@@ -9,8 +9,52 @@ local function normal_move(keys)
     end
 end
 
+local function neo_tree_window()
+    for _, win in ipairs(vim.api.nvim_list_wins()) do
+        if vim.api.nvim_win_is_valid(win) then
+            local ok, buf = pcall(vim.api.nvim_win_get_buf, win)
+            if ok and vim.bo[buf].filetype == "neo-tree" then
+                return win
+            end
+        end
+    end
+    return nil
+end
+
+local function safe_tree_node(state)
+    if not state or not state.tree then
+        return nil
+    end
+
+    local ok, node = pcall(function()
+        return state.tree:get_node()
+    end)
+    if ok then
+        return node
+    end
+
+    local win = neo_tree_window()
+    if not win then
+        return nil
+    end
+
+    local ok_cursor, cursor = pcall(vim.api.nvim_win_get_cursor, win)
+    if not ok_cursor then
+        return nil
+    end
+
+    ok, node = pcall(function()
+        return state.tree:get_node(cursor[1])
+    end)
+
+    if ok then
+        return node
+    end
+    return nil
+end
+
 local function selected_node_dir(state)
-    local node = state.tree and state.tree:get_node()
+    local node = safe_tree_node(state)
     if not node or not node.path then
         return nil
     end
@@ -46,6 +90,31 @@ local function focus_or_unfocus_explorer()
     end
 
     panels.open_files()
+end
+
+local function safe_rename(state)
+    local node = safe_tree_node(state)
+    if not node or node.type == "message" or not node.path then
+        vim.notify("Neo-tree rename: focus a file or folder first", vim.log.levels.WARN, { title = "Neo-tree" })
+        return
+    end
+
+    local ok_actions, fs_actions = pcall(require, "neo-tree.sources.filesystem.lib.fs_actions")
+    if not ok_actions or type(fs_actions.rename_node) ~= "function" then
+        vim.notify("Neo-tree rename action unavailable", vim.log.levels.ERROR, { title = "Neo-tree" })
+        return
+    end
+
+    local ok_rename, err = pcall(fs_actions.rename_node, node.path, function()
+        local ok_commands, commands = pcall(require, "neo-tree.sources.filesystem.commands")
+        if ok_commands and type(commands.refresh) == "function" then
+            pcall(commands.refresh, state)
+        end
+    end)
+
+    if not ok_rename then
+        vim.notify("Neo-tree rename failed: " .. tostring(err), vim.log.levels.ERROR, { title = "Neo-tree" })
+    end
 end
 
 return {
@@ -195,6 +264,7 @@ return {
             filesystem = {
                 commands = {
                     open_folder_as_project = open_node_as_project,
+                    rename = safe_rename,
                 },
                 follow_current_file = { enabled = true },
                 use_libuv_file_watcher = true,

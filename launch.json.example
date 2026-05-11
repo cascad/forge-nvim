@@ -3,9 +3,11 @@
     // DAP launch configs для проекта lab.
     //
     // Стандартизация в этом репо:
-    //   * Rust и Python используют console = "integratedTerminal" -
-    //     PTY через runInTerminal, рендерится в секции "console"
-    //     dap-view. Stdin / stdout / stderr - всё там.
+    //   * Rust использует console = "integratedTerminal": PTY через
+    //     runInTerminal рендерится в секции "console" dap-view.
+    //   * Python использует console = "internalConsole" +
+    //     redirectOutput = true: отдельное системное окно не открывается,
+    //     stdout/stderr идут в REPL через DAP output events.
     //   * Go - ИСКЛЮЧЕНИЕ. delve в mode = "debug" не уважает
     //     console = "integratedTerminal" (по крайней мере в v1.23.x:
     //     stdout процесса теряется). Используем outputMode = "remote",
@@ -81,7 +83,8 @@
             "request": "launch",
             "program": "${workspaceFolder}/scrapper1.py",
             "cwd": "${workspaceFolder}",
-            "console": "integratedTerminal",
+            "console": "internalConsole",
+            "redirectOutput": true,
             "python": "${workspaceFolder}/venv/Scripts/python.exe",
             "justMyCode": true
         }

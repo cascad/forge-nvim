@@ -288,32 +288,17 @@ local function rust_current_program()
     local normalized_current = normalize_path(current_file)
     for _, candidate in ipairs(candidates) do
         if normalize_path(candidate.target.src_path) == normalized_current then
-            vim.notify(
-                "DAP target: " .. candidate.target.name .. " (" .. candidate.kind .. ")",
-                vim.log.levels.INFO,
-                { title = "DAP" }
-            )
             return candidate.exe
         end
     end
 
     for _, candidate in ipairs(candidates) do
         if candidate.kind == "bin" and candidate.target.name == selected_pkg.name then
-            vim.notify(
-                "DAP target: " .. candidate.target.name .. " (package bin)",
-                vim.log.levels.INFO,
-                { title = "DAP" }
-            )
             return candidate.exe
         end
     end
 
     if #candidates == 1 then
-        vim.notify(
-            "DAP target: " .. candidates[1].target.name .. " (" .. candidates[1].kind .. ")",
-            vim.log.levels.INFO,
-            { title = "DAP" }
-        )
         return candidates[1].exe
     elseif #candidates > 1 then
         local names = vim.tbl_map(function(candidate)
@@ -454,12 +439,16 @@ local function format_launch_choice(c)
     return ("%s  [%s]"):format(name, type_)
 end
 
--- Choose dap-view section to focus based on the adapter type. delve в
--- mode=debug не уважает console=integratedTerminal (см. PANELS.md и
--- DEBUG_SETUP_JOURNEY.md эпизод 6.9), поэтому stdout Go идёт в REPL,
--- а не в Console. Все остальные адаптеры пишут в Console через PTY.
-local function section_for_config_type(type_)
+-- Choose dap-view section to focus based on the adapter/config. Go and Python
+-- with internalConsole emit output events, which nvim-dap appends to REPL.
+-- Rust/codelldb uses runInTerminal, so its PTY is shown in Console.
+local function section_for_config(cfg)
+    local type_ = type(cfg) == "table" and cfg.type or cfg
     if type_ == "go" or type_ == "delve" then
+        return "repl"
+    end
+    if (type_ == "python" or type_ == "debugpy")
+        and (type(cfg) ~= "table" or cfg.console ~= "integratedTerminal") then
         return "repl"
     end
     return "console"
@@ -467,7 +456,7 @@ end
 
 local function open_debug_for_config(cfg)
     if cfg and cfg.type then
-        panels.show_debug_section(section_for_config_type(cfg.type), false)
+        panels.show_debug_section(section_for_config(cfg), false)
     else
         panels.open_debug()
     end
@@ -559,25 +548,225 @@ local function prompt_args(prompt)
     end
 end
 
-local function project_python()
-    local root = vim.fn.getcwd()
-    local candidates
-    if vim.fn.has("win32") == 1 then
-        candidates = {
-            root .. "/.venv/Scripts/python.exe",
-            root .. "/venv/Scripts/python.exe",
-        }
-    else
-        candidates = {
-            root .. "/.venv/bin/python",
-            root .. "/venv/bin/python",
-        }
+local function path_from_env_or_global(global_name, env_name)
+    local value = vim.g[global_name]
+    if type(value) == "string" and value ~= "" then
+        return vim.fn.expand(value)
     end
 
-    for _, candidate in ipairs(candidates) do
-        if vim.fn.executable(candidate) == 1 then return candidate end
+    value = vim.env[env_name]
+    if type(value) == "string" and value ~= "" then
+        return vim.fn.expand(value)
     end
+
+    return nil
+end
+
+local function executable_path(path)
+    if type(path) ~= "string" or path == "" then
+        return nil
+    end
+    path = vim.fn.expand(path)
+    if vim.fn.executable(path) == 1 then
+        return path
+    end
+    return nil
+end
+
+local function path_executable(name)
+    if vim.fn.executable(name) ~= 1 then
+        return nil
+    end
+    local resolved = vim.fn.exepath(name)
+    return resolved ~= "" and resolved or name
+end
+
+local function python_in_env(env_dir)
+    if not env_dir or env_dir == "" then
+        return nil
+    end
+    if vim.fn.has("win32") == 1 then
+        return env_dir .. "/Scripts/python.exe"
+    end
+    return env_dir .. "/bin/python"
+end
+
+local function debugpy_adapter_in_env(env_dir)
+    if not env_dir or env_dir == "" then
+        return nil
+    end
+    if vim.fn.has("win32") == 1 then
+        return env_dir .. "/Scripts/debugpy-adapter.exe"
+    end
+    return env_dir .. "/bin/debugpy-adapter"
+end
+
+local function python_project_roots()
+    local roots, seen = {}, {}
+    local function add(path)
+        if not path or path == "" then
+            return
+        end
+        path = vim.fs.normalize(path)
+        local key = normalize_path(path)
+        if seen[key] then
+            return
+        end
+        seen[key] = true
+        table.insert(roots, path)
+    end
+
+    local current = current_launch_path()
+    local start = current ~= "" and vim.fs.dirname(current) or vim.fn.getcwd()
+    local marker = vim.fs.find({
+        "pyproject.toml",
+        "setup.py",
+        "setup.cfg",
+        "requirements.txt",
+        "Pipfile",
+        "poetry.lock",
+        "uv.lock",
+        ".git",
+    }, { upward = true, path = start })[1]
+
+    add(marker and vim.fs.dirname(marker) or start)
+    add(vim.fn.getcwd())
+    add(vim.fn.getcwd(0))
+
+    local get_clients = vim.lsp.get_clients or vim.lsp.get_active_clients
+    for _, client in ipairs(get_clients({ bufnr = 0 })) do
+        add(client.config and client.config.root_dir)
+    end
+
+    return roots
+end
+
+local function project_python()
+    local explicit = executable_path(path_from_env_or_global("forge_python_path", "FORGE_PYTHON_PATH"))
+    if explicit then
+        return explicit
+    end
+
+    local venv = vim.env.VIRTUAL_ENV
+    local venv_python = executable_path(python_in_env(venv))
+    if venv_python then
+        return venv_python
+    end
+
+    local conda = vim.env.CONDA_PREFIX
+    local conda_python = executable_path(
+        conda and (vim.fn.has("win32") == 1 and (conda .. "/python.exe") or (conda .. "/bin/python"))
+    )
+    if conda_python then
+        return conda_python
+    end
+
+    for _, root in ipairs(python_project_roots()) do
+        for _, folder in ipairs({ ".venv", "venv", ".env", "env" }) do
+            local candidate = executable_path(python_in_env(root .. "/" .. folder))
+            if candidate then
+                return candidate
+            end
+        end
+    end
+
+    local from_path = path_executable("python3") or path_executable("python")
+    if from_path then
+        return from_path
+    end
+
     return "python"
+end
+
+local function debugpy_adapter_executable()
+    local explicit = executable_path(path_from_env_or_global("forge_debugpy_adapter", "FORGE_DEBUGPY_ADAPTER"))
+    if explicit then
+        return explicit
+    end
+
+    for _, root in ipairs(python_project_roots()) do
+        for _, folder in ipairs({ ".venv", "venv", ".env", "env" }) do
+            local candidate = executable_path(debugpy_adapter_in_env(root .. "/" .. folder))
+            if candidate then
+                return candidate
+            end
+        end
+    end
+
+    local from_path = path_executable("debugpy-adapter")
+    if from_path then
+        return from_path
+    end
+
+    local mason_adapter = vim.fn.stdpath("data") .. "/mason/packages/debugpy/venv/Scripts/debugpy-adapter.exe"
+    return executable_path(mason_adapter)
+end
+
+local function debugpy_adapter_python()
+    local explicit = executable_path(path_from_env_or_global("forge_debugpy_python", "FORGE_DEBUGPY_PYTHON"))
+    if explicit then
+        return explicit
+    end
+
+    local mason_python = vim.fn.stdpath("data") .. "/mason/packages/debugpy/venv/Scripts/python.exe"
+    return executable_path(mason_python) or project_python()
+end
+
+local function show_python_debug_info()
+    local adapter = debugpy_adapter_executable()
+    local lines = {
+        "Python debug:",
+        "  project python: " .. project_python(),
+        "  debugpy adapter: " .. (adapter or "<none found; fallback to python -m debugpy.adapter>"),
+        "  debugpy python fallback: " .. debugpy_adapter_python(),
+        "",
+        "Overrides:",
+        "  vim.g.forge_python_path / $FORGE_PYTHON_PATH",
+        "  vim.g.forge_debugpy_adapter / $FORGE_DEBUGPY_ADAPTER",
+        "  vim.g.forge_debugpy_python / $FORGE_DEBUGPY_PYTHON",
+    }
+    vim.notify(table.concat(lines, "\n"), vim.log.levels.INFO, { title = "DAP Python" })
+end
+
+local function python_debug_opts()
+    return {
+        console = "internalConsole",
+        config = {
+            redirectOutput = true,
+            justMyCode = true,
+        },
+    }
+end
+
+local function keep_debugpy_adapter_inside_nvim(adapter_command)
+    local dap = require("dap")
+
+    local function mark_attached(adapter)
+        if type(adapter) == "table" and adapter.type == "executable" then
+            if adapter_command then
+                adapter.command = adapter_command
+                adapter.args = {}
+            end
+            adapter.options = adapter.options or {}
+            adapter.options.detached = false
+        end
+        return adapter
+    end
+
+    local function wrap_adapter(adapter)
+        if type(adapter) == "function" then
+            return function(cb, config)
+                adapter(function(resolved)
+                    cb(mark_attached(resolved))
+                end, config)
+            end
+        end
+        return mark_attached(adapter)
+    end
+
+    local wrapped = wrap_adapter(dap.adapters.python)
+    dap.adapters.python = wrapped
+    dap.adapters.debugpy = wrapped
 end
 
 local function extend_config(base, fields)
@@ -633,7 +822,8 @@ local function current_file_configs(ft)
             request = "launch",
             program = "${file}",
             cwd = "${workspaceFolder}",
-            console = "integratedTerminal",
+            console = "internalConsole",
+            redirectOutput = true,
             python = project_python,
             justMyCode = true,
         }
@@ -697,7 +887,7 @@ local function dap_continue()
         local session = dap_mod.session()
         local cfg = session and session.config
         if cfg and cfg.type then
-            panels.show_debug_section(section_for_config_type(cfg.type), false)
+            panels.show_debug_section(section_for_config(cfg), false)
         else
             panels.open_debug()
         end
@@ -750,7 +940,7 @@ local function dap_pick_any()
         local session = dap_mod.session()
         local cfg = session and session.config
         if cfg and cfg.type then
-            panels.show_debug_section(section_for_config_type(cfg.type), false)
+            panels.show_debug_section(section_for_config(cfg), false)
         else
             panels.open_debug()
         end
@@ -1034,6 +1224,8 @@ return {
                 local benign_patterns = {
                     "command `python` of adapter `debugpy` exited with %d+",
                     "command `python%d?%-?%d*` of adapter `debugpy` exited with %d+",
+                    "command `[^`]*[Pp]ython[^`]*` of adapter `debugpy` exited with %d+",
+                    "command `[^`]*debugpy%-adapter[^`]*` of adapter `debugpy` exited with %d+",
                     "command `dlv` of adapter `go` exited with %d+",
                     "command `dlv%.exe` of adapter `go` exited with %d+",
                 }
@@ -1096,7 +1288,7 @@ return {
                 local cfg = session and session.config
                 if cfg and cfg.type then
                     panels.show_debug_section(
-                        section_for_config_type(cfg.type),
+                        section_for_config(cfg),
                         false
                     )
                 else
@@ -1299,19 +1491,23 @@ return {
         ft = "python",
         dependencies = { "mfussenegger/nvim-dap" },
         config = function()
-            -- debugpy ставится mason'ом → bin/python в виртуалке Mason
-            local debugpy_python = vim.fn.stdpath("data")
-                .. "/mason/packages/debugpy/venv/Scripts/python.exe"
-            if vim.fn.filereadable(debugpy_python) == 1 then
-                require("dap-python").setup(debugpy_python)
-            else
-                -- fallback на системный python с debugpy через pip
-                require("dap-python").setup("python")
-            end
+            local dap_python = require("dap-python")
+            dap_python.resolve_python = project_python
+
+            local adapter = debugpy_adapter_executable()
+            dap_python.setup(debugpy_adapter_python(), {
+                include_configs = false,
+                console = "internalConsole",
+                pythonPath = project_python,
+            })
+            keep_debugpy_adapter_inside_nvim(adapter)
+            vim.api.nvim_create_user_command("DapPythonInfo", show_python_debug_info, {
+                desc = "Show Python/debugpy paths selected by DAP",
+            })
         end,
         keys = {
-            { "<leader>dt", function() require("dap-python").test_method() end, desc = "Debug: Python test method",   ft = "python" },
-            { "<leader>dT", function() require("dap-python").test_class() end,  desc = "Debug: Python test class",    ft = "python" },
+            { "<leader>dt", function() require("dap-python").test_method(python_debug_opts()) end, desc = "Debug: Python test method",   ft = "python" },
+            { "<leader>dT", function() require("dap-python").test_class(python_debug_opts()) end,  desc = "Debug: Python test class",    ft = "python" },
         },
     },
 }

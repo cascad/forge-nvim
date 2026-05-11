@@ -26,6 +26,10 @@ return {
             dashboard.section.footer.val = start.footer()
 
             dashboard.config.opts.noautocmd = true
+            -- alpha-nvim keeps its own window id for resize redraws. On fast
+            -- jumps/window changes that id can already be gone; disabling this
+            -- official redraw hook avoids noisy WinResized errors.
+            dashboard.config.opts.redraw_on_resize = false
             return dashboard.config
         end,
         config = function(_, opts)

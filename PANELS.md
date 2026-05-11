@@ -20,6 +20,14 @@
 
 Open folder prompt:
 
+Project switching is intentionally VS Code-like: when the selected path is a
+different project, the current project session is saved and Neovim uses native
+`:restart` to start a fresh server, then changes cwd and restores the selected
+project session. This avoids carrying old buffers, LSP clients, file watchers,
+debug sessions, or plugin window state into the new workspace. There is no
+in-process project-switch fallback: if `:restart` is unavailable or fails, the
+switch is aborted with an error.
+
 - Строка ввода стартует с текущего `cwd`, например `F:/work/current-project/`.
 - Путь можно редактировать сразу в этой строке.
 - Completion mode - `dir`, то есть штатное дополнение директорий от Vim.
@@ -231,13 +239,11 @@ neo-tree mappings тоже расширены под русскую раскла
   включено на `TRACE`, чтобы ошибки launch были видны без повторной настройки.
 - DAP View держит console, scopes, breakpoints, threads, watches и REPL как секции одного окна,
   поэтому нижние debug-буферы не могут поменяться местами как два split'а `dap-ui`.
-- Стандартизировано: каждый дебагги-процесс получает PTY через
-  `runInTerminal` (`console = "integratedTerminal"` во всех configs -
-  Rust/Go/Python). Stdout/stderr/stdin идут в **Console** секцию
-  dap-view, она открывается по умолчанию (`default_section = "console"`).
-  REPL - только для интерактивных DAP-команд (eval, :Continue, :Next).
-  Это единообразно работает на всех платформах; codelldb на Windows
-  с `internalConsole` stdout не захватывает - проверено эмпирически.
+- Rust получает PTY через `runInTerminal` (`console = "integratedTerminal"`):
+  stdout/stderr/stdin идут в **Console** секцию dap-view. Python не получает
+  отдельный terminal: `internalConsole` + `redirectOutput=true` шлют
+  stdout/stderr через DAP `output` events в **REPL**. Go тоже смотрим в REPL
+  через `outputMode = "remote"`.
   См. ниже "Output: console vs REPL".
 - В terminal-mode F-клавиши принудительно переводятся в Normal mode и вызывают
   `nvim-dap`, поэтому второй `<F5>` должен быть именно continue.
@@ -281,13 +287,15 @@ neo-tree mappings тоже расширены под русскую раскла
   -> repl.append(...)`.
 
 Стандарт в нашем `dap.lua` и явных `launch.json` configs:
-**`console = "integratedTerminal"` для Rust и Python, исключение для Go**.
+**Rust использует `console = "integratedTerminal"`, Python использует
+`console = "internalConsole"` + `redirectOutput = true`, Go использует
+`outputMode = "remote"`**.
 
 | Адаптер | Конфиг | Output идёт в |
 |---|---|---|
 | **codelldb** (Rust/C/C++) | `console = "integratedTerminal"` | Console |
 | **delve** (Go)            | `outputMode = "remote"`           | REPL    |
-| **debugpy** (Python)      | `console = "integratedTerminal"` | Console |
+| **debugpy** (Python)      | `console = "internalConsole"` + `redirectOutput = true` | REPL |
 
 **Почему Go - исключение.** В `mode = "debug"` delve компилит и
 запускает бинарь сам через `go build`, и НЕ уважает поле
@@ -303,9 +311,12 @@ Go-сессии переключаешься в REPL: `<leader>m6` или `<lead
 - **codelldb на Windows** не захватывает stdout от Rust бинарей с
   `internalConsole` - REPL остаётся пустым. Известная проблема
   адаптера, не наш баг. С `integratedTerminal` PTY получает всё.
-- **debugpy** без `redirectOutput` открывает отдельный системный
-  consol-subprocess для python, который висит как левое окно.
-  С `redirectOutput=true` работает, но усложняет шаблон.
+- **debugpy** с `integratedTerminal` на Windows может открывать отдельный
+  системный console-subprocess для python, который висит как левое окно и
+  перехватывает фокус. Поэтому для Python используем `internalConsole` +
+  `redirectOutput=true`; stdout/stderr идут через DAP `output` events в REPL.
+  Generated Python configs уже такие; проектные `launch.json` надо писать так
+  же явно.
 - **delve**: оба варианта живут, но `integratedTerminal` гомогенизирует
   поведение со всеми остальными.
 
@@ -442,6 +453,20 @@ tools path.
 Не использовать `--check-go-version=false` как постоянное решение: Delve
 ставит этот check не случайно, рассинхрон версий runtime и debugger дает
 тонкие баги в чтении стека/goroutine state.
+
+Python debug uses two separate paths:
+
+1. **Project Python** - the interpreter used to run your code. Resolver order:
+   `vim.g.forge_python_path` / `$FORGE_PYTHON_PATH`, active `VIRTUAL_ENV`,
+   active `CONDA_PREFIX`, project `.venv`/`venv`/`.env`/`env`, then `python3`
+   or `python` from `PATH`.
+2. **debugpy adapter** - the DAP adapter process. Resolver order:
+   `vim.g.forge_debugpy_adapter` / `$FORGE_DEBUGPY_ADAPTER`, project venv
+   `debugpy-adapter`, `debugpy-adapter` from `PATH`, then Mason
+   `debugpy-adapter.exe` as bootstrap fallback. Mason's `python.exe` is only a
+   last fallback if no adapter executable exists.
+
+Check what will be used with `:DapPythonInfo`.
 
 ## Icons / Fonts
 

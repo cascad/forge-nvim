@@ -21,6 +21,7 @@
 | `<leader>fc` | Files: changed (git status) |
 | `<leader>fj` | Files: jumplist |
 | `<leader>fp` / `<leader>op` | **Open recent project** (project.nvim) |
+| `<leader>of` / `<leader>oP` | Open folder path as project |
 | `<leader>oh` | Open home / Alpha |
 | `<S-h>` / `<S-l>` | Prev / next buffer |
 | `<leader>bd` | Close buffer |
@@ -121,6 +122,7 @@
 |---|---|
 | `<leader>dt` | Debug test method |
 | `<leader>dT` | Debug test class |
+| `:DapPythonInfo` | Show selected Python/debugpy paths |
 
 ## 5. Git (gitsigns)
 

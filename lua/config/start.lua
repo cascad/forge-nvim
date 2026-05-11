@@ -2,6 +2,7 @@ local M = {}
 
 local recent_cache = {}
 local open_files_layout
+local close_file_buffers
 
 local function normalize_dir(path)
     path = vim.fs.normalize(vim.fn.fnamemodify(path, ":p"))
@@ -11,12 +12,26 @@ local function normalize_dir(path)
     return (path:gsub("[/\\]+$", ""))
 end
 
-local function normal_file_buffers()
+local function normalized_key(path)
+    local key = normalize_dir(path):gsub("\\", "/")
+    if vim.fn.has("win32") == 1 then
+        key = key:lower()
+    end
+    return key
+end
+
+local function path_inside_dir(path, dir)
+    local file = normalized_key(path)
+    local root = normalized_key(dir)
+    return file == root or file:sub(1, #root + 1) == root .. "/"
+end
+
+local function normal_file_buffers(match)
     local buffers = {}
     for _, buf in ipairs(vim.api.nvim_list_bufs()) do
         if vim.api.nvim_buf_is_loaded(buf) and vim.bo[buf].buftype == "" then
             local name = vim.api.nvim_buf_get_name(buf)
-            if name ~= "" then
+            if name ~= "" and (not match or match(name, buf)) then
                 buffers[#buffers + 1] = buf
             end
         end
@@ -100,9 +115,15 @@ local function write_modified_buffers()
     return true
 end
 
-local function save_current_session()
-    if #normal_file_buffers() == 0 then
-        return
+local function save_current_session(root)
+    root = normalize_dir(root or vim.fn.getcwd())
+    if #normal_file_buffers(function(name) return path_inside_dir(name, root) end) == 0 then
+        return true
+    end
+
+    if not close_file_buffers(function(name) return not path_inside_dir(name, root) end) then
+        vim.notify("Project switch aborted: could not close non-project buffers", vim.log.levels.ERROR, { title = "Start" })
+        return false
     end
 
     local ok_panels, panels = pcall(require, "config.panels")
@@ -114,31 +135,45 @@ local function save_current_session()
     if ok and type(persistence.save) == "function" then
         pcall(persistence.save)
     end
+    return true
 end
 
-local function close_file_buffers()
-    for _, buf in ipairs(normal_file_buffers()) do
-        if vim.api.nvim_buf_is_valid(buf) then
-            pcall(vim.api.nvim_buf_delete, buf, { force = false })
+close_file_buffers = function(match)
+    local buffers = normal_file_buffers(match)
+    if #buffers == 0 then
+        return true
+    end
+
+    local targets = {}
+    for _, buf in ipairs(buffers) do
+        targets[buf] = true
+    end
+
+    local scratch
+    for _, win in ipairs(vim.api.nvim_tabpage_list_wins(0)) do
+        if vim.api.nvim_win_is_valid(win) then
+            local ok_buf, buf = pcall(vim.api.nvim_win_get_buf, win)
+            if ok_buf and targets[buf] then
+                scratch = scratch or vim.api.nvim_create_buf(false, true)
+                pcall(vim.api.nvim_win_set_buf, win, scratch)
+            end
         end
     end
-end
 
-local function prepare_project_switch(target_path)
-    local current_path = normalize_dir(vim.fn.getcwd())
-    if current_path == target_path and #normal_file_buffers() > 0 then
-        close_start_buffer()
+    local failed = {}
+    for _, buf in ipairs(buffers) do
+        if vim.api.nvim_buf_is_valid(buf) then
+            local ok, err = pcall(vim.api.nvim_buf_delete, buf, { force = true })
+            if not ok then
+                failed[#failed + 1] = tostring(err)
+            end
+        end
+    end
+
+    if #failed > 0 then
+        vim.notify(table.concat(failed, "\n"), vim.log.levels.ERROR, { title = "Start: close buffers" })
         return false
     end
-
-    if current_path ~= target_path then
-        if not write_modified_buffers() then
-            return false
-        end
-        save_current_session()
-        close_file_buffers()
-    end
-
     return true
 end
 
@@ -196,6 +231,66 @@ local function open_code_only_layout()
     end
 end
 
+local function set_project_dir(path)
+    local ok_project, project = pcall(require, "project_nvim.project")
+    if ok_project and type(project.set_pwd) == "function" then
+        project.set_pwd(path, "start")
+    else
+        vim.api.nvim_set_current_dir(path)
+    end
+end
+
+function M.open_project_after_restart(path, open_files)
+    path = path and normalize_dir(path)
+    if not readable_dir(path) then
+        vim.notify("Project path is not a directory: " .. tostring(path), vim.log.levels.ERROR, { title = "Start" })
+        return
+    end
+
+    set_project_dir(path)
+
+    if not load_session_if_present() then
+        if open_files then
+            open_files_layout()
+        else
+            open_code_only_layout()
+        end
+    end
+end
+
+local function restart_project(path, opts)
+    if vim.fn.exists(":restart") ~= 2 then
+        vim.notify("Project switch requires Neovim :restart; aborting.", vim.log.levels.ERROR, { title = "Start" })
+        return
+    end
+
+    local current_path = normalize_dir(vim.fn.getcwd())
+    if current_path == path then
+        return
+    end
+
+    if not write_modified_buffers() then
+        return
+    end
+
+    local ok_panels, panels = pcall(require, "config.panels")
+    if ok_panels and type(panels.stop_debug) == "function" then
+        pcall(panels.stop_debug)
+    end
+
+    if not save_current_session(current_path) then
+        return
+    end
+
+    local open_files = opts.open_files ~= false
+    local command = ("restart +qall! lua require('config.start').open_project_after_restart(%s, %s)")
+        :format(string.format("%q", path), open_files and "true" or "false")
+    local ok, err = pcall(vim.cmd, command)
+    if not ok then
+        vim.notify("Hard project switch failed: " .. tostring(err), vim.log.levels.ERROR, { title = "Start" })
+    end
+end
+
 function M.open_project(path, opts)
     opts = opts or {}
     path = path and normalize_dir(path)
@@ -203,15 +298,16 @@ function M.open_project(path, opts)
         vim.notify("Project path is not a directory: " .. tostring(path), vim.log.levels.ERROR, { title = "Start" })
         return
     end
-    if not prepare_project_switch(path) then
+
+    local current_path = normalize_dir(vim.fn.getcwd())
+    if current_path ~= path then
+        restart_project(path, opts)
         return
     end
 
-    local ok_project, project = pcall(require, "project_nvim.project")
-    if ok_project and type(project.set_pwd) == "function" then
-        project.set_pwd(path, "start")
-    else
-        vim.api.nvim_set_current_dir(path)
+    if #normal_file_buffers() > 0 then
+        close_start_buffer()
+        return
     end
 
     if not load_session_if_present() then
