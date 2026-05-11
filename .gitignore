@@ -1,0 +1,23 @@
+*.log
+session/
+sessions/
+
+# Local/private notes from setup sessions. These are useful while iterating on
+# one machine, but must not be published with the distributable config.
+DEBUG_SETUP_JOURNEY.md
+PLAN.md
+RUST_NAVIGATION_PERFORMANCE_FIX.md
+WISHLIST.md
+INSTALL_WINDOWS.md
+
+spell/
+.luarc.json
+.luarc.jsonc
+.vscode/
+.idea/
+
+*.swp
+*.swo
+
+# lazy-lock.json — наоборот, КОММИТИМ, чтобы версии плагинов
+# воспроизводились на других машинах. Здесь его не игнорируем.

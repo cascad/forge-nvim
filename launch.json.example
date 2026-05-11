@@ -1,0 +1,97 @@
+{
+    // ============================================================
+    // DAP launch configs для проекта lab.
+    //
+    // Стандартизация в этом репо:
+    //   * Rust и Python используют console = "integratedTerminal" -
+    //     PTY через runInTerminal, рендерится в секции "console"
+    //     dap-view. Stdin / stdout / stderr - всё там.
+    //   * Go - ИСКЛЮЧЕНИЕ. delve в mode = "debug" не уважает
+    //     console = "integratedTerminal" (по крайней мере в v1.23.x:
+    //     stdout процесса теряется). Используем outputMode = "remote",
+    //     это прибивает stdout как DAP `output` events -> в REPL
+    //     секцию dap-view. Чтобы видеть вывод Go - <leader>m6.
+    //   * Секция "repl" в общем случае - для DAP-команд (eval,
+    //     :Continue, :Next).
+    //   * Никаких internalConsole для Rust: на Windows codelldb с
+    //     internalConsole не захватывает stdout от Rust бинарей
+    //     (известная проблема адаптера).
+    //
+    // По <F5> nvim показывает picker в таком порядке:
+    //   1. все явные configs из этого launch.json, без filetype-фильтра;
+    //   2. generated current-file configs для текущего Rust/Go/Python файла.
+    // <leader>dP - picker только по configs из launch.json.
+    // ============================================================
+    "version": "0.2.0",
+    "configurations": [
+        // ============================== Rust ==============================
+        // Стандартный дебаг бинаря. preLaunchTask = overseer task из
+        // tasks.lua, делает `cargo build` перед codelldb.
+        {
+            "name": "Rust: lab (debug bin)",
+            "type": "codelldb",
+            "request": "launch",
+            "program": "${workspaceFolder}/target/debug/lab.exe",
+            "args": [],
+            "cwd": "${workspaceFolder}",
+            "stopOnEntry": false,
+            "console": "integratedTerminal",
+            "sourceLanguages": ["rust"],
+            "preLaunchTask": "cargo build (debug)"
+        },
+        // То же, но с CLI-аргументами через ${input:rustArgs} (см. ниже
+        // секцию "inputs"). codelldb сам шеллит строку, поэтому можно
+        // вводить "--verbose --config foo.yaml" одной строкой.
+        {
+            "name": "Rust: lab (with args)",
+            "type": "codelldb",
+            "request": "launch",
+            "program": "${workspaceFolder}/target/debug/lab.exe",
+            "args": "${input:rustArgs}",
+            "cwd": "${workspaceFolder}",
+            "stopOnEntry": false,
+            "console": "integratedTerminal",
+            "sourceLanguages": ["rust"],
+            "preLaunchTask": "cargo build (debug)"
+        },
+        // =============================== Go ===============================
+        // ИСКЛЮЧЕНИЕ из общего стандарта: для delve используем
+        // outputMode = "remote" (вывод программы шлётся как DAP `output`
+        // events -> dap-view "repl"). Причина: в mode = "debug" delve
+        // компилит и запускает бинарь сам через `go build`, и НЕ уважает
+        // console = "integratedTerminal" (по крайней мере в v1.23.x).
+        // Получается невидимый stdout. outputMode = "remote" работает
+        // надёжно. Цена - после старта Go-сессии надо переключиться в
+        // REPL-секцию (<leader>m6 или <leader>dR), а не Console.
+        {
+            "name": "Go: main.go",
+            "type": "go",
+            "request": "launch",
+            "mode": "debug",
+            "program": "${workspaceFolder}/main.go",
+            "cwd": "${workspaceFolder}",
+            "args": [],
+            "outputMode": "remote"
+        },
+        // ============================= Python =============================
+        // scrapper1.py через debugpy, интерпретатор из локального venv.
+        {
+            "name": "Python: scrapper1.py",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/scrapper1.py",
+            "cwd": "${workspaceFolder}",
+            "console": "integratedTerminal",
+            "python": "${workspaceFolder}/venv/Scripts/python.exe",
+            "justMyCode": true
+        }
+    ],
+    "inputs": [
+        {
+            "id": "rustArgs",
+            "type": "promptString",
+            "description": "Rust CLI args (space-separated)",
+            "default": ""
+        }
+    ]
+}
