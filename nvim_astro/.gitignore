@@ -1,0 +1,16 @@
+# Локальные подсказки для lua_ls — генерируются автоматически.
+.luarc.json
+.luarc.jsonc
+
+# Сессии, swap-файлы, IDE-мусор.
+session/
+sessions/
+*.swp
+*.swo
+*.log
+spell/
+.vscode/
+.idea/
+
+# lazy-lock.json — КОММИТИМ (он фиксирует версии плагинов), поэтому
+# здесь его НЕ игнорируем.
