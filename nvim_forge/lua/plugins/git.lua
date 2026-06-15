@@ -76,10 +76,9 @@ return {
             local function open_file_explorer()
                 pcall(vim.cmd, "DiffviewClose")
                 vim.schedule(function()
-                    -- ide.show("explorer") вместо panels.mode_files —
-                    -- последний дёргает close_activity и убил бы bottom
-                    -- (debug/tests/jobs), даже если они не связаны с
-                    -- Diffview. Здесь нужен ТОЛЬКО переход в explorer.
+                    -- ide.show (один слот), а НЕ apply_layout("files") —
+                    -- последний закрыл бы bottom/right (debug/tests/jobs).
+                    -- Здесь нужен ТОЛЬКО переход в explorer.
                     local ok, ide = pcall(require, "ide")
                     if ok then ide.show("explorer") end
                 end)

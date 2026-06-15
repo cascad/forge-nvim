@@ -79,12 +79,34 @@ function M.wrap_message(message, width)
     return trim(table.concat(out, "\n"))
 end
 
+-- Кэш переноса текста (problem 2): Neovim дёргает M.format на КАЖДУЮ
+-- диагностику при КАЖДОМ показе virtual_lines (а показ случается часто:
+-- курсор сменил строку, ресайз, повторный publish). wrap_message не
+-- бесплатный (посимвольный strdisplaywidth). Кэшируем результат по
+-- (сообщение → перенос) для текущей ширины окна; при смене ширины
+-- сбрасываем. Так «генерация текста пояснения» считается один раз и
+-- больше не подтормаживает — выезжает мгновенно из кэша.
+local format_cache = {}
+local format_cache_width = nil
+
 function M.format(diagnostic)
+    local width = M.wrap_width()
+    if width ~= format_cache_width then
+        format_cache = {}
+        format_cache_width = width
+    end
+
     local message = diagnostic.message
     if diagnostic.code then
         message = string.format("%s: %s", diagnostic.code, message)
     end
-    return M.wrap_message(message)
+
+    local cached = format_cache[message]
+    if cached ~= nil then return cached end
+
+    local wrapped = M.wrap_message(message, width)
+    format_cache[message] = wrapped
+    return wrapped
 end
 
 function M.virtual_lines_current()
@@ -104,13 +126,24 @@ function M.setup_refresh()
     if M._refresh_setup then return end
     M._refresh_setup = true
 
-    vim.api.nvim_create_autocmd({ "VimResized", "WinResized", "WinEnter" }, {
+    -- Перерисовываем диагностику ТОЛЬКО при реальном изменении ширины окна
+    -- (перенос текста зависит от ширины). Раньше тут был ещё WinEnter — он
+    -- передёргивал show на КАЖДЫЙ переход фокуса между окнами, заставляя
+    -- заново раскладывать все virtual_lines без причины (ширина-то не
+    -- менялась). Это и давало микро-фриз при переключении панелей. Убрали.
+    -- Плюс дебаунс: серию событий ресайза схлопываем в один re-show.
+    local timer
+    local function schedule_refresh()
+        if timer then timer:stop() end
+        timer = vim.defer_fn(function()
+            timer = nil
+            pcall(vim.diagnostic.show, nil, 0)
+        end, 60)
+    end
+
+    vim.api.nvim_create_autocmd({ "VimResized", "WinResized" }, {
         group = vim.api.nvim_create_augroup("UserDiagnosticWrapRefresh", { clear = true }),
-        callback = function()
-            vim.schedule(function()
-                pcall(vim.diagnostic.show, nil, 0)
-            end)
-        end,
+        callback = schedule_refresh,
     })
 end
 

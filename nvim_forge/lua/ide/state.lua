@@ -276,6 +276,72 @@ function M.focus_slot(slot)
 end
 
 -- =============================================================
+-- Единый toggle всех панелей on/off
+-- =============================================================
+
+---Спрятать ВСЕ панели (запомнив набор) / вернуть последний набор.
+---Если прятать нечего и снимка нет — открываем explorer как дефолт.
+function M.toggle_panels()
+    refresh_all_slots()
+    local any = state.slots.left or state.slots.right or state.slots.bottom
+
+    if any then
+        -- Снимок текущего набора слотов, потом закрываем всё.
+        state.last_panel_slots = vim.deepcopy(state.slots)
+        for _, slot in ipairs(SLOTS) do
+            if state.slots[slot] then close_active(slot) end
+        end
+        M.focus_main()
+    else
+        local snap = state.last_panel_slots
+        if snap and (snap.left or snap.right or snap.bottom) then
+            for _, slot in ipairs(SLOTS) do
+                if snap[slot] then M.show(snap[slot]) end
+            end
+        else
+            M.show("explorer")
+        end
+        M.focus_main()
+    end
+end
+
+-- =============================================================
+-- Фокус по панелям (через маркер w:forge_panel, см. ide/marks.lua)
+-- =============================================================
+
+local function list_panel_windows()
+    local wins = {}
+    for _, win in ipairs(vim.api.nvim_tabpage_list_wins(0)) do
+        if vim.api.nvim_win_is_valid(win) and vim.w[win].forge_panel then
+            wins[#wins + 1] = win
+        end
+    end
+    return wins
+end
+
+---Циклически перейти к следующей/предыдущей видимой панели.
+---@param dir? integer +1 (next, default) | -1 (prev)
+function M.focus_next_panel(dir)
+    dir = dir or 1
+    local wins = list_panel_windows()
+    if #wins == 0 then return end
+
+    local cur = vim.api.nvim_get_current_win()
+    local idx = 0
+    for i, w in ipairs(wins) do if w == cur then idx = i; break end end
+    local nxt = ((idx - 1 + dir) % #wins) + 1
+    if idx == 0 then nxt = (dir > 0) and 1 or #wins end
+    pcall(vim.api.nvim_set_current_win, wins[nxt])
+end
+
+---Сфокусировать N-ю видимую панель (1-based, по порядку окон).
+---@param n integer
+function M.focus_panel(n)
+    local wins = list_panel_windows()
+    if wins[n] then pcall(vim.api.nvim_set_current_win, wins[n]) end
+end
+
+-- =============================================================
 -- Layouts
 -- =============================================================
 

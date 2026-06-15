@@ -122,7 +122,14 @@ local cursor_shapes = {
     "r-cr-o:hor20-Cursor",                   -- replace/operator: горизонтальная 20%
     "a:blinkwait200-blinkon300-blinkoff200", -- мерцание во всех режимах
 }
-opt.scrolloff = 999          -- курсор всегда по центру (settings.json: cursorSurroundingLines:999)
+-- scrolloff=8 — курсор НЕ строго по центру (как было с 999), а держит
+-- отступ ~1/6 экрана сверху/снизу: в центральной зоне двигается
+-- построчно без скролла, у краёв окно начинает ехать. Это убирает
+-- раздражающий "мгновенный прыжок" при выделении мышью, который был
+-- с центрированием 999. Скролл за последнюю строку (как VS Code) даёт
+-- модуль forge.eob_scroll (виртуальные строки под EOF) — подключается
+-- ниже.
+opt.scrolloff = 8
 local cursor_shapes_value = table.concat(cursor_shapes, ",")
 local last_cursor_shape_refresh = -1000
 
@@ -169,7 +176,29 @@ vim.api.nvim_create_autocmd(
 opt.sidescrolloff = 8
 opt.wrap = false
 opt.linebreak = true
-opt.colorcolumn = "100,120"  -- как helix rulers
+opt.colorcolumn = "100,120"  -- как helix rulers (только для кода, см. ниже)
+
+-- Линейка длины строки (colorcolumn) нужна в КОДЕ, но в прозе мешает:
+-- в markdown/text/коммитах нет «лимита 100 символов», вертикальная полоса
+-- только отвлекает. Гасим её для не-кодовых филетайпов.
+--
+-- colorcolumn — ОКОННАЯ опция (не буферная), поэтому ставим её на каждый
+-- показ буфера (FileType + BufWinEnter), причём В ОБЕ стороны: проза → "",
+-- код → "100,120". Иначе «пустое» значение, выставленное для markdown,
+-- протекло бы в code-буфер, открытый потом в том же окне.
+local no_colorcolumn_ft = {
+    markdown = true, text = true, txt = true, gitcommit = true,
+    gitrebase = true, help = true, man = true, ["copilot-chat"] = true,
+    NeogitCommitMessage = true, AvanteInput = true, Avante = true,
+}
+local function apply_colorcolumn()
+    local ft = vim.bo.filetype
+    vim.wo.colorcolumn = no_colorcolumn_ft[ft] and "" or "100,120"
+end
+vim.api.nvim_create_autocmd({ "FileType", "BufWinEnter" }, {
+    group = vim.api.nvim_create_augroup("UserProseNoColorcolumn", { clear = true }),
+    callback = apply_colorcolumn,
+})
 
 opt.expandtab = true
 opt.shiftwidth = 4
@@ -290,3 +319,67 @@ opt.foldlevelstart = 99
 
 -- Большие файлы: settings.json: largeFileOptimizations:false ⇒ не ломаем
 -- LSP/treesitter на больших файлах. Просто не отключаем оптимизации.
+
+-- Scroll beyond last line (VS Code editor.scrollBeyondLastLine): курсор
+-- может уезжать к центру даже в самом конце файла, где реальных строк
+-- ниже нет. См. lua/forge/eob_scroll.lua.
+pcall(function() require("forge.eob_scroll").setup() end)
+
+-- Подсветка парной скобки. Встроенный matchparen включён обратно
+-- (см. config/lazy.lua — убран из disabled_plugins): когда курсор на
+-- скобке (в т.ч. на ЗАКРЫВАЮЩЕЙ), подсвечивается её пара. Здесь только
+-- делаем хайлайт ярче и заметнее, потому что дефолтный MatchParen у
+-- многих тем — еле видный фон. Bold + подчёркивание + контрастный фон.
+local function set_matchparen_hl()
+    vim.api.nvim_set_hl(0, "MatchParen", {
+        bold = true,
+        underline = true,
+        -- фон/цвет берём из темы, только усиливаем; если тема не задаёт —
+        -- ставим заметный персиковый, как курсор.
+        fg = "#f5e0dc",
+        bg = "#45475a",
+    })
+
+    -- --- Подсветка диагностик (problem 3) ---
+    -- Ошибка должна быть ВИДНА сразу на каждой проблемной строке, не дожидаясь
+    -- курсора. Раньше тут был `undercurl` + `sp` (цветная волнистая) — но в
+    -- терминале с TERM=xterm-256color (твой случай) terminfo НЕ умеет ни
+    -- undercurl, ни цветное подчёркивание (Smulx/Setulc), поэтому в коде не
+    -- рисовалось НИЧЕГО — ошибка терялась. Делаем надёжно, без зависимости от
+    -- возможностей подчёркивания:
+    --   * underline (ПРЯМОЕ) — рисуется в любом терминале;
+    --   * sp — цвет линии там, где терминал умеет (WezTerm c TERM=wezterm);
+    --   * bg — приглушённая ЗАЛИВКА токена: рисуется ВСЕГДА (termguicolors=on),
+    --     это и есть гарантированный «и подчёркивание, и цвет» в коде, как
+    --     красный маркер ошибки в VS Code.
+    -- Error/Warn получают заливку (важные), Info/Hint — только подчёркивание,
+    -- чтобы не зашумлять. Сообщение остаётся ленивым (virtual_lines текущей
+    -- строки), а МЕТКА — мгновенная и на всех строках.
+    vim.api.nvim_set_hl(0, "DiagnosticUnderlineError", { underline = true, sp = "#f38ba8", bg = "#4a2f3a" })
+    vim.api.nvim_set_hl(0, "DiagnosticUnderlineWarn",  { underline = true, sp = "#f9e2af", bg = "#423c2b" })
+    vim.api.nvim_set_hl(0, "DiagnosticUnderlineInfo",  { underline = true, sp = "#89dceb" })
+    vim.api.nvim_set_hl(0, "DiagnosticUnderlineHint",  { underline = true, sp = "#94e2d5" })
+
+    -- --- Подсветка поиска (problem 4) ---
+    -- `/foo`, `*`, `#` подсвечивают ВСЕ совпадения по всему файлу
+    -- (hlsearch=true). Делаем заливку яркой и контрастной, чтобы найденные
+    -- подстроки бросались в глаза, как ошибки/подсказки. CurSearch (текущее
+    -- под курсором) — отдельным персиковым цветом, чтобы отличать его от
+    -- остальных жёлтых совпадений.
+    vim.api.nvim_set_hl(0, "Search",    { bg = "#f9e2af", fg = "#1e1e2e", bold = true })
+    vim.api.nvim_set_hl(0, "IncSearch", { bg = "#fab387", fg = "#1e1e2e", bold = true })
+    vim.api.nvim_set_hl(0, "CurSearch", { bg = "#fab387", fg = "#1e1e2e", bold = true })
+
+    -- --- Счётчик совпадений nvim-hlslens (см. plugins/search.lua) ---
+    -- Виртуальный текст «[n/total]»: у текущего под курсором — персиковый
+    -- (в тон CurSearch/IncSearch), у остальных — приглушённый на surface,
+    -- чтобы цифры читались, но не спорили с самой жёлтой заливкой Search.
+    vim.api.nvim_set_hl(0, "HlSearchLensNear", { bg = "#fab387", fg = "#1e1e2e", bold = true })
+    vim.api.nvim_set_hl(0, "HlSearchLens",     { bg = "#313244", fg = "#bac2de" })
+    vim.api.nvim_set_hl(0, "HlSearchFloat",    { bg = "#fab387", fg = "#1e1e2e", bold = true })
+end
+set_matchparen_hl()
+vim.api.nvim_create_autocmd("ColorScheme", {
+    group = vim.api.nvim_create_augroup("UserMatchParenHl", { clear = true }),
+    callback = set_matchparen_hl,
+})

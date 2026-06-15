@@ -30,6 +30,12 @@ return {
             "nvim-lua/plenary.nvim",
             "nvim-tree/nvim-web-devicons",
             "nvim-telescope/telescope-fzf-native.nvim",
+            -- ui-select: перехватывает vim.ui.select (code action / quick fix
+            -- меню, layout picker, выбор launch-конфига dap) и рисует его
+            -- плавающим списком telescope вместо убогого нумерованного списка
+            -- внизу экрана. С темой `cursor` всплывает у курсора — как
+            -- лампочка Quick Fix в VS Code.
+            "nvim-telescope/telescope-ui-select.nvim",
         },
         keys = {
             -- VS Code Ctrl+P / Ctrl+Shift+P
@@ -126,6 +132,12 @@ return {
                         override_file_sorter = true,
                         case_mode = "smart_case",
                     },
+                    ["ui-select"] = {
+                        require("telescope.themes").get_cursor({
+                            -- компактный список у курсора (VS Code Quick Fix)
+                            layout_config = { width = 0.6, height = 0.4 },
+                        }),
+                    },
                 },
             }
         end,
@@ -133,6 +145,7 @@ return {
             local telescope = require("telescope")
             telescope.setup(opts)
             pcall(telescope.load_extension, "fzf")
+            pcall(telescope.load_extension, "ui-select")
         end,
     },
 }

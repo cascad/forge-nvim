@@ -342,6 +342,15 @@ local closable_tool_filetypes = {
 
 local function smart_close_current_context()
     after_normal_mode(function()
+        -- Любое ПЛАВАЮЩЕЕ окно (ConformInfo, LspInfo, hover, signature help,
+        -- notify-история и т.п.) — просто закрываем окно. Floats не влияют на
+        -- layout панелей, так что это всегда безопасно.
+        local cur = vim.api.nvim_get_current_win()
+        if vim.api.nvim_win_get_config(cur).relative ~= "" then
+            pcall(vim.api.nvim_win_close, cur, true)
+            return
+        end
+
         if in_diffview_tab() then
             pcall(vim.cmd, "DiffviewClose")
             return
@@ -398,6 +407,29 @@ vim.api.nvim_create_user_command("ForgeCloseContext", smart_close_current_contex
 
 vim.api.nvim_create_user_command("ForgeBufferNext", next_buffer, { desc = "Next listed file buffer" })
 vim.api.nvim_create_user_command("ForgeBufferPrev", previous_buffer, { desc = "Previous listed file buffer" })
+
+-- Единообразный `q` = закрыть окно для транзиентных info/popup-окон. Многие
+-- плагины и так мапят `q` (help, ConformInfo, Lazy, Mason, Trouble), но не все
+-- (checkhealth, lspinfo, qf, fugitive-blame и т.п.). Ставим buffer-local `q`,
+-- чтобы такие окна ВСЕГДА закрывались по `q` — и закрывали именно ОКНО, не
+-- трогая твои файловые буферы и layout панелей.
+--
+-- НЕ трогаем edgy-панели (neo-tree/dap*/grug-far/overseer/neotest) — у них свои
+-- toggle'ы (<leader>e, <C-j>, <leader>P*), и `q` там может значить другое.
+vim.api.nvim_create_autocmd("FileType", {
+    group = vim.api.nvim_create_augroup("ForgeQuitInfoWindows", { clear = true }),
+    pattern = {
+        "help", "man", "qf", "checkhealth", "lspinfo", "conform-info",
+        "null-ls-info", "notify", "noice", "startuptime", "query",
+        "fugitive", "fugitiveblame", "git", "gitsigns-blame", "tsplayground",
+    },
+    callback = function(ev)
+        vim.keymap.set("n", "q", "<cmd>close<CR>", {
+            buffer = ev.buf, nowait = true, silent = true,
+            desc = "Close info window",
+        })
+    end,
+})
 
 -- ===========================================================================
 -- VS Code-style Ctrl-биндинги (vim.handleKeys: <C-*> = false из settings.json)
@@ -540,12 +572,45 @@ nm("<A-j>", function() vim.lsp.buf.definition() end, "Go to definition")
 
 -- Shift+Alt+F — format document (VS Code Alt+Win+L → перевешено: Win-key
 -- в TUI ловится плохо, поэтому Shift+Alt+F как было раньше в VS Code).
-nm("<S-A-f>", function()
+local function format_document()
     -- conform.nvim grabs this; до его загрузки fallback на LSP.
     local ok, conform = pcall(require, "conform")
     if ok then conform.format({ async = true, lsp_format = "fallback" })
     else vim.lsp.buf.format({ async = true }) end
-end, "Format document")
+end
+nm("<S-A-f>", format_document, "Format document")
+vm("<S-A-f>", format_document, "Format selection")
+
+-- Cmd+Alt+L (как Reformat Code в IntelliJ/GoLand). На Windows/в TUI клавиша
+-- Cmd (<D-...>) не приходит — работает только в Neovide и на macOS-GUI.
+-- На обычном терминале используй <S-A-f> или <leader>lf. Дублируем, чтобы
+-- mac-мускульная память срабатывала там, где Cmd доступен.
+nm("<D-A-l>", format_document, "Format document (Cmd+Alt+L)")
+im("<D-A-l>", function() vim.cmd("stopinsert"); format_document() end, "Format document")
+vm("<D-A-l>", format_document, "Format selection")
+
+-- =========================================================================
+-- Code action / Quick Fix (VS Code Ctrl+. / IntelliJ Alt+Enter).
+-- Через них принимаются предложения LSP/линтеров: gopls "Fill struct"
+-- (заполнить структуру дефолтами по всем полям), clippy "could lift into
+-- loop condition", "organize imports", "add missing import" (с ВЫБОРОМ
+-- пакета при коллизии) и т.п. Глобальные (не buffer-local LspAttach),
+-- чтобы работали даже до attach; без LSP — просто no-op.
+-- =========================================================================
+local function lsp_code_action()
+    vim.lsp.buf.code_action()
+end
+nm("<C-.>", lsp_code_action, "LSP: code action / quick fix")
+im("<C-.>", function() vim.cmd("stopinsert"); lsp_code_action() end, "LSP: code action")
+vm("<C-.>", lsp_code_action, "LSP: code action (range)")
+nm("<A-CR>", lsp_code_action, "LSP: code action / quick fix")
+im("<A-CR>", function() vim.cmd("stopinsert"); lsp_code_action() end, "LSP: code action")
+vm("<A-CR>", lsp_code_action, "LSP: code action (range)")
+-- <leader>. — терминал-безопасная "точка"-мнемоника под Ctrl+. из VS Code.
+-- Работает в ЛЮБОМ терминале (в отличие от <C-.>, который многие терминалы
+-- не передают — шлют голую `.`, а это в normal mode = повтор изменения).
+nm("<leader>.", lsp_code_action, "LSP: code action / quick fix")
+vm("<leader>.", lsp_code_action, "LSP: code action (range)")
 
 -- Ctrl+Enter — выполнить выделение (helix: pipe-to bash, VS Code: terminal.runSelectedText).
 -- Под Windows прогоняем через pwsh, чтобы вёл себя как в helix `:sh`.
@@ -620,38 +685,36 @@ xm(">", ">gv", "Indent right")
 -- ===========================================================================
 
 -- IDE modes/layouts: each command switches the whole tool-window layout.
-local panels = require("config.panels")
-nm("<leader>mm", panels.select_mode,  "Mode: select")
-nm("<leader>mf", panels.mode_files,   "Mode: files")
-nm("<leader>mb", panels.mode_buffers, "Mode: buffers")
-nm("<leader>mg", panels.mode_git,     "Mode: git")
-nm("<leader>md", panels.mode_debug,   "Mode: debug")
-nm("<leader>mt", panels.mode_tests,   "Mode: tests")
-nm("<leader>mj", panels.mode_jobs,    "Mode: jobs")
-nm("<leader>ms", panels.mode_search,  "Mode: search")
-nm("<leader>mo", panels.mode_output,  "Mode: output")
-nm("<leader>mc", panels.mode_code,    "Mode: code only")
-nm("<leader>mq", panels.close_ide,    "Mode: close IDE")
-nm("<leader>mQ", panels.close_ide,    "Mode: close IDE")
-nm("<leader>m0", panels.focus_code,   "Mode: focus code")
-nm("<leader>m]", panels.next_mode_window, "Mode: next window")
-nm("<leader>m[", panels.prev_mode_window, "Mode: previous window")
+-- Всё ведёт в единый контроллер ide.* (config/panels.lua больше нет).
+local ide = require("ide")
+nm("<leader>mm", function() ide.layouts.select()      end, "Mode: select")
+nm("<leader>mf", function() ide.apply_layout("files")   end, "Mode: files")
+nm("<leader>mb", function() ide.apply_layout("buffers") end, "Mode: buffers")
+nm("<leader>mg", function() ide.apply_layout("git")     end, "Mode: git")
+nm("<leader>md", function() ide.dap.open()              end, "Mode: debug")
+nm("<leader>mt", function() ide.apply_layout("tests")   end, "Mode: tests")
+nm("<leader>mj", function() ide.apply_layout("jobs")    end, "Mode: jobs")
+nm("<leader>ms", function() ide.apply_layout("search")  end, "Mode: search")
+nm("<leader>mo", function() ide.dap.show_console()      end, "Mode: output")
+nm("<leader>mc", function() ide.apply_layout("code")    end, "Mode: code only")
+nm("<leader>mq", function() ide.close_ide()             end, "Mode: close IDE")
+nm("<leader>mQ", function() ide.close_ide()             end, "Mode: close IDE")
+nm("<leader>m0", function() ide.focus_main()            end, "Mode: focus code")
+nm("<leader>m]", function() ide.focus_next_panel(1)     end, "Mode: next panel")
+nm("<leader>m[", function() ide.focus_next_panel(-1)    end, "Mode: previous panel")
 for i = 1, 6 do
     local slot = i
     nm("<leader>m" .. slot, function()
-        panels.focus_mode_slot(slot)
-    end, "Mode: focus slot " .. slot)
+        ide.focus_panel(slot)
+    end, "Mode: focus panel " .. slot)
 end
 
 -- ===========================================================================
--- Layouts (ide framework, edgy под капотом). См. docs/PANELS_PLAN.md.
+-- Layouts (единый контроллер ide, edgy под капотом).
+-- <leader>m* — «режимы» (apply_layout / dap / focus), см. выше.
 -- <leader>p* — именованные пресеты (ide.apply_layout).
--- <leader>P* — ручное управление слотами и cycle.
---
--- Старые <leader>m* выше остаются как backwards-compat до окончательной
--- миграции panels.lua → ide.* (Этап 10 плана).
+-- <leader>P* — ручное управление слотами, cycle и единый toggle панелей.
 -- ===========================================================================
-local ide = require("ide")
 nm("<leader>pp", function() ide.layouts.select() end,           "Layout: select")
 nm("<leader>pc", function() ide.apply_layout("code")    end,    "Layout: code only")
 nm("<leader>pf", function() ide.apply_layout("files")   end,    "Layout: files")
@@ -723,6 +786,11 @@ tlmap({ "n", "i", "t" }, "<F8>",  toggle_bottom,
 nm("<leader>Pt", toggle_left,   "IDE: toggle left panel")
 nm("<leader>Py", toggle_bottom, "IDE: toggle bottom panel")
 nm("<leader>Pu", toggle_right,  "IDE: toggle right panel")
+
+-- Единый toggle ВСЕХ панелей: спрятать весь набор / вернуть последний.
+-- Только leader-аккорд: Ctrl+Shift+буква на части терминалов схлопывается в
+-- Ctrl+буква и перехватил бы, например, <C-e> (скролл).
+nm("<leader>Pp", function() ide.toggle_panels() end, "IDE: toggle all panels")
 
 -- Focus
 nm("<leader>P0", function() ide.focus_main() end,        "IDE: focus main editor")

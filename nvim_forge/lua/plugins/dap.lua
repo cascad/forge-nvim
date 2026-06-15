@@ -321,7 +321,7 @@ local function rust_current_program()
     return dap_abort()
 end
 
-local panels = require("config.panels")
+local ide_dap = require("ide.dap")
 
 local function remember_launch_buffer()
     local ok, dap = pcall(require, "dap")
@@ -471,10 +471,13 @@ local function section_for_config(cfg)
 end
 
 local function open_debug_for_config(cfg)
+    -- Канонический момент «старт дебага» — через декларативный триггер
+    -- (см. ide/triggers.lua: debug:start → debug-раскладка). Секция зависит
+    -- от типа адаптера (console/repl/terminal).
     if cfg and cfg.type then
-        panels.show_debug_section(section_for_config(cfg), false)
+        require("ide").triggers.fire("debug:start", { section = section_for_config(cfg) })
     else
-        panels.open_debug()
+        ide_dap.open()
     end
 end
 
@@ -987,9 +990,9 @@ local function dap_continue()
         local session = dap_mod.session()
         local cfg = session and session.config
         if cfg and cfg.type then
-            panels.show_debug_section(section_for_config(cfg), false)
+            ide_dap.show_section(section_for_config(cfg), false)
         else
-            panels.show_debug_section(nil, false)
+            ide_dap.show_section(nil, false)
         end
     end
     vim.schedule(function()
@@ -1041,9 +1044,9 @@ local function dap_pick_any()
         local session = dap_mod.session()
         local cfg = session and session.config
         if cfg and cfg.type then
-            panels.show_debug_section(section_for_config(cfg), false)
+            ide_dap.show_section(section_for_config(cfg), false)
         else
-            panels.show_debug_section(nil, false)
+            ide_dap.show_section(nil, false)
         end
     end
     vim.schedule(function()
@@ -1201,8 +1204,8 @@ return {
             { "<leader>dl", function() require("dap").run_last() end,           desc = "Debug: run last" },
             { "<leader>dP", dap_pick_any,                                        desc = "Debug: pick any launch.json config" },
             { "<leader>dL", dap_show_log,                                      desc = "Debug: show logs" },
-            { "<leader>dD", panels.toggle_debug,                                 desc = "Debug: view" },
-            { "<leader>du", panels.toggle_debug,                                 desc = "Debug: toggle view" },
+            { "<leader>dD", function() ide_dap.toggle() end,                     desc = "Debug: view" },
+            { "<leader>du", function() ide_dap.toggle() end,                     desc = "Debug: toggle view" },
             { "<leader>de", function() require("dap.ui.widgets").hover() end,   desc = "Debug: eval hover" },
             { "<leader>dw", function()
                 local input = vim.fn.input("Watch: ", vim.fn.expand("<cword>"))
@@ -1221,8 +1224,8 @@ return {
                     require("ide").show("dap.sidebar")
                 end
             end, mode = "v",                                                      desc = "Debug: watch selection" },
-            { "<leader>dR", panels.open_dap_repl,                              desc = "Debug: REPL" },
-            { "<C-S-d>",    panels.toggle_debug,                                 desc = "Debug: view" },
+            { "<leader>dR", function() ide_dap.show_repl() end,                desc = "Debug: REPL" },
+            { "<C-S-d>",    function() ide_dap.toggle() end,                     desc = "Debug: view" },
         },
         config = function()
             local dap = require("dap")
@@ -1387,12 +1390,9 @@ return {
                 local session = dap.session()
                 local cfg = session and session.config
                 if cfg and cfg.type then
-                    panels.show_debug_section(
-                        section_for_config(cfg),
-                        false
-                    )
+                    ide_dap.show_section(section_for_config(cfg), false)
                 else
-                    panels.open_debug()
+                    ide_dap.open()
                 end
             end
 
@@ -1424,6 +1424,32 @@ return {
             -- respond". Reset делаем ДО dap.run в run_debug_choice, см.
             -- его выше: тогда мы вне rpc-callback и без побочки.
             dap.listeners.after.event_initialized.dapview_config = open_debug_view
+
+            -- VS Code-style: на КАЖДОЙ остановке исполнения (breakpoint,
+            -- паника Rust/fatalpanic, исключение, step) гарантируем что
+            -- левый debug-sidebar виден и в нём актуальные scopes/call
+            -- stack. event_initialized срабатывает РОВНО ОДИН РАЗ при
+            -- старте сессии — если программа стопается/паникует позже
+            -- (а sidebar к тому моменту скрыт: юзер ушёл в код, edgy
+            -- схлопнул окно, паника открыла stdlib-исходник поверх), без
+            -- этого listener'а панель не появлялась — ровно баг, который
+            -- описал юзер ("остановился на fatalpanic, но layout не висит").
+            --
+            -- Только sidebar (idempotent ide.show) — bottom (terminal/repl)
+            -- НЕ трогаем: он уже поднят на init, а hide/show его на каждом
+            -- стопе мигал бы выводом. reset_dap_repl тоже НЕ зовём —
+            -- иначе на каждой остановке чистили бы вывод REPL.
+            --
+            -- vim.schedule — мы внутри rpc-callback от адаптера; любые
+            -- синхронные манипуляции окнами здесь могут поймать таймаут
+            -- "Debug adapter didn't respond" (см. коммент у before.launch).
+            dap.listeners.after.event_stopped.forge_ensure_sidebar = function()
+                vim.schedule(function()
+                    if not require("dap").session() then return end
+                    local ok, ide = pcall(require, "ide")
+                    if ok then pcall(ide.show, "dap.sidebar") end
+                end)
+            end
 
             -- VS Code-style: после event_terminated/event_exited оставляем
             -- последний state (scopes/watches/stacks/breakpoints/call stack)

@@ -1,6 +1,5 @@
 -- Unit-test panel and runners for Rust / Go / Python.
 
-local panels = require("config.panels")
 local diagnostics = require("config.diagnostics")
 
 local function nt()
@@ -25,15 +24,16 @@ return {
             "nvim-neotest/neotest-python",
         },
         keys = {
-            { "<leader>Tp", panels.toggle_tests,                              desc = "Tests: side panel" },
-            { "<leader>Tt", function() nt().run.run() end,                    desc = "Tests: run nearest" },
-            { "<leader>Tf", function() nt().run.run(vim.fn.expand("%")) end,  desc = "Tests: run file" },
-            { "<leader>TA", function() nt().run.run(vim.fn.getcwd()) end,     desc = "Tests: run all" },
+            { "<leader>Tp", function() require("ide").toggle("tests") end,     desc = "Tests: side panel" },
+            -- Запуск тестов авто-открывает Test Output (ide/triggers.lua: test:run).
+            { "<leader>Tt", function() nt().run.run(); require("ide").triggers.fire("test:run") end,                    desc = "Tests: run nearest" },
+            { "<leader>Tf", function() nt().run.run(vim.fn.expand("%")); require("ide").triggers.fire("test:run") end,  desc = "Tests: run file" },
+            { "<leader>TA", function() nt().run.run(vim.fn.getcwd()); require("ide").triggers.fire("test:run") end,     desc = "Tests: run all" },
             { "<leader>Td", function() nt().run.run({ strategy = "dap" }) end, desc = "Tests: debug nearest" },
             { "<leader>Ts", function() nt().run.stop() end,                   desc = "Tests: stop" },
             { "<leader>Ta", function() nt().run.attach() end,                 desc = "Tests: attach" },
             { "<leader>To", function() nt().output.open({ enter = true }) end, desc = "Tests: output" },
-            { "<leader>TO", panels.toggle_test_output,                        desc = "Tests: output panel" },
+            { "<leader>TO", function() require("ide").toggle("tests_output") end, desc = "Tests: output panel" },
             { "<leader>Tw", function() nt().watch.toggle(vim.fn.expand("%")) end, desc = "Tests: watch file" },
         },
         config = function()

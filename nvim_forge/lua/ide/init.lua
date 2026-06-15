@@ -34,6 +34,43 @@ M.list_layouts = state.list_layouts
 M.find_main_window = state.find_main_window
 M.is_main_window   = state.is_main_window
 
+-- Единый toggle панелей + фокус по панелям (см. ide/state.lua).
+M.toggle_panels    = state.toggle_panels
+M.focus_next_panel = state.focus_next_panel
+M.focus_panel      = state.focus_panel
+
+-- DAP-оркестрация (см. ide/dap.lua). Требуем лениво, чтобы не словить
+-- цикл require (ide → ide.dap → ide).
+M.dap = setmetatable({}, {
+    __index = function(_, k) return require("ide.dap")[k] end,
+})
+
+-- Декларативные триггеры авто-открытия панелей (см. ide/triggers.lua).
+M.triggers = setmetatable({}, {
+    __index = function(_, k) return require("ide.triggers")[k] end,
+})
+
+-- Закрыть ВСЕ tool-окна + остановить debug-сессию.
+function M.close_ide()
+    local activities = require("ide.activities")
+    local had_debug = activities.stop_debug()
+    activities.close_activity(nil)
+    M.apply_layout("code") -- синхронизируем state + фокус в main
+    if had_debug then
+        -- DAP может слать поздние события при terminate — дочищаем.
+        vim.defer_fn(function()
+            activities.close_debug()
+            activities.focus_code_window()
+        end, 120)
+    end
+end
+
+-- Подготовка к сохранению сессии: вытащить файлы из панелей, закрыть
+-- tool-окна/буферы (см. ide/activities.lua, forge/panel_guard.lua).
+function M.cleanup_for_session()
+    require("ide.activities").cleanup_for_session()
+end
+
 -- =============================================================
 -- Helpers для определения is_open по filetype
 -- =============================================================
@@ -364,6 +401,7 @@ local default_components = {
 local default_layouts = {
     code     = { left = nil,           right = nil,      bottom = nil           },
     files    = { left = "explorer",    right = nil,      bottom = nil           },
+    buffers  = { left = "buffers",     right = nil,      bottom = nil           },
     outline  = { left = "outline",     right = nil,      bottom = nil           },
     git      = { left = "git_status",  right = "neogit", bottom = nil           },
     -- DAP layout (VS Code Run-and-Debug):
@@ -413,6 +451,10 @@ function M.setup(opts)
         end
     end
 
+    -- Маркировка tool-окон (w:forge_panel/slot/component) — после того, как
+    -- компоненты зарегистрированы (marks строит карту ft→component из registry).
+    require("ide.marks").setup()
+
     -- User commands для интроспекции и быстрого вызова.
     vim.api.nvim_create_user_command("IdeShow", function(o)
         M.show(o.args)
@@ -426,6 +468,14 @@ function M.setup(opts)
     vim.api.nvim_create_user_command("IdeLayout", function(o)
         M.apply_layout(o.args)
     end, { nargs = 1, complete = function() return state.list_layouts() end })
+
+    vim.api.nvim_create_user_command("IdeClose", function()
+        M.close_ide()
+    end, { desc = "Закрыть все tool-окна и остановить debug-сессию" })
+
+    vim.api.nvim_create_user_command("IdeMode", function()
+        require("ide.layouts").select()
+    end, { desc = "Выбрать layout (vim.ui.select)" })
 
     vim.api.nvim_create_user_command("IdeStatus", function()
         local cur = M.current()

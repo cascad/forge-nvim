@@ -124,7 +124,8 @@ return {
                 },
             })
 
-            -- Cmdline `:` и `/` — fuzzy + path
+            -- Cmdline `:` — fuzzy + path. Тут popup-дополнение полезно
+            -- (команды/пути) и поиску не мешает.
             cmp.setup.cmdline(":", {
                 mapping = cmp.mapping.preset.cmdline(),
                 sources = cmp.config.sources({
@@ -134,10 +135,22 @@ return {
                 }),
                 matching = { disallow_symbol_nonprefix_matching = false },
             })
-            cmp.setup.cmdline({ "/", "?" }, {
-                mapping = cmp.mapping.preset.cmdline(),
-                sources = { { name = "buffer" } },
-            })
+
+            -- Поиск `/` и `?` — НАМЕРЕННО без cmp.
+            --
+            -- Цель — нативная «подсветка ВСЕХ совпадений прямо во время
+            -- набора»: при incsearch+hlsearch (оба включены в options.lua)
+            -- Neovim подсвечивает все вхождения по всему файлу, как только
+            -- ты печатаешь паттерн (текущее — IncSearch/персиковый, прочие —
+            -- Search/жёлтый). Но если на `/` повесить cmp.setup.cmdline,
+            -- его popup перехватывает строку поиска и ломает живую
+            -- перерисовку incsearch — совпадения по ходу набора перестают
+            -- подсвечиваться (и popup ещё и закрывает их собой). Поэтому на
+            -- поиске cmp не поднимаем — чистая нативная подсветка.
+            --
+            -- (Если когда-нибудь снова захочется word-дополнение в поиске —
+            -- вернуть cmp.setup.cmdline({ "/", "?" }, { sources = {{ name =
+            -- "buffer" }} }), но ценой живой подсветки.)
         end,
     },
 }

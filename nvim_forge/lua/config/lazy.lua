@@ -43,8 +43,12 @@ require("lazy").setup({
         rtp = {
             -- Глобально дисейблим встроенные плагины, которые мы не используем.
             -- Стартап ускоряется на 10–20мс, и в :checkhealth тише.
+            -- matchparen НЕ отключаем: он подсвечивает парную скобку,
+            -- когда курсор стоит на скобке (в т.ч. на закрывающей —
+            -- подсветит открывающую). Хайлайт усилен в config/options.lua
+            -- (ColorScheme autocmd → MatchParen bold+underline).
             disabled_plugins = {
-                "gzip", "matchit", "matchparen", "netrwPlugin",
+                "gzip", "matchit", "netrwPlugin",
                 "tarPlugin", "tohtml", "tutor", "zipPlugin",
             },
         },

@@ -128,22 +128,51 @@ return {
             -- появится ПОД строкой с переносом, ничего не обрезано.
             -- Signs в gutter остаются: видно, в каких строках есть
             -- диагностика, даже когда курсор не на них.
-            vim.diagnostic.config({
-                virtual_text = false,
-                virtual_lines = diagnostics.virtual_lines_current(),
-                signs = {
-                    text = {
-                        [vim.diagnostic.severity.ERROR] = " ",
-                        [vim.diagnostic.severity.WARN]  = " ",
-                        [vim.diagnostic.severity.INFO]  = " ",
-                        [vim.diagnostic.severity.HINT]  = " ",
-                    },
-                },
-                underline = true,
-                update_in_insert = false,
-                severity_sort = true,
-                float = { border = "rounded", source = "if_many" },
-            })
+            local function apply_diagnostic_config()
+                local sev = vim.diagnostic.severity
+                -- Без nerd-шрифта (vim.g.have_nerd_font=false) значки-глифы
+                -- рендерятся пустотой/тофу — значок в gutter не виден. Даём
+                -- ASCII-фоллбэк (E/W/I/H), он красится в цвет severity через
+                -- DiagnosticSign* и виден в ЛЮБОМ шрифте. С nerd-шрифтом
+                -- вернутся иконки.
+                local sign_text = vim.g.have_nerd_font
+                    and {
+                        [sev.ERROR] = " ", [sev.WARN] = " ",
+                        [sev.INFO]  = " ", [sev.HINT] = " ",
+                    }
+                    or {
+                        [sev.ERROR] = "E", [sev.WARN] = "W",
+                        [sev.INFO]  = "I", [sev.HINT] = "H",
+                    }
+                vim.diagnostic.config({
+                    virtual_text = false,
+                    virtual_lines = diagnostics.virtual_lines_current(),
+                    signs = { text = sign_text },
+                    underline = true,
+                    update_in_insert = false,
+                    severity_sort = true,
+                    float = { border = "rounded", source = "if_many" },
+                })
+            end
+
+            -- ВАЖНО: оборачиваем в pcall. В новых Neovim vim.diagnostic.config()
+            -- при применении делает re-show диагностики по уже открытым буферам
+            -- (diagnostic.lua → show → once_buf_loaded). Если на момент вызова
+            -- среди буферов есть невалидный/wiped (на старте бывает временный
+            -- scratch/alpha buffer, напр. id=2), внутренний show падает с
+            -- "Invalid buffer id". Без pcall эта ошибка обрывала ВЕСЬ config()
+            -- lspconfig — и всё, что ниже (LspAttach, настройка LSP-серверов,
+            -- capabilities), не выполнялось → LSP вообще не поднимался.
+            -- Конфиг при этом успевает примениться (show идёт ПОСЛЕ записи
+            -- опций), поэтому swallowнутая ошибка не теряет настройки.
+            if not pcall(apply_diagnostic_config) then
+                vim.api.nvim_create_autocmd("VimEnter", {
+                    once = true,
+                    callback = function()
+                        vim.schedule(function() pcall(apply_diagnostic_config) end)
+                    end,
+                })
+            end
             diagnostics.setup_refresh()
 
             -- Toggle между «компактный режим» (только signs) и «полный
@@ -153,7 +182,7 @@ return {
             vim.api.nvim_create_user_command("DiagToggle", function()
                 if diag_state == "current_line" then
                     -- → показать на ВСЕХ строках с диагностикой
-                    vim.diagnostic.config({
+                    pcall(vim.diagnostic.config, {
                         virtual_lines = diagnostics.virtual_lines_all(),
                         virtual_text = false,
                     })
@@ -161,12 +190,12 @@ return {
                     vim.notify("Diagnostics: virtual_lines (all)", vim.log.levels.INFO)
                 elseif diag_state == "all" then
                     -- → только signs
-                    vim.diagnostic.config({ virtual_lines = false, virtual_text = false })
+                    pcall(vim.diagnostic.config, { virtual_lines = false, virtual_text = false })
                     diag_state = "signs_only"
                     vim.notify("Diagnostics: signs only", vim.log.levels.INFO)
                 else
                     -- → вернуться к current_line
-                    vim.diagnostic.config({
+                    pcall(vim.diagnostic.config, {
                         virtual_lines = diagnostics.virtual_lines_current(),
                         virtual_text = false,
                     })
@@ -315,20 +344,24 @@ return {
             -- settings.json: useLanguageServer:true, formatTool:goimports,
             -- organizeImports on save, gofumpt-style.
             --
-            -- ВАЖНО: completeUnimported = false. Иначе gopls в completion-
-            -- listе показывает символы из НЕИМПОРТИРОВАННЫХ пакетов и при
-            -- accept'е сам добавляет import. Эвристика выбора пакета часто
-            -- ошибается на коллизиях (rand → math/rand vs crypto/rand,
-            -- log → стандартный vs zap/zerolog). Нам нужен контроль: видим
-            -- diagnostic «undeclared name», жмём <leader>la или <leader>lO,
-            -- gopls предлагает ВСЕ кандидаты — выбираем нужный. Это
-            -- VS Code-style "Ctrl+." workflow.
+            -- completeUnimported = true. Набираешь `strings.` или
+            -- `strings.Filter` — gopls ищет символ по НЕИМПОРТИРОВАННЫМ
+            -- пакетам и при accept'е сам добавляет import. Это именно тот
+            -- VS Code-style autocomplete-импорт, который и нужен.
+            -- На коллизиях (rand → math/rand vs crypto/rand, log → стандартный
+            -- vs zap) gopls показывает ВСЕ кандидаты ОТДЕЛЬНЫМИ пунктами с
+            -- полным путём пакета в `[LSP]`-detail — выбираешь нужный руками,
+            -- эвристика ничего не угадывает молча. Если же хочется добавить
+            -- импорт к уже написанному имени — остаётся <leader>la / <leader>lO.
+            -- importShortcut="Both" — в hover/jump доступны и определение, и
+            -- ссылка на импортируемый пакет.
             vim.lsp.config("gopls", {
                 settings = {
                     gopls = {
                         gofumpt = true,
                         usePlaceholders = true,
-                        completeUnimported = false,
+                        completeUnimported = true,
+                        importShortcut = "Both",
                         staticcheck = true,
                         analyses = {
                             unusedparams = true,
@@ -428,6 +461,13 @@ return {
                         procMacro = { enable = true },
                         diagnostics = {
                             enable = true,
+                            -- Экспериментальные нативные диагностики ra: ловят
+                            -- БОЛЬШЕ ошибок "на лету" (необъявленные имена,
+                            -- обращение к несуществующим полям/методам, mismatched
+                            -- args и т.п.) ДО запуска cargo check на save. Иногда
+                            -- дают редкие ложные срабатывания на сложных макросах —
+                            -- осознанный размен ради более полной подсветки.
+                            experimental = { enable = true },
                             disabled = { "unlinked-file" },
                         },
                         -- clippy на каждый save, включая фоновый Rust autosave

@@ -8,8 +8,13 @@ return {
         "windwp/nvim-autopairs",
         event = "InsertEnter",
         opts = {
-            check_ts = true,
-            ts_config = { lua = { "string" }, javascript = { "template_string" } },
+            -- check_ts = false НАМЕРЕННО. С check_ts=true автопары спрашивают
+            -- у treesitter контекст (строка/коммент), но когда файл не
+            -- парсится (синтаксическая ошибка → дерево в состоянии ERROR),
+            -- запрос ноды срывается и закрывающая скобка перестаёт
+            -- подставляться. Без TS-проверки пары работают всегда —
+            -- предсказуемо, даже в "сломанном" коде.
+            check_ts = false,
             disable_filetype = { "TelescopePrompt", "vim" },
             fast_wrap = {
                 map = "<M-e>",
@@ -215,8 +220,10 @@ return {
                 callback = function()
                     vim.schedule(function()
                         local ok, ide = pcall(require, "ide")
-                        if ok and type(ide.show) == "function" then
-                            pcall(ide.show, "explorer")
+                        if ok then
+                            -- Вход в проект (restore) → дерево файлов
+                            -- (ide/triggers.lua: project:open).
+                            pcall(function() ide.triggers.fire("project:open") end)
                             -- Фокус обратно в editor: explorer открывается, но
                             -- курсор остаётся на редактируемом файле.
                             if type(ide.focus_main) == "function" then
@@ -231,9 +238,9 @@ return {
                 group = vim.api.nvim_create_augroup("UserPersistenceCleanSession", { clear = true }),
                 pattern = "PersistenceSavePre",
                 callback = function()
-                    local ok, panels = pcall(require, "config.panels")
-                    if ok and type(panels.prepare_session_save) == "function" then
-                        panels.prepare_session_save()
+                    local ok, ide = pcall(require, "ide")
+                    if ok and type(ide.cleanup_for_session) == "function" then
+                        ide.cleanup_for_session()
                     end
                 end,
             })

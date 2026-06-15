@@ -1,6 +1,5 @@
 -- File explorer. То, чего в Helix нет в принципе.
 
-local panels = require("config.panels")
 local ru_keys = require("config.ru_keys")
 
 local function normal_move(keys)
@@ -89,11 +88,9 @@ local function focus_or_unfocus_explorer()
         end
     end
 
-    -- ВАЖНО: ide.show("explorer"), а НЕ panels.open_files()/mode_files().
-    -- panels.mode_files зовёт close_activity("files") — он сносит bottom
-    -- (debug/tests/jobs/search) и right (neogit/tests). Это режимная
-    -- легаси-логика, которая нарушает VS Code-инвариант "панели живут
-    -- независимо". ide.show трогает ТОЛЬКО left slot.
+    -- ide.show трогает ТОЛЬКО left slot, не снося bottom/right — панели
+    -- живут независимо (VS Code-инвариант). НЕ apply_layout("files"), который
+    -- закрыл бы остальные слоты.
     require("ide").show("explorer")
 end
 
@@ -133,11 +130,8 @@ return {
             "MunifTanjim/nui.nvim",
         },
         keys = {
-            -- ВАЖНО: `ide.toggle("explorer")`, а НЕ `panels.toggle_files`.
-            -- Старый panels.* всё ещё закрывает все остальные слоты через
-            -- close_activity — что ломает VS Code-инвариант "панели
-            -- независимы" (открыл explorer → закрылся debug bottom).
-            -- ide.toggle/show трогает строго один слот (left).
+            -- ide.toggle/show трогает строго один слот (left) — не закрывает
+            -- остальные панели (VS Code-инвариант "панели независимы").
             --
             -- `explorer` зарегистрирован с filesystem source (см. ide/
             -- init.lua), это решает проблему "neo-tree v3.x last_used":

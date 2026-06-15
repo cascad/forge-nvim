@@ -126,9 +126,9 @@ local function save_current_session(root)
         return false
     end
 
-    local ok_panels, panels = pcall(require, "config.panels")
-    if ok_panels and type(panels.prepare_session_save) == "function" then
-        panels.prepare_session_save()
+    local ok_ide, ide = pcall(require, "ide")
+    if ok_ide and type(ide.cleanup_for_session) == "function" then
+        ide.cleanup_for_session()
     end
 
     local ok, persistence = pcall(require, "persistence")
@@ -178,9 +178,9 @@ close_file_buffers = function(match)
 end
 
 local function cleanup_restored_session()
-    local ok_panels, panels = pcall(require, "config.panels")
-    if ok_panels and type(panels.prepare_session_save) == "function" then
-        panels.prepare_session_save()
+    local ok_ide, ide = pcall(require, "ide")
+    if ok_ide and type(ide.cleanup_for_session) == "function" then
+        ide.cleanup_for_session()
     end
 
     local win = visible_normal_file_window()
@@ -198,9 +198,10 @@ local function cleanup_restored_session()
 end
 
 local function ensure_explorer_open()
+    -- Вход в проект → дерево файлов (ide/triggers.lua: project:open).
     local ok, ide = pcall(require, "ide")
-    if ok and type(ide.show) == "function" then
-        pcall(ide.show, "explorer")
+    if ok then
+        pcall(function() ide.triggers.fire("project:open") end)
     end
 end
 
@@ -228,11 +229,12 @@ local function load_session_if_present()
 end
 
 open_files_layout = function()
-    close_start_buffer()
-    -- ide.show("explorer"), а НЕ panels.mode_files() — последний дёргает
-    -- close_activity и сносит bottom/right (debug/tests/jobs/search).
-    -- В чистом старте это не критично, но пользователь хочет, чтобы
-    -- стартап вёл себя предсказуемо и не имел "режимных" побочек.
+    -- НЕ делаем close_start_buffer()/enew: Alpha остаётся в главном окне как
+    -- заглушка отсутствия файла (так хочет пользователь), а слева открываем
+    -- дерево. Раньше enew подменял Alpha пустым [No Name].
+    --
+    -- ensure_explorer_open → триггер project:open → ide.show("explorer")
+    -- (один слот, не сносит bottom/right). См. ide/triggers.lua.
     ensure_explorer_open()
 end
 
@@ -285,9 +287,9 @@ local function restart_project(path, opts)
         return
     end
 
-    local ok_panels, panels = pcall(require, "config.panels")
-    if ok_panels and type(panels.stop_debug) == "function" then
-        pcall(panels.stop_debug)
+    local ok_dap, ide_dap = pcall(require, "ide.dap")
+    if ok_dap and type(ide_dap.stop) == "function" then
+        pcall(ide_dap.stop)
     end
 
     if not save_current_session(current_path) then
@@ -364,7 +366,9 @@ end
 function M.open_path_prompt(default_path)
     local path = vim.fn.input("Open project path: ", editable_project_path(default_path), "dir")
     if path and path ~= "" then
-        M.open_project(path, { open_files = false })
+        -- open_files = true (по умолчанию): при входе в проект без сессии
+        -- показываем дерево слева, а Alpha остаётся заглушкой в главном окне.
+        M.open_project(path)
     end
 end
 

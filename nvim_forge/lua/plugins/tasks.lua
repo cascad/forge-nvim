@@ -1,8 +1,6 @@
 -- Task runner/job layer. Overseer owns build/run/test jobs and integrates
 -- with nvim-dap preLaunchTask, so DAP configs do not shell out manually.
 
-local panels = require("config.panels")
-
 local function source_buffer()
     local launch_buf = vim.g.user_dap_launch_buf
     if type(launch_buf) == "number" and vim.api.nvim_buf_is_valid(launch_buf) then
@@ -52,11 +50,12 @@ return {
             "OverseerTaskAction",
         },
         keys = {
-            { "<leader>jj", panels.mode_jobs,                   desc = "Jobs: panel" },
-            { "<leader>jr", "<cmd>OverseerRun<CR>",             desc = "Jobs: run task" },
+            { "<leader>jj", function() require("ide").apply_layout("jobs") end,  desc = "Jobs: panel" },
+            -- Запуск задачи/сборки авто-открывает Tasks (ide/triggers.lua: task:run).
+            { "<leader>jr", function() vim.cmd("OverseerRun"); require("ide").triggers.fire("task:run") end,   desc = "Jobs: run task" },
             { "<leader>jt", "<cmd>OverseerToggle bottom<CR>",   desc = "Jobs: toggle panel" },
             { "<leader>ja", "<cmd>OverseerTaskAction<CR>",      desc = "Jobs: task action" },
-            { "<leader>js", "<cmd>OverseerShell<CR>",           desc = "Jobs: shell task" },
+            { "<leader>js", function() vim.cmd("OverseerShell"); require("ide").triggers.fire("task:run") end, desc = "Jobs: shell task" },
         },
         opts = {
             dap = true,
