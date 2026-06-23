@@ -57,6 +57,18 @@ return {
                         -- Усилить cursorline и подсветку номера строки
                         CursorLine   = { bg = c.surface0 },
                         CursorLineNr = { fg = c.peach, bold = true },
+
+                        -- Плейсхолдеры сниппета (развёрнутые параметры
+                        -- функции и т.п.). Просьба юзера: шаблон должен
+                        -- визуально отличаться от уже написанного кода —
+                        -- «прозрачнее». Поэтому приглушённый цвет + курсив:
+                        --   active  — текущий узел (чуть светлее),
+                        --   passive — ещё не заполненные параметры (бледнее).
+                        -- Печать в select-mode'е всё равно заменяет текст;
+                        -- эти группы только меняют ВИД, не поведение.
+                        -- (luasnip ext_opts → lua\plugins\completion.lua.)
+                        ForgeSnippetActive  = { fg = c.subtext0, italic = true },
+                        ForgeSnippetPassive = { fg = c.overlay1, italic = true },
                     }
                 end,
             },

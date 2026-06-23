@@ -12,6 +12,34 @@ return {
         end)(),
         dependencies = { "rafamadriz/friendly-snippets" },
         config = function()
+            local luasnip = require("luasnip")
+            local types = require("luasnip.util.types")
+
+            -- Плейсхолдеры сниппета красим ОТДЕЛЬНО от обычного кода, чтобы
+            -- развёрнутый шаблон параметров (`fn(arg1, arg2)`) читался как
+            -- «шаблон, не код» (просьба юзера: «прозрачнее / отличаться от
+            -- написанного»). Группы ForgeSnippet* заданы в теме —
+            -- lua\plugins\ui.lua (catppuccin highlight_overrides):
+            --   active  — узел, на котором стоишь;
+            --   passive — параметры, до которых ещё не дошёл.
+            -- Поведение НЕ меняется: активный плейсхолдер по-прежнему в
+            -- select-mode'е, и первый же набранный символ его заменяет —
+            -- вводится именно то, что напечатал, а не имя параметра.
+            -- priority на active поднят, чтобы стиль было видно и поверх
+            -- select-mode выделения, а не только на пассивных узлах.
+            luasnip.setup({
+                ext_opts = {
+                    [types.insertNode] = {
+                        active  = { hl_group = "ForgeSnippetActive", priority = 9000 },
+                        passive = { hl_group = "ForgeSnippetPassive" },
+                        visited = { hl_group = "ForgeSnippetPassive" },
+                    },
+                    [types.choiceNode] = {
+                        active = { hl_group = "ForgeSnippetActive", priority = 9000 },
+                    },
+                },
+            })
+
             require("luasnip.loaders.from_vscode").lazy_load()
         end,
     },

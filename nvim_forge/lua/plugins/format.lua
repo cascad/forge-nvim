@@ -8,13 +8,14 @@
 --   * Python → ruff format + ruff isort.
 --   * Lua    → stylua.
 --
--- Тулзы ставятся СИСТЕМНО (этот сетап не использует mason-tool-installer
--- для не-Python-тулз):
---   gofumpt  : go install mvdan.cc/gofumpt@latest
+-- ЕДИНЫЙ механизм для не-LSP-тулз — СИСТЕМНАЯ установка (mason-tool-installer
+-- их больше НЕ держит, чтобы не было двух конкурирующих источников):
+--   gofumpt  : go install mvdan.cc/gofumpt@latest      (в PATH)
+--   golines  : go install github.com/segmentio/golines@latest
 --   stylua   : cargo install stylua   |   winget install JohnnyMorganz.StyLua
 --   prettier : npm i -g prettier      (или prettierd)
--- Если что-то unavailable, conform тихо пропустит формат и
--- сделает lsp_format = "fallback" (если LSP сервер прицеплен).
+-- Если что-то unavailable, conform тихо пропустит этот форматтер и сделает
+-- lsp_format = "fallback" (если LSP-сервер прицеплен) — без ошибок и фризов.
 
 return {
     {
@@ -69,31 +70,34 @@ return {
                 toml   = {},
                 ["*"]  = { "trim_whitespace", "trim_newlines" },
             },
-            format_on_save = function(bufnr)
+            -- format_after_save (АСИНХРОННЫЙ), а НЕ format_on_save.
+            --
+            -- format_on_save — СИНХРОННЫЙ хук на BufWritePre: он блокирует
+            -- главный цикл редактора, пока внешний форматтер (gofumpt/golines/
+            -- rustfmt/prettier/stylua) не отработает — до timeout_ms (был 1000мс).
+            -- То есть КАЖДЫЙ <C-s>/:w по ходу правки кода замораживал ввод на
+            -- сотни мс. Это и были «фризы при написании» (problem 2 → опять).
+            --
+            -- Жёсткое правило юзера: набор кода НИКОГДА не должен подвисать;
+            -- форматтер пусть «тормозит» в фоне. format_after_save запускает
+            -- форматтер АСИНХРОННО уже ПОСЛЕ записи (на BufWritePost) и затем
+            -- применяет дифф отдельной записью — ввод не блокируется ни на
+            -- explicit :w, ни тем более на autosave.
+            format_after_save = function(bufnr)
                 -- Hard bypass — глобально / per-buffer.
                 if vim.g.disable_autoformat or vim.b[bufnr].disable_autoformat then
                     return
                 end
 
-                -- НЕ форматируем фоновые autosave-записи.
-                --
-                -- Это и был источник «фриза при форматировании» (problem 2):
-                -- format_on_save — СИНХРОННЫЙ хук на BufWritePre, а gofumpt/
-                -- golines/rustfmt/prettier — внешние процессы. auto-save.nvim
-                -- пишет каждые 500мс по ходу набора, и на КАЖДУЮ такую запись
-                -- редактор синхронно ждал внешний форматтер → подвисал прямо
-                -- во время печати.
-                --
-                -- Autosave нужен не ради формата, а ради LSP-диагностик и
-                -- rust-analyzer checkOnSave/clippy — они продолжают работать
-                -- (autocmd'ы записи не отключены). Форматируем ТОЛЬКО на ЯВНОМ
-                -- сохранении (:w / Ctrl+S): тогда user_auto_save_active=false,
-                -- блокировка одноразовая и ожидаемая, а не каждые полсекунды.
+                -- НЕ форматируем фоновые autosave-записи (каждые 500мс).
+                -- Форматируем ТОЛЬКО на явном сохранении (:w / Ctrl+S), и то
+                -- асинхронно. Autosave продолжает кормить LSP-диагностики и
+                -- rust-analyzer checkOnSave/clippy (autocmd'ы записи включены).
                 if vim.g.user_auto_save_active then
                     return
                 end
 
-                return { timeout_ms = 1000, lsp_format = "fallback" }
+                return { lsp_format = "fallback" }
             end,
             formatters = {
                 stylua = {

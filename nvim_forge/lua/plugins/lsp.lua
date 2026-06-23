@@ -82,10 +82,14 @@ return {
                 "debugpy",
                 -- codelldb НЕ ставим: пользователь держит его в PATH
                 -- (%LocalAppData%\codelldb\adapter\codelldb.exe).
-                -- Форматтеры
-                "gofumpt",
-                "goimports",
-                "stylua",
+                --
+                -- Форматтеры здесь НЕ держим (единый механизм — системный):
+                --   stylua   : cargo install stylua  (см. format.lua)
+                --   prettier : npm i -g prettier
+                --   gofumpt/golines : go install ...  (уже в PATH)
+                -- Два конкурирующих механизма (mason + system) раньше давали
+                -- «на костылях»: stylua числился тут, но Mason его не ставил,
+                -- а system-установки не было → conform молча падал на lua/json.
                 -- Линтеры (если ruff/gopls/pyright чего-то не покрывают)
                 "golangci-lint",
             },
@@ -471,8 +475,11 @@ return {
                             disabled = { "unlinked-file" },
                         },
                         -- clippy на каждый save, включая фоновый Rust autosave
-                        -- через 500мс (см. editor.lua). conform.nvim при этом
-                        -- не форматирует autosave-записи, только явный <C-s>/:w.
+                        -- через 500мс (см. editor.lua). Это НЕ фризит набор:
+                        -- ra гоняет cargo clippy в ОТДЕЛЬНОМ процессе и шлёт
+                        -- диагностики асинхронно — главный цикл nvim его не
+                        -- ждёт («линтер в фоне»). conform тоже не блокирует:
+                        -- format_after_save асинхронный и autosave не форматит.
                         checkOnSave = true,
                         check = {
                             command = "clippy",

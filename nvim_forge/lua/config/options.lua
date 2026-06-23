@@ -11,15 +11,24 @@ vim.g.have_nerd_font = vim.g.have_nerd_font or false
 
 opt.number = true
 opt.relativenumber = true
--- Две колонки номеров одновременно:
---   слева абсолютный номер строки в файле (%l), справа относительный (%r).
+-- Две колонки номеров одновременно: слева абсолютный, справа относительный.
 -- Нативные number+relativenumber показывают абсолютный только на текущей
--- строке (hybrid-mode), поэтому используем 'statuscolumn'.
+-- строке (hybrid-mode), поэтому собираем колонку сами через 'statuscolumn'.
 --
--- Формат: <signs><fold> <abs:4> | <rel:3>
--- ASCII-разделитель `|` вместо `│`, потому что некоторые шрифты/терминалы
--- режут box-drawing глифы по высоте, и колонка визуально схлопывается в одну.
-local statuscolumn = "%s%C %4{v:lnum} %=%3{v:relnum} "
+-- Ширина считается от РЕАЛЬНОГО числа строк в буфере (минимум 2 цифры).
+-- Раньше были фиксированные %4/%3 + растягивающий %= — из-за этого даже в
+-- коротком файле под номера уходил «жирный кусок» пустого места. Теперь обе
+-- колонки ужимаются под файл и стоят впритык, без растяжки.
+function _G.forge_statuscolumn()
+    -- На «виртуальных» строках (wrap / virt_lines) номер не дублируем.
+    if vim.v.virtnum ~= 0 then return "" end
+    -- line("$") в контексте statuscolumn = число строк рисуемого буфера.
+    local w = math.max(2, #tostring(vim.fn.line("$")))
+    return string.format("%" .. w .. "d %" .. w .. "d ", vim.v.lnum, vim.v.relnum)
+end
+
+-- %s — знаки (diagnostics/git/dap), %C — фолды, дальше наши два номера.
+local statuscolumn = "%s%C %{%v:lua.forge_statuscolumn()%}"
 
 -- Применяем ко всем буферам кроме спец-плагинных (neo-tree, dap-ui, alpha,
 -- lazy, mason, trouble и т.п.) — у них собственный gutter, и наш statuscolumn
