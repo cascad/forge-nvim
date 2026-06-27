@@ -341,8 +341,32 @@ return {
             if ok_cmp then
                 capabilities = cmp_lsp.default_capabilities(capabilities)
             end
-            -- Глобальный дефолт для всех LSP-конфигов
-            vim.lsp.config("*", { capabilities = capabilities })
+            -- Глобальный дефолт для всех LSP-конфигов.
+            --
+            -- on_exit: если сервер УПАЛ (диагностика/линтер «тихо сломались» —
+            -- ровно жалоба юзера), громко сообщаем и подсказываем рестарт.
+            -- Чтобы не спамить на ШТАТНЫХ остановках, молчим когда:
+            --   * code == 0 (чистый стоп);
+            --   * выходим из nvim (v:exiting не null);
+            --   * мы сами перезапускаем (:LspRestart / :GoToolchain ставят
+            --     vim.g.forge_lsp_restarting).
+            vim.lsp.config("*", {
+                capabilities = capabilities,
+                on_exit = function(code, signal, _client_id)
+                    -- чистый стоп = code 0 И без сигнала (на Unix kill может
+                    -- дать code 0 + ненулевой signal — это тоже падение).
+                    if code == 0 and (signal == nil or signal == 0) then return end
+                    if vim.v.exiting ~= vim.NIL then return end
+                    if vim.g.forge_lsp_restarting then return end
+                    vim.schedule(function()
+                        vim.notify(
+                            ("LSP-сервер упал (exit %d). Диагностика/линтер молчат —\n"
+                                .. "перезапусти: <leader>lR (буфер) или :LspRestart. Лог: :LspLog"):format(code),
+                            vim.log.levels.WARN, { title = "LSP" }
+                        )
+                    end)
+                end,
+            })
 
             -- ----------- gopls -----------
             -- settings.json: useLanguageServer:true, formatTool:goimports,
@@ -541,6 +565,34 @@ return {
                 vim.cmd.tabnew(vim.lsp.get_log_path())
             end, { desc = "Open LSP log file in new tab" })
 
+            -- Перезапуск набора LSP-клиентов БЕЗ :edit. :edit падает E37 на
+            -- изменённом буфере (и тогда сервер не поднимается — ровно когда
+            -- правишь код и линтер «отвалился»), к тому же ре-attach'ит только
+            -- текущий буфер. Здесь: форс-стоп (сервер мог зависнуть — ровно
+            -- случай «диагностика молчит»), затем ре-attach через FileType на
+            -- ВСЕХ задетых буферах (vim.lsp.enable вешает старт именно на
+            -- FileType). НАШ рестарт глушит crash-нотификацию из on_exit.
+            local function forge_restart_clients(clients, on_done)
+                local names, bufs, seen = {}, {}, {}
+                for _, c in ipairs(clients) do
+                    names[#names + 1] = c.name
+                    for b in pairs(c.attached_buffers or {}) do
+                        if not seen[b] then seen[b] = true; bufs[#bufs + 1] = b end
+                    end
+                end
+                vim.g.forge_lsp_restarting = true
+                for _, c in ipairs(clients) do pcall(function() c:stop(true) end) end
+                vim.defer_fn(function()
+                    vim.g.forge_lsp_restarting = nil
+                    for _, b in ipairs(bufs) do
+                        if vim.api.nvim_buf_is_valid(b) then
+                            pcall(vim.api.nvim_exec_autocmds, "FileType", { buffer = b })
+                        end
+                    end
+                    if on_done then on_done(names) end
+                end, 500)
+            end
+
             vim.api.nvim_create_user_command("LspRestart", function(args)
                 local name_filter = args.fargs[1]
                 local clients = vim.lsp.get_clients(name_filter and { name = name_filter } or nil)
@@ -550,13 +602,10 @@ return {
                         vim.log.levels.WARN, { title = "LSP" })
                     return
                 end
-                local names = vim.tbl_map(function(c) return c.name end, clients)
-                for _, c in ipairs(clients) do c:stop() end
-                vim.defer_fn(function()
-                    vim.cmd("edit")
+                forge_restart_clients(clients, function(names)
                     vim.notify("LSP restarted: " .. table.concat(names, ", "),
                         vim.log.levels.INFO, { title = "LSP" })
-                end, 500)
+                end)
             end, {
                 nargs = "?",
                 complete = function()
@@ -598,6 +647,56 @@ return {
                 end
                 vim.notify(table.concat(lines, "\n"), vim.log.levels.INFO, { title = "LSP" })
             end, { desc = "Show LSP clients attached to current buffer" })
+
+            -- ----------- Перезапуск LSP/линтера на текущем буфере -----------
+            -- «Линтер тихо сломался» (gopls перестал слать диагностику) →
+            -- перезапускаем сервер(ы) ЭТОГО буфера одной клавишей, без аргумента.
+            vim.keymap.set("n", "<leader>lR", function()
+                local clients = vim.lsp.get_clients({ bufnr = 0 })
+                if #clients == 0 then
+                    vim.notify("Нет LSP на этом буфере", vim.log.levels.WARN, { title = "LSP" })
+                    return
+                end
+                forge_restart_clients(clients, function(names)
+                    vim.notify("Перезапущен LSP/линтер: " .. table.concat(names, ", "),
+                        vim.log.levels.INFO, { title = "LSP" })
+                end)
+            end, { desc = "LSP: restart on this buffer (refresh diagnostics/linter)" })
+
+            -- ----------- Go: версия и переключение toolchain -----------
+            -- :GoVersion — показать активную версию Go и GOTOOLCHAIN.
+            -- :GoToolchain [go1.25.0|auto|local] — переключить toolchain и
+            -- перезапустить gopls (как смена версии Go в VS Code). Без
+            -- аргумента — picker. Логика в forge/go.lua, статуслайн — ui.lua.
+            vim.api.nvim_create_user_command("GoVersion", function()
+                local go = require("forge.go")
+                go.refresh()
+                vim.defer_fn(function()
+                    local v = go.version()
+                    vim.notify(
+                        "Go: " .. (v == "" and "<неизвестно>" or v)
+                        .. "\nGOTOOLCHAIN: " .. go.current_toolchain()
+                        .. "\nПереключить: :GoToolchain [go1.25.0 | auto | local]",
+                        vim.log.levels.INFO, { title = "Go" }
+                    )
+                end, 300)
+            end, { desc = "Show active Go version and GOTOOLCHAIN" })
+
+            vim.api.nvim_create_user_command("GoToolchain", function(a)
+                local go = require("forge.go")
+                if a.args and a.args ~= "" then
+                    go.set_toolchain(a.args)
+                    return
+                end
+                local choices = { "auto", "local", "go1.25.0", "go1.24.0", "go1.23.3" }
+                vim.ui.select(choices, {
+                    prompt = "GOTOOLCHAIN (сейчас: " .. go.current_toolchain() .. "):",
+                }, function(c) if c then go.set_toolchain(c) end end)
+            end, {
+                nargs = "?",
+                complete = function() return { "auto", "local", "go1.25.0", "go1.24.0", "go1.23.3" } end,
+                desc = "Switch Go toolchain (GOTOOLCHAIN) and restart gopls",
+            })
         end,
     },
 }

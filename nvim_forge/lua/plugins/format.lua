@@ -17,28 +17,57 @@
 -- Если что-то unavailable, conform тихо пропустит этот форматтер и сделает
 -- lsp_format = "fallback" (если LSP-сервер прицеплен) — без ошибок и фризов.
 
+-- Громко сообщить, если форматтер НЕ отработал. Главная причина «формат не
+-- форматирует» — СИНТАКСИЧЕСКАЯ ошибка в файле: gofmt/gofumpt/golines (и
+-- rustfmt) отказываются трогать непарсящийся код и выходят с ошибкой. Раньше
+-- это было молча; теперь — явный warning + (для runtime-ошибки форматтера)
+-- подсказка, что чинить. Подсказку добавляем ТОЛЬКО когда это действительно
+-- ошибка запуска форматтера ("Formatter '…' error:"), а не "No formatters
+-- available"/timeout/interrupted — иначе подсказка про синтаксис вводит в
+-- заблуждение (напр. golines просто не установлен).
+local function notify_format_err(err)
+    if not err then return end
+    err = tostring(err)
+    local hint = ""
+    if err:match("[Ff]ormatter%s+'.-'%s+error") or err:match("exited with code") then
+        hint = "\n\ngofmt/gofumpt/rustfmt НЕ форматируют файл с синтаксической ошибкой.\n"
+            .. "Сначала почини её (смотри диагностику LSP/подчёркивания), потом формат."
+    end
+    vim.notify("Форматирование не выполнено:\n" .. err .. hint,
+        vim.log.levels.WARN, { title = "Format" })
+end
+
+-- Ручной формат с показом ошибки (для <S-A-f> / <leader>lf). quiet=true —
+-- чтобы conform НЕ показывал свой generic-popup "Formatter failed, see
+-- :ConformInfo" поверх нашего детального (callback с err.message всё равно
+-- сработает). На format_after_save quiet НЕ ставим — там нет callback'а и
+-- ошибки всплывают через notify_on_error.
+local function format_with_errors(opts)
+    opts = vim.tbl_extend("force",
+        { async = true, lsp_format = "fallback", quiet = true }, opts or {})
+    require("conform").format(opts, function(err) notify_format_err(err) end)
+end
+
 return {
     {
         "stevearc/conform.nvim",
         event = { "BufWritePre" },
-        cmd = { "ConformInfo", "Format" },
+        -- :Format определяем сами в init (sync + показ ошибки), поэтому в cmd
+        -- его НЕ держим — иначе lazy создаст конфликтующий стаб-:Format.
+        cmd = { "ConformInfo" },
         keys = {
             -- Для Rust clippy запускается АВТО на каждый :w
             -- (rust_analyzer.checkOnSave = true в lsp.lua).
-            -- Здесь — просто rustfmt + LSP-format fallback.
+            -- Здесь — просто rustfmt + LSP-format fallback (+ показ ошибки).
             {
                 "<S-A-f>",
-                function()
-                    require("conform").format({ async = true, lsp_format = "fallback" })
-                end,
+                function() format_with_errors() end,
                 mode = { "n", "v" },
                 desc = "Format buffer/range",
             },
             {
                 "<leader>lf",
-                function()
-                    require("conform").format({ async = true, lsp_format = "fallback" })
-                end,
+                function() format_with_errors() end,
                 desc = "LSP: format",
             },
         },
@@ -125,6 +154,30 @@ return {
                 vim.b.disable_autoformat = false
                 vim.g.disable_autoformat = false
             end, { desc = "Re-enable autoformat-on-save" })
+
+            -- :Format — СИНХРОННЫЙ формат с ЯВНЫМ показом ошибки. Это и есть
+            -- «проверить на месте»: запусти :Format на go-файле с
+            -- синтаксической ошибкой — увидишь stderr gofmt (где именно
+            -- сломано), а не молчание. На валидном файле — «Отформатировано».
+            vim.api.nvim_create_user_command("Format", function(args)
+                local conform = require("conform")
+                local opts = { async = false, lsp_format = "fallback", timeout_ms = 4000, quiet = true }
+                if args.range > 0 then
+                    opts.range = {
+                        ["start"] = { args.line1, 0 },
+                        -- реальная длина последней строки, а не магическое
+                        -- 999999 (range-форматтеры вроде ruff читают колонку).
+                        ["end"] = { args.line2, #vim.fn.getline(args.line2) },
+                    }
+                end
+                conform.format(opts, function(err)
+                    if err then
+                        notify_format_err(err)
+                    else
+                        vim.notify("Отформатировано.", vim.log.levels.INFO, { title = "Format" })
+                    end
+                end)
+            end, { range = true, desc = "Format buffer/range (sync; shows formatter errors)" })
         end,
     },
 }

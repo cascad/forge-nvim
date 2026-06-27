@@ -1234,6 +1234,17 @@ return {
                 require("overseer").enable_dap(true)
             end)
 
+            -- true ПОСЛЕ event_initialized текущей сессии. Нужно, чтобы
+            -- отличить ШТАТНЫЙ выход delve/debugpy (после успешного запуска —
+            -- глушим warning) от ПАДЕНИЯ НА СТАРТЕ (ошибка сборки → delve
+            -- выходит ДО инициализации; такое НЕ глушим, иначе «нижняя панель
+            -- просто не открылась» молча — ровно жалоба юзера). Сбрасывается
+            -- на старте сессии (before.initialize — см. listeners ниже).
+            local session_initialized = false
+            -- true, если для текущей сессии уже показали "Error on launch:" —
+            -- тогда синтетический "Delve не смог..." НЕ дублируем.
+            local launch_error_shown = false
+
             -- Keep nvim-dap's built-in variable expansion, but validate the
             -- final adapter config right after it. CodeLLDB used through raw
             -- DAP still requires `program`; VS Code's extension-only `cargo`
@@ -1324,11 +1335,20 @@ return {
             do
                 local utils = require("dap.utils")
                 local original_notify = utils.notify
+                -- debugpy на Windows при normal disconnect выходит с кодом 1
+                -- (известный квирк) — глушим всегда.
                 local benign_patterns = {
                     "command `python` of adapter `debugpy` exited with %d+",
                     "command `python%d?%-?%d*` of adapter `debugpy` exited with %d+",
                     "command `[^`]*[Pp]ython[^`]*` of adapter `debugpy` exited with %d+",
                     "command `[^`]*debugpy%-adapter[^`]*` of adapter `debugpy` exited with %d+",
+                }
+                -- delve тоже выходит ненулевым кодом при ОБЫЧНОМ завершении —
+                -- но ТОЛЬКО эти глушим, и ТОЛЬКО если сессия успела
+                -- инициализироваться. Если delve выпал ДО инициализации —
+                -- это ошибка сборки/старта: показываем, иначе панель «молча
+                -- не открылась».
+                local adapter_exit_patterns = {
                     "command `dlv` of adapter `go` exited with %d+",
                     "command `dlv%.exe` of adapter `go` exited with %d+",
                 }
@@ -1339,8 +1359,30 @@ return {
                                 return
                             end
                         end
+                        for _, pattern in ipairs(adapter_exit_patterns) do
+                            if msg:match(pattern) then
+                                if session_initialized then
+                                    return -- штатное завершение после запуска
+                                end
+                                if launch_error_shown then
+                                    return -- уже показали "Error on launch:" — не дублируем
+                                end
+                                -- падение на старте без "Error on launch" →
+                                -- НЕ глушим, поясняем (иначе панель «молча не открылась»).
+                                vim.schedule(function()
+                                    vim.notify(
+                                        "Delve не смог запустить Go-программу (ошибка сборки/пути?).\n"
+                                        .. "Нижняя панель не открылась, т.к. сессия не стартовала.\n"
+                                        .. "Детали: <leader>dL или :DapShowLog",
+                                        vim.log.levels.ERROR, { title = "DAP Go" }
+                                    )
+                                end)
+                                return
+                            end
+                        end
                     end
                     if log_level == vim.log.levels.ERROR and type(msg) == "string" and msg:match("^Error on launch:") then
+                        launch_error_shown = true
                         local session = dap.session()
                         local cfg = session and session.config
                         local name = cfg and cfg.name or "?"
@@ -1385,6 +1427,19 @@ return {
             -- session" между сессиями dap-ui сам разрулит, если console
             -- сделан через layout с element=console.
 
+            -- Видна ли уже какая-нибудь нижняя debug-секция (repl/console/term)?
+            local function bottom_debug_visible()
+                for _, win in ipairs(vim.api.nvim_tabpage_list_wins(0)) do
+                    if vim.api.nvim_win_is_valid(win) then
+                        local ft = vim.bo[vim.api.nvim_win_get_buf(win)].filetype
+                        if ft == "dap-repl" or ft == "dapui_console" or ft == "dap-terminal" then
+                            return true
+                        end
+                    end
+                end
+                return false
+            end
+
             local function open_debug_view()
                 reset_dap_repl()
                 local session = dap.session()
@@ -1394,6 +1449,21 @@ return {
                 else
                     ide_dap.open()
                 end
+
+                -- Watchdog: если через 800мс нижняя панель так и не появилась,
+                -- а сессия жива — пробуем ещё раз. Страховка от edgy-гонки,
+                -- из-за которой иногда «нижняя панель просто не открывалась».
+                -- Привязываемся к КОНКРЕТНОЙ сессии: если её уже нет или
+                -- стартовала другая — не дёргаем (без лишних перерисовок).
+                local watched = session
+                vim.defer_fn(function()
+                    local s = dap.session()
+                    if not s or s ~= watched then return end
+                    local c = s.config
+                    if c and c.type and not bottom_debug_visible() then
+                        pcall(ide_dap.show_section, section_for_config(c), false)
+                    end
+                end, 800)
             end
 
             -- Debug mode stays visible after the program exits. Output remains
@@ -1415,6 +1485,20 @@ return {
 
             dap.listeners.before.attach.dapview_config = reset_dap_repl
             dap.listeners.before.launch.dapview_config = reset_dap_repl
+            -- Сброс флагов сессии — на before.initialize, а НЕ before.launch.
+            -- ВАЖНО (иначе спам ложными ошибками): nvim-dap зовёт before.<cmd>
+            -- на ОТВЕТ запроса, а не на отправку. delve шлёт событие
+            -- `initialized` СРАЗУ после ответа на `initialize` и ДО ответа на
+            -- `launch`. Значит порядок такой: initialize-ответ →
+            -- before.initialize (сброс в false) → событие initialized
+            -- (after.event_initialized → true) → launch-ответ. Если бы сброс
+            -- висел на before.launch, он бы занулял флаг УЖЕ ПОСЛЕ
+            -- event_initialized — и при штатном завершении (delve выходит
+            -- ненулевым кодом) мы бы каждый раз орали ложным "Delve не смог...".
+            dap.listeners.before.initialize.forge_session_flag = function()
+                session_initialized = false
+                launch_error_shown = false
+            end
             -- Намеренно НЕ цепляем reset_dapui_console_buf на dap.listeners.before:
             -- listener выполняется СИНХРОННО в callback-обработчике сообщений
             -- от адаптера. nvim_buf_delete каскадно фиатит force_buffers
@@ -1423,6 +1507,7 @@ return {
             -- nvim-dap. Адаптер ждёт ответ → таймаут "Debug adapter didn't
             -- respond". Reset делаем ДО dap.run в run_debug_choice, см.
             -- его выше: тогда мы вне rpc-callback и без побочки.
+            dap.listeners.after.event_initialized.forge_session_flag = function() session_initialized = true end
             dap.listeners.after.event_initialized.dapview_config = open_debug_view
 
             -- VS Code-style: на КАЖДОЙ остановке исполнения (breakpoint,

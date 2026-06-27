@@ -548,8 +548,6 @@ nm("<A-[>", "<C-o>", "Jumplist back")
 nm("<A-]>", "<C-i>", "Jumplist forward")
 
 -- Ctrl+] — indent как в IDE.
--- Ctrl+[ НЕ маппим: в терминалах это часто тот же код, что Esc, и такой
--- mapping ломает выход из insert/visual mode.
 nm("<C-]>", ">>", "Indent line")
 -- Raw Ctrl+] fallback: если терминал присылает ASCII 29, перебиваем
 -- дефолтный Vim tag-jump, который иначе даёт E439 "Not identifier under cursor".
@@ -558,6 +556,21 @@ im("<C-]>", "<Esc>>>gi", "Indent line")
 map("i", "\29", "<Esc>>>gi", { desc = "Indent line", silent = true })
 vm("<C-]>", ">gv", "Indent selection")
 map("v", "\29", ">gv", { desc = "Indent selection", silent = true })
+
+-- Ctrl+[ — outdent (сдвиг строки влево), симметрично Ctrl+] = indent,
+-- как в VS Code (editor.action.outdentLines).
+--
+-- Напрямую <C-[> в терминале НЕ маппится: физически Ctrl+[ == Esc (0x1b),
+-- nvim не отличает их, и mapping сломал бы выход из режимов. Поэтому wezterm
+-- ловит ФИЗИЧЕСКИЙ Ctrl+[ и шлёт <F13> (см. wezterm.lua: phys:LeftBracket +
+-- CTRL → SendKey F13). Esc остаётся на самой клавише Esc (и на <Esc><Esc>).
+-- В терминалах без этого правила Ctrl+[ просто работает как Esc — мы конфиг
+-- не трогаем, <F13> там никто не шлёт.
+nm("<F13>", "<<",        "Outdent line")
+im("<F13>", "<Esc><<gi", "Outdent line")
+-- xm (mode "x") = ТОЛЬКО visual, не select — иначе <F13> перехватывался бы и
+-- на плейсхолдере сниппета (там select-mode), мешая Esc-сворачиванию.
+xm("<F13>", "<gv",       "Outdent selection")
 
 -- Alt+J — go-to definition (VS Code revealDefinition).
 -- Здесь для случая, когда LSP ещё не подцепился; LspAttach перевесит на

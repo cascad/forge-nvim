@@ -22,6 +22,77 @@ local config = wezterm.config_builder and wezterm.config_builder() or {}
 local is_windows = wezterm.target_triple:find("windows") ~= nil
 
 -- =====================================================================
+-- Размер окна при старте + запоминание размера.
+-- =====================================================================
+-- Логика, как просил юзер: растяни окно мышью как удобно → нажми
+-- Ctrl+Shift+S (см. config.keys ниже) — размер сохранится, и ВСЕ новые окна
+-- открываются ровно таким, пока не сохранишь снова. Если сохранённого ещё
+-- нет — открываем крупным в долю экрана (как VS Code/IDEA), не на весь экран.
+-- Сохранённый размер лежит в хомяке (не в репо).
+local window_state_file = (wezterm.home_dir or os.getenv("USERPROFILE") or ".")
+    .. "/.wezterm_forge_window.json"
+
+-- Доли экрана ТОЛЬКО для первого запуска (пока размер не сохранён). Основной
+-- способ задать размер — Ctrl+Shift+S; эти числа лишь дефолт «из коробки».
+local WINDOW_FRACTION_W = 0.62
+local WINDOW_FRACTION_H = 0.72
+
+local function read_saved_size()
+    local f = io.open(window_state_file, "r")
+    if not f then return nil end
+    local data = f:read("*a")
+    f:close()
+    local ok, t = pcall(wezterm.json_parse, data)
+    if ok and type(t) == "table" and tonumber(t.w) and tonumber(t.h) then
+        return { w = math.floor(t.w), h = math.floor(t.h) }
+    end
+    return nil
+end
+
+local function center_on_active_screen(gui, w, h)
+    local screen = wezterm.gui.screens().active
+    gui:set_inner_size(w, h)
+    gui:set_position(
+        screen.x + math.floor((screen.width - w) / 2),
+        screen.y + math.floor((screen.height - h) / 2)
+    )
+end
+
+-- Ctrl+Shift+S → запомнить ТЕКУЩИЙ размер окна.
+local save_window_size = wezterm.action_callback(function(window, _pane)
+    local dims = window:get_dimensions()
+    local t = { w = dims.pixel_width, h = dims.pixel_height }
+    local f = io.open(window_state_file, "w")
+    if f then
+        f:write(wezterm.json_encode(t))
+        f:close()
+        window:toast_notification("WezTerm",
+            ("Размер окна сохранён: %d×%d (откроется таким в след. раз)"):format(t.w, t.h),
+            nil, 3000)
+    else
+        window:toast_notification("WezTerm", "Не удалось записать размер окна", nil, 3000)
+    end
+end)
+
+wezterm.on("gui-startup", function(cmd)
+    local _, _, window = wezterm.mux.spawn_window(cmd or {})
+    local gui = window:gui_window()
+    local ok = pcall(function()
+        local saved = read_saved_size()
+        if saved then
+            center_on_active_screen(gui, saved.w, saved.h)
+        else
+            local screen = wezterm.gui.screens().active
+            center_on_active_screen(gui,
+                math.floor(screen.width * WINDOW_FRACTION_W),
+                math.floor(screen.height * WINDOW_FRACTION_H))
+        end
+    end)
+    -- Фоллбэк, если API экрана недоступен — просто крупный фикс-размер.
+    if not ok then pcall(function() gui:set_inner_size(1500, 950) end) end
+end)
+
+-- =====================================================================
 -- Шелл по умолчанию
 -- =====================================================================
 -- Ищем exe в %PATH% вручную (WezTerm-Lua не имеет встроенного "which").
@@ -154,6 +225,18 @@ config.keys = {
     -- copy/paste без "умной" логики.
     { key = "phys:C", mods = "CTRL|SHIFT", action = act.CopyTo("Clipboard") },
     { key = "phys:V", mods = "CTRL|SHIFT", action = act.PasteFrom("Clipboard") },
+
+    -- Ctrl+Shift+S — запомнить текущий размер окна (см. gui-startup выше).
+    -- nvim это не использует, так что перехват тут безопасен.
+    { key = "phys:S", mods = "CTRL|SHIFT", action = save_window_size },
+
+    -- Ctrl+[ → outdent в Neovim (сдвиг строки влево, как Ctrl+] = вправо).
+    -- Физически Ctrl+[ == Esc (0x1b), и nvim не может их различить, поэтому
+    -- перехватываем здесь и шлём <F13> — на него nvim вешает «сдвиг влево»
+    -- (см. nvim_forge/lua/config/keymaps.lua). Esc остаётся на самой
+    -- клавише Esc. phys:LeftBracket — физическая позиция «[», не зависит
+    -- от раскладки (на русской это та же клавиша, что печатает «х»).
+    { key = "phys:LeftBracket", mods = "CTRL", action = act.SendKey({ key = "F13" }) },
 }
 
 return config

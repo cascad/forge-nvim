@@ -153,7 +153,16 @@ return {
                         end,
                     },
                 },
-                lualine_x = { "encoding", "fileformat", "filetype" },
+                lualine_x = {
+                    -- Версия Go (toolchain) — только на go-буферах. Раньше снизу
+                    -- был лишь filetype «go», а какая ВЕРСИЯ — непонятно.
+                    -- Клик не нужен: переключение через :GoToolchain (см. lsp.lua).
+                    {
+                        function() return require("forge.go").label() end,
+                        cond = function() return vim.bo.filetype == "go" end,
+                    },
+                    "encoding", "fileformat", "filetype",
+                },
                 lualine_y = { "progress" },
                 lualine_z = { "location" },
             },

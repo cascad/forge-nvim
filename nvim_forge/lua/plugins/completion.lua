@@ -40,6 +40,54 @@ return {
                 },
             })
 
+            -- Esc на активном плейсхолдере — «свернуть до пустого вызова».
+            -- Просьба юзера: когда gopls развернул foo(arg1, arg2), а я НЕ хочу
+            -- заполнять параметры, Esc должен убрать незаполненный шаблон,
+            -- оставив foo() с курсором внутри скобок (как VS Code), а не
+            -- оставлять текст плейсхолдеров.
+            --
+            -- Плейсхолдеры живут в SELECT-mode'е (luasnip выделяет дефолт узла),
+            -- поэтому перехватываем Esc именно в 's':
+            --   * есть активный сниппет → выходим в normal, закрываем сессию
+            --     (unlink_current), и если курсор ВНУТРИ (...) — `ci(` чистит
+            --     аргументы → foo() со входом в insert. (`ci(` берёт ВНЕШНИЕ
+            --     скобки, так что foo(bar(x)) тоже схлопнется в foo().)
+            --   * сниппета нет / не в скобках → просто чистый Esc (отмена).
+            -- Всё в pcall: Esc НИКОГДА не «залипнет», даже если API сменится.
+            local function snippet_collapse_esc()
+                local raw_esc = vim.api.nvim_replace_termcodes("<Esc>", true, false, true)
+
+                local active = false
+                pcall(function() active = luasnip.in_snippet() end)
+                if not active then
+                    vim.api.nvim_feedkeys(raw_esc, "n", false) -- обычный Esc
+                    return
+                end
+
+                -- select → normal (курсор остаётся на плейсхолдере, внутри скобок)
+                vim.api.nvim_feedkeys(raw_esc, "nx", false)
+                pcall(luasnip.unlink_current) -- закрыть «живую» сниппет-сессию
+
+                -- Сворачиваем ТОЛЬКО однострочный вызов на текущей строке:
+                -- открывающая `(` без пары должна быть на ЭТОЙ же строке. Это
+                -- ровно кейс сигнатуры gopls `foo(arg1, arg2)`. Так мы не
+                -- схлопываем многострочные блоки и внешние «чужие» скобки.
+                -- ВНИМАНИЕ: ci( чистит ВСЁ внутри скобок — если ты уже заполнил
+                -- часть аргументов, они тоже уйдут (это и есть «свернуть до
+                -- пустого вызова», выбранный вариант). Откат — обычный `u`.
+                local inside = false
+                pcall(function()
+                    local pos = vim.fn.searchpairpos("(", "", ")", "nbW")
+                    inside = pos[1] == vim.fn.line(".")
+                end)
+                if inside then
+                    vim.api.nvim_feedkeys("ci(", "n", false) -- → foo(|) + insert
+                end
+            end
+
+            vim.keymap.set("s", "<Esc>", snippet_collapse_esc,
+                { silent = true, desc = "Snippet: collapse to empty call / cancel" })
+
             require("luasnip.loaders.from_vscode").lazy_load()
         end,
     },
