@@ -119,6 +119,50 @@ local function safe_rename(state)
     end
 end
 
+-- Страж «псевдо-файлов» в дереве.
+--
+-- neo-tree рисует строку «(7 hidden items)» как узел type="message" — у него
+-- НЕТ поля path, только синтетический id вида "<последний_скрытый_путь>_hidden_message".
+-- Апстримный open_with_cmd (sources/common/commands.lua) тип узла не проверяет:
+-- берёт `node.path or node:get_id()` и делает `:e <id>` — в редакторе
+-- открывается пустой буфер-фантом с именем «..._hidden_message». Это и есть
+-- «7 hidden items открывается как отдельный файл».
+--
+-- Лечим у себя (не форкая плагин): переопределяем open/open_split/open_vsplit
+-- для каждого source. На message-узле файл не открываем, а делаем то, ради чего
+-- в эту строку и тыкают — переключаем показ скрытых (в filesystem). В
+-- git_status/buffers переключать нечего → просто ничего не делаем.
+--
+-- Рекурсии нет: neo-tree мержит пользовательские commands в КОПИЮ таблицы
+-- (tbl_deep_extend), сам модуль sources.<x>.commands не мутируется, поэтому
+-- require(...)[cmd] ниже — всегда оригинальная функция.
+local function open_guard(source, cmd)
+    return function(state, ...)
+        local node = safe_tree_node(state)
+        if node and node.type == "message" then
+            if source == "filesystem" then
+                local ok, fs_cmds = pcall(require, "neo-tree.sources.filesystem.commands")
+                if ok and type(fs_cmds.toggle_hidden) == "function" then
+                    pcall(fs_cmds.toggle_hidden, state)
+                end
+            end
+            return
+        end
+        local ok, cmds = pcall(require, "neo-tree.sources." .. source .. ".commands")
+        if ok and type(cmds[cmd]) == "function" then
+            return cmds[cmd](state, ...)
+        end
+    end
+end
+
+local function guarded_open_commands(source)
+    return {
+        open        = open_guard(source, "open"),
+        open_split  = open_guard(source, "open_split"),
+        open_vsplit = open_guard(source, "open_vsplit"),
+    }
+end
+
 return {
     {
         "nvim-neo-tree/neo-tree.nvim",
@@ -306,10 +350,10 @@ return {
                 }),
             },
             filesystem = {
-                commands = {
+                commands = vim.tbl_extend("force", guarded_open_commands("filesystem"), {
                     open_folder_as_project = open_node_as_project,
                     rename = safe_rename,
-                },
+                }),
                 follow_current_file = { enabled = true },
                 use_libuv_file_watcher = true,
                 filtered_items = {
@@ -333,9 +377,11 @@ return {
             buffers = {
                 follow_current_file = { enabled = true },
                 show_unloaded = true,
+                commands = guarded_open_commands("buffers"),
             },
             git_status = {
                 window = { position = "left" },
+                commands = guarded_open_commands("git_status"),
             },
         },
     },

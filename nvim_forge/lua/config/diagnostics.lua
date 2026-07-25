@@ -122,6 +122,170 @@ function M.virtual_lines_all()
     }
 end
 
+-- =====================================================================
+-- «Где именно я ошибся» — подсветка точного диапазона под окошком.
+-- =====================================================================
+-- Пассивно место ошибки и так помечено: DiagnosticUnderline* даёт
+-- подчёркивание + лёгкую заливку ровно под теми символами, на которые
+-- ругается компилятор. Но раньше на них ещё и УКАЗЫВАЛИ virtual_lines
+-- (уголок «╰──» к нужной колонке), а мы их убрали (они раздвигали код).
+--
+-- Возвращаем указание, не возвращая раздвигание: пока висит окно с текстом
+-- (`gl`), ровно тот диапазон, о котором это окно говорит, подсвечивается
+-- цветом severity. Видно и ЧТО не так (окно), и ГДЕ (подсветка) — а код
+-- не сдвинулся ни на строку.
+
+local FOCUS_NS = vim.api.nvim_create_namespace("forge_diag_focus")
+local focus_group = vim.api.nvim_create_augroup("ForgeDiagFocus", { clear = true })
+
+local SEVERITY_SUFFIX = {
+    [vim.diagnostic.severity.ERROR] = "Error",
+    [vim.diagnostic.severity.WARN]  = "Warn",
+    [vim.diagnostic.severity.INFO]  = "Info",
+    [vim.diagnostic.severity.HINT]  = "Hint",
+}
+
+---Смешать два RGB-цвета: alpha=0 → bg, alpha=1 → fg.
+local function blend(fg, bg, alpha)
+    local function channel(color, shift)
+        return math.floor(color / 2 ^ shift) % 256
+    end
+    local out = 0
+    for _, shift in ipairs({ 16, 8, 0 }) do
+        local c = math.floor(channel(fg, shift) * alpha + channel(bg, shift) * (1 - alpha) + 0.5)
+        out = out * 256 + math.min(255, math.max(0, c))
+    end
+    return out
+end
+
+---Группы подсветки «фокус на диагностике»: фон = цвет severity, подмешанный
+---к фону редактора (заметно, но не выжигает глаза), текст — жирный.
+function M.setup_focus_highlights()
+    local normal = vim.api.nvim_get_hl(0, { name = "Normal", link = false })
+    for _, suffix in pairs(SEVERITY_SUFFIX) do
+        local sev = vim.api.nvim_get_hl(0, { name = "Diagnostic" .. suffix, link = false })
+        local name = "ForgeDiagFocus" .. suffix
+        if sev.fg and normal.bg then
+            vim.api.nvim_set_hl(0, name, {
+                bg = blend(sev.fg, normal.bg, 0.30),
+                bold = true,
+            })
+        else
+            -- Прозрачный фон / тема без цветов — падаем на штатную группу.
+            vim.api.nvim_set_hl(0, name, { link = "DiagnosticVirtualText" .. suffix })
+        end
+    end
+end
+
+vim.api.nvim_create_autocmd("ColorScheme", {
+    group = focus_group,
+    callback = function() pcall(M.setup_focus_highlights) end,
+})
+
+local function clear_focus(buf)
+    if buf and vim.api.nvim_buf_is_valid(buf) then
+        pcall(vim.api.nvim_buf_clear_namespace, buf, FOCUS_NS, 0, -1)
+    end
+end
+
+-- Окно, открытое последним `gl`. Нужно, чтобы Esc умел его закрыть НЕ двигая
+-- курсор (штатно float гаснет только на CursorMoved).
+local float_win, float_buf = nil, nil
+
+---Закрыть оверлей диагностики, если он открыт.
+---@return boolean closed было что закрывать (Esc-цепочка на это смотрит)
+function M.close_float()
+    local win = float_win
+    float_win, float_buf = nil, nil
+    if win and vim.api.nvim_win_is_valid(win) then
+        pcall(vim.api.nvim_win_close, win, true)   -- подсветку снимет WinClosed
+        return true
+    end
+    return false
+end
+
+---Показать диагностику строки под курсором ОВЕРЛЕЕМ + подсветить точное место.
+---Подсветка живёт ровно столько же, сколько окно: гаснет вместе с ним (движение
+---курсора, Esc, `q`).
+function M.show_under_cursor()
+    -- Курсор уже ВНУТРИ окошка (в него проваливает повторный `gl`) — незачем
+    -- открывать окно поверх окна: там диагностики нет, а слепой сброс
+    -- autocmd'ов ниже осиротил бы подсветку в коде.
+    if float_buf and vim.api.nvim_get_current_buf() == float_buf then
+        return float_buf, float_win
+    end
+
+    local buf = vim.api.nvim_get_current_buf()
+    local lnum = vim.api.nvim_win_get_cursor(0)[1] - 1
+
+    vim.api.nvim_clear_autocmds({ group = focus_group, event = { "CursorMoved", "CursorMovedI", "InsertEnter", "WinClosed" } })
+    clear_focus(buf)
+
+    local diags = vim.diagnostic.get(buf, { lnum = lnum })
+    if #diags == 0 then return end
+
+    for _, d in ipairs(diags) do
+        local end_row = d.end_lnum or d.lnum
+        local end_col = d.end_col or (d.col + 1)
+        -- Диагностика НУЛЕВОЙ ШИРИНЫ — это не «место в коде», а точка вставки:
+        -- так rustc шлёт подсказки вида «try using a conversion method:
+        -- `.to_string()`» (диапазон col==end_col сразу после выражения). Тут
+        -- указывать не на что: если растянуть до col+1, подсветится соседний
+        -- символ (`;`), которого подсказка вообще не касается — враньё глазу.
+        -- Текст такой подсказки всё равно виден в окне, просто без заливки.
+        local zero_width = (end_row == d.lnum and end_col <= d.col)
+        if not zero_width then
+            pcall(vim.api.nvim_buf_set_extmark, buf, FOCUS_NS, d.lnum, d.col, {
+                end_row = end_row,
+                end_col = end_col,
+                hl_group = "ForgeDiagFocus" .. (SEVERITY_SUFFIX[d.severity] or "Error"),
+                priority = 200,   -- выше treesitter и DiagnosticUnderline*
+                strict = false,   -- диапазон может вылезать за конец строки
+            })
+        end
+    end
+
+    float_buf, float_win = vim.diagnostic.open_float(nil, { scope = "line" })
+
+    if float_buf and float_win then
+        -- Esc / q ВНУТРИ окошка: повторный `gl` проваливает туда курсор (штатный
+        -- focus_id-механизм Neovim), и оттуда окно иначе не закрыть, кроме как
+        -- уйти из него.
+        for _, lhs in ipairs({ "<Esc>", "q" }) do
+            vim.keymap.set("n", lhs, M.close_float, {
+                buffer = float_buf, nowait = true, silent = true,
+                desc = "Закрыть окно диагностики",
+            })
+        end
+
+        -- Подсветка живёт ровно столько же, сколько окно, КАК БЫ оно ни закрылось
+        -- (Esc, q, движение курсора, смена окна). Одно правило вместо гадания по
+        -- списку событий.
+        vim.api.nvim_create_autocmd("WinClosed", {
+            group = focus_group,
+            pattern = tostring(float_win),
+            once = true,
+            callback = function()
+                float_win, float_buf = nil, nil
+                clear_focus(buf)
+            end,
+        })
+    end
+
+    -- Страховка на случай, если окно не открылось: подсветка всё равно снимется.
+    -- BufLeave тут НЕТ намеренно — вход в само окошко (повторный `gl`) даёт
+    -- BufLeave на code-буфере и погасил бы подсветку ровно тогда, когда на неё
+    -- и смотрят.
+    vim.api.nvim_create_autocmd({ "CursorMoved", "CursorMovedI", "InsertEnter" }, {
+        group = focus_group,
+        buffer = buf,
+        once = true,
+        callback = function() clear_focus(buf) end,
+    })
+
+    return float_buf, float_win
+end
+
 function M.setup_refresh()
     if M._refresh_setup then return end
     M._refresh_setup = true

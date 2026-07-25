@@ -30,9 +30,21 @@ end
 -- %s — знаки (diagnostics/git/dap), %C — фолды, дальше наши два номера.
 local statuscolumn = "%s%C %{%v:lua.forge_statuscolumn()%}"
 
--- Применяем ко всем буферам кроме спец-плагинных (neo-tree, dap-ui, alpha,
--- lazy, mason, trouble и т.п.) — у них собственный gutter, и наш statuscolumn
--- ломает их выравнивание.
+-- «Обвес» окна (номера + statuscolumn + линейка colorcolumn) задаётся ОДНОЙ
+-- функцией apply_window_chrome ниже. Раньше это были две независимые функции
+-- (statuscolumn и colorcolumn), и обе применялись к nvim_get_current_win() —
+-- то есть к тому окну, где стоит КУРСОР, а не к тому, где реально показался
+-- буфер. Если буфер въезжал в неактивное окно (типовой случай: alpha-заглушка
+-- в главном окне, пока фокус в neo-tree; или layout-код, двигающий буферы
+-- между окнами), настройки уезжали в чужое окно, а alpha так и оставалась с
+-- number=true и colorcolumn=100,120, унаследованными от кода. Отсюда и лезли
+-- номера строк и вертикальная линейка на welcome-экране.
+--
+-- Теперь применяем к win_findbuf(buf) — ко ВСЕМ окнам, где показан буфер
+-- события, независимо от фокуса.
+
+-- Спец-плагинные («tool») окна: neo-tree, dap-ui, alpha, lazy, mason, trouble
+-- и т.п. — у них собственный gutter, наши номера/линейка там мусор.
 local excluded_ft = {
     ["neo-tree"]      = true,
     ["dap-repl"]      = true,
@@ -60,29 +72,81 @@ local excluded_bt = {
     ["quickfix"] = true,
 }
 
-local function apply_statuscolumn(win)
+-- Линейка длины строки (colorcolumn) нужна в КОДЕ, но в прозе мешает:
+-- в markdown/text/коммитах нет «лимита 100 символов», вертикальная полоса
+-- только отвлекает.
+local no_colorcolumn_ft = {
+    markdown = true, text = true, txt = true, gitcommit = true,
+    gitrebase = true, help = true, man = true, ["copilot-chat"] = true,
+    NeogitCommitMessage = true, AvanteInput = true, Avante = true,
+}
+
+---Единая точка правды про «обвес» окна: номера строк, statuscolumn, линейка.
+---Ставится В ОБЕ стороны (tool → выключить, код → включить), иначе значения,
+---выставленные для tool-окна, протекали бы в code-буфер, открытый потом в том
+---же окне.
+---@param win integer
+local function apply_window_chrome(win)
+    if not vim.api.nvim_win_is_valid(win) then return end
+    -- Плавающие окна (cmp, hover, наш diagnostic-оверлей, telescope) — не наши.
+    local ok_cfg, cfg = pcall(vim.api.nvim_win_get_config, win)
+    if not ok_cfg or (cfg.relative and cfg.relative ~= "") then return end
+
     local buf = vim.api.nvim_win_get_buf(win)
     local ft  = vim.bo[buf].filetype
     local bt  = vim.bo[buf].buftype
+    local wo  = vim.wo[win]
+
     if excluded_ft[ft] or excluded_bt[bt] then
-        vim.wo[win].statuscolumn = ""
+        -- Tool-окно: ни наших номеров, ни нативных, ни линейки.
+        wo.statuscolumn   = ""
+        wo.number         = false
+        wo.relativenumber = false
+        wo.colorcolumn    = ""
     else
-        vim.wo[win].statuscolumn = statuscolumn
+        wo.statuscolumn   = statuscolumn
+        wo.number         = true
+        wo.relativenumber = true
+        wo.colorcolumn    = no_colorcolumn_ft[ft] and "" or "100,120"
+    end
+end
+
+---Применить к ВСЕМ окнам, где показан буфер (а не к текущему — см. коммент
+---выше про уехавшие в чужое окно опции).
+---@param buf integer
+local function apply_chrome_to_buf(buf)
+    if not buf or not vim.api.nvim_buf_is_valid(buf) then return end
+    for _, win in ipairs(vim.fn.win_findbuf(buf)) do
+        apply_window_chrome(win)
     end
 end
 
 opt.statuscolumn = statuscolumn
-for _, w in ipairs(vim.api.nvim_list_wins()) do apply_statuscolumn(w) end
+for _, w in ipairs(vim.api.nvim_list_wins()) do apply_window_chrome(w) end
 
-vim.api.nvim_create_autocmd(
-    { "WinNew", "BufWinEnter", "FileType", "BufEnter" },
-    {
-        group = vim.api.nvim_create_augroup("UserLineNumberColumns", { clear = true }),
-        callback = function()
-            apply_statuscolumn(vim.api.nvim_get_current_win())
-        end,
-    }
-)
+local chrome_group = vim.api.nvim_create_augroup("UserWindowChrome", { clear = true })
+
+vim.api.nvim_create_autocmd({ "BufWinEnter", "FileType", "BufEnter" }, {
+    group = chrome_group,
+    callback = function(args) apply_chrome_to_buf(args.buf) end,
+})
+
+vim.api.nvim_create_autocmd({ "WinNew", "WinEnter" }, {
+    group = chrome_group,
+    callback = function() apply_window_chrome(vim.api.nvim_get_current_win()) end,
+})
+
+-- alpha-nvim рендерится с eventignore=all (opts.noautocmd), поэтому ни
+-- BufWinEnter, ни FileType на welcome-экране не стреляют — окно остаётся с
+-- тем обвесом, что был до него (номера + линейка от кода). Единственный
+-- «легальный» хук alpha — User AlphaReady, он уже вне eventignore.
+vim.api.nvim_create_autocmd("User", {
+    group = chrome_group,
+    pattern = "AlphaReady",
+    callback = function()
+        for _, w in ipairs(vim.api.nvim_list_wins()) do apply_window_chrome(w) end
+    end,
+})
 
 local wrapped_output_ft = {
     ["dap-repl"] = true,
@@ -185,29 +249,9 @@ vim.api.nvim_create_autocmd(
 opt.sidescrolloff = 8
 opt.wrap = false
 opt.linebreak = true
-opt.colorcolumn = "100,120"  -- как helix rulers (только для кода, см. ниже)
-
--- Линейка длины строки (colorcolumn) нужна в КОДЕ, но в прозе мешает:
--- в markdown/text/коммитах нет «лимита 100 символов», вертикальная полоса
--- только отвлекает. Гасим её для не-кодовых филетайпов.
---
--- colorcolumn — ОКОННАЯ опция (не буферная), поэтому ставим её на каждый
--- показ буфера (FileType + BufWinEnter), причём В ОБЕ стороны: проза → "",
--- код → "100,120". Иначе «пустое» значение, выставленное для markdown,
--- протекло бы в code-буфер, открытый потом в том же окне.
-local no_colorcolumn_ft = {
-    markdown = true, text = true, txt = true, gitcommit = true,
-    gitrebase = true, help = true, man = true, ["copilot-chat"] = true,
-    NeogitCommitMessage = true, AvanteInput = true, Avante = true,
-}
-local function apply_colorcolumn()
-    local ft = vim.bo.filetype
-    vim.wo.colorcolumn = no_colorcolumn_ft[ft] and "" or "100,120"
-end
-vim.api.nvim_create_autocmd({ "FileType", "BufWinEnter" }, {
-    group = vim.api.nvim_create_augroup("UserProseNoColorcolumn", { clear = true }),
-    callback = apply_colorcolumn,
-})
+-- как helix rulers. Только для кода: список исключений (проза, tool-окна) и
+-- само применение — в apply_window_chrome выше, там же no_colorcolumn_ft.
+opt.colorcolumn = "100,120"
 
 opt.expandtab = true
 opt.shiftwidth = 4

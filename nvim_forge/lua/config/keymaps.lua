@@ -678,10 +678,14 @@ nm("<S-A-Up>",   "yyP",       "Duplicate line up")
 vm("<S-A-Down>", "y'>p",      "Duplicate selection down")
 vm("<S-A-Up>",   "y'<P",      "Duplicate selection up")
 
--- Эскейп выделения подсветки и поискового highlight'а.
+-- Esc в normal — «убрать лишнее с экрана», по одному слою за нажатие.
+-- Порядок важен: сперва гасим оверлей диагностики (`gl`), потому что штатно он
+-- исчезает только при движении курсора, а хочется убрать его НЕ сходя со строки.
+-- Нет оверлея — снимаем подсветку поиска (прежнее поведение, не сломано).
 nm("<Esc>", function()
+    if require("config.diagnostics").close_float() then return end
     vim.cmd("nohlsearch")
-end, "Clear search highlight")
+end, "Clear: diagnostic overlay / search highlight")
 
 -- Better up/down при wrap
 map({ "n", "x" }, "j", "v:count == 0 ? 'gj' : 'j'", { expr = true, silent = true })

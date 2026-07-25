@@ -1,7 +1,5 @@
 -- Unit-test panel and runners for Rust / Go / Python.
 
-local diagnostics = require("config.diagnostics")
-
 local function nt()
     return require("neotest")
 end
@@ -81,10 +79,15 @@ return {
                 quickfix = { open = false },
             })
 
+            -- То же правило, что и для LSP-диагностики (см. plugins/lsp.lua):
+            -- текст упавшего теста не раскрывается сам и не раздвигает код.
+            -- Остаются знак в gutter + подчёркивание; полный текст — по `gl`
+            -- (оверлей показывает диагностику строки из ВСЕХ namespace'ов,
+            -- включая neotest) либо в Test Output панели.
             local neotest_ns = vim.api.nvim_create_namespace("neotest")
             vim.diagnostic.config({
                 virtual_text = false,
-                virtual_lines = diagnostics.virtual_lines_current(),
+                virtual_lines = false,
             }, neotest_ns)
         end,
     },

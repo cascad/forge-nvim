@@ -126,12 +126,25 @@ return {
             local rust_external = require("config.rust_external")
 
             -- ----------- Diagnostics UI -----------
-            -- virtual_text отключён: длинные сообщения уезжают за правый
-            -- край экрана и не переносятся. Вместо этого включаем
-            -- virtual_lines только для строки под курсором — сообщение
-            -- появится ПОД строкой с переносом, ничего не обрезано.
-            -- Signs в gutter остаются: видно, в каких строках есть
-            -- диагностика, даже когда курсор не на них.
+            -- ГЛАВНОЕ ПРАВИЛО: текст диагностики НИКОГДА не появляется сам.
+            --
+            -- Раньше было virtual_lines={current_line=true} — сообщение
+            -- разворачивалось под строкой, едва курсор на неё попадал, и
+            -- РАЗДВИГАЛО код вниз. При наборе кода (где половина строк
+            -- временно «ошибочные») страница дёргалась на каждое движение
+            -- курсора. Теперь inline-раскрытия нет вообще:
+            --
+            --   * пассивно  — только знак в gutter (E/W/I/H) + подчёркивание
+            --     под проблемным местом. Ничего не двигается, ничего не мигает;
+            --   * по запросу — `gl` (или родной neovim'ский <C-W>d) открывает
+            --     ОВЕРЛЕЙ (float) с полным текстом у курсора. Это плавающее
+            --     окно поверх кода: строки не раздвигаются, окно само гаснет
+            --     при первом же движении курсора.
+            --
+            -- virtual_text не включаем и здесь: длинные сообщения уезжают за
+            -- правый край и не переносятся. Полный текст — во float.
+            -- Раскрытие inline всё ещё доступно, но только руками: <leader>td
+            -- (DiagToggle) переключает off → current_line → all → off.
             local function apply_diagnostic_config()
                 local sev = vim.diagnostic.severity
                 -- Без nerd-шрифта (vim.g.have_nerd_font=false) значки-глифы
@@ -150,12 +163,22 @@ return {
                     }
                 vim.diagnostic.config({
                     virtual_text = false,
-                    virtual_lines = diagnostics.virtual_lines_current(),
+                    virtual_lines = false,   -- см. блок выше: только по хоткею
                     signs = { text = sign_text },
                     underline = true,
                     update_in_insert = false,
                     severity_sort = true,
-                    float = { border = "rounded", source = "if_many" },
+                    -- Оверлей по `gl` / <C-W>d. header="" — без строчки
+                    -- «Diagnostics:», она только съедает высоту. max_width
+                    -- + wrap: длинное сообщение переносится внутри окна,
+                    -- а не уезжает за край экрана.
+                    float = {
+                        border = "rounded",
+                        source = "if_many",
+                        header = "",
+                        max_width = 90,
+                        wrap = true,
+                    },
                 })
             end
 
@@ -179,34 +202,46 @@ return {
             end
             diagnostics.setup_refresh()
 
-            -- Toggle между «компактный режим» (только signs) и «полный
-            -- inline» (virtual_lines на всех строках, не только текущей).
-            -- По умолчанию: только current_line.
-            local diag_state = "current_line"
+            -- Раскрыть диагностику под курсором ОВЕРЛЕЕМ (float поверх кода,
+            -- строки не раздвигает, гаснет при движении курсора) + подсветить
+            -- ТОЧНОЕ место, о котором это окно говорит (см. config/diagnostics).
+            --   gl     — основной хоткей: два символа, без leader и модификаторов;
+            --   <C-W>d — родной дефолт Neovim 0.10+ (голый float, без подсветки
+            --            места; ничего не переопределяем, работает сам по себе).
+            -- Не буферный маппинг (не в LspAttach): диагностика бывает не только
+            -- от LSP (линтеры, neotest), и `gl` должен работать всегда.
+            diagnostics.setup_focus_highlights()
+            vim.keymap.set("n", "gl", diagnostics.show_under_cursor,
+                { desc = "Diag: показать под курсором (окно + подсветка места)" })
+
+            -- Ручное inline-раскрытие, если всё-таки понадобилось «как раньше»:
+            -- off (по умолчанию) → current_line → all → off.
+            local diag_state = "off"
             vim.api.nvim_create_user_command("DiagToggle", function()
-                if diag_state == "current_line" then
-                    -- → показать на ВСЕХ строках с диагностикой
-                    pcall(vim.diagnostic.config, {
-                        virtual_lines = diagnostics.virtual_lines_all(),
-                        virtual_text = false,
-                    })
-                    diag_state = "all"
-                    vim.notify("Diagnostics: virtual_lines (all)", vim.log.levels.INFO)
-                elseif diag_state == "all" then
-                    -- → только signs
-                    pcall(vim.diagnostic.config, { virtual_lines = false, virtual_text = false })
-                    diag_state = "signs_only"
-                    vim.notify("Diagnostics: signs only", vim.log.levels.INFO)
-                else
-                    -- → вернуться к current_line
+                if diag_state == "off" then
+                    -- → inline под строкой с курсором (старое поведение)
                     pcall(vim.diagnostic.config, {
                         virtual_lines = diagnostics.virtual_lines_current(),
                         virtual_text = false,
                     })
                     diag_state = "current_line"
                     vim.notify("Diagnostics: virtual_lines (current line)", vim.log.levels.INFO)
+                elseif diag_state == "current_line" then
+                    -- → inline на ВСЕХ строках с диагностикой
+                    pcall(vim.diagnostic.config, {
+                        virtual_lines = diagnostics.virtual_lines_all(),
+                        virtual_text = false,
+                    })
+                    diag_state = "all"
+                    vim.notify("Diagnostics: virtual_lines (all)", vim.log.levels.INFO)
+                else
+                    -- → назад к «ничего само не раскрывается»
+                    pcall(vim.diagnostic.config, { virtual_lines = false, virtual_text = false })
+                    diag_state = "off"
+                    vim.notify("Diagnostics: signs only (gl — показать под курсором)",
+                        vim.log.levels.INFO)
                 end
-            end, { desc = "Cycle diagnostics display: current_line → all → signs_only" })
+            end, { desc = "Cycle diagnostics display: off → current_line → all" })
 
             vim.keymap.set("n", "<leader>td", "<cmd>DiagToggle<CR>",
                 { desc = "Toggle diagnostics display mode" })

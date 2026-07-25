@@ -401,11 +401,21 @@ Step (`F10`/`F11`), Terminate (`<S-F5>`) или Restart (`<C-S-F5>`).
 
 ### Diagnostics
 
-| Keymap         | Action                                |
-| -------------- | ------------------------------------- |
-| `<leader>td`   | Toggle diagnostics globally           |
-| `<leader>sd`   | Telescope buffer diagnostics          |
-| `<leader>sD`   | Telescope workspace diagnostics       |
+Сами по себе сообщения не раскрываются: пассивно — знак в gutter + подчёркивание
+и лёгкая заливка ровно под ошибочными символами. Текст — по `gl`: оверлей поверх
+кода плюс подсветка того самого диапазона, о котором говорит окно. Гаснет при
+движении курсора, код не сдвигается.
+
+| Keymap         | Action                                          |
+| -------------- | ----------------------------------------------- |
+| `gl`           | Диагностика под курсором: окно + подсветка места |
+| `gl` (повторно)| Перейти внутрь окна (скролл/копирование)        |
+| `<Esc>`        | Убрать окно, не двигая курсор                   |
+| `q`            | Закрыть окно, находясь внутри него              |
+| `<C-W>d`       | То же окно без подсветки (дефолт Neovim)        |
+| `<leader>td`   | Inline-режим: off → current line → all → off    |
+| `<leader>sd`   | Telescope buffer diagnostics                    |
+| `<leader>sD`   | Telescope workspace diagnostics                 |
 
 ---
 
