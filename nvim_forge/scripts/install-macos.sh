@@ -1,4 +1,30 @@
 #!/usr/bin/env bash
+# ============================================================
+# Установка forge-nvim на macOS. Идемпотентен: повторный запуск
+# ничего не переустанавливает, только доставляет недостающее.
+#
+# Что делает:
+#   1. brew-зависимости (git, neovim, ripgrep, fd, cmake,
+#      tree-sitter-cli) + Nerd Font для иконок — только то, чего нет.
+#   2. WezTerm: ставит cask, если терминала нет, и симлинкует
+#      wezterm.lua из репо в ~/.config/wezterm/wezterm.lua.
+#   3. Клонирует/обновляет конфиг в ~/.config/nvim и синкает плагины
+#      (удалённая установка). Для ЛОКАЛЬНОЙ работы из чекаута через
+#      ./nvim_forge.sh этот шаг не нужен — запускай с DEPS_ONLY.
+#
+# Флаги (env):
+#   FORGE_NVIM_DEPS_ONLY=1      только зависимости + WezTerm, не трогать
+#                               ~/.config/nvim (режим для ./nvim_forge.sh)
+#   FORGE_NVIM_SKIP_DEPS=1      не ставить brew-пакеты
+#   FORGE_NVIM_SKIP_WEZTERM=1   не трогать WezTerm и его конфиг
+#   FORGE_NVIM_WITH_LANGUAGES=1 доставить go/python/rustup
+#   FORGE_NVIM_INSTALL_DIR=...  куда ставить конфиг (деф. ~/.config/nvim)
+#   FORGE_NVIM_NO_BACKUP=1      падать, если путь занят, вместо бэкапа
+#
+# Типовой запуск на маке с локальным чекаутом монорепо:
+#   FORGE_NVIM_DEPS_ONLY=1 ./nvim_forge/scripts/install-macos.sh
+#   ./nvim_forge.sh
+# ============================================================
 set -euo pipefail
 
 REPO_URL="${FORGE_NVIM_REPO:-https://github.com/cascad/forge-nvim.git}"
@@ -8,6 +34,8 @@ SKIP_DEPS="${FORGE_NVIM_SKIP_DEPS:-0}"
 WITH_LANGUAGES="${FORGE_NVIM_WITH_LANGUAGES:-0}"
 USE_LOCAL_SOURCE="${FORGE_NVIM_USE_LOCAL_SOURCE:-0}"
 NO_BACKUP="${FORGE_NVIM_NO_BACKUP:-0}"
+DEPS_ONLY="${FORGE_NVIM_DEPS_ONLY:-0}"
+SKIP_WEZTERM="${FORGE_NVIM_SKIP_WEZTERM:-0}"
 
 step() {
   printf '\n==> %s\n' "$1"
@@ -19,6 +47,41 @@ info() {
 
 have() {
   command -v "$1" >/dev/null 2>&1
+}
+
+formula_installed() {
+  [ -n "$(brew list --formula --versions "$1" 2>/dev/null)" ]
+}
+
+cask_installed() {
+  [ -n "$(brew list --cask --versions "$1" 2>/dev/null)" ]
+}
+
+# Ставит только отсутствующие формулы, уже установленные — пропускает.
+ensure_formulas() {
+  local missing=()
+  local f
+  for f in "$@"; do
+    if formula_installed "$f"; then
+      info "$f: already installed"
+    else
+      missing+=("$f")
+    fi
+  done
+  if [ "${#missing[@]}" -gt 0 ]; then
+    brew install "${missing[@]}"
+  fi
+}
+
+ensure_casks() {
+  local c
+  for c in "$@"; do
+    if cask_installed "$c"; then
+      info "$c: already installed"
+    else
+      brew install --cask "$c"
+    fi
+  done
 }
 
 install_deps() {
@@ -34,20 +97,89 @@ install_deps() {
   fi
 
   step "Installing base dependencies"
-  brew install git neovim ripgrep fd cmake llvm tree-sitter
+  # tree-sitter-cli: в свежем Homebrew CLI отделён от библиотеки
+  # tree-sitter (библиотека приедет сама как зависимость neovim).
+  # llvm не ставим: для сборки treesitter-парсеров достаточно Apple clang
+  # из Xcode CLT, без которого Homebrew и так не работает.
+  ensure_formulas git neovim ripgrep fd cmake tree-sitter-cli
+
+  step "Installing Nerd Font (иконки в nvim/wezterm)"
+  # Основной шрифт из wezterm.lua — CaskaydiaCove Nerd Font.
+  ensure_casks font-caskaydia-cove-nerd-font
 
   if [ "$WITH_LANGUAGES" = "1" ]; then
     step "Installing optional language toolchains"
-    brew install go python rustup-init
+    ensure_formulas go python rustup-init
     if ! have cargo; then
       rustup-init -y --no-modify-path
+    fi
+    # gopls — конвенция конфига: из Go-тулчейна (go install), НЕ через Mason
+    # (см. nvim_forge/lua/plugins/lsp.lua и forge/health.lua).
+    local gobin
+    gobin="$(go env GOPATH)/bin"
+    if have gopls || [ -x "$gobin/gopls" ]; then
+      info "gopls: already installed"
+    else
+      go install golang.org/x/tools/gopls@latest
+      info "gopls -> $gobin (добавь этот каталог в PATH, если его там нет)"
     fi
   fi
 }
 
+setup_wezterm() {
+  if [ "$SKIP_WEZTERM" = "1" ]; then
+    info "Skipping WezTerm setup"
+    return
+  fi
+
+  step "Setting up WezTerm"
+
+  if have wezterm || [ -d "/Applications/WezTerm.app" ]; then
+    info "WezTerm: already installed"
+  elif have brew; then
+    ensure_casks wezterm
+  else
+    info "brew not found; install WezTerm manually: https://wezterm.org"
+  fi
+
+  # Ищем wezterm.lua относительно скрипта: сначала корень монорепо
+  # (nvim_forge/scripts/../..), затем корень конфига (remote-раскладка).
+  local script_dir
+  script_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)"
+  local src=""
+  local candidate
+  for candidate in "$script_dir/../../wezterm.lua" "$script_dir/../wezterm.lua"; do
+    if [ -f "$candidate" ]; then
+      src="$(cd -P -- "$(dirname -- "$candidate")" && pwd)/wezterm.lua"
+      break
+    fi
+  done
+
+  if [ -z "$src" ]; then
+    info "wezterm.lua not found near the config; skipping terminal config link"
+    return
+  fi
+
+  local dst_dir="${XDG_CONFIG_HOME:-$HOME/.config}/wezterm"
+  local dst="$dst_dir/wezterm.lua"
+
+  if [ -L "$dst" ] && [ "$(readlink "$dst")" = "$src" ]; then
+    info "WezTerm config already linked: $dst"
+    return
+  fi
+
+  if [ -e "$dst" ] || [ -L "$dst" ]; then
+    backup_path "$dst"
+  fi
+
+  mkdir -p "$dst_dir"
+  ln -s "$src" "$dst"
+  info "Linked $dst -> $src"
+}
+
 backup_path() {
   local path="$1"
-  if [ ! -e "$path" ]; then
+  if [ ! -e "$path" ] && [ ! -L "$path" ]; then
     return
   fi
 
@@ -151,6 +283,15 @@ sync_neovim() {
 }
 
 install_deps
+setup_wezterm
+
+if [ "$DEPS_ONLY" = "1" ]; then
+  printf '\nDependencies and WezTerm are ready; ~/.config/nvim untouched.\n'
+  printf 'Launch from the repo checkout: ./nvim_forge.sh\n'
+  printf '(first start downloads plugins automatically)\n'
+  exit 0
+fi
+
 install_config
 sync_neovim
 

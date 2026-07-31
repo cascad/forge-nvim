@@ -74,6 +74,41 @@ function M.label()
     return "Go " .. v .. (overridden and "*" or "")
 end
 
+---Реально установленные версии Go для picker'а :GoToolchain, по убыванию.
+---Источники: SDK в ~/sdk/go* (их качают официальные обёртки golang.org/dl
+---и GOTOOLCHAIN) + сами обёртки go1.* в GOBIN. Обёртка без скачанного SDK
+---тоже годится: при выборе GOTOOLCHAIN найдёт её в PATH и докачает SDK.
+function M.installed_versions()
+    local seen, list = {}, {}
+    local function add(name)
+        if name:match("^go%d+%.%d+") and not seen[name] then
+            seen[name] = true
+            list[#list + 1] = name
+        end
+    end
+    for _, dir in ipairs(vim.fn.glob(vim.fn.expand("~/sdk") .. "/go*", true, true)) do
+        add(vim.fn.fnamemodify(dir, ":t"))
+    end
+    local gobin = vim.env.GOBIN
+        or ((vim.env.GOPATH and vim.env.GOPATH ~= "" and vim.env.GOPATH
+            or vim.fn.expand("~/go")) .. "/bin")
+    for _, f in ipairs(vim.fn.glob(gobin .. "/go1*", true, true)) do
+        add(vim.fn.fnamemodify(f, ":t"))
+    end
+    local function parts(v)
+        local maj, min, patch = v:match("^go(%d+)%.(%d+)%.?(%d*)")
+        return tonumber(maj) or 0, tonumber(min) or 0, tonumber(patch) or 0
+    end
+    table.sort(list, function(a, b)
+        local a1, a2, a3 = parts(a)
+        local b1, b2, b3 = parts(b)
+        if a1 ~= b1 then return a1 > b1 end
+        if a2 ~= b2 then return a2 > b2 end
+        return a3 > b3
+    end)
+    return list
+end
+
 ---Переключить toolchain и перезапустить gopls.
 ---@param ver string "go1.25.0" | "1.25.0" | "auto" | "local"
 function M.set_toolchain(ver)

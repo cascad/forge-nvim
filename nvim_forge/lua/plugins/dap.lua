@@ -26,8 +26,9 @@
 --   в std-буфер. Чистый nvim-lspconfig с теми же settings работает
 --   как раньше — мгновенно.
 --
--- codelldb берётся из PATH (у пользователя стоит в
--- %LocalAppData%\codelldb\adapter\codelldb.exe).
+-- codelldb: на Windows берётся из PATH (у пользователя стоит в
+-- %LocalAppData%\codelldb\adapter\codelldb.exe), на macOS/Linux его
+-- ставит Mason (mason-tool-installer в lsp.lua) → mason_bin-фолбэк ниже.
 
 -- Resolve a tool installed by Mason. Returns absolute path or nil.
 -- Used to bypass $PATH lookup when there are multiple competing copies of
@@ -183,7 +184,7 @@ local function codelldb_path()
     local localappdata = vim.fn.expand("$LOCALAPPDATA")
     local guess = localappdata .. "/codelldb/adapter/codelldb.exe"
     if vim.fn.filereadable(guess) == 1 then return guess end
-    -- Mason fallback (если решит когда-нибудь поставить).
+    -- Mason — штатный путь на macOS/Linux (ставится mason-tool-installer'ом).
     local mason = mason_bin("codelldb")
     if mason then return mason end
     return nil
@@ -1621,8 +1622,11 @@ return {
             else
                 vim.schedule(function()
                     vim.notify(
-                        "codelldb not found in PATH or %LocalAppData%\\codelldb\\adapter\\.\n"
-                        .. "Rust/C/C++ debugging will not work until you install it.",
+                        "codelldb not found (checked PATH, Mason, %LocalAppData%\\codelldb\\adapter\\).\n"
+                        .. "Rust/C/C++ debugging will not work until it is installed.\n"
+                        .. "macOS/Linux: ставится сам через Mason при первом старте; "
+                        .. "если не поставился — :MasonInstall codelldb.\n"
+                        .. "Windows: положи codelldb в PATH или %LocalAppData%\\codelldb\\adapter\\.",
                         vim.log.levels.WARN, { title = "DAP" }
                     )
                 end)

@@ -46,7 +46,11 @@ return {
         event = { "BufReadPre", "BufNewFile" },
         opts = {
             ensure_installed = {
-                "gopls",
+                -- gopls тут НЕ ставим: конвенция — gopls из активного
+                -- Go-тулчейна (`go install golang.org/x/tools/gopls@latest`,
+                -- см. forge/health.lua и install-скрипты, WITH_LANGUAGES=1).
+                -- Mason-сборка и сама требует go, и перекрывала бы своей
+                -- копией PATH-версию. Включается явно: vim.lsp.enable ниже.
                 "pyright",
                 "ruff",
                 "lua_ls",
@@ -67,10 +71,9 @@ return {
         "WhoIsSethDaniel/mason-tool-installer.nvim",
         dependencies = { "williamboman/mason.nvim" },
         event = "VeryLazy",
-        opts = {
-            ensure_installed = {
-                -- LSP
-                "gopls",
+        opts = function()
+            local tools = {
+                -- LSP (gopls — НЕ здесь: из Go-тулчейна, см. mason-lspconfig выше)
                 "pyright",
                 "ruff",
                 "lua-language-server",
@@ -80,8 +83,6 @@ return {
                 -- current so project toolchain upgrades do not break debugging.
                 "delve",
                 "debugpy",
-                -- codelldb НЕ ставим: пользователь держит его в PATH
-                -- (%LocalAppData%\codelldb\adapter\codelldb.exe).
                 --
                 -- Форматтеры здесь НЕ держим (единый механизм — системный):
                 --   stylua   : cargo install stylua  (см. format.lua)
@@ -92,11 +93,30 @@ return {
                 -- а system-установки не было → conform молча падал на lua/json.
                 -- Линтеры (если ruff/gopls/pyright чего-то не покрывают)
                 "golangci-lint",
-            },
-            auto_update = false,
-            run_on_start = true,
-            start_delay = 3000,
-        },
+            }
+            -- codelldb: на Windows НЕ ставим — пользователь держит его в PATH
+            -- (%LocalAppData%\codelldb\adapter\codelldb.exe). На macOS/Linux
+            -- ставим через Mason — dap.lua найдёт его mason_bin-фолбэком.
+            if vim.fn.has("win32") == 0 then
+                table.insert(tools, "codelldb")
+            end
+            return {
+                ensure_installed = tools,
+                auto_update = false,
+                run_on_start = true,
+                start_delay = 3000,
+            }
+        end,
+        -- ВАЖНО: сам плагин стартует установку из своего plugin/-файла по
+        -- VimEnter. При lazy-загрузке (event=VeryLazy) VimEnter уже прошёл,
+        -- автокоманда не сработает НИКОГДА — из-за этого ensure_installed
+        -- молча не выполнялся. Поэтому после setup зовём run_on_start сами
+        -- (он уважает run_on_start=true и start_delay выше).
+        config = function(_, opts)
+            local mti = require("mason-tool-installer")
+            mti.setup(opts)
+            mti.run_on_start()
+        end,
     },
 
     -- =====================================================================
@@ -453,6 +473,22 @@ return {
                     },
                 },
             })
+            -- gopls ставится НЕ через Mason (см. mason-lspconfig выше), поэтому
+            -- automatic_enable его не включит — включаем явно, бинарник из PATH
+            -- (тот, что собран активным Go-тулчейном).
+            if vim.fn.executable("gopls") == 1 then
+                vim.lsp.enable("gopls")
+            else
+                vim.schedule(function()
+                    vim.notify(
+                        "gopls не найден в PATH — Go LSP выключен.\n"
+                        .. "Ставится из активного Go-тулчейна:\n"
+                        .. "  go install golang.org/x/tools/gopls@latest\n"
+                        .. "(или install-скрипт с FORGE_NVIM_WITH_LANGUAGES=1)",
+                        vim.log.levels.WARN, { title = "LSP" }
+                    )
+                end)
+            end
 
             -- ----------- pyright -----------
             vim.lsp.config("pyright", {
@@ -723,13 +759,18 @@ return {
                     go.set_toolchain(a.args)
                     return
                 end
-                local choices = { "auto", "local", "go1.25.0", "go1.24.0", "go1.23.3" }
+                -- Список версий — из реально установленных на машине
+                -- (~/sdk + обёртки go1.* в GOBIN), см. forge/go.lua.
+                local choices = vim.list_extend({ "auto", "local" }, go.installed_versions())
                 vim.ui.select(choices, {
                     prompt = "GOTOOLCHAIN (сейчас: " .. go.current_toolchain() .. "):",
                 }, function(c) if c then go.set_toolchain(c) end end)
             end, {
                 nargs = "?",
-                complete = function() return { "auto", "local", "go1.25.0", "go1.24.0", "go1.23.3" } end,
+                complete = function()
+                    return vim.list_extend({ "auto", "local" },
+                        require("forge.go").installed_versions())
+                end,
                 desc = "Switch Go toolchain (GOTOOLCHAIN) and restart gopls",
             })
         end,

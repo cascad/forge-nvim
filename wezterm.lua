@@ -24,11 +24,12 @@ local is_windows = wezterm.target_triple:find("windows") ~= nil
 -- =====================================================================
 -- Размер окна при старте + запоминание размера.
 -- =====================================================================
--- Логика, как просил юзер: растяни окно мышью как удобно → нажми
--- Ctrl+Shift+S (см. config.keys ниже) — размер сохранится, и ВСЕ новые окна
--- открываются ровно таким, пока не сохранишь снова. Если сохранённого ещё
--- нет — открываем крупным в долю экрана (как VS Code/IDEA), не на весь экран.
--- Сохранённый размер лежит в хомяке (не в репо).
+-- Логика, как просил юзер: растяни окно мышью как удобно, подбери шрифт
+-- (Cmd/Ctrl +/−) → нажми Ctrl+Shift+S (см. config.keys ниже) — размер окна
+-- И размер шрифта сохранятся, и ВСЕ новые окна открываются ровно такими,
+-- пока не сохранишь снова. Если сохранённого ещё нет — открываем крупным
+-- в долю экрана (как VS Code/IDEA), не на весь экран.
+-- Сохранённое состояние лежит в хомяке (не в репо).
 local window_state_file = (wezterm.home_dir or os.getenv("USERPROFILE") or ".")
     .. "/.wezterm_forge_window.json"
 
@@ -44,7 +45,12 @@ local function read_saved_size()
     f:close()
     local ok, t = pcall(wezterm.json_parse, data)
     if ok and type(t) == "table" and tonumber(t.w) and tonumber(t.h) then
-        return { w = math.floor(t.w), h = math.floor(t.h) }
+        return {
+            w = math.floor(t.w),
+            h = math.floor(t.h),
+            -- В файлах, сохранённых до добавления шрифта, поля нет — nil.
+            font_size = tonumber(t.font_size),
+        }
     end
     return nil
 end
@@ -58,19 +64,26 @@ local function center_on_active_screen(gui, w, h)
     )
 end
 
--- Ctrl+Shift+S → запомнить ТЕКУЩИЙ размер окна.
+-- Ctrl+Shift+S → запомнить ТЕКУЩИЕ размер окна и размер шрифта.
 local save_window_size = wezterm.action_callback(function(window, _pane)
     local dims = window:get_dimensions()
-    local t = { w = dims.pixel_width, h = dims.pixel_height }
+    -- effective_config() учитывает set_config_overrides, т.е. отдаёт шрифт
+    -- после Cmd/Ctrl +/− (font-биндинги ниже работают через overrides).
+    local t = {
+        w = dims.pixel_width,
+        h = dims.pixel_height,
+        font_size = window:effective_config().font_size,
+    }
     local f = io.open(window_state_file, "w")
     if f then
         f:write(wezterm.json_encode(t))
         f:close()
         window:toast_notification("WezTerm",
-            ("Размер окна сохранён: %d×%d (откроется таким в след. раз)"):format(t.w, t.h),
+            ("Сохранено: окно %d×%d, шрифт %.1f (так и откроется в след. раз)")
+                :format(t.w, t.h, t.font_size),
             nil, 3000)
     else
-        window:toast_notification("WezTerm", "Не удалось записать размер окна", nil, 3000)
+        window:toast_notification("WezTerm", "Не удалось записать состояние окна", nil, 3000)
     end
 end)
 
@@ -156,6 +169,12 @@ config.font = wezterm.font_with_fallback({
 -- молча берём из fallback.
 config.warn_about_missing_glyphs = false
 config.font_size = 12.0
+-- Если шрифт был сохранён через Ctrl/Cmd+Shift+S — восстанавливаем его,
+-- перекрывая дефолт выше. Хранится в одном файле с размером окна.
+local saved_state = read_saved_size()
+if saved_state and saved_state.font_size then
+    config.font_size = saved_state.font_size
+end
 config.line_height = 1.05
 
 -- right чуть шире — там рисуется полоса прокрутки (enable_scroll_bar),
@@ -218,6 +237,24 @@ local smart_copy = wezterm.action_callback(function(window, pane)
     end
 end)
 
+-- Смена размера шрифта ЧЕРЕЗ config overrides, а не дефолтные
+-- IncreaseFontSize/DecreaseFontSize: внутренний font-scale wezterm нельзя
+-- прочитать из Lua, а overrides видны в effective_config() — только так
+-- Ctrl/Cmd+Shift+S может сохранить текущий шрифт. Шаг тот же, что у
+-- дефолта (×1.1). factor = nil — сброс к config.font_size (т.е. к
+-- сохранённому, а без сохранённого — к 12).
+local function change_font_size(factor)
+    return wezterm.action_callback(function(window, _pane)
+        local overrides = window:get_config_overrides() or {}
+        if factor then
+            overrides.font_size = window:effective_config().font_size * factor
+        else
+            overrides.font_size = nil
+        end
+        window:set_config_overrides(overrides)
+    end)
+end
+
 config.keys = {
     { key = "phys:C", mods = "CTRL", action = smart_copy },
     { key = "phys:V", mods = "CTRL", action = act.PasteFrom("Clipboard") },
@@ -238,5 +275,25 @@ config.keys = {
     -- от раскладки (на русской это та же клавиша, что печатает «х»).
     { key = "phys:LeftBracket", mods = "CTRL", action = act.SendKey({ key = "F13" }) },
 }
+
+-- Шрифт: Cmd+=/− (мак) и Ctrl+=/− (вин/линукс) — крупнее/мельче,
+-- Cmd/Ctrl+0 — сброс к сохранённому/дефолту. Перекрываем ВСЕ дефолтные
+-- комбинации Increase/DecreaseFontSize (включая шифтованные «+»), иначе
+-- часть из них меняла бы внутренний масштаб мимо overrides и Ctrl+Shift+S
+-- сохранял бы не тот размер (см. change_font_size выше).
+for _, mods in ipairs({ "SUPER", "CTRL", "SHIFT|SUPER", "SHIFT|CTRL" }) do
+    table.insert(config.keys, { key = "=", mods = mods, action = change_font_size(1.1) })
+    table.insert(config.keys, { key = "+", mods = mods, action = change_font_size(1.1) })
+    table.insert(config.keys, { key = "-", mods = mods, action = change_font_size(1 / 1.1) })
+    table.insert(config.keys, { key = "0", mods = mods, action = change_font_size(nil) })
+end
+
+-- На macOS дублируем сохранение размера окна на привычный Cmd+Shift+S
+-- (SUPER = Cmd). На Windows такой бинд не вешаем: Win+Shift+S занят
+-- системным скриншотом.
+if not is_windows then
+    table.insert(config.keys,
+        { key = "phys:S", mods = "SUPER|SHIFT", action = save_window_size })
+end
 
 return config
