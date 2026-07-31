@@ -56,6 +56,7 @@ forge-nvim/
 ├── nvim_forge.sh       # launcher (macOS / Linux)
 ├── nvim_astro.cmd      # launcher (Windows)
 ├── nvim-ide.cmd        # launcher (Windows, was: nvim2.cmd)
+├── wezterm.lua         # terminal + multiplexer config, shared Win/macOS
 ├── .gitignore          # shared
 └── .gitattributes      # shared
 ```
@@ -67,6 +68,7 @@ forge-nvim/
 | Main IDE             | `nvim_forge.cmd`     | `./nvim_forge.sh`      | `nvim_forge/QUICKSTART.md`, `nvim_forge/PANELS.md` |
 | AstroNvim baseline   | `nvim_astro.cmd`     | (one-liner below)      | `nvim_astro/README.md` |
 | `ldelossa/nvim-ide`  | `nvim-ide.cmd`       | (one-liner below)      | `nvim-ide/README.md` |
+| Terminal + panes     | `wezterm.lua`        | `wezterm.lua`          | `docs/WEZTERM.md` |
 
 On first use on macOS/Linux:
 

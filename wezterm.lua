@@ -150,6 +150,20 @@ config.enable_csi_u_key_encoding = false  -- kitty protocol предпочтит
 config.send_composed_key_when_left_alt_is_pressed = false
 config.send_composed_key_when_right_alt_is_pressed = false
 
+-- macOS: не отдавать Ctrl-комбинации системному IME.
+-- macos_forward_to_ime_modifier_mask по умолчанию равен "SHIFT|CTRL", то
+-- есть нажатия с Ctrl сначала уходят в IME. При не-латинском источнике
+-- ввода (в системе включён RussianWin) IME может съесть такое событие, и
+-- до сопоставления с config.keys оно не доходит. Под удар попадает в
+-- первую очередь LEADER (Ctrl+Shift+Space) и весь слой Ctrl+Shift ниже.
+-- Оставляем в маске только SHIFT: Ctrl идёт напрямую в WezTerm, а обычный
+-- ввод и композиция через IME работают как раньше.
+-- Это профилактика, а не лечение конкретного бага: сломанный Cmd+C
+-- ломался по другой причине — см. disable_default_key_bindings ниже.
+if not is_windows then
+    config.macos_forward_to_ime_modifier_mask = "SHIFT"
+end
+
 -- =====================================================================
 -- Внешний вид
 -- =====================================================================
@@ -203,15 +217,43 @@ config.cursor_blink_ease_in = "Constant"  -- без плавного появл�
 config.cursor_blink_ease_out = "Constant" -- без плавного затухания
 config.animation_fps = 1                -- дискретное вкл/выкл, не fade
 
--- Табы WezTerm не нужны (вкладки/сплиты ведёт Neovim). Прячем панель,
--- если открыт один таб.
-config.hide_tab_bar_if_only_one_tab = true
+-- Панель вкладок. Держим ВСЕГДА видимой (тонкую, без "fancy"): теперь это
+-- не только вкладки, но и индикатор LEADER + имя воркспейса (см. секцию
+-- мультиплексора внизу файла). Без неё не видно, взведён ли префикс.
+-- Не нужна — верни `true`, всё остальное продолжит работать.
+config.hide_tab_bar_if_only_one_tab = false
 config.use_fancy_tab_bar = false
+config.tab_bar_at_bottom = true
+config.tab_max_width = 24
+
+-- Неактивные панели слегка притушены, чтобы фокус читался с одного взгляда.
+-- Значения мягкие: текст в фоновой панели остаётся читаемым.
+config.inactive_pane_hsb = { saturation = 0.85, brightness = 0.75 }
 
 -- =====================================================================
 -- Copy / Paste
 -- =====================================================================
 local act = wezterm.action
+
+-- ВСЕ ВСТРОЕННЫЕ ХОТКЕИ WEZTERM ОТКЛЮЧЕНЫ — это принципиально.
+-- Дефолты WezTerm заданы ПО СИМВОЛУ, а не по позиции клавиши, поэтому они
+-- срабатывают только на английской раскладке и молча пропадают на русской:
+-- ровно та разница в поведении, которой тут быть не должно. Хуже того, часть
+-- из них перехватывала клавиши у Neovim (и тоже только на англ.):
+--   Ctrl+Shift+F  — забирал Search у панели поиска nvim (<C-S-f>)
+--   Ctrl+Shift+P  — забирал палитру у Telescope (<C-S-p>)
+--   Ctrl+PageUp/PageDown — забирали переключение буферов nvim
+--   Alt+Enter     — забирал <A-CR>
+-- Поэтому: дефолты выключены целиком, а всё нужное ниже переопределено
+-- через phys: (позиция клавиши). Итог — один и тот же набор хоткеев на
+-- Windows и macOS, на английской и русской раскладке, и ничего не
+-- утекает мимо Neovim незаметно.
+-- Мышь это не затрагивает: за неё отвечает отдельный
+-- disable_default_mouse_bindings, он остаётся выключенным — выделение,
+-- копирование по выделению и клик по ссылкам работают как раньше.
+-- Режимы copy_mode и search_mode тоже сохраняются: они живут в отдельных
+-- key_tables и этим флагом не сбрасываются.
+config.disable_default_key_bindings = true
 
 -- РАСКЛАДКО-НЕЗАВИСИМОСТЬ. Привязки заданы через `phys:` — это ФИЗИЧЕСКАЯ
 -- позиция клавиши на ANSI-US клавиатуре, а не символ, который она печатает.
@@ -224,9 +266,12 @@ local act = wezterm.action
 -- Прочие Ctrl+<буква>, которые wezterm НЕ перехватывает, уходят как есть в
 -- nvim — там раскладку разруливает config/ru_keys.lua (langmap + алиасы).
 
--- Ctrl+C — "умный": если есть выделение мышью/клавиатурой → копируем и
--- снимаем выделение; если выделения нет → шлём Ctrl+C в программу как
--- обычный SIGINT/прерывание (нужно шеллу и nvim).
+-- "Умный" Ctrl+C — ТОЛЬКО ДЛЯ WINDOWS (навешивается ниже под if is_windows).
+-- Там нет Cmd, поэтому одна и та же клавиша обязана делать два дела: если
+-- есть выделение мышью/клавиатурой → копируем и снимаем выделение; если
+-- выделения нет → шлём Ctrl+C в программу как обычный SIGINT.
+-- На macOS копирование системное (Cmd+C), и совмещать не нужно: там Ctrl+C
+-- вообще не перехватывается и всегда работает как чистое прерывание.
 local smart_copy = wezterm.action_callback(function(window, pane)
     local sel = window:get_selection_text_for_pane(pane)
     if sel and sel ~= "" then
@@ -256,7 +301,6 @@ local function change_font_size(factor)
 end
 
 config.keys = {
-    { key = "phys:C", mods = "CTRL", action = smart_copy },
     { key = "phys:V", mods = "CTRL", action = act.PasteFrom("Clipboard") },
     -- Дубли на Ctrl+Shift+C/V — привычный терминальный вариант, всегда
     -- copy/paste без "умной" логики.
@@ -276,16 +320,26 @@ config.keys = {
     { key = "phys:LeftBracket", mods = "CTRL", action = act.SendKey({ key = "F13" }) },
 }
 
+-- Ctrl+C вешаем только на Windows (см. smart_copy выше). На macOS клавиша
+-- остаётся неперехваченной и уходит в программу как 0x03 → SIGINT.
+if is_windows then
+    table.insert(config.keys, { key = "phys:C", mods = "CTRL", action = smart_copy })
+end
+
 -- Шрифт: Cmd+=/− (мак) и Ctrl+=/− (вин/линукс) — крупнее/мельче,
 -- Cmd/Ctrl+0 — сброс к сохранённому/дефолту. Перекрываем ВСЕ дефолтные
 -- комбинации Increase/DecreaseFontSize (включая шифтованные «+»), иначе
 -- часть из них меняла бы внутренний масштаб мимо overrides и Ctrl+Shift+S
 -- сохранял бы не тот размер (см. change_font_size выше).
+-- Клавиши заданы через phys: (позиция на клавиатуре), а не символом. По
+-- символу «=» на русской раскладке ловилось бы не всегда, а вариант «+»
+-- (Shift+=) вообще уехал бы: на RussianWin Shift над цифрами даёт другие
+-- знаки. С phys:Equal + модификатором SHIFT комбинация одна и та же на
+-- любой раскладке, поэтому отдельная строка на «+» больше не нужна.
 for _, mods in ipairs({ "SUPER", "CTRL", "SHIFT|SUPER", "SHIFT|CTRL" }) do
-    table.insert(config.keys, { key = "=", mods = mods, action = change_font_size(1.1) })
-    table.insert(config.keys, { key = "+", mods = mods, action = change_font_size(1.1) })
-    table.insert(config.keys, { key = "-", mods = mods, action = change_font_size(1 / 1.1) })
-    table.insert(config.keys, { key = "0", mods = mods, action = change_font_size(nil) })
+    table.insert(config.keys, { key = "phys:Equal", mods = mods, action = change_font_size(1.1) })
+    table.insert(config.keys, { key = "phys:Minus", mods = mods, action = change_font_size(1 / 1.1) })
+    table.insert(config.keys, { key = "phys:0", mods = mods, action = change_font_size(nil) })
 end
 
 -- На macOS дублируем сохранение размера окна на привычный Cmd+Shift+S
@@ -295,5 +349,332 @@ if not is_windows then
     table.insert(config.keys,
         { key = "phys:S", mods = "SUPER|SHIFT", action = save_window_size })
 end
+
+-- =====================================================================
+-- МУЛЬТИПЛЕКСОР: панели, вкладки, воркспейсы (вместо tmux)
+-- =====================================================================
+-- ПОЧЕМУ НЕ tmux/zellij: оба нативно живут только под Unix. На Windows
+-- tmux работает лишь внутри WSL — а тогда nvim_forge.cmd, pwsh и нативные
+-- тулзы остаются "снаружи", и хоткеи на маке и винде расходятся. У WezTerm
+-- мультиплексор встроенный, и ЭТОТ файл — единственный источник хоткеев,
+-- поэтому на обеих ОС они буквально одни и те же.
+--
+-- МОДЕЛЬ РОВНО КАК В tmux: есть LEADER (аналог Ctrl+B) — Ctrl+Shift+Space.
+-- Нажал leader, отпустил, нажал команду. Пока префикс взведён, в панели
+-- вкладок горит жёлтый "LEADER". Смысл в том, что у Neovim отбирается одна
+-- комбинация, а не десяток.
+--
+-- Буквы команд — по логике vim, а не tmux: v = :vsplit, s = :split.
+--
+-- Прямые дубли (без leader) навешены только на то, что жмётся постоянно.
+-- Они выбраны из комбинаций, которых НЕТ в nvim_forge: Ctrl+Shift+{B,D,E,
+-- F,J,P} и Ctrl+Shift+F5 заняты Neovim, C/V/S — выше в этом файле.
+-- Всё, что WezTerm перехватил, до Neovim уже не долетит — поэтому список
+-- прямых биндингов держим коротким.
+--
+-- Про cwd: новая панель наследует каталог текущей только если шелл шлёт
+-- OSC 7. У zsh/bash это даёт shell-integration WezTerm, у pwsh — строчка
+-- в профиле. Без неё панель откроется в домашнем каталоге.
+
+config.leader = {
+    key = "phys:Space",
+    mods = "CTRL|SHIFT",
+    timeout_milliseconds = 2000,
+}
+
+local function map(key, mods, action)
+    table.insert(config.keys, { key = key, mods = mods, action = action })
+end
+
+-- --- Панели: создать / убить -----------------------------------------
+map("phys:V", "LEADER", act.SplitPane({ direction = "Right" }))  -- :vsplit
+map("phys:S", "LEADER", act.SplitPane({ direction = "Down" }))   -- :split
+map("phys:X", "LEADER", act.CloseCurrentPane({ confirm = true }))
+map("phys:Z", "LEADER", act.TogglePaneZoomState)
+
+-- Самое частое — "дай вторую консоль рядом" — без leader, одной рукой.
+map("Enter", "CTRL|SHIFT", act.SplitPane({ direction = "Right" }))
+map("Enter", "CTRL|SHIFT|ALT", act.SplitPane({ direction = "Down" }))
+map("phys:Z", "CTRL|SHIFT", act.TogglePaneZoomState)
+map("phys:W", "CTRL|SHIFT", act.CloseCurrentPane({ confirm = true }))
+
+-- --- Панели: переходы -------------------------------------------------
+local dirs = {
+    { "phys:H", "LeftArrow",  "Left" },
+    { "phys:J", "DownArrow",  "Down" },
+    { "phys:K", "UpArrow",    "Up" },
+    { "phys:L", "RightArrow", "Right" },
+}
+for _, d in ipairs(dirs) do
+    local letter, arrow, dir = d[1], d[2], d[3]
+    map(letter, "LEADER", act.ActivatePaneDirection(dir))
+    map(arrow, "LEADER", act.ActivatePaneDirection(dir))
+    map(arrow, "CTRL|SHIFT", act.ActivatePaneDirection(dir))
+end
+-- o — по кругу (tmux); q — показать буквы на панелях и прыгнуть в любую.
+map("phys:O", "LEADER", act.RotatePanes("Clockwise"))
+map("phys:Q", "LEADER", act.PaneSelect({ alphabet = "asdfghjkl" }))
+
+-- --- Панели: ресайз ---------------------------------------------------
+-- LEADER r → залипающий режим: жми стрелки/hjkl сколько нужно, Esc — выход.
+-- Это key_table с one_shot = false, аналог tmux resize-pane -Z … по нажатию.
+map("phys:R", "LEADER", act.ActivateKeyTable({ name = "resize_pane", one_shot = false }))
+
+-- ВСТРОЕННЫЕ ТАБЛИЦЫ copy_mode / search_mode — ТОЖЕ НА ПОЗИЦИИ КЛАВИШ.
+-- WezTerm задаёт их по символам (h, j, k, l, y, G, $, /), поэтому на
+-- русской раскладке внутри copy mode не работало бы вообще ничего.
+-- Берём дефолтные таблицы и механически переписываем символьные клавиши
+-- на phys:. Тонкость, из-за которой нельзя конвертировать «в лоб»:
+-- заглавные записаны как key="G", mods="NONE" — то есть подразумевают
+-- Shift. Если просто сделать phys:G, то сработает обычная «g», и G (в
+-- конец буфера) перебьёт g (в начало). Поэтому заглавным явно дописываем
+-- SHIFT. Знаки вроде $ и ^ — это Shift+4 и Shift+6, их разворачиваем так же.
+local PUNCT_TO_PHYS = {
+    [","] = { "Comma" },       [";"] = { "Semicolon" },
+    ["."] = { "Period" },      ["/"] = { "Slash" },
+    ["?"] = { "Slash", true }, ["'"] = { "Quote" },
+    ['"'] = { "Quote", true }, ["`"] = { "Grave" },
+    ["-"] = { "Minus" },       ["="] = { "Equal" },
+    ["["] = { "LeftBracket" }, ["]"] = { "RightBracket" },
+    ["{"] = { "LeftBracket", true }, ["}"] = { "RightBracket", true },
+    ["$"] = { "4", true },     ["^"] = { "6", true },
+    ["%"] = { "5", true },     ["*"] = { "8", true },
+    ["("] = { "9", true },     [")"] = { "0", true },
+    ["<"] = { "Comma", true }, [">"] = { "Period", true },
+    [":"] = { "Semicolon", true },
+}
+
+local function with_shift(mods)
+    if mods == nil or mods == "" or mods == "NONE" then return "SHIFT" end
+    if mods:find("SHIFT") then return mods end
+    return mods .. "|SHIFT"
+end
+
+local function to_phys_binding(b)
+    local key, mods = b.key, b.mods or "NONE"
+    if type(key) ~= "string" then return b end
+    -- Уже привязано к позиции — не трогаем.
+    if key:match("^phys:") then return b end
+
+    -- Дефолтные таблицы приходят с префиксом "mapped:" — это и есть
+    -- «сопоставлять по символу текущей раскладки», ровно то, что нам мешает.
+    -- Снимаем префикс и смотрим на сам символ.
+    local raw = key:match("^mapped:(.+)$") or key
+
+    -- Одиночная латинская буква: a → phys:A, G → phys:G + SHIFT.
+    if raw:match("^[A-Za-z]$") then
+        if raw:match("^%u$") then mods = with_shift(mods) end
+        return { key = "phys:" .. raw:upper(), mods = mods, action = b.action }
+    end
+    -- Цифра: позиция та же, но пусть будет единообразно.
+    if raw:match("^%d$") then
+        return { key = "phys:" .. raw, mods = mods, action = b.action }
+    end
+    -- Знаки препинания по таблице выше.
+    local p = PUNCT_TO_PHYS[raw]
+    if p then
+        return {
+            key = "phys:" .. p[1],
+            mods = p[2] and with_shift(mods) or mods,
+            action = b.action,
+        }
+    end
+    -- Всё остальное — именованные клавиши (Escape, Enter, PageUp, стрелки,
+    -- Space, F1…). Они и так не зависят от раскладки, не трогаем.
+    return b
+end
+
+config.key_tables = {}
+-- pcall: wezterm.gui доступен не во всех контекстах (например, в
+-- mux-сервере). Если API нет — просто остаёмся на дефолтных таблицах,
+-- конфиг от этого не падает.
+local ok_tables, default_tables = pcall(function()
+    return wezterm.gui.default_key_tables()
+end)
+if ok_tables and type(default_tables) == "table" then
+    for name, binds in pairs(default_tables) do
+        local converted = {}
+        for _, b in ipairs(binds) do
+            table.insert(converted, to_phys_binding(b))
+        end
+        config.key_tables[name] = converted
+    end
+end
+
+-- В ЭТОЙ ВЕРСИИ WezTerm В copy_mode НЕТ ПОИСКА — он вынесен в отдельный
+-- режим (search_mode) и из copy mode никак не вызывается. Для vim-навигации
+-- по выводу это дыра: без «/» половина смысла теряется. Добавляем привычную
+-- тройку. act.Search открывает search_mode: набрал шаблон → Enter вернёт в
+-- copy mode на совпадении, дальше n/N прыгают по ним.
+if config.key_tables.copy_mode then
+    local cm = config.key_tables.copy_mode
+    table.insert(cm, {
+        key = "phys:Slash", mods = "NONE",
+        action = act.Search({ CaseInSensitiveString = "" }),
+    })
+    table.insert(cm, { key = "phys:N", mods = "NONE", action = act.CopyMode("NextMatch") })
+    table.insert(cm, { key = "phys:N", mods = "SHIFT", action = act.CopyMode("PriorMatch") })
+end
+
+config.key_tables.resize_pane = {
+        { key = "phys:H",     action = act.AdjustPaneSize({ "Left", 3 }) },
+        { key = "phys:J",     action = act.AdjustPaneSize({ "Down", 3 }) },
+        { key = "phys:K",     action = act.AdjustPaneSize({ "Up", 3 }) },
+        { key = "phys:L",     action = act.AdjustPaneSize({ "Right", 3 }) },
+        { key = "LeftArrow",  action = act.AdjustPaneSize({ "Left", 3 }) },
+        { key = "DownArrow",  action = act.AdjustPaneSize({ "Down", 3 }) },
+        { key = "UpArrow",    action = act.AdjustPaneSize({ "Up", 3 }) },
+        { key = "RightArrow", action = act.AdjustPaneSize({ "Right", 3 }) },
+    { key = "Escape",     action = "PopKeyTable" },
+    { key = "Enter",      action = "PopKeyTable" },
+}
+
+-- --- Готовая раскладка под задачу «nvim + тестовые консоли» ------------
+-- LEADER a: текущая панель (там forge-nvim) остаётся слева и широкой,
+-- справа появляются две консоли столбиком. Фокус возвращается в nvim.
+map("phys:A", "LEADER", wezterm.action_callback(function(_window, pane)
+    local right = pane:split({ direction = "Right", size = 0.35 })
+    right:split({ direction = "Bottom", size = 0.5 })
+    pane:activate()
+end))
+
+-- --- Вкладки ----------------------------------------------------------
+map("phys:C", "LEADER", act.SpawnTab("CurrentPaneDomain"))
+map("phys:N", "LEADER", act.ActivateTabRelative(1))
+map("phys:P", "LEADER", act.ActivateTabRelative(-1))
+map("phys:T", "CTRL|SHIFT", act.SpawnTab("CurrentPaneDomain"))
+map("PageDown", "CTRL|SHIFT", act.ActivateTabRelative(1))
+map("PageUp", "CTRL|SHIFT", act.ActivateTabRelative(-1))
+-- Ctrl+Tab / Ctrl+Shift+Tab — привычное «как везде» переключение вкладок.
+-- Отдаём терминалу осознанно: Neovim крутит буферы на <Tab>/<S-Tab> БЕЗ
+-- Ctrl, а <C-Tab> в nvim_forge не занят ничем. Голый <Tab> мы не трогаем,
+-- он уходит в nvim как раньше. Клавиша именованная, а не символьная,
+-- поэтому от раскладки не зависит.
+-- Захочешь вернуть <C-Tab> в Neovim — удали эти две строки.
+map("Tab", "CTRL", act.ActivateTabRelative(1))
+map("Tab", "CTRL|SHIFT", act.ActivateTabRelative(-1))
+-- phys:1..9 — по позиции клавиши. Через символ Ctrl+Shift+2 на русской
+-- раскладке пришёл бы как «"», а на английской как «@» — и биндинг
+-- разъехался бы между раскладками.
+for i = 1, 9 do
+    map("phys:" .. i, "LEADER", act.ActivateTab(i - 1))
+    map("phys:" .. i, "CTRL|SHIFT", act.ActivateTab(i - 1))
+end
+-- Переименовать вкладку. phys:Comma, потому что на русской раскладке эта
+-- клавиша печатает «б» — по символу биндинг бы не поймался.
+map("phys:Comma", "LEADER", act.PromptInputLine({
+    description = "Имя вкладки:",
+    action = wezterm.action_callback(function(window, _pane, line)
+        if line and line ~= "" then
+            window:active_tab():set_title(line)
+        end
+    end),
+}))
+
+-- --- Воркспейсы (аналог сессий tmux) ----------------------------------
+-- Набор вкладок/панелей под задачу; переключение мгновенное, состояние
+-- каждого воркспейса живёт своей жизнью.
+map("phys:W", "LEADER", act.ShowLauncherArgs({ flags = "FUZZY|TABS|WORKSPACES" }))
+map("phys:S", "LEADER|SHIFT", act.PromptInputLine({
+    description = "Новый/существующий воркспейс:",
+    action = wezterm.action_callback(function(window, pane, line)
+        if line and line ~= "" then
+            window:perform_action(act.SwitchToWorkspace({ name = line }), pane)
+        end
+    end),
+}))
+
+-- --- Скроллбэк: чтение и поиск ---------------------------------------
+-- QuickSelect (подсветить на экране пути/URL/хеши буквами и скопировать
+-- одной клавишей) по умолчанию висел на Ctrl+Shift+Space — а эту комбинацию
+-- забрал LEADER. Возвращаем на свободный Ctrl+Shift+U и дублируем в leader.
+map("phys:U", "CTRL|SHIFT", act.QuickSelect)
+map("phys:Space", "LEADER", act.QuickSelect)
+-- LEADER [ — copy mode: hjkl/стрелки для навигации по истории, v — выделить,
+-- y — скопировать, Esc — выход. Ровно как copy-mode-vi в tmux.
+map("phys:LeftBracket", "LEADER", act.ActivateCopyMode)
+map("phys:F", "LEADER", act.Search({ CaseInSensitiveString = "" }))
+
+-- LEADER b — ВЕСЬ вывод панели уходит в файл и открывается в nvim новой
+-- вкладкой, курсор в конце. Дальше это обычный Neovim: /поиск, n/N, gg/G,
+-- визуальный режим, y в системный буфер, :w для сохранения куска.
+-- Возврат к вводу — просто :q, вкладка закроется и ты снова в консоли.
+-- Приём штатный, описан в документации WezTerm (docs/scrollback.md):
+-- get_lines_as_text + SpawnCommandInNewTab.
+--
+-- Запускаем ГОЛЫЙ nvim, а не nvim_forge.sh/.cmd: для чтения вывода нужен
+-- мгновенный старт, а не полная IDE с LSP и плагинами. Захочешь форж —
+-- поменяй args на путь до nvim_forge.sh (мак) / nvim_forge.cmd (винда).
+--
+-- Файл один и тот же, каждый раз перезаписывается. Лежит в хомяке рядом
+-- с .wezterm_forge_window.json — в репо ничего не попадает. Учти, что в
+-- нём остаётся последний вывод консоли: если там мелькали токены/пароли,
+-- удали файл руками.
+local scrollback_file = (wezterm.home_dir or os.getenv("USERPROFILE") or ".")
+    .. "/.wezterm_scrollback.txt"
+
+map("phys:B", "LEADER", wezterm.action_callback(function(window, pane)
+    local text = pane:get_lines_as_text(pane:get_dimensions().scrollback_rows)
+    -- get_lines_as_text отдаёт и незанятую часть экрана — это хвост из
+    -- пустых строк, из-за него курсор в конце файла оказывается в пустоте.
+    text = text:gsub("%s+$", "\n")
+    local f = io.open(scrollback_file, "w")
+    if not f then
+        window:toast_notification("WezTerm",
+            "Не удалось записать " .. scrollback_file, nil, 3000)
+        return
+    end
+    f:write(text)
+    f:close()
+    -- «+» без числа — открыть на последней строке, т.е. на свежем выводе.
+    window:perform_action(
+        act.SpawnCommandInNewTab({ args = { "nvim", "+", scrollback_file } }),
+        pane)
+end))
+
+-- --- Возврат полезных дефолтов, теперь через phys: ---------------------
+-- Всё, что WezTerm давал «из коробки» и что стоит сохранить. Переписано на
+-- позиции клавиш, поэтому одинаково работает на любой раскладке.
+-- НЕ возвращены намеренно (их забирает Neovim, см. комментарий выше):
+-- Ctrl+Shift+F, Ctrl+Shift+P, Ctrl+PageUp/PageDown, Ctrl+Tab, Alt+Enter.
+map("phys:K", "CTRL|SHIFT", act.ClearScrollback("ScrollbackOnly"))
+map("phys:L", "CTRL|SHIFT", act.ShowDebugOverlay)
+map("phys:R", "CTRL|SHIFT", act.ReloadConfiguration)
+map("phys:N", "CTRL|SHIFT", act.SpawnWindow)
+map("phys:X", "CTRL|SHIFT", act.ActivateCopyMode)
+map("PageUp", "SHIFT", act.ScrollByPage(-1))
+map("PageDown", "SHIFT", act.ScrollByPage(1))
+
+-- Дефолты, которые висели на Alt+Enter / Ctrl+Shift+P / Ctrl+Shift+U —
+-- переехали под LEADER, чтобы не отнимать комбинации у Neovim.
+map("phys:M", "LEADER", act.ToggleFullScreen)
+map("phys:Semicolon", "LEADER", act.ActivateCommandPalette)  -- аналог prefix+: в tmux
+map("phys:E", "LEADER", act.CharSelect({ copy_on_select = true }))
+
+-- macOS: системные Cmd-комбинации, которые там ожидаются на уровне ОС.
+-- На Windows их нет — кросс-платформенный набор целиком живёт на Ctrl/LEADER,
+-- так что это только удобство мака, а не отдельная «маковая раскладка».
+if not is_windows then
+    map("phys:C", "SUPER", act.CopyTo("Clipboard"))
+    map("phys:V", "SUPER", act.PasteFrom("Clipboard"))
+    map("phys:N", "SUPER", act.SpawnWindow)
+    map("phys:T", "SUPER", act.SpawnTab("CurrentPaneDomain"))
+    map("phys:H", "SUPER", act.HideApplication)
+    map("phys:M", "SUPER", act.Hide)
+    map("phys:Q", "SUPER", act.QuitApplication)
+end
+
+-- --- Индикатор LEADER + воркспейс в панели вкладок --------------------
+wezterm.on("update-right-status", function(window, _pane)
+    local leader = window:leader_is_active()
+    local text = " " .. window:active_workspace() .. " "
+    if leader then
+        text = " LEADER  " .. text
+    end
+    window:set_right_status(wezterm.format({
+        { Foreground = { Color = leader and "#f9e2af" or "#6c7086" } },
+        { Text = text },
+    }))
+end)
 
 return config
