@@ -9,7 +9,10 @@
 #      tree-sitter-cli и т.д.) — через нативный пакетный менеджер.
 #   2. WezTerm (только в GUI-сессии): ставит терминал, Nerd Font
 #      (CaskaydiaCove) и симлинкует wezterm.lua из репо в
-#      ~/.config/wezterm/wezterm.lua.
+#      ~/.config/wezterm/wezterm.lua (WT-LOAD-13): путь, уже ведущий в
+#      файл репо, не трогает, внутри чекаута ничего не создаёт. Перекрытия
+#      (~/.wezterm.lua, WEZTERM_CONFIG_FILE) на Linux НЕ нейтрализуются —
+#      их убирают руками (решение владельца 2026-09-27, Q13 = A).
 #   3. Клонирует/обновляет конфиг в ~/.config/nvim и синкает плагины
 #      (удалённая установка). Для ЛОКАЛЬНОЙ работы из чекаута через
 #      ./nvim_forge.sh этот шаг не нужен — запускай с DEPS_ONLY.
@@ -40,6 +43,28 @@ NO_BACKUP="${FORGE_NVIM_NO_BACKUP:-0}"
 DEPS_ONLY="${FORGE_NVIM_DEPS_ONLY:-0}"
 SKIP_WEZTERM="${FORGE_NVIM_SKIP_WEZTERM:-0}"
 FORCE_WEZTERM="${FORGE_NVIM_FORCE_WEZTERM:-0}"
+
+# Каталог скрипта — один раз на верхнем уровне. Пуст при `curl … | bash`:
+# ${BASH_SOURCE[0]} тогда не задан (с `set -u` — падение), а wezterm.lua
+# от текущего каталога не ищем — он может оказаться чужим.
+SCRIPT_DIR=""
+if [ -n "${BASH_SOURCE[0]:-}" ] && [ -f "${BASH_SOURCE[0]}" ]; then
+  SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)"
+fi
+# Корень чекаута монорепо (рядом лаунчер nvim_forge.sh) — чтобы не класть
+# ничего внутрь него, когда XDG_CONFIG_HOME указывает в репо.
+MONOREPO_ROOT=""
+if [ -n "$SCRIPT_DIR" ] && [ -f "$SCRIPT_DIR/../../nvim_forge.sh" ]; then
+  MONOREPO_ROOT="$(cd -- "$SCRIPT_DIR/../.." && pwd -P)"
+fi
+# Общие функции подключения (resolve_path, path_within, link_wezterm_config)
+# — одна копия на macOS и Linux. Нет файла — шаг WezTerm пропускается.
+WEZTERM_LINK_LIB=0
+if [ -n "$SCRIPT_DIR" ] && [ -f "$SCRIPT_DIR/lib/wezterm-link.sh" ]; then
+  # shellcheck source=lib/wezterm-link.sh
+  . "$SCRIPT_DIR/lib/wezterm-link.sh"
+  WEZTERM_LINK_LIB=1
+fi
 
 step() {
   printf '\n==> %s\n' "$1"
@@ -195,37 +220,27 @@ setup_wezterm() {
 
   # Ищем wezterm.lua относительно скрипта: сначала корень монорепо
   # (nvim_forge/scripts/../..), затем корень конфига (remote-раскладка).
-  local script_dir
-  script_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)"
-  local src=""
-  local candidate
-  for candidate in "$script_dir/../../wezterm.lua" "$script_dir/../wezterm.lua"; do
-    if [ -f "$candidate" ]; then
-      src="$(cd -P -- "$(dirname -- "$candidate")" && pwd)/wezterm.lua"
-      break
-    fi
-  done
-
+  local src="" candidate
+  if [ -n "$SCRIPT_DIR" ] && [ "$WEZTERM_LINK_LIB" = "1" ]; then
+    for candidate in "$SCRIPT_DIR/../../wezterm.lua" "$SCRIPT_DIR/../wezterm.lua"; do
+      if [ -f "$candidate" ]; then
+        src="$(resolve_path "$candidate")"
+        break
+      fi
+    done
+  fi
   if [ -z "$src" ]; then
     info "wezterm.lua not found near the config; skipping terminal config link"
     return
   fi
 
-  local dst_dir="${XDG_CONFIG_HOME:-$HOME/.config}/wezterm"
-  local dst="$dst_dir/wezterm.lua"
-
-  if [ -L "$dst" ] && [ "$(readlink "$dst")" = "$src" ]; then
-    info "WezTerm config already linked: $dst"
-    return
+  # XDG_CONFIG_HOME, указывающий внутрь чекаута (терминал nvim_forge), не
+  # учитывается: симлинк лёг бы в дерево репо.
+  local xdg="${XDG_CONFIG_HOME:-}"
+  if [ -n "$xdg" ] && [ -n "$MONOREPO_ROOT" ] && path_within "$(resolve_path "$xdg")" "$MONOREPO_ROOT"; then
+    xdg=""
   fi
-
-  if [ -e "$dst" ] || [ -L "$dst" ]; then
-    backup_path "$dst"
-  fi
-
-  mkdir -p "$dst_dir"
-  ln -s "$src" "$dst"
-  info "Linked $dst -> $src"
+  link_wezterm_config "$src" "${xdg:-$HOME/.config}/wezterm"
 }
 
 backup_path() {
@@ -262,13 +277,13 @@ copy_local_repo() {
 }
 
 install_config() {
-  local script_dir
-  script_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)"
-  local local_repo_root
-  local_repo_root="$(cd "$script_dir/.." && pwd -P)"
+  local local_repo_root=""
   local running_from_repo=0
-  if [ -f "$local_repo_root/init.lua" ] && [ -d "$local_repo_root/lua" ]; then
-    running_from_repo=1
+  if [ -n "$SCRIPT_DIR" ]; then
+    local_repo_root="$(cd "$SCRIPT_DIR/.." && pwd -P)"
+    if [ -f "$local_repo_root/init.lua" ] && [ -d "$local_repo_root/lua" ]; then
+      running_from_repo=1
+    fi
   fi
 
   step "Installing forge-nvim"

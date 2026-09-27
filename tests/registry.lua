@@ -1,0 +1,35 @@
+-- Реестр файлов проверок для tests/run.lua (add-wezterm-spec-checks, design,
+-- решения 1 и 9). Каждый файл проверок — здесь, иначе trace его не пропустит.
+--
+-- Поля записи:
+--   file    — путь от корня репо;
+--   suite   — набор: unit | wezterm | install | trace | conpty;
+--   kind    — 'lua' (по умолчанию: `nvim -l <file>`), 'sh' (shell-набор,
+--             способ запуска зависит от ОС хоста, см. run.lua, LAUNCHERS.sh)
+--             или 'py' (`python <file>`, только Windows, LAUNCHERS.py);
+--   shell   — для kind = 'sh' обязательно: среда набора. Сейчас одна —
+--             'posix': bash + git + python3, вызов `<скрипт> <репо> [bash]`;
+--             Windows — WSL (+ ветка FORGE_BASH32), macOS — /bin/bash
+--             (+ bash из Homebrew), Linux — bash (+ ветка FORGE_BASH32);
+--   timeout — секунды, по умолчанию 60.
+-- Зарегистрированный, но отсутствующий файл — FAIL «зарегистрирован, но файла нет».
+return {
+  { file = 'tests/lib/check.test.lua', suite = 'unit' },
+  { file = 'tests/lib/spec_index.test.lua', suite = 'unit' },
+  { file = 'tests/wezterm/fake_wezterm.test.lua', suite = 'unit' },
+  { file = 'tests/wezterm/keyboard-protocol.test.lua', suite = 'unit' },
+  { file = 'tests/wezterm/key-ownership.test.lua', suite = 'unit' },
+  { file = 'tests/wezterm/clipboard.test.lua', suite = 'unit' },
+  { file = 'tests/wezterm/windows-mode.test.lua', suite = 'unit' },
+  { file = 'tests/wezterm/panes-tabs.test.lua', suite = 'unit' },
+  { file = 'tests/wezterm/scrollback.test.lua', suite = 'unit' },
+  { file = 'tests/wezterm/window-state.test.lua', suite = 'unit' },
+  { file = 'tests/wezterm/ui.test.lua', suite = 'unit' },
+  { file = 'tests/wezterm/config-loading.test.lua', suite = 'wezterm' },
+  { file = 'tests/wezterm/snapshot.test.lua', suite = 'wezterm' },
+  { file = 'tests/install-macos.scenarios.sh', suite = 'install', kind = 'sh', shell = 'posix', timeout = 180 },
+  { file = 'tests/install-linux.scenarios.sh', suite = 'install', kind = 'sh', shell = 'posix', timeout = 120 },
+  { file = 'tests/wezterm/conpty/chords.test.py', suite = 'conpty', kind = 'py', timeout = 400 },
+  { file = 'tests/trace.test.lua', suite = 'trace' },
+  { file = 'tests/lib/trace.test.lua', suite = 'trace' },
+}

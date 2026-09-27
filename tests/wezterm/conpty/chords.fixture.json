@@ -1,0 +1,1072 @@
+{
+  "layouts": {
+    "en": {
+      "announce": {
+        "chansend": true,
+        "ui_send": true
+      },
+      "forge_announce": {
+        "disabled_quiet": true,
+        "exit": true,
+        "start": true
+      },
+      "layout": "en",
+      "physical_keys": [
+        "0",
+        "1",
+        "2",
+        "3",
+        "5",
+        "6",
+        "7",
+        "8",
+        "9",
+        "<BS>",
+        "<C-A>",
+        "<C-B>",
+        "<C-C>",
+        "<C-D>",
+        "<C-E>",
+        "<C-F>",
+        "<C-G>",
+        "<C-H>",
+        "<C-K>",
+        "<C-L>",
+        "<C-N>",
+        "<C-O>",
+        "<C-P>",
+        "<C-Q>",
+        "<C-R>",
+        "<C-S>",
+        "<C-T>",
+        "<C-U>",
+        "<C-V>",
+        "<C-W>",
+        "<C-X>",
+        "<C-Y>",
+        "<C-Z>",
+        "<C-\\>",
+        "<C-]>",
+        "<C-^>",
+        "<C-_>",
+        "<CR>",
+        "<Esc>",
+        "<F10>",
+        "<F11>",
+        "<F12>",
+        "<F13>",
+        "<F14>",
+        "<F15>",
+        "<F16>",
+        "<F17>",
+        "<F18>",
+        "<F19>",
+        "<F1>",
+        "<F20>",
+        "<F21>",
+        "<F22>",
+        "<F23>",
+        "<F24>",
+        "<F25>",
+        "<F26>",
+        "<F27>",
+        "<F28>",
+        "<F29>",
+        "<F2>",
+        "<F30>",
+        "<F31>",
+        "<F32>",
+        "<F33>",
+        "<F34>",
+        "<F35>",
+        "<F36>",
+        "<F37>",
+        "<F38>",
+        "<F39>",
+        "<F3>",
+        "<F40>",
+        "<F41>",
+        "<F42>",
+        "<F43>",
+        "<F44>",
+        "<F45>",
+        "<F46>",
+        "<F47>",
+        "<F48>",
+        "<F49>",
+        "<F4>",
+        "<F50>",
+        "<F51>",
+        "<F52>",
+        "<F53>",
+        "<F54>",
+        "<F55>",
+        "<F56>",
+        "<F57>",
+        "<F58>",
+        "<F59>",
+        "<F5>",
+        "<F60>",
+        "<F61>",
+        "<F62>",
+        "<F63>",
+        "<F6>",
+        "<F7>",
+        "<F8>",
+        "<F9>",
+        "<M-4>",
+        "<M-5>",
+        "<M-C-F10>",
+        "<M-C-F11>",
+        "<M-C-F12>",
+        "<M-C-F1>",
+        "<M-C-F2>",
+        "<M-C-F3>",
+        "<M-C-F4>",
+        "<M-C-F5>",
+        "<M-C-F6>",
+        "<M-C-F7>",
+        "<M-C-F8>",
+        "<M-C-F9>",
+        "<NL>",
+        "<S-F10>",
+        "<S-F11>",
+        "<S-F12>",
+        "<S-F4>",
+        "<S-F5>",
+        "<S-F6>",
+        "<S-F7>",
+        "<S-F8>",
+        "<S-F9>",
+        "<Tab>",
+        "a",
+        "b",
+        "c",
+        "d",
+        "e",
+        "f",
+        "g",
+        "h",
+        "i",
+        "j",
+        "k",
+        "l",
+        "m",
+        "n",
+        "o",
+        "p",
+        "q",
+        "r",
+        "s",
+        "t",
+        "u",
+        "v",
+        "w",
+        "x",
+        "y",
+        "z"
+      ],
+      "replay": {
+        "nvim": {
+          "Ctrl+.": {
+            "replay": [
+              "<C-N>"
+            ],
+            "right_ctrl": [
+              "<C-N>"
+            ]
+          },
+          "Ctrl+/": {
+            "replay": [
+              "<C-_>"
+            ],
+            "right_ctrl": [
+              "<C-_>"
+            ]
+          },
+          "Ctrl+Enter": {
+            "replay": [
+              "<NL>"
+            ],
+            "right_ctrl": [
+              "<NL>"
+            ]
+          },
+          "Ctrl+Shift+D": {
+            "replay": [
+              "<C-D>"
+            ],
+            "right_ctrl": [
+              "<C-D>"
+            ]
+          },
+          "Ctrl+Shift+E": {
+            "replay": [
+              "<C-E>"
+            ],
+            "right_ctrl": [
+              "<C-E>"
+            ]
+          },
+          "Ctrl+Shift+F": {
+            "replay": [
+              "<C-F>"
+            ],
+            "right_ctrl": [
+              "<C-F>"
+            ]
+          },
+          "Ctrl+Shift+F5": {
+            "replay": [
+              "<F41>"
+            ],
+            "right_ctrl": [
+              "<F41>"
+            ]
+          },
+          "Ctrl+Shift+P": {
+            "replay": [
+              "<C-P>"
+            ],
+            "right_ctrl": [
+              "<C-P>"
+            ]
+          },
+          "Ctrl+Space": {
+            "replay": [],
+            "right_ctrl": []
+          }
+        },
+        "records": {
+          "Ctrl+.": {
+            "replay": [
+              "vk=190 sc=52 uc=0 down=1 cs=8",
+              "vk=190 sc=52 uc=0 down=0 cs=8"
+            ],
+            "right_ctrl": [
+              "vk=190 sc=52 uc=0 down=1 cs=4",
+              "vk=190 sc=52 uc=0 down=0 cs=4"
+            ]
+          },
+          "Ctrl+/": {
+            "replay": [
+              "vk=191 sc=53 uc=0 down=1 cs=8",
+              "vk=191 sc=53 uc=0 down=0 cs=8"
+            ],
+            "right_ctrl": [
+              "vk=191 sc=53 uc=0 down=1 cs=4",
+              "vk=191 sc=53 uc=0 down=0 cs=4"
+            ]
+          },
+          "Ctrl+Enter": {
+            "replay": [
+              "vk=13 sc=28 uc=10 down=1 cs=8",
+              "vk=13 sc=28 uc=10 down=0 cs=8"
+            ],
+            "right_ctrl": [
+              "vk=13 sc=28 uc=10 down=1 cs=4",
+              "vk=13 sc=28 uc=10 down=0 cs=4"
+            ]
+          },
+          "Ctrl+Shift+D": {
+            "replay": [
+              "vk=68 sc=32 uc=4 down=1 cs=24",
+              "vk=68 sc=32 uc=4 down=0 cs=24"
+            ],
+            "right_ctrl": [
+              "vk=68 sc=32 uc=4 down=1 cs=20",
+              "vk=68 sc=32 uc=4 down=0 cs=20"
+            ]
+          },
+          "Ctrl+Shift+E": {
+            "replay": [
+              "vk=69 sc=18 uc=5 down=1 cs=24",
+              "vk=69 sc=18 uc=5 down=0 cs=24"
+            ],
+            "right_ctrl": [
+              "vk=69 sc=18 uc=5 down=1 cs=20",
+              "vk=69 sc=18 uc=5 down=0 cs=20"
+            ]
+          },
+          "Ctrl+Shift+F": {
+            "replay": [
+              "vk=70 sc=33 uc=6 down=1 cs=24",
+              "vk=70 sc=33 uc=6 down=0 cs=24"
+            ],
+            "right_ctrl": [
+              "vk=70 sc=33 uc=6 down=1 cs=20",
+              "vk=70 sc=33 uc=6 down=0 cs=20"
+            ]
+          },
+          "Ctrl+Shift+F5": {
+            "replay": [
+              "vk=116 sc=63 uc=0 down=1 cs=24",
+              "vk=116 sc=63 uc=0 down=0 cs=24"
+            ],
+            "right_ctrl": [
+              "vk=116 sc=63 uc=0 down=1 cs=20",
+              "vk=116 sc=63 uc=0 down=0 cs=20"
+            ]
+          },
+          "Ctrl+Shift+P": {
+            "replay": [
+              "vk=80 sc=25 uc=16 down=1 cs=24",
+              "vk=80 sc=25 uc=16 down=0 cs=24"
+            ],
+            "right_ctrl": [
+              "vk=80 sc=25 uc=16 down=1 cs=20",
+              "vk=80 sc=25 uc=16 down=0 cs=20"
+            ]
+          },
+          "Ctrl+Space": {
+            "replay": [
+              "vk=32 sc=57 uc=32 down=1 cs=8",
+              "vk=32 sc=57 uc=32 down=0 cs=8"
+            ],
+            "right_ctrl": [
+              "vk=32 sc=57 uc=32 down=1 cs=4",
+              "vk=32 sc=57 uc=32 down=0 cs=4"
+            ]
+          }
+        },
+        "vt": {
+          "Ctrl+.": {
+            "replay": [
+              "0e"
+            ],
+            "right_ctrl": [
+              "0e"
+            ]
+          },
+          "Ctrl+/": {
+            "replay": [
+              "1f"
+            ],
+            "right_ctrl": [
+              "1f"
+            ]
+          },
+          "Ctrl+Enter": {
+            "replay": [
+              "0a"
+            ],
+            "right_ctrl": [
+              "0a"
+            ]
+          },
+          "Ctrl+Shift+D": {
+            "replay": [
+              "04"
+            ],
+            "right_ctrl": [
+              "04"
+            ]
+          },
+          "Ctrl+Shift+E": {
+            "replay": [
+              "05"
+            ],
+            "right_ctrl": [
+              "05"
+            ]
+          },
+          "Ctrl+Shift+F": {
+            "replay": [
+              "06"
+            ],
+            "right_ctrl": [
+              "06"
+            ]
+          },
+          "Ctrl+Shift+F5": {
+            "replay": [
+              "1b 5b 31 35 3b 36 7e"
+            ],
+            "right_ctrl": [
+              "1b 5b 31 35 3b 36 7e"
+            ]
+          },
+          "Ctrl+Shift+P": {
+            "replay": [
+              "10"
+            ],
+            "right_ctrl": [
+              "10"
+            ]
+          },
+          "Ctrl+Space": {
+            "replay": [],
+            "right_ctrl": []
+          }
+        }
+      },
+      "rows": [
+        {
+          "bytes": "\u001b[25;5~",
+          "chord": "Ctrl+Shift+F",
+          "lhs": "<C-S-f>",
+          "nvim_key": [
+            "<C-F13>"
+          ],
+          "original": [
+            70,
+            33,
+            6,
+            24
+          ]
+        },
+        {
+          "bytes": "\u001b[26;5~",
+          "chord": "Ctrl+Shift+P",
+          "lhs": "<C-S-p>",
+          "nvim_key": [
+            "<C-F14>"
+          ],
+          "original": [
+            80,
+            25,
+            16,
+            24
+          ]
+        },
+        {
+          "bytes": "\u001b[28;5~",
+          "chord": "Ctrl+Shift+E",
+          "lhs": "<C-S-e>",
+          "nvim_key": [
+            "<C-F15>"
+          ],
+          "original": [
+            69,
+            18,
+            5,
+            24
+          ]
+        },
+        {
+          "bytes": "\u001b[29;5~",
+          "chord": "Ctrl+Shift+D",
+          "lhs": "<C-S-d>",
+          "nvim_key": [
+            "<C-F16>"
+          ],
+          "original": [
+            68,
+            32,
+            4,
+            24
+          ]
+        },
+        {
+          "bytes": "\u001b[31;5~",
+          "chord": "Ctrl+Shift+F5",
+          "lhs": "<C-S-F5>",
+          "nvim_key": [
+            "<C-F17>"
+          ],
+          "original": [
+            116,
+            63,
+            0,
+            24
+          ]
+        },
+        {
+          "bytes": "\u001b[32;5~",
+          "chord": "Ctrl+.",
+          "lhs": "<C-.>",
+          "nvim_key": [
+            "<C-F18>"
+          ],
+          "original": [
+            190,
+            52,
+            0,
+            8
+          ]
+        },
+        {
+          "bytes": "\u001b[33;5~",
+          "chord": "Ctrl+Enter",
+          "lhs": "<C-CR>",
+          "nvim_key": [
+            "<C-F19>"
+          ],
+          "original": [
+            13,
+            28,
+            10,
+            8
+          ]
+        },
+        {
+          "bytes": "\u001b[34;5~",
+          "chord": "Ctrl+/",
+          "lhs": "<C-/>",
+          "nvim_key": [
+            "<C-F20>"
+          ],
+          "original": [
+            191,
+            53,
+            0,
+            8
+          ]
+        },
+        {
+          "bytes": "\u001b[25;6~",
+          "chord": "Ctrl+Space",
+          "lhs": "<C-Space>",
+          "nvim_key": [
+            "<C-S-F13>"
+          ],
+          "original": [
+            32,
+            57,
+            32,
+            8
+          ]
+        }
+      ]
+    },
+    "ru": {
+      "announce": {
+        "chansend": true,
+        "ui_send": true
+      },
+      "forge_announce": {
+        "disabled_quiet": true,
+        "exit": true,
+        "start": true
+      },
+      "layout": "ru",
+      "physical_keys": [
+        "0",
+        "1",
+        "2",
+        "3",
+        "5",
+        "6",
+        "7",
+        "8",
+        "9",
+        "<BS>",
+        "<C-A>",
+        "<C-B>",
+        "<C-C>",
+        "<C-D>",
+        "<C-E>",
+        "<C-F>",
+        "<C-G>",
+        "<C-H>",
+        "<C-K>",
+        "<C-L>",
+        "<C-N>",
+        "<C-O>",
+        "<C-P>",
+        "<C-Q>",
+        "<C-R>",
+        "<C-S>",
+        "<C-T>",
+        "<C-U>",
+        "<C-V>",
+        "<C-W>",
+        "<C-X>",
+        "<C-Y>",
+        "<C-Z>",
+        "<C-\\>",
+        "<C-]>",
+        "<C-^>",
+        "<C-_>",
+        "<CR>",
+        "<Esc>",
+        "<F10>",
+        "<F11>",
+        "<F12>",
+        "<F13>",
+        "<F14>",
+        "<F15>",
+        "<F16>",
+        "<F17>",
+        "<F18>",
+        "<F19>",
+        "<F1>",
+        "<F20>",
+        "<F21>",
+        "<F22>",
+        "<F23>",
+        "<F24>",
+        "<F25>",
+        "<F26>",
+        "<F27>",
+        "<F28>",
+        "<F29>",
+        "<F2>",
+        "<F30>",
+        "<F31>",
+        "<F32>",
+        "<F33>",
+        "<F34>",
+        "<F35>",
+        "<F36>",
+        "<F37>",
+        "<F38>",
+        "<F39>",
+        "<F3>",
+        "<F40>",
+        "<F41>",
+        "<F42>",
+        "<F43>",
+        "<F44>",
+        "<F45>",
+        "<F46>",
+        "<F47>",
+        "<F48>",
+        "<F49>",
+        "<F4>",
+        "<F50>",
+        "<F51>",
+        "<F52>",
+        "<F53>",
+        "<F54>",
+        "<F55>",
+        "<F56>",
+        "<F57>",
+        "<F58>",
+        "<F59>",
+        "<F5>",
+        "<F60>",
+        "<F61>",
+        "<F62>",
+        "<F63>",
+        "<F6>",
+        "<F7>",
+        "<F8>",
+        "<F9>",
+        "<M-4>",
+        "<M-5>",
+        "<M-C-F10>",
+        "<M-C-F11>",
+        "<M-C-F12>",
+        "<M-C-F1>",
+        "<M-C-F2>",
+        "<M-C-F3>",
+        "<M-C-F4>",
+        "<M-C-F5>",
+        "<M-C-F6>",
+        "<M-C-F7>",
+        "<M-C-F8>",
+        "<M-C-F9>",
+        "<NL>",
+        "<S-F10>",
+        "<S-F11>",
+        "<S-F12>",
+        "<S-F4>",
+        "<S-F5>",
+        "<S-F6>",
+        "<S-F7>",
+        "<S-F8>",
+        "<S-F9>",
+        "<Tab>",
+        "a",
+        "b",
+        "c",
+        "d",
+        "e",
+        "f",
+        "g",
+        "h",
+        "i",
+        "j",
+        "k",
+        "l",
+        "m",
+        "n",
+        "o",
+        "p",
+        "q",
+        "r",
+        "s",
+        "t",
+        "u",
+        "v",
+        "w",
+        "x",
+        "y",
+        "z"
+      ],
+      "replay": {
+        "nvim": {
+          "Ctrl+.": {
+            "replay": [
+              "<C-N>"
+            ],
+            "right_ctrl": [
+              "<C-N>"
+            ]
+          },
+          "Ctrl+/": {
+            "replay": [
+              "<C-N>"
+            ],
+            "right_ctrl": [
+              "<C-N>"
+            ]
+          },
+          "Ctrl+Enter": {
+            "replay": [
+              "<NL>"
+            ],
+            "right_ctrl": [
+              "<NL>"
+            ]
+          },
+          "Ctrl+Shift+D": {
+            "replay": [
+              "<C-D>"
+            ],
+            "right_ctrl": [
+              "<C-D>"
+            ]
+          },
+          "Ctrl+Shift+E": {
+            "replay": [
+              "<C-E>"
+            ],
+            "right_ctrl": [
+              "<C-E>"
+            ]
+          },
+          "Ctrl+Shift+F": {
+            "replay": [
+              "<C-F>"
+            ],
+            "right_ctrl": [
+              "<C-F>"
+            ]
+          },
+          "Ctrl+Shift+F5": {
+            "replay": [
+              "<F41>"
+            ],
+            "right_ctrl": [
+              "<F41>"
+            ]
+          },
+          "Ctrl+Shift+P": {
+            "replay": [
+              "<C-P>"
+            ],
+            "right_ctrl": [
+              "<C-P>"
+            ]
+          },
+          "Ctrl+Space": {
+            "replay": [],
+            "right_ctrl": []
+          }
+        },
+        "records": {
+          "Ctrl+.": {
+            "replay": [
+              "vk=190 sc=52 uc=0 down=1 cs=8",
+              "vk=190 sc=52 uc=0 down=0 cs=8"
+            ],
+            "right_ctrl": [
+              "vk=190 sc=52 uc=0 down=1 cs=4",
+              "vk=190 sc=52 uc=0 down=0 cs=4"
+            ]
+          },
+          "Ctrl+/": {
+            "replay": [
+              "vk=191 sc=53 uc=0 down=1 cs=8",
+              "vk=191 sc=53 uc=0 down=0 cs=8"
+            ],
+            "right_ctrl": [
+              "vk=191 sc=53 uc=0 down=1 cs=4",
+              "vk=191 sc=53 uc=0 down=0 cs=4"
+            ]
+          },
+          "Ctrl+Enter": {
+            "replay": [
+              "vk=13 sc=28 uc=10 down=1 cs=8",
+              "vk=13 sc=28 uc=10 down=0 cs=8"
+            ],
+            "right_ctrl": [
+              "vk=13 sc=28 uc=10 down=1 cs=4",
+              "vk=13 sc=28 uc=10 down=0 cs=4"
+            ]
+          },
+          "Ctrl+Shift+D": {
+            "replay": [
+              "vk=68 sc=32 uc=4 down=1 cs=24",
+              "vk=68 sc=32 uc=4 down=0 cs=24"
+            ],
+            "right_ctrl": [
+              "vk=68 sc=32 uc=4 down=1 cs=20",
+              "vk=68 sc=32 uc=4 down=0 cs=20"
+            ]
+          },
+          "Ctrl+Shift+E": {
+            "replay": [
+              "vk=69 sc=18 uc=5 down=1 cs=24",
+              "vk=69 sc=18 uc=5 down=0 cs=24"
+            ],
+            "right_ctrl": [
+              "vk=69 sc=18 uc=5 down=1 cs=20",
+              "vk=69 sc=18 uc=5 down=0 cs=20"
+            ]
+          },
+          "Ctrl+Shift+F": {
+            "replay": [
+              "vk=70 sc=33 uc=6 down=1 cs=24",
+              "vk=70 sc=33 uc=6 down=0 cs=24"
+            ],
+            "right_ctrl": [
+              "vk=70 sc=33 uc=6 down=1 cs=20",
+              "vk=70 sc=33 uc=6 down=0 cs=20"
+            ]
+          },
+          "Ctrl+Shift+F5": {
+            "replay": [
+              "vk=116 sc=63 uc=0 down=1 cs=24",
+              "vk=116 sc=63 uc=0 down=0 cs=24"
+            ],
+            "right_ctrl": [
+              "vk=116 sc=63 uc=0 down=1 cs=20",
+              "vk=116 sc=63 uc=0 down=0 cs=20"
+            ]
+          },
+          "Ctrl+Shift+P": {
+            "replay": [
+              "vk=80 sc=25 uc=16 down=1 cs=24",
+              "vk=80 sc=25 uc=16 down=0 cs=24"
+            ],
+            "right_ctrl": [
+              "vk=80 sc=25 uc=16 down=1 cs=20",
+              "vk=80 sc=25 uc=16 down=0 cs=20"
+            ]
+          },
+          "Ctrl+Space": {
+            "replay": [
+              "vk=32 sc=57 uc=32 down=1 cs=8",
+              "vk=32 sc=57 uc=32 down=0 cs=8"
+            ],
+            "right_ctrl": [
+              "vk=32 sc=57 uc=32 down=1 cs=4",
+              "vk=32 sc=57 uc=32 down=0 cs=4"
+            ]
+          }
+        },
+        "vt": {
+          "Ctrl+.": {
+            "replay": [
+              "0e"
+            ],
+            "right_ctrl": [
+              "0e"
+            ]
+          },
+          "Ctrl+/": {
+            "replay": [
+              "0e"
+            ],
+            "right_ctrl": [
+              "0e"
+            ]
+          },
+          "Ctrl+Enter": {
+            "replay": [
+              "0a"
+            ],
+            "right_ctrl": [
+              "0a"
+            ]
+          },
+          "Ctrl+Shift+D": {
+            "replay": [
+              "04"
+            ],
+            "right_ctrl": [
+              "04"
+            ]
+          },
+          "Ctrl+Shift+E": {
+            "replay": [
+              "05"
+            ],
+            "right_ctrl": [
+              "05"
+            ]
+          },
+          "Ctrl+Shift+F": {
+            "replay": [
+              "06"
+            ],
+            "right_ctrl": [
+              "06"
+            ]
+          },
+          "Ctrl+Shift+F5": {
+            "replay": [
+              "1b 5b 31 35 3b 36 7e"
+            ],
+            "right_ctrl": [
+              "1b 5b 31 35 3b 36 7e"
+            ]
+          },
+          "Ctrl+Shift+P": {
+            "replay": [
+              "10"
+            ],
+            "right_ctrl": [
+              "10"
+            ]
+          },
+          "Ctrl+Space": {
+            "replay": [],
+            "right_ctrl": []
+          }
+        }
+      },
+      "rows": [
+        {
+          "bytes": "\u001b[25;5~",
+          "chord": "Ctrl+Shift+F",
+          "lhs": "<C-S-f>",
+          "nvim_key": [
+            "<C-F13>"
+          ],
+          "original": [
+            70,
+            33,
+            6,
+            24
+          ]
+        },
+        {
+          "bytes": "\u001b[26;5~",
+          "chord": "Ctrl+Shift+P",
+          "lhs": "<C-S-p>",
+          "nvim_key": [
+            "<C-F14>"
+          ],
+          "original": [
+            80,
+            25,
+            16,
+            24
+          ]
+        },
+        {
+          "bytes": "\u001b[28;5~",
+          "chord": "Ctrl+Shift+E",
+          "lhs": "<C-S-e>",
+          "nvim_key": [
+            "<C-F15>"
+          ],
+          "original": [
+            69,
+            18,
+            5,
+            24
+          ]
+        },
+        {
+          "bytes": "\u001b[29;5~",
+          "chord": "Ctrl+Shift+D",
+          "lhs": "<C-S-d>",
+          "nvim_key": [
+            "<C-F16>"
+          ],
+          "original": [
+            68,
+            32,
+            4,
+            24
+          ]
+        },
+        {
+          "bytes": "\u001b[31;5~",
+          "chord": "Ctrl+Shift+F5",
+          "lhs": "<C-S-F5>",
+          "nvim_key": [
+            "<C-F17>"
+          ],
+          "original": [
+            116,
+            63,
+            0,
+            24
+          ]
+        },
+        {
+          "bytes": "\u001b[32;5~",
+          "chord": "Ctrl+.",
+          "lhs": "<C-.>",
+          "nvim_key": [
+            "<C-F18>"
+          ],
+          "original": [
+            190,
+            52,
+            0,
+            8
+          ]
+        },
+        {
+          "bytes": "\u001b[33;5~",
+          "chord": "Ctrl+Enter",
+          "lhs": "<C-CR>",
+          "nvim_key": [
+            "<C-F19>"
+          ],
+          "original": [
+            13,
+            28,
+            10,
+            8
+          ]
+        },
+        {
+          "bytes": "\u001b[34;5~",
+          "chord": "Ctrl+/",
+          "lhs": "<C-/>",
+          "nvim_key": [
+            "<C-F20>"
+          ],
+          "original": [
+            191,
+            53,
+            0,
+            8
+          ]
+        },
+        {
+          "bytes": "\u001b[25;6~",
+          "chord": "Ctrl+Space",
+          "lhs": "<C-Space>",
+          "nvim_key": [
+            "<C-S-F13>"
+          ],
+          "original": [
+            32,
+            57,
+            32,
+            8
+          ]
+        }
+      ]
+    }
+  },
+  "provenance": {
+    "conpty_dll": "C:\\Program Files\\WezTerm\\conpty.dll",
+    "conpty_sha256": "2f09eaa55c60e11241ca21fff19336529470d9b76a77bcb45de78cfabdb50308",
+    "conpty_version": null,
+    "date": "2026-09-27",
+    "layout": "en",
+    "nvim": "NVIM v0.12.2",
+    "wezterm": "wezterm 20240203-110809-5046fc22"
+  },
+  "version": "1"
+}

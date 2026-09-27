@@ -1,5 +1,7 @@
 # IDE Modes And Panels
 
+> **Windows + WezTerm:** часть сочетаний (`Ctrl+Shift+буква`, `Ctrl+Enter`, `Ctrl+Space`, `Ctrl+/`, `Ctrl+.`, F-клавиши с модификаторами) через ConPTY до nvim не доходит (WT-KBD-6); сочетания nvim_forge WezTerm доставляет подменой. Список и альтернативы — `docs/WEZTERM.md`, раздел 12.
+
 ## Start Page / Recent Projects
 
 Плагин: `goolord/alpha-nvim`.

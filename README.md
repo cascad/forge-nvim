@@ -31,7 +31,9 @@ state and cache in:
 | macOS    | same as Linux (XDG paths)                                                        |
 
 So the configs are fully isolated from each other and from the
-"real" install at `~/.config/nvim` (or `%LOCALAPPDATA%\nvim\`).
+"real" install at `~/.config/nvim` (or `%LOCALAPPDATA%\nvim\`) — on
+macOS that install is a symlink to this checkout's `nvim_forge/`, so its
+plugin data (`~/.local/share/nvim`) is still separate.
 
 To nuke a single config's data, delete its `*-data\` folder
 (Windows) or `~/.local/share/<NVIM_APPNAME>/` etc. (Unix). The source
@@ -70,13 +72,18 @@ forge-nvim/
 | `ldelossa/nvim-ide`  | `nvim-ide.cmd`       | (one-liner below)      | `nvim-ide/README.md` |
 | Terminal + panes     | `wezterm.lua`        | `wezterm.lua`          | `docs/WEZTERM.md` |
 
-On first use on macOS/Linux:
+macOS — один скрипт из чекаута, без флагов. Он ставит зависимости, шрифт,
+WezTerm и его конфиг (и проверяет, что WezTerm его реально подхватит).
+Повторный запуск безопасен и заодно чинит то, что разъехалось:
 
 ```bash
-chmod +x nvim_forge.sh
+./nvim_forge/scripts/install-macos.sh
 ./nvim_forge.sh                 # запуск без аргументов
 ./nvim_forge.sh path/to/file    # с файлом
 ```
+
+Linux: `chmod +x nvim_forge.sh` (если exec-бит потерялся), дальше так же
+`./nvim_forge.sh`.
 
 `nvim_forge.sh` использует `exec env XDG_CONFIG_HOME=$REPO
 NVIM_APPNAME=nvim_forge nvim "$@"` — переменные живут только пока

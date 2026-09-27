@@ -442,17 +442,14 @@ niv("<C-s>", "<Esc><cmd>silent! write<CR>", "Save")
 nm("<C-a>", "ggVG", "Select all")
 im("<C-a>", "<Esc>ggVG", "Select all")
 
--- Ctrl+C / Ctrl+X / Ctrl+V — clipboard как в IDE
+-- Ctrl+C / Ctrl+X — clipboard как в IDE
 -- В normal/visual мы уже clipboard=unnamedplus, поэтому y/d/p == системный.
 -- Но Ctrl+C должен копировать выделение _и оставаться в normal_, как в VS Code.
 vm("<C-c>", '"+y', "Copy")
 vm("<C-x>", '"+d', "Cut")
--- Ctrl+V в normal/visual — paste из системного. В insert — тоже paste.
-nm("<C-v>", '"+p', "Paste")
-vm("<C-v>", '"+P', "Paste over selection")
-im("<C-v>", "<C-r>+", "Paste")
--- Командной строки тоже касается (искать/менять с системного буфера)
-map("c", "<C-v>", "<C-r>+", { desc = "Paste" })
+-- Ctrl+V здесь НЕ привязан: его забирает WezTerm и вставляет буфер обмена
+-- сам, как вставленный текст, во всех режимах (WT-KEYS-7, WT-CLIP-6).
+-- Блочное выделение и ввод символа буквально — встроенный Ctrl+Q.
 map("c", "<Tab>", function()
     local ok_cmp, cmp = pcall(require, "cmp")
     if ok_cmp and cmp.visible() then

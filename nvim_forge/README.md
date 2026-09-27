@@ -15,13 +15,33 @@ This is one of several configs living in this repository. See the root
 nvim_forge.cmd
 ```
 
-**macOS / Linux**
+**macOS** — один скрипт ставит всё (зависимости, шрифт, WezTerm и его
+конфиг) и проверяет результат; повторный запуск безопасен и чинит то, что
+разъехалось:
 
 ```bash
-chmod +x nvim_forge.sh       # один раз после клонирования
+./nvim_forge/scripts/install-macos.sh
 ./nvim_forge.sh
 ./nvim_forge.sh path/to/file # с файлом
 ```
+
+**Linux**
+
+```bash
+chmod +x nvim_forge.sh       # если exec-бит потерялся
+./nvim_forge.sh
+```
+
+WezTerm на Linux подключается симлинком — из корня репо:
+
+```bash
+mkdir -p ~/.config/wezterm && ln -sf "$PWD/wezterm.lua" ~/.config/wezterm/wezterm.lua
+```
+
+или `FORGE_NVIM_DEPS_ONLY=1 ./nvim_forge/scripts/install-linux.sh` (в
+GUI-сессии): путь, уже ведущий в репо, он не трогает и внутри чекаута ничего
+не создаёт. `~/.wezterm.lua` и переменная `WEZTERM_CONFIG_FILE` на Linux
+перекрывают симлинк молча — установщик их не трогает, убери руками.
 
 Обе обёртки делают одно и то же: ставят `NVIM_APPNAME=nvim_forge` и
 `XDG_CONFIG_HOME` на корень репо, после чего `exec nvim`. Переменные
@@ -60,20 +80,33 @@ Linux:
 curl -fsSL https://raw.githubusercontent.com/cascad/forge-nvim/main/nvim_forge/scripts/install-linux.sh | bash
 ```
 
-macOS:
+macOS (на чистом маке: склонирует монорепо в `~/forge-nvim` и продолжит
+оттуда, как `./nvim_forge/scripts/install-macos.sh`). Нужен git: без Xcode
+Command Line Tools скрипт остановится и подскажет `xcode-select --install`
+(системный диалог установки сам не всплывёт):
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/cascad/forge-nvim/main/nvim_forge/scripts/install-macos.sh | bash
 ```
 
-The scripts install base dependencies, back up an existing Neovim
-config, clone this repo, copy `nvim_forge/` into the Neovim config
+macOS: without flags the script sets up dependencies and WezTerm and leaves
+`~/.config/nvim` alone (run `./nvim_forge.sh`). With `FORGE_NVIM_DEPS_ONLY=0`
+the Neovim config path becomes a **symlink** to `nvim_forge/` of the checkout
+(the local one or the clone in `FORGE_NVIM_SRC`): keep the checkout in place —
+`git pull` there updates the installed config too. An existing config is moved
+to a backup once; a rerun just reports `forge-nvim config already linked`.
+Plugins are brought to the checkout's `lazy-lock.json` (`Lazy! restore`), so
+the checkout stays clean, then Mason tools are installed.
+
+Linux and Windows scripts install base dependencies, back up an existing
+Neovim config, clone this repo, copy `nvim_forge/` into the Neovim config
 directory, run `Lazy! sync`, and then try to install Mason tools.
 
-> NOTE: the install scripts still assume a flat repo layout where
-> `init.lua` sits at the repo root. After the move into `nvim_forge/`
-> they need a small update before remote installation works again.
-> Local development via `nvim_forge.cmd` is unaffected.
+> NOTE: the Linux/Windows install scripts, in the `~/.config/nvim` mode, still
+> assume a flat repo layout where `init.lua` sits at the repo root. After the
+> move into `nvim_forge/` they need a small update before remote installation
+> works again. The macOS script links `nvim_forge/` instead (see above). Local
+> development via `nvim_forge.sh` / `nvim_forge.cmd` is unaffected.
 
 For Neovim 0.12+, `nvim-treesitter` uses its `main` branch and
 requires `tree-sitter-cli`. The install scripts include it in the base
@@ -132,6 +165,18 @@ Useful variables:
 - `FORGE_NVIM_WITH_LANGUAGES=1`
 - `FORGE_NVIM_USE_LOCAL_SOURCE=1`
 - `FORGE_NVIM_NO_BACKUP=1`
+- `FORGE_NVIM_DEPS_ONLY=0|1` (Linux and macOS): `1` — dependencies and WezTerm
+  only, `~/.config/nvim` untouched. Linux default `0`, no detection; macOS
+  default detected — `1` when run from the monorepo checkout
+- `FORGE_NVIM_SKIP_WEZTERM=1` (Linux and macOS) — leave WezTerm and its config alone
+- Linux only: `FORGE_NVIM_FORCE_WEZTERM=1` — set up WezTerm even without a GUI
+  session (`DISPLAY` / `WAYLAND_DISPLAY`)
+- macOS only: `FORGE_NVIM_SRC` (checkout location for `curl | bash` and for a
+  script file run outside a checkout, default `~/forge-nvim`)
+- macOS: `FORGE_NVIM_USE_LOCAL_SOURCE=1` means "no network: the only source is
+  the checkout the script runs from" — outside a checkout the script refuses
+  before doing anything; from a checkout it changes nothing. The install path
+  is a symlink either way, nothing is copied.
 
 ## Notes
 

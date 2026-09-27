@@ -72,7 +72,7 @@
 | `<leader>Pu`                 | Toggle **right** panel  | n          | `tests` (neotest summary)      |
 
 > **Важно про терминальные коды.**
-> Изначально были `<C-S-b>` / `<C-S-j>` (как в VS Code), но в Windows
+> Изначально были `<C-S-b>` / `<C-S-j>` (как в VS Code; WT-KBD-6), но в Windows
 > Terminal / cmd / ConPTY / RDP shift+ctrl+letter **неотличим** от
 > ctrl+letter — терминал шлёт те же байты. Поэтому теперь биндинг
 > прямо на `<C-b>` / `<C-j>`. Старый `<C-b>` (buffers picker из
@@ -117,9 +117,9 @@
 | `<leader>bB`   | Explorer: buffers panel               | n    |
 | `<leader>gS`   | Git: side panel (Neo-Tree git_status) | n    |
 | `<C-e>`        | Explorer: focus / unfocus             | n    |
-| `<C-S-e>` / `<C-A-e>` / `<A-E>` / `<S-A-e>` | то же, разные терминальные кодировки | n |
+| `<C-S-e>` / `<C-A-e>` / `<A-E>` / `<S-A-e>` | то же, разные терминальные кодировки _(Win+WezTerm: через подмену (WT-KEYS-10; без неё не доходит — WT-KBD-6))_ | n |
 | `<C-p>`        | Find file (telescope)                 | n    |
-| `<C-S-p>`      | Command palette (`:Telescope commands`)| n   |
+| `<C-S-p>`      | Command palette (`:Telescope commands`) _(Win+WezTerm: через подмену (WT-KEYS-10; без неё не доходит — WT-KBD-6))_ | n   |
 | `<leader>ff`   | Files: find                           | n    |
 | `<leader>fr`   | Files: recent (oldfiles)              | n    |
 | `<leader>fg`   | Files: live grep                      | n    |
@@ -142,7 +142,7 @@
 | `<leader>bB`   | Buffers panel (Neo-Tree)              | n    |
 | `<S-l>` / `<Tab>` / `]b` / `<C-PageDown>` / `<A-l>` | Next buffer | n |
 | `<S-h>` / `<S-Tab>` / `[b` / `<C-PageUp>` / `<A-h>` | Prev buffer | n |
-| `<C-q>` / `<A-w>` / `<A-q>` / `<F4>` / `<C-F4>` | Smart close (file/tool window/diffview) | n/i/v/t |
+| `<A-w>` / `<A-q>` / `<F4>` / `<C-F4>` | Smart close (file/tool window/diffview) _(Win+WezTerm: `<C-F4>` приходит как `<F28>`; вместо — `<F4>` / `<A-w>` (WT-KBD-6))_ | n/i/v/t |
 
 > `<C-b>` ранее открывал buffers picker; теперь это **toggle left panel**
 > (см. § 2.1). Buffers picker: `<leader>bb` или `<leader>fb`.
@@ -158,7 +158,7 @@
 | `<leader>wh/j/k/l` | Move to left/down/up/right window | n    |
 | `<leader>wq`   | Close window                          | n    |
 | `<leader>wo`   | Keep only current window              | n    |
-| `<F6>` / `<S-F6>` | Cycle next/prev window focus       | n/i/v/t |
+| `<F6>` / `<S-F6>` | Cycle next/prev window focus _(Win+WezTerm: `<S-F6>` приходит как `<F18>`; вместо — `<C-w>W` (WT-KBD-6))_ | n/i/v/t |
 | `<F7>` / `<A-e>` | Focus editable editor window        | n/i/v/t |
 | `<C-w>h/j/k/l` | Native vim split move (не remap'нут)  | n    |
 
@@ -170,7 +170,7 @@
 | -------------- | ------------------------------------- | ---- |
 | `<C-f>`        | Find в текущем буфере (как `/`)       | n/i  |
 | `<C-h>`        | Replace в буфере (`:%s/`)             | n    |
-| `<C-S-f>`      | Search: project-wide panel (grug-far) | n    |
+| `<C-S-f>`      | Search: project-wide panel (grug-far) _(Win+WezTerm: через подмену (WT-KEYS-10; без неё не доходит — WT-KBD-6))_ | n    |
 | `<leader>sF` / `<leader>sR` | Search: panel (grug-far)        | n    |
 | `<leader>sV`   | Search within visual selection        | v    |
 | `<leader>ss`   | Telescope live_grep                   | n    |
@@ -237,12 +237,12 @@
 | Keymap         | Action                                | Mode |
 | -------------- | ------------------------------------- | ---- |
 | `<F5>`         | Continue / start                      | n/t  |
-| `<S-F5>`       | Terminate                             | n/t  |
-| `<C-S-F5>`     | Restart                               | n/t  |
+| `<S-F5>`       | Terminate _(Win+WezTerm: `<S-F5>` приходит как `<F17>`; вместо — `<leader>dq` (WT-KBD-6))_ | n/t  |
+| `<C-S-F5>`     | Restart _(Win+WezTerm: через подмену (WT-KEYS-10; без неё не доходит — WT-KBD-6))_ | n/t  |
 | `<F9>`         | Toggle breakpoint                     | n    |
 | `<F10>`        | Step over                             | n/t  |
 | `<F11>`        | Step into                             | n/t  |
-| `<S-F11>`      | Step out                              | n/t  |
+| `<S-F11>`      | Step out _(Win+WezTerm: `<S-F11>` приходит как `<F23>`; вместо — `<leader>dO` (WT-KBD-6))_ | n/t  |
 
 ### `<leader>d*` (helix space.d)
 
@@ -261,7 +261,7 @@
 | `<leader>dl`   | Run last config                       |
 | `<leader>dP`   | Pick any launch.json config           |
 | `<leader>dL`   | Show DAP logs                         |
-| `<leader>dD` / `<leader>du` / `<C-S-d>` | Toggle debug view (sidebar + bottom) |
+| `<leader>dD` / `<leader>du` / `<C-S-d>` | Toggle debug view (sidebar + bottom) _(Win+WezTerm: через подмену (WT-KEYS-10; без неё не доходит — WT-KBD-6))_ |
 | `<leader>de`   | Eval hover (`dap.ui.widgets.hover`)   |
 | `<leader>dw`   | Watch expression (prompt с `<cword>`) |
 | `<leader>dw`   | Watch selection (visual)              |
@@ -280,7 +280,7 @@
 
 Любая смена фокуса (`<C-w>*` или эти прыжки) **не ломает** останов на
 брейкпоинте. Сессия живёт, пока ты сам не нажмёшь Continue (`F5`),
-Step (`F10`/`F11`), Terminate (`<S-F5>`) или Restart (`<C-S-F5>`).
+Step (`F10`/`F11`), Terminate (`<S-F5>`) или Restart (`<C-S-F5>`). (Win+WezTerm: через подмену (WT-KEYS-10; без неё не доходит — WT-KBD-6); Win+WezTerm: `<S-F5>` приходит как `<F17>`; вместо — `<leader>dq` (WT-KBD-6))
 Поэтому смело инспектируй переменные, лазь по стеку, набирай выражения
 в REPL — состояние сохраняется.
 
@@ -306,7 +306,7 @@ Step (`F10`/`F11`), Terminate (`<S-F5>`) или Restart (`<C-S-F5>`).
 | `<CR>`         | `dapui_stacks`            | Перейти в frame стека (курсор в коде) |
 | `<CR>`         | `dapui_breakpoints`       | Перейти к breakpoint в коде  |
 | `dd`           | `dapui_breakpoints`       | Удалить breakpoint           |
-| `q` / `<F4>` / `<C-q>` | любое DAP-окно   | Закрыть это окно (slot скроется) |
+| `q` / `<F4>`   | любое DAP-окно   | Закрыть это окно (slot скроется) |
 | `i` / `a` / `A` | `dap-repl`               | Включить insert (ввод выражения), `<CR>` отправить |
 | `<Esc><Esc>`   | `dap-terminal`            | Выйти из terminal-режима в normal (но процесс продолжает писать) |
 
@@ -372,11 +372,11 @@ Step (`F10`/`F11`), Terminate (`<S-F5>`) или Restart (`<C-S-F5>`).
 | Keymap         | Action                                |
 | -------------- | ------------------------------------- |
 | `<F12>`        | Go to definition                      |
-| `<S-F12>`      | Find references                       |
-| `<C-F12>`      | Go to implementation                  |
+| `<S-F12>`      | Find references _(Win+WezTerm: `<S-F12>` приходит как `<F24>`; вместо — `gr` / `<leader>lr` (WT-KBD-6))_ |
+| `<C-F12>`      | Go to implementation _(Win+WezTerm: `<C-F12>` приходит как `<F36>`; вместо — `gi` / `<leader>li` (WT-KBD-6))_ |
 | `<F2>`         | Rename                                |
 | `<F3>`         | Next diagnostic (with float)          |
-| `<S-F3>`       | Previous diagnostic                   |
+| `<S-F3>`       | Previous diagnostic _(Win+WezTerm: `<S-F3>` приходит как `<F15>`; вместо — `[d` (WT-KBD-6))_ |
 | `<A-j>`        | Go to definition (VS Code alt)        |
 
 ### `<leader>l*`
@@ -537,8 +537,8 @@ Step (`F10`/`F11`), Terminate (`<S-F5>`) или Restart (`<C-S-F5>`).
 
 | Keymap         | Action                                | Mode |
 | -------------- | ------------------------------------- | ---- |
-| `<F4>` / `<C-F4>` / `<A-w>` / `<A-q>` / `<C-q>` | Smart close current context | n/i/v/t |
-| `<F6>` / `<S-F6>` | Cycle window focus (next/prev)     | n/i/v/t |
+| `<F4>` / `<C-F4>` / `<A-w>` / `<A-q>` | Smart close current context _(Win+WezTerm: `<C-F4>` приходит как `<F28>`; вместо — `<F4>` / `<A-w>` (WT-KBD-6))_ | n/i/v/t |
+| `<F6>` / `<S-F6>` | Cycle window focus (next/prev) _(Win+WezTerm: `<S-F6>` приходит как `<F18>`; вместо — `<C-w>W` (WT-KBD-6))_ | n/i/v/t |
 | `<F7>` / `<A-e>` | Focus editor window                 | n/i/v/t |
 | `<C-PageDown>` / `<A-l>` | Next buffer                 | n/i/v/t |
 | `<C-PageUp>` / `<A-h>`   | Previous buffer             | n/i/v/t |
@@ -555,15 +555,19 @@ Step (`F10`/`F11`), Terminate (`<S-F5>`) или Restart (`<C-S-F5>`).
 | `<C-a>`        | Select all                            | n/i  |
 | `<C-c>`        | Copy selection                        | v    |
 | `<C-x>`        | Cut selection                         | v    |
-| `<C-v>`        | Paste                                 | n/v/i/c |
 | `<C-z>`        | Undo                                  | n/i  |
 | `<C-y>`        | Redo                                  | n/i  |
+
+Вставка — `Ctrl+V` терминала: WezTerm сам вставляет буфер обмена во всех
+режимах и в командной строке, своей привязки `<C-v>` у nvim_forge нет.
+Блочное выделение и ввод символа буквально — встроенный `Ctrl+Q`
+(`<C-q>`), он же вместо `<C-v>` в режиме вставки и командной строке.
 
 ### Comments / Indent
 
 | Keymap         | Action                                | Mode |
 | -------------- | ------------------------------------- | ---- |
-| `<C-/>` / `<C-_>` | Toggle comment line                | n/i/x |
+| `<C-/>` / `<C-_>` | Toggle comment line _(Win+WezTerm: через подмену (WT-KEYS-10; без неё не доходит — WT-KBD-6))_ | n/i/x |
 | `<C-]>`        | Indent line                           | n/i/v |
 | `<` / `>`      | Indent left/right (сохраняет visual)  | v    |
 
@@ -583,7 +587,7 @@ Step (`F10`/`F11`), Terminate (`<S-F5>`) или Restart (`<C-S-F5>`).
 | -------------- | ------------------------------------- | ---- |
 | `<C-l>`        | Select line без `\n`                  | n    |
 | `<Esc>`        | Clear search highlight                | n    |
-| `<C-CR>`       | Run selection через `pwsh -Command -` | v    |
+| `<C-CR>`       | Run selection через `pwsh -Command -` _(Win+WezTerm: через подмену (WT-KEYS-10; без неё не доходит — WT-KBD-6))_ | v    |
 
 ---
 
@@ -595,7 +599,7 @@ Step (`F10`/`F11`), Terminate (`<S-F5>`) или Restart (`<C-S-F5>`).
 | -------------- | ------------------------------------- |
 | `<C-j>` / `<C-Down>` | Select next item                |
 | `<C-k>` / `<C-Up>`   | Select previous item            |
-| `<C-Space>`    | Manual trigger                        |
+| `<C-Space>`    | Manual trigger _(Win+WezTerm: через подмену (WT-KEYS-10; без неё не доходит — WT-KBD-6))_ |
 | `<C-e>`        | Abort completion                      |
 | `<CR>`         | Confirm (replace, no auto-select)     |
 | `<Tab>`        | Confirm / expand snippet / fallback   |
@@ -608,7 +612,6 @@ Step (`F10`/`F11`), Terminate (`<S-F5>`) или Restart (`<C-S-F5>`).
 | -------------- | ------------------------------------- |
 | `<Tab>`        | Accept wildmenu или trigger cmp       |
 | `<CR>`         | Accept wildmenu или submit            |
-| `<C-v>`        | Paste from system clipboard           |
 
 ---
 
@@ -662,7 +665,7 @@ Step (`F10`/`F11`), Terminate (`<S-F5>`) или Restart (`<C-S-F5>`).
 | Explorer      | `<leader>e`     | Toggle Neo-Tree                    |
 | Левая панель  | `<C-b>`         | Toggle whole left slot (VS Code Ctrl+B) |
 | Нижняя панель | `<C-j>` / `<F8>`| Toggle whole bottom slot (VS Code Ctrl+J) |
-| Закрыть       | `<F4>` / `<C-q>`| Smart close (alpha если последний) |
+| Закрыть       | `<F4>`          | Smart close (alpha если последний) |
 | Сохранить     | `<C-s>`         | Save                               |
 | Layouts       | `<leader>pp`    | Picker всех layouts                |
 | Debug start   | `F5`            | Continue/start (выберет config)    |
@@ -673,7 +676,7 @@ Step (`F10`/`F11`), Terminate (`<S-F5>`) или Restart (`<C-S-F5>`).
 | Hover         | `K`             | Documentation                      |
 | Code action   | `<leader>la`    | LSP code action menu               |
 | Format        | `<leader>lf`    | Format buffer                      |
-| Comment line  | `<C-/>`         | Toggle comment                     |
+| Comment line  | `<C-/>` _(Win+WezTerm: через подмену (WT-KEYS-10; без неё не доходит — WT-KBD-6))_ | Toggle comment                     |
 | Git diff      | `<leader>gd`    | DiffviewOpen                       |
 | Git status    | `<leader>gg`    | Neogit (tab)                       |
 
@@ -687,6 +690,15 @@ Step (`F10`/`F11`), Terminate (`<S-F5>`) или Restart (`<C-S-F5>`).
 - **Which-key**: после нажатия `<leader>` появляется popup с группами
   (`p` Layouts, `P` IDE, `d` Debug, `g` Git, `l` LSP, `s` Search, …).
   Подождать `timeoutlen` (по умолчанию 300ms) и оно само покажет.
+- **WezTerm на Windows — подменные клавиши (WT-KEYS-10).** Через ConPTY
+  часть сочетаний до nvim не доходит (`<C-S-f>` приходит как `<C-f>`, (Win+WezTerm: через подмену (WT-KEYS-10; без неё не доходит — WT-KBD-6))
+  `<C-Space>` не приходит вовсе). WezTerm перехватывает `<C-S-f>`, `<C-S-p>`, (Win+WezTerm: через подмену (WT-KEYS-10; без неё не доходит — WT-KBD-6))
+  `<C-S-e>`, `<C-S-d>`, `<C-S-F5>`, `<C-.>`, `<C-CR>`, `<C-/>`, `<C-Space>` (Win+WezTerm: через подмену (WT-KEYS-10; без неё не доходит — WT-KBD-6))
+  и в панели, где nvim_forge объявил себя (user var `FORGE_NVIM`), шлёт
+  вместо них `<C-F13>`…`<C-F20>` и `<C-S-F13>` (без подмены — WT-KBD-6). nvim_forge переназначает их на
+  исходные сочетания во всех режимах (`config/wezterm_chords.lua`, в `:map`
+  видно «WezTerm: …»). Выключить — `vim.g.forge_wezterm_chords = false` до
+  загрузки конфига: объявления нет, WezTerm ничего не подменяет.
 - **Russian layout**: все `<leader>*` и `<C-*>` мapping'и работают и
   с включённой русской раскладкой через `langmap` + `ru_keys`. Это
   значит `<leader>фф` ≡ `<leader>aa` и т.д.

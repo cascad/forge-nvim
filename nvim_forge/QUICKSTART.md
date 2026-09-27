@@ -1,5 +1,7 @@
 # Шпаргалка на каждый день
 
+> **Windows + WezTerm:** часть сочетаний (`Ctrl+Shift+буква`, `Ctrl+Enter`, `Ctrl+Space`, `Ctrl+/`, `Ctrl+.`, F-клавиши с модификаторами) через ConPTY до nvim не доходит (WT-KBD-6); сочетания nvim_forge WezTerm доставляет подменой. Список и альтернативы — `docs/WEZTERM.md`, раздел 12.
+
 Лидер: **Space**.
 Все маппинги отображаются в which-key — нажми `<Space>` и подожди.
 

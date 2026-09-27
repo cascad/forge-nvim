@@ -1,0 +1,28 @@
+#!/bin/sh
+# Хук pre-commit (add-wezterm-spec-checks, design, решение 11): перед коммитом
+# гоняет все проверки `nvim -l tests/run.lua`; есть FAIL — коммита нет.
+#
+# Включить (один раз на машине, в этом клоне):  git config core.hooksPath .githooks
+# Выключить:                                     git config --unset core.hooksPath
+# Разовый обход:                                 git commit --no-verify
+#
+# Проверяется рабочее дерево, а не индекс: несохранённые в индекс правки тоже
+# участвуют. POSIX sh — работает в Git Bash (Windows) и на macOS.
+
+root=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd) || exit 1
+
+if ! command -v nvim >/dev/null 2>&1; then
+  echo "pre-commit: nvim не найден в PATH — проверки (nvim -l tests/run.lua) не запускаются." >&2
+  echo "  Поставь Neovim 0.12 и добавь его в PATH, либо обойди хук разово:" >&2
+  echo "    git commit --no-verify" >&2
+  echo "  или выключи его в этом клоне: git config --unset core.hooksPath" >&2
+  exit 1
+fi
+
+cd "$root" || exit 1
+nvim -l tests/run.lua
+rc=$?
+if [ "$rc" -ne 0 ]; then
+  echo "pre-commit: проверки не прошли (код $rc) — коммит остановлен. Подробности: .tests/report.json, .tests/logs/" >&2
+fi
+exit "$rc"

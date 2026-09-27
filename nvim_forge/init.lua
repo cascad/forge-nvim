@@ -21,6 +21,9 @@ vim.g.loaded_python3_provider = 0
 require("config.ru_keys").setup()
 require("config.options")
 require("config.keymaps")
+-- WezTerm на Windows: подменные клавиши сочетаний, которые не доходят через
+-- ConPTY, и объявление панели (WT-KEYS-10). Выключить — vim.g.forge_wezterm_chords = false.
+require("config.wezterm_chords").setup()
 require("config.lazy")
 
 -- IDE-фреймворк: регистрирует компоненты (explorer/outline/dap/...) и

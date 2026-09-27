@@ -1255,3 +1255,1148 @@ source. На message-узле файл не открываем, а делаем 
 файле по-прежнему открывает файл (делегирование не сломано).
 
 **Файлы:** `lua/plugins/neo-tree.lua`.
+
+## 2026-08-01
+
+### WezTerm: leader → липкий модальный режим WINDOWS
+
+**Проблема.** Управление панелями/вкладками WezTerm жило на tmux-леадере
+`Ctrl+Shift+Space` в режиме «нажал префикс → ровно одна команда». Три клавиши
+на КАЖДОЕ действие — неудобно для серии операций (подвигать, сплитнуть,
+поресайзить). Идея: один переключатель между «обычным вводом в консоль» и
+«управлением окнами», как режимы в vim, чтобы хоткеи не пересекались с
+forge-nvim.
+
+**Причина / выбор конструкции.** `config.leader` по своей природе одноразовый:
+после команды префикс гаснет. Промышленный примитив под modal-интерфейс в
+WezTerm — именованные `key_tables` с `one_shot=false` (ими уже сделаны
+`resize_pane`, `copy_mode`, `search_mode`). Терминал по своей природе слеп к
+режимам программы внутри (PTY — односторонняя байтовая труба), поэтому
+mode-awareness от nvim тут не нужна и не помогла бы: у безрежимного шелла
+дешёвого leader'а всё равно быть не может. Явный вход + выход по Esc решает
+задачу без user-vars и прочих костылей.
+
+**Решение.** `config.leader` убран целиком. `Ctrl+Shift+Space` теперь
+`ActivateKeyTable{ name="windows", one_shot=false }` — ЛИПКИЙ режим WINDOWS.
+Пока он выключен — NORMAL: ни одна из клавиш режима не перехватывается, весь
+ввод уходит в shell/nvim (пересечений с редактором нет by construction —
+общая клавиша ровно одна, вход, и в nvim она свободна). Внутри режима на голых
+клавишах: `hjkl`/стрелки — переходы, `v`/`s` — сплиты, `x` — закрыть, `z` —
+зум, `o` — цикл, `q` — PaneSelect, `r` — подрежим RESIZE, `c`/`n`/`p`/`1..9` —
+вкладки, `,` — переименовать, `w`/`Shift+S` — воркспейсы, `[` — copy mode,
+`f` — поиск, `Space` — QuickSelect, `b` — вывод в nvim, `e`/`;`/`m` —
+charselect/палитра/фуллскрин. Навигация/сплиты/вкладки ОСТАВЛЯЮТ в режиме;
+всё, что открывает промпт или уводит фокус в программу — `Multiple{PopKeyTable,…}`,
+иначе таблица осталась бы активной поверх nvim в новой вкладке и жрала ввод.
+Выход: `Esc` / `Enter` / повторный `Ctrl+Shift+Space` (тумблер). Страховка —
+`timeout_milliseconds=5000` (забыл выйти → режим сам отпустит клавиши).
+RESIZE входит с `replace_current=true`, поэтому один `Esc` из него = сразу в
+NORMAL. Индикатор режима — КРУПНЫЙ цветной бейдж СПРАВА в баре (там же, где
+раньше горел `LEADER` — это место точно отрисовывается; попытка вынести его
+влево через `set_left_status` в ретро-баре не показывалась вовсе) с подсказкой
+«Esc выход», свой цвет на каждый режим (WINDOWS жёлтый / RESIZE оранжевый /
+COPY синий / SEARCH зелёный), через `window:active_key_table()` (в pcall);
+нет бейджа = NORMAL. `status_update_interval=100` — плашка появляется/гаснет
+мгновенно.
+Частые одиночные прямые дубли оставлены вне режима: `Ctrl+Shift+Enter` — сплит,
+`Ctrl+Tab`/`Ctrl+Shift+Tab` и `Ctrl+Shift+PageUp/Down` — вкладки,
+`Ctrl+Shift+h/j/k/l` И `Ctrl+Shift+стрелки` — переходы по панелям (hjkl
+добавлены по просьбе, в nvim свободны — проверено grep'ом),
+`Ctrl+Shift+Z/W/T/U/1..9` — зум/закрыть/новая вкладка/QuickSelect/на вкладку.
+Ради `Ctrl+Shift+K/L` под hjkl освобождены их прежние действия:
+ClearScrollback → `Ctrl+Shift+Delete` (через `phys:Delete`: логическое имя
+`Delete` в этой версии wezterm парсилось как `Escape`), ShowDebugOverlay → в
+режим WINDOWS на `d`.
+
+Проверено: `wezterm --config-file wezterm.lua show-keys` грузит конфиг с
+кодом 0 без ошибок; таблица `windows` содержит все верхи и выходы, вход
+`SHIFT|CTRL Space → ActivateKeyTable windows`, `r → resize_pane` с
+`replace_current=true`; `Ctrl+Shift+h/j/k/l → ActivatePaneDirection`,
+`Ctrl+Shift+Delete → ClearScrollback`.
+
+**Файлы:** `wezterm.lua` (корень репо).
+
+## 2026-09-27
+
+### 41. Windows/WezTerm: не набираются заглавные и запятая на русской раскладке
+
+**Проблема.** В WezTerm на Windows «перестал работать Shift»: на русской
+раскладке не набирается ни одна заглавная буква и запятая (Shift+/).
+Английская раскладка в порядке. Проявляется в Claude Code.
+
+**Причина.** Цепочка из трёх звеньев, каждое проверено:
+
+1. Claude Code 2.1.283 (обновился 2026-09-27; в сборке от 2026-09-02 этого кода
+   нет) при `TERM_PROGRAM=WezTerm` включает «extended keys»: шлёт `CSI <u`,
+   `CSI >5u` (kitty: disambiguate + report alternate keys) и `CSI >4;2m`.
+2. ConPTY — тот же `conpty.dll`/`OpenConsole.exe`, что лежит в
+   `C:\Program Files\WezTerm` — пропускает эти последовательности в терминал.
+   WezTerm кладёт Kitty(5) на стек клавиатуры панели, и `get_keyboard_encoding()`
+   перестаёт возвращать Win32. С этого момента клавиши кодирует уже не
+   win32-input-mode, а kitty-кодировщик WezTerm.
+3. Kitty-кодировщик (`encode_kitty` в `wezterm-input-types/src/lib.rs`) не знает
+   не-US раскладок, так и в 20240203, и в main. Ключ без Shift он вычисляет через
+   `us_layout_unshift()`, в коде прямо стоит `FIXME ... assuming the US layout`.
+   При флаге report-alternate-keys он отправляет escape-последовательностью
+   любой Shift+символ, кроме латинских букв:
+   - Shift+Ф → `CSI 1060::97;2u`;
+   - русская запятая → `CSI 44::47;2u`.
+
+   Поле shifted key в обоих случаях пустое, а Claude Code берёт текст именно
+   оттуда и такую клавишу выбрасывает. Латинские заглавные не страдают: с них
+   WezTerm снимает Shift ещё до кодирования и шлёт голую букву.
+
+Воспроизведено без GUI. Claude Code запускался в псевдоконсоли через тот же
+`conpty.dll`, роль терминала играл скрипт. Ввод `ab` + Shift+Ф + `,` + `cd`:
+
+- в kitty-кодировке на экране `abcd`;
+- в win32-input-mode — `abФ,cd`.
+
+nvim тоже проверен:
+
+- в ConPTY он kitty не включает: DA1 отвечает сам ConPTY раньше терминала, и
+  nvim откатывается на `CSI >4;2m`;
+- `<S-Ф>` в insert-режиме вставляет `Ф`.
+
+nvim здесь не виноват.
+
+**Решение.** В `wezterm.lua`:
+
+- `config.enable_kitty_keyboard = not is_windows`;
+- `allow_win32_input_mode = true` записан явно.
+
+На Windows WezTerm теперь игнорирует kitty-push, и панель остаётся на
+win32-input-mode: VK, скан-код, готовый символ раскладки, модификаторы. ConPTY
+сам отдаёт программе правильный символ. На macOS kitty остаётся ради
+`<D-…>`/`Ctrl+.` в nvim. Там Shift+буква идёт через системный IME и приходит в
+WezTerm текстом без модификаторов (`insert_text` → `Modifiers::NONE`), поэтому
+этот баг мак не задевает, пока в `macos_forward_to_ime_modifier_mask` есть
+SHIFT. Комментарий у маски переписан как инвариант: прежний текст («дефолт
+SHIFT|CTRL») был неверен, дефолт и так SHIFT. Обновлять WezTerm бесполезно — в
+main тот же код.
+
+Попутно вернули то, что пропало вместе с `disable_default_key_bindings`:
+Shift+Insert (вставить) и Ctrl+Insert (копировать).
+
+**В уже открытой сессии** Claude Code надо перезапустить. Kitty-режим, включённый
+до правки, держится до выхода программы, на выходе она сама снимает его
+`CSI <u`.
+
+**Как проверить самому.** Временно поставить `config.debug_key_events = true`,
+открыть debug overlay (режим WINDOWS → `d`) и нажать Shift+Ф. Ожидается строка
+`win32: Encoded input as …`, а не `kitty: Encoded input as …`.
+
+**Upstream.** Баг кодировщика стоит завести в wezterm: unshifted key считается
+по US-раскладке, а report-alternate-keys экранирует текстовые клавиши, хотя по
+спецификации они остаются текстом. Claude Code мог бы при пустом shifted key
+брать текст из самого codepoint'а.
+
+**Файлы:** `wezterm.lua` (корень репо), `docs/WEZTERM.md`.
+
+### 42. macOS/WezTerm: Cmd+C «не копирует» выделение мышью в шелле
+
+**Проблема.** Выделение мышью в шелле → Cmd+C → в буфере обмена пусто. Прошлая
+попытка (`disable_default_key_bindings` + `phys:C SUPER`) не помогла.
+
+**Причина.** Клавиша доходит: и через пункт меню Edit ⌘C, и через keyDown по
+`phys:C`. Ломалось само действие, `act.CopyTo`. Оба факта проверены в исходнике
+20240203, в main то же самое:
+
+- `CopyTo` берёт текст выделения и пишет его в буфер безусловно. При пустом
+  выделении на macOS это `clearContents()` + `""`, то есть буфер стирается.
+- Выделение WezTerm снимает сам, как только перерисуется любая его строка
+  (`check_for_dirty_lines_and_invalidate_selection`): промпт, новый вывод, TUI.
+
+Сценарий целиком:
+
+1. Мышь уже скопировала текст при отпускании кнопки (дефолтный
+   `CompleteSelection…`).
+2. Выделение гаснет, потому что перерисовалась строка.
+3. Cmd+C затирает буфер пустой строкой.
+
+В nvim с `mouse=a` выделения WezTerm нет вообще, поэтому там Cmd+C стирал буфер
+всегда.
+
+**Решение.** Все copy-клавиши ведут в один путь, `copy_selection_or(fallback)`:
+
+- есть выделение → копируем;
+- нет → fallback или ничего, буфер не трогаем.
+
+Раскладка по клавишам:
+
+- Cmd+C, Ctrl+Shift+C и Ctrl+Insert → `copy_selection`, без fallback;
+- Ctrl+C на Windows (`smart_copy`) — тот же конструкт с fallback =
+  Ctrl+C/SIGINT.
+
+Голого `CopyTo` на клавишах больше нет, поэтому пункт меню ⌘C не перехватывает,
+и Cmd+C идёт через keyDown → `phys:C`. Это видно в `debug_key_events`.
+
+Вторая вероятная причина — на маке грузится не этот конфиг. Шапка советовала
+`export WEZTERM_CONFIG_FILE` в `~/.zshrc`, а WezTerm.app из Dock/Spotlight
+`~/.zshrc` не читает. Подключение конфига на маке теперь целиком делает
+`install-macos.sh`, руками ничего — см. §43.
+
+**Не проверено на маке** (здесь только Windows): нужен прогон на месте, шаги в
+ответе/`docs/WEZTERM.md`. Копирование визуального выделения nvim по Cmd+C
+намеренно не делали. Для этого нужно слать `<D-c>` строкой `ESC[99;9u` (SendKey
+теряет SUPER) и держать маппинг `<D-c>` в nvim, иначе голая `c` в visual удалит
+выделение. Отдельная задача.
+
+**Файлы:** `wezterm.lua` (корень репо), `docs/WEZTERM.md`.
+
+### 43. macOS: всё ставится одним `install-macos.sh`, ничего не нужно помнить
+
+**Проблема.** Для мака приходилось помнить ручные шаги:
+
+- флаг `FORGE_NVIM_DEPS_ONLY=1` — без него скрипт из чекаута клонировал бы
+  конфиг в `~/.config/nvim`;
+- как подключать конфиг WezTerm: шапка `wezterm.lua` советовала export в
+  `~/.zshrc`, скрипт ставил симлинк, и какой конфиг реально загружен, было
+  неизвестно;
+- на чистом маке — прописать brew в PATH;
+- `curl | bash` из README клонировал монорепо в `~/.config/nvim`, где
+  `init.lua` нет, и «успешно» завершался.
+
+**Причина.** WezTerm берёт ПЕРВЫЙ найденный конфиг
+(`config/src/config.rs`, `load_with_overrides`; порядок сверен по исходнику
+20240203):
+
+1. `--config-file`;
+2. переменная `WEZTERM_CONFIG_FILE`;
+3. `~/.wezterm.lua`;
+4. `$XDG_CONFIG_HOME/wezterm/wezterm.lua`, по умолчанию `~/.config/wezterm`.
+
+Симлинк стоит в п. 4, поэтому всё выше перекрывает его молча. WezTerm.app из
+Dock берёт окружение из launchd, а не из `~/.zshrc`.
+
+**Решение.** `nvim_forge/scripts/install-macos.sh`, каждый шаг — отдельная
+функция:
+
+- **Режим определяется сам.** Запуск из чекаута монорепо → локальный режим.
+  При `curl | bash` скрипт клонирует монорепо в `~/forge-nvim`
+  (`FORGE_NVIM_SRC`) и перезапускается оттуда: путь установки один.
+- **brew в PATH.** Если brew стоит, но не в PATH, в `~/.zprofile` один раз
+  дописывается `brew shellenv`. Шрифт, поставленный вручную, cask не трогает,
+  а сбой установки шрифта — предупреждение, не остановка.
+- **WezTerm.** Сначала файловые шаги, которые могут отказать при `NO_BACKUP`
+  (до правок окружения):
+  - `~/.wezterm.lua`, если ведёт не в репо, — в бэкап;
+  - симлинк туда, где ищет WezTerm из Dock (`XDG_CONFIG_HOME` из launchd).
+    Путь, который уже ведёт в репо (в том числе через каталог-симлинк), не
+    трогается. Каталог-симлинк в никуда чинится.
+
+  Затем переменная:
+  - в launchd снимается, если ведёт не в репо;
+  - в профиль шелла (`.zshenv/.zprofile/.zshrc/.zlogin` с учётом
+    `ZDOTDIR`, bash-профили, fish), где она задана, в конец дописывается
+    помеченный блок `unset` (`set -e` для fish). Строки пользователя не
+    переписываются;
+  - LaunchAgent, выставляющий её при входе, называется по имени, и шаг
+    считается сломанным.
+
+  В конце проверка:
+  - какой файл загрузит WezTerm из Dock (тот же порядок поиска);
+  - что `wezterm.lua` грузится без ошибок — через `wezterm --config-file …
+    ls-fonts`.
+
+  Не так — остальная установка доходит до конца, но код возврата 1 с
+  объяснением. Если запущенный WezTerm грузил не этот конфиг, скрипт один
+  раз предлагает Cmd+Q.
+- **Защита от ложного успеха.** `sync_neovim` падает, если в каталоге
+  установки нет `init.lua`.
+- **`SCRIPT_DIR`** считается один раз, через `${BASH_SOURCE[0]:-}` и только
+  если это реальный файл. При `curl | bash` раньше выходило криво: в bash 5
+  внутри функции там `main`, и `wezterm.lua` искался от текущего каталога; в
+  bash 3.2 переменная не задана.
+
+**Что нашло ревью первой версии.** Независимое ревью (три линзы плюс
+опровергающая проверка каждой находки) подтвердило 18 дефектов; ниже — те,
+которые поменяли конструкцию:
+
+- **Проверка «парсится» через `show-keys` ничего не проверяла.** Настоящий
+  wezterm на сломанном конфиге печатает дефолтные хоткеи и выходит с 0.
+  Тест не поймал это, потому что заглушка изображала wezterm неправильно
+  (`exit 1`).
+  - Урок: заглушка — это утверждение о чужой системе, её надо сверять с
+    реальным бинарём.
+  - Сверено на 20240203: `ls-fonts` на ошибке даёт пустой stdout и `ERROR`
+    в stderr.
+- **Переписывание строк профиля ломало синтаксис.** Строка
+  `export …; fi` превращалась в комментарий вместе с `fi`. Замена на
+  `true # …` этого не исправляла. Отсюда append-only `unset`: дописывание в
+  конец не может сломать разбор файла.
+- **При `~/.config/wezterm` → каталог чекаута** «бэкап» уносил сам
+  `wezterm.lua` репо.
+- **При `NO_BACKUP=1`** launchd и профили правились до того, как скрипт
+  отказывался.
+- **Запуск из терминала nvim_forge** (`XDG_CONFIG_HOME` = корень репо) клал
+  лишний симлинк в сам репо. Второй симлинк по `XDG_CONFIG_HOME` шелла убран.
+
+**Проверено.** 61 проверка в песочнице: свой HOME, заглушки `launchctl`,
+`wezterm` (ведёт себя как настоящий 20240203) и `pgrep`. Прогон на bash 5.2
+(WSL) и на bash 3.2.57 — той же версии, что `/bin/bash` в macOS (собран из
+исходников). Сценарии:
+
+- чистая установка и повторный запуск без изменений;
+- все перекрытия с профилем-симлинком;
+- профиль после правки проходит `bash -n`, `EDITOR` из той же строки
+  выживает, переменная снята;
+- `XDG_CONFIG_HOME` у launchd и терминала nvim_forge;
+- сломанный конфиг → код 1;
+- `curl | bash` с клоном и перезапуском;
+- `NO_BACKUP` не трогает окружение;
+- битые, относительные и каталоговые симлинки;
+- LaunchAgent → код 1;
+- профиль только для чтения.
+
+`ls-fonts` проверен на настоящем wezterm. На самом маке целиком не
+запускалось.
+
+**Файлы:** `nvim_forge/scripts/install-macos.sh`, `wezterm.lua` (шапка),
+`docs/WEZTERM.md`, `README.md`, `nvim_forge/README.md`.
+
+### 44. OpenSpec: спека WezTerm и установщика macOS, сверка кода со спекой
+
+**Проблема.** Описания фич жили в пяти местах: `wezterm.lua` (комментарии),
+`docs/WEZTERM.md`, README, FIXLOG, память агента. Эти описания расходились с
+кодом и друг с другом: например, `docs/WEZTERM.md` §1–8 до сих пор описывал
+удалённый LEADER. Проверить, «что должно быть», было не по чему, а значит,
+нечем было и восстанавливать поведение после бага.
+
+**Причина.** Не было одного записанного контракта поведения и процесса,
+который держит его в синхроне с кодом.
+
+**Решение.** Подключён OpenSpec 1.13.2 в штатном виде.
+
+- **Инструменты.** `openspec init --tools claude` и `openspec update` с
+  расширенным профилем: в `.claude/` штатные скиллы и команды `/opsx:*`,
+  включая `/opsx:verify`.
+- **Спеки.** `openspec/specs/` — 10 capability, около 120 требований с
+  ID, всё снято с кода:
+  - WezTerm: загрузка конфига, клавиатурный протокол, владение клавишами,
+    буфер обмена, скроллбэк, режим WINDOWS, панели и вкладки,
+    размер окна и шрифта, вид;
+  - установщик macOS.
+
+  Каждое требование сверено с кодом отдельным агентом-проверяющим.
+- **Фаза 1 «базовая линия».** Спека описывает код как есть, источник
+  правды пока — код. Фаза 2, где правда — спека, начинается после
+  проверки владельцем (change `review-baseline`). Текущая фаза записана
+  в `openspec/config.yaml`.
+- **Расхождения.** При сверке найдено 71 расхождение, всё разложено
+  по 13 changes в `openspec/changes/`:
+  - баги: copy mode `y` и гонка при проверке выделения стирают буфер;
+    `x`/`q` в WINDOWS не выходят из режима; размер новых окон;
+    pwsh из Store; 9 багов установщика; баги `install-linux.sh`;
+  - решения владельца: модальность WINDOWS/RESIZE, `o` = следующая
+    панель, Enter в поиске, `<C-v>`, подмена сочетаний для nvim на
+    Windows, Win+= только вне Windows, `~/.config/nvim` = симлинк;
+  - около 30 мест устаревших docs и комментариев;
+  - ручные проверки на маке и в GUI;
+  - автотесты «спека ↔ код» и рефакторинг `wezterm.lua` под их
+    защитой.
+
+  Решения владельца 2026-09-27 записаны в `design.md` соответствующих
+  changes.
+- **Правила работы в репо** (роли спеки, changes, FIXLOG и PROBLEMS;
+  кто прав при расхождении; штатные команды) — `CLAUDE.md` в корне.
+  Правила PROBLEMS → FIXLOG перенесены туда из приватной памяти агента,
+  чтобы их видела и сессия на маке.
+- **Тест установщика macOS** теперь лежит в репо:
+  `tests/install-macos.scenarios.sh`.
+
+С этого момента у записи FIXLOG, задевающей поведение, есть строка
+`Спека: <ID> (ADDED|MODIFIED|REMOVED|FIX)`.
+
+**Проверено:**
+- `openspec validate --all --strict` — 23/23 (10 спек, 13 changes);
+- `openspec status` — у каждого change все артефакты готовы;
+- тест установщика — 61/61 на bash 5.2 и на bash 3.2.57.
+
+Код поведения в этой записи не менялся; всё, что нужно поменять, лежит в
+changes.
+
+Спека: WT-*, MAC-INST-* (ADDED, базовая линия)
+
+**Файлы:** `openspec/` (config.yaml, specs/, changes/), `CLAUDE.md`,
+`.claude/skills/openspec-*`, `.claude/commands/opsx/*`,
+`tests/install-macos.scenarios.sh`.
+
+### 45. WezTerm: `y` в copy mode и гонка при копировании стирали буфер
+
+**Проблема.** После §42 два пути всё ещё писали в буфер пустую строку:
+1. `y` в copy mode без выделения, например сразу после Ctrl+Shift+X.
+   Встроенная таблица WezTerm вешает на `y` голый `CopyTo` + `Close`.
+2. Клавиши копирования (Ctrl+C на Windows, Ctrl+Shift+C, Ctrl+Insert,
+   Cmd+C), если выделение гасло между проверкой и записью.
+
+**Причина.** Функция `copy_selection_or` проверяла выделение, а потом
+выполняла `CopyTo`. `CopyTo` читает выделение заново. Если строка под
+выделением перерисовалась в этот промежуток, второе чтение давало `""`.
+`copy_to_clipboard` пишет в буфер и пустую строку. Правка §42 не касалась
+`y`, у неё свой путь во встроенной таблице.
+
+**Решение.**
+- Одна фабрика копирования `copy_selection_with(after_copy, on_empty)`.
+  Выделение читается один раз, в буфер через `CopyTextTo` уходит именно
+  прочитанный текст.
+- Клавиши на ней:
+  - Ctrl+Shift+C, Ctrl+Insert, Cmd+C — ничего сверху;
+  - Ctrl+C на Windows — `ClearSelection` после копирования, `SendKey`
+    Ctrl+C без выделения;
+  - `y` в copy mode — `CopyMode("Close")` в обоих случаях.
+- Запись `y` в `copy_mode` заменяется, а не дописывается. Если найдено
+  не ровно одна запись — `wezterm.log_error`. Если встроенных таблиц
+  нет — `wezterm.log_warn`.
+- Голого `CopyTo` в конфиге больше нет ни на клавишах, ни в таблицах
+  режимов.
+
+Спека: WT-CLIP-1 (MODIFIED)
+Спека: WT-SCROLL-7 (MODIFIED)
+
+**Проверено:**
+- `nvim -l tests/wezterm/clipboard.test.lua`:
+  - на старом коде новые проверки красные: `y` с выделением и без,
+    гонка, «голого CopyTo нет»; «без выделения ничего» — зелёная;
+  - на новом коде всё зелёное.
+- `nvim -l tests/run.lua` — зелёный.
+- `wezterm show-keys` (Windows, 20240203): в `copy_mode` на `Y
+  (Physical)` висит колбэк, а не `Multiple([CopyTo, Close])`.
+- `wezterm ls-fonts`: в stderr нет `ERROR`.
+- Вручную на Windows после Ctrl+Shift+R — не проверено. Шаги:
+  1. `Set-Clipboard A` → Ctrl+Shift+X → `y` → `Get-Clipboard` = `A`;
+  2. Ctrl+Shift+X → `v` `w` `w` `y` → в буфере выделенный текст;
+  3. Ctrl+Shift+C и Ctrl+Insert без выделения → буфер `A`.
+- На Mac не проверено. Шаги:
+  1. `printf A | pbcopy` → Ctrl+Shift+X → `y` → `pbpaste` = `A`;
+  2. Cmd+C без выделения → `A`;
+  3. выделение мышью + Cmd+C → текст выделения;
+  4. `nvim -l tests/wezterm/clipboard.test.lua`.
+
+**Файлы:** `wezterm.lua`, `tests/wezterm/clipboard.test.lua`,
+`tests/wezterm/scrollback.test.lua`, `docs/WEZTERM.md` (строка `y`).
+
+### 46. WezTerm: Enter в search mode принимает шаблон
+
+**Проблема.** После `/`, набора шаблона и Enter поиск не возвращался в
+copy mode. Enter прыгал к совпадению выше, строка ввода оставалась
+активной. `n`/`N` дописывались в шаблон буквами, вместо того чтобы ходить
+по совпадениям. Выйти в copy mode на совпадении можно было только через
+Ctrl+Shift+X.
+
+**Причина.** Во встроенной таблице `search_mode` WezTerm 20240203
+Enter = `CopyMode("PriorMatch")`, то же, что ↑ и Ctrl+P. Комментарий в
+`wezterm.lua` при этом обещал «Enter вернёт в copy mode».
+
+**Решение (решение владельца 2026-09-27: «принять и в copy mode»).**
+- После перевода встроенных таблиц на `phys:` запись Enter без
+  модификаторов в `search_mode` заменяется на
+  `CopyMode("AcceptPattern")`: `editing_search = false`, таблица
+  переключается на `copy_mode`, совпадение остаётся выделенным.
+- Запись заменяется, а не дописывается. Если записи нет, она
+  добавляется. Если записей больше одной — `wezterm.log_error`.
+- Enter с модификаторами, ↑ и Ctrl+P не тронуты.
+
+Спека: WT-SCROLL-10 (MODIFIED)
+
+**Проверено:**
+- `nvim -l tests/wezterm/scrollback.test.lua`: проверка «Enter
+  принимает шаблон» красная на старом коде и зелёная на новом; ↑ и
+  `n`/`N` в copy mode — зелёные.
+- Эталоны show-keys (`tests/wezterm/golden/keys.*.lua`) обновлены через
+  `--update-golden`. Diff — только строка Enter: `PriorMatch` →
+  `AcceptPattern`.
+- `wezterm show-keys --lua --key-table search_mode` (Windows, 20240203):
+  одна строка Enter, `act.CopyMode 'AcceptPattern'`.
+- `ls-fonts`: в stderr нет `ERROR`.
+- `nvim -l tests/run.lua` — зелёный.
+- Вручную на Windows (GUI) не проверено. Сценарии WT-SCROLL-10:
+  1. Enter после шаблона → COPY на совпадении;
+  2. Enter у самого верхнего совпадения → без перехода по кругу;
+  3. `N`/`n` после Enter;
+  4. `/` + `n` дописывает букву;
+  5. `f` из WINDOWS → Enter → `y`;
+  6. Enter без совпадений → буфер не тронут;
+  7. ↑ и Ctrl+P остаются переходом вверх.
+- На Mac не проверено: те же сценарии.
+
+**Файлы:** `wezterm.lua`, `tests/wezterm/scrollback.test.lua`,
+`tests/wezterm/golden/keys.*.lua`, `docs/WEZTERM.md` (раздел «Поиск»).
+
+### 47. WezTerm: режимы WINDOWS и RESIZE модальные
+
+**Проблема.** Режим WINDOWS был модальным только наполовину.
+- Клавиша без команды уходила в программу: опечатка в режиме печатала
+  букву в nvim, `i` включал вставку.
+- `q` и `x` открывали экран выбора панели и запрос подтверждения при
+  включённом режиме. Режим перехватывал метки `s`, `d`, `f`… и `n` в
+  запросе.
+- `o` поворачивал панели, хотя FIXLOG и docs обещали «следующая по
+  кругу».
+- RESIZE вёл себя так же, а выход через `PopKeyTable` при WINDOWS поверх
+  RESIZE оставлял под запросом слой RESIZE.
+
+**Причина.** У `ActivateKeyTable` не было `prevent_fallback`. `q` и `x`
+стояли в группе «остаются». `o` = `RotatePanes`. «Выйти до действия» было
+сделано через `PopKeyTable`, а он снимает только верхний слой.
+
+**Решение** (решения владельца 2026-09-27: «глотать», «`o` — фокус на
+следующую панель», RESIZE — как WINDOWS, сочетания терминала — одинаково
+на обеих ОС).
+- `prevent_fallback = true` у входа в WINDOWS и у `r` (RESIZE): клавиша
+  без команды проглатывается.
+- Сочетания терминала копируются в таблицы `windows` и `resize_pane`
+  одним проходом по готовому `config.keys` в конце файла. Работают в
+  режиме так же, как без него, и продлевают его. Пара, занятая командой
+  режима, пропускается: Ctrl+Shift+Space в WINDOWS остаётся выходом.
+- `map(key, mods, action, opts)`: пометка `leaves_mode` у Ctrl+Shift+W,
+  Ctrl+Shift+U, Ctrl+Shift+X и Cmd+Q. Их копии в режимах — `leave_mode(…)`
+  = `Multiple{ ClearKeyTableStack, действие }`.
+- `q`, `x`, `a`, `,`, `w`, Shift+S, `[`, `f`, Space, `b`, `e`, `;`, `m`,
+  `d` — через `leave_mode`: выключают WINDOWS и RESIZE под ним до
+  открытия экрана. Esc, Enter и Ctrl+Shift+Space по-прежнему снимают
+  один слой (`PopKeyTable`).
+- `o` → `ActivatePaneDirection("Next")`.
+
+Спека: WT-WIN-2 (MODIFIED)
+Спека: WT-WIN-3 (MODIFIED)
+Спека: WT-WIN-4 (MODIFIED)
+Спека: WT-WIN-6 (MODIFIED)
+Спека: WT-WIN-7 (MODIFIED)
+Спека: WT-WIN-10 (MODIFIED)
+Спека: WT-WIN-11 (MODIFIED)
+Спека: WT-WIN-19 (MODIFIED)
+Спека: WT-WIN-20 (MODIFIED)
+Спека: WT-WIN-21 (MODIFIED)
+Спека: WT-PANE-4 (MODIFIED)
+Спека: WT-UI-12 (MODIFIED)
+
+**Проверено:**
+- `tests/wezterm/windows-mode.test.lua`:
+  - сценарии «windows-mode: …» из строк `Проверка:`: выходы, вход
+    проглатывает, копии сочетаний, `o`, какие команды выходят, экранные
+    сочетания выходят (оракул по имени действия);
+  - на копии `wezterm.lua` до правки красные все проверки новой
+    семантики, на новом коде всё зелёное.
+- Подправлены проверки, завязанные на `PopKeyTable` и «сочетания нет в
+  таблице режима»: `panes-tabs`, `scrollback`, `window-state`.
+- Эталоны show-keys обновлены через `--update-golden`. Diff — только вход
+  Ctrl+Shift+Space (`prevent_fallback`) и таблицы `windows` /
+  `resize_pane`.
+- `nvim -l tests/run.lua` — зелёный.
+- `ls-fonts` — без `ERROR`.
+- ConPTY-стенд (`conpty.dll` WezTerm, RESIZE_QUIRK | WIN32_INPUT_MODE),
+  2026-09-27: одинокие отпускания `i` и `g` (`ESC[vk;sc;uc;0;0;1_`) в
+  pwsh 7, nvim в режиме вставки и в нормальном режиме — на экране ничего.
+  Контрольное нажатие `x` после них доходит. WT-WIN-20 держится.
+- Вручную на Windows (GUI) не проверено. Сценарии из задачи 2.8
+  change `fix-windows-mode-modality`.
+- На Mac не проверено: задача 3.1, в том числе Esc поверх экрана выбора
+  и Shift+S.
+
+**Файлы:** `wezterm.lua`, `tests/wezterm/windows-mode.test.lua`,
+`tests/wezterm/panes-tabs.test.lua`, `tests/wezterm/scrollback.test.lua`,
+`tests/wezterm/window-state.test.lua`, `tests/wezterm/golden/*`,
+`docs/WEZTERM.md` (§1, строки `o`, `q`, `x`, `r`).
+
+### 48. WezTerm: новые окна — как первое, шрифт нового окна и повторный сброс
+
+**Проблема.**
+- Сохранённый размер (Ctrl+Shift+S) получало только первое окно при
+  запуске. Окна от Ctrl+Shift+N / Cmd+N, `wezterm cli spawn
+  --new-window` и повторного запуска открывались стандартными 80×24 там,
+  где их ставила ОС. Шапка `wezterm.lua` при этом обещала «ВСЕ новые
+  окна».
+- Новое окно открывалось со шрифтом последнего перечитывания конфига, а
+  не с только что сохранённым.
+- Повторный Ctrl/Cmd+`0` ничего не делал: overrides те же, и WezTerm
+  конфиг окна не пересчитывал, так что новое сохранение из другого окна
+  не подхватывалось.
+
+**Причина.**
+- Размер задавал только обработчик `gui-startup`, а он срабатывает один
+  раз, для первого окна процесса.
+- Шрифт живёт в `config.font_size`, который вычисляется при перечитывании
+  конфига, а не при открытии окна.
+- Сброс ставил `font_size = nil` в overrides. Со второго нажатия значение
+  совпадало с текущим, и WezTerm его не применял.
+
+**Решение** (решения владельца 2026-09-27: новые окна по центру, как
+первое; сохранённый шрифт — только для новых окон).
+- Один путь размещения — «принять окно»: обработчик
+  `window-config-reloaded`. WezTerm шлёт это событие каждому новому окну
+  сразу после показа (`termwindow/mod.rs`, `new_window`, 20240203).
+  - Признак непринятого окна — overrides `nil`: новое окно начинает с
+    `Null`, а принятое получает `{}`.
+  - Размер и центр считает чистая функция `new_window_geometry` (saved /
+    fraction / fallback).
+  - Последний шаг, и при ошибке тоже, — overrides `{}`. Конфиг окна
+    вычисляется заново, и шрифт берётся из файла на момент открытия.
+  - В журнал: `log_info` с id окна, источником размера и итогом;
+    `log_warn` при ошибке. Раньше `pcall` глотал ошибку молча.
+- Обработчик `gui-startup` удалён. Первое окно с программой из командной
+  строки открывает сам WezTerm.
+- Сброс шрифта при каждом нажатии идёт в два шага: overrides с
+  `font_size` из файла (без файла — 12), затем без `font_size`. Второе
+  значение всегда отличается от первого, поэтому конфиг пересчитывается.
+  После сброса окно снова следует за файлом. `nil` в overrides не ставит
+  ни один путь.
+
+Спека: WT-STATE-2 (MODIFIED)
+Спека: WT-STATE-4 (MODIFIED)
+Спека: WT-STATE-5 (MODIFIED)
+Спека: WT-STATE-7 (MODIFIED)
+Спека: WT-PANE-7 (MODIFIED)
+
+**Проверено:**
+- `nvim -l tests/wezterm/window-state.test.lua`:
+  - новые проверки (размер и центр нового окна, доля экрана, нет
+    сведений об экране, открытые окна не двигаются, один путь
+    размещения, два шага сброса, ни одного `nil` в overrides) красные на
+    копии `wezterm.lua` до правки и зелёные после;
+  - WT-STATE-1 переведены с `gui-startup` на новое окно.
+- Подправлены проверки `panes-tabs` (WT-PANE-12) и `ui` (WT-UI-3): там
+  проверялся `gui-startup`.
+- Подделка `wezterm` дополнена: `window_id()`, журнал `res.logs`,
+  `set_config_overrides(nil)` виден как `vim.NIL`.
+- Эталоны `config.*.lua` обновлены через `--update-golden`. Diff — только
+  список событий: `gui-startup` → `window-config-reloaded`.
+- `nvim -l tests/run.lua` — зелёный.
+- `ls-fonts` — без `ERROR`.
+- Вручную на Windows (GUI, после полного перезапуска WezTerm) не
+  проверено. Сценарии — задачи 2.2 и 3.2 change
+  `fix-window-state-new-windows`: Ctrl+Shift+N, CLI, повторный запуск,
+  возврат в воркспейс, повторный Ctrl+`0`; строки «принять окно» — в
+  debug overlay (WINDOWS → `d`).
+- На Mac не проверено: задачи 2.3 и 3.3.
+
+**Файлы:** `wezterm.lua`, `tests/wezterm/window-state.test.lua`,
+`tests/wezterm/fake_wezterm.lua`, `tests/wezterm/fake_wezterm.test.lua`,
+`tests/wezterm/panes-tabs.test.lua`, `tests/wezterm/ui.test.lua`,
+`tests/wezterm/golden/config.*.lua`, `docs/WEZTERM.md` (строки
+`Ctrl+Shift+S` и `Ctrl/Cmd+0`).
+
+### 49. nvim_forge: мёртвые привязки Ctrl+V удалены, вставку делает WezTerm
+
+**Проблема.** У nvim_forge были привязки `<C-v>` в нормальном,
+визуальном, вставки и командном режимах. Под WezTerm они не срабатывали
+никогда: Ctrl+V забирает терминал и сам вставляет буфер обмена (WT-CLIP-6).
+Инвариант «перехваты WezTerm не пересекаются с привязками nvim_forge»
+(WT-KEYS-7) из-за них держался только со списком исключений. Вдобавок
+KEYBINDINGS.md обещал `<C-q>` как «Smart close», а такой привязки в коде
+нет: Ctrl+Q — встроенное блочное выделение.
+
+**Причина.** Привязки остались со времён, когда вставка делалась в nvim
+(FIXLOG 2026-05-31: Ctrl+C/V отдали WezTerm, а nvim-часть не убрали).
+
+**Решение (решение владельца 2026-09-27, Q7 = A).**
+- Подблок `<C-v>` в `nvim_forge/lua/config/keymaps.lua` удалён.
+  `<C-c>` и `<C-x>` в визуальном режиме остались.
+- Вставка — через WezTerm; блочное выделение и ввод символа буквально —
+  встроенный Ctrl+Q.
+- **BREAKING** для nvim_forge в других терминалах: там Ctrl+V снова
+  штатный Neovim (блочное выделение, ввод символа буквально).
+- Тест WT-KEYS-7 стал строгим: единственное пересечение — `<C-c>` на
+  Windows. Отдельная проверка — `<C-v>` нет ни в одном режиме.
+- Документы: KEYBINDINGS.md (без `<C-v>` «Paste» и без `<C-q>` «Smart
+  close»), WEZTERM.md §10.
+
+Спека: WT-KEYS-7 (MODIFIED)
+Спека: WT-KBD-6 (MODIFIED)
+
+**Проверено:**
+- `nvim -l tests/run.lua --id WT-KEYS-7`: после сужения исключений до
+  удаления привязок — FAIL с `<C-v>` (n, v, i, c); после удаления —
+  PASS.
+- Живой nvim_forge headless: `nvim_get_keymap` в режимах n, x, i, c не
+  находит `<C-V>`. `:verbose map <C-q>` / `map!` / `tmap` — «No mapping
+  found».
+- Вручную в WezTerm не проверено: Ctrl+V во всех режимах, Ctrl+Q →
+  VISUAL BLOCK, Ctrl + физическая `;` на русской раскладке (задача 1.4
+  change `resolve-key-ownership-conflicts`). На Mac не проверено.
+
+**Файлы:** `nvim_forge/lua/config/keymaps.lua`,
+`tests/wezterm/key-ownership.test.lua`, `nvim_forge/KEYBINDINGS.md`,
+`docs/WEZTERM.md` (§10).
+
+### 50. WezTerm: Super-сочетания шрифта только вне Windows
+
+**Проблема.** Цикл шрифта вешал Super+=/-/0 (и с Shift) на всех
+платформах. На Windows Win+= — системная экранная лупа, часть
+Win-сочетаний ОС забирает, а висящие привязки раздували таблицу
+перехватов WT-KEYS-3 (54 вместо 48).
+
+**Причина.** Один список модификаторов `SUPER, CTRL, SHIFT|SUPER,
+SHIFT|CTRL` для всех ОС.
+
+**Решение (решение владельца 2026-09-27, Q9 = A).**
+- Список модификаторов строится по платформе: `CTRL` и `SHIFT|CTRL`
+  везде, `SUPER` и `SHIFT|SUPER` — только вне Windows (Cmd на macOS,
+  Super на Linux).
+- На Windows 48 перехватов, на macOS по-прежнему 61.
+- **BREAKING** на Windows: Win+=/-/0 больше не меняют шрифт даже там, где
+  ОС их пропускала.
+
+Спека: WT-KEYS-3 (MODIFIED)
+Спека: WT-STATE-6 (MODIFIED)
+Спека: WT-STATE-7 (MODIFIED)
+
+**Проверено:**
+- `nvim -l tests/run.lua --id WT-KEYS-3` / `--id WT-STATE-6`: до правки
+  FAIL (лишние пары `SUPER` на Windows), после — PASS.
+- `show-keys` на Windows не находит `SUPER Equal|Minus|0`.
+- Эталоны: в `keys.windows.lua` и `config.windows.lua` удалено по 18
+  строк, все с `SUPER`: 6 в `config.keys` и их копии в таблицах `windows`
+  и `resize_pane` (с §47 сочетания терминала копируются в режимы).
+  Эталоны macOS и Linux не изменились.
+- `nvim -l tests/run.lua` — зелёный.
+- Вручную не проверено:
+  - на Windows: Ctrl+=/-/0 работают, Win+=/Win+Shift+-/Win+0 шрифт не
+    меняют;
+  - на Mac: Cmd+=/-/0 — как раньше.
+
+**Файлы:** `wezterm.lua`, `tests/wezterm/key-ownership.test.lua`,
+`tests/wezterm/window-state.test.lua`, `tests/wezterm/golden/*.windows.lua`,
+`docs/WEZTERM.md` (§9).
+
+### 51. WezTerm: правый Alt на Windows — AltGr, Alt+Space и Alt+F4 — окну (решения владельца)
+
+**Проблема.** WT-KBD-4 требовал «Alt как Meta» без оговорок. На Windows
+правый Alt на русской раскладке — AltGr (правый Alt+8 вводит «₽»). В
+фазе 2 это читалось бы как нарушение требования. Комментарий в
+`wezterm.lua` намекал, что настройки `send_composed_key_when_*` решают
+это везде, хотя они действуют только на macOS.
+
+**Причина.** Поведение ОС и WezTerm на Windows не было отражено ни в
+спеке, ни в комментарии.
+
+**Решение (решения владельца 2026-09-27).**
+- Q10 = A: правый Alt на Windows остаётся AltGr, код не меняется.
+  - Отклонено: сделать правый Alt Meta и на Windows — пропадает «₽» и
+    другие символы AltGr, а настройками WezTerm это на Windows не
+    делается.
+  - Комментарий у `send_composed_key_when_*` уточнён: настройки — для
+    macOS, на Windows Meta — левый Alt.
+- Q11 = A: Alt+Space и Alt+F4 остаются оконному слою WezTerm (перехват в
+  `window.rs`, привязкой не отменяется). Спека WT-KEYS-9 не меняется.
+- В `docs/WEZTERM.md` §9 одна строка: Meta — левый Alt, правый — AltGr,
+  Alt+Space/Alt+F4 забирает окно.
+
+Спека: WT-KBD-4 (MODIFIED)
+WT-KEYS-9 — без изменений.
+
+**Проверено:**
+- `ls-fonts` — без `ERROR`.
+- Правка `wezterm.lua` — только комментарий.
+- Вручную на Windows не проверено (нужен GUI; ConPTY-стенд этот слой не
+  видит):
+  - русская раскладка: правый Alt+8 → «₽», правый Alt + физическая X →
+    ничего, левый Alt + физическая X → `<M-ч>`;
+  - английская: правый Alt+x → `<M-x>`;
+  - Alt+Space → системное меню окна, Alt+F4 → закрыть окно (пункт W2
+    чек-листа `review-baseline`).
+
+**Файлы:** `wezterm.lua` (комментарий), `docs/WEZTERM.md` (§9).
+
+### 52. WezTerm: PowerShell 7 из Store, шрифты без окна ошибки, бейдж не срезается
+
+**Проблема.**
+1. На Windows запускался Windows PowerShell 5.1, хотя стоит PowerShell 7
+   (из Microsoft Store), а комментарий и docs обещали pwsh.
+2. На Mac (и на любой машине без Consolas, Cascadia Mono, Inconsolata
+   Nerd Font Mono) при запуске открывалось окно «wezterm Configuration
+   Error» про запасные шрифты.
+3. При нескольких длинных вкладках бейдж режима и имя воркспейса справа
+   срезались: 4 вкладки — видно только «sc выход default», 5 — «efault».
+
+**Причина.**
+1. `exe_in_path` проверял наличие через `io.open`, а псевдоним Store
+   (`%LOCALAPPDATA%\Microsoft\WindowsApps\pwsh.exe`) как файл не
+   открывается.
+2. Каждое имя в `font_with_fallback`, которого нет в системе, WezTerm
+   показывает окном ошибки.
+3. Правая часть рисуется в месте, оставшемся после вкладок, а вкладки
+   занимали по 24 знакоместа.
+
+**Решение** (решения владельца 2026-09-27: pwsh 7 по умолчанию; бейджи
+оверлеев — отдельно, позже).
+1. Шелл:
+   - наличие `pwsh.exe` — через `wezterm.glob`, без открытия, по порядку
+     PATH;
+   - в `default_prog` идёт найденный полный путь (выбор и запуск не
+     расходятся), без находки — `powershell.exe -NoLogo`;
+   - PATH читается рядом с остальными фактами о платформе, поиск —
+     чистая функция `find_in_path(path, name, exists)`.
+2. Профиль PowerShell 7 (вне репо,
+   `Documents\PowerShell\Microsoft.PowerShell_profile.ps1`, создан):
+   одна строка dot-source профиля Windows PowerShell. PSReadLine, UTF-8 и
+   starship теперь те же. Строка и проверка — в `docs/WEZTERM.md` §9.
+3. Шрифты: в списке только CaskaydiaCove (два имени); запасные —
+   встроенные JetBrains Mono, Noto Color Emoji и Symbols Nerd Font Mono.
+4. Панель вкладок: обработчик `format-tab-title` сужает вкладки так,
+   чтобы справа всегда оставалось место под самый длинный бейдж (WINDOWS)
+   и имя воркспейса: `w = min(24, max(1, (cols − 3 − R) / n))`. Бейдж
+   строится одной функцией из одной таблицы режимов — и для показа, и
+   для резерва. Вкладки не прыгают при входе в режим.
+
+Спека: WT-UI-1 (MODIFIED)
+Спека: WT-UI-4 (MODIFIED)
+Спека: WT-UI-10 (MODIFIED)
+Спека: WT-UI-12 (MODIFIED)
+Спека: WT-UI-13 (MODIFIED)
+Спека: WT-UI-15 (MODIFIED)
+
+**Проверено:**
+- Пробы, Windows, WezTerm 20240203, 2026-09-27:
+  - `wezterm.glob` видит псевдоним Store (1 мс на все 51 каталог PATH),
+    `read_dir` тоже видит, `io.open` — нет;
+  - псевдоним по полному пути запускается через CreateProcessW и под
+    ConPTY: `$PSVersionTable.PSVersion.Major` = 7;
+  - настоящий WezTerm выбрал
+    `C:\Users\cascad\AppData\Local\Microsoft\WindowsApps\pwsh.exe -NoLogo`.
+- Профиль pwsh 7: `MenuComplete` на Tab, `OutputEncoding` utf-8,
+  кириллица из UTF-8 без BOM читается. Под ConPTY старт чистый (prompt
+  starship, ошибок нет). Единственная запись в `$Error` —
+  `PredictionSource` при перенаправленном выводе, перехвачена `try` в
+  профиле 5.1.
+- Шрифты:
+  - `ls-fonts --text abc` — CaskaydiaCove;
+  - проба с несуществующим основным шрифтом — сообщение только про него,
+    текст рисует JetBrains Mono.
+- `tests/wezterm/ui.test.lua`:
+  - новые проверки (Store-псевдоним, порядок PATH, два имени шрифта,
+    ширины 19/15/24/1, резерв ≥ любого бейджа, обработчик без API окна)
+    красные на `wezterm.lua` из HEAD и зелёные на новом;
+  - эталоны `config.*.lua`: минус три запасных шрифта, плюс событие
+    `format-tab-title`.
+- `nvim -l tests/run.lua` — зелёный.
+- Вручную не проверено:
+  - на Windows после перезапуска WezTerm: новая вкладка — pwsh 7,
+    `cd D:\`, окно ошибки шрифтов, сценарии WT-UI-15 на 2/4/5 вкладках и
+    в узком окне;
+  - на Mac: нет окна ошибки шрифтов, WT-UI-15 с Cmd+T.
+
+**Файлы:** `wezterm.lua`, `tests/wezterm/ui.test.lua`,
+`tests/wezterm/fake_wezterm.lua` (`glob`, `column_width`,
+`truncate_right`, `mux.get_active_workspace`),
+`tests/wezterm/window-state.test.lua`, `tests/wezterm/golden/config.*.lua`,
+`docs/WEZTERM.md` (§4, §9); вне репо —
+`Documents\PowerShell\Microsoft.PowerShell_profile.ps1`.
+
+### 53. WezTerm + nvim_forge: сочетания nvim_forge на Windows через подмену клавиш
+
+**Проблема.** На Windows часть сочетаний nvim_forge не работала: между
+WezTerm и nvim стоит ConPTY, и он перекодирует ввод сам (FIXLOG §41).
+- Ctrl+Shift+F/P/E/D приходили как `<C-f>`/`<C-p>`/`<C-e>`/`<C-d>`, то
+  есть срабатывали чужие действия.
+- Ctrl+Enter приходил как `<NL>` (переключал нижнюю панель), а
+  визуальный `<C-CR>` не работал.
+- Ctrl+Space не приходил вовсе.
+- Ctrl+. и Ctrl+/ работали не на всех раскладках.
+
+**Причина.** ConPTY отдаёт программе только то, что умеет закодировать
+сам; kitty-протокол на Windows выключен (§41), а win32-input-mode до nvim
+не доходит (WT-KBD-6).
+
+**Решение** (решение владельца 2026-09-27, Q8 = A; итог пробы — в design
+change `add-nvim-chords-on-windows`).
+- **Объявление.** nvim_forge ставит user var `FORGE_NVIM=<версия таблицы>`
+  через OSC 1337 SetUserVar (`nvim_ui_send`) на VimEnter/VimResume и
+  снимает на VimLeavePre/VimSuspend, только при интерфейсе-терминале.
+  Выключатель — `vim.g.forge_wezterm_chords = false`.
+- **Подмена.** WezTerm на Windows перехватывает 9 сочетаний WT-KEYS-10.
+  Если панель объявлена этой же версией, `SendString` отправляет
+  подменную клавишу: xterm F13–F20 с Ctrl (`<C-F13>`…`<C-F20>`), девятая
+  с Ctrl+Shift (`<C-S-F13>`). Иначе отправляет запись win32-input-mode
+  исходного нажатия (нажатие и сразу отпускание, Ctrl — левый).
+- **Сторона nvim_forge.** `config/wezterm_chords.lua` переназначает
+  подменные клавиши на исходные сочетания во всех режимах (remap).
+  Таблица и версия — в двух местах, связь держит тест.
+- **Журнал.** `user-var-changed` пишет строку `forge: FORGE_NVIM pane=…
+  value=…`.
+- **Пробный стенд в репо** — `tests/wezterm/conpty/`:
+  - харнесс ConPTY с Job object;
+  - три читателя (nvim, сырой VT, записи консоли) и nvim_forge;
+  - проба A/B/C с фикстурой;
+  - набор раннера `conpty` (kind `py`, только Windows, по запросу или с
+    `--id`).
+
+Спека: WT-KEYS-10 (ADDED)
+Спека: WT-KBD-9 (ADDED)
+Спека: WT-KEYS-1 (MODIFIED)
+Спека: WT-KEYS-3 (MODIFIED)
+Спека: WT-KEYS-4 (MODIFIED)
+Спека: WT-KBD-6 (MODIFIED)
+Спека: WT-KBD-7 (MODIFIED)
+
+**Проверено:**
+- Проба через conpty.dll (`nvim -l tests/run.lua conpty`, 64 проверки,
+  русская раскладка, 2026-09-27):
+  - объявление проходит ConPTY байт в байт (`nvim_ui_send` и
+    `chansend`);
+  - K1–K4: одна клавиша на сочетание, не совпадает ни с одним физическим
+    нажатием (F1–F12 × Shift/Ctrl/Alt, буквы, цифры); pwsh на подменные
+    клавиши ничего не печатает;
+  - повтор исходного нажатия неотличим от нажатия у трёх читателей,
+    кроме правого Ctrl;
+  - настоящий nvim_forge объявляет себя, снимает объявление на `:qa`, с
+    выключателем молчит, и на каждую подменную клавишу выполняет свой
+    `lhs`;
+  - повторный прогон совпадает с фикстурой; дерево процессов гасится
+    (новых `OpenConsole.exe`, `nvim.exe` нет).
+- `nvim -l tests/run.lua` — зелёный:
+  - WT-KEYS-10 на поддельном wezterm: привязки, байты колбэка с
+    объявлением и без, macOS/Linux без подмен, версии;
+  - сторона nvim: remap во всех режимах, `init.lua`.
+- Мутации (клавиша, версия в модуле, версия в `wezterm.lua`) — FAIL.
+- Эталоны: `keys.windows.lua` +27 строк (9 подмен и их копии в режимах
+  WINDOWS/RESIZE), `config.*` — событие `user-var-changed`; macOS и
+  Linux по клавишам не изменились.
+- Команда сброса для pwsh из docs доходит до терминала байт в байт.
+- Не проверено:
+  - прогон пробы на английской раскладке (`--layout en --update-fixture`
+    после переключения раскладки);
+  - GUI WezTerm на Windows (задача 3.4);
+  - Mac (задача 3.7).
+
+**Находки** (в PROBLEMS.md):
+- Ctrl+] на русской раскладке приходит как `<NL>`, в подмену не взят:
+  запись нажатия зависит от раскладки;
+- Shift+F1 = `<F13>` = Ctrl+[.
+
+**Файлы:** `wezterm.lua`, `nvim_forge/lua/config/wezterm_chords.lua`,
+`nvim_forge/init.lua`, `nvim_forge/KEYBINDINGS.md`, `docs/WEZTERM.md` (§10),
+`tests/wezterm/conpty/*`, `tests/wezterm/key-ownership.test.lua`,
+`tests/wezterm/windows-mode.test.lua`, `tests/wezterm/fake_wezterm.lua`,
+`tests/lib/nvim_keymaps.lua`, `tests/run.lua`, `tests/registry.lua`,
+`tests/wezterm/golden/*`, `PROBLEMS.md`.
+
+### 54. macOS: установщик — шрифт, Rust, git без CLT, профили, LaunchAgent, подсказка, ~/.config/nvim симлинком
+
+**Проблема** (расхождения базовой линии с кодом `install-macos.sh`, §43):
+- шрифт в одном из двух каталогов `Library/Fonts` не находился:
+  `ls A B` падал на отсутствующем каталоге, и cask ставился поверх —
+  падал на конфликте;
+- с `FORGE_NVIM_WITH_LANGUAGES=1` rustup-init запускался при каждом
+  прогоне, если `~/.cargo/bin` не в PATH;
+- на маке без Xcode CLT `curl | bash` запускал `/usr/bin/git`-заглушку:
+  всплывал системный диалог, а бутстрап шёл дальше;
+- присваивание `WEZTERM_CONFIG_FILE`, дописанное в профиль после блока
+  forge-nvim, не получало нового блока: хватало того, что блок есть;
+- LaunchAgent искался текстом: `unsetenv`, `EnvironmentVariables` и путь
+  репо через `~`/симлинк давали ложное «сломано», а из двух plist
+  назывался один;
+- подсказка о перезапуске выходила в панели WezTerm, загрузившего файл
+  репо через `~/.wezterm.lua` или `WEZTERM_CONFIG_FILE` под другим
+  именем;
+- режим `~/.config/nvim` (`FORGE_NVIM_DEPS_ONLY=0`):
+  - каждый прогон делал новый бэкап и копировал заново;
+  - клонировал весь монорепо вместо конфига;
+  - из терминала nvim_forge ставил конфиг внутрь репо (`XDG_CONFIG_HOME` =
+    репо);
+  - `Lazy! sync` переписывал отслеживаемый `lazy-lock.json`;
+- шапка не называла `FORGE_NVIM_REPO`, `FORGE_NVIM_BRANCH`,
+  `FORGE_NVIM_USE_LOCAL_SOURCE`, а про `brew shellenv` говорила только
+  `~/.zprofile`.
+
+**Причина.** Проверки держались на текстовых совпадениях и кодах `ls`.
+Режим установки жил отдельной копией логики и без проверок до бэкапа.
+
+**Решение** (design change `fix-macos-installer`; решение владельца
+2026-09-27: Q12 = B, путь установки — симлинк, Decision 9).
+- Шрифт — glob каждого каталога с `[ -e ]`.
+- Rust стоит, если `cargo` в PATH или исполняемый `~/.cargo/bin/cargo`;
+  во втором случае — подсказка про PATH.
+- `git_available`: `/usr/bin/git` + `xcode-select -p` с ошибкой — git
+  недоступен, подсказка `xcode-select --install`, код 1, git не
+  запускается.
+- Профили: проверяется только хвост после последнего `# <<< forge-nvim
+  <<<` — новое присваивание получает ещё один блок, повторы сходятся.
+- LaunchAgent: разбор plist.
+  - `plutil -convert xml1` (без plutil — как есть);
+  - строки `ProgramArguments`/`Program`;
+  - `launchctl setenv WEZTERM_CONFIG_FILE <v>` аргументами или в `sh -c`
+    (там `~`/`$HOME` раскрываются);
+  - сравнение после раскрытия симлинков; называется каждый нарушитель.
+- Подсказка: авторитетна `WEZTERM_CONFIG_FILE` панели; без неё —
+  кандидаты `$WEZTERM_CONFIG_DIR/wezterm.lua`, `.wezterm.lua` и
+  launchd-переменная из того же каталога.
+- Режим `~/.config/nvim`:
+  - путь установки — симлинк на `<чекаут>/nvim_forge` через общую с
+    WezTerm функцию `link_with_backup`;
+  - все отказы до первого бэкапа, одной предпроверкой сразу после шага
+    зависимостей: нет `nvim_forge/init.lua`, путь вложен в чекаут или
+    чекаут в путь, нет `nvim`;
+  - `XDG_CONFIG_HOME` внутри чекаута не учитывается;
+  - файл вне чекаута → бутстрап в `FORGE_NVIM_SRC` и перезапуск с
+    `FORGE_NVIM_DEPS_ONLY=0`; `FORGE_NVIM_USE_LOCAL_SOURCE=1` вне чекаута
+    — отказ до любых действий;
+  - плагины — `Lazy! restore` с `XDG_CONFIG_HOME`/`NVIM_APPNAME`
+    установленного конфига.
+- Шапка названа полностью, S29 это сверяет.
+
+**Миграция.** Прежняя копия `~/.config/nvim` один раз уходит в
+`~/.config/nvim.backup-*`, дальше повтор — `forge-nvim config already
+linked`. Откат — revert; копия лежит в бэкапе.
+
+Спека: MAC-INST-6 (MODIFIED)
+Спека: MAC-INST-5 (MODIFIED)
+Спека: MAC-INST-3 (MODIFIED)
+Спека: WT-LOAD-7 (MODIFIED)
+Спека: WT-LOAD-8 (MODIFIED)
+Спека: WT-LOAD-12 (MODIFIED)
+Спека: MAC-INST-10 (MODIFIED)
+Спека: MAC-INST-11 (MODIFIED)
+Спека: MAC-INST-13 (MODIFIED)
+
+**Проверено:**
+- `tests/install-macos.scenarios.sh` в WSL: 127 из 127 под bash 5.2.21 и
+  под bash 3.2.57, 2026-09-27; через раннер (`install`, обе ветки) —
+  PASS.
+  - Новые S17–S29 и переписанные S11/S13 на прежнем `install-macos.sh`
+    дают 51 FAIL, на новом — 0.
+  - Заглушки `brew`, `rustup-init`, `go`, `xcode-select`, `plutil`,
+    `nvim` описывают в комментариях, что изображают.
+  - S21 гоняется с `plutil` и без.
+- На Mac не проверено:
+  - шрифт только в `~/Library/Fonts` и только в `/Library/Fonts`;
+  - мак без CLT;
+  - двоичный plist;
+  - полный прогон `FORGE_NVIM_DEPS_ONLY=0` из чекаута с повтором
+    (задачи 2.6, 3.5, 5.3, 7.8, 9.3).
+
+**Файлы:** `nvim_forge/scripts/install-macos.sh`,
+`tests/install-macos.scenarios.sh`, `nvim_forge/README.md`, `README.md`,
+`nvim_forge.sh` (шапка), `docs/WEZTERM.md` (§9).
+
+### 55. Linux: шаг WezTerm в install-linux.sh — те же дефекты, что §43 починил для macOS
+
+**Проблема.** Шаг WezTerm в `install-linux.sh` жил своей копией логики,
+которую §43 для macOS уже исправил:
+1. относительный симлинк на файл репо не считался «уже подключено» и
+   уходил в бэкап;
+2. `~/.config/wezterm` → каталог чекаута: «бэкап» уносил сам `wezterm.lua`
+   репо и оставлял самоссылку;
+3. битый каталог-симлинк `~/.config/wezterm` ронял `mkdir -p`;
+4. из терминала nvim_forge (`XDG_CONFIG_HOME` = репо) симлинк ложился
+   внутрь чекаута;
+5. при `curl | bash` (`${BASH_SOURCE[0]}` не задан) `wezterm.lua` искался
+   от текущего каталога.
+
+Вдобавок команда для Linux в шапке `wezterm.lua` на чистом HOME падала:
+нет каталога `~/.config/wezterm`.
+
+**Причина.** Две копии одной логики: §43 починил одну.
+
+**Решение** (решение владельца 2026-09-27: Q13 = A — только исправления
+1–5 и команда в шапке; перекрытия на Linux не нейтрализуются, режим
+`~/.config/nvim` на Linux — follow-up).
+- Общий файл `nvim_forge/scripts/lib/wezterm-link.sh`: `resolve_path`,
+  `path_within`, `link_with_backup`, `link_wezterm_config`, одна копия на
+  оба установщика (bash 3.2). Контракт вызывающего — в шапке.
+- `install-macos.sh` подключает его (перенесены функции из §54).
+- `install-linux.sh`:
+  - каталог скрипта — один раз на верхнем уровне;
+  - шаг WezTerm — через `link_wezterm_config`;
+  - `XDG_CONFIG_HOME` внутри чекаута не учитывается;
+  - при stdin и без общего файла — пропуск с `wezterm.lua not found near
+    the config`.
+- Шапка `wezterm.lua`: `mkdir -p ~/.config/wezterm && ln -sf
+  "$PWD/wezterm.lua" ~/.config/wezterm/wezterm.lua` (из корня репо) или
+  `./nvim_forge/scripts/install-linux.sh`.
+- Docs (WEZTERM.md, nvim_forge/README.md): команда и предупреждение, что
+  `~/.wezterm.lua` и `WEZTERM_CONFIG_FILE` на Linux перекрывают симлинк
+  молча.
+
+**Восстановление после самоссылки старой версии.** В чекауте `git
+checkout -- wezterm.lua` (или вернуть `wezterm.lua.backup-*`), затем
+удалить лишний бэкап.
+
+Спека: WT-LOAD-13 (MODIFIED)
+
+**Проверено:**
+- Новый `tests/install-linux.scenarios.sh`: L1–L11 — 26 из 26 под bash
+  5.2.21 и 3.2.57. На прежнем `install-linux.sh` красные L2
+  (относительный), L6, L7, L9, L10 и L11 (на прежней шапке).
+- `tests/install-macos.scenarios.sh` с общим файлом — 127 из 127 под
+  обоими bash.
+- Оба набора в `nvim -l tests/run.lua` (набор `install`) — PASS.
+- `wezterm ls-fonts` — без `ERROR`.
+- На рабочем столе Linux не проверялось (WSL-песочница).
+- На Mac не проверено (задача 4.3): общий файл исполняется и там.
+
+**Файлы:** `nvim_forge/scripts/lib/wezterm-link.sh` (новый),
+`nvim_forge/scripts/install-linux.sh`, `nvim_forge/scripts/install-macos.sh`,
+`wezterm.lua` (шапка), `tests/install-linux.scenarios.sh` (новый),
+`tests/install-macos.scenarios.sh`, `tests/registry.lua`, `CLAUDE.md`,
+`docs/WEZTERM.md`, `nvim_forge/README.md`.
+
+### 56. docs/WEZTERM.md и комментарии wezterm.lua сверены с кодом и спеками
+
+**Проблема.** `docs/WEZTERM.md` описывал модель LEADER, которую запись
+2026-08-01 заменила режимом WINDOWS, и местами ошибался:
+- очистка истории на `Ctrl+Shift+K` и debug overlay на `Ctrl+Shift+L` —
+  теперь это навигация по панелям;
+- `Ctrl+Shift+B`/`J` — «панели nvim»;
+- «хитрые» сочетания «долетают благодаря kitty» — на Windows kitty нет.
+
+Комментарии `wezterm.lua` утверждали неверное:
+- «чистый» Ctrl+C → 0x03 (§17), хотя с modifyOtherKeys уходит `CSI
+  27;5;99~` — верно теперь в WT-KBD-7;
+- полоса прокрутки и `min_content_width` (§16) — WT-SCROLL-3, WT-UI-7;
+- «старое имя» шрифта (2026-05-31, п. 3) — WT-UI-4;
+- «нет бейджа = NORMAL» (2026-08-01), хотя у оверлеев бейджа нет, а ввод
+  они перехватывают, — WT-UI-12; та же запись не называла все
+  затронутые файлы;
+- у выгрузки истории — «срезаем хвост пустых строк».
+
+Прежние записи не правятся; верное описание — в указанных требованиях.
+
+**Причина.** Записи 2026-08-01 и раньше меняли код, но не docs, и ничто не
+сверяло одно с другим.
+
+**Решение.**
+- `docs/WEZTERM.md` переписан как руководство, выведенное из спек и
+  итогового кода.
+  - Разделы 0–13: загрузка конфига, принципы, режим WINDOWS, панели,
+    вкладки и окна, воркспейсы, история, QuickSelect, выгрузка, буфер,
+    окно и шрифт, различия ОС, что получает nvim, альтернативный экран.
+  - ID требований — в заголовках и колонке «Спека»; все ID существуют в
+    спеках или в ADDED активных changes.
+  - Описано поведение после changes этой сессии: модальный WINDOWS,
+    Enter в поиске, `y`, новые окна, Super только вне Windows, pwsh 7,
+    бейдж, подмена WT-KEYS-10.
+- nvim_forge:
+  - в `HOTKEYS.md`/`KEYBINDINGS.md` у каждого сочетания WT-KBD-6 стоит
+    пометка: девять сочетаний WT-KEYS-10 — «через подмену»; F-клавиши с
+    модификаторами — «приходит как `<F17>`…», с альтернативой (номера
+    сняты пробой через conpty.dll);
+  - в `QUICKSTART.md`, `PANELS.md`, `COOKBOOK.md` — одна оговорка;
+  - в README — NOTE про раскладку и полный список переменных, в том
+    числе `FORGE_NVIM_FORCE_WEZTERM`.
+- `wezterm.lua`: комментарии исправлены и ссылаются на ID. Строка
+  `text:gsub("%s+$", "\n")` в выгрузке удалена: `get_lines_as_text` в
+  20240203 сам делает `trim_end()` (`lua-api-crates/mux/src/pane.rs`),
+  шаблон ничего не находил.
+
+**Проверено:**
+- `wezterm.lua` без комментариев отличается от прежнего ровно строкой
+  `gsub`.
+- Нормализованный `show-keys --lua` до и после совпадает.
+- `ls-fonts` — без `ERROR`.
+- `nvim -l tests/run.lua` — зелёный.
+- Все ID в `docs/WEZTERM.md` существуют; у каждого раздела `## ` ID в
+  заголовке.
+- Все `FORGE_NVIM_*` обоих установщиков названы в `nvim_forge/README.md`.
+- Панель Claude Code на альтернативном экране: `wezterm cli get-text
+  --start-line -5000` даёт 67 строк при высоте окна 67.
+- Вручную в GUI не проверено:
+  - хеш файла выгрузки до и после удаления `gsub`;
+  - `Ctrl+Shift+W` в панели с одним pwsh;
+  - бейдж после `Ctrl+Shift+U`;
+  - выгрузка `'a'; ''; 'b'`.
+
+**Файлы:** `docs/WEZTERM.md`, `wezterm.lua` (комментарии, одна строка
+кода), `nvim_forge/README.md`, `nvim_forge/HOTKEYS.md`,
+`nvim_forge/KEYBINDINGS.md`, `nvim_forge/QUICKSTART.md`,
+`nvim_forge/PANELS.md`, `nvim_forge/COOKBOOK.md`.
