@@ -1,8 +1,14 @@
 # FIXLOG — что правили и как
 
-Журнал решённых проблем в формате **Проблема → Решение → Файлы**.
+Журнал работ и исправлений. Для новых записей:
+**Проблема → Причина → Изменение → Проверка/e2e → Вывод → Файлы**.
 Новые проблемы кидаются в `PROBLEMS.md` (корень репо), оттуда переезжают
 сюда после фикса.
+
+Единая хронология, включая ранние материалы прежнего workspace:
+[docs/HISTORY.md](../docs/HISTORY.md). Источники импорта и шаблон новых записей:
+[docs/history/](../docs/history/README.md). Исторические записи ниже сохраняют
+исходные номера и формулировки; уточнения дописываются отдельной записью.
 
 Связанные документы:
 
@@ -11,8 +17,9 @@
 - `COOKBOOK.md` — пользовательские сценарии.
 - `:checkhealth forge` — живой статус форматтеров / LSP / тулзов.
 
-Формат записи: дата, краткий тег, текст проблемы (как описал юзер),
-что сделано, какие файлы тронуты.
+Формат новых записей: фактическая дата, ID/статус, симптом и воспроизведение,
+причина, изменение, проверки по платформам, вывод и файлы. Гипотеза и
+непроверенный результат должны быть явно помечены.
 
 ---
 
@@ -2400,3 +2407,1215 @@ checkout -- wezterm.lua` (или вернуть `wezterm.lua.backup-*`), зат�
 кода), `nvim_forge/README.md`, `nvim_forge/HOTKEYS.md`,
 `nvim_forge/KEYBINDINGS.md`, `nvim_forge/QUICKSTART.md`,
 `nvim_forge/PANELS.md`, `nvim_forge/COOKBOOK.md`.
+
+## 2026-10-31
+
+### 57. IDE-001: пассивный сбор сведений о задержках zsh/Go на Mac
+
+**Проблема.** На Mac до запуска Neovim подвисают новая вкладка WezTerm и
+`clear`. Go повторяет загрузку go1.26.0, которая не проходит проверку при
+GOSUMDB=off. Профили Mac отсутствуют в репо; причинность не подтверждена.
+
+**Причина.** На данном этапе известен механизм неудачной загрузки, но не
+команда-инициатор. Starship вызывает `go version` в Go-модуле; это кандидат,
+не установленная причина на машине владельца. Повторный source — также гипотеза.
+
+**Решение.** Подготовлен пассивный сборщик Python 3: выбранный environment,
+zsh-профили и статические source-ссылки, сохранённый GOENV, директивы Go-проекта,
+настройка Go-модуля Starship. Не выполняет shell/Go, ничего не записывает,
+не выводит полные строки профилей. Есть ограничения обхода и размера файлов.
+Сборщик и инструкция добавлены в change `diagnose-macos-shell-startup`
+(`skip_specs: true`: диагностический инструмент, поведение shell/nvim/WezTerm
+не менялось). Исходная IDE-001 остаётся открытой до отчёта/trace и замеров Mac.
+
+**Проверено (Windows):**
+- `python -B tests/shell_diagnostics_test.py`: 12 проверок зелёные; временные
+  HOME, обход циклов и относительных source, лимиты, GOENV, GOWORK, отсутствие
+  исполнения команд и вывода секретов из строк профилей.
+- `nvim -l tests/shell-diagnostics.test.lua`: PASS; зарегистрировано в unit.
+- `git diff --check`: без ошибок на момент проверки.
+- На Mac не проверено: запуск из проблемного каталога, реальный hook,
+  время вкладки/prompt/clear и результат точечного исправления.
+
+**Файлы:** `nvim_forge/scripts/diagnose-shell.py`, `tests/shell_diagnostics_test.py`,
+`tests/shell-diagnostics.test.lua`, `tests/registry.lua`, `tests/README.md`,
+`docs/MACOS_STARTUP_DIAGNOSTICS.md`, `docs/IDE_ROADMAP.md`, `PROBLEMS.md`,
+`openspec/changes/diagnose-macos-shell-startup/`.
+
+### 58. Общий e2e-контур: Windows native, Ubuntu Docker, Mac отдельно
+
+**Проблема.** IDE-010/011: нужен универсальный подход к каждой фиче/багу,
+общие сценарии, простые команды и проверка на целевых системах. Mint владелец
+временно отложил. Имеющиеся unit не заменяют GUI/IDE e2e.
+
+**Причина.** Runner покрывал настройки/контракты WezTerm и установщики;
+первого отдельного e2e-набора и одинаковых entrypoints ещё не было.
+При проверке новых обёрток найден scalar-splat в PowerShell: один suite
+`unit` превращался в отдельные `u/n/i/t`.
+
+**Решение.** Suite e2e в общем runner; quick/e2e/full через scripts/test.*.
+В PowerShell suites явно string[]. Регресс argv и ошибки режима проверяет
+CLI e2e, запускающий системную обёртку и дочерний nvim-stub. Отдельный e2e
+диагностического CLI запускает настоящий инструмент на временном HOME.
+Общий запуск Python и протокол stdout — tests/lib/python_case.lua.
+
+Ubuntu Docker: pinned Ubuntu digest и Neovim 0.12.2 с проверкой SHA256,
+read-only чекаут, результаты .tests/ubuntu, runtime без сети и без root.
+Первый root-прогон исказил проверку read-only профиля S16; после запуска
+пользователем forge и передачи ему созданных нами артефактов тест проходит
+без изменения ожиданий. Пакеты apt пока не зафиксированы snapshot-версией.
+
+План, системные границы, правило «фича/баг → e2e» и непокрытые сценарии
+записаны в docs/PORTABLE_ARCHITECTURE.md, tests/e2e/README.md, CLAUDE.md.
+Change `establish-platform-e2e-workflow`, skip_specs=true: инфраструктура
+разработки, обычный runtime IDE не меняется. Путь к cs2d ещё не получен.
+
+**Проверено 2026-10-31:**
+- Windows: `nvim -l tests/run.lua unit e2e wezterm trace` — 18 файлов PASS,
+  0 FAIL, 0 SKIP. Это не означает полное покрытие IDE: 38 MANUAL и 29 UNCOVERED
+  в текущем индексе требований. ConPTY в этой сессии не прогонялся.
+- Ubuntu 24.04/Neovim 0.12.2 в Docker: `ubuntu full` — 19 PASS, 0 FAIL,
+  3 SKIP: real WezTerm отсутствует, дополнительные ветки обоих установщиков
+  под Bash 3.2 отсутствуют. Основные sandbox-прогоны под Bash 5 прошли.
+- quick PowerShell и синтаксис Bash entrypoint проверены; CLI e2e обоих
+  entrypoints выполнены в Windows и Ubuntu соответственно.
+- Mac и исходный сбой IDE-001 не проверены; GUI/полный IDE-регресс ещё
+  не реализован. Все пробелы оставлены явно в матрице.
+
+**Файлы:** scripts/test.*, tests/containers/*, tests/e2e/*,
+tests/lib/python_case.lua, tests/shell_diagnostics_test.py,
+tests/shell-diagnostics.test.lua, tests/run.lua, tests/registry.lua,
+tests/README.md, docs/IDE_ROADMAP.md, docs/PORTABLE_ARCHITECTURE.md,
+README.md, PROBLEMS.md, CLAUDE.md, openspec/changes/establish-platform-e2e-workflow/.
+
+### 59. Единая история: импорт ранних материалов и обязательный вывод исправления
+
+**Связь:** решение владельца 2026-10-31; change `consolidate-project-history`.
+**Статус:** объединены описательные артефакты; поведение редактора не менялось.
+
+**Проблема.** Причины и история ранних решений оставались в
+`F:/claude_code/vim`, более поздние — в FIXLOG и DEBUG_JOURNEY этого репо.
+Из-за разрозненности легко повторить неудачную попытку или принять старый
+план за описание нынешней сборки. В новых записях требовался явный вывод.
+
+**Причина.** Переезд исходников и смена конфигурации не сопровождались
+объединением описательной истории. Ранние артефакты частично дублировались
+в резервных копиях; многие не содержали точной даты события.
+
+**Изменение.** Шесть уникальных исторических Markdown-артефактов и запись
+о чистой установке сохранены в docs/history/legacy с исходными байтами,
+SHA256 и ссылками на источники/совпадающие снимки в sources.json.
+Создана единая хронология docs/HISTORY.md: ранние этапы с честной датировкой,
+существующий DEBUG_JOURNEY и все записи FIXLOG. Старые §1–58 сохранены.
+Новый формат закреплён в CLAUDE.md, roadmap и шаблоне записи.
+
+**Проверено вручную (Windows, разовая сверка документов).** Выполнен
+одноразовый аудит `.tests/verify-history.py`: 7 архивов совпали по байтам
+с оригиналами, 4 дублирующих источника подтверждены нормализованными SHA256;
+70 ссылок покрывают все 59 номерных, буквенные и ненумерованные записи.
+Даты в index упорядочены, пути разрешаются; прежнее тело журнала из HEAD
+сохранилось, архивы не игнорируются Git и защищены от нормализации CRLF/LF.
+Исходные документы читались как данные;
+команды и код из них не исполнялись. Это проверка целостности документов,
+не подтверждение нынешнего поведения IDE и не закрытие её e2e-долга.
+
+**Вывод.** История принадлежит репозиторию и дополняется при каждом
+исправлении. Дата импорта/снимка не подменяет дату события; «план»,
+«гипотеза», «ручная проверка» и «подтверждено e2e» остаются разными статусами.
+Старые попытки унификации DAP-вывода полезны при IDE-003/004, но относятся
+к прежним плагинам: перед повторением решения сверяем текущий стек.
+По §57: пассивная диагностика не доказывает исправление Mac.
+По §58: инфраструктурный зелёный прогон не доказывает e2e редактора;
+root-контейнер искажает проверки прав, а команды-обёртки требуют проверки argv.
+
+**Файлы:** docs/HISTORY.md, docs/history/*, CLAUDE.md, docs/IDE_ROADMAP.md,
+README.md, PROBLEMS.md, nvim_forge/FIXLOG.md, nvim_forge/DEBUG_JOURNEY.md,
+openspec/config.yaml, openspec/changes/consolidate-project-history/.
+
+### 60. OpenSpec: постоянное разрешение владельца на фиксированный CLI
+
+**Связь:** явное глобальное разрешение владельца от 2026-10-31.
+
+**Проблема.** Согласованные команды OpenSpec повторно запрашивали разрешение.
+Это мешало автономной работе и не соответствовало указанию владельца.
+
+**Причина.** Прежние правила разрешали отдельные полные PowerShell-команды
+(например, list), а не весь согласованный CLI с необходимыми подкомандами.
+Разрешение в чате само по себе не меняет постоянную политику исполнения.
+
+**Изменение.** В пользовательском `C:/Users/cascad/.codex/rules/openspec.rules`
+сохранён allow-prefix для `npx`/`npx.cmd --yes @fission-ai/openspec@1.13.2`.
+В CLAUDE.md записано разрешение владельца и сохранение технических ограничений
+среды. Оно относится к этому пакету/версии, а не любым npm-пакетам.
+
+**Проверено вручную.** `codex execpolicy check --rules .../openspec.rules --
+npx.cmd --yes @fission-ai/openspec@1.13.2 status --change
+establish-platform-e2e-workflow --json` вернул `allow`. Это проверка правила,
+не e2e поведения редактора. Другая shell-обёртка и ограничения sandbox могут
+по-прежнему потребовать отдельного технического согласования.
+
+**Вывод.** Пожелание владельца сохраняем в исполняемом правиле с ограниченным
+префиксом и в контексте репозитория; не обещаем отключение всех проверок среды.
+
+**Файлы:** CLAUDE.md; пользовательский `.codex/rules/openspec.rules` вне репо.
+
+### 61. Настоящий editor e2e: pinned плагины, RPC UI и готовность интерфейса
+
+**Связь:** IDE-011, этап 0.5; change `establish-platform-e2e-workflow`.
+
+**Проблема.** Зелёный CLI/unit-прогон не проверял сам редактор: открытие,
+сохранение, дерево, поиск, буферы и фокус. Bare headless также пропускал
+UIEnter/VeryLazy и поздние действия плагинов.
+
+**Причина.** Не было отдельного процесса с нашей сборкой, подготовленными
+зависимостями, пользовательским вводом и наблюдаемым результатом.
+
+**Изменение.** Явный prepare_editor.py экспортирует 66 ревизий lazy-lock.json
+из git-кэша или скачивает их с --download. Runtime не скачивает зависимости;
+несовпадение manifest с lock — FAIL. Docker готовит плагины при build.
+Настоящая сборка копируется в приватный stdpath(config), плагины — data/lazy,
+HOME/state/cache и Git-проект изолированы. Собственный Msgpack-RPC клиент
+на vim.system/vim.mpack принимает redraw от nvim_ui_attach: UIEnter и VeryLazy
+проходят реально, mappings вызываются через публичный nvim_input.
+
+**Неудачные попытки и уточнения.** Внешнего `-u` оказалось недостаточно:
+lazy сбрасывает runtimepath к stdpath(config). RPC job родительского Neovim
+принимает API-запросы как сервер и не заменяет UI-клиент для redraw.
+RPC внутри predicate vim.wait повторно входил в тот же predicate через
+вложенный event loop; polling вынесен наружу. Асинхронный F7 и сразу Ctrl+P
+создавали гонку действий теста. Наконец, Ubuntu показал: фокус в Neo-tree
+ещё не означает, что каталог прочитан. Тест ждёт видимый файл с deadline,
+как отдельно ждёт insert mode Telescope и результаты поиска. Поведение
+плагинов ради зелёного результата не подменялось.
+
+Проверен и точечный --id: он пропускает SELF-случаи, поэтому выбранное
+IDE-BOOT-требование самостоятельно подготавливает тот же пользовательский
+сценарий как Given, без отдельных ложных PASS подготовительных шагов.
+Windows --id IDE-BOOT-2 и Ubuntu --id IDE-BOOT выполнены успешно.
+
+Большое копирование плагинов через Windows/Docker bind mount давало примерно
+55 с на editor e2e. Runtime перенесён в temp гостя, в .tests остаются проект,
+конфиг, manifest, сообщения, процессы, stderr и текст UI, включая snapshot
+конкретного упавшего сценария. Это устраняет I/O тестовой среды; не является
+замером ускорения повседневного Neovim.
+
+**Проверка/e2e (2026-10-31, HEAD 1bc3c0f с изменениями).** Windows native,
+Neovim 0.12.2: unit/e2e/wezterm/trace — 19 файлов PASS, 0 FAIL; editor отдельно
+после исправления ожидания дерева — 10 PASS. Ubuntu 24.04/Neovim 0.12.2,
+Docker без runtime-сети: full — 20 PASS, 0 FAIL, 3 SKIP; editor — 10 PASS.
+SKIP: нет бинарника WezTerm и дополнительных Bash 3.2 прогонов установщиков.
+Native ConPTY и Mac не выполнялись. Языки, DAP, neotest, Git/worktree,
+реальный clipboard и физическая доставка клавиш ещё не покрыты этим ядром.
+Одноразовая сверка истории после дополнения: 7 архивов и 4 дублирующих
+источника целы, 74 ссылки покрывают 63 номерных и остальные записи;
+прежнее тело FIXLOG сохранено. Оба текущих changes прошли OpenSpec strict validate.
+
+**Вывод.** Проверяем приложение с его настоящим жизненным циклом и ожидаем
+наблюдаемую готовность перед действием. RPC UI годится для сценариев ядра;
+PTY/ConPTY и GUI остаются отдельными границами проверки. Следующие баги
+редактора добавляют регресс в этот контур, а не откладывают e2e на конец.
+
+**Файлы:** tests/e2e/editor.test.lua, prepare_editor.py, plugin-sources.json,
+tests/lib/editor.lua, editor_rpc.lua, spec_index.test.lua, tests/registry.lua,
+tests/containers/*, .dockerignore, tests/README.md, tests/e2e/README.md,
+docs/IDE_ROADMAP.md, PROBLEMS.md, openspec/changes/establish-platform-e2e-workflow/.
+
+### 62. Старт редактора: скрытые загрузки Treesitter и Mason
+
+**Спека:** IDE-BOOT-1 (ADDED); change `make-editor-startup-passive`.
+**Связь:** этап 1; исходная IDE-001 до запуска nvim этим не закрыта.
+
+**Проблема.** Даже с подготовленными плагинами запуск редактора начинал
+сетевую подготовку инструментов/парсеров. Это создавало фоновые задержки и
+ошибки сети в обычной работе.
+
+**Причина.** Treesitter main вызывал install при наличии CLI; legacy включал
+ensure/auto_install. mason-tool-installer имел run_on_start=true и отдельный
+ручной вызов run_on_start с задержкой 3000 мс. Мост mason-lspconfig загружался
+по BufReadPre и вызывал registry.refresh даже с пустым ensure_installed.
+Переводчик имён mason-tool-installer тоже мог потребовать этот мост.
+
+**Изменение.** Установка парсеров осталась в ForgeTreesitterInstall,
+автоустановка main/legacy убрана. mason-tool-installer сохраняет каталог и
+явные MasonToolsInstall/Sync/Update, run_on_start выключен. Его мосты имён
+отключены: каталог уже использует Mason package names. mason-lspconfig
+загружается явными LspInstall/LspUninstall; доступные серверы включает
+vim.lsp.enable после настройки с PATH/Mason bin. Уже установленные инструменты
+не удаляются; после явной установки LSP нужен перезапуск редактора.
+
+**Проверка/e2e.** Исходный красный editor-прогон на Windows зафиксировал
+curl tree-sitter-rust в snapshot `.tests/editor-e2e/7676137378900`.
+Одного ensure_installed={} было недостаточно: после подключения UI нашёлся
+безусловный refresh моста. Постоянный IDE-BOOT-1 ждёт VeryLazy и окно после
+прежнего 3-секундного таймера, проверяет отсутствие curl/wget, события установки
+Mason и сообщения Treesitter о загрузке, наличие явных команд. Windows и
+Ubuntu PASS в составе результатов §61; сеть Ubuntu runtime выключена.
+Успешная установка пакетов и полный LSP-сценарий этим не доказаны. Mac открыт.
+
+**Вывод.** Пассивный старт требует проверки фактических процессов после
+подключения UI: пустой список установки не гарантирует отсутствие сети.
+Подготовка инструментов — отдельное явное действие. Инициатор загрузки Go
+в zsh на Mac всё ещё неизвестен, его нельзя приписывать найденным действиям nvim.
+
+**Файлы:** nvim_forge/lua/plugins/lsp.lua, treesitter.lua, dap.lua (подсказка),
+nvim_forge/README.md, QUICKSTART.md, tests/e2e/editor.test.lua,
+openspec/changes/make-editor-startup-passive/, openspec/config.yaml,
+docs/IDE_ROADMAP.md, PROBLEMS.md, tests/e2e/README.md.
+
+### 63. Отсутствующий gopls: предупреждение только при работе с Go
+
+**Спека:** IDE-BOOT-2 (ADDED); change `make-editor-startup-passive`.
+
+**Проблема.** В Ubuntu core e2e открывал обычный .txt без Go SDK/gopls и
+получал длинное сообщение про установку Go LSP. Интерфейс останавливался
+на Press ENTER, хотя пользователь не работал с Go.
+
+**Причина.** Общий config nvim-lspconfig проверял gopls и безусловно
+планировал предупреждение при первом BufReadPre любого файла.
+
+**Изменение.** При отсутствии gopls предупреждение отложено до первого
+FileType go. Полезная инструкция установки сохранена; файлы других типов
+больше не запускают это предупреждение.
+
+**Проверка/e2e.** Исходный Ubuntu snapshot
+`.tests/ubuntu/editor-e2e/4592218079330/screen.txt` содержит предупреждение
+и hit-enter при работе с .txt. IDE-BOOT-2 проверяет отсутствие этого
+уведомления после открытия/редактирования, поиска и переключения панелей.
+Ubuntu без gopls и Windows с унаследованным PATH прошли (§61).
+Положительный Go/LSP-сценарий и Mac остаются частью дальнейшего покрытия.
+
+**Вывод.** Сообщение об отсутствующем языковом инструменте должно относиться
+к языковому действию пользователя. Минимальный образ без SDK помогает
+обнаруживать помехи, которые установленный набор инструментов скрывает.
+
+**Файлы:** nvim_forge/lua/plugins/lsp.lua, tests/e2e/editor.test.lua,
+openspec/changes/make-editor-startup-passive/specs/editor-bootstrap/spec.md.
+
+### 64. Реальный DAP E2E: Go и Delve в частном тестовом окружении
+
+**Связь:** IDE-011, этап 2; change `fix-dap-output-lifecycle`.
+
+**Проблема.** Core e2e не запускал отладчик и не мог доказать сохранность
+stdout/stderr или текста panic. Нужен одинаковый регресс Windows/Ubuntu/Mac.
+
+**Причина.** Не было проекта, совместимых SDK/адаптера и сценария с реальным
+процессом. На этой Windows PATH выбирал Go 1.23.3, тогда как Delve 1.26.3
+требует минимум Go 1.24; это отдельная несовместимость тестовой среды.
+
+**Изменение.** Добавлен stdlib Go-проект с stdout/stderr, breakpoint, panic
+и файловым сигналом для второй остановки. Сценарии используют F5/F9 и
+настоящий выбор launch.json, читают видимый REPL, записывают реальные DAP
+events/log и версии инструментов. Никакой подмены адаптера или плагинов.
+Явный prepare_dap.py готовит Go 1.26.0 с официальным SHA256 и Delve 1.26.3
+в .tests/dap-tools; системный Go/PATH не меняется. Тест добавляет этот путь
+только дочернему редактору. Docker готовит те же версии при build;
+runtime без сети, без добавления privileged/SYS_PTRACE/seccomp исключений.
+GOTOOLCHAIN=local, GOPROXY=off и GOENV=off заданы только тестовому процессу.
+
+**Неудачные попытки.** Первый sandbox-прогон получил Access denied от gopls
+на временном проекте; это не засчитано как дефект вывода DAP. Повтор с
+доступом дошёл до явной ошибки несовместимого Go/Delve, сохранённой в UI.
+Проверку версии перенесли до запуска, вместо отключения проверки Delve.
+Ранний Enter в ещё не готовом Telescope давал Nothing currently selected;
+теперь ждём insert mode и строку конфигурации. Lua nil по RPC возвращается
+как vim.NIL: раньше он мог ошибочно считаться истинным условием готовности.
+Общий wait больше не принимает vim.NIL; DAP predicates возвращают bool.
+При заключительном регрессе Windows snapshot 17833237628400 обнаружил
+такую же гонку в core live_grep: текст результата появился раньше выбранного
+элемента, Enter дал Nothing currently selected. Теперь перед Enter тесты
+ждут также выбранный элемент через документированный getter
+telescope.actions.state.get_selected_entry; ввод по-прежнему настоящий,
+приватные действия не вызываются и данные плагина не подменяются.
+В Ubuntu ожидаем отрисовку контекстного предупреждения отсутствующего gopls
+и подтверждаем его Enter; сообщение сохраняется, LSP не устанавливается.
+
+**Проверка/e2e (2026-10-31, HEAD 1bc3c0f с изменениями).** На старом коде
+четыре DAP-сценария дали 1 PASS / 3 FAIL на обеих ОС; red-артефакты:
+Windows `.tests/editor-e2e/17068714100900`, Ubuntu
+`.tests/ubuntu/editor-e2e/12458750308989`. После §65–66 — 4 PASS на обеих.
+Общий Windows unit/e2e/wezterm/trace: 21 файл PASS, 0 FAIL. Ubuntu full:
+22 PASS, 0 FAIL, 3 SKIP (WezTerm и дополнительные Bash 3.2 наборы).
+10 core e2e также прошли. Mac, native ConPTY, Python/debugpy и Rust/codelldb
+в этом шаге не проверены. Команды подготовки/запуска — tests/e2e/README.md.
+
+**Вывод.** Совместимость SDK/адаптера — явная часть подготовки, а не скрытая
+установка при запуске редактора. Готовность окна, строки выбора и paused
+состояния различаются. Подтверждаем результат по настоящим событиям и
+буферам; зависший probe или предупреждение окружения не объявляем багом IDE.
+
+**Файлы:** tests/e2e/dap-output.test.lua, fixtures/dap-go/*, prepare_dap.py,
+tests/lib/editor.lua, editor_rpc.lua, tests/containers/Dockerfile,
+tests/registry.lua, tests/README.md, tests/e2e/README.md,
+openspec/changes/fix-dap-output-lifecycle/.
+
+### 65. Go DAP: невидимый REPL и потеря раннего вывода
+
+**Спека:** IDE-DAP-1 (ADDED). **Связь:** IDE-003; Go/Delve часть.
+
+**Проблема.** Вывод реально получен редактором, но не показан; ранняя строка
+сборки исчезает к первой остановке. Нужно сохранить вывод первого и повторного
+запуска, включая завершение и переключение панелей.
+
+**Причина.** section_for_config выбирал terminal по console=integratedTerminal
+раньше проверки канала Go. При outputMode=remote Delve продолжал слать DAP
+output в REPL, runInTerminal не происходил, а bottom скрывался в ожидании
+терминала. Это конкретное воспроизведение невидимого вывода; точный launch.json
+владельца пока не сверен. Вторая причина: собственные clear на initialized
+и ответ launch стирали ранние output events. Сам pinned nvim-dap уже
+очищает REPL перед отправкой initialize; повторная очистка была лишней.
+
+**Изменение.** Для Go/Delve remote приоритет имеет REPL независимо от
+оставшегося console. Убраны повторные clear, очисткой нового запуска владеет
+nvim-dap. На stopped идемпотентно показываем sidebar и нужный не-PTY bottom,
+без очистки и с проверкой актуальности paused-сессии. PTY остаётся во владении
+runInTerminal. Вывод после выхода сохраняется до следующего initialize.
+
+**Проверка/e2e.** На Windows и Ubuntu red показал одновременно: DAP events
+со stdout есть, но dap-repl не виден для remote + integratedTerminal;
+Building есть среди events, но отсутствует в REPL. После исправления три
+сценария IDE-DAP-1 проходят: первый/повторный запуск, конфликт console и
+скрытие панелей с возвращением на второй breakpoint. Проверяются оба потока,
+сохранность ранней строки и отсутствие строк прошлого запуска. Сценарий
+скрытия уже проходил до исправления благодаря текущему Edgy; его не выдаём
+за найденную первопричину. Результаты полного регресса — §64.
+
+**Вывод.** UI следует фактическому каналу адаптера. Инициализация, ответ
+launch и первые output events имеют разный порядок: очистка принадлежит
+одному раннему моменту, повторять её на поздних событиях нельзя. Удаление
+дублирующей ответственности проще дополнительного таймера/watchdog.
+Mac и другие адаптеры остаются в матрице; исходную жалобу целиком не закрываем.
+
+**Файлы:** nvim_forge/lua/plugins/dap.lua, tests/e2e/dap-output.test.lua,
+openspec/changes/fix-dap-output-lifecycle/specs/debug-output/spec.md,
+nvim_forge/QUICKSTART.md, docs/IDE_ROADMAP.md, PROBLEMS.md.
+
+### 66. Go panic: текст ошибки в Output без продолжения процесса
+
+**Спека:** IDE-DAP-2 (ADDED). **Связь:** IDE-004; Go/Delve часть.
+
+**Проблема.** При остановке runtime.fatalpanic в Locals видна panic-структура,
+но в REPL нет текста ошибки. Чтобы получить runtime stderr, приходилось
+продолжать процесс, теряя удобный момент исследования.
+
+**Причина.** Delve останавливает процесс до печати runtime stderr. Уже
+доступны stopped.text/description и ответ exceptionInfo: в настоящем probe
+оба содержали FORGE_PANIC_MESSAGE, включая stack trace в exceptionInfo.
+nvim-dap показывал эти сведения как diagnostic исходника, не как REPL output.
+Ожидание stdout само по себе не могло показать ещё не напечатанный текст.
+
+**Изменение.** На exception добавляем в REPL помеченное `[DAP exception]`
+описание события и доступные подробности exceptionInfo. Это сведения адаптера,
+не поддельный stderr. Не продолжаем программу и не вычисляем выражения.
+Ответ привязан к объекту сессии, потоку и поколению паузы: после continue,
+новой сессии или следующей остановки он больше не добавляется. Без capability
+или при отклонённом запросе остаётся доступный текст события без лишней ошибки.
+Повторяющиеся description не печатаются дважды.
+
+**Проверка/e2e.** Probe `.tests/editor-e2e/16893906050300` сохранил настоящий
+exceptionInfo, stopped event и REPL без panic text. Постоянный IDE-DAP-2
+падал до изменения на Windows/Ubuntu; после — видит текст и сохраняет
+paused session, затем продолжает до выхода и проверяет настоящий
+`panic: FORGE_PANIC_MESSAGE` в сохранённом REPL. Шесть дополнительных unit
+проверяют stack/вложенную ошибку, отсутствие capability, ошибку запроса и
+запоздалые ответы после continue/смены сессии/паузы. Общий регресс — §64.
+Для Rust/codelldb с PTY и Python/debugpy нужен отдельный реальный прогон;
+Mac пока не выполнялся.
+
+**Вывод.** Причина остановки и stderr — разные источники с разным временем
+доставки. Отображаем доступные сведения адаптера во время паузы, не меняя
+исполнение; затем сохраняем реальный вывод процесса. Асинхронный ответ
+принадлежит конкретной паузе, одной проверки session id недостаточно.
+
+**Файлы:** nvim_forge/lua/forge/dap_output.lua, lua/plugins/dap.lua,
+tests/lib/dap_output.test.lua, tests/e2e/dap-output.test.lua,
+tests/registry.lua, openspec/changes/fix-dap-output-lifecycle/,
+nvim_forge/QUICKSTART.md, docs/IDE_ROADMAP.md, PROBLEMS.md.
+
+### 67. Запросы разрешений после переключения Full access
+
+**Проблема.** Владелец включил Full access, но проверка OpenSpec всё ещё
+вызвала диалог разрешения. Повторное согласие на обычную рабочую команду
+не требовалось и противоречило предпочтению владельца.
+
+**Причина.** После прежних ограничений сети команда продолжала отправляться
+с явным sandbox_permissions=require_escalated. Обычный запуск после смены
+режима не был проверен. Запись согласия/allow-prefix и текущий режим приложения
+не отменяют необходимость правильно выбирать способ вызова инструмента.
+
+**Изменение.** Убран лишний флаг; в CLAUDE.md закреплён обычный запуск по
+умолчанию после смены режима, без автоматического переноса старой эскалации.
+Реальное ограничение среды по-прежнему проверяется по результату команды.
+
+**Проверено вручную (Windows, 2026-10-31).** Та же команда
+`npx.cmd --yes @fission-ai/openspec@1.13.2 validate fix-dap-output-lifecycle
+--type change --strict --no-interactive` без require_escalated завершилась
+кодом 0 за 2,3 с: Change is valid, без нового запроса. Это проверка вызова
+рабочего CLI, не поведения редактора. Успех относится к этому одиночному
+вызову: составная команда позже всё ещё получила сетевой EACCES; общее
+снятие всех ограничений по одному успешному запуску не утверждаем.
+
+**Вывод.** После изменения режима перепроверяем обычный путь, а не продолжаем
+инициировать повышенный доступ по старому шаблону. Согласованная работа и
+явный системный запрос — разные вещи; необязательный запрос не создаём.
+
+**Файлы:** CLAUDE.md; история уточняет ограничения вывода §60.
+
+### 68. Go test E2E: явная подготовка parser и runner
+
+**Проблема.** Для проверки IDE-006 настоящему neotest нужен Go Treesitter
+parser. Базовый private editor профиль его не содержал; автоматическая
+установка при запуске противоречит пассивному startup (§62).
+
+**Причина.** Discovery адаптера зависит от native parser и его ABI, а не
+только от наличия Go SDK. Исходников плагина недостаточно. На Windows clang
+требует доступный линкер/SDK; POSIX-флаг -fPIC там не поддерживается.
+
+**Изменение.** Добавлен явный prepare_tests.py: собирает Go parser из ревизии
+2346a3ab1bb3857b48b29d779a1ef9799a248cd7 каталога pinned nvim-treesitter,
+проверяет загрузку текущим Neovim, готовит gotestsum v1.13.0 с проверкой
+Go-модулей. Native библиотека копируется в private data/site/parser;
+Windows .lib/.exp остаются в build, не загрязняют runtime parser directory.
+Плагины копируются только по lock: старый удалённый adapter в кэше не влияет
+на E2E. Перед blocking Lua RPC проверяется fast nvim_get_mode: hit-enter
+становится понятным сбоем со screen snapshot, а не ожиданием до таймаута.
+
+**Проверка/e2e.** Windows Neovim 0.12.2 + clang и Ubuntu 24.04 + gcc:
+parser ABI preflight, затем tests/e2e/test-runner.test.lua — реальные
+discovery/test/debug. Одинаковые fixture и ввод, путь проекта с пробелами.
+Пять сценариев прошли на обеих ОС; Docker runtime без сети, непривилегированный
+пользователь. Native подготовка не меняет системный Go/PATH; Mac не проверен.
+Итоговый общий регресс — §69. Спека: IDE-TEST-1/2, IDE-DAP-3 (ADDED).
+
+**Вывод.** Установка и сборка native зависимостей — явный подготовительный
+этап. E2E должен запускать настоящий parser и editor UI, а не имитировать
+успешный discovery. Системные отличия ограничены compiler/preparation.
+
+**Файлы:** tests/e2e/prepare_tests.py, fixtures/test-runner/,
+tests/e2e/test-runner.test.lua, tests/lib/editor.lua,
+tests/containers/Dockerfile, tests/registry.lua, tests/README.md,
+tests/e2e/README.md, docs/AGENT_COMMANDS.md.
+
+### 69. Go neotest: nearest, пути с пробелами и фоновый discovery
+
+**Проблема.** Обычный Go nearest/file не давал результата в реальном E2E;
+нельзя было отделить сломанный test runner от жалобы на DAP overlay.
+
+**Причина.** Закреплённый neotest-go 59b5050 использовал несовместимый с
+текущей Go grammar table query: Impossible pattern в short_var_declaration.
+Кроме того, его build_spec по исходникам склеивал неэкранированный cd/path
+и go test без nearest-фильтра. Последние два дефекта не называем отдельно
+пройденным red: до исполнения старый adapter падал на discovery.
+Старый neotest ad99182 также не запускал worker: требовал nvim-treesitter,
+которого нет в его runtimepath, и переходил в fallback.
+
+**Изменение.** Go adapter заменён на neotest-golang 65b2be6, core neotest
+закреплён на 27bf921 с upstream исправлением worker. Общий runner gotestsum
+пишет JSON в файл; используется одинаково на Windows/macOS/Linux. Установка
+через явный :MasonToolsInstall или go install, при startup её нет. Manual
+DAP config на каждый запуск свежий, сохраняет go adapter, remote output,
+nearest-фильтр и -test.v для t.Log. Хоткеи и общий neotest UI сохранены.
+
+**Попытки и границы вывода.** sanitize_output=true потребовал необязательный
+utf8.nvim и упал на обеих ОС; опция убрана, лишний plugin не добавлен. В одном
+промежуточном Windows file-run go runner показал 0 passed/2 failed вместо 1/1
+(.tests/editor-e2e/19849811448900). Последующие зелёные запуски не считаем
+доказательством исправления обновлением core: integrated strategy совпадает
+между ревизиями. Выбран рекомендуемый upstream файловый gotestsum канал,
+который исключает PTY из передачи JSON. Конкретный потерянный байт того
+запуска не установлен; неисправный итог подтверждён сохранённым snapshot.
+См. [обоснование upstream](https://fredrikaverpil.github.io/neotest-golang/config/#runner).
+
+**Проверка/e2e.** Исходный discovery red воспроизведён на Windows и Ubuntu
+(например, artifacts 19327095530700 и 14574222977912 соответственно).
+Постоянные IDE-TEST-1/2 E2E проверяют успешный nearest без соседнего теста,
+настоящий enabled worker, падающий nearest → весь файл → 1 pass/1 fail,
+текст ошибки, скрытие Output и сохранение кода. Debug: реальный Delve
+останавливается на F9, eval возвращает 42, после q сессия остаётся на паузе;
+F5 доводит тест до PASS в сохранённом REPL, сосед не исполняется.
+Upstream намеренно возвращает skipped для DAP в neotest; статус панели
+не объявляем passed и не подменяем эвристикой.
+
+Итог 2026-10-31: Windows unit/e2e/wezterm/trace — 22 файла PASS, 0 FAIL;
+Ubuntu Docker full — 23 PASS, 0 FAIL, 3 SKIP. Новые пять E2E прошли на обеих
+ОС, прежние 10 core и 4 Go/Delve тоже. Логи: .tests/windows-ide006-regression.txt,
+.tests/ubuntu-ide006-full.txt; детальные snapshots — editor-e2e/. Ubuntu SKIP:
+бинарник WezTerm и две дополнительные Bash 3.2 ветки. Mac, Python/Rust,
+GUI/физическая доставка клавиш и Windows ConPTY в этом прогоне не проверены.
+Спека: IDE-TEST-1/2 (ADDED), change fix-test-runner-and-dap-popup.
+
+**Вывод.** Для nearest важны не только mapping и команда go test: необходимы
+совместимый discovery, точный test-фильтр и надёжный канал результатов.
+Выбираем upstream интеграцию и общий файловый канал, не собственную копию
+адаптера и не Windows-only обработку повреждённого JSON. Debug-вывод и
+test-runner статус имеют разные контракты.
+
+**Файлы:** nvim_forge/lua/plugins/tests.lua, lua/plugins/lsp.lua,
+nvim_forge/lazy-lock.json, tests/e2e/plugin-sources.json,
+tests/e2e/test-runner.test.lua, nvim_forge/QUICKSTART.md,
+openspec/changes/fix-test-runner-and-dap-popup/.
+
+### 70. DAP eval: No active session и закрытие временного окна
+
+**Проблема.** Окно No active session оставалось поверх кода, Esc/q его не
+убирали. Исходная жалоба IDE-006 связывала это с запуском теста.
+
+**Причина.** Space d e напрямую вызывал публичный DAP widgets.hover даже
+без сессии. Настоящий expression widget создаёт dap-float и переводит туда
+фокус; штатных Esc/q у него нет. Глобальный Esc закрывал только diagnostics.
+Обычный neotest сам этот widget не вызывает: точная последовательность
+владельца на Mac не установлена, не приписываем ей выдуманную причину.
+
+**Изменение.** Небольшой forge.dap_hover проверяет наличие paused session
+и frame. Без них сообщает, что нужна пауза, не открывая пустой float; при
+паузе делегирует вычисление штатному widget. Buffer-local Esc/q закрывают
+DAP floats текущей вкладки; Esc из кода также их убирает. Файлы, sidebar
+и DAP-сессия сохраняются.
+
+**Проверка/e2e.** На прежнем коде настоящий публичный widget воспроизвёл
+No active session и не закрылся Esc на Windows/Ubuntu. После исправления
+IDE-DAP-3 проверяет Space d e без сессии; q/Esc из уже открытого настоящего
+widget, F7 → Esc из кода; на реальном Delve breakpoint — значение 42,
+закрытие q и сохранение той же paused-сессии до F5. Пять общих сценариев
+test-runner.test.lua и весь регресс — §69. Mac отдельно не проверен.
+Спека: IDE-DAP-3 (ADDED), change fix-test-runner-and-dap-popup.
+
+**Вывод.** Проверка контекста до создания transient окна и его закрытие —
+два независимых требования. Cancel должен работать из самого окна и после
+возврата в код; он не должен менять исполнение программы. Установленный
+источник текста отделяем от непроверенной исходной последовательности.
+
+**Файлы:** nvim_forge/lua/forge/dap_hover.lua, lua/plugins/dap.lua,
+lua/config/keymaps.lua, tests/e2e/test-runner.test.lua,
+nvim_forge/QUICKSTART.md, PROBLEMS.md, docs/IDE_ROADMAP.md, docs/HISTORY.md.
+
+### 71. Snippet: ручной ввод отменяет нетронутые параметры
+
+**Проблема.** IDE-007: «Если набирается что-то, не подсвеченная сигнатура,
+то предлагаемая часть должна сброситься». После принятия completion
+combine(left, right), выхода из поля и ввода ;next оставалось
+combine(left, right);next. При заполненном первом аргументе результат был
+combine(42, right); вместо combine(42);.
+
+**Причина.** Это текст insert-узлов LuaSnip, а не ghost text (он выключен).
+Конфиг выделял active/passive узлы (§29) и сворачивал вызов только по явному
+Esc в select mode (§30). Для ручного ввода после ухода из активного поля
+не было ни отмены нетронутых параметров, ни завершения сессии. Один unlink
+оставил бы сгенерированный текст; ci( удалил бы и введённые аргументы.
+
+**Изменение.** Добавлен общий forge.snippet_input без OS-веток и новых
+зависимостей. Документированные LuaSnip User events задают активное поле;
+параметры отслеживаются по extmarks, изменения — через on_bytes. Поэтому
+введённое значение сохраняется даже при точном совпадении с default.
+Ручной ввод вне поля очищает только нетронутые insert-параметры распознанного
+простого вызова и лишние comma-разделители. В passive-поле остаётся пустой
+слот для собственного значения. Движение без ввода ничего не удаляет;
+завершённые вызовы и сложные блоки/choice/dynamic templates не очищаются.
+
+InsertCharPre работает под textlock: очистка ставится командой в typeahead
+перед исходным символом. Новый ввод не теряется и не обгоняет очистку;
+курсор отслеживается extmark, undo/redo объединяет очистку с этим вводом.
+Внутренние mark.id/session.ns_id pinned LuaSnip изолированы в helper:
+его собственный Mark использует buf=0, поэтому фоновое on_bytes читает
+extmarks с явным buffer id. Tab/Shift-Tab и прежний явный Esc сохранены.
+
+**Попытки.** В первоначальном E2E ещё одно падение было ошибкой теста:
+ожидание экранного столбца выделения после Shift-Tab заменено проверкой
+реального заполненного текста. Ожидаемый tab в fixture блока также заменён
+на четыре пробела: LuaSnip учитывает установленный expandtab. Эти два
+несовпадения не выдаём за дефекты редактора; production-отступы не менялись.
+
+**Проверка/e2e.** tests/e2e/snippet-input.test.lua, IDE-SNIP-1: fixture
+.code-snippets загружается штатным VSCode loader, реальный cmp_luasnip
+показывает меню, Ctrl+j/Enter принимает предложение. Helper очистки из теста
+не вызывается. Исходные два red повторились на Windows и Ubuntu
+(.tests/windows-ide007-red.txt, .tests/ubuntu-ide007-red.txt; например artifacts
+27103318937300 и 21743660494943). Новый регресс — 11 PASS на каждой ОС:
+manual после вызова, сохранение введённого аргумента, Tab/Shift-Tab и
+завершение, Esc, passive/Unicode, значение равно default, undo/redo,
+несколько удаляемых диапазонов с разделителями, multiline, другой буфер
+с настоящей фоновой правкой через public buffer API, сложный блок.
+
+Общий прогон 2026-10-31: Windows Neovim 0.12.2 unit/e2e/wezterm/trace —
+23 файла PASS, 0 FAIL; Ubuntu 24.04 Docker full — 24 PASS, 0 FAIL, 3 SKIP.
+Логи: .tests/windows-ide007-regression.txt и .tests/ubuntu-ide007-full.txt;
+snapshots — editor-e2e/. Прежние core, Go/Delve и neotest/eval E2E прошли.
+Ubuntu SKIP прежние: нет WezTerm и дополнительных интерпретаторов Bash 3.2.
+Mac, GUI/физическая доставка клавиш и реальные completion-ответы языковых
+серверов не проверены. E2E доказывает общую cmp/LuaSnip цепочку, не качество
+или полноту LSP completions. Спека: IDE-SNIP-1 (ADDED),
+change fix-snippet-manual-input.
+
+**Вывод.** Предлагаемый текст и пользовательский ввод нельзя различать
+только по содержимому или подсветке: нужны границы узлов и история правок.
+Автоматическая отмена сохраняет ввод и работает по точным ranges; явное
+сворачивание всего вызова остаётся отдельной командой. Системные различия
+для этой функции не понадобились.
+
+**Файлы:** nvim_forge/lua/forge/snippet_input.lua, lua/plugins/completion.lua,
+tests/e2e/snippet-input.test.lua, fixtures/snippet-input/forge.code-snippets,
+tests/registry.lua, openspec/changes/fix-snippet-manual-input/,
+openspec/config.yaml, nvim_forge/QUICKSTART.md, tests/README.md,
+tests/e2e/README.md, docs/AGENT_COMMANDS.md, docs/HISTORY.md,
+docs/IDE_ROADMAP.md, PROBLEMS.md.
+
+### 72. codelldb: проверка инструмента при запуске
+
+**Проблема.** IDE-012, обнаружена при Go/neotest E2E (§69): открытие Go-файла
+показывало codelldb not found, хотя пользователь не запускал Rust/C/C++.
+Похожее предупреждение появлялось при F9 в обычном .txt. Исходный Ubuntu
+snapshot — .tests/ubuntu/editor-e2e/15158195455942/snapshot.json.
+
+**Причина.** nvim-dap-go зависит от общего nvim-dap. В общем setup сразу
+выполнялся codelldb_path; без binary планировался WARN и вообще пропускалась
+регистрация adapter и C/C++/Rust configurations. Поэтому явный F5 затем
+давал дополнительный Config references missing adapter codelldb, вместо
+полезного сообщения о конкретном отсутствующем инструменте. Это не причина
+zsh/Go startup IDE-001: здесь Neovim уже запущен.
+
+**Изменение.** codelldb зарегистрирован как штатный function adapter
+nvim-dap: путь ищется при запросе запуска, затем callback получает прежние
+server/port/executable/args/detached. При отсутствии — один WARN с вариантами
+установки и возврат без создания сессии. Default configurations регистрируются
+независимо от binary. Порядок PATH → Windows standard location → Mason,
+terminal mode, Rust build и прочие языковые сообщения сохранены. Новых
+зависимостей, установок и OS-веток не добавлено.
+
+**Проверка/e2e.** tests/e2e/dap-discovery.test.lua: настоящий private editor,
+из его PATH исключены каталоги codelldb; реальные LOCALAPPDATA/Mason не
+используются. Проверяются executable codelldb == 0 и доступность Git;
+установленная копия debugger на Windows не менялась. Три исходных red
+получены на Windows и Ubuntu: лишний WARN на Go, такой же WARN на F9 в .txt,
+missing adapter при настоящем F5/launch.json. Повтор с улучшенным наблюдением:
+.tests/windows-ide012-red-observed.txt и .tests/ubuntu-ide012-red-observed.txt
+(например artifacts 29401476918400 и 23850563572708).
+
+После исправления все три E2E PASS на обеих ОС: Go/F9 без чужого сообщения,
+зарегистрированы C/C++/Rust defaults, F5 без binary сообщает ровно один раз,
+повтор — ещё один WARN, session отсутствует, файл редактируется/сохраняется.
+Для negative launch program — существующий Neovim executable: он не
+исполняется, отсутствие adapter останавливает запуск раньше. DAP не подменён.
+
+**Наблюдение за ошибкой.** Первый negative launch выявил гонку наблюдателя:
+между fast get_mode и blocking exec_lua возникал hit-enter от missing adapter,
+и проверка зависала до RPC timeout. Штатный vim.notify теперь дополнительно
+передаёт RPC push родителю; notifications.json сохраняется и за error prompt,
+а отображение/поведение сообщения остаются штатными. Повтор на прежнем
+production-коде показал конкретную missing adapter причину без RPC timeout.
+
+Общий регресс 2026-10-31: Windows Neovim 0.12.2 unit/e2e/wezterm/trace —
+24 файла PASS, 0 FAIL; Ubuntu 24.04 Docker full — 25 PASS, 0 FAIL, 3 SKIP.
+Логи .tests/windows-ide012-regression.txt и .tests/ubuntu-ide012-full.txt.
+Предыдущие core, Go/Delve, neotest/eval и snippet E2E прошли. Ubuntu SKIP
+прежние: отсутствуют WezTerm и дополнительные Bash 3.2 интерпретаторы.
+OpenSpec strict validate и diff --check прошли. Mac, GUI/физические клавиши,
+Windows ConPTY и настоящая positive Rust/C/C++ отладка этим прогоном не
+проверены. Спека: IDE-DAP-4 (ADDED), change defer-codelldb-check-until-launch.
+
+**Вывод.** Общая регистрация возможности не должна проверять наличие всех
+неиспользуемых инструментов. Поиск и понятный отказ принадлежат конкретному
+запуску; простое удаление WARN оставило бы ошибку missing adapter. Наблюдение
+за ожидаемой ошибкой тоже не должно зависеть от blocking API за её экраном.
+
+**Файлы:** nvim_forge/lua/plugins/dap.lua, tests/e2e/dap-discovery.test.lua,
+tests/lib/editor.lua, tests/lib/editor_rpc.lua, tests/registry.lua,
+openspec/changes/defer-codelldb-check-until-launch/, nvim_forge/QUICKSTART.md,
+tests/README.md, tests/e2e/README.md, docs/AGENT_COMMANDS.md,
+docs/IDE_ROADMAP.md, PROBLEMS.md, docs/HISTORY.md.
+
+### 73. Windows Starship: Git timeout и подавление повторных WARN
+
+**Проблема.** IDE-013: в новой вкладке Windows после cd D:/rust_repo/cs2d
+появилось Executing command git.exe timed out; повторно сообщение не видно.
+
+**Причина сообщения.** Профиль PowerShell запускает Starship 1.21.1.
+Действующий command_timeout — 500 мс. В session log найден указанный WARN.
+Trace модуля git_status показывает вызов git status --porcelain=2 --branch
+с явными git-dir/work-tree и -c core.fsmonitor=. Установленная версия
+logger читает session log и подавляет одинаковые WARN; поэтому отсутствие
+повторного сообщения не доказывает исчезновение задержки.
+
+**Проверено вручную (Windows, 2026-10-31).** starship --version, print-config,
+профили, session log и официальный src/logger.rs тега v1.21.1; module
+git_status --path D:/rust_repo/cs2d с STARSHIP_LOG=trace. Git вызов 205.844 мс,
+весь модуль 209.234 мс. Четыре тёплых запуска 223.1 / 212.0 / 216.3 / 211.9 мс
+без WARN. Артефакты .tests/starship-cs2d-git-trace.txt и
+.tests/starship-logger-v1.21.1.rs; команды — docs/AGENT_COMMANDS.md §17.
+Языковые модули prompt отдельно не запускались, установки SDK не вызывались.
+
+**Решение/состояние.** Диагноз сообщения записан в PROBLEMS/roadmap; исправления
+ещё нет. Исходное первое превышение 500 мс не воспроизведено. Холодный кэш
+файловой системы/проверка защитником остаются гипотезами. Настройки Starship,
+Git и рабочие файлы cs2d не менялись; таймаут не увеличен вслепую. Дальше —
+замер первого обращения в новой сессии и регресс выбранного исправления.
+Это отдельная Windows-проблема, не подтверждение причины Mac/zsh/Go IDE-001.
+
+**Вывод.** Время рендеринга prompt нужно измерять, а не оценивать по частоте
+WARN: логгер специально подавляет повторы. Текущий тёплый PASS по времени
+не объясняет холодный таймаут. Изменения поведения не было, новая спека
+или E2E исправления этим наблюдением не объявляются завершёнными.
+
+**Файлы:** PROBLEMS.md, docs/IDE_ROADMAP.md, docs/AGENT_COMMANDS.md,
+docs/HISTORY.md. Источник logger:
+https://github.com/starship/starship/blob/v1.21.1/src/logger.rs.
+
+### 74. Панели Debug: общий маршрут Space w
+
+**Проблема.** IDE-005/009: фокус Locals/Output/code и управление панелями
+разбросаны по D*/P*/m*. Нет общего normal маршрута hide/help/zoom и явной
+подсказки активной области. Владелец выбрал Space w. Дополнительно настоящий
+red показал: Edgy q закрывал одно физическое окно Locals, оставляя Watch,
+Stack и Breakpoints; это одна составная ide.sidebar-группа.
+
+**Причина.** Клавиши принадлежали отдельным backend, физическое окно и
+логический debug-компонент смешивались. Скрытие и фокус не имели общей
+точки координации, а простое изменение размеров edgebar рисковало бы
+перестраивать остальные панели и код.
+
+**Изменение.** ide.controls даёт Space w h/j/k/l (соседнее окно), 0 (код),
+d (Locals), c (Output), q (скрыть debug-компонент), z (развернуть/вернуть),
+? (помощь). В debug normal q скрывает, Esc возвращает zoom или фокус в код,
+? открывает закрываемую помощь. Enter/j/k остаются действиями backend.
+Обычный Space w q сохраняет прежний wincmd q. D*/P*/m*, F6/F7 сохранены.
+
+Winbar показывает [focus], секцию и ?. Zoom — временное увеличенное окно
+с тем же буфером, исходные окна/размеры не закрываются. Уход фокуса или
+внешнее закрытие источника убирает overlay; q сначала возвращает источник,
+затем скрывает весь компонент. ide.dap запоминает repl/console/terminal,
+чтобы Space w c возвращал тот же канал и вывод. Обработчики не вызывают
+continue/step/terminate и не перехватывают печатный insert/terminal ввод.
+
+**Проверка/e2e.** tests/e2e/debug-panels.test.lua: четыре сценария на
+настоящем Go/Delve. Без сессии — старый alias, q всей группы, Space w,
+направления и помощь. На реальном breakpoint — struct с Value=42, Enter,
+ru alias Space цв, help/Esc, zoom/restore того же buffer/window/dimensions,
+REPL ввод q/?, скрытие/возврат stdout, внешнее dapui.close источника и q
+развёрнутой группы. Session/thread/frame сравниваются на UI-переходах;
+только явный F5 доводит процесс до PANEL_AFTER. В обычном коде локального q нет.
+
+Исходный q red: .tests/windows-panels-red.txt, artifacts 1115214146800;
+Ubuntu — .tests/ubuntu-panels-red.txt, artifacts 126945669655. После перезагрузки
+Docker был выключен; поднят docker desktop start. Red Ubuntu повторён с
+сохранённым исходным config-source в .tests/ubuntu/baselines/panels-before.
+Harness принимает FORGE_E2E_CONFIG_SOURCE только с совпадающим lock и
+сохраняет config-origin.txt; default остаётся текущим nvim_forge.
+
+**Попытки.** Первый paused E2E не выбрал launch.json в реальном Telescope
+меню; это исправление теста, не поведения редактора. Затем nil-поля session
+были ошибочно приняты за готовый breakpoint (nil ~= vim.NIL): теперь проверяются
+числовые thread/frame. Холодная Go-сборка после перезагрузки показала штатный
+adapter-slow WARN/hit-enter. Явный ack_warning принимает только заданный WARN,
+сохраняет экран и ждёт настоящий breakpoint; ERROR не принимается. Этот же
+путь добавлен прежним DAP/neotest E2E. Попытка общего compiler cache на
+Windows/Docker bind mount сопровождалась таймаутами Go проверок; итоговый
+cache одного прогона — native temp через FORGE_E2E_GO_CACHE, не test-result cache.
+
+Итог 2026-10-31: Windows Neovim 0.12.2 unit/e2e/wezterm/trace — 25 файлов
+PASS, 0 FAIL; Ubuntu 24.04 Docker full — 26 PASS, 0 FAIL, 3 SKIP. Четыре
+новых E2E прошли на обеих ОС. Логи .tests/windows-panels-final-regression.txt
+и .tests/ubuntu-panels-final-full.txt. Ubuntu SKIP прежние: WezTerm и две
+дополнительные Bash 3.2 ветки. Mac/GUI, физическая доставка ru/en и PTY
+Rust/Python не проверены; остальные панели ещё не подключены к пилоту.
+Спека: IDE-PANEL-1/2 (ADDED), change unify-debug-panel-controls.
+
+**Вывод.** Общий маршрут начинается с выбора области и локальных действий,
+а не с переназначения всех backend сразу. Логическая панель может состоять
+из нескольких окон; hide работает на уровне компонента. UI-переходы проверяются
+на настоящей паузе с сохранением вывода, а zoom не требует ломать раскладку.
+
+**Файлы:** nvim_forge/lua/ide/controls.lua, ide/dap.lua, ide/init.lua,
+config/keymaps.lua, tests/e2e/debug-panels.test.lua, fixtures/debug-panels/,
+tests/lib/editor.lua, tests/run.lua, tests/registry.lua, Go E2E,
+openspec/changes/unify-debug-panel-controls/, openspec/config.yaml,
+nvim_forge/QUICKSTART.md, docs/IDE_ROADMAP.md, docs/AGENT_COMMANDS.md,
+docs/HISTORY.md, PROBLEMS.md, tests/README.md, tests/e2e/README.md.
+
+### 75. Satellite: нулевая высота при закрытии debug-панелей
+
+**Проблема.** IDE-014, найдена реальным E2E пилота §74 на Windows и Ubuntu:
+внешний dapui.close источника развёрнутого Output оставлял hit-enter с
+satellite.nvim: unable to get a view / Invalid 'height': expected positive
+Integer. Это блокировало дальнейший ввод и провалило общий регресс.
+
+**Причина.** В Satellite excluded_filetypes остались старые dap-view FT,
+но отсутствовали нынешние dapui_scopes/watches/stacks/breakpoints/console.
+Scrollbar пытался работать с маленькими scratch-панелями при перерасчёте
+раскладки. Его get_winheight вычитает строку winbar; traceback показывает
+передачу недопустимой высоты в nvim_open_win. Обычный dap-repl был исключён,
+но этого недостаточно для составного sidebar текущего backend.
+
+**Изменение.** В штатный excluded_filetypes добавлены нынешние DAP FT,
+dap-terminal и help пилота. Scrollbar кода и его diagnostics/git/search
+handlers сохранены. Plugin не форкался; notify/ошибка не подавлялись.
+
+**Проверка/e2e.** Постоянный IDE-PANEL-2 сценарий Output zoom → настоящий
+публичный dapui.close({layout=3}) → отсутствие overlay → возврат вывода.
+Он не вызывает приватную функцию очистки. На прежнем списке исключений
+падал на Windows/Ubuntu; логи .tests/windows-panels-satellite-red.txt и
+.tests/ubuntu-panels-satellite-red.txt, например Ubuntu artifact 673547933859
+с ERROR в notifications.json и screen snapshot. После исправления четыре
+panel E2E PASS на каждой ОС, в том числе внешнее закрытие. После сценария
+проверяется отсутствие ERROR, а пауза/stdout должны сохраниться. Весь
+финальный регресс — §74; Mac/GUI пока не проверены.
+Спека: IDE-PANEL-2 (ADDED), change unify-debug-panel-controls.
+
+**Вывод.** При смене backend нужно сверять не только ключи/FT регистрации,
+но и интеграции декораций. Scrollbar предназначен для кода; scratch-окна
+отладчика исключаются явно. Проверка внешнего закрытия нашла ошибку, которой
+не было в простом zoom/restore; ERROR сохранён как red, а не замаскирован.
+
+**Файлы:** nvim_forge/lua/plugins/ide.lua, tests/e2e/debug-panels.test.lua,
+openspec/changes/unify-debug-panel-controls/, PROBLEMS.md,
+docs/IDE_ROADMAP.md, docs/HISTORY.md, tests/e2e/README.md.
+
+
+### 76. Outline слева и общий маршрут панели
+
+Дата: 2026-10-31. Задача: IDE-008, продолжение IDE-009.
+
+**Проблема.** Владелец попросил Outline слева как в VS Code: открыть без
+мыши, выбрать символ, перейти в код и вернуться. Aerial уже был установлен,
+но Space l o / s o вызывали его команды напрямую, обходя ide.state. В одном
+логическом left-слоте могли остаться и Explorer, и Outline. Общие q/Esc/help/
+zoom из пилота Debug ещё не действовали в Outline.
+
+**Причина.** Две plugin-spec Aerial одновременно задавали разные сторону
+открытия и порядок backend; после слияния было трудно увидеть итоговые
+настройки. Нативные toggle не обновляли состояние менеджера. autojump=true
+прокручивал код при движении по списку. При подключении общего q дополнительно
+обнаружилось: после обычного AerialOpen менеджер не знает о панели, и hide
+возвращает фокус в код, оставляя окно на экране.
+
+**Изменение.** Один plugins/outline.lua: LSP, затем Treesitter, левая панель,
+прежние ограничения размера и переходы { / }, autojump=false. Space w a
+открывает/фокусирует Outline; l o / s o переключают его через ide.toggle;
+p o сохраняет смысл раскладки. Space w o/ws/wv сохраняют прежние команды.
+Общие controls получили Outline: [focus], q/Esc/?, zoom того же буфера и
+направления Space w. Нативные j/k, h/l и Enter/o/v/s сохраняются. hide после
+проверки состояния закрывает ещё видимый текущий компонент через registry,
+поэтому работает и после штатной команды backend. Другие слоты сохраняются.
+
+**Проверка/e2e.** Постоянный tests/e2e/outline.test.lua: шесть сценариев,
+настоящие Aerial/Edgy/Neo-tree, встроенный Lua Treesitter parser Neovim 0.12.2,
+fixture с вложенной функцией, ввод nvim_input. Проверены старые aliases,
+геометрия/левое положение, замена Explorer, h/l, отсутствие autojump, Enter,
+фокус/help/zoom/Enter из zoom/q/Esc, смена файлов, No symbols без backend,
+быстрые переключения и q после AerialOpen. Проверяется отсутствие ERROR,
+установок и DAP-сессии. Последние два сценария относятся также к §77.
+
+Исходный конфиг сохранён в .tests/baselines/outline-before; окончательный
+тест через FORGE_E2E_CONFIG_SOURCE воспроизводит mismatch Explorer/Outline
+(windows-outline-baseline-replay.txt). До исправления общего hide тест q
+после AerialOpen оставляет окно (windows-outline-lifecycle-red/replay.txt).
+В первом пробном тесте Space w 0 на dashboard создавал лишний code split;
+setup исправлен на обычный :edit. Проверка No symbols ждёт асинхронный render.
+Это исправления сценария теста, а не повод менять поведение продукта.
+
+Полный финальный регресс после §77: Windows unit/e2e/wezterm/trace —
+26 файлов PASS, 0 FAIL, 0 SKIP; Ubuntu Docker full — 27 PASS, 0 FAIL, 3 SKIP
+(28 файлов, 30 прогонов). На обеих ОС все шесть Outline E2E PASS;
+Debug/Delve/neotest/snippet/core также прошли. Логи:
+.tests/windows-outline-final-regression.txt, .tests/ubuntu-outline-final-full.txt.
+SKIP Ubuntu — реальный WezTerm и дополнительные Bash 3.2 ветки установщиков;
+основные Bash 5 сценарии PASS. Strict validate integrate-outline-panel PASS.
+Mac/GUI/физическая ru/en и documentSymbol остальных языков не проверены.
+Спека: IDE-PANEL-3 (ADDED), change integrate-outline-panel.
+
+**Вывод.** У Outline теперь один конфиг и один маршрут через менеджер.
+Explorer и Outline заменяют друг друга в left-слоте; код и открытые файлы
+сохраняются. Наличие plugin-spec не заменяет проверку переходов между панелями:
+расширенный регресс нашёл также два отложенных перехода Neo-tree (§77).
+
+**Файлы:** nvim_forge/lua/plugins/outline.lua, plugins/ide.lua,
+lua/ide/controls.lua, lua/config/keymaps.lua, tests/e2e/outline.test.lua,
+tests/e2e/fixtures/outline/, tests/registry.lua, nvim_forge/QUICKSTART.md,
+PROBLEMS.md, docs/IDE_ROADMAP.md, docs/HISTORY.md, docs/AGENT_COMMANDS.md,
+tests/e2e/README.md, openspec/changes/integrate-outline-panel/.
+
+### 77. Neo-tree: повторное открытие и отложенные события
+
+Дата: 2026-10-31. Задача: IDE-015, найдена регрессом IDE-008.
+
+**Проблема.** После первых четырёх локальных Outline PASS общий Windows
+регресс получил [Neo-tree ERROR] debounce neo-tree-follow: Invalid 'win':
+Expected Lua number. Открылся hit-enter; следующий RPC заблокировался, и
+первое сообщение теста оказалось замаскировано ошибкой cleanup «Дочерний
+редактор завершился». Ещё один параллельный прогон оставил позднее окно
+Explorer рядом с Outline, хотя left-слот уже переключён.
+
+**Причина.** Neo-tree close удаляет буфер, сохраняя state.tree. При повторном
+открытии state.winid/state.bufnr уже новые, а NuiTree ещё старый до render.
+window_exists(state) проверяет новый буфер, затем follow читает курсор через
+state.tree:get_node(); у старого tree.bufnr нет окна, получается cursor(nil).
+Кроме того, отложенный filesystem navigate может закончиться после close и
+снова открыть Explorer поверх уже выбранного Outline. Это временная гонка
+общего backend, не особенность путей Windows.
+
+**Изменение.** forge.neo_tree_lifecycle подключён через штатные события
+neo_tree_window_after_open / after_render. При смене буфера устаревшая ссылка
+tree убирается; раскрытия передаются первой отрисовке через временные defaults,
+затем defaults восстанавливаются, чтобы пользователь мог сворачивать каталоги.
+После завершения render левое окно сверяется с актуальным выбранным backend
+ide.state: поздний Neo-tree закрывается, если слот уже занят Outline/Debug.
+Закрытие не происходит посередине создания окна; floating/current Neo-tree
+этой сверкой не затронуты. Функции и таймеры зависимостей не переопределены,
+follow включён, lock не менялся. Cleanup теста обёрнут отдельно, чтобы его
+ошибка больше не заменяла исходную причину.
+
+**Проверка/e2e.** Первый настоящий ERROR сохранён в
+.tests/windows-outline-regression.txt и editor-e2e/3730754149400:
+notifications.json с level=ERROR и screen с hit-enter. Позднее открытие —
+editor-e2e/4156763449400: одновременно реальные neo-tree/aerial окна.
+Baseline до lifecycle — .tests/baselines/outline-lifecycle-before.
+Окончательный replay windows-outline-lifecycle-replay.txt фиксирует
+tree_buf=14/visible_buf=16, closed-tree-refs.json. После исправления список пуст.
+
+Постоянный пятый E2E использует 12 быстрых пользовательских циклов. На реальном
+after_open наблюдатель только читает, существует ли окно tree.bufnr; так
+опасная фаза ловится и без случайного совпадения с follow-таймером. Backend и
+время таймеров не подменяются. Первая попытка одного stress loop проходила до
+исправления на быстрой машине; поэтому к наблюдаемому пользовательскому пути
+добавлена проверка валидности ссылки. После первоначального lifecycle hook
+нагрузка выявила ещё поздний navigate; добавлена сверка после render.
+Шестой E2E отдельно проверяет общий q после AerialOpen (§76).
+
+Финальный Windows/Ubuntu регресс и границы — §76. Шесть Outline и четыре
+Debug E2E PASS на обеих ОС; ERROR не подавлен и не принят как ожидаемый prompt.
+Mac/GUI открыты. Спека: IDE-PANEL-3 (ADDED), change integrate-outline-panel.
+
+**Вывод.** Проверка только наличия окна недостаточна: важно, какому буферу
+принадлежит объект дерева и какое действие пользователь выбрал последним.
+Временную гонку закрывает согласование жизненного цикла на границе backend;
+постоянный E2E наблюдает опасное состояние, не рассчитывая на случайный timeout.
+При обновлении Neo-tree эти сценарии проверяют и необходимость адаптации.
+
+**Файлы:** nvim_forge/lua/forge/neo_tree_lifecycle.lua,
+nvim_forge/lua/plugins/neo-tree.lua, tests/e2e/outline.test.lua,
+openspec/changes/integrate-outline-panel/, PROBLEMS.md, docs/IDE_ROADMAP.md,
+docs/HISTORY.md, docs/AGENT_COMMANDS.md, tests/e2e/README.md.
+
+
+### 78. Дерево файлов: операции и общий маршрут
+
+Дата: 2026-10-31. Задача: IDE-016, продолжение IDE-009.
+
+**Проблема.** После Outline владелец попросил продолжать roadmap: файловые
+операции и общий маршрут панели. a/A/r/m/x/p в Neo-tree уже были настроены,
+но настоящих E2E создания/rename/move и открытых буферов не было. Общие
+q/Esc/help/zoom не покрывали дерево; Files/Buffers/Git разделяют один filetype
+и переключались в обход состояния менеджера.
+
+**Причина.** Native source selector и </> меняют источник в том же окне.
+Публичный ide.current() успевал очистить прежний видимый слот во время
+перехода, после чего контроллер не знал, к какому backend принадлежит новый
+источник. Заголовок дерева уже содержал selector, и простая замена winbar
+уничтожила бы навигацию по источникам.
+
+**Изменение.** Space w e открывает/фокусирует Files; Space e/E сохранены,
+bf/bb/bg проходят через менеджер, штатные </> и mouse targets selector остаются.
+Общие controls определяют компонент по источнику буфера и добавляют [focus]
+к штатному selector; подписи могут сокращаться на узкой панели. q скрывает
+компонент, Esc возвращает фокус без скрытия, ? — краткая помощь, g? — native
+справка. Диалоги сохраняют ввод/Enter/Esc. selected backend хранится в requested
+отдельно от физической видимости и сбрасывается при явном закрытии; после
+render новый источник принимается только внутри выбранного backend. Поздний
+Neo-tree по-прежнему не отменяет Outline (§77). Файловые операции остаются
+штатными; исправления по E2E — §79–82.
+
+**Проверка/e2e.** tests/e2e/file-explorer.test.lua — 7 настоящих editor E2E:
+создание Unicode/space каталога и файла, открытие/запись; rename открытого
+файла/каталога с дочерним буфером; m и запись по новому пути; x/p и отказ от
+занятого имени; отмена a/r/m и конфликт rename; selector/источники/общие keys;
+zoom Enter/rename с правильной выбранной строкой и сохранением окон.
+Во всех сценариях проверяются ERROR, установки и DAP-сессия. Известный WARN
+rename-конфликта может быть снят как hit-enter с записью экрана, ERROR — нет.
+fs_actions/vim.ui.input/файловые callbacks в постоянных тестах не подменены.
+
+Source regression читает публичный current() на настоящем after_open;
+до requested-state это теряет переход Files → Buffers. Red:
+.tests/windows-files-source-red.txt, config-source artifact 5700386164500.
+Ожидания используют _ready renderer и настоящий буфер. Первые попытки теста
+использовали /, занятый fuzzy finder, и один фиксированный номер строки при
+Git/render. Locator исправлен на повторное чтение видимой строки и normal G;
+созданный файл при необходимости показывается раскрытием каталога. Литерал <
+передаётся RPC как <lt>. Эти исправления транспорта не выдаются за баг редактора.
+
+Финальный регресс после §82: Windows unit/e2e/wezterm/trace — 27 файлов PASS,
+0 FAIL, 0 SKIP; Ubuntu 24.04 Docker full — 28 PASS, 0 FAIL, 3 SKIP
+(29 файлов, 31 прогон). Neovim 0.12.2 на обеих ОС. Все 7 новых файловых,
+6 Outline и 4 Debug E2E PASS; остальной Go/Delve/neotest/snippet/core также PASS.
+Логи: .tests/windows-files-complete-regression.txt,
+.tests/ubuntu-files-complete-recheck-full.txt. SKIP Ubuntu прежние: настоящий WezTerm
+и дополнительные Bash 3.2 ветки; основные Bash 5 installer-сценарии PASS.
+Strict validate integrate-file-explorer PASS. Mac/GUI/физическая ru/en,
+несохранённые буферы, отдельные copy/delete/trash, case-only/cross-volume/network
+операции и LSP file-operation матрица остаются непроверенными.
+Один предыдущий Ubuntu full (ubuntu-files-complete-full.txt) получил 30s timeout
+дочернего nvim_keymaps в unit key-ownership при успешных editor E2E. Причина
+таймаута не установлена. Отдельный повтор — 46 PASS, затем полный recheck
+после завершения параллельного Windows прогона. Лимиты/код ради этого не менялись;
+исходный FAIL сохранён. Windows полный прогон занял 260.5 с.
+Спека: IDE-PANEL-4, IDE-FILE-1/2 (ADDED), change integrate-file-explorer.
+
+**Вывод.** Дерево получило общий маршрут без собственного файлового backend
+и ветвей по ОС. E2E подтвердили существующий rename и нашли ошибки полного
+пути, отложенного reveal, выбора из zoom и совпадающих Esc. Следующий пункт —
+управление буферами/вкладками; остальные панели и Mac сохраняют свой долг.
+
+**Файлы:** nvim_forge/lua/ide/controls.lua, ide/state.lua, ide/init.lua,
+forge/neo_tree_lifecycle.lua, plugins/neo-tree.lua, config/keymaps.lua,
+tests/e2e/file-explorer.test.lua, tests/registry.lua, openspec/config.yaml,
+openspec/changes/integrate-file-explorer/, nvim_forge/QUICKSTART.md,
+PROBLEMS.md, docs/IDE_ROADMAP.md, docs/HISTORY.md, docs/AGENT_COMMANDS.md,
+tests/e2e/README.md.
+
+### 79. Move: полный путь в диалоге
+
+Дата: 2026-10-31. Задача: IDE-017.
+
+**Проблема.** При m с полным путём назначения файл не перемещался; Neo-tree
+выдавал ENOENT с адресом вида <project>/<полный путь project>/destination/file.
+На Windows в середине назначения повторялся C:\Users\... .
+
+**Причина.** Стандартный режим show_path для move сохраняет родительскую
+часть отдельно. get_unused_name добавляет введённое имя к этому префиксу.
+Полный путь воспринимался как имя и добавлялся повторно. Это логика input_root,
+а не необходимость Windows-спецслучая или установки внешнего инструмента.
+
+**Изменение.** Mapping m использует штатный config.show_path=absolute.
+В диалоге показан полный путь; backend не добавляет сохранённый префикс.
+Функция перемещения, callbacks, конфликт имени и переименование буфера
+сохранились штатными. Никаких замен fs_actions или проверки ОС.
+
+**Проверка/e2e.** IDE-FILE-2: открыть move_me.txt, m → полный путь с пробелом,
+проверить исчезновение источника/содержимое назначения/путь буфера, добавить
+строку и записать по новому адресу. Второй сценарий проверяет x/p и отказ
+от занятого имени. Red исходной сборки — windows-files-baseline.txt,
+notifications artifact 5087009947400. Replay окончательного теста на
+.tests/baselines/files-before — windows-files-move-replay.txt, artifact
+6129901742000. Windows/Ubuntu PASS после исправления, полные результаты — §78.
+Спека: IDE-FILE-2 (ADDED), change integrate-file-explorer.
+
+**Вывод.** Сначала проверяется штатный режим ввода backend. Здесь достаточно
+правильного config.show_path; собственный файловый move не потребовался.
+
+**Файлы:** nvim_forge/lua/plugins/neo-tree.lua,
+tests/e2e/file-explorer.test.lua, openspec/changes/integrate-file-explorer/,
+nvim_forge/QUICKSTART.md, PROBLEMS.md, docs/HISTORY.md, docs/AGENT_COMMANDS.md,
+docs/IDE_ROADMAP.md, tests/e2e/README.md.
+
+### 80. Reveal: повторный navigate после rename
+
+Дата: 2026-10-31. Задача: IDE-018.
+
+**Проблема.** При быстром rename открытого каталога получался Neo-tree ERROR:
+folder_old ENOENT, хотя каталог и дочерний буфер уже получили новое имя.
+Первый короткий прогон файловых действий прошёл; расширенный прогон поймал
+запоздавшее чтение старого каталога и hit-enter.
+
+**Причина.** Space E сначала делал ide.show(explorer), чей open уже вызывает
+Neotree filesystem reveal left, затем повторял ту же команду. filesystem
+navigate использует debounce; второй запрос сохранял прежний reveal-путь.
+После rename отложенный scan добавлял его родителей в paths_to_load, когда
+старого каталога уже нет. Кроме того, один лишь видимый список ещё не означает
+завершённый renderer; тест должен дождаться реального _ready.
+
+**Изменение.** При первом открытии остаётся один reveal. При уже видимом Files
+явный повторный reveal для нового текущего файла сохранён. E2E ожидает готовый
+backend и выбранный видимый узел; дополнительных временных sleep нет.
+Асинхронное сканирование и file watcher не отключались, ошибки не подавлялись.
+
+**Проверка/e2e.** IDE-FILE-1 создаёт данные, переименовывает открытый файл,
+затем открывает child в folder_old и быстро переименовывает сам каталог.
+Проверяются новый путь дочернего буфера, содержимое, редактирование/запись и
+отсутствие ERROR. Red — .tests/windows-files-controls-first.txt, artifact
+5358716713000/notifications.json с folder_old ENOENT. После исправления этот
+путь входит в постоянный 7-case E2E; Windows/Ubuntu PASS, полный регресс — §78.
+Спека: IDE-FILE-1, IDE-PANEL-4 (ADDED), change integrate-file-explorer.
+
+**Вывод.** Идемпотентность менеджера не устраняет повторный backend-запрос,
+если wrapper вызывает reveal ещё раз после show. Инициатор и готовность UI
+должны проверяться отдельно.
+
+**Файлы:** nvim_forge/lua/plugins/neo-tree.lua,
+tests/e2e/file-explorer.test.lua, openspec/changes/integrate-file-explorer/,
+PROBLEMS.md, docs/IDE_ROADMAP.md, docs/HISTORY.md, docs/AGENT_COMMANDS.md,
+tests/e2e/README.md.
+
+### 81. Neo-tree: выбранная строка после zoom
+
+Дата: 2026-10-31. Задача: IDE-019.
+
+**Проблема.** В исходном дереве выбран file_one, в zoom пользователь выбирает
+file_two и нажимает Enter — открывается file_one. Та же ошибка могла затронуть
+файловую команду, которая читает выбранный узел через NuiTree.
+
+**Причина.** Overlay показывает тот же буфер, но имеет свой cursor/view.
+NuiTree:get_node() находит исходное окно буфера, где осталась прежняя строка.
+Первая попытка переноса курсора до закрытия overlay тоже не помогла:
+WinEnter backend восстанавливает собственную позицию при возврате окна.
+
+**Изменение.** Общий restore запоминает cursor/view и переносит их после
+возврата исходного окна. Перед именованной командой Neo-tree tree_mappings
+возвращает выбранную строку из zoom, сохраняя config/desc и делегируя
+state.commands выбранного источника. Общие j/k/q/Esc/? остаются своими
+действиями; open/rename guard также готовят исходное окно. Файловые функции
+зависимости и сам NuiTree не переопределены.
+
+**Проверка/e2e.** Последний IDE-PANEL-4 E2E специально оставляет file_one в
+исходном окне, выбирает file_two в zoom и подтверждает Enter. Проверяет
+правильный путь, отсутствие overlay и прежние window ids. Затем в новом zoom
+выбирает keep_me и переименовывает его; file_one и содержимое соседей сохранены.
+Red — windows-files-controls-second.txt, artifact 5534595085400. Окончательный
+replay этого config-source — windows-files-zoom-replay.txt, artifact
+6129928888900: выбранный файл не открыт. После исправления Windows/Ubuntu
+PASS; старые Debug/Outline zoom-сценарии также PASS в общем регрессе (§78).
+Спека: IDE-PANEL-4 (ADDED), change integrate-file-explorer.
+
+**Вывод.** Совпадения буфера недостаточно для plugin-панели. Важны владелец
+курсорной позиции и порядок WinEnter перед подтверждённым действием.
+
+**Файлы:** nvim_forge/lua/ide/controls.lua, lua/plugins/neo-tree.lua,
+tests/e2e/file-explorer.test.lua, openspec/changes/integrate-file-explorer/,
+nvim_forge/QUICKSTART.md, PROBLEMS.md, docs/IDE_ROADMAP.md, docs/HISTORY.md,
+docs/AGENT_COMMANDS.md, tests/e2e/README.md.
+
+### 82. Neo-tree: два владельца Esc
+
+Дата: 2026-10-31. Задача: IDE-020.
+
+**Проблема.** Локально 7 сценариев проходили, но полный Windows и Ubuntu
+регресс получил Esc FAIL после помощи: вместо возврата в код фокус оставался
+в дереве. Повторный прямой прогон мог снова пройти. Это не различие ОС.
+
+**Причина.** В defaults Neo-tree ключ назван <esc>, в нашей таблице был <Esc>.
+Lua хранит две разные строки, Neovim считает их одной клавишей. После merge
+renderer применял обе записи через pairs в неопределённом порядке. Побеждал
+либо общий cancel, либо native cancel, который закрывает preview/float и
+оставляет обычное дерево в фокусе. Диагностика на Ubuntu показала map_desc=cancel
+и отсутствие вызова общего обработчика. На Windows при успешном порядке общий
+cancel действительно переводил фокус в code window.
+
+**Изменение.** Override использует исходное имя <esc>, заменяя default и
+оставляя одну запись. Диагностические wrappers cancel и stack observers
+удалены; постоянные тесты не заменяют обработчики.
+
+**Проверка/e2e.** IDE-PANEL-4 читает runtime state.window.mappings настоящего
+backend, нормализует ключи через nvim_replace_termcodes и требует одного Esc.
+Далее пять раз выполняет помощь → Esc → дерево → Esc → код и проверяет, что
+дерево осталось видимым. Это одновременно проверка опасного совпадения и
+пользовательского поведения. Red полного прогона — windows-files-final-regression.txt,
+ubuntu-files-final-full.txt; Ubuntu artifact 4546164879028. Диагностический
+focus-trace.json — .tests/ubuntu/editor-e2e/4785901752983. Replay окончательного
+теста на config-source 5949438588300 — windows-files-esc-replay.txt: найдено
+{ '<Esc>', '<esc>' } независимо от случайного победителя. После исправления
+7 E2E PASS на обеих ОС; финальный полный регресс — §78.
+Спека: IDE-PANEL-4 (ADDED), change integrate-file-explorer.
+
+**Вывод.** Проверять владение нужно после канонизации Neovim key notation,
+а не по строковым именам Lua-таблицы. Одинаковые по смыслу alias в merged
+конфигурации могут дать случайное поведение даже при правильных функциях.
+
+**Файлы:** nvim_forge/lua/plugins/neo-tree.lua,
+tests/e2e/file-explorer.test.lua, openspec/changes/integrate-file-explorer/,
+PROBLEMS.md, docs/IDE_ROADMAP.md, docs/HISTORY.md, docs/AGENT_COMMANDS.md,
+tests/e2e/README.md.

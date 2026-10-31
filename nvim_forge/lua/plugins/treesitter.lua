@@ -156,12 +156,10 @@ local function setup_main()
 
     if type(ts.install) == "function" then
         vim.api.nvim_create_user_command("ForgeTreesitterInstall", function()
+            ensure_tree_sitter_cli_on_path()
             ts.install(languages):wait(300000)
         end, { desc = "Install forge-nvim Treesitter parsers" })
-
-        if ensure_tree_sitter_cli_on_path() then
-            ts.install(languages)
-        end
+        -- IDE-BOOT-1: наличие CLI не означает согласие на загрузку при старте.
     end
 
     setup_textobjects()
@@ -235,8 +233,8 @@ local function setup_legacy()
     end
 
     configs.setup({
-        ensure_installed = languages,
-        auto_install = true,
+        ensure_installed = {},
+        auto_install = false,
         sync_install = false,
         highlight = {
             enable = true,

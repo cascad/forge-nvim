@@ -1,0 +1,129 @@
+{
+  "imported_on": "2026-10-31",
+  "source_root": "F:\\claude_code\\vim",
+  "archive_policy": "original bytes; normalized UTF-8/BOM/CRLF hashes only for deduplication",
+  "artifacts": [
+    {
+      "source": "helix/RATIONALE.md",
+      "archived_as": "legacy/helix-rationale.md",
+      "description": "Решения по Helix и авторская последовательность шагов",
+      "kind": "historical-decisions",
+      "sha256": "ded1c106898aef9e94a61c55d9e40f7c19fb6e23838acaa0ff73605ca318e9cd",
+      "normalized_sha256": "ded1c106898aef9e94a61c55d9e40f7c19fb6e23838acaa0ff73605ca318e9cd",
+      "lines": 321,
+      "dating": {
+        "event_date": null,
+        "basis": "Точная дата события в источнике не указана."
+      },
+      "duplicate_sources": []
+    },
+    {
+      "source": "helix/PROBLEMS.md",
+      "archived_as": "legacy/helix-postmortem.md",
+      "description": "Постмортем Helix и причины перехода на Neovim",
+      "kind": "postmortem",
+      "sha256": "ca39caebbef39ca24cee2652a0df1e07b092e839d465ca4a13b06bab95eed561",
+      "normalized_sha256": "ca39caebbef39ca24cee2652a0df1e07b092e839d465ca4a13b06bab95eed561",
+      "lines": 119,
+      "dating": {
+        "event_date": null,
+        "basis": "Точная дата события в источнике не указана."
+      },
+      "duplicate_sources": []
+    },
+    {
+      "source": "nvim/PLAN.md",
+      "archived_as": "legacy/neovim-initial-plan.md",
+      "description": "Первоначальный план Neovim и выбор стека",
+      "kind": "historical-plan",
+      "sha256": "45815509c4a25adab34f7b3f32738f0fb7de3ce740011c8ae3aa68fff91e7e14",
+      "normalized_sha256": "3f7527bf4103d857705d656029bb47e4a94d58c1c6bb137a3312e025d492cb55",
+      "lines": 200,
+      "dating": {
+        "event_date": null,
+        "basis": "Совпадает с содержимым source-nvim в каталоге backup с меткой 20260511-131120; это метка снимка, не точная дата события.",
+        "snapshot_label": "2026-05-11"
+      },
+      "duplicate_sources": [
+        {
+          "source": "backups/before-clean-install-20260511-131120/source-nvim/PLAN.md",
+          "sha256": "45815509c4a25adab34f7b3f32738f0fb7de3ce740011c8ae3aa68fff91e7e14"
+        }
+      ]
+    },
+    {
+      "source": "nvim/RUST_NAVIGATION_PERFORMANCE_FIX.md",
+      "archived_as": "legacy/rust-navigation-performance.md",
+      "description": "Причины фризов Rust-навигации и сделанный фикс",
+      "kind": "historical-fix",
+      "sha256": "b1466509928ebf5e9884208858d51b7711392a36417126d9293369d422581c71",
+      "normalized_sha256": "badeffdbed905586f98cb4768423dc1bb2159af660db0dade6337fefd2754418",
+      "lines": 200,
+      "dating": {
+        "event_date": null,
+        "basis": "Совпадает с содержимым source-nvim в каталоге backup с меткой 20260511-131120; это метка снимка, не точная дата события.",
+        "snapshot_label": "2026-05-11"
+      },
+      "duplicate_sources": [
+        {
+          "source": "backups/before-clean-install-20260511-131120/source-nvim/RUST_NAVIGATION_PERFORMANCE_FIX.md",
+          "sha256": "b1466509928ebf5e9884208858d51b7711392a36417126d9293369d422581c71"
+        }
+      ]
+    },
+    {
+      "source": "nvim/DEBUG_SETUP_JOURNEY.md",
+      "archived_as": "legacy/neovim-debug-setup.md",
+      "description": "Ранний журнал DAP: launch.json, output, фокус и неудачные попытки",
+      "kind": "debug-journey",
+      "sha256": "37cd1c85da8d57fbc740c288bf1db622debd99fc82e7f294012e5071f409c459",
+      "normalized_sha256": "37cd1c85da8d57fbc740c288bf1db622debd99fc82e7f294012e5071f409c459",
+      "lines": 1114,
+      "dating": {
+        "event_date": null,
+        "basis": "Совпадает с содержимым source-nvim в каталоге backup с меткой 20260511-131120; это метка снимка, не точная дата события.",
+        "snapshot_label": "2026-05-11"
+      },
+      "duplicate_sources": [
+        {
+          "source": "backups/before-clean-install-20260511-131120/source-nvim/DEBUG_SETUP_JOURNEY.md",
+          "sha256": "37cd1c85da8d57fbc740c288bf1db622debd99fc82e7f294012e5071f409c459"
+        }
+      ]
+    },
+    {
+      "source": "nvim/WISHLIST.md",
+      "archived_as": "legacy/recent-projects-notes.md",
+      "description": "Завершённая заметка о recent projects picker",
+      "kind": "historical-feature",
+      "sha256": "b0e9e4609bd7a2b3dc6b1a8d3a45c82524b3955e28426bc6bfa306eec08577d0",
+      "normalized_sha256": "c7a81d4d4004e34ea626e976b9e346e0fff8b6d8bab1eff0cea8c60f1b62fbce",
+      "lines": 43,
+      "dating": {
+        "event_date": null,
+        "basis": "Совпадает с содержимым source-nvim в каталоге backup с меткой 20260511-131120; это метка снимка, не точная дата события.",
+        "snapshot_label": "2026-05-11"
+      },
+      "duplicate_sources": [
+        {
+          "source": "backups/before-clean-install-20260511-131120/source-nvim/WISHLIST.md",
+          "sha256": "b0e9e4609bd7a2b3dc6b1a8d3a45c82524b3955e28426bc6bfa306eec08577d0"
+        }
+      ]
+    },
+    {
+      "source": "backups/clean-install-runtime-20260511-132208/runtime-backup.txt",
+      "archived_as": "legacy/2026-05-11-clean-install.txt",
+      "description": "Чистая установка: запись выполненных действий 2026-05-11",
+      "kind": "dated-install-record",
+      "sha256": "54eae1713bc54edea24ecc3713c5b0335dafbb6194e4a7f3003d722d1346d018",
+      "normalized_sha256": "7c9bab068098be873caf392de3abed1ca6aae65d0ec6a3e83c292c6b3bcf0ef0",
+      "lines": 6,
+      "dating": {
+        "event_date": "2026-05-11",
+        "basis": "Поле stamp=20260511-132208 внутри runtime-backup.txt."
+      },
+      "duplicate_sources": []
+    }
+  ]
+}

@@ -143,13 +143,13 @@ local matches = require('check').matches
 -- ============================================================================
 -- 1. Аргументы
 -- ============================================================================
-local SUITES = { 'unit', 'wezterm', 'install', 'trace', 'conpty' }
+local SUITES = { 'unit', 'e2e', 'wezterm', 'install', 'trace', 'conpty' }
 -- Без явных наборов идут все, кроме conpty: пробы через conpty.dll идут около
 -- минуты, поэтому только по имени набора или вместе с --id.
-local DEFAULT_SUITES = { 'unit', 'wezterm', 'install', 'trace' }
+local DEFAULT_SUITES = { 'unit', 'e2e', 'wezterm', 'install', 'trace' }
 local USAGE = [[
 Использование: nvim -l tests/run.lua [набор…] [--id ID] [--update-golden] [--strict] [--registry ФАЙЛ]
-  набор            unit | wezterm | install | trace | conpty
+  набор            unit | e2e | wezterm | install | trace | conpty
                    (по умолчанию — все, кроме conpty; с --id — все)
   --id ID          только проверки требования: WT-CLIP — вся capability, WT-CLIP-1 — одно требование
   --update-golden  перезаписать эталоны и фикстуру (осознанное изменение, diff — в тот же коммит)
@@ -279,6 +279,8 @@ end
 -- 4. Запуск файла: процесс на файл, таймаут, разбор строк, вердикт
 -- ============================================================================
 local CHILD_ENV = {
+  -- Общий compiler cache одного прогона на native FS, не на Docker bind mount.
+  FORGE_E2E_GO_CACHE = vim.env.FORGE_E2E_GO_CACHE or (vim.fn.tempname() .. '-forge-go-cache'),
   FORGE_REPO = ROOT,
   FORGE_TEST_ID = ARGS.id or '',
   FORGE_UPDATE_GOLDEN = ARGS.update_golden and '1' or '',

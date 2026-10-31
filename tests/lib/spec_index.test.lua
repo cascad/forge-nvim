@@ -18,7 +18,8 @@ T.check('SELF: индекс репо содержит все заголовки 
   local n = 0
   for _ in pairs(idx.ids) do n = n + 1 end
   T.eq(n, expected, 'ID уникальны')
-  T.eq(idx.areas, { WT = true, MAC = true }, 'области ID')
+  -- Области включают и ADDED активных changes: editor-bootstrap вводит IDE.
+  T.eq(idx.areas, { WT = true, MAC = true, IDE = true }, 'области ID основного индекса и changes')
 end)
 
 T.check('SELF: scan_ids не путает WT-CLIP-1 и WT-CLIP-10 и знает области', function()

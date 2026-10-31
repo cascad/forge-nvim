@@ -13,6 +13,7 @@
 local activities = require("ide.activities")
 
 local M = {}
+local last_output = 'repl'
 
 -- ide требуем лениво внутри функций — иначе цикл (ide/init → ide.dap → ide).
 local function ide()
@@ -46,6 +47,7 @@ end
 --                | "stacks" | "threads" | "breakpoints"
 -- @param enter   boolean — ставить ли фокус в debug-окно (иначе фокус в код)
 function M.show_section(section, enter)
+    if section == 'repl' or section == 'console' or section == 'terminal' then last_output = section end
     activities.close_activity("debug")
 
     local mod = ide()
@@ -117,6 +119,25 @@ end
 -- Bottom = REPL (interactive DAP REPL), с фокусом.
 function M.show_repl()
     M.show_section("repl", true)
+end
+
+-- Сохраняем канал вывода: скрытый PTY не заменяется пустым REPL.
+function M.focus_output()
+    local outputs = { ['dap-repl'] = true, dapui_console = true, ['dap-terminal'] = true }
+    for _, win in ipairs(vim.api.nvim_tabpage_list_wins(0)) do
+        if outputs[vim.bo[vim.api.nvim_win_get_buf(win)].filetype]
+            and vim.api.nvim_win_get_config(win).relative == '' then
+            vim.api.nvim_set_current_win(win)
+            return
+        end
+    end
+    local mod = ide()
+    if not mod then return end
+    mod.show('dap.' .. last_output)
+    vim.schedule(function()
+        local target = ({ repl = 'dap-repl', console = 'dapui_console', terminal = 'dap-terminal' })[last_output]
+        dapui_focus_ft(target)
+    end)
 end
 
 -- Сфокусировать конкретную sidebar-секцию (scopes/watches/stacks/threads/

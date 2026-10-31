@@ -22,6 +22,7 @@ M.empty    = empty
 -- Высокоуровневое API.
 M.show         = state.show
 M.hide         = state.hide
+M.sync_visible_source = state.sync_visible_source
 M.hide_slot    = state.hide_slot
 M.toggle       = state.toggle
 M.toggle_slot  = state.toggle_slot
@@ -454,6 +455,7 @@ function M.setup(opts)
     -- Маркировка tool-окон (w:forge_panel/slot/component) — после того, как
     -- компоненты зарегистрированы (marks строит карту ft→component из registry).
     require("ide.marks").setup()
+    require("ide.controls").setup()
 
     -- User commands для интроспекции и быстрого вызова.
     vim.api.nvim_create_user_command("IdeShow", function(o)

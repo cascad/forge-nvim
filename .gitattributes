@@ -6,3 +6,6 @@
 *.lua text eol=lf
 *.md text eol=lf
 *.json text eol=lf
+
+# Архивные источники сохраняют исходные байты; SHA256 указан в sources.json.
+docs/history/legacy/** -text

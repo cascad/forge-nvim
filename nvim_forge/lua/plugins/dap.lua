@@ -465,6 +465,11 @@ local function section_for_config(cfg)
     if type_ == "codelldb" then
         return "terminal"
     end
+    -- spec: IDE-DAP-1 Delve outputMode=remote доставляет DAP output events,
+    -- даже если launch.json сохранил console=integratedTerminal.
+    if (type_ == "go" or type_ == "delve") and type(cfg) == "table" and cfg.outputMode == "remote" then
+        return "repl"
+    end
     if type(cfg) == "table" and cfg.console == "integratedTerminal" then
         return "terminal"
     end
@@ -1207,7 +1212,7 @@ return {
             { "<leader>dL", dap_show_log,                                      desc = "Debug: show logs" },
             { "<leader>dD", function() ide_dap.toggle() end,                     desc = "Debug: view" },
             { "<leader>du", function() ide_dap.toggle() end,                     desc = "Debug: toggle view" },
-            { "<leader>de", function() require("dap.ui.widgets").hover() end,   desc = "Debug: eval hover" },
+            { "<leader>de", function() require("forge.dap_hover").open() end,   desc = "Debug: eval hover" },
             { "<leader>dw", function()
                 local input = vim.fn.input("Watch: ", vim.fn.expand("<cword>"))
                 if input and input ~= "" then
@@ -1230,6 +1235,7 @@ return {
         },
         config = function()
             local dap = require("dap")
+            require("forge.dap_hover").setup()
             dap.set_log_level("TRACE")
             pcall(function()
                 require("overseer").enable_dap(true)
@@ -1412,11 +1418,9 @@ return {
                 end,
             })
 
-            local function reset_dap_repl()
-                pcall(function()
-                    require("dap.repl").clear()
-                end)
-            end
+            -- IDE-DAP-1: nvim-dap сам очищает REPL перед initialize.
+            -- Повторная очистка на initialized/ответ launch стирала ранние
+            -- output events (в том числе сообщение Delve о сборке).
 
             -- ВАЖНО: Console-секцию dap-ui самим трогать НЕЛЬЗЯ.
             -- nvim-dap recycles term-буферы через свой внутренний пул
@@ -1442,7 +1446,6 @@ return {
             end
 
             local function open_debug_view()
-                reset_dap_repl()
                 local session = dap.session()
                 local cfg = session and session.config
                 if cfg and cfg.type then
@@ -1484,8 +1487,6 @@ return {
             -- у dap_terminal_win_cmd / reset_dap_terminal_buf.
             dap.defaults.fallback.terminal_win_cmd = dap_terminal_win_cmd
 
-            dap.listeners.before.attach.dapview_config = reset_dap_repl
-            dap.listeners.before.launch.dapview_config = reset_dap_repl
             -- Сброс флагов сессии — на before.initialize, а НЕ before.launch.
             -- ВАЖНО (иначе спам ложными ошибками): nvim-dap зовёт before.<cmd>
             -- на ОТВЕТ запроса, а не на отправку. delve шлёт событие
@@ -1510,6 +1511,7 @@ return {
             -- его выше: тогда мы вне rpc-callback и без побочки.
             dap.listeners.after.event_initialized.forge_session_flag = function() session_initialized = true end
             dap.listeners.after.event_initialized.dapview_config = open_debug_view
+            require("forge.dap_output").setup(dap)
 
             -- VS Code-style: на КАЖДОЙ остановке исполнения (breakpoint,
             -- паника Rust/fatalpanic, исключение, step) гарантируем что
@@ -1521,19 +1523,21 @@ return {
             -- этого listener'а панель не появлялась — ровно баг, который
             -- описал юзер ("остановился на fatalpanic, но layout не висит").
             --
-            -- Только sidebar (idempotent ide.show) — bottom (terminal/repl)
-            -- НЕ трогаем: он уже поднят на init, а hide/show его на каждом
-            -- стопе мигал бы выводом. reset_dap_repl тоже НЕ зовём —
-            -- иначе на каждой остановке чистили бы вывод REPL.
+            -- Восстанавливаем только отсутствующие компоненты: ide.show
+            -- идемпотентен. Вывод при остановке не очищаем.
             --
             -- vim.schedule — мы внутри rpc-callback от адаптера; любые
             -- синхронные манипуляции окнами здесь могут поймать таймаут
             -- "Debug adapter didn't respond" (см. коммент у before.launch).
-            dap.listeners.after.event_stopped.forge_ensure_sidebar = function()
+            dap.listeners.after.event_stopped.forge_ensure_sidebar = function(stopped_session)
                 vim.schedule(function()
-                    if not require("dap").session() then return end
+                    if require("dap").session() ~= stopped_session or not stopped_session.stopped_thread_id then return end
                     local ok, ide = pcall(require, "ide")
                     if ok then pcall(ide.show, "dap.sidebar") end
+                    local section = section_for_config(stopped_session.config)
+                    -- PTY принадлежит runInTerminal; сами не создаём
+                    -- новый терминал и не закрываем уже полученный вывод.
+                    if ok and section ~= "terminal" then pcall(ide.show, "dap." .. section) end
                 end)
             end
 
@@ -1541,7 +1545,7 @@ return {
             -- последний state (scopes/watches/stacks/breakpoints/call stack)
             -- видимым — это полезно для post-mortem inspection, и в VS Code
             -- работает так же. Чистка панелей произойдёт при следующем
-            -- launch (reset_dap_repl + новая сессия перезатрёт scopes).
+            -- initialize (nvim-dap очистит REPL, новая сессия обновит scopes).
             dap.listeners.after.setBreakpoints.user_breakpoint_diagnostics = function(_, err, response, request)
                 if err then
                     vim.notify("Error setting breakpoints: " .. tostring(err), vim.log.levels.ERROR, { title = "DAP" })
@@ -1576,9 +1580,21 @@ return {
             -- =================================================================
             -- codelldb adapter — для C / C++ / Rust.
             -- =================================================================
-            local cl = codelldb_path()
-            if cl then
-                dap.adapters.codelldb = {
+            -- spec: IDE-DAP-4 поиск нужен при запуске, не при загрузке Go/DAP.
+            dap.adapters.codelldb = function(on_config)
+                local cl = codelldb_path()
+                if not cl then
+                    vim.notify(
+                        "codelldb not found (checked PATH, %LocalAppData%\\codelldb\\adapter\\, Mason).\n"
+                        .. "Rust/C/C++ debugging will not work until it is installed.\n"
+                        .. "macOS/Linux: установи через :MasonToolsInstall; "
+                        .. "если не поставился — :MasonInstall codelldb.\n"
+                        .. "Windows: положи codelldb в PATH или %LocalAppData%\\codelldb\\adapter\\.",
+                        vim.log.levels.WARN, { title = "DAP" }
+                    )
+                    return
+                end
+                on_config({
                     type = "server",
                     port = "${port}",
                     executable = {
@@ -1586,50 +1602,35 @@ return {
                         args = { "--port", "${port}" },
                         detached = false,  -- Windows: detached=true иногда роняет дебаггер
                     },
-                }
+                })
+            end
 
-                for _, ft in ipairs({ "c", "cpp", "rust" }) do
-                    dap.configurations[ft] = dap.configurations[ft] or {}
-                    local launch_config = {
-                        name = "codelldb: launch",
-                        type = "codelldb",
-                        request = "launch",
-                        program = ft == "rust"
-                            and rust_current_program
-                            or function()
-                                return vim.fn.input(
-                                    "Path to executable: ",
-                                    vim.fn.getcwd() .. "/", "file"
-                                )
-                            end,
-                        cwd = ft == "rust" and cargo_root or "${workspaceFolder}",
-                        stopOnEntry = false,
-                        args = {},
-                        -- Standard convention in this config: codelldb получает
-                        -- PTY через runInTerminal -> dap-ui's `dapui_console`
-                        -- буфер (см. terminal_win_cmd wrapper ниже). На
-                        -- Windows codelldb с `internalConsole` теряет println!,
-                        -- поэтому только integratedTerminal.
-                        console = "integratedTerminal",
-                    }
-                    if ft == "rust" then
-                        launch_config.preLaunchTask = "cargo build (debug)"
-                        -- Enables CodeLLDB Rust data formatters from the active Rust toolchain.
-                        launch_config.sourceLanguages = { "rust" }
-                    end
-                    table.insert(dap.configurations[ft], launch_config)
+            for _, ft in ipairs({ "c", "cpp", "rust" }) do
+                dap.configurations[ft] = dap.configurations[ft] or {}
+                local launch_config = {
+                    name = "codelldb: launch",
+                    type = "codelldb",
+                    request = "launch",
+                    program = ft == "rust"
+                        and rust_current_program
+                        or function()
+                            return vim.fn.input(
+                                "Path to executable: ",
+                                vim.fn.getcwd() .. "/", "file"
+                            )
+                        end,
+                    cwd = ft == "rust" and cargo_root or "${workspaceFolder}",
+                    stopOnEntry = false,
+                    args = {},
+                    -- codelldb получает PTY через runInTerminal. На Windows
+                    -- internalConsole теряет println!, поэтому integratedTerminal.
+                    console = "integratedTerminal",
+                }
+                if ft == "rust" then
+                    launch_config.preLaunchTask = "cargo build (debug)"
+                    launch_config.sourceLanguages = { "rust" }
                 end
-            else
-                vim.schedule(function()
-                    vim.notify(
-                        "codelldb not found (checked PATH, Mason, %LocalAppData%\\codelldb\\adapter\\).\n"
-                        .. "Rust/C/C++ debugging will not work until it is installed.\n"
-                        .. "macOS/Linux: ставится сам через Mason при первом старте; "
-                        .. "если не поставился — :MasonInstall codelldb.\n"
-                        .. "Windows: положи codelldb в PATH или %LocalAppData%\\codelldb\\adapter\\.",
-                        vim.log.levels.WARN, { title = "DAP" }
-                    )
-                end)
+                table.insert(dap.configurations[ft], launch_config)
             end
 
             -- telescope-dap расширение (frames / commands / breakpoints picker)

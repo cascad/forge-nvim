@@ -5,9 +5,9 @@
 -- Как это работает в 0.11+:
 --   1. nvim-lspconfig поставляет lsp/<server>.lua с дефолтами (cmd,
 --      filetypes, root_markers).
---   2. mason-lspconfig 2.x с automatic_enable=true вызывает
---      vim.lsp.enable() для каждого ensure_installed-сервера, который
---      успешно поставлен.
+--   2. vim.lsp.enable() включает доступные серверы из PATH/Mason bin.
+--      mason-lspconfig загружается только явными LspInstall/LspUninstall:
+--      его setup() обновляет registry даже при пустом ensure_installed.
 --   3. Наша задача — до enable() вызвать vim.lsp.config('<srv>', {...})
 --      с settings/capabilities/init_options. vim.lsp.enable() мерджит
 --      это поверх дефолтов из lsp/<server>.lua.
@@ -34,8 +34,7 @@ return {
 
     -- =====================================================================
     -- mason-lspconfig 2.x — мост Mason ⇄ vim.lsp.config/enable.
-    -- automatic_enable=true (default в 2.x) делает vim.lsp.enable()
-    -- автоматически для всех ensure_installed-серверов.
+    -- Загружается явными командами установки, не открытием файла.
     -- =====================================================================
     {
         "williamboman/mason-lspconfig.nvim",
@@ -43,29 +42,20 @@ return {
             "williamboman/mason.nvim",
             "neovim/nvim-lspconfig",
         },
-        event = { "BufReadPre", "BufNewFile" },
+        cmd = { "LspInstall", "LspUninstall" },
         opts = {
-            ensure_installed = {
-                -- gopls тут НЕ ставим: конвенция — gopls из активного
-                -- Go-тулчейна (`go install golang.org/x/tools/gopls@latest`,
-                -- см. forge/health.lua и install-скрипты, WITH_LANGUAGES=1).
-                -- Mason-сборка и сама требует go, и перекрывала бы своей
-                -- копией PATH-версию. Включается явно: vim.lsp.enable ниже.
-                "pyright",
-                "ruff",
-                "lua_ls",
-                "rust_analyzer",
-            },
-            -- automatic_enable=true (default 2.x) поднимет все
-            -- ensure_installed-сервера через vim.lsp.enable().
-            -- Settings для rust_analyzer задаём в vim.lsp.config()
-            -- ниже в этом же файле.
+            -- Установка только явным setup/MasonToolsInstall; обычное
+            -- открытие файла включает уже установленные LSP (IDE-BOOT-1).
+            ensure_installed = {},
+            -- При явной установке automatic_enable (default 2.x) включает
+            -- поддерживаемые установленные серверы. На обычном старте
+            -- доступные серверы включает нативный цикл внизу этого файла.
         },
     },
 
     -- =====================================================================
     -- Декларативный список инструментов (LSP / DAP / форматтеры / линтеры).
-    -- Запускается на старте, прогресс показывает fidget.
+    -- Установка по явной команде, обычный старт не запускает её (IDE-BOOT-1).
     -- =====================================================================
     {
         "WhoIsSethDaniel/mason-tool-installer.nvim",
@@ -73,7 +63,8 @@ return {
         event = "VeryLazy",
         opts = function()
             local tools = {
-                -- LSP (gopls — НЕ здесь: из Go-тулчейна, см. mason-lspconfig выше)
+                -- gopls из активного Go-тулчейна: go install
+                -- golang.org/x/tools/gopls@latest или setup WITH_LANGUAGES=1.
                 "pyright",
                 "ruff",
                 "lua-language-server",
@@ -93,6 +84,7 @@ return {
                 -- а system-установки не было → conform молча падал на lua/json.
                 -- Линтеры (если ruff/gopls/pyright чего-то не покрывают)
                 "golangci-lint",
+                "gotestsum",
             }
             -- codelldb: на Windows НЕ ставим — пользователь держит его в PATH
             -- (%LocalAppData%\codelldb\adapter\codelldb.exe). На macOS/Linux
@@ -103,19 +95,19 @@ return {
             return {
                 ensure_installed = tools,
                 auto_update = false,
-                run_on_start = true,
-                start_delay = 3000,
+                run_on_start = false,
+                -- Каталог уже содержит Mason package names. Не загружаем
+                -- мосты ради перевода имён: setup моста обновляет registry.
+                integrations = {
+                    ["mason-lspconfig"] = false,
+                    ["mason-null-ls"] = false,
+                    ["mason-nvim-dap"] = false,
+                },
             }
         end,
-        -- ВАЖНО: сам плагин стартует установку из своего plugin/-файла по
-        -- VimEnter. При lazy-загрузке (event=VeryLazy) VimEnter уже прошёл,
-        -- автокоманда не сработает НИКОГДА — из-за этого ensure_installed
-        -- молча не выполнялся. Поэтому после setup зовём run_on_start сами
-        -- (он уважает run_on_start=true и start_delay выше).
         config = function(_, opts)
             local mti = require("mason-tool-installer")
             mti.setup(opts)
-            mti.run_on_start()
         end,
     },
 
@@ -140,6 +132,7 @@ return {
         event = { "BufReadPre", "BufNewFile" },
         dependencies = {
             "hrsh7th/cmp-nvim-lsp",
+            "williamboman/mason.nvim",
         },
         config = function()
             local diagnostics = require("config.diagnostics")
@@ -479,15 +472,23 @@ return {
             if vim.fn.executable("gopls") == 1 then
                 vim.lsp.enable("gopls")
             else
-                vim.schedule(function()
-                    vim.notify(
-                        "gopls не найден в PATH — Go LSP выключен.\n"
-                        .. "Ставится из активного Go-тулчейна:\n"
-                        .. "  go install golang.org/x/tools/gopls@latest\n"
-                        .. "(или install-скрипт с FORGE_NVIM_WITH_LANGUAGES=1)",
-                        vim.log.levels.WARN, { title = "LSP" }
-                    )
-                end)
+                -- Отсутствующий Go-инструмент относится к Go, а не к первому
+                -- открытому .txt: длинный notify мог остановить UI на hit-enter.
+                vim.api.nvim_create_autocmd("FileType", {
+                    group = vim.api.nvim_create_augroup("ForgeMissingGoLsp", { clear = true }),
+                    pattern = "go", once = true,
+                    callback = function()
+                        vim.schedule(function()
+                            vim.notify(
+                                "gopls не найден в PATH — Go LSP выключен.\n"
+                                .. "Ставится из активного Go-тулчейна:\n"
+                                .. "  go install golang.org/x/tools/gopls@latest\n"
+                                .. "(или install-скрипт с FORGE_NVIM_WITH_LANGUAGES=1)",
+                                vim.log.levels.WARN, { title = "LSP" }
+                            )
+                        end)
+                    end,
+                })
             end
 
             -- ----------- pyright -----------
@@ -773,6 +774,15 @@ return {
                 end,
                 desc = "Switch Go toolchain (GOTOOLCHAIN) and restart gopls",
             })
+
+            -- Нативное включение доступных серверов не требует registry refresh.
+            -- Mason уже добавил свой bin в PATH как dependency этого плагина.
+            for server, binary in pairs({
+                pyright = "pyright-langserver", ruff = "ruff",
+                lua_ls = "lua-language-server", rust_analyzer = "rust-analyzer",
+            }) do
+                if vim.fn.executable(binary) == 1 then vim.lsp.enable(server) end
+            end
         end,
     },
 }

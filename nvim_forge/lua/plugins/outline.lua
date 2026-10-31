@@ -9,7 +9,9 @@ return {
         "stevearc/aerial.nvim",
         cmd = { "AerialOpen", "AerialToggle", "AerialClose", "AerialNavToggle" },
         keys = {
-            { "<leader>lo", "<cmd>AerialToggle left<CR>", desc = "Outline (Aerial)" },
+            { "<leader>lo", function() require('ide.controls').outline(true) end, desc = "Outline: toggle left" },
+            { "<leader>so", function() require('ide.controls').outline(true) end, desc = "Outline: toggle left" },
+            { "<leader>sn", "<cmd>AerialNavToggle<CR>", desc = "Outline: nav popup" },
         },
         dependencies = {
             "nvim-treesitter/nvim-treesitter",
@@ -20,6 +22,15 @@ return {
             -- Если LSP не подцепился (например, в внешнем файле без
             -- проекта), aerial скатывается на TS.
             backends = { "lsp", "treesitter", "markdown", "man" },
+            attach_mode = "global",
+            show_guides = true,
+            autojump = false, -- spec: IDE-PANEL-3 переход только после подтверждения
+            disable_max_lines = 3000,
+            disable_max_size = 500 * 1024,
+            on_attach = function(buf)
+                vim.keymap.set("n", "{", "<cmd>AerialPrev<CR>", { buffer = buf, desc = "Aerial: prev symbol" })
+                vim.keymap.set("n", "}", "<cmd>AerialNext<CR>", { buffer = buf, desc = "Aerial: next symbol" })
+            end,
 
             -- Слот фиксирован "left" чтобы edgy его захватывал в
             -- left edgebar. Можно ставить "right", но тогда наша
@@ -53,17 +64,13 @@ return {
             -- forge UI (catppuccin).
             icons = {},
 
-            -- ВАЖНО: aerial по дефолту привязывает свой
-            -- `nav-toggle` к <CR>. У нас <CR> используется для
-            -- "go to definition"-style действий в нескольких
-            -- местах, поэтому только базовые: open / split / vsplit.
+            -- Штатные переходы. h/l и folds берём из defaults Aerial;
+            -- q/Esc/? после FileType задаёт общий ide.controls.
             keymaps = {
                 ["<CR>"] = "actions.jump",
                 ["o"]    = "actions.jump",
                 ["v"]    = "actions.jump_vsplit",
                 ["s"]    = "actions.jump_split",
-                ["q"]    = "actions.close",
-                ["?"]    = "actions.show_help",
             },
         },
     },

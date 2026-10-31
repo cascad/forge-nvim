@@ -6,11 +6,12 @@ end
 
 return {
     { "rouge8/neotest-rust", ft = "rust" },
-    { "nvim-neotest/neotest-go", ft = "go" },
+    { "fredrikaverpil/neotest-golang", ft = "go", commit = "65b2be63c3de00e6f15c05388ebdc8d603dbd727" },
     { "nvim-neotest/neotest-python", ft = "python" },
 
     {
         "nvim-neotest/neotest",
+        commit = "27bf921498043f7ecd821d6db68d05de244bbd02",
         cmd = "Neotest",
         dependencies = {
             "nvim-neotest/nvim-nio",
@@ -18,7 +19,7 @@ return {
             "antoinemadec/FixCursorHold.nvim",
             "nvim-treesitter/nvim-treesitter",
             "rouge8/neotest-rust",
-            "nvim-neotest/neotest-go",
+            "fredrikaverpil/neotest-golang",
             "nvim-neotest/neotest-python",
         },
         keys = {
@@ -45,12 +46,19 @@ return {
                 }))
             end
 
-            local ok_go, go = pcall(require, "neotest-go")
+            local ok_go, go = pcall(require, "neotest-golang")
             if ok_go then
                 table.insert(adapters, go({
-                    experimental = { test_table = true },
-                    recursive_run = true,
-                    args = { "-count=1", "-timeout=60s" },
+                    -- spec: IDE-TEST-1/2 adapter формирует argv/nearest-фильтр.
+                    -- JSON-файл исключает искажение результатов терминальным PTY.
+                    runner = "gotestsum",
+                    go_test_args = { "-v", "-count=1", "-timeout=60s" },
+                    dap_mode = "manual",
+                    -- Свежая таблица на запуск: adapter добавляет args/cwd.
+                    dap_manual_config = function()
+                        return { type = "go", name = "Debug Go test", request = "launch",
+                            mode = "test", outputMode = "remote", args = { "-test.v" } }
+                    end,
                 }))
             end
 

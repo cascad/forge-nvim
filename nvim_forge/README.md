@@ -64,7 +64,22 @@ For day-to-day use you can install this config as the default Neovim
 config (Windows: `%LOCALAPPDATA%\nvim`, Linux/macOS:
 `${XDG_CONFIG_HOME:-$HOME/.config}/nvim`). Plugin versions are pinned
 in `lazy-lock.json`. Language servers, formatters and DAP tools are
-installed by Mason on first sync.
+installed by the explicit setup step or Mason commands below.
+
+Обычный запуск подготовленной сборки не устанавливает инструменты и
+Treesitter-парсеры. Для подготовки после установки/обновления:
+
+```vim
+:MasonToolsInstall
+:ForgeTreesitterInstall
+```
+
+Для setup-скрипта доступна синхронная `:MasonToolsInstallSync`. Обновление
+инструментов — отдельная команда `:MasonToolsUpdate`. После установки LSP
+перезапусти редактор: доступные серверы включаются из PATH/Mason bin.
+`gopls` ставится из активного Go-тулчейна (`go install golang.org/x/tools/gopls@latest`),
+а не Mason. Первичная загрузка самих плагинов lazy.nvim остаётся частью
+bootstrap; политика выше относится к инструментам и парсерам.
 
 ### Quick Install
 

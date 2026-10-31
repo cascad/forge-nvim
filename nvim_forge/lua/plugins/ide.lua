@@ -39,41 +39,6 @@ return {
     },
 
     -- =========================================================
-    -- aerial.nvim — outline (Structure)
-    -- =========================================================
-    {
-        "stevearc/aerial.nvim",
-        cmd = { "AerialToggle", "AerialOpen", "AerialNavToggle" },
-        opts = {
-            backends = { "treesitter", "lsp", "markdown", "man" },
-            layout = {
-                default_direction = "right",
-                width = 36,
-                placement = "edge",
-                resize_to_content = false,
-            },
-            attach_mode = "global",
-            show_guides = true,
-            highlight_on_jump = 200,
-            autojump = true,
-            -- Не attach'имся к гигантским файлам (stdlib и vendored
-            -- deps). Aerial для rust использует treesitter-бэкенд,
-            -- но если файл совсем огромный (std/fs.rs ≈ 3300 строк
-            -- — попадает) — даже treesitter parse тормозит.
-            disable_max_lines = 3000,
-            disable_max_size = 500 * 1024,
-            on_attach = function(buf)
-                vim.keymap.set("n", "{", "<cmd>AerialPrev<CR>", { buffer = buf, desc = "Aerial: prev symbol" })
-                vim.keymap.set("n", "}", "<cmd>AerialNext<CR>", { buffer = buf, desc = "Aerial: next symbol" })
-            end,
-        },
-        keys = {
-            { "<leader>so", "<cmd>AerialToggle!<CR>", desc = "Outline: toggle (aerial)" },
-            { "<leader>sn", "<cmd>AerialNavToggle<CR>", desc = "Outline: nav popup" },
-        },
-    },
-
-    -- =========================================================
     -- glance.nvim — peek definition / references (Ctrl+Click аналог)
     -- =========================================================
     {
@@ -251,6 +216,9 @@ return {
             excluded_filetypes = {
                 "neo-tree", "Trouble", "trouble", "lazy", "mason",
                 "alpha", "help", "man", "qf", "aerial", "dap-repl",
+                -- spec: IDE-PANEL-2 DAP UI — scratch-панели, не окна кода.
+                "dapui_scopes", "dapui_watches", "dapui_stacks", "dapui_breakpoints",
+                "dapui_console", "dap-terminal", "forge-panel-help",
                 "dap-view", "dap-view-term", "dap-view-help",
                 "OverseerList", "overseer", "overseer-list",
                 "TelescopePrompt", "TelescopeResults",

@@ -38,6 +38,9 @@ local state = {
 }
 
 local SLOTS = { "left", "right", "bottom" }
+-- Выбор пользователя переживает короткий промежуток без окна при смене
+-- источника backend. refresh_slot обновляет только фактическую видимость.
+local requested = {}
 
 -- =============================================================
 -- Helpers
@@ -142,6 +145,7 @@ end
 ---Закрыть текущий компонент в слоте (если есть).
 ---@param slot string
 local function close_active(slot)
+    requested[slot] = nil
     refresh_slot(slot)
     local id = state.slots[slot]
     if not id then return end
@@ -164,9 +168,13 @@ function M.show(id)
     refresh_slot(slot)
 
     -- Идемпотентность: если уже активен — оставляем как есть.
-    if state.slots[slot] == id and comp.is_open() then return end
+    if state.slots[slot] == id and comp.is_open() then
+        requested[slot] = id
+        return
+    end
 
     close_active(slot)
+    requested[slot] = id
     pcall(comp.open)
     state.slots[slot] = id
     state.last_shown[slot] = id
@@ -179,6 +187,19 @@ function M.hide(id)
     if state.slots[comp.slot] == id then
         close_active(comp.slot)
     end
+end
+
+-- spec: IDE-PANEL-4. Backend может сменить источник в том же окне
+-- (клавиши </> и source selector). Принять уже видимый источник можно
+-- только внутри выбранного backend: поздний Neo-tree не отменяет Outline.
+function M.sync_visible_source(id, filetype)
+    local comp = registry.get(id)
+    local previous = comp and registry.get(requested[comp.slot])
+    if not previous or not vim.tbl_contains(previous.filetypes, filetype)
+        or not vim.tbl_contains(comp.filetypes, filetype) or not comp.is_open() then return end
+    state.slots[comp.slot] = id
+    requested[comp.slot] = id
+    state.last_shown[comp.slot] = id
 end
 
 ---@param slot string
@@ -408,6 +429,7 @@ end
 -- =============================================================
 
 function M.reset()
+    requested = {}
     state = {
         slots = { left = nil, right = nil, bottom = nil },
         layout = nil,

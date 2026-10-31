@@ -1,5 +1,17 @@
 # forge-nvim repo
 
+## Рабочий план мини-IDE
+
+Основная сборка — **nvim_forge**. Текущие этапы, приоритеты и критерии
+готовности: [docs/IDE_ROADMAP.md](docs/IDE_ROADMAP.md).
+Новые проблемы добавляем в [PROBLEMS.md](PROBLEMS.md), порядок работы — в план.
+Первый этап: [диагностика задержек zsh/Go на Mac](docs/MACOS_STARTUP_DIAGNOSTICS.md).
+Активные среды — Windows/macOS/Ubuntu; Mint пока отложен: [границы модулей](docs/PORTABLE_ARCHITECTURE.md).
+[E2E и команды прогонов внутри VM](tests/e2e/README.md).
+[Команды агента и формат получаемых результатов](docs/AGENT_COMMANDS.md).
+[Единая история работ, причин и решений](docs/HISTORY.md), включая материалы
+из прежнего `F:/claude_code/vim`; новые исправления — в `nvim_forge/FIXLOG.md`.
+
 Multi-config monorepo for Neovim setups. Each subfolder is a complete
 Neovim config; each `*.cmd` at the repo root is a launcher that runs
 Neovim against that config **without touching** your system

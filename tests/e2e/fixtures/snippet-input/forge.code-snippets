@@ -1,0 +1,20 @@
+{
+  "Forge function signature": {
+    "prefix": "forgecall",
+    "body": "combine(${1:left}, ${2:right})$0",
+    "description": "Fixture: два параметра вызова"
+  },
+  "Forge three parameters": {
+    "prefix": "forgetriple",
+    "body": "triple(${1:first}, ${2:middle}, ${3:last})$0"
+  },
+  "Forge multiline call": {
+    "prefix": "forgemulti",
+    "body": ["multicall(", "\t${1:first},", "\t${2:second}", ")$0"]
+  },
+  "Forge code block": {
+    "prefix": "forgeblock",
+    "body": ["if (${1:condition}) {", "\t${2:body}", "}$0"],
+    "description": "Fixture: сложный шаблон не является сигнатурой"
+  }
+}

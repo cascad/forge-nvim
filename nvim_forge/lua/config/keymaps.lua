@@ -676,13 +676,12 @@ vm("<S-A-Down>", "y'>p",      "Duplicate selection down")
 vm("<S-A-Up>",   "y'<P",      "Duplicate selection up")
 
 -- Esc в normal — «убрать лишнее с экрана», по одному слою за нажатие.
--- Порядок важен: сперва гасим оверлей диагностики (`gl`), потому что штатно он
--- исчезает только при движении курсора, а хочется убрать его НЕ сходя со строки.
--- Нет оверлея — снимаем подсветку поиска (прежнее поведение, не сломано).
+-- Сначала DAP float, затем оверлей диагностики (`gl`), затем подсветка поиска.
 nm("<Esc>", function()
+    if require("forge.dap_hover").close() then return end
     if require("config.diagnostics").close_float() then return end
     vim.cmd("nohlsearch")
-end, "Clear: diagnostic overlay / search highlight")
+end, "Clear: DAP / diagnostics / search highlight")
 
 -- Better up/down при wrap
 map({ "n", "x" }, "j", "v:count == 0 ? 'gj' : 'j'", { expr = true, silent = true })
@@ -897,11 +896,18 @@ nm("<leader>ts", "<cmd>set spell!<CR>",        "Toggle: spell")
 -- Окна (helix space.w)
 nm("<leader>wv", "<C-w>v", "Window: vsplit")
 nm("<leader>ws", "<C-w>s", "Window: hsplit")
-nm("<leader>wh", "<C-w>h", "Window: left")
-nm("<leader>wj", "<C-w>j", "Window: down")
-nm("<leader>wk", "<C-w>k", "Window: up")
-nm("<leader>wl", "<C-w>l", "Window: right")
-nm("<leader>wq", "<C-w>q", "Window: close")
+local panel_controls = require('ide.controls')
+for key, name in pairs({ h = 'left', j = 'down', k = 'up', l = 'right' }) do
+    nm('<leader>w' .. key, function() panel_controls.direction(key) end, 'Window: ' .. name)
+end
+nm('<leader>w0', panel_controls.focus_code, 'Window: code')
+nm('<leader>wd', panel_controls.locals, 'Window: Locals')
+nm('<leader>wc', panel_controls.output, 'Window: debug Output')
+nm('<leader>wa', function() panel_controls.outline() end, 'Window: Outline')
+nm('<leader>we', function() panel_controls.explorer() end, 'Window: Files')
+nm('<leader>wq', panel_controls.hide, 'Window: hide panel / close window')
+nm('<leader>wz', panel_controls.zoom, 'Window: zoom / restore panel')
+nm('<leader>w?', panel_controls.help, 'Window: panel help')
 nm("<leader>wo", "<C-w>o", "Window: only")
 
 -- Буферы (helix space.B)

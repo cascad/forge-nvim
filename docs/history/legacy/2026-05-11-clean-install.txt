@@ -1,0 +1,6 @@
+stamp=20260511-132208
+LOCALAPPDATA=C:\Users\cascad\AppData\Local
+Renamed nvim-data to nvim-data.backup-20260511-132208
+Removed local nvim reparse point via DirectoryInfo.Delete after PowerShell Remove-Item failed
+Installed forge-nvim from F:\repo\forge-nvim with -UseLocalSource -SkipDependencies
+Retried gitcommit Treesitter parser after clearing temp tree-sitter-gitcommit*; smoke checks passed

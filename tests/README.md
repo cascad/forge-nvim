@@ -8,7 +8,8 @@ nvim_forge он не меняет.
 
 ```sh
 nvim -l tests/run.lua                      # всё, что проверяется без GUI
-nvim -l tests/run.lua unit                 # только набор unit (наборы: unit, wezterm, install, trace, conpty)
+nvim -l tests/run.lua unit                 # только набор unit (наборы: unit, e2e, wezterm, install, trace, conpty)
+nvim -l tests/run.lua e2e                  # реализованные end-to-end сценарии
 nvim -l tests/run.lua conpty               # проба через conpty.dll (Windows, ~1,5 мин; в обычный прогон не входит)
 nvim -l tests/run.lua --id WT-CLIP         # вся capability
 nvim -l tests/run.lua --id WT-CLIP-2       # одно требование (WT-CLIP-20 не захватывается)
@@ -18,8 +19,56 @@ nvim -l tests/run.lua --help
 ```
 
 Команды — из корня репо. Нужен только Neovim 0.12 (LuaJIT, `vim.system`).
+Наборы с Python требуют Python 3. Единые quick/e2e/full-команды для VM,
+правило e2e для каждой фичи/бага и фактическое покрытие:
+[e2e/README.md](e2e/README.md). Обёртки — `scripts/test.ps1` и `scripts/test.sh`.
 WezTerm 20240203, WSL и bash 3.2 нужны своим наборам; без них набор получает
 SKIP, а не PASS.
+
+Editor e2e требует Git, ripgrep и подготовленные исходники плагинов по
+`nvim_forge/lazy-lock.json`: `python3 tests/e2e/prepare_editor.py --download`
+(Windows: `python`). Подготовка выполняется отдельно; отсутствие или
+расхождение зависимостей даёт FAIL с подсказкой. Docker готовит их при build.
+Сам тест запускает настоящую сборку с подключённым RPC UI и приватным
+профилем; подробнее — [e2e/README.md](e2e/README.md).
+
+DAP E2E также требует совместимые Go/Delve. Явная подготовка частных версий:
+`python3 -B tests/e2e/prepare_dap.py --download` (Windows: `python`).
+Docker готовит их при build; в тесте нет загрузки SDK/адаптера.
+Только DAP: `nvim -l tests/e2e/dap-output.test.lua`; фильтр —
+`nvim -l tests/run.lua e2e --id IDE-DAP`.
+
+Go/neotest E2E дополнительно требует C compiler (clang/gcc) и явной подготовки
+парсера/runner: после prepare_editor.py и prepare_dap.py выполнить
+`python3 -B tests/e2e/prepare_tests.py --download` (Windows: `python`).
+Она собирает Go parser из каталога pinned Treesitter, проверяет ABI в Neovim
+и ставит gotestsum v1.13.0 в `.tests/test-deps`. Docker делает это при build.
+Прямой прогон: `nvim -l tests/e2e/test-runner.test.lua`; фильтры общего runner:
+`--id IDE-TEST` или `--id IDE-DAP-3`. Нужные бинарники добавляются только
+в PATH дочернего редактора. Системный Go и профиль пользователя не меняются.
+
+Completion/snippet E2E без новых инструментов:
+`nvim -l tests/e2e/snippet-input.test.lua` либо
+`nvim -l tests/run.lua e2e --id IDE-SNIP-1`. Нужны только общие подготовленные
+плагины; fixture загружается штатным VSCode loader и принимается из настоящего
+cmp меню. LSP не подменяется, языковой сервер этому сценарию не нужен.
+
+Отсутствующий codelldb: `nvim -l tests/e2e/dap-discovery.test.lua` либо
+`nvim -l tests/run.lua e2e --id IDE-DAP-4`. Тест исключает каталоги codelldb
+только из PATH дочернего редактора, проверяет отсутствие binary и наличие
+Git; private LOCALAPPDATA/Mason не содержат tools. Если обязательные tools
+на машине находятся в том же единственном каталоге, подготовить отдельное
+окружение без codelldb. Реальные установленный debugger и пользовательские
+файлы не меняются; это negative E2E, не проверка Rust/C/C++ debugging.
+
+Run & Debug panels: `nvim -l tests/e2e/debug-panels.test.lua` либо
+`nvim -l tests/run.lua e2e --id IDE-PANEL`. Нужны подготовленные Go/Delve.
+Go E2E используют общий compiler cache одного прогона в native temp:
+`FORGE_E2E_GO_CACHE` передаётся только тестовым процессам. Для прямого файла
+создаётся собственный temp cache; можно явно задать подготовленный каталог.
+Это не test-result cache. Runtime cache не расположен на Windows/Docker bind mount.
+Для повторения старого конфига можно явно задать `FORGE_E2E_CONFIG_SOURCE`:
+его lock обязан совпасть с подготовленным, источник пишется в config-origin.txt.
 
 Код возврата: 0 — FAIL нет; 1 — есть FAIL (или UNCOVERED под `--strict`,
 или под `--id` не выполнилось ни одной проверки); 2 — ошибка аргументов.
@@ -29,7 +78,13 @@ SKIP, а не PASS.
 ```sh
 nvim -l tests/lib/check.test.lua
 nvim -l tests/wezterm/fake_wezterm.test.lua
+nvim -l tests/shell-diagnostics.test.lua   # пассивная диагностика IDE-001, нужен Python 3
 ```
+
+Сам сборщик: `python3 nvim_forge/scripts/diagnose-shell.py` (на Windows —
+`python`). Выполнять из проблемного каталога, используя абсолютный путь к
+скрипту. Он ничего не исполняет и не изменяет; инструкция —
+`docs/MACOS_STARTUP_DIAGNOSTICS.md`.
 
 ## Протокол строк
 

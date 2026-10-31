@@ -3,7 +3,7 @@
 --
 -- Поля записи:
 --   file    — путь от корня репо;
---   suite   — набор: unit | wezterm | install | trace | conpty;
+--   suite   — набор: unit | e2e | wezterm | install | trace | conpty;
 --   kind    — 'lua' (по умолчанию: `nvim -l <file>`), 'sh' (shell-набор,
 --             способ запуска зависит от ОС хоста, см. run.lua, LAUNCHERS.sh)
 --             или 'py' (`python <file>`, только Windows, LAUNCHERS.py);
@@ -16,6 +16,7 @@
 return {
   { file = 'tests/lib/check.test.lua', suite = 'unit' },
   { file = 'tests/lib/spec_index.test.lua', suite = 'unit' },
+  { file = 'tests/lib/dap_output.test.lua', suite = 'unit' },
   { file = 'tests/wezterm/fake_wezterm.test.lua', suite = 'unit' },
   { file = 'tests/wezterm/keyboard-protocol.test.lua', suite = 'unit' },
   { file = 'tests/wezterm/key-ownership.test.lua', suite = 'unit' },
@@ -25,6 +26,17 @@ return {
   { file = 'tests/wezterm/scrollback.test.lua', suite = 'unit' },
   { file = 'tests/wezterm/window-state.test.lua', suite = 'unit' },
   { file = 'tests/wezterm/ui.test.lua', suite = 'unit' },
+  { file = 'tests/shell-diagnostics.test.lua', suite = 'unit' },
+  { file = 'tests/e2e/shell-diagnostics.test.lua', suite = 'e2e' },
+  { file = 'tests/e2e/entrypoints.test.lua', suite = 'e2e' },
+  { file = 'tests/e2e/editor.test.lua', suite = 'e2e', timeout = 180 },
+  { file = 'tests/e2e/dap-output.test.lua', suite = 'e2e', timeout = 300 },
+  { file = 'tests/e2e/test-runner.test.lua', suite = 'e2e', timeout = 360 },
+  { file = 'tests/e2e/snippet-input.test.lua', suite = 'e2e', timeout = 180 },
+  { file = 'tests/e2e/dap-discovery.test.lua', suite = 'e2e', timeout = 120 },
+  { file = 'tests/e2e/debug-panels.test.lua', suite = 'e2e', timeout = 300 },
+  { file = 'tests/e2e/outline.test.lua', suite = 'e2e', timeout = 180 },
+  { file = 'tests/e2e/file-explorer.test.lua', suite = 'e2e', timeout = 180 },
   { file = 'tests/wezterm/config-loading.test.lua', suite = 'wezterm' },
   { file = 'tests/wezterm/snapshot.test.lua', suite = 'wezterm' },
   { file = 'tests/install-macos.scenarios.sh', suite = 'install', kind = 'sh', shell = 'posix', timeout = 180 },

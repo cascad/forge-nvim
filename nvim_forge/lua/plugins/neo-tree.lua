@@ -21,6 +21,7 @@ local function neo_tree_window()
 end
 
 local function safe_tree_node(state)
+    require('ide.controls').tree_action()
     if not state or not state.tree then
         return nil
     end
@@ -163,6 +164,27 @@ local function guarded_open_commands(source)
     }
 end
 
+-- Штатные именованные действия читают курсор исходного NuiTree-окна.
+-- Вернуть выбор из zoom перед командой любого источника, включая delete;
+-- j/k и общие q/Esc/? остаются собственными функциями панели.
+local function tree_mappings(mappings)
+    for key, value in pairs(mappings) do
+        local name = type(value) == 'string' and value
+            or type(value) == 'table' and (value.command or value[1])
+        if type(name) == 'string' and name ~= 'none' then
+            local opts = type(value) == 'table' and vim.deepcopy(value) or {}
+            opts.command = nil
+            opts.desc = opts.desc or name
+            opts[1] = function(state)
+                require('ide.controls').tree_action()
+                return state.commands[name](state)
+            end
+            mappings[key] = opts
+        end
+    end
+    return ru_keys.extend_mappings(mappings)
+end
+
 return {
     {
         "nvim-neo-tree/neo-tree.nvim",
@@ -181,13 +203,16 @@ return {
             -- init.lua), это решает проблему "neo-tree v3.x last_used":
             -- даже после работы в Git/Buffers <leader>e всегда возвращает
             -- к Files.
-            { "<leader>e",  function() require("ide").toggle("explorer") end, desc = "Explorer: toggle (Files)" },
+            { "<leader>e",  function() require('ide.controls').explorer('filesystem', true) end, desc = "Explorer: toggle (Files)" },
             { "<leader>E",  function()
                 -- Reveal current file: ide.show идемпотентен, поэтому если
                 -- explorer уже открыт на filesystem и НЕ показывает текущий
                 -- файл — нужен прямой :Neotree reveal вызов.
-                require("ide").show("explorer")
-                pcall(vim.cmd, "Neotree filesystem reveal left")
+                local visible = require('ide').current().slots.left == 'explorer'
+                require('ide.controls').explorer()
+                -- Первое открытие уже выполняет reveal. Второй navigate
+                -- откладывает старый путь, который после rename уже исчез.
+                if visible then vim.cmd('Neotree filesystem reveal left') end
             end, desc = "Explorer: reveal current file" },
             -- TODO: после теста в Windows terminal/Cursor почистить лишние
             -- варианты. Разные терминалы по-разному кодируют Shift/Ctrl/Alt
@@ -259,6 +284,10 @@ return {
             })
         end,
         opts = {
+            event_handlers = {
+                { event = 'neo_tree_window_after_open', handler = function(args) require('forge.neo_tree_lifecycle').opened(args) end },
+                { event = 'after_render', handler = function(state) require('forge.neo_tree_lifecycle').rendered(state) end },
+            },
             sources = { "filesystem", "buffers", "git_status" },
             -- Дефолтный source при `Neotree` без аргумента — Files.
             -- Без этого neo-tree берёт last_used из своего state-файла
@@ -310,7 +339,7 @@ return {
             },
             window = {
                 width = 32,
-                mappings = ru_keys.extend_mappings({
+                mappings = tree_mappings({
                     ["<space>"] = "none",   -- освобождаем — у нас лидер
                     ["j"]       = normal_move("j"),
                     ["k"]       = normal_move("k"),
@@ -321,7 +350,10 @@ return {
                     ["o"]       = "open",
                     ["v"]       = "open_vsplit",
                     ["s"]       = "open_split",
-                    ["<Esc>"]   = "close_window",
+                    ["q"]       = function() require('ide.controls').hide() end,
+                    -- spec: IDE-PANEL-4 имя как в defaults: <esc>/<Esc>
+                    -- одна клавиша Neovim, две записи дают случайного владельца.
+                    ["<esc>"]   = function() require('ide.controls').cancel() end,
                     ["P"]       = { "toggle_preview", config = { use_float = true } },
                     ["a"]       = { "add", config = { show_path = "relative" } },
                     ["A"]       = "add_directory",
@@ -331,8 +363,11 @@ return {
                     ["x"]       = "cut_to_clipboard",
                     ["p"]       = "paste_from_clipboard",
                     ["c"]       = "copy",
-                    ["m"]       = "move",
-                    ["?"]       = "show_help",
+                    -- spec: IDE-FILE-2 штатный absolute input_root не
+                    -- добавляет родительский каталог к уже полному пути.
+                    ["m"]       = { "move", config = { show_path = "absolute" } },
+                    ["?"]       = function() require('ide.controls').help() end,
+                    ["g?"]      = "show_help",
                     ["R"]       = "refresh",
                     -- ["H"] = "toggle_hidden" перенесён ВНИЗ в
                     -- filesystem.window.mappings — эта команда есть
@@ -344,9 +379,9 @@ return {
                     -- сверху neo-tree:
                     --   < и > — встроены в neo-tree (prev/next source)
                     -- Дополнительно — прямые шорткаты на конкретный таб:
-                    ["bf"]      = function() vim.cmd("Neotree filesystem reveal left") end,
-                    ["bb"]      = function() vim.cmd("Neotree buffers reveal left") end,
-                    ["bg"]      = function() vim.cmd("Neotree git_status reveal left") end,
+                    ["bf"]      = function() require('ide.controls').explorer('filesystem') end,
+                    ["bb"]      = function() require('ide.controls').explorer('buffers') end,
+                    ["bg"]      = function() require('ide.controls').explorer('git_status') end,
                 }),
             },
             filesystem = {
@@ -364,7 +399,7 @@ return {
                     never_show = { ".DS_Store", "thumbs.db" },
                 },
                 window = {
-                    mappings = ru_keys.extend_mappings({
+                    mappings = tree_mappings({
                         -- toggle_hidden — только в filesystem source
                         -- (см. комментарий выше в общих window.mappings).
                         ["H"] = "toggle_hidden",

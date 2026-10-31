@@ -1,0 +1,14 @@
+services:
+  ubuntu:
+    build:
+      context: ../..
+      dockerfile: tests/containers/Dockerfile
+    image: forge-nvim-tests:ubuntu24.04-nvim0.12.2
+    working_dir: /workspace
+    # Загрузка зависимостей только при build; тестовый запуск без сети.
+    network_mode: none
+    volumes:
+      - ../..:/workspace:ro
+      - ../../.tests/ubuntu:/workspace/.tests
+    entrypoint: [bash, scripts/test.sh]
+    command: [e2e]
