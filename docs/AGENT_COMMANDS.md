@@ -1486,3 +1486,71 @@ runtime в `.tests/tmp` не осталось; аудит — `ide034-retired-pr
 Завершение change: strict validate `fix-active-worktree-delete`, trace,
 `git diff --check`, затем явный список `git add` и `git diff --cached --check`.
 Ни .tests/.tools, ни full GPU status/пути сторонних проектов в коммит не входят.
+
+## 31. Docker: старый диск и чистая настройка (IDE-037)
+
+Это история разового поручения владельца «заново / на чистый», а не шаг
+подготовки каждого теста. Новое правило в CLAUDE.md: агент использует уже
+запущенный engine; при его недоступности сообщает ограничение. Автозапуск,
+перезапуск, остановка Desktop/WSL, ремонт IPC и смена внешних настроек ради
+очередного прогона без отдельного поручения запрещены. Прежние команды
+Desktop в этом каталоге остаются историческими примерами.
+
+Состояние и пути проверялись обычным read-only CLI:
+
+```powershell
+docker context show
+docker info --format 'server={{.ServerVersion}} os={{.OSType}} images={{.Images}} containers={{.Containers}} driver={{.Driver}}'
+docker ps -a
+docker image ls
+docker volume ls
+$forgeSettingsPath=Join-Path $env:APPDATA 'Docker/settings-store.json'
+$forgeSettings=Get-Content -LiteralPath $forgeSettingsPath -Raw | ConvertFrom-Json
+$forgeSettings | Select-Object CustomWslDistroDir,DiskSizeMiB,AutoStart
+Get-Item -LiteralPath 'F:/wsl/DockerDesktopWSL/disk/docker_data.vhdx','F:/wsl/DockerDesktopWSL-clean/disk/docker_data.vhdx' |
+  Select-Object FullName,Length,LastWriteTime | ConvertTo-Json
+Get-PSDrive -Name F | Select-Object Name,Used,Free | ConvertTo-Json
+```
+
+`rg --files` / `rg -n` по локальным журналам Docker нашли ошибки AF_UNIX
+и UI action `Reset to factory defaults` в 22:52:00. Инициатор UI действия
+не установлен; агент эту команду не вызывал. Старое хранилище на F: найдено
+отдельно от нового пустого C:. Get-VHD не дал метаданные без повышения прав;
+повышение не выполнялось, целостность содержимого старого диска не заявлена.
+
+До выбора чистого окружения `docker desktop stop --timeout 60` штатно
+остановил Desktop. Начатое через robocopy копирование 468,88 GiB на F:
+отменено по новому решению владельца. CIM подтвердил собственное дерево
+управляющего PowerShell и robocopy; `taskkill /PID 22320 /T /F` завершил
+только это дерево. PID исторический, повторять команду по нему нельзя.
+Состояние отмены — `.tests/docker-recovery-copy-state.json`.
+
+Настройки сохранены в ignored `.tests/docker-clean-settings-before.json`.
+Пока Desktop был остановлен, изменены только CustomWslDistroDir на
+`F:/wsl/DockerDesktopWSL-clean`, DiskSizeMiB на 131072, AutoStart на false,
+WslEngineEnabled и UseContainerdSnapshotter на true. JSON сохранён через
+ConvertTo-Json/WriteAllText; прочие настройки не пересоздавались. Разовый
+`docker desktop start --detach` запустил чистое окружение. Это не установка
+автоматического запуска для последующих проверок.
+
+Smoke использовал уникальное имя volume с меткой владельца операции;
+ниже шаблон двух выполненных запусков, `<probe-volume>` надо заменить:
+
+```powershell
+docker run --rm --network none --mount 'type=volume,source=<probe-volume>,target=/probe' busybox:1.37.0 sh -c 'echo FORGE_DOCKER_OK > /probe/check; cat /probe/check'
+docker run --rm --network none --mount 'type=volume,source=<probe-volume>,target=/probe,readonly' busybox:1.37.0 cat /probe/check
+```
+
+Оба вывода — `FORGE_DOCKER_OK`. В finally проверена метка своего volume,
+удалён только этот volume; контейнеры удалились через --rm. Итог: Docker
+28.5.1, Linux, overlayfs, 0 контейнеров/0 volumes, 1 образ busybox 6,77 MB;
+новый VHDX около 1,36 GiB, лимит 128 GiB и AutoStart=false подтверждены чтением.
+Это ручной инфраструктурный smoke Windows/WSL, не полный Ubuntu E2E редактора.
+
+Исходный `F:/wsl/DockerDesktopWSL/disk/docker_data.vhdx` сохранён: размер
+503452794880 байт и LastWrite 21:50:06 не изменились. Незавершённая копия
+`F:/wsl/DockerDesktopWSL-recovered-20261101/disk/docker_data.vhdx` осталась:
+её точечный Remove-Item автоматическая проверка отклонила (`blocked by policy`).
+Копия не используется Docker; удаление не обходилось другим способом.
+Подробнее — [настройка и границы восстановления](DOCKER_WINDOWS_SETUP.md),
+история FIXLOG §98. Настройки и полные пользовательские журналы не коммитятся.
