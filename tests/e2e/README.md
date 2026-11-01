@@ -248,6 +248,36 @@ nvim -l tests/e2e/file-explorer.test.lua
 подготовлены для актуального lock, достаточно второй. Go SDK/парсеры/LSP для
 этих текстовых файлов не нужны. Общая команда гостя остаётся scripts/test.sh e2e.
 
+Файловые вкладки: `nvim -l tests/e2e/buffers.test.lua`, отдельно
+`nvim -l tests/run.lua e2e --id IDE-BUF`. Восемь сценариев с настоящими
+BufferLine/Telescope/Neo-tree/auto-save/native confirm: цикл и badd/unloaded/
+readonly при реальном terminal; picker из дерева с terminal, файловый фильтр
+и сохранение окон; закрытие saved файла во всех split и из панели; Cancel
+последнего/непоследнего файла; Save/Discard через F4/Alt-w; alpha/reopen с
+курсором; отказ Save unnamed и последующая запись после назначения имени.
+Cancel удерживает confirm 750 ms (дольше autosave debounce), проверяя диск;
+после отмены новое редактирование должно снова сохраниться обычным autosave.
+
+Диалог не подменяется. Его mode=r? при blocking=false: ожидания идут через
+fast get_mode/nvim_input. editor.lua запрещает Lua RPC за confirm. Из terminal
+используется штатный F7; обнаруженный перехват Ctrl-\ у ToggleTerm зарегистрирован
+как IDE-023, без изменения его привязки. Начальная попытка считывала курсор
+сразу после nvim_input — теперь ожидается фактический переход. Telescope
+entry_maker использует штатный formatter с явным bufnr_width.
+
+Red закрытия — windows-buffers-cancel-replay.txt с
+FORGE_E2E_CONFIG_SOURCE=.tests/baselines/buffers-before. В artifact
+1534125656600/project/file_one.txt уже есть UNSAVED_ после скрытия окна:
+BufLeave успел вызвать auto-save до confirm. Положительные focused логи —
+windows-buffers-third.txt и ubuntu-buffers-first.txt (8 PASS на каждой ОС).
+Окончательный replay IDE-BUF-1 — windows-buffers-navigation-replay.txt:
+2 FAIL, в цикле выбран terminal вместо file_one, picker включает terminal.
+Полные результаты — windows-buffers-full.txt и ubuntu-buffers-full.txt.
+Mac/GUI/физические модификаторы и persistent session reopen не проверены;
+Save As dialog не добавлен, raw :bdelete/внешние plugin close не входят
+в стек Space b r. Для Mac после подготовки плагинов достаточно
+`nvim -l tests/e2e/buffers.test.lua`.
+
 Go E2E разделяют compiler cache одного прогона в native temp через
 `FORGE_E2E_GO_CACHE`; прямой Lua-файл получает отдельный temp cache.
 Windows/Docker bind mount для runtime cache не используется. Source/flags
@@ -286,8 +316,22 @@ error/hit-enter prompt; наблюдатель сохраняет штатное
 `FORGE_E2E_CONFIG_SOURCE=<config-source>` с тем же lock; config-origin.txt
 записывает выбор. В Docker snapshot должен быть в `.tests/ubuntu/`, потому
 что контейнерный `.tests` перекрыт отдельным mount.
-Большой runtime с плагинами живёт в приватном временном каталоге ОС: это
-избегает задержки копирования через Windows/Docker bind mount. Пользовательские
+Большой runtime с плагинами на Windows живёт в `.tests/tmp` на диске checkout
+(здесь F:). На POSIX используется native temp гостя, чтобы избежать задержки
+Windows/Docker bind mount. `FORGE_TEST_TMPDIR` задаёт абсолютный override.
+`scripts/test.ps1` направляет TEMP/TMP/TMPDIR и лог runner туда же только на
+время запуска; для прямого Windows `nvim` задать это окружение заранее.
+После сохранения артефактов child завершается и созданный профиль удаляется,
+в том числе после ошибки подготовки. Проверяются realpath и JSON-маркер
+владения; несовпадение запрещает удаление. Временный file lock ожидается до
+5 секунд, маркер удаляется последним. При ошибке копирования артефактов
+профиль сохраняется с явным диагностическим путём.
+
+Windows Go cache один: `.tests/tmp/go-build-cache`, runner и focused наборы
+переиспользуют его. `FORGE_E2E_GO_CACHE` позволяет абсолютный override.
+В контейнере cache остаётся на native FS гостя. Старые тестовые данные C:
+перенесены вне checkout в `F:/forge-nvim-tmp/`; подробности и ограничения
+автопроверки — FIXLOG §90 и AGENT_COMMANDS §24. Пользовательские
 data/state/config не используются. Нативные исполняемые инструменты берутся
 из PATH; состав PATH не считается зафиксированным языковым окружением.
 
@@ -348,11 +392,12 @@ shell/process/clipboard и подготовке VM. Крупные sleep, пер
 | IDE-012, codelldb discovery | Go/F9 без чужого WARN; F5 без binary → понятное сообщение, повтор, редактирование | `dap-discovery.test.lua`: 3 negative E2E Windows/Ubuntu PASS; Mac и positive Rust/C/C++ DAP открыты |
 | IDE-005/009 и IDE-014, Debug панели | Space w, real paused Locals/Output, q/Esc/help/zoom, внешний close, сохранность сессии/вывода | `debug-panels.test.lua`: 4 E2E Windows/Ubuntu PASS; Mac/GUI и остальные панели открыты |
 | IDE-008, Outline и IDE-015 | Открыть слева → найти/раскрыть символ → перейти в код → вернуться; Explorer/файлы/zoom и pending callbacks | `outline.test.lua`: 6 real Aerial E2E Windows/Ubuntu PASS; Mac/GUI и остальные языковые backend открыты |
-| IDE-009, панели | Одни действия навигации/отмены/скрытия во всех панелях | Debug, Outline и Neo-tree покрыты; Git IDE/tests/поиск/задачи ещё не реализованы |
+| IDE-009, панели | Одни действия навигации/отмены/скрытия во всех панелях | Debug, Outline, Neo-tree и Neogit status покрыты; tests/поиск/задачи ещё открыты |
 | Базовое ядро редактора | Запуск, открыть/изменить/сохранить, дерево, имя/содержимое, буферы, фокус | `editor.test.lua`: Windows и Ubuntu PASS; Mac ждёт прогона |
 | IDE-BOOT-1/2 | Старт без установки инструментов, отсутствие предупреждения Go в .txt | `editor.test.lua`: Windows и Ubuntu PASS; Mac ждёт прогона; наличие gopls в Windows не фиксируется, отсутствие подтверждено в Ubuntu |
 | IDE-016–019, управление файлами | Создать/переименовать/переместить, cut/paste, отмена/конфликт, сохранённые буферы, общий маршрут/selector/zoom | `file-explorer.test.lua`: 7 real editor E2E; границы и результаты ниже |
-| Git/worktree | Локальный bare remote → worktree → изменение → diff → commit/push | Не реализован |
+| Git/worktree | Локальный bare remote → worktree → изменение → commit/push; hunks/diff/history | `git-workflow.test.lua`: 6 real editor E2E, IDE-GIT-1/2/3/4, IDE-PANEL-5; `diffview-close.test.lua`: 7 сценариев IDE-GIT-5; `worktree-refresh.test.lua`: 3 сценария IDE-GIT-6 split/full/быстрый visit. Ошибки push/merge/rebase ещё открыты |
+| Тестовый runtime IDE-030 | Реальное завершение редактора, сохранение артефактов, удаление своего профиля и отказ по чужому маркеру | `editor-runtime.test.lua`: 4 сценария, включая ошибку prepare и временный file lock внешнего процесса; `dap-output.test.lua` проверяет фактический go env GOCACHE |
 | Shell/jobs | Открыть terminal, job, закрыть/восстановить фокус | Не реализован; смена/закрытие файлов и базовый фокус покрыты ядром |
 | Языки | Для каждого языка LSP/format/run/debug/tests в применимых сочетаниях | Не реализован |
 
@@ -360,17 +405,80 @@ shell/process/clipboard и подготовке VM. Крупные sleep, пер
 
 | Среда | Общие сценарии | Специальные проверки | Состояние |
 |---|---|---|---|
-| Windows native | CLI/IDE/languages | ConPTY, clipboard, ru/en, пути/venv | unit/e2e/wezterm/trace: 27 файлов PASS, включая 10 core, 4 Go/Delve, 5 Go/neotest/eval, 11 snippet, 3 codelldb-discovery, 4 Debug, 6 Outline и 7 File explorer E2E; GUI/остальное IDE-покрытие по таблице выше |
+| Windows native | CLI/IDE/languages | ConPTY, clipboard, ru/en, пути/venv | IDE-028 full: 30 PASS / 2 FAIL / 0 SKIP (32 файла); два падавших файла затем 2 PASS / 0 FAIL после исправления тестового транспорта. CLI timeout IDE-031 остаётся открытым, IDE-027 в этом full не повторился; GUI не проверен |
 | macOS | CLI/IDE/languages | zsh startup, Cmd, clipboard, arm64 при наличии | Ждёт VM/машину владельца |
-| Ubuntu | CLI/IDE/languages | apt/version check, bash/zsh, X11/Wayland по целевой сессии | Docker: 28 PASS, 0 FAIL, 3 SKIP, включая 10 core, 4 Go/Delve, 5 Go/neotest/eval, 11 snippet, 3 codelldb-discovery, 4 Debug, 6 Outline и 7 File explorer E2E; GUI не проверен |
+| Ubuntu | CLI/IDE/languages | apt/version check, bash/zsh, X11/Wayland по целевой сессии | Docker: 33 PASS, 0 FAIL, 3 SKIP (34 файла / 36 прогонов), включая 3 worktree refresh, 7 Diffview и 4 runtime E2E; прежние editor/language наборы тоже прошли, GUI не проверен |
 | Mint | CLI/IDE/languages | apt/version check, bash/zsh, desktop clipboard | Временно отложен владельцем |
 
 Этот набор дополняет существующие `wezterm`, `install`, `trace`, `conpty`;
 их доказательства учитываются по фактической границе проверки, а не просто
 переносятся под ярлык e2e.
 
-Прогон 2026-10-31, рабочее дерево HEAD `1bc3c0f` с текущими изменениями:
+Прогон 2026-11-01, рабочее дерево HEAD `4368fa1` с текущими изменениями:
 Windows Neovim 0.12.2, Ubuntu 24.04/Neovim 0.12.2. Ubuntu SKIP: реальная
 загрузка WezTerm (бинарник отсутствует), две дополнительные ветки установщиков
 под Bash 3.2 (интерпретатор отсутствует). Основные sandbox-сценарии
 установщиков под Bash 5 прошли. Windows ConPTY в этой сессии не прогонялся.
+
+Git-шаг: Windows `.tests/windows-git-full-recheck.txt` — 29 PASS/0 FAIL/0 SKIP;
+Ubuntu `.tests/ubuntu-git-full-recheck.txt` — 31 файл/33 прогона,
+30 PASS/0 FAIL/3 SKIP. В обоих полных прогонах Git — 6 PASS. Последнее
+уточнение файлового locator дополнительно проверено всем focused набором
+Windows (7 PASS) и полным Ubuntu. Первые красные прогоны сохранены:
+Windows — единичное завершение child в buffer/terminal (IDE-027, не закрыта),
+Ubuntu — гонка ожидания созданного файла (IDE-029, FIXLOG §88).
+Между прогонами восстановлен остановившийся Docker Desktop штатным start.
+
+Новые Git-сценарии используют private bare remote и native popup/input/commit
+editor. Commit подтверждается ZZ; готовность picker проверяется по insert
+mode и введённому фильтру. Path input ждёт отложенный prefix backend, visit
+ждёт выбранную ветку в Head. Быстрое закрытие IDE-026 теперь имеет отдельный
+регресс `diffview-close.test.lua`; быстрый visit IDE-028 остаётся открытым. Mac остаётся
+за владельцем; GUI/доставка физического Ctrl/Cmd не проверяются RPC grid.
+
+Последующий шаг IDE-026/030 (FIXLOG §89–90):
+`.tests/windows-diffview-runtime-final.txt` — 30 PASS / 1 FAIL / 0 SKIP;
+`.tests/ubuntu-diffview-runtime-final.txt` — 33 файла / 35 прогонов,
+32 PASS / 0 FAIL / 3 SKIP. Diffview — 7 PASS и runtime — 4 PASS на обеих ОС.
+Windows FAIL — native terminal crash IDE-027, child_exit=3221225477;
+он повторился, причина неизвестна, весь Windows-регресс зелёным не считается.
+Первый полный запуск после добавления cleanup (28 PASS / 3 FAIL) сохранён
+как windows-diffview-runtime-full.txt: отдельно устранены transient lock
+при удалении DAP профиля и публикация неполного JSON Git gate.
+
+После последнего уточнения общего Windows Go cache дополнительно пройдены
+целиком focused Go/Delve (4), neotest/eval (5), Debug panels (4) и launcher
+quick (13 файлов). Ubuntu full использовал окончательный helper/cache код.
+Полный Windows отчёт и логи сохранены отдельно как
+windows-diffview-runtime-final-report.json и -logs/ до последующего quick.
+После Windows тестов — 0 оставшихся private runtime и 0 файлов в старом
+C TEMP/nvim.0 (forge-storage-final-audit.json). Старые данные сохранены на F:.
+Оба strict change validate, trace и git diff --check прошли; Mac/GUI/ConPTY
+не запускались. Windows/Ubuntu прогонялись последовательно.
+
+IDE-028 (FIXLOG §91): три `worktree-refresh.test.lua` e2e на Windows/Ubuntu
+проверяют удерживаемый настоящий log → visit и конечные Head/recent/LogView,
+файлы/HEAD/index, split/full tab, серию visit без proxy и reopen. После
+release ждём фактической доставки captured output (done), сохранённого
+refresh task (он может быть отменён Neogit), проверяем интерфейс и ещё
+500 ms наблюдаем поздние ошибки. Действия — только native клавиши, private
+состояние используется для наблюдения. Обе платформы: финальные 3 PASS,
+транскрипты windows-/ubuntu-worktree-refresh-final.txt. Unicode renderer
+строит граф из тех же commit, штатные операции/зависимости не менялись.
+
+Полный Windows IDE-028: 32 файла, 30 PASS / 2 FAIL / 0 SKIP
+(windows-worktree-refresh-full.txt). Новый Windows launcher с CreateNoWindow
+сначала терял stdout; добавлен бинарный pipe pump, весь новый набор прошёл.
+Другой FAIL — единичный CLI unknown-mode timeout 10s (IDE-031), причина
+неизвестна. Повтор обоих файлов через временный registry — 2 PASS / 0 FAIL,
+CLI 0,5s, новый editor набор 3 PASS; файл windows-worktree-refresh-recheck.txt.
+Этот повтор не превращает первый full в полностью зелёный. Все 8 buffer
+e2e в этом full прошли, IDE-027 остаётся открытым без объяснённой причины.
+
+Полный Ubuntu IDE-028: 34 файла / 36 прогонов — 33 PASS / 0 FAIL / 3 SKIP
+(ubuntu-worktree-refresh-full.txt). Прежние Git 6, Diffview close 7 и runtime
+4 прошли в обоих full. Перед добавлением final done/quiet наблюдения full
+уже проверил основной код; после этого уточнения весь новый набор отдельно
+повторён на обеих ОС. Отчёты Windows full/recheck и Ubuntu full сохранены
+отдельно; старые FIXLOG байты проверены. Следующая диагностика Windows —
+IDE-027/031, затем ошибки push/конфликты. Mac/GUI/ConPTY не проверены.

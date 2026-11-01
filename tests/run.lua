@@ -279,8 +279,8 @@ end
 -- 4. Запуск файла: процесс на файл, таймаут, разбор строк, вердикт
 -- ============================================================================
 local CHILD_ENV = {
-  -- Общий compiler cache одного прогона на native FS, не на Docker bind mount.
-  FORGE_E2E_GO_CACHE = vim.env.FORGE_E2E_GO_CACHE or (vim.fn.tempname() .. '-forge-go-cache'),
+  -- Windows переиспользует cache на диске checkout; Docker — native FS гостя.
+  FORGE_E2E_GO_CACHE = require('go_cache').path(ROOT),
   FORGE_REPO = ROOT,
   FORGE_TEST_ID = ARGS.id or '',
   FORGE_UPDATE_GOLDEN = ARGS.update_golden and '1' or '',

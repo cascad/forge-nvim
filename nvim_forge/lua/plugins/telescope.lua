@@ -3,13 +3,21 @@
 -- продолжит работать на Lua-сортировщике, просто медленнее.
 
 local function open_buffer_picker()
-    require("telescope.builtin").buffers({
+    local files=require('ide.buffers')
+    files.focus_editor()
+    local opts={
         prompt_title = "Open Buffers",
         sort_mru = true,
         show_all_buffers = true,
-        ignore_current_buffer = true,
+        ignore_current_buffer = false,
         previewer = false,
-    })
+        bufnr_width = #tostring(vim.fn.bufnr('$')),
+    }
+    local entry=require('telescope.make_entry').gen_from_buffer(opts)
+    opts.entry_maker=function(value)
+        if files.is_file(value.bufnr) then return entry(value) end
+    end
+    require('telescope.builtin').buffers(opts)
 end
 
 return {

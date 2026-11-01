@@ -3619,3 +3619,535 @@ focus-trace.json — .tests/ubuntu/editor-e2e/4785901752983. Replay оконча
 tests/e2e/file-explorer.test.lua, openspec/changes/integrate-file-explorer/,
 PROBLEMS.md, docs/IDE_ROADMAP.md, docs/HISTORY.md, docs/AGENT_COMMANDS.md,
 tests/e2e/README.md.
+
+
+## 2026-11-01
+
+### 83. Файловые вкладки: общая модель и reopen
+
+**Проблема.** Следующий пункт roadmap — открытые файлы/вкладки, выбор,
+следующий/предыдущий, закрытие и возврат фокуса. В keymaps.lua и ide.empty
+существовали разные предикаты файла; цикл считал вкладкой любой listed буфер,
+включая terminal. BufferLine/picker/close расходились по набору и порядку,
+не было общего возврата закрытого файла. Непосредственно закрытие — §84.
+
+**Причина.** В keymaps.lua находились история/порядок/поиск editor window,
+собственные проверки loaded/listed и fallback-close; ide.empty повторял
+классификацию и выбирал другого соседа. Частично отрисованный BufferLine
+мог скрывать ещё не показанные badd-буферы из цикла.
+
+**Изменение.** Модель ide.buffers общая для обычных listed буферов (bt=''),
+включая unloaded/readonly/unnamed; tool/terminal исключены. BufferLine получает
+custom_filter, Telescope — штатный entry_maker с тем же фильтром и запуском
+из editor window. Порядок — реальные элементы BufferLine плюс ещё не
+отрисованные буферы. Старые aliases и команды сохранены; дублирующая логика
+убрана из keymaps, ide.empty остаётся совместимым facade. Новый Space b r
+возвращает существующий закрытый файл с курсором в том же окне, в том числе
+из alpha/панели. В текущем процессе хранится до 20 путей; история не
+перехватывает bdelete при rename Neo-tree и не хранит отброшенный текст.
+
+**Проверка/e2e.** tests/e2e/buffers.test.lua — восемь настоящих UI сценариев:
+цикл с badd/unloaded/readonly и настоящим terminal; picker из дерева при
+terminal; split/панели при close; Cancel последнего и непоследнего файла;
+Save/Discard через F4/Alt-w; alpha/reopen с курсором; Save error unnamed и
+последующая запись с именем. Фикстура — private project штатного editor
+backend, действия — nvim_input. Проверяются окна/пути/текст/диск, tabpage
+остаётся один, установка инструментов не запускается. Native confirm и
+плагины не подменяются. Старые core, Debug, Outline и файловые E2E проходят
+вместе с новым набором.
+
+Начальные уточнения: nvim_input ставит движение в очередь, курсор нужно
+дождаться до снятия эталона; native confirm — mode r? при blocking=false,
+Lua RPC за ним запрещён в editor.lua. Telescope formatter требует bufnr_width
+до генерации записей. Из настоящего terminal используется F7 с noremap-выходом;
+прямой Ctrl-\ открыл ToggleTerm (artifact 1353158363400), зарегистрирован
+отдельный IDE-023. Подсказка теперь предлагает F7 либо Esc Esc; привязка
+ToggleTerm не менялась. Это не выдаётся за проверку физической доставки клавиш.
+
+Окончательный replay IDE-BUF-1 на исходной сборке —
+windows-buffers-navigation-replay.txt: два FAIL, Tab выбирает terminal вместо
+file_one, а picker содержит terminal. Плагины/файлы в replay те же, источник
+конфига записан в config-origin.txt; это проверка старой модели, не подмена UI.
+
+Focused Windows/Ubuntu — 8 PASS на каждой ОС (windows-buffers-third.txt,
+ubuntu-buffers-first.txt). Финальные полные логи — windows-buffers-full.txt и
+ubuntu-buffers-full.txt. Windows unit/e2e/wezterm/trace: 28 файлов PASS, 0 FAIL,
+0 SKIP. Ubuntu Docker full: 29 PASS, 0 FAIL, 3 SKIP (30 файлов/32 прогона).
+SKIP прежние: настоящий WezTerm и дополнительные Bash 3.2 installer-ветки;
+основные Bash 5 sandbox-сценарии PASS. Neovim 0.12.2, Ubuntu 24.04;
+HEAD 4368fa1 с текущими изменениями. Strict validate PASS. Mac/GUI/физические
+модификаторы, persistent/session reopen, Save As dialog и Git/Diffview
+матрица открыты. Спека: IDE-BUF-1/3 (ADDED), change stabilize-buffer-navigation.
+
+**Вывод.** Файловая вкладка определяется моделью, а не любым listed буфером.
+Фокус и восстановление файла работают в существующем editor window и не
+меняют Neovim tabpages/WezTerm. Следующая локальная задача — Git/worktree
+с локальным bare remote и постоянными E2E.
+
+**Файлы:** nvim_forge/lua/ide/buffers.lua, ide/empty.lua,
+config/keymaps.lua, plugins/ui.lua, plugins/telescope.lua, ide/controls.lua,
+tests/e2e/buffers.test.lua, tests/lib/editor.lua, tests/registry.lua,
+openspec/config.yaml, openspec/changes/stabilize-buffer-navigation/,
+nvim_forge/QUICKSTART.md, PROBLEMS.md, docs/IDE_ROADMAP.md, docs/HISTORY.md,
+docs/AGENT_COMMANDS.md, tests/e2e/README.md.
+
+### 84. Закрытие файла: решение до смены окон и autosave
+
+**Проблема.** Старый close менял буферы окон до confirm; последний файл сначала
+заменялся alpha. Dirty-текст мог скрыться, окно поменять фокус, а ошибка bdelete
+подавлялась pcall. E2E закрытия из панели также получил файл вместо tool-буфера.
+
+**Причина.** Решение о данных принималось после UI-мутаций. При смене буфера
+BufLeave немедленно вызывал auto-save; к моменту bdelete файл уже записывался,
+и пользователь не видел ожидаемого выбора. На исходной сборке replay сохранил
+UNSAVED_ на диске до confirm (artifact 1534125656600/project/file_one.txt).
+Кроме immediate-save, существовал отложенный таймер InsertLeave на 500 ms.
+
+**Изменение.** Save/Discard/Cancel (default Cancel) принимается до смены окон.
+Закрываемый буфер временно защищён condition auto-save; официальный
+cancel_deferred_save получил User ForgeBufferClose для отмены его pending
+таймера. Событие вызывается в контексте целевого буфера; защита снимается
+после любого исхода. Функции/таймеры плагина не патчатся, глобальный autosave
+не отключается. Save — silent write с обработкой ошибки: без лишнего hit-enter,
+ошибка не подавлена и оставляет буфер открытым. Discard не пишет файл.
+Только после решения заменяются окна удаляемого буфера; split и панели не
+закрываются. Последний файл показывает alpha. При Cancel текст/modified/
+курсор/раскладка остаются прежними. Space b d из панели закрывает файл в коде,
+не заменяя tool-буфер; F4/Alt-w сохраняют контекстное назначение.
+
+**Проверка/e2e.** IDE-BUF-2: закрыть saved файл, показанный в двух split,
+при открытом дереве; затем последний файл из панели. Для dirty последнего/
+непоследнего файла удержать реальный confirm 750 ms (дольше debounce),
+проверить неизменность диска и отменить c/default Enter. Сверить все окна,
+буферы, размеры, курсор и текст. Затем новый ввод должен сохраниться обычным
+autosave — защита не оставлена включённой. Save/Discard проверяют диск;
+unnamed Save error сохраняет текст/modified, после назначения имени Save
+успешен. Ожидается только известный WARN ошибки записи; ERROR не принимается.
+
+Red старой сборки — .tests/windows-buffers-cancel-replay.txt, источник
+.tests/baselines/buffers-before. Первые итерации ещё неверно ожидали blocking
+для confirm; после исправления транспорта replay всё равно не видит нужного
+диалога и показывает изменённый диск/другой буфер. Первая попытка Save печатала
+сообщение write после confirm, получая hit-enter; исправлено на silent write.
+Все восемь focused E2E Windows/Ubuntu PASS; полный регресс и границы — §83.
+Спека: IDE-BUF-2 (ADDED), change stabilize-buffer-navigation.
+
+**Вывод.** Безопасное закрытие включает порядок UI и согласование с autosave.
+Достаточно один раз сменить окно до решения, чтобы BufLeave записал то,
+что пользователь ещё собирался отменить. Явное закрытие теперь отделяет
+решение о данных от замены буферов, сохраняя обычный autosave после Cancel.
+
+**Файлы:** nvim_forge/lua/ide/buffers.lua, ide/empty.lua,
+config/keymaps.lua, plugins/editor.lua, tests/e2e/buffers.test.lua,
+tests/lib/editor.lua, openspec/changes/stabilize-buffer-navigation/,
+nvim_forge/QUICKSTART.md, PROBLEMS.md, docs/IDE_ROADMAP.md, docs/HISTORY.md,
+docs/AGENT_COMMANDS.md, tests/e2e/README.md.
+
+
+---
+
+## 85. Git-панель: общий маршрут и реальные сценарии
+
+**Проблема.** Git существовал как отдельные Neogit/Diffview views, но не входил
+в общий маршрут Space w. Не было постоянного e2e ветки, commit/push и worktree.
+Скрытие/zoom могли работать внешне, не сохраняя выбранную строку backend.
+
+**Причина.** Neogit устанавливает карты после FileType и хранит исходное окно.
+Кроме того, запись q=Close в его конфигурации используется другими views:
+замена этой записи функцией при первой интеграции лишила log/diff родного q.
+Старый фильтр Edgy проверял только относительность окна и не отличал полный tab.
+
+**Изменение.** Space w g и прежний Space g G используют правый слот registry;
+Space g g сохраняет полный tab. Status получает общие q/Esc/? и Space w z;
+g? открывает родную справку. Native q=Close остаётся в opts, общая карта q
+устанавливается только в готовом status на NeogitStatusRefreshed. Для zoom
+j/k двигают выбор overlay, перед действием выбор переносится в исходное окно.
+Git-команды и private функции Neogit не заменяются. Edgy оставляет единственное
+окно полного Git-tab в editor area; q/Space w 0 возвращают исходный tab кода.
+
+**Проверка/e2e.** tests/e2e/git-workflow.test.lua: 6 real editor сценариев,
+Windows Neovim 0.12.2 и Ubuntu 24.04/Neovim 0.12.2 PASS. Проверены focus/help/
+zoom и stage выбранного файла, stage/unstage hunk, diff обеих версий и история
+файла с возвратом окон, branch/commit/push и история репозитория, сквозной
+worktree → файл → commit/push → visit/delete, стабильный root и Recent Projects.
+Клавиши подаются nvim_input; Git CLI после baseline только наблюдает index,
+HEAD, remote ref/blob и worktree. Настроен private bare origin, без внешнего
+сервиса, user identity/hooks/global config. Setup baseline использует Git CLI.
+Доступен options.prepare проекта до запуска child и Neogit; все 66 pin сохранены,
+кроме целевого обновления Neogit (§86). Артефакты/команды — docs/AGENT_COMMANDS §22.
+
+**Границы.** Mac/GUI/физические клавиши не проверены; commit в e2e подтверждает
+родной ZZ. Ошибки push, merge/rebase и быстрые операции во время загрузки
+не объявлены готовыми: IDE-026 (Diffview close) и IDE-028 (worktree visit)
+сохранены в инбоксе. При visit e2e ждёт выбранную ветку в Head status.
+Полный Windows повтор — 29 PASS, 0 FAIL; в первом полном прогоне один child
+завершился в старом terminal/buffer e2e (IDE-027), причина неизвестна. Повтор
+всех восьми buffer e2e и полный Windows прошли. Snapshot ошибки теперь
+сохраняет child_exit, если он получен. Итоги полного Ubuntu и файловой гонки — §88.
+Спека: IDE-PANEL-5 (ADDED), IDE-GIT-1/2/3 (ADDED), change integrate-git-workflow.
+
+**Вывод.** Для интеграции панели нужны её реальный жизненный цикл и родные
+операции. Одна замена карты в opts может влиять на другие views; это поймал
+пользовательский путь истории, а не проверка наличия хоткея.
+
+**Файлы:** lua/ide/controls.lua, lua/config/keymaps.lua, lua/plugins/git.lua,
+lua/plugins/edgy.lua (в nvim_forge), tests/e2e/git-workflow.test.lua,
+tests/lib/editor.lua, tests/registry.lua, QUICKSTART.md, docs/IDE_ROADMAP.md,
+docs/AGENT_COMMANDS.md, docs/HISTORY.md, tests/e2e/README.md,
+openspec/changes/integrate-git-workflow/.
+
+---
+
+## 86. Windows: hunk patch с относительным путём
+
+**Проблема.** Native s на отдельном hunk не менял index в Windows; тот же e2e
+проходил в Ubuntu. Полный файл staging работал. В Neogit trace получено
+git apply --cached и `does not exist in index` для абсолютного C:\...\file_one.txt.
+
+**Причина.** В закреплённом Neogit 395ac481 Path:make_relative сравнивал пути
+с native-разделителем, тогда как часть путей уже содержала /. В patch
+попадал абсолютный путь с диском, которого в Git index нет.
+
+**Изменение.** Pin Neogit обновлён до d7bb91b42f984416adc6116d6ba8fba287857af3:
+[upstream #1977](https://github.com/NeogitOrg/neogit/commit/d7bb91b42f984416adc6116d6ba8fba287857af3)
+нормализует разделители внутри Path:make_relative. Своя реализация stage или
+Windows-патч private API не добавлены. Подготовлены pinned-зависимости и новый
+Ubuntu-образ; обычный запуск IDE ничего для тестов не скачивает.
+
+**Проверка/e2e.** Постоянный IDE-GIT-1 создаёт два удалённых друг от друга hunk,
+stage первого оставляет второй в worktree, unstage возвращает пустой index.
+Red старого pin: .tests/windows-git-hunk.txt / artifact 4217973742200/neogit.log
+(первый transcript впоследствии перезаписывался, red trace сохранён в artifact).
+Green после обновления — Windows/Ubuntu и полный Git-набор §85. Для уже
+установленной сборки нужен обычный :Lazy restore по новому lazy-lock.
+Спека: IDE-GIT-1 (ADDED), change integrate-git-workflow.
+
+**Вывод.** OS-граница была в нормализации пути зависимости. Общий upstream fix
+устраняет расхождение платформ, не создавая второй Git backend внутри Forge.
+
+**Файлы:** nvim_forge/lazy-lock.json, tests/e2e/git-workflow.test.lua,
+PROBLEMS.md, docs/IDE_ROADMAP.md, docs/AGENT_COMMANDS.md, tests/e2e/README.md.
+
+---
+
+## 87. Worktree: стабильный корень рабочей папки
+
+**Проблема.** Neogit создавал worktree и менял cwd, но после Esc в старый
+файл относительный :edit снова открывал файл основного репозитория.
+Один тест списка worktree этого не замечал; сквозной commit/push выявил сброс.
+
+**Причина.** project.nvim с manual_mode=false на BufEnter определял root
+по текущему файлу и менял глобальный cwd. Старый открытый буфер относился к
+основному worktree, поэтому обычная смена фокуса отменяла выбранный контекст.
+Red: .tests/editor-e2e/4692036212000/, IDE-GIT-3 файл из linked worktree.
+
+**Изменение.** manual_mode=true: root принадлежит выбранной рабочей папке.
+Open folder/worktree/:ProjectRoot меняют его явно; произвольный BufEnter — нет.
+Существующие файлы сохраняют пути и содержимое. Начальный cwd и DirChanged
+попадают в историю через штатный project.set_pwd с уже текущим cwd; это
+сохраняет Recent Projects без возврата автоопределения на каждом файле.
+
+**Проверка/e2e.** IDE-GIT-3: worktree с пробелом → фокус старого файла →
+относительное открытие → изменение → native commit/push; bare remote содержит
+изменение, основной HEAD прежний. Затем visit main/linked, отказ от force
+сохраняет dirty-содержимое, обычное удаление чистого worktree успешно.
+IDE-GIT-4 отдельно проверяет root при фокусе, сохранение обоих файловых буферов
+и наличие обеих папок в настоящем Recent Projects picker. Windows/Ubuntu PASS.
+Проверяются обычные операции после обновления Head; быстрый visit IDE-028 открыт.
+Спека: IDE-GIT-4 (ADDED), IDE-GIT-3 (ADDED), change integrate-git-workflow.
+
+**Вывод.** Корень рабочей папки теперь меняется явным действием пользователя.
+Фокус старого файла сохраняет выбранный worktree и доступ к истории проектов.
+
+**Файлы:** nvim_forge/lua/plugins/editor.lua, tests/e2e/git-workflow.test.lua,
+PROBLEMS.md, nvim_forge/QUICKSTART.md, docs/IDE_ROADMAP.md,
+docs/AGENT_COMMANDS.md, docs/HISTORY.md, tests/e2e/README.md,
+openspec/changes/integrate-git-workflow/.
+
+
+---
+
+## 88. Файловый e2e: ожидание готовности дерева
+
+**Проблема.** Первый полный Ubuntu-регресс Git получил 6 PASS / 1 FAIL в
+старом File Explorer e2e: созданный файл уже существовал на диске, но его
+строка не появилась в раскрытом дереве. Остальные шесть файловых сценариев
+и все шесть Git сценариев прошли. Red: artifact 4604061566637, screen/snapshot
+IDE-FILE-1 Unicode. Повтор исходного теста один раз прошёл; одного ожидания
+авто-раскрытия без l оказалось недостаточно (artifact 4937251126201).
+
+**Причина.** Тест проверял fs_stat и один раз решал, нужно ли нажать l, по
+ещё не обновлённому UI. Native add завершает show_new_children/navigate и
+fs watcher асинхронно. Каталог может уже раскрыться между чтением и l,
+либо остаться закрытым; l — toggle, поэтому без проверки текущего состояния
+он может дать обратный результат. Точный порядок callback первого сбоя
+по snapshot не восстановлен; связь с новым cwd не доказана.
+
+**Изменение.** Locator choose получил необязательного родителя: ждёт строку
+файла в UI, при необходимости выбирает видимую родительскую папку и нажимает
+реальный l только если текущая папка готова и закрыта. Наблюдение NuiTree
+используется только для чтения; операции идут nvim_input. Нет подмены
+backend, принудительного раскрытия Lua-функцией или фиксированного sleep.
+Создание/открытие/сохранение и проверки содержимого остались прежними.
+
+**Проверка/e2e.** Focused File Explorer: Windows/Ubuntu 7 PASS, 0 FAIL.
+Полный Windows: 29 файлов PASS, 0 FAIL, 0 SKIP; после уточнения файлового
+locator изменённый набор дополнительно целиком пройден на Windows.
+Заключительный полный Ubuntu: 31 файл / 33 прогона, 30 PASS, 0 FAIL, 3 SKIP.
+Git в обоих полных прогонах — 6 PASS. Strict OpenSpec validate и trace PASS,
+git diff --check без ошибок. Transcript — windows-git-full-recheck.txt,
+ubuntu-git-full-recheck.txt, windows-git-file-final.txt, ubuntu-git-file-final.txt
+в .tests/. Первый Ubuntu full (29 PASS, 1 FAIL, 3 SKIP) сохранён отдельно.
+
+Между прогонами остановился Docker Desktop: процессов/engine pipe не было.
+Штатный docker desktop start восстановил engine 28.5.1; обновление Docker
+и изменение конфигурации IDE не выполнялись. Это отдельное событие среды.
+SKIP: отсутствующий WezTerm и две дополнительные ветки Bash 3.2; основные
+sandbox-установщики Bash 5 прошли. Mac/GUI/ConPTY suite не запускались,
+Mint отложен владельцем. IDE-026/027/028 остаются открытыми (§85, PROBLEMS).
+Спека: IDE-FILE-1 (FIX) — проверка, поведение редактора в этой записи не менялось.
+
+**Вывод.** Наличие файла на диске не завершает UI-операцию. Locator должен
+проверять видимость цели и текущее раскрытие родителя перед навигацией,
+сохраняя ограниченное время ожидания и проверку фактического содержимого.
+
+**Файлы:** tests/e2e/file-explorer.test.lua, PROBLEMS.md, docs/AGENT_COMMANDS.md,
+docs/HISTORY.md, docs/IDE_ROADMAP.md, tests/e2e/README.md,
+openspec/changes/integrate-git-workflow/tasks.md.
+
+
+---
+
+## 89. Diffview: закрытие во время загрузки
+
+**Проблема.** IDE-026: история уже видна, но закрытие до окончания загрузки
+версии давало async traceback/hit-enter (`use_entry`/file_history_view).
+Исходные artifacts — 3719241169500 и 3783993574400; новый постоянный
+регресс до исправления — 7764921880500, windows-diffview-close-red.txt.
+
+**Причина.** Закреплённый Diffview 4516612 уничтожает FileEntry и окна при
+close, пока coroutine ещё ожидает git show/create_buffer. Pin совпал с
+upstream HEAD, обновления с готовым исправлением не найдено. Прежний Git
+e2e ждал cur_entry.opened и не проверял ранний close.
+
+**Изменение.** Общий Lua-адаптер ide.diffview отслеживает ready, обновление
+панели и file_open_pre/post. Команда DiffviewClose возвращает фокус в
+исходный tab/window сразу, а очистку конкретного view откладывает до
+окончания backend. Готовый просмотр закрывается сразу. Существующие
+Space g q, q, F4/Alt-w, DiffviewClose! и переход Space e используют этот
+маршрут. Другой открытый view не становится целью позднего callback.
+Методы зависимости не патчились, lazy-lock этого исправления не менялся.
+Закрывающийся tab кратко остаётся в фоне до безопасной очистки.
+
+**Проверка/e2e.** Семь сценариев настоящего редактора: все aliases,
+повторный close/reopen, другой diff, новая история того же файла до
+окончания старой, естественный мгновенный close без proxy, пустой diff,
+изменения и Explorer. Проверяются исходный текст/курсор/геометрия,
+фактическая очистка, отсутствие ERROR/hit-enter/позднего traceback.
+Прозрачный private git_cmd proxy задерживает настоящий git show, затем
+исполняет его с неизменённым stdout/stderr; наблюдение идёт через RPC UI.
+Список readiness проверяется по условиям, отдельные 400 ms наблюдают
+поздние ошибки. Полный Windows: Diffview 7 PASS; Ubuntu: 7 PASS.
+
+Во время общего прогона обнаружена гонка самого gate: JSON-файл уже
+существовал, но write ещё не закончился (Expected value/T_END). Теперь
+готовый JSON публикуется rename из .pending; backend и его ошибки не
+подменяются. При переполнении C: первый общий регресс получил ENOSPC —
+исправление инфраструктуры отдельно в §90. Windows native terminal crash
+IDE-027 остаётся открытым. Mac/GUI и произвольный native :tabclose либо
+прямое уничтожение private view другим кодом здесь не проверены/не покрыты.
+Спека: IDE-GIT-5 (ADDED), change fix-diffview-close-lifecycle.
+
+**Вывод.** Закрытие интерфейса должно согласовываться с незавершённой
+работой backend. Возврат фокуса выполняется сразу, уничтожение ресурсов —
+после завершения операции и только для сохранённого экземпляра просмотра.
+
+**Файлы:** nvim_forge/lua/ide/diffview.lua, nvim_forge/lua/plugins/git.lua,
+tests/e2e/diffview-close.test.lua, tests/e2e/git_gate.py, tests/registry.lua,
+PROBLEMS.md, nvim_forge/QUICKSTART.md, docs/IDE_ROADMAP.md,
+docs/AGENT_COMMANDS.md, docs/HISTORY.md, tests/e2e/README.md,
+openspec/changes/fix-diffview-close-lifecycle/.
+
+
+---
+
+## 90. Тестовые runtime заполнили диск C:
+
+**Проблема.** Владелец потребовал найти созданные агентом данные на C:,
+убрать их и направить temp на F:. До очистки свободного места оставалось
+около 2 MB. Windows-регресс получил ENOSPC; tempname мог вернуть неверный
+путь, а в checkout появился относительный -forge-editor.
+
+**Причина.** Старый editor.start копировал все 66 pinned-плагинов в
+native Windows TEMP для каждого private Neovim. stop сохранял артефакты,
+убивал child, но не удалял runtime. Подтверждены 551 старый профиль по
+уникальному observer и 18 оборванных по transcript/fixture/содержимому.
+Ещё 9 самостоятельных *-forge-go-cache были созданы runner/focused Go e2e.
+Это ошибка тестового драйвера; установка обычного пользовательского IDE
+профиля не была источником этих копий.
+
+**Изменение диска.** С проверкой абсолютных путей/владения/отсутствия
+reparse points собственные данные перенесены в
+F:/forge-nvim-tmp/retired-C-profiles и retired-C-go-caches, вне checkout
+и Docker bind mount. Сохранены 22 903 883 640 логических байт, около
+4,5 млн файлов. Это сохранённые на F: данные, не окончательное удаление.
+Ошибочный -forge-editor и proof-профили red/неудачного cleanup тоже убраны
+из рабочего корня/tmp в retirement. Paths/bytes/exit codes — в журналах
+.tests/forge-C-*.ndjson и forge-C-cleanup-summary.json.
+
+Прямой Remove-Item на C: отклонён автоматической проверкой (`blocked by
+policy`, без пояснения), включая один проверенный профиль и пустую папку.
+Использован сохраняющий перенос Move-Item/robocopy /MOVE без purge/MIR.
+Четыре пустые оболочки профилей остались; в проверенном C TEMP/nvim.0
+после переноса 0 файлов/0 полезных байт, на C: свободно около 28,3 GiB.
+Чужие временные файлы/профили/npm caches не очищались. Docker WSL уже
+настроен в F:/wsl/DockerDesktopWSL; настройка не менялась.
+
+**Изменение каркаса.** editor_runtime.create создаёт Windows runtime
+в .tests/tmp на диске checkout, POSIX — на native FS гостя. Абсолютный
+FORGE_TEST_TMPDIR переопределяет базу. У каждого профиля JSON-маркер с
+repo/canonical path/token; remove проверяет realpath, непосредственного
+родителя, тип каталога и маркер. Чужой профиль не удаляется. stop сначала
+сохраняет артефакты, затем завершает child через qa!/fallback kill и удаляет
+профиль. Ошибка start/prepare тоже очищает созданную копию; ошибка копирования
+артефактов сохраняет runtime с диагностическим путём.
+
+Первая попытка cleanup после DAP столкнулась с удержанными log/telemetry
+файлами Windows, несмотря на выход Neovim. Точный владелец lock не доказан.
+Повтор до 5 секунд и сохранение маркера до удаления остальных данных
+позволяют безопасно закончить очистку. GOTELEMETRY env не используется:
+закреплённый Go описывает это значение go env как non-settable.
+scripts/test.ps1 задаёт TEMP/TMP/TMPDIR/NVIM_LOG_FILE на диске checkout
+на время процесса и восстанавливает окружение в finally. Агентские Python/
+npx/прямые nvim команды используют temp F:, npx cache —
+F:/forge-nvim-tmp/npm-cache; глобальные параметры Windows/npm не менялись.
+go_cache.path направляет Windows runner и три focused Go набора в один
+.tests/tmp/go-build-cache с переиспользованием вместо новой копии на запуск.
+
+**Проверка/e2e.** Старый driver взят git show HEAD:tests/lib/editor.lua;
+red «runtime не удалён» — windows-editor-runtime-red.txt, artifact
+10267159288500. Четыре постоянных editor-runtime e2e проверяют реальное
+сохранение/завершение/удаление, частичный prepare, отказ при чужом маркере,
+transient file lock отдельным Python-процессом. Windows: 4 PASS; Ubuntu:
+4 PASS. Go использует фактический ожидаемый GOCACHE
+(go env проверяется в DAP); после перехода на общий cache Windows focused
+Go/Delve 4 PASS, neotest/eval 5 PASS, Debug panels 4 PASS. quick: 13 PASS.
+
+Полный Windows unit/e2e/wezterm/trace: 31 файл — 30 PASS, 1 FAIL, 0 SKIP
+(windows-diffview-runtime-final.txt/report.json). Все новые сценарии прошли,
+runtime-профили после остановки отсутствуют. FAIL — повтор прежнего
+IDE-027, native terminal/buffer crash, child_exit=3221225477, artifact
+12179929834000; отдельный повтор в этой сессии — 11614849831400. Причина
+не установлена, зелёным регресс не объявляется. Предшествующий полный
+прогон (28 PASS/3 FAIL) сохранил DAP cleanup lock, gate JSON race и тот же
+native crash; первые две причины устранены и проверены.
+
+Ubuntu full: 33 файла / 35 прогонов, 32 PASS, 0 FAIL, 3 SKIP (ubuntu-diffview-runtime-final.txt). После переполнения C: Docker Desktop
+терял engine pipe; штатный restart не остановил процессы, выполнена
+остановка только проверенных Docker-процессов и docker-desktop WSL,
+затем Hidden start. Пользовательский Ubuntu не останавливался. Попытки
+до готовности engine сохранены как ошибки среды, не PASS/SKIP тестов.
+Причина повторной остановки Docker Desktop не установлена; для последней
+попытки Hidden start, ожидание engine и compose выполнены в одном shell.
+OpenSpec strict validate двух changes и git diff --check прошли.
+Mac/GUI/ConPTY suite не запускались, Mint отложен. Каркас: SELF,
+change fix-editor-test-runtime с skip_specs:true; пользовательская IDE-001
+про Mac zsh/Go этим изменением не закрывается.
+
+**Вывод.** Частные копии зависимостей требуют явного владельца и cleanup
+при успешном и аварийном завершении. Большие Windows temp должны жить
+на диске checkout, повторно используемый compiler cache — в одном известном
+каталоге. Результаты/проекты сохраняются отдельно от удаляемого runtime.
+
+**Файлы:** tests/lib/editor.lua, tests/lib/editor_runtime.lua,
+tests/lib/go_cache.lua, tests/e2e/editor-runtime.test.lua,
+tests/e2e/hold_file.py, tests/e2e/dap-output.test.lua,
+tests/e2e/test-runner.test.lua, tests/e2e/debug-panels.test.lua,
+tests/run.lua, tests/registry.lua, scripts/test.ps1, CLAUDE.md,
+PROBLEMS.md, docs/HISTORY.md, docs/IDE_ROADMAP.md,
+docs/AGENT_COMMANDS.md, tests/e2e/README.md,
+openspec/changes/fix-editor-test-runtime/.
+
+
+---
+
+## 91. Neogit: согласованный граф при быстром visit worktree
+
+**Проблема.** IDE-028: после работы в linked worktree быстрые visit
+main → linked с разными HEAD давали async traceback `No commit found for
+oid`, log.lua:218, блокирующий hit-enter. Исходный artifact —
+4764282243200. Прежний ordinary Git e2e обходил гонку ожиданием строки
+Head перед следующим visit; это было ограничение проверки, не исправление.
+
+**Причина.** В закреплённом Neogit d7bb91b ASCII renderer получает records
+commit и линии графа двумя Git log. После ожидания первого запроса текущий
+global repo уже может принадлежать другому worktree, и второй запрос
+возвращает другой набор OID. parse_log требует соответствия каждой линии
+commit records и падает на отсутствующем OID. Memoize различает cwd, но
+не фиксирует контекст между двумя запросами одной coroutine.
+
+**Изменение.** Использован штатный graph_style=unicode: Neogit строит граф
+из уже декодированных commit первого log. Текст и граф относятся к одному
+снимку, второй запрос не нужен. Одна общая настройка Windows/macOS/Linux,
+без задержки ввода, блокировки visit, собственного Git backend, перехвата
+ошибок или patch методов плагина. Pin не менялся. Upstream bf4ace99f
+защищает parse_log от отсутствующих commit, но сам по себе не объединяет
+снимки; обновление ещё 55 commit для этой задачи не потребовалось.
+Наблюдаемая разница — стандартный Unicode-граф вместо ASCII.
+
+**Проверка/e2e.** Постоянный worktree-refresh.test.lua создаёт две ветки с
+разными уникальными HEAD, общим baseline и разным staged содержимым.
+Git log исполняется в исходной папке, готовый настоящий вывод удерживается;
+через native Worktree popup/Telescope пользователь посещает другую папку,
+затем вывод доставляется. Public git_executable меняется только в private
+тестовом конфиге. Assertions проверяют Git code 0, незавершённый исходный
+refresh, его фактическое завершение/отмену, конечный cwd/Head/recent и
+реальные строки LogView, сохранность файлов/HEAD/index обеих папок.
+Операции идут nvim_input; данные/ошибки backend не подменяются.
+
+Red ASCII до изменения: windows-worktree-refresh-red.txt, artifact
+13710146467500, async assert log.lua:218/hit-enter, захваченные Git code 0.
+Первый тестовый .cmd launcher был непригоден: cmd раскрывал %cd% внутри
+полного Git format, запрос возвращал 128. Этот отдельный сбой обвязки
+сохранён в windows-worktree-refresh-launcher-failure.txt (13595819830400),
+не объявлен red IDE-028. Windows transport заменён маленьким native .NET
+launcher, собираемым встроенным PowerShell; POSIX использует exec Python.
+Потоки и argv, включая percent/пробелы, передаются без cmd интерпретации.
+В первом full новый transport с CreateNoWindow=true оказался без явных
+stdout/stderr pipes: status получил пустые ответы/Head 0000000. Добавлен
+бинарный CopyToAsync pump обоих потоков; отдельный focused сценарий прошёл,
+после него все три сценария повторены через тот же runner.
+
+Три сценария: задержанная история и быстрый visit в split/full tab; восемь
+естественных visit без proxy и повторное открытие панели. Перед следующей
+операцией нет ожидания Head. После release отдельно проверяется done marker
+реального вывода; последние 500 ms каждого сценария наблюдают поздние
+ошибки после проверки готовности. Из четырёх started
+прокладок некоторые могут быть отменены самим Neogit при initial refresh;
+ожидается сохранённый конкретный task, а не совпадение числа markers.
+Артефакты содержат git-observed, refresh-completion, captured Git stdout,
+snapshot/screen обеих историй, notifications и neogit.log.
+
+Windows focused: 3 PASS. Полный Windows: 32 файла, 30 PASS / 2 FAIL / 0 SKIP (windows-worktree-refresh-full.txt); после исправления launcher повтор двух падавших файлов — 2 PASS / 0 FAIL, финальный focused — 3 PASS.
+Ubuntu full: 34 файла / 36 прогонов, 33 PASS / 0 FAIL / 3 SKIP (ubuntu-worktree-refresh-full.txt); новый набор 3 PASS (также windows-/ubuntu-worktree-refresh-final.txt после уточнения done/quiet).
+Существующие Git (6), Diffview close (7) и runtime (4): 6/7/4 PASS на обеих ОС.
+Strict validate и git diff --check: PASS. Mac/GUI/ConPTY
+не запускались; IDE-027 native Windows terminal crash остаётся отдельным
+пунктом диагностики. Исходная IDE-001 Mac zsh/Go этим изменением не закрывается.
+Отдельная ошибка первого full Windows — CLI entrypoints unknown-mode:
+PowerShell превысил прежний timeout 10 секунд (IDE-031). Причина неизвестна,
+timeout/проверки не ослаблялись. Результат повторного запуска записан отдельно;
+частичный повтор не превращает первый full в полностью зелёный.
+Спека: IDE-GIT-6 (ADDED), change fix-neogit-worktree-refresh.
+
+**Вывод.** Связанные данные интерфейса должны строиться из одного
+снимка, особенно когда пользователь может сменить репозиторий между
+асинхронными запросами. Штатный renderer решает эту гонку и убирает
+лишний Git-процесс; ждать вручную готовности предыдущего Head не требуется.
+
+**Файлы:** nvim_forge/lua/plugins/git.lua,
+tests/e2e/worktree-refresh.test.lua, tests/e2e/neogit_git_gate.py,
+tests/e2e/git_proxy_launcher.cs, tests/e2e/build_git_proxy.ps1,
+tests/registry.lua, PROBLEMS.md, docs/IDE_ROADMAP.md,
+nvim_forge/QUICKSTART.md, docs/AGENT_COMMANDS.md, docs/HISTORY.md,
+tests/e2e/README.md, openspec/changes/fix-neogit-worktree-refresh/.

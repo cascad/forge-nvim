@@ -1,6 +1,6 @@
 local root = vim.fn.fnamemodify(debug.getinfo(1, 'S').source:sub(2), ':p:h:h:h')
-local go_cache = vim.env.FORGE_E2E_GO_CACHE or (vim.fn.tempname() .. '-forge-go-cache')
 package.path = root .. '/tests/lib/?.lua;' .. package.path
+local go_cache = require('go_cache').path(root)
 local T = require('check')
 local uv = vim.uv
 

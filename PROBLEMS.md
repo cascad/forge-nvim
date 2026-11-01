@@ -10,9 +10,94 @@
 
 Маршрут и приоритеты: [рабочий план nvim_forge](docs/IDE_ROADMAP.md).
 Для новых пунктов используем следующий свободный ID `IDE-xxx`; исходный
-симптом хранится здесь, этап и состояние — в плане. Следующий ID: `IDE-015`.
+симптом хранится здесь, этап и состояние — в плане. Следующий ID: `IDE-032`.
 
 <!-- пиши ниже -->
+
+## IDE-031 — единичный timeout Windows CLI entrypoint
+
+Полный регресс IDE-028: CLI quick/e2e прошли, но отдельный запуск Windows
+PowerShell `-NoProfile -File .../scripts/test.ps1 unknown-mode` превысил
+10 секунд в TestEntryPointsCLI. Процесс запускался в изолированной fixture
+на F:, до нормального завершения неверного режима. Причина не установлена;
+timeout не увеличивался, launcher IDE-028 этот путь не использует.
+Исходный отчёт: `.tests/windows-worktree-refresh-full-report.json`, stderr:
+`.tests/windows-worktree-refresh-full-logs/tests__e2e__entrypoints.test.lua.log`.
+Это существующий постоянный e2e; результат повторного запуска сохраняется
+отдельно в `.tests/windows-worktree-refresh-recheck.txt`.
+Повтор обоих CLI случаев прошёл (0,5 секунды), код/timeout этого набора не
+менялись. Исходная причина timeout остаётся открытой; один повтор не фикс.
+
+IDE-030 → [FIXLOG §90](nvim_forge/FIXLOG.md#90-тестовые-runtime-заполнили-диск-c):
+569 копий editor runtime (551 старый + 18 оборванных) и 9 Go cache заняли
+22,90 GB логических данных на C:. Собственные данные перенесены с журналом в
+`F:/forge-nvim-tmp/`, C TEMP/nvim.0 больше не содержит файлов. Windows temp
+тестов теперь в `.tests/tmp`, compiler cache переиспользуется, редакторские
+профили удаляются после сохранения артефактов и при ошибке подготовки.
+Четыре пустые оболочки профилей на C: не занимают полезных данных; прямое
+удаление отклонено автоматической проверкой. Регресс: editor-runtime.test.lua.
+
+IDE-029 (гонка File Explorer e2e после создания файла) → FIXLOG §88:
+убран однократный toggle `l` по устаревшему снимку между созданием файла и
+show_new_children. Locator ждёт строку UI и раскрывает выбранную родительскую
+папку только если она закрыта; наличие на диске само по себе не завершает ожидание.
+Red: `.tests/ubuntu/editor-e2e/4604061566637/`.
+
+IDE-028 → [FIXLOG §91](nvim_forge/FIXLOG.md#91-neogit-согласованный-граф-при-быстром-visit-worktree):
+после commit/push быстрые visit между разными HEAD давали async traceback
+`git/log.lua:218` / `No commit found for oid` (4764282243200).
+Причина подтверждена real Git gate: ASCII текст и граф получались двумя
+запросами с меняющимся repo. Штатный Unicode renderer строит их из одного
+снимка. Новый red — `.tests/editor-e2e/13710146467500/`;
+`worktree-refresh.test.lua` проверяет split/full tab, поздний callback,
+естественную серию visit, правильные Head/recent/log и сохранность Git/файлов.
+Три e2e Windows/Ubuntu прошли; Mac/GUI не проверены.
+
+## IDE-027 — единичное завершение Neovim в terminal/buffer e2e
+
+Первый полный Windows-регресс Git: IDE-BUF-1 (цикл вкладок и обычный terminal)
+получил `Редактор завершился во время nvim_exec_lua`, stderr пустой.
+`.tests/windows-git-full.txt`, artifact `.tests/editor-e2e/4960006794000/`.
+Остальные 7 buffer и все 5 Git e2e прошли. Повторный изолированный запуск
+всех 8 buffer e2e прошёл (`windows-git-buffers-recheck.txt`). Причина не
+установлена, исправлением Git этот сбой не объявляется. Сценарий уже входит
+в постоянный регресс; snapshot ошибки теперь сохраняет `child_exit`, если
+процесс успел сообщить его. Повтор при проверке очистки runtime:
+`.tests/editor-e2e/11614849831400/snapshot.json`, picker из дерева/terminal,
+`child_exit=3221225477` (Windows access violation), stderr пустой. Это не
+ошибка Lua cleanup; причина native crash пока не установлена. Продолжить
+диагностику отдельно от IDE-030. Последний полный Windows после очистки:
+`.tests/windows-diffview-runtime-final.txt` — 30 PASS / 1 FAIL (этот набор);
+artifact `.tests/editor-e2e/12179929834000/`, тот же child_exit=3221225477.
+В полном регрессе IDE-028 все 8 buffer e2e прошли. Native причина прежнего
+сбоя не установлена, пункт остаётся открытым; сведений Application Error/
+nvim CrashDumps на этой машине не найдено.
+
+IDE-026 → [FIXLOG §89](nvim_forge/FIXLOG.md#89-diffview-закрытие-во-время-загрузки):
+ранний close после списка истории давал async traceback/hit-enter
+(`file_history_view.lua:98` / `use_entry`; исходные artifacts 3719241169500,
+3783993574400). Запрос close теперь возвращает фокус в исходный контекст,
+cleanup ждёт backend и адресуется конкретному view. Постоянный регресс —
+`tests/e2e/diffview-close.test.lua`, включая real git show gate. Новый red
+исходной сборки: `.tests/editor-e2e/7764921880500/`.
+
+IDE-024 (Windows hunk stage) → FIXLOG §86: upstream Neogit #1977,
+абсолютный путь в patch заменён относительным обновлением pin. Red:
+`.tests/editor-e2e/4217973742200/neogit.log`, Git `does not exist in index`.
+
+IDE-025 (worktree cwd сбрасывается при фокусе старого файла) → FIXLOG §87:
+корень рабочей папки теперь меняется явно; project.nvim не меняет cwd на
+каждом BufEnter. Red: `.tests/editor-e2e/4692036212000/`.
+
+## IDE-023 — стандартный выход из terminal перехватывается ToggleTerm
+
+В ходе E2E файловых вкладок настоящий `:terminal echo ...` получил
+Ctrl-\, Ctrl-n; вместо normal открылся дополнительный ToggleTerm. Native
+Ctrl-\ совпадает с open_mapping ToggleTerm. Проверенный маршрут возврата — F7
+(он выходит из terminal без remap), также настроен Esc Esc для normal.
+Конфликт прямого native выхода остаётся для этапа terminal/jobs; конфигурация
+ToggleTerm в задаче буферов не менялась. Воспроизведение — windows-buffers-first.txt,
+artifact 1353158363400: обычный terminal и дополнительный toggleterm.
 
 ## IDE-013 — Windows: Starship прерывает Git при первом prompt в cs2d
 
@@ -170,6 +255,15 @@ Windows не срабатывают. Решить: псевдонимы в nvim_
 
 
 <!-- ────────── разобрано (переехало в nvim_forge/FIXLOG.md) ────────── -->
+
+IDE-021 → [FIXLOG §83](nvim_forge/FIXLOG.md#83-файловые-вкладки-общая-модель-и-reopen):
+единый файловый цикл/BufferLine/picker, unloaded/readonly, панели/terminal,
+Space b r и 8 editor E2E. Mac/GUI и persistent/session reopen открыты.
+
+IDE-022 → [FIXLOG §84](nvim_forge/FIXLOG.md#84-закрытие-файла-решение-до-смены-окон-и-autosave):
+прежний close менял окна до confirm, BufLeave запускал autosave. Решение
+Save/Discard/Cancel принимается до мутаций, таймер закрываемого буфера отменяется
+штатным событием; Cancel/ошибка записи сохраняют данные/фокус.
 
 IDE-016 → [FIXLOG §78](nvim_forge/FIXLOG.md#78-дерево-файлов-операции-и-общий-маршрут):
 создание/rename/move/cut-paste/отмена/конфликт, source selector и общий Space w e;

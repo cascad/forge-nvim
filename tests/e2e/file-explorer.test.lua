@@ -21,7 +21,7 @@ local function tree(keys)
     return tree_text():find('file_one.txt',1,true) and e:lua([[local s=require('neo-tree.sources.manager').get_state_for_window();return s and s._ready]])
   end)
 end
-local function choose(name)
+local function choose(name, parent)
   -- '/' занят штатным fuzzy finder Neo-tree. Читаем видимые строки и
   -- перемещаемся обычным normal G, без вызова tree/focus private actions.
   e:wait('выбран ' .. name, function()
@@ -30,7 +30,19 @@ local function choose(name)
       if line:find(name,1,true) then return i end end;return false]],{name})
     -- Git/follow могут сдвинуть строки между чтением и G. Повторно найти
     -- видимый элемент после перерисовки, как locator в обычном UI тесте.
-    if type(row)=='number' then e:input(row .. 'G') end
+    if type(row)=='number' then
+      e:input(row .. 'G')
+    elseif parent then
+      -- Внутренний navigate/show_new_children и fs watcher могут закончиться
+      -- в разном порядке. Читаем фактическое раскрытие папки и жмём l только
+      -- на выбранной закрытой папке; это реальные клавиши, не backend action.
+      local folder=e:lua([[local name=...;local s=require('neo-tree.sources.manager').get_state_for_window()
+        local n=s and s.tree and s.tree:get_node();local row
+        for i,line in ipairs(vim.api.nvim_buf_get_lines(0,0,-1,false)) do if line:find(name,1,true) then row=i;break end end
+        return {row=row,selected=n and n.name==name,expanded=n and n:is_expanded(),ready=s and s._ready}]],{parent})
+      if not folder.selected and folder.row then e:input(folder.row..'G')
+      elseif folder.selected and folder.ready and not folder.expanded then e:input('l') end
+    end
     return false
   end)
 end
@@ -92,11 +104,7 @@ check('IDE-FILE-1 создать каталог/файл с Unicode и проб�
   popup('a')
   submit(file('создано space/новый файл.txt'))
   e:wait('файл создан', function() return exists('создано space/новый файл.txt') end)
-  if not tree_text():find('новый файл.txt',1,true) then
-    choose('создано space')
-    e:input('l')
-  end
-  choose('новый файл.txt')
+  choose('новый файл.txt', 'создано space')
   focus('<CR>', 'text')
   e:input('gg0iFILE_E2E_CONTENT<Esc>:write<CR>')
   e:wait('настоящий файл сохранён', function() return content('создано space/новый файл.txt')[1]=='FILE_E2E_CONTENT' end)

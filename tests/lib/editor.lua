@@ -12,7 +12,17 @@ local function copy_tree(source, target)
   end
 end
 
-function M.start(root, options)
+local function stop_process(rpc)
+  if not rpc or rpc.exited then return end
+  -- Уведомление без ожидания RPC-ответа: qa! завершает сам transport.
+  pcall(function() rpc.process:write(vim.mpack.encode({2,'nvim_command',{'qa!'}})) end)
+  if not vim.wait(2000,function() return rpc.exited end,10) then
+    rpc.process:kill(15)
+    assert(vim.wait(2000,function() return rpc.exited end,10), 'Дочерний Neovim не завершился')
+  end
+end
+
+local function start(root, options, holder)
   options = options or {}
   local deps = vim.env.FORGE_E2E_DEPS or (root .. '/.tests/editor-deps')
   local manifest_path = deps .. '/manifest.json'
@@ -26,9 +36,12 @@ function M.start(root, options)
 
   local dir = root .. '/.tests/editor-e2e/' .. tostring(uv.hrtime())
   vim.fn.mkdir(dir, 'p')
+  holder.dir=dir
   -- Большой private runtime живёт на файловой системе гостя, а не на
   -- Windows bind mount. В .tests остаются только воспроизводимые артефакты.
-  local runtime = vim.fn.tempname() .. '-forge-editor'
+  local profile = require('editor_runtime').create(root)
+  holder.profile=profile
+  local runtime = profile.path
   local project = runtime .. '/project'
   vim.fn.mkdir(project, 'p')
   vim.fn.mkdir(project .. '/nested', 'p')
@@ -67,6 +80,9 @@ function M.start(root, options)
   vim.fn.writefile({ config_source }, dir .. '/config-origin.txt')
   env.FORGE_E2E_CONFIG = config
 
+  -- Подготовка частного проекта до старта backend (реальные Git fixtures и т.п.).
+  if options.prepare then options.prepare(project, env, runtime) end
+
   local observer = runtime .. '/observe.lua'
   vim.fn.writefile({
     'vim.opt.rtp:prepend(vim.env.FORGE_E2E_CONFIG)',
@@ -81,10 +97,11 @@ function M.start(root, options)
     '--cmd', 'lua dofile(' .. vim.inspect(observer) .. ')', '-u', config .. '/init.lua' }, {
     cwd = project, env = env, clear_env = true, timeout = options.timeout,
   })
+  holder.rpc=rpc
   local self = { rpc = rpc, dir = dir, project = project, runtime = runtime }
   function self:lua(code, args)
     local mode = self.rpc:request('nvim_get_mode', {})
-    assert(not mode.blocking, 'Neovim ожидает ввода; смотри screen snapshot (hit-enter)')
+    assert(not mode.blocking and mode.mode ~= 'r?', 'Neovim ожидает ввода; смотри screen snapshot (hit-enter/confirm)')
     return self.rpc:request('nvim_exec_lua', { code, args or {} })
   end
   function self:input(keys)
@@ -127,18 +144,24 @@ function M.start(root, options)
       return self:lua([[local wins={}; for _,w in ipairs(vim.api.nvim_list_wins()) do local b=vim.api.nvim_win_get_buf(w); wins[#wins+1]={id=w,buf=b,file=vim.api.nvim_buf_get_name(b),ft=vim.bo[b].filetype,lines=vim.api.nvim_buf_get_lines(b,0,math.min(80,vim.api.nvim_buf_line_count(b)),false)} end; return {windows=wins,mode=vim.api.nvim_get_mode(),messages=vim.fn.execute('messages'),errmsg=vim.v.errmsg,notifications=vim.g.forge_e2e_notifications,installs=vim.g.forge_e2e_installs,spawns=_G.forge_e2e_spawns,config=vim.fn.stdpath('config'),data=vim.fn.stdpath('data')} ]])
     end)
     local suffix = label and ('-' .. label:gsub('[^%w_-]', '_')) or ''
-    vim.fn.writefile({ vim.json.encode(ok and state or { error = tostring(state) }) }, self.dir .. '/snapshot' .. suffix .. '.json')
+    vim.fn.writefile({ vim.json.encode(ok and state or { error = tostring(state), child_exit = self.rpc.exit_code }) }, self.dir .. '/snapshot' .. suffix .. '.json')
     vim.fn.writefile(vim.split(table.concat(self.rpc.stderr), '\n'), self.dir .. '/stderr.log')
     vim.fn.writefile({ vim.json.encode(self.rpc.notifications) }, self.dir .. '/notifications.json')
     vim.fn.writefile(self.rpc:screen_lines(), self.dir .. '/screen' .. suffix .. '.txt')
   end
   function self:stop()
+    if self.stopped then return end
     pcall(function() self:snapshot() end)
-    copy_tree(self.project, self.dir .. '/project')
-    copy_tree(config, self.dir .. '/config-source')
-    assert(uv.fs_copyfile(manifest_path, self.dir .. '/dependency-manifest.json'))
-    if vim.fn.filereadable(env.NVIM_LOG_FILE) == 1 then uv.fs_copyfile(env.NVIM_LOG_FILE, self.dir .. '/nvim.log') end
-    self.rpc.process:kill(15)
+    local ok,err=pcall(function()
+      copy_tree(self.project, self.dir .. '/project')
+      copy_tree(config, self.dir .. '/config-source')
+      assert(uv.fs_copyfile(manifest_path, self.dir .. '/dependency-manifest.json'))
+      if vim.fn.filereadable(env.NVIM_LOG_FILE) == 1 then assert(uv.fs_copyfile(env.NVIM_LOG_FILE, self.dir .. '/nvim.log')) end
+    end)
+    stop_process(self.rpc)
+    if not ok then holder.keep_runtime=true;error(tostring(err)..'; runtime сохранён: '..runtime) end
+    require('editor_runtime').remove(profile)
+    self.stopped=true
   end
   -- Подключение настоящего UI запускает UIEnter и VeryLazy.
   local ok, failure = pcall(function()
@@ -161,6 +184,16 @@ function M.start(root, options)
     error(tostring(failure) .. '; artifacts: ' .. dir)
   end
   return self
+end
+
+function M.start(root, options)
+  local holder={}
+  local ok,result=xpcall(function() return start(root,options,holder) end,debug.traceback)
+  if ok then return result end
+  stop_process(holder.rpc)
+  if holder.dir then pcall(vim.fn.writefile,vim.split(tostring(result),'\n'),holder.dir..'/start-error.txt') end
+  if holder.profile and not holder.keep_runtime then require('editor_runtime').remove(holder.profile) end
+  error(result)
 end
 
 return M

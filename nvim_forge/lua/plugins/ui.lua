@@ -181,6 +181,7 @@ return {
         opts = {
             options = {
                 mode = "buffers",
+                custom_filter = function(buf) return require('ide.buffers').is_file(buf) end,
                 diagnostics = "nvim_lsp",
                 diagnostics_indicator = function(_, _, diag)
                     local s = " "

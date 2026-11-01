@@ -89,7 +89,7 @@ return {
             trigger_events = {
                 immediate_save = { "BufLeave", "FocusLost" },
                 defer_save     = { "InsertLeave", "TextChanged" },
-                cancel_deferred_save = { "InsertEnter" },
+                cancel_deferred_save = { "InsertEnter", { "User", pattern = "ForgeBufferClose" } },
             },
             -- Маркируем write как фоновый autosave. conform.nvim смотрит
             -- этот флаг и НЕ форматирует такие сохранения, но autocmd'ы
@@ -106,6 +106,7 @@ return {
                 end,
             },
             condition = function(buf)
+                if not require('ide.buffers').may_autosave(buf) then return false end
                 local ft = vim.bo[buf].filetype
                 local bt = vim.bo[buf].buftype
                 if bt ~= "" then return false end                  -- не терминалы / qflist / help
@@ -158,10 +159,10 @@ return {
                 ".project-root",
                 "Makefile",
             },
-            -- false = автодетект project root на BufEnter и автосмена cwd.
-            -- Если хочется ручного контроля — поставить true и звать
-            -- :ProjectRoot руками.
-            manual_mode = false,
+            -- Корень — выбранная рабочая папка, не текущий файл. Иначе
+            -- BufEnter старого буфера отменяет переход Neogit в worktree.
+            -- Open folder/worktree/:ProjectRoot меняют cwd явно на всех ОС.
+            manual_mode = true,
             show_hidden = false,
             silent_chdir = true,
             scope_chdir = "global",       -- глобальный cwd, не tab/window
@@ -184,6 +185,15 @@ return {
             require("project_nvim").setup(opts)
 
             local ok, project = pcall(require, "project_nvim.project")
+            if ok then
+                -- История остаётся доступной и без автоопределения на BufEnter.
+                -- set_pwd получает уже текущий cwd и не меняет выбранный root.
+                project.set_pwd(vim.fn.getcwd(), 'cwd')
+                vim.api.nvim_create_autocmd('DirChanged', {
+                    group = vim.api.nvim_create_augroup('ForgeProjectHistory', { clear = true }),
+                    callback = function() project.set_pwd(vim.fn.getcwd(), 'cwd') end,
+                })
+            end
             if ok and vim.lsp.get_clients then
                 project.find_lsp_root = function()
                     local buf_ft = vim.api.nvim_get_option_value("filetype", { buf = 0 })

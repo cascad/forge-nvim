@@ -209,7 +209,9 @@ return {
                     DiffviewOpen = { "--untracked-files=true" },
                 },
                 hooks = {
+                    view_closed = function(view) require('ide.diffview').closed(view) end,
                     view_opened = function(view)
+                        require('ide.diffview').opened(view)
                         apply_diff_highlights()
                         vim.schedule(function()
                             sync_diff_windows(view)
@@ -257,12 +259,18 @@ return {
                         { diff_modes, "<A-e>", after_normal_mode(function() focus_diff_side("right") end), { desc = "Diff: focus editable side" } },
                     },
                     file_history_panel = {
+                        { "n", "q", "<cmd>DiffviewClose<CR>", { desc = "Close diff history" } },
+                        { "n", "<leader>e", open_file_explorer, { desc = "Close history and open Explorer" } },
                         { diff_modes, "<C-e>", after_normal_mode(actions.toggle_files), { desc = "Diff history: toggle commit list" } },
                         { diff_modes, "<A-j>", after_normal_mode(actions.select_next_entry), { desc = "Diff history: next entry" } },
                         { diff_modes, "<A-k>", after_normal_mode(actions.select_prev_entry), { desc = "Diff history: previous entry" } },
                     },
                 },
             }
+        end,
+        config = function(_, opts)
+            require('diffview').setup(opts)
+            require('ide.diffview').setup()
         end,
     },
     {
@@ -275,10 +283,20 @@ return {
         },
         keys = {
             { "<leader>gg", function() require("neogit").open({ kind = "tab" }) end,   desc = "Git: status tab" },
-            { "<leader>gG", function() require("neogit").open({ kind = "split" }) end, desc = "Git: status split" },
+            { "<leader>gG", function() require('ide.controls').git() end, desc = "Git: status split" },
         },
         opts = {
             kind = "tab",
+            -- spec: IDE-GIT-6. Один снимок log для текста и графа: ASCII
+            -- повторно запрашивает Git, когда cwd уже мог сменить worktree.
+            graph_style = "unicode",
+            mappings = {
+                popup = { ['?'] = false, ['g?'] = 'HelpPopup' },
+                status = {
+                    ['<esc>'] = function() require('ide.controls').cancel() end,
+                    ['?'] = function() require('ide.controls').help() end,
+                },
+            },
             integrations = {
                 diffview = true,
                 telescope = true,

@@ -56,32 +56,10 @@ local function toggle_comment_selection()
     api.toggle.linewise(mode)
 end
 
--- Закрытие текущего буфера. Делегируется ide.empty.close_buffer_safe,
--- который умеет показывать alpha welcome screen, если это был
--- последний открытый файл (вместо пустого "Noname"). См. ide/empty.lua.
-local function close_current_buffer()
-    local ok, empty = pcall(require, "ide.empty")
-    if ok and empty and empty.close_buffer_safe then
-        empty.close_buffer_safe()
-        return
-    end
-
-    -- Fallback на старое поведение (если ide не загрузился).
-    local current = vim.api.nvim_get_current_buf()
-    local listed = vim.tbl_filter(function(buf)
-        return vim.bo[buf].buflisted
-    end, vim.api.nvim_list_bufs())
-
-    if #listed <= 1 then
-        vim.cmd("enew")
-    else
-        vim.cmd("bprevious")
-    end
-
-    if vim.api.nvim_buf_is_valid(current) then
-        vim.cmd("bdelete " .. current)
-    end
-end
+-- spec: IDE-BUF-1/2/3 общая модель файловых вкладок и safe-close.
+local buffers = require('ide.buffers')
+buffers.setup()
+local function close_current_buffer() buffers.close() end
 
 local function after_normal_mode(fn)
     local mode = vim.api.nvim_get_mode().mode
@@ -105,178 +83,9 @@ end
 
 local in_diffview_tab
 
-local function is_editable_file_window(win)
-    if not vim.api.nvim_win_is_valid(win) then return false end
-
-    local buf = vim.api.nvim_win_get_buf(win)
-    if vim.bo[buf].buftype ~= "" then return false end
-    if vim.bo[buf].readonly or not vim.bo[buf].modifiable then return false end
-    if vim.api.nvim_buf_get_name(buf) == "" then return false end
-
-    local ft = vim.bo[buf].filetype
-    return ft ~= "DiffviewFiles" and ft ~= "DiffviewFileHistory" and ft ~= "neo-tree"
-end
-
--- Является ли buf "tab"-буфером — тем, который должен попадать в цикл
--- <Tab>/<S-Tab> и в `<leader>bb` / bufferline. Критерий ОДИН: buflisted.
---
--- Раньше мы дополнительно требовали nvim_buf_is_loaded(buf), но это было
--- неверно: после восстановления сессии (persistence.nvim) фоновые буферы
--- остаются listed, но не loaded до первого BufEnter. В результате они
--- видны в bufferline и в picker'е, но <Tab> их пропускал. Lazy-load
--- произойдёт автоматически при nvim_set_current_buf — это штатное
--- поведение vim.
-local function is_tab_buffer(buf)
-    if not vim.api.nvim_buf_is_valid(buf) then return false end
-    return vim.bo[buf].buflisted
-end
-
-local file_buffer_history = {}
-
-local function touch_file_buffer(buf)
-    if not is_tab_buffer(buf) then return end
-
-    for i = #file_buffer_history, 1, -1 do
-        if file_buffer_history[i] == buf then
-            table.remove(file_buffer_history, i)
-        end
-    end
-    table.insert(file_buffer_history, 1, buf)
-end
-
-vim.api.nvim_create_autocmd("BufEnter", {
-    group = vim.api.nvim_create_augroup("ForgeFileBufferHistory", { clear = true }),
-    callback = function(args)
-        touch_file_buffer(args.buf)
-    end,
-})
-
-local function ordered_file_buffers()
-    local seen = {}
-    local buffers = {}
-
-    local ok_bufferline, bufferline = pcall(require, "bufferline")
-    if ok_bufferline and type(bufferline.get_elements) == "function" then
-        local ok_elements, result = pcall(bufferline.get_elements)
-        local elements = ok_elements and result and result.elements or {}
-        for _, element in ipairs(elements) do
-            local buf = tonumber(element.id)
-            if buf and is_tab_buffer(buf) and not seen[buf] then
-                buffers[#buffers + 1] = buf
-                seen[buf] = true
-            end
-        end
-    end
-
-    if #buffers > 0 then return buffers end
-
-    for _, buf in ipairs(file_buffer_history) do
-        if is_tab_buffer(buf) and not seen[buf] then
-            buffers[#buffers + 1] = buf
-            seen[buf] = true
-        end
-    end
-
-    for _, info in ipairs(vim.fn.getbufinfo({ buflisted = 1 })) do
-        local buf = info.bufnr
-        if is_tab_buffer(buf) and not seen[buf] then
-            buffers[#buffers + 1] = buf
-            seen[buf] = true
-        end
-    end
-
-    return buffers
-end
-
--- Notify-throttle per buffer: один alert за переключение, не спамим.
-local _missing_file_notified = {}
-
-local function notify_if_file_missing(buf)
-    if not vim.api.nvim_buf_is_valid(buf) then return end
-    local name = vim.api.nvim_buf_get_name(buf)
-    if name == "" then return end
-    -- Только для обычных file-buffers; временные (term://, etc.) пропускаем.
-    if vim.bo[buf].buftype ~= "" then return end
-
-    if vim.fn.filereadable(name) == 1 then
-        _missing_file_notified[buf] = nil
-        return
-    end
-    -- Не нотифицируем по 100 раз подряд за одну "пропажу".
-    if _missing_file_notified[buf] then return end
-    _missing_file_notified[buf] = true
-    vim.schedule(function()
-        vim.notify("File no longer available on disk: " .. vim.fn.fnamemodify(name, ":t")
-            .. "\n(use <leader>bd to drop this buffer)",
-            vim.log.levels.WARN, { title = "buffer" })
-    end)
-end
-
-local function show_file_buffer(buf)
-    if not is_tab_buffer(buf) then return end
-
-    local target_win
-    local current_win = vim.api.nvim_get_current_win()
-    if is_editable_file_window(current_win) then
-        target_win = current_win
-    else
-        for _, win in ipairs(vim.api.nvim_tabpage_list_wins(0)) do
-            if is_editable_file_window(win) then
-                target_win = win
-                break
-            end
-        end
-    end
-
-    if target_win and vim.api.nvim_win_is_valid(target_win) then
-        vim.api.nvim_set_current_win(target_win)
-    end
-
-    -- nvim_set_current_buf лениво подгрузит unloaded buffer (BufRead).
-    -- Если файл на диске уже не существует — vim покажет пустой буфер с
-    -- тем же именем и пометит его как новый; мы дополнительно нотифицируем.
-    vim.api.nvim_set_current_buf(buf)
-    notify_if_file_missing(buf)
-end
-
-local function active_tab_buffer()
-    local current = vim.api.nvim_get_current_buf()
-    if is_tab_buffer(current) then return current end
-
-    for _, win in ipairs(vim.api.nvim_tabpage_list_wins(0)) do
-        if is_editable_file_window(win) then
-            local buf = vim.api.nvim_win_get_buf(win)
-            if is_tab_buffer(buf) then return buf end
-        end
-    end
-end
-
+local is_editable_file_window = buffers.is_editor_window
 local function switch_file_buffer(direction)
-    after_normal_mode(function()
-        local buffers = ordered_file_buffers()
-        if #buffers == 0 then return end
-
-        local current = active_tab_buffer()
-        local index
-        for i, buf in ipairs(buffers) do
-            if buf == current then
-                index = i
-                break
-            end
-        end
-
-        local target
-        if index then
-            local next_index = ((index - 1 + direction) % #buffers) + 1
-            target = buffers[next_index]
-        else
-            target = buffers[1]
-        end
-
-        if target and vim.api.nvim_buf_is_valid(target) then
-            show_file_buffer(target)
-        end
-    end)
+    after_normal_mode(function() buffers.cycle(direction) end)
 end
 
 local function focus_editor_window()
@@ -905,6 +714,7 @@ nm('<leader>wd', panel_controls.locals, 'Window: Locals')
 nm('<leader>wc', panel_controls.output, 'Window: debug Output')
 nm('<leader>wa', function() panel_controls.outline() end, 'Window: Outline')
 nm('<leader>we', function() panel_controls.explorer() end, 'Window: Files')
+nm('<leader>wg', panel_controls.git, 'Window: Git')
 nm('<leader>wq', panel_controls.hide, 'Window: hide panel / close window')
 nm('<leader>wz', panel_controls.zoom, 'Window: zoom / restore panel')
 nm('<leader>w?', panel_controls.help, 'Window: panel help')
@@ -912,6 +722,7 @@ nm("<leader>wo", "<C-w>o", "Window: only")
 
 -- Буферы (helix space.B)
 nm("<leader>bd", close_current_buffer,     "Buffer: close")
+nm("<leader>br", buffers.reopen, "Buffer: reopen last closed file")
 nm("<leader>bn", next_buffer,         "Buffer: next")
 nm("<leader>bp", previous_buffer,     "Buffer: prev")
 nm("<S-h>",      previous_buffer,     "Buffer: prev")

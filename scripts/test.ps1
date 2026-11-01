@@ -5,6 +5,16 @@ param(
 )
 $ErrorActionPreference = 'Stop'
 $forgeTestRoot = Split-Path -Parent $PSScriptRoot
+$forgeSavedTemp = $env:TEMP
+$forgeSavedTmp = $env:TMP
+$forgeSavedTmpDir = $env:TMPDIR
+$forgeSavedNvimLog = $env:NVIM_LOG_FILE
+$forgeTestTemp = Join-Path $forgeTestRoot '.tests/tmp'
+New-Item -ItemType Directory -Path $forgeTestTemp -Force | Out-Null
+$env:TEMP = $forgeTestTemp
+$env:TMP = $forgeTestTemp
+$env:TMPDIR = $forgeTestTemp
+$env:NVIM_LOG_FILE = Join-Path $forgeTestTemp 'runner-nvim.log'
 Push-Location -LiteralPath $forgeTestRoot
 try {
     if (-not (Get-Command nvim -ErrorAction SilentlyContinue)) {
@@ -19,5 +29,9 @@ try {
     $forgeTestExit = $LASTEXITCODE
 } finally {
     Pop-Location
+    $env:TEMP = $forgeSavedTemp
+    $env:TMP = $forgeSavedTmp
+    $env:TMPDIR = $forgeSavedTmpDir
+    $env:NVIM_LOG_FILE = $forgeSavedNvimLog
 }
 exit $forgeTestExit

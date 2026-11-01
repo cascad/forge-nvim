@@ -88,6 +88,17 @@
    и `docker compose -f tests/containers/compose.yaml run --build --rm ubuntu full`.
    Границы проверок,
    покрытие и ещё не реализованные части — `tests/e2e/README.md`.
+9. **Временные данные (решение владельца 2026-11-01).** Windows-тесты не
+   заполняют системный C:. Runtime редактора создаётся в `.tests/tmp` на диске
+   checkout (здесь F:); `scripts/test.ps1` задаёт там TEMP/TMP/TMPDIR для своего
+   процесса и восстанавливает окружение после запуска. При прямом запуске
+   тестов агент задаёт те же переменные перед `nvim`; другие команды агента,
+   создающие temp (Python, npx и т.п.), тоже используют F:; для npx агент задаёт
+   `npm_config_cache=F:/forge-nvim-tmp/npm-cache` в окружении команды. Профили очищаются после
+   сохранения артефактов и при ошибке подготовки. На macOS/Linux по умолчанию
+   используется native temp; `FORGE_TEST_TMPDIR` задаёт абсолютный override.
+   Windows Go cache переиспользуется в `.tests/tmp/go-build-cache`; старые
+   данные C: перенесены с журналом в `F:/forge-nvim-tmp/`, вне checkout.
 
 ## OpenSpec: штатные команды (Claude Code)
 

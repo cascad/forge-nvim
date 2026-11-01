@@ -1,6 +1,6 @@
 local root = vim.fn.fnamemodify(debug.getinfo(1, 'S').source:sub(2), ':p:h:h:h')
-local go_cache = vim.env.FORGE_E2E_GO_CACHE or (vim.fn.tempname() .. '-forge-go-cache')
 package.path = root .. '/tests/lib/?.lua;' .. package.path
+local go_cache = require('go_cache').path(root)
 local T = require('check')
 local editor
 local sep = vim.fn.has('win32') == 1 and ';' or ':'
@@ -20,7 +20,8 @@ local function start_editor()
   end
   vim.fn.mkdir(editor.project .. '/.vscode', 'p')
   -- Проверка заранее даёт понятный FAIL вместо hit-enter ошибки несовместимых SDK.
-  local versions = editor:lua([[local versions={}; for _,cmd in ipairs({{'go','version'},{'dlv','version'}}) do local r=vim.system(cmd,{text=true}):wait(); assert(r.code==0,r.stderr); versions[#versions+1]=r.stdout end; return versions]])
+  local versions = editor:lua([[local versions={}; for _,cmd in ipairs({{'go','version'},{'dlv','version'},{'go','env','GOCACHE'}}) do local r=vim.system(cmd,{text=true}):wait(); assert(r.code==0,r.stderr); versions[#versions+1]=r.stdout end; return versions]])
+  T.eq(vim.fs.normalize(vim.trim(versions[3])), vim.fs.normalize(go_cache), 'реальный Go использует выбранный cache')
   vim.fn.writefile(vim.split(table.concat(versions, '\n'), '\n'), editor.dir .. '/tool-versions.txt')
   local major, minor = versions[1]:match('go(%d+)%.(%d+)')
   assert(tonumber(major) == 1 and tonumber(minor) >= 24,

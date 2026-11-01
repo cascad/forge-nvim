@@ -1,4 +1,4 @@
--- spec: IDE-PANEL-1/2/3/4 общий маршрут клавиатуры: DAP, Outline, Neo-tree.
+-- spec: IDE-PANEL-1/2/3/4/5 общий маршрут: DAP, Outline, Neo-tree, Git.
 local M = {}
 local zoom, help
 local active_win
@@ -6,7 +6,7 @@ local titles = {
     dapui_scopes = 'Locals', dapui_watches = 'Watch', dapui_stacks = 'Call Stack',
     dapui_breakpoints = 'Breakpoints', ['dap-repl'] = 'Output / REPL',
     dapui_console = 'Debug Console', ['dap-terminal'] = 'Debug Terminal',
-    aerial = 'Outline', ['neo-tree'] = 'Files',
+    aerial = 'Outline', ['neo-tree'] = 'Files', NeogitStatus = 'Git',
 }
 local tree_components = { filesystem = 'explorer', buffers = 'buffers', git_status = 'git_status' }
 function M.tree_component(source) return tree_components[source] end
@@ -20,7 +20,7 @@ local function component(win)
         return tree_components[vim.b[vim.api.nvim_win_get_buf(win or 0)].neo_tree_source]
     end
     if kind:match('^dapui_') and kind ~= 'dapui_console' then return 'dap.sidebar' end
-    return ({ ['dap-repl'] = 'dap.repl', dapui_console = 'dap.console', ['dap-terminal'] = 'dap.terminal', aerial = 'outline' })[kind]
+    return ({ ['dap-repl'] = 'dap.repl', dapui_console = 'dap.console', ['dap-terminal'] = 'dap.terminal', aerial = 'outline', NeogitStatus = 'neogit' })[kind]
 end
 
 local function close_help(enter)
@@ -59,6 +59,10 @@ function M.tree_action() if zoom and ft(0) == 'neo-tree' then M.restore(true) en
 function M.focus_code()
     close_help(false)
     M.restore(false)
+    if ft(0) == 'NeogitStatus' and #vim.api.nvim_tabpage_list_wins(0) == 1 and #vim.api.nvim_list_tabpages() > 1 then
+        vim.cmd('tabclose')
+        return
+    end
     require('ide').focus_main()
 end
 
@@ -99,10 +103,48 @@ function M.explorer(source, toggle)
     ide.focus_slot('left')
 end
 
+function M.git()
+    close_help(false)
+    M.restore(false)
+    local ide = require('ide')
+    ide.focus_main()
+    ide.show('neogit')
+    ide.focus_slot('right')
+end
+
+-- Neogit хранит окно backend. В overlay j/k остаются локальной навигацией;
+-- перед штатной операцией вернуть туда выбранную строку. Карта берётся после
+-- создания backend, без копирования списка его Git-команд и private API.
+function M.git_maps(buf)
+    if not vim.api.nvim_buf_is_valid(buf) then return end
+    if vim.b[buf].forge_git_maps then return end
+    vim.b[buf].forge_git_maps = true
+    -- В opts остаётся q=Close: Neogit использует эту запись и для log/diff.
+    -- Переопределяем только готовый status, не меняя карты прочих views.
+    vim.keymap.set('n', 'q', M.hide, { buffer = buf, silent = true, nowait = true, desc = 'Panel: hide Git' })
+    for _, map in ipairs(vim.api.nvim_buf_get_keymap(buf, 'n')) do
+        if map.callback and map.expr ~= 1 and map.expr ~= true
+            and map.lhs ~= 'q' and map.lhs ~= '?' and map.lhs:lower() ~= '<esc>' then
+            local callback, key = map.callback, map.lhs
+            vim.keymap.set('n', key, function()
+                if zoom and ft(0) == 'NeogitStatus' then
+                    if key == 'j' or key == 'k' then vim.cmd('normal! ' .. vim.v.count1 .. key); return end
+                    M.restore(true)
+                end
+                return callback()
+            end, { buffer = buf, silent = map.silent == 1, nowait = map.nowait == 1, desc = map.desc })
+        end
+    end
+end
+
 function M.hide()
     close_help(true)
     M.restore(true)
     local id = component(0)
+    if id == 'neogit' and #vim.api.nvim_tabpage_list_wins(0) == 1 and #vim.api.nvim_list_tabpages() > 1 then
+        vim.cmd('tabclose')
+        return
+    end
     if not id then
         vim.cmd('wincmd q') -- прежний Space w q для обычного окна
         return
@@ -127,6 +169,7 @@ function M.zoom()
     local source = vim.api.nvim_get_current_win()
     if not titles[ft(source)] then return end
     local buf = vim.api.nvim_win_get_buf(source)
+    if ft(source) == 'NeogitStatus' then M.git_maps(buf) end
     local view = vim.fn.winsaveview()
     local cursor = vim.api.nvim_win_get_cursor(source)
     local win = vim.api.nvim_open_win(buf, true, {
@@ -151,13 +194,14 @@ function M.help()
         'c               Output / REPL / Terminal',
         'a               Outline слева',
         'e               Files слева',
+        'g               Git справа',
         'q               скрыть текущую панель',
         'z               развернуть / вернуть',
         '?               эта подсказка', '',
         'В панели: j/k — список, Enter — раскрыть/выбрать.',
         'q — скрыть; Esc — вернуть zoom, иначе фокус в код.',
         'Insert/terminal: печатные клавиши остаются вводом.',
-        'Из terminal: Ctrl-\\, Ctrl-n; затем Space w.',
+        'Из terminal: Esc Esc — normal; F7 — в код.',
         'Навигация не продолжает и не завершает отладку.', '',
         'Закрыть помощь: q / Esc',
     }
@@ -170,6 +214,10 @@ function M.help()
         lines[#lines + 1] = 'x/p — вырезать/вставить, h/l — свернуть/открыть.'
         lines[#lines + 1] = 'bf/bb/bg или </> — Files/Buffers/Git, g? — справка.'
         lines[#lines + 1] = 'Диалог: Enter — подтвердить, Esc — отменить ввод.'
+    elseif ft(source) == 'NeogitStatus' then
+        lines[#lines + 1] = 'Git: Tab — раскрыть diff, s/u — stage/unstage.'
+        lines[#lines + 1] = 'c c — commit; P u — push; b — ветки; w — worktree.'
+        lines[#lines + 1] = 'g? — штатная справка Neogit со всеми действиями.'
     end
     vim.api.nvim_buf_set_lines(buf, 0, -1, false, lines)
     vim.bo[buf].bufhidden = 'wipe'
@@ -218,8 +266,18 @@ end
 
 function M.setup()
     local group = vim.api.nvim_create_augroup('ForgePanelControls', { clear = true })
+    vim.api.nvim_create_autocmd('User', {
+        group = group, pattern = 'NeogitStatusRefreshed', callback = function()
+            for _, buf in ipairs(vim.api.nvim_list_bufs()) do
+                if vim.bo[buf].filetype == 'NeogitStatus' then M.git_maps(buf) end
+            end
+        end,
+    })
     vim.api.nvim_create_autocmd('FileType', {
         group = group, pattern = vim.tbl_keys(titles), callback = function(ev)
+            if vim.bo[ev.buf].filetype == 'NeogitStatus' then
+                return -- общие карты заданы в opts Neogit после FileType
+            end
             for key, action in pairs({ q = M.hide, ['<Esc>'] = M.cancel, ['?'] = M.help }) do
                 vim.keymap.set('n', key, action, { buffer = ev.buf, nowait = true, silent = true, desc = 'Panel: ' .. key })
             end

@@ -178,10 +178,11 @@ return {
                     size = { width = 60 },
                     pinned = false,
                     filter = function(buf, win)
-                        -- Neogit kind="tab" открывается во весь tabpage,
-                        -- захватывать НЕ надо. kind="split" даёт обычный
-                        -- side-split — его и кладём в edgebar.
+                        -- Единственное окно полного Git-tab оставляем в
+                        -- editor area. Split рядом с кодом — правая панель;
+                        -- floating zoom не захватываем.
                         return vim.api.nvim_win_get_config(win).relative == ""
+                            and #vim.api.nvim_tabpage_list_wins(vim.api.nvim_win_get_tabpage(win)) > 1
                     end,
                 },
             },
