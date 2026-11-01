@@ -188,6 +188,10 @@ Neovim до нынешнего nvim_forge. Здесь одна последов�
 | §89 | [Diffview: закрытие во время загрузки](../nvim_forge/FIXLOG.md#89-diffview-закрытие-во-время-загрузки) |
 | §90 | [Тестовые runtime заполнили диск C:](../nvim_forge/FIXLOG.md#90-тестовые-runtime-заполнили-диск-c) |
 | §91 | [Neogit: согласованный граф при быстром visit worktree](../nvim_forge/FIXLOG.md#91-neogit-согласованный-граф-при-быстром-visit-worktree) |
+| §92 | [Windows terminal: ConPTY lifecycle и временный SDK](../nvim_forge/FIXLOG.md#92-windows-terminal-conpty-lifecycle-и-временный-sdk) |
+| §93 | [CLI timeout: сохраняем доказательства](../nvim_forge/FIXLOG.md#93-cli-timeout-сохраняем-доказательства) |
+| §94 | [ConPTY: регресс не должен менять плагины владельца](../nvim_forge/FIXLOG.md#94-conpty-регресс-не-должен-менять-плагины-владельца) |
+| §95 | [Удалённый файл: буфер остаётся доступным](../nvim_forge/FIXLOG.md#95-удалённый-файл-буфер-остаётся-доступным) |
 
 ## Как читать и дополнять
 

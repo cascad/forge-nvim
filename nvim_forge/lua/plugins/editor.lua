@@ -89,7 +89,7 @@ return {
             trigger_events = {
                 immediate_save = { "BufLeave", "FocusLost" },
                 defer_save     = { "InsertLeave", "TextChanged" },
-                cancel_deferred_save = { "InsertEnter", { "User", pattern = "ForgeBufferClose" } },
+                cancel_deferred_save = { "InsertEnter", "FileChangedShell", { "User", pattern = "ForgeBufferClose" } },
             },
             -- Маркируем write как фоновый autosave. conform.nvim смотрит
             -- этот флаг и НЕ форматирует такие сохранения, но autocmd'ы

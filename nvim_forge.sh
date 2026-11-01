@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# POSIX launcher, включая Windows bind mount: хранить с LF (.gitattributes).
 # ============================================================
 # Launches Neovim with the nvim_forge config from this repository
 # WITHOUT touching the parent shell's environment and WITHOUT

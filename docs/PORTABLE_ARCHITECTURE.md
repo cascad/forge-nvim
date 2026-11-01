@@ -64,6 +64,16 @@ Neovim и базовые leader-привязки доступны также в 
 
 ## Проверка архитектуры
 
+IDE-027 (§92 FIXLOG): подтверждена ошибка ConPTY в самом Windows Neovim,
+воспроизводимая без Forge/плагинов. Временный SDK вынесен за границу Lua:
+`scripts/prepare-windows-sdk.ps1`, source/patch lock, отдельный runtime в
+`.tools`, общий resolver для Windows launcher/test entrypoint. Явная
+подготовка, проверка hash и ошибка при missing/stale SDK; в общем управлении
+панелями/окнами нет Windows-only обхода. Официальные Linux/macOS SDK,
+хоткеи и сценарии едины. Правило удаления временного SDK — подтверждённый
+upstream fix и прохождение того же core/buffer регресса. Команды и ограничения:
+[tests/diagnostics/README.md](../tests/diagnostics/README.md).
+
 Общий e2e-набор запускается нативно в Windows, headless в Ubuntu Docker
 на Windows, отдельно на Mac. Mint временно не входит в обязательную матрицу. Тест фичи
 описывает одинаковое действие и результат; адаптер ввода/PTY меняется по

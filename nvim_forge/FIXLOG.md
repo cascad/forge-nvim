@@ -4151,3 +4151,266 @@ tests/e2e/git_proxy_launcher.cs, tests/e2e/build_git_proxy.ps1,
 tests/registry.lua, PROBLEMS.md, docs/IDE_ROADMAP.md,
 nvim_forge/QUICKSTART.md, docs/AGENT_COMMANDS.md, docs/HISTORY.md,
 tests/e2e/README.md, openspec/changes/fix-neogit-worktree-refresh/.
+
+### 92. Windows terminal: ConPTY lifecycle и временный SDK
+
+**Связь:** IDE-027; change investigate-windows-regression-instability.
+Спека: IDE-BOOT-3 (ADDED).
+**Статус:** native причина подтверждена, исправление подключено временным
+Windows x64 SDK к локальному launcher/test entrypoint; Linux использует
+официальный SDK, Mac/GUI не проверены. Прямой системный Windows nvim не заменён.
+
+**Проблема.** После §85/90 иногда завершался child редактор при обычном
+terminal и F7/выборе файла из панели, 3221225477 (0xC0000005), stderr пустой.
+Прежние artifacts 4960006794000, 11614849831400, 12179929834000 и зелёные
+повторы не объясняли причину. На HEAD 25dfbab свежие оба IDE-BUF-1 дали red
+(15837401380000, 15845301918000, windows-stability-buffers-baseline.txt).
+
+**Причина.** Проверено вручную Windows Debug API, attach к конкретному PID
+дочернего редактора: second-chance NULL read в nvim.exe!pty_proc_resize+0x1a,
+artifact 17044404691900/native-crash.json. Сохранён один symbol/frame;
+не выдаём его за полный stack trace. В upstream pty_proc_close_console
+ConPTY освобождается background thread, main thread ждёт final frame через
+nested uv_run; опубликованный conpty pointer обнулялся только после этого.
+Resize мог попасть в освобождаемый/уже отсутствующий ConPTY. Чистый --clean
+Neovim без Forge/плагинов проходит 50 passive циклов; scheduled public
+window resize при выходе terminal echo падает на цикле 1. Это native
+граница процесса, не доказанный дефект панели или Lua cleanup.
+
+**Изменение.** Указатель изымается до запуска background free/nested loop;
+поздний resize при NULL не делает вызов ConPTY. Единственный patch в
+scripts/sdk, source commit 4b35336f6f850ce68a230716401cdaa21bdb6a25 (v0.12.2),
+patch SHA256 740c86fd69140936a9ffd95c56881234c373c4e987e93f4fd2d37df827264bd0.
+На одном MSVC/RelWithDebInfo/deps исходный source падает на первом цикле,
+patched проходит 50. При attach debugger зелёные повторы меняли timing;
+финальный A/B без attach. Official 0.12.5 также падал с Forge (1 PASS/1 FAIL),
+простое обновление не принято как фикс. Пробы mappings/UI/раннего Diffview
+require не устранили сбой; изменения этих компонентов не включены.
+
+После конкретного A/B и 8 buffer green владелец выбрал временный Windows SDK.
+Явный prepare-windows-sdk.ps1 проверяет source/patch, собирает SDK, выполняет
+50 циклов перед Ready manifest; повтор с готовыми deps тоже проверен.
+Исходники/build/temp в .tests на диске checkout, рабочий runtime в .tools.
+Общий resolver Windows launcher/test entrypoint проверяет lock/manifest и
+binary SHA256, без сети/компилятора на старте. Missing/stale/corrupt SDK
+даёт команду подготовки; FORGE_NVIM=system — явный диагностический override.
+Системные программы/PATH не меняются, общий Lua UI без Windows обхода.
+Hash через .NET не зависит от module autoload Get-FileHash во вложенном
+PowerShell. Патч хранится LF независимо от autocrlf. Удаление временного
+SDK после подтверждённого upstream исправления требует того же регресса.
+
+**Проверка/e2e.** Постоянные terminal-resize.lua, windows-sdk.test.lua и
+native-probe.test.lua: actual subprocess/UI/terminal, cleanup/artifacts,
+argv с пробелами/кириллицей, exit=7, восстановление env в том же PowerShell,
+system override, отказ preparer по чужому source/patch, broken manifest.
+Windows: native 50 PASS, исходные 8 buffer PASS на candidate и в full;
+SDK CLI 6 Python сценариев + native case PASS. Passive CLI/invalid args/
+spawn cleanup — 3 PASS. Ubuntu official 0.12.2: native 50 PASS, те же
+диагностические контракты и POSIX launcher PASS.
+Первый Ubuntu full нашёл CRLF в старом рабочем nvim_forge.sh вопреки уже
+существовавшему .gitattributes LF: реальный bash отказал. Нормализован сам
+launcher, fixture не подменяла окончания; полный регресс повторён.
+
+Windows full SDK: 38 файлов/40 прогонов, 37 PASS / 1 FAIL / 2 SKIP
+(Bash 3.2). Отдельный FAIL IDE-032: после удаления открытого linked worktree
+Git code 0 и корректный list, но E211/no longer available и RPC timeout
+nvim_get_mode. Artifact 20402797082900. Исходный IDE-GIT-3 отдельно прошёл
+и на official, и на patched SDK; причина блокировки не установлена,
+не закрыта и занесена в очередь. Два первоначальных попытанных повтора
+отказали раньше сценария из-за изменённого ConPTY source lock (§94),
+не считаются red Git. После восстановления lock получены настоящие повторы.
+Ubuntu full: 37 файлов/39 прогонов, 36 PASS / 0 FAIL / 3 SKIP (WezTerm и Bash 3.2). Первый красный Ubuntu full сохранён отдельно
+как ubuntu-stability-full-first.txt/report; последующий не стирает его.
+Windows full/report/logs, ConPTY focused и Ubuntu report сохранены отдельно;
+полный Windows не объявлен зелёным по частичному повтору.
+
+**Вывод.** Ошибку native зависимости нужно изолировать минимальным сценарием
+и проверять A/B при одинаковой сборке. Временный патч живёт на границе SDK
+с происхождением и явной подготовкой; универсальная модель IDE от него
+не ветвится. SDK готов на текущей машине, обычный запуск — nvim_forge.cmd.
+
+**Файлы:** scripts/prepare-windows-sdk.ps1, scripts/sdk/*,
+scripts/lib/nvim-sdk.ps1, scripts/launch-forge.ps1, scripts/test.ps1,
+nvim_forge.cmd, nvim_forge.sh, .gitattributes, .gitignore,
+tests/diagnostics/*, tests/windows_sdk_test.py, tests/e2e/windows-sdk.test.lua,
+tests/e2e/native-probe.test.lua, tests/registry.lua, README/docs/roadmap,
+PROBLEMS.md, openspec/changes/investigate-windows-regression-instability/.
+
+### 93. CLI timeout: сохраняем доказательства
+
+**Связь:** IDE-031; тот же change. **Статус:** диагностика; исходная причина
+10s timeout unknown-mode из §91 не установлена, пункт остаётся открытым.
+
+**Проблема.** Единственный timeout PowerShell fixture CLI в полном §91
+не сохранил PID/время/частичный вывод/скрипты после удаления TemporaryDirectory.
+Повтор 0,5s не давал объяснения, повышение timeout скрывало бы проблему.
+
+**Причина.** Причина зависания неизвестна. Недостаток наблюдаемости установлен:
+subprocess.run поднимал TimeoutExpired без постоянного контекста попытки.
+
+**Изменение.** CLI helper сохраняет started.json до ожидания, result.json
+с argv/cwd/PID/elapsed/exit/stdout/stderr/timed_out и явные fixture scripts
+при ошибке. Нет копии HOME/полного env. Timeout прежний 10s, retry нет;
+child останавливается/ожидается, TimeoutExpired остаётся FAIL.
+
+**Проверка/e2e.** 10 Windows запусков TestEntryPointsCLI — 30 subprocess
+quick/e2e/unknown-mode, все прошли. Артефакты .tests/entrypoints-e2e.
+Постоянный entrypoint-diagnostics.test.lua запускает реальные процессы:
+exit=7 со stdout/stderr, намеренный sleep с частичным выводом/2s deadline,
+spawn error; проверяет один процесс, ошибку и завершение child до возврата.
+Три Python сценария PASS Windows/Ubuntu; существующий CLI e2e и quick PASS.
+Продуктовый deadline не увеличивался; успешный контроль обвязки не доказывает
+исправление исходного timeout.
+
+**Вывод.** Невоспроизведённую ошибку оставляем открытой и делаем следующую
+попытку диагностируемой, сохраняя прежний критерий отказа.
+**Файлы:** tests/lib/cli_probe.py, tests/shell_diagnostics_test.py,
+tests/e2e/entrypoint-diagnostics.test.lua, tests/registry.lua,
+tests/diagnostics/README.md, docs/AGENT_COMMANDS.md, PROBLEMS.md, roadmap.
+
+### 94. ConPTY: регресс не должен менять плагины владельца
+
+**Связь:** IDE-033; Спека: IDE-BOOT-3 (ADDED); тот же change.
+**Статус:** исправлена изоляция Windows ConPTY набора, реальная проба прошла.
+
+**Проблема.** В конце полного Windows SDK набора старый ConPTY reader
+переписал source lazy-lock.json: neogit d7bb91b → 395ac48, neotest 27bf921 →
+ad99182. Из-за этого последующая подготовленная editor fixture отказала
+по manifest. Пробы внутри ConPTY считались PASS, хотя тест менял чекаут.
+
+**Причина.** forge_env задавал NVIM_APPNAME и XDG_CONFIG_HOME=<repo>,
+оставляя user data/cache/state. Lazy смотрел на другие реальные user
+plugin HEAD и обновлял source lock. Harness ещё вызывал nvim из PATH,
+а не SDK общего runner. Это установленная ошибка изоляции теста.
+
+**Изменение.** ConPTY получает выбранный SDK через FORGE_TEST_NVIM,
+private config/data/cache/state/HOME/TEMP с подготовленными pinned plugins.
+Прямой user/source config не загружается. Python запускается с -B.
+Child пишет actual stdpath/SDK, набор проверяет их и неизменность исходного
+lock. Профиль удаляется после закрытия процессов ConPTY. Изменённый lock
+сохранён в windows-stability-conpty-mutated-lock.json, прежние байты точно
+восстановлены из HEAD. Не обновляли зависимости ради прохождения тестов.
+
+**Проверка/e2e.** Весь реальный ConPTY набор повторён выбранным SDK:
+66 проверок, 1 файл PASS / 0 FAIL / 0 SKIP, 92,9s. Actual private stdpath
+и выбранный SDK проверяются в chords.test.py; source lock остался прежним.
+Наблюдение Windows stdpath сделано из настоящего child, не из предположения
+родительского env. Артефакты windows-stability-conpty-isolated.txt/report.
+Final Windows quick 13/13, trace 2/2, strict validate и diff --check PASS.
+
+Старый неправильный запуск успел создать на C: ровно один новый plugin
+neotest-golang (211 файлов, 1 711 811 байт), CreationTime внутри ConPTY
+интервала 15:10:54–15:10:56. Проверены точные пути/время создания/отсутствие
+старых файлов. Только этот новый каталог перенесён с сохранением в
+F:/forge-nvim-tmp/retired-conpty-20261101; журнал retirement.json/result.json.
+Первый Move перенёс все файлы, но не пустую оболочку; её прямое удаление
+отклонено автоматической policy без подробной причины. Более щадящий Move
+сохранил и пустую оболочку на F:, исходный путь больше не существует.
+Прежние user plugin каталоги/файлы не удалялись и без baseline не откатывались.
+Final audit: 0 private editor/ConPTY profiles, 0 файлов C TEMP/nvim.0,
+source lazy-lock без diff. SDK/build/temp остаются на F:.
+
+**Вывод.** Даже успешная интерактивная проба должна доказывать изоляцию
+фактических stdpath и закреплённой версии процесса. Один config override
+не изолирует Lazy data и не защищает lock от перезаписи.
+**Файлы:** tests/lib/conpty_profile.py, tests/wezterm/conpty/harness.py,
+tests/wezterm/conpty/chords.test.py, tests/wezterm/conpty/readers/forge_onkey.lua,
+tests/run.lua, tests/e2e/README.md, docs/AGENT_COMMANDS.md, PROBLEMS.md,
+docs/IDE_ROADMAP.md, docs/HISTORY.md, тот же OpenSpec change.
+
+### 95. Удалённый файл: буфер остаётся доступным
+
+**Связь:** IDE-032; change handle-deleted-file-buffers.
+Спека: IDE-BUF-4 (ADDED).
+**Статус:** общая обработка успешно удалённого файла/worktree исправлена,
+Windows/Ubuntu проверены; Mac/GUI отдельно не проверены. Отказы самого
+удаления текущего cwd и initial attach вынесены в IDE-034/035, не закрыты.
+
+**Проблема.** В полном §92 Git успешно удалил linked worktree, но открытый
+file_one.txt оставался в памяти. На экране E211/no longer available,
+следующий RPC nvim_get_mode не ответил за прежние 10s (20402797082900).
+Повтор сценария был зелёным на обоих SDK и не объяснял проблему.
+
+**Причина.** NeogitStatusRefreshed вызывает set autoread | checktime.
+Для исчезнувшего файла default FileChangedShell выдаёт E211, тогда как
+ide.buffers.show предупреждал лишь при явном выборе. Помимо native
+сообщения Gitsigns сохранял watchers скрытых буферов исчезнувшего каталога,
+а pending autosave мог записать уже удалённый обычный файл обратно.
+Первый новый real worktree red (22298339049700) содержал и E211, и async
+Gitsigns error. После уточнения готовности diff контроль того же финального
+сценария против целого старого config-source дал чистый E211 без Gitsigns
+traceback (36164862736900, windows-deleted-files-baseline-final-red.txt).
+Это подтверждённая граница lifecycle, не основание повысить RPC timeout.
+
+**Изменение.** Common ide.buffers обрабатывает native deleted: сохраняет
+имя/текст/modified, отмечает удержание autosave, показывает одно warning
+на episode. Для остальных причин сохраняется native ask, включая конфликт
+с несохранённым текстом. После успешного write/Save As удержание снимается;
+переименование само по себе его не снимает. Буферы не удаляются и не
+переименовываются автоматически. Новые ещё не записанные файлы не считаются
+удалёнными: учёт disk-backed заполняется при реальном чтении/записи.
+
+Неблокирующее предупреждение использует public Fidget notify из уже
+установленного плагина. Первый вариант default vim.notify после снятия
+E211 сам создавал hit-enter длинным предупреждением; глобальный notify не
+переопределяется и чужие ошибки не подавляются. История конкретного warning
+проверяется public get_history, повторный checktime/show не продлевает его.
+
+FileChangedShell не разрешает менять текущий буфер, а при ignore native
+early return пропускает FileChangedShellPost. Поэтому AutoSave получил
+штатный cancel trigger FileChangedShell для его opts.buf; временный
+cancelling flag разрешает именно cancel condition и снимается schedule.
+500ms debounce не менялся. Общий checktime фактически проверяет только
+видимые окна: для hidden используется public checktime N. При первом
+обнаружении удалённого файла остальные ранее прочитанные missing buffers
+тоже освобождают Gitsigns watchers через public detach; их native проверки
+завершают отмену pending save. Повторный episode не сканирует всё дерево
+буферов заново. BufWritePost возвращает обычный attach после восстановления.
+Нет private monkey patch, изменения пинов/SDK или Windows ветки в Lua.
+
+**Проверка/e2e.** deleted-files.test.lua содержит пять real editor сценариев:
+12 loaded файлов удалённого worktree, включая hidden; посещение worktree
+и успешное удаление из main; hidden pending autosave → повторные проверки/
+выбор → удержание → write → autosave → повторное удаление; Save As;
+обычный autoread и настоящий конфликт W12 с явным OK и сохранностью обеих
+версий. Git remove, popup, Telescope, confirm и код — настоящие, действия
+через nvim_input. Checktime marker доказывает завершение команды. Observer
+записывает notifications/history/состояние worktree, не подменяет backend.
+
+Готовность diff каждого файла проверяется, пока он видим. Раннее ожидание
+added у всех уже hidden буферов было неверным: Gitsigns намеренно откладывает
+такой diff до показа. Эта ошибка locator сохранена отдельно, не выдана за
+red редактора. Диагностические delete-current-worktree.lua и
+delete-pending-attach.lua сохраняют новые независимые последовательности
+IDE-034/035; исходные проблемы остаются открытыми и следующими в плане.
+
+Focused Windows: 5 PASS; Ubuntu: 5 PASS. Полный Windows: 39 файлов/41 прогон, 38 PASS / 1 FAIL / 2 SKIP (Bash 3.2).
+Полный Ubuntu: 38 файлов/40 прогонов, 37 PASS / 0 FAIL / 3 SKIP (WezTerm/Bash 3.2). Все прежние 8 buffer, 6 Git, 3 worktree refresh
+и 7 Diffview E2E пройдены. Windows ConPTY использовал private профиль SDK
+и не менял source lock. Full отчёты/логи сохранены с deleted-files префиксом.
+Единственный FAIL Windows full относится к SDK CLI, не IDE-032: partial
+unittest ERROR на missing manifest не дал законченной сводки в прежнем
+внешнем deadline. Точная причина/связь с IDE-031 неизвестна. Отдельно весь
+SDK файл повторён (2 PASS); полный red не переписан. Для следующего случая
+SDK CLI подключён к общему started/result/PID helper, command-line string
+хранится целиком, OEM output допускает замену недекодируемых символов,
+outer assert включает code/signal. Deadline 10s/30s и отсутствие retry
+сохранены; контракты helper и SDK повторены, IDE-031 не закрыта.
+Strict validate, quick/trace и diff --check PASS. Прежние байты FIXLOG
+проверены до/после append; source lazy-lock без diff, private runtime и
+C TEMP/nvim.0 без оставшихся файлов. Непроверенные Mac/GUI не названы PASS.
+
+**Вывод.** Удаление дискового объекта не должно уничтожать его рабочую копию
+в редакторе или превращать фоновую синхронизацию в диалог. Владение буфером,
+pending save и Git watchers завершаются согласованно, а явное восстановление
+снова включает обычный lifecycle. Регресс синхронизируется по готовности
+реального UI/операции, не по искусственному ожиданию времени.
+
+**Файлы:** nvim_forge/lua/ide/buffers.lua,
+nvim_forge/lua/plugins/editor.lua, tests/e2e/deleted-files.test.lua,
+tests/diagnostics/delete-current-worktree.lua,
+tests/diagnostics/delete-pending-attach.lua, tests/registry.lua,
+tests/lib/cli_probe.py, tests/windows_sdk_test.py, tests/e2e/windows-sdk.test.lua,
+openspec/changes/handle-deleted-file-buffers/*, PROBLEMS.md,
+docs/IDE_ROADMAP.md, docs/AGENT_COMMANDS.md, docs/HISTORY.md,
+nvim_forge/QUICKSTART.md, tests/e2e/README.md, CLAUDE.md.

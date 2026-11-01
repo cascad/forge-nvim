@@ -17,7 +17,9 @@ $env:TMPDIR = $forgeTestTemp
 $env:NVIM_LOG_FILE = Join-Path $forgeTestTemp 'runner-nvim.log'
 Push-Location -LiteralPath $forgeTestRoot
 try {
-    if (-not (Get-Command nvim -ErrorAction SilentlyContinue)) {
+    . (Join-Path $PSScriptRoot 'lib/nvim-sdk.ps1')
+    $forgeTestNvim = Get-ForgeNvim $forgeTestRoot
+    if (-not (Get-Command $forgeTestNvim -ErrorAction SilentlyContinue)) {
         throw 'Neovim is required. Prepare this VM before running tests.'
     }
     [string[]] $forgeTestSuites = switch ($Mode) {
@@ -25,7 +27,7 @@ try {
         'e2e'   { @('e2e') }
         'full'  { @('unit', 'e2e', 'wezterm', 'install', 'trace', 'conpty') }
     }
-    & nvim -l tests/run.lua @forgeTestSuites
+    & $forgeTestNvim -l tests/run.lua @forgeTestSuites
     $forgeTestExit = $LASTEXITCODE
 } finally {
     Pop-Location

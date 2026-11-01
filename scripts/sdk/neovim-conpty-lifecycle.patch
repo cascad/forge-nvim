@@ -1,0 +1,31 @@
+diff --git a/src/nvim/os/pty_proc_win.c b/src/nvim/os/pty_proc_win.c
+index 14aacc9..18fb0b6 100644
+--- a/src/nvim/os/pty_proc_win.c
++++ b/src/nvim/os/pty_proc_win.c
+@@ -40,12 +40,13 @@ static void pty_proc_close_console(Stream *stream, void *data)
+     TerminateProcess(ptyproc->proc_handle, 0);
+   }
+   uv_thread_t tid;
+-  uv_thread_create(&tid, os_conpty_free, ptyproc->conpty);
++  conpty_t *conpty = ptyproc->conpty;
++  ptyproc->conpty = NULL;
++  uv_thread_create(&tid, os_conpty_free, conpty);
+   while (!proc->out.did_eof && WaitForSingleObject(tid, 0) == WAIT_TIMEOUT) {
+     uv_run(&proc->loop->uv, UV_RUN_ONCE);
+   }
+   uv_thread_detach(&tid);
+-  ptyproc->conpty = NULL;
+ }
+ 
+ /// @returns zero on success, or negative error code.
+@@ -176,7 +177,9 @@ const char *pty_proc_tty_name(PtyProc *ptyproc)
+ void pty_proc_resize(PtyProc *ptyproc, uint16_t width, uint16_t height)
+   FUNC_ATTR_NONNULL_ALL
+ {
+-  os_conpty_set_size(ptyproc->conpty, width, height);
++  if (ptyproc->conpty != NULL) {
++    os_conpty_set_size(ptyproc->conpty, width, height);
++  }
+ }
+ 
+ void pty_proc_resume(PtyProc *ptyproc)

@@ -4,6 +4,10 @@
 local f = assert(io.open(assert(os.getenv('FORGE_KEYLOG')), 'w'))
 vim.api.nvim_create_autocmd('VimEnter', {
   callback = function()
+    if vim.env.FORGE_CONPTY_PROFILE_RECORD then
+      vim.fn.writefile({vim.json.encode({config=vim.fn.stdpath('config'),data=vim.fn.stdpath('data'),
+        cache=vim.fn.stdpath('cache'),state=vim.fn.stdpath('state'),nvim=vim.v.progpath})},vim.env.FORGE_CONPTY_PROFILE_RECORD)
+    end
     f:write('ready\n')
     f:flush()
   end,

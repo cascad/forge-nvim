@@ -306,7 +306,9 @@ end
 function LAUNCHERS.py(_, abs)
   if HOST.os ~= 'windows' then return { skip = 'набор только для Windows (conpty.dll)' } end
   if not HOST.python then return { skip = 'python не найден в PATH' } end
-  return { runs = { { cmd = { HOST.python, abs }, env = { PYTHONIOENCODING = 'utf-8' } } } }
+  return { runs = { { cmd = { HOST.python, '-B', abs }, env = {
+    PYTHONIOENCODING = 'utf-8', PYTHONDONTWRITEBYTECODE = '1', FORGE_TEST_NVIM = HOST.nvim,
+  } } } }
 end
 
 -- Shell-наборы, shell = 'posix' (design, решение 9). Контракт скрипта:

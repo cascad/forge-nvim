@@ -135,14 +135,14 @@ class Report:
         return cond
 
 
-def probe(h, r, layout):
+def probe(h, r, layout, forge_env):
     result = {'layout': layout}
 
     # --- A: объявление ------------------------------------------------------
     announce_lua = os.path.join(HERE, 'readers', 'announce.lua')
     ways = {}
     for way in ('ui_send', 'chansend'):
-        with h.Session(['nvim', '--clean', '-u', 'NONE', '-i', 'NONE', '-n', '--cmd', 'luafile ' + announce_lua],
+        with h.Session([h.NVIM, '--clean', '-u', 'NONE', '-i', 'NONE', '-n', '--cmd', 'luafile ' + announce_lua],
                        env={'FORGE_ANNOUNCE_WAY': way}, timeout=20) as s:
             ways[way] = s.wait_for(lambda o: ANNOUNCE in o, 8)
     result['announce'] = ways
@@ -154,10 +154,8 @@ def probe(h, r, layout):
     # Объявление самого nvim_forge (nvim_forge/lua/config/wezterm_chords.lua):
     # FORGE_NVIM=<версия> при старте, пустое значение при :qa, с выключателем —
     # ничего. nvim_forge — из этого репо (NVIM_APPNAME + XDG_CONFIG_HOME).
-    repo = os.path.dirname(os.path.dirname(os.path.dirname(HERE)))
-    forge_env = {'NVIM_APPNAME': 'nvim_forge', 'XDG_CONFIG_HOME': repo}
     unset = ESC + b']1337;SetUserVar=FORGE_NVIM=\x07'
-    with h.Session(['nvim'], env=forge_env, timeout=60) as s:
+    with h.Session([h.NVIM], env=forge_env, timeout=60) as s:
         started = s.wait_for(lambda o: ANNOUNCE in o, 30)
         s.settle(1.0)
         s.write(b'\x1b:qa!\r')
@@ -167,7 +165,7 @@ def probe(h, r, layout):
             'OSC 1337 FORGE_NVIM от nvim_forge не пришёл за 30 с')
     r.check('WT-KBD-9 nvim_forge снимает объявление при выходе (пустое значение)', left,
             'после :qa! нет OSC 1337 FORGE_NVIM с пустым значением')
-    with h.Session(['nvim', '--cmd', 'let g:forge_wezterm_chords = v:false'], env=forge_env, timeout=60) as s:
+    with h.Session([h.NVIM, '--cmd', 'let g:forge_wezterm_chords = v:false'], env=forge_env, timeout=60) as s:
         s.wait_for(lambda o: b'NORMAL' in o or b'~' in o, 20)
         s.settle(3.0)
         quiet = b'SetUserVar=FORGE_NVIM' not in s.output()
@@ -283,7 +281,20 @@ def main():
         r.skip('WT-KBD-9 проба через conpty.dll', f'раскладка {layout}: проба знает только ru и en')
         return 0
     prov = h.provenance()
-    result = probe(h, r, layout)
+    repo = os.path.dirname(os.path.dirname(os.path.dirname(HERE)))
+    sys.path.insert(0, os.path.join(repo, 'tests/lib'))
+    from conpty_profile import isolated_forge
+    with isolated_forge(repo) as forge_env:
+        result = probe(h, r, layout, forge_env)
+        with open(forge_env['FORGE_CONPTY_PROFILE_RECORD'], encoding='utf-8') as f:
+            paths = json.load(f)
+        private = os.path.dirname(forge_env['FORGE_CONPTY_PROFILE_RECORD'])
+        r.check('IDE-BOOT-3 ConPTY читает private config/data/cache/state',
+                all(os.path.commonpath([private, paths[key]]) == private for key in ('config', 'data', 'cache', 'state')),
+                f'ConPTY вышел из частного профиля: {paths}')
+        if os.environ.get('FORGE_TEST_NVIM'):
+            r.check('IDE-BOOT-3 ConPTY использует SDK общего runner',
+                    os.path.normcase(os.path.abspath(paths['nvim'])) == os.path.normcase(os.path.abspath(h.NVIM)), str(paths))
 
     fixture = {}
     if os.path.exists(FIXTURE):

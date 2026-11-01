@@ -31,7 +31,21 @@ Each `*.cmd` / `*.sh` does the same thing in a single scoped env:
 
 1. Set `XDG_CONFIG_HOME` to the repo root.
 2. Set `NVIM_APPNAME` to the folder name (e.g. `nvim_forge`).
-3. Run `nvim` with the supplied arguments.
+3. Run Neovim with the supplied arguments. `nvim_forge.cmd` uses the
+   prepared Windows SDK; POSIX launchers and other configs use `nvim` in PATH.
+
+Для `nvim_forge` на Windows один раз явно подготовить временный SDK:
+
+```powershell
+powershell -NoProfile -File scripts/prepare-windows-sdk.ps1 -Download
+.\nvim_forge.cmd
+```
+
+На builder нужны Git, CMake/Ninja и MSVC C++ Build Tools. Source/build/temp
+остаются на диске checkout; runtime — `.tools/neovim/windows-x64`.
+Launcher/test entrypoint проверяют manifest и SHA256, ничего не собирают
+при старте. Системный `nvim` не заменяется. Причина, A/B и команды:
+[tests/diagnostics/README.md](tests/diagnostics/README.md).
 
 Neovim then reads `<repo>/<NVIM_APPNAME>/init.lua` and keeps data,
 state and cache in:

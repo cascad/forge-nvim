@@ -31,6 +31,7 @@ if "%XDG_CONFIG_HOME:~-1%"=="\" set "XDG_CONFIG_HOME=%XDG_CONFIG_HOME:~0,-1%"
 
 set "NVIM_APPNAME=nvim_forge"
 
-nvim %*
+powershell -NoProfile -File "%~dp0scripts\launch-forge.ps1" %*
+set "FORGE_LAUNCH_EXIT=%ERRORLEVEL%"
 
-endlocal
+endlocal & exit /b %FORGE_LAUNCH_EXIT%

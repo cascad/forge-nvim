@@ -11,9 +11,17 @@ This is one of several configs living in this repository. See the root
 
 **Windows**
 
-```cmd
-nvim_forge.cmd
+```powershell
+powershell -NoProfile -File scripts/prepare-windows-sdk.ps1 -Download
+.\nvim_forge.cmd
 ```
+
+Явная подготовка требует Git, CMake/Ninja и MSVC C++ Build Tools. Временный
+Windows SDK исправляет native ConPTY crash IDE-027; хранится в
+`.tools/neovim/windows-x64`. Launcher проверяет source/patch/binary hash,
+при missing/stale SDK показывает команду подготовки. На старте SDK не
+скачивается/собирается. Системный `nvim` не меняется; прямой `nvim` по-прежнему
+запускает системную программу. Подробности: `tests/diagnostics/README.md`.
 
 **macOS** — один скрипт ставит всё (зависимости, шрифт, WezTerm и его
 конфиг) и проверяет результат; повторный запуск безопасен и чинит то, что
@@ -44,7 +52,8 @@ GUI-сессии): путь, уже ведущий в репо, он не тро
 перекрывают симлинк молча — установщик их не трогает, убери руками.
 
 Обе обёртки делают одно и то же: ставят `NVIM_APPNAME=nvim_forge` и
-`XDG_CONFIG_HOME` на корень репо, после чего `exec nvim`. Переменные
+`XDG_CONFIG_HOME` на корень репо, после чего запускают Neovim: проверенный
+локальный SDK Windows либо официальный `nvim` из PATH на POSIX. Переменные
 живут только до выхода из nvim, родительский shell их не видит.
 Каталоги:
 

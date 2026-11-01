@@ -1116,3 +1116,227 @@ Runtime cleanup и отсутствие прироста C: проверены �
 neogit-worktree-storage-audit.json, прежний FIXLOG — в
 neogit-worktree-history-prefix.json. Windows runtime в `.tests/tmp`,
 профили после завершения отсутствуют; глобальные TEMP не менялись.
+
+## 26. IDE-027/031: native crash, временный SDK и CLI artifacts (2026-11-01)
+
+Постоянные сценарии и формат JSON: `tests/diagnostics/README.md`.
+Windows parent запускается с TEMP/TMP/TMPDIR в `.tests/tmp`,
+NVIM_LOG_FILE там же; npm cache — `F:/forge-nvim-tmp/npm-cache`.
+Все нижеприведённые команды выполняются из F:/repo/forge-nvim.
+
+```powershell
+nvim -l tests/diagnostics/terminal-resize.lua --passive > .tests/windows-stability-passive-final.txt 2>&1
+nvim -l tests/diagnostics/terminal-resize.lua > .tests/windows-stability-resize-final.txt 2>&1
+powershell -NoProfile -File scripts/prepare-windows-sdk.ps1 -Variant upstream -Download
+$forgeUpstream=(Resolve-Path .tests/neovim-native/upstream/bin/nvim.exe).Path
+nvim -l tests/diagnostics/terminal-resize.lua --nvim $forgeUpstream > .tests/windows-stability-resize-upstream.txt 2>&1
+powershell -NoProfile -File scripts/prepare-windows-sdk.ps1 -Download > .tests/windows-stability-sdk-prepare.txt 2>&1
+$forgeSdk=(Resolve-Path .tools/neovim/windows-x64/bin/nvim.exe).Path
+& $forgeSdk -l tests/e2e/buffers.test.lua
+& $forgeSdk -l tests/e2e/windows-sdk.test.lua > .tests/windows-stability-sdk-cli-final-guards.txt 2>&1
+powershell -NoProfile -File scripts/test.ps1 full > .tests/windows-stability-full.txt 2>&1
+python -X utf8 -B tests/shell_diagnostics_test.py TestEntryPointsCLI
+& $forgeSdk -l tests/e2e/entrypoint-diagnostics.test.lua
+& $forgeSdk -l tests/e2e/native-probe.test.lua
+& $forgeSdk -l tests/run.lua trace
+npx.cmd --yes @fission-ai/openspec@1.13.2 validate investigate-windows-regression-instability --type change --strict --no-interactive
+git diff --check
+```
+
+Я вижу текст stdout/stderr и exit каждого процесса. У core probe дополнительно
+JSON с actual child_exit, PID/версией, этапом/циклом, runtime и cleaned.
+У официального Windows SDK resize-команда возвращает 1, child_exit
+3221225477; passive проходит 50. У одинаково собранного unpatched исходника
+тоже red на цикле 1, patched проходит 50. Ошибка native, без плагинов.
+Вызов `nvim -l` вне выбранного entrypoint использует системный binary;
+патч подключается через `nvim_forge.cmd`, `scripts/test.ps1` или прямой
+абсолютный путь подготовленного SDK. FORGE_NVIM=system — явный override.
+
+Первый private SDK собирался через cmd.exe/vcvars64.bat, CMake/Ninja/MSVC,
+RelWithDebInfo. Повторяемый builder теперь в scripts/prepare-windows-sdk.ps1,
+диагностическая обёртка tests/diagnostics/build-conpty-sdk.ps1 делегирует ему.
+Source commit/patch/binary hashes сохраняются в forge-sdk.json; source/build
+в .tests/neovim-native, рабочий SDK в .tools, компиляторные временные файлы на F:.
+Builder отказывается менять посторонние source edits/другую ревизию и
+блокирует параллельную сборку того же checkout. Build tools нужны при явной
+подготовке, обычный launcher только проверяет metadata/hash.
+
+Проверено вручную при расследовании: точечный attach Windows Debug API к
+PID child тестового редактора, через приватные .tests/probe-debug-editor.lua
+и .tests/win-native-debug.py (`--pid <child PID> --out <artifact dir>`).
+Python ctypes вызывал DebugActiveProcess, отключал kill-on-debugger-exit,
+получал second-chance exception/thread context и DbgHelp symbol. Не менял
+WER/AeDebug, не устанавливал debugger. Результат:
+`.tests/editor-e2e/17044404691900/native-crash.json`, symbol
+pty_proc_resize+0x1a, NULL read. Attach меняет timing: зелёные повторы под
+debugger не считаются проверкой исправления. Финальный A/B — без attach.
+`lldb.exe --version` завис; остановлен только свой подтверждённый PID.
+LuaFFI exception probe не дал надёжного результата и не включён в продукт.
+
+Чтение official GitHub source/release/compare API сохранено в .tests:
+nvim-pty-proc-win.c, nvim-stability-release.json и upstream-compare.json.
+SDK 0.12.5 скачан отдельно в .tests/nvim-probes с проверкой official SHA256;
+он также падал в Forge, системный Neovim не обновлялся. Приватные пробы
+keymaps, отключения UI plugins и Diffview lazy-load не устранили crash.
+Постоянный clean probe заменяет эти разовые эксперименты.
+
+IDE-031: 10 отдельных Python запусков TestEntryPointsCLI, 30 процессов
+quick/e2e/unknown-mode, прежний timeout 10s. Все попытки сохраняются в
+.tests/entrypoints-e2e: started.json появляется до ожидания, result.json
+содержит PID/argv/cwd/elapsed/exit/stdout/stderr/timed_out. При ошибке также
+сохраняются явные fixture scripts до удаления временной папки. Нет retry
+и нет копирования целого окружения/HOME. E2E намеренно запускает зависший
+процесс с частичным выводом; timeout остаётся FAIL, child остановлен.
+Исходная причина IDE-031 пока не установлена.
+
+```powershell
+docker compose -f tests/containers/compose.yaml run --rm --entrypoint nvim ubuntu -l tests/diagnostics/terminal-resize.lua
+docker compose -f tests/containers/compose.yaml run --rm --entrypoint nvim ubuntu -l tests/e2e/windows-sdk.test.lua
+docker compose -f tests/containers/compose.yaml run --rm ubuntu full > .tests/ubuntu-stability-full.txt 2>&1
+```
+
+Контейнер проверяет официальный Linux SDK/POSIX launcher и общие сценарии,
+без Windows build tools, сети и GUI. Windows/Ubuntu full идут последовательно.
+Полный Windows report/logs сохраняются в windows-stability-full-report.json
+и windows-stability-full-logs до следующего общего runner. Красный полный
+прогон не переименовывается в зелёный после частичного повтора.
+
+Первый Windows full SDK: 38 файлов / 40 прогонов, 37 PASS / 1 FAIL / 2 SKIP
+(Bash 3.2). IDE-027 и новый SDK прошли; FAIL — IDE-032, E211/RPC timeout
+после удаления чистого worktree, artifact 20402797082900. Исходный IDE-GIT-3
+отдельно повторён на официальном и patched SDK: по 1 PASS; это не фикс IDE-032.
+Первые два ошибочных повтора отказали по manifest, потому что в конце full
+старый ConPTY reader изменил source lazy-lock через user plugin data.
+Эти отказы не считаются red worktree: before/after lock сохранены отдельно,
+восстановлен точный HEAD lock, затем выполнены настоящие повторы.
+
+IDE-033: ConPTY harness использовал `XDG_CONFIG_HOME=<repo>`, не изолировал
+data/state/cache и вызывал системный nvim. Источник lock не редактировался
+вручную: исходный снимок восстановлен через `git show HEAD:nvim_forge/lazy-lock.json`
+(Python subprocess.check_output → Path.write_bytes), изменённый файл сохранён
+в .tests/windows-stability-conpty-mutated-lock.json. Теперь conpty_profile.py
+копирует config и pinned plugins в свой F: runtime, actual child записывает
+stdpath/SDK, после набора проверяется неизменность source lock; каталог удаляется.
+Runner передаёт FORGE_TEST_NVIM=vim.v.progpath и Python -B; это тестовый SDK
+parameter, не сигнал объявления FORGE_NVIM из протокола WezTerm.
+
+```powershell
+& .tools/neovim/windows-x64/bin/nvim.exe -l tests/run.lua conpty > .tests/windows-stability-conpty-isolated.txt 2>&1
+$env:FORGE_TEST_ID='IDE-GIT-3'
+nvim -l tests/e2e/git-workflow.test.lua > .tests/windows-stability-worktree-official-final.txt 2>&1
+& .tools/neovim/windows-x64/bin/nvim.exe -l tests/e2e/git-workflow.test.lua > .tests/windows-stability-worktree-sdk-final.txt 2>&1
+Remove-Item Env:FORGE_TEST_ID
+```
+
+Итог ConPTY после изоляции: 66 проверок PASS, source lock без diff, runtime
+удалён. Неверный первый запуск успел создать новый user lazy/neotest-golang
+на C: (CreationTime 15:10:54, 211 файлов/1 711 811 байт). Проверены точный
+source/destination, время создания и отсутствие старых файлов; только
+этот каталог сохранён в F:/forge-nvim-tmp/retired-conpty-20261101.
+Первый Move перенёс все файлы, оставив пустую оболочку. Автоматическая
+policy отклонила прямое удаление без подробной причины; вместо удаления
+пустая оболочка также сохранена отдельным Move на F:. Исходный путь не
+существует, журналы — windows-stability-conpty-retirement.json/result.json.
+Прежние user plugin каталоги/файлы без baseline не откатывались.
+
+Первый Ubuntu full: 35 PASS / 1 FAIL / 3 SKIP. Новый POSIX launcher E2E
+обнаружил CRLF в старом рабочем nvim_forge.sh вопреки *.sh eol=lf. Исправлен
+сам файл, fixture его не нормализует. Полный повтор: 37 файлов/39 прогонов,
+36 PASS / 0 FAIL / 3 SKIP; первый report/log сохранён с -first суффиксом.
+Final Windows quick 13/13, trace 2/2, новый SDK/CLI/probe contracts PASS,
+strict validate и diff --check PASS. Final storage audit: 0 runtime/ConPTY
+профилей, 0 C TEMP файлов, исходный lock без diff. Старые 324332 байта
+FIXLOG сохранены побайтно, SHA256 прежнего prefix f3475d226e7da68989aa2a72e6b493730bbfaafbf6e5b316c0f720f30b7991ec;
+новые §92–94 только дописаны, audit в windows-stability-history-prefix.json.
+
+## 27. IDE-032: удалённые буферы и native checktime (2026-11-01)
+
+```powershell
+$env:TEMP='F:\repo\forge-nvim\.tests\tmp'
+$env:TMP=$env:TEMP
+$env:TMPDIR=$env:TEMP
+$env:NVIM_LOG_FILE=Join-Path $env:TEMP 'runner-nvim.log'
+& .tools/neovim/windows-x64/bin/nvim.exe -l tests/e2e/deleted-files.test.lua
+powershell -NoProfile -File scripts/test.ps1 full > .tests/windows-deleted-files-full.txt 2>&1
+docker compose -f tests/containers/compose.yaml run --rm --entrypoint nvim ubuntu -l tests/e2e/deleted-files.test.lua > .tests/ubuntu-deleted-files-focused.txt 2>&1
+docker compose -f tests/containers/compose.yaml run --rm ubuntu full > .tests/ubuntu-deleted-files-full.txt 2>&1
+npx.cmd --yes @fission-ai/openspec@1.13.2 validate handle-deleted-file-buffers --type change --strict --no-interactive
+git diff --check
+```
+
+5 editor E2E используют настоящий Neogit popup, Telescope, confirm и Git
+remove частного worktree; имена/текст/modified/окно и main проверяются после
+удаления. UI input вызывает :checktime, отдельный marker после команды
+доказывает завершение. Для hidden pending autosave используется :checktime N,
+поскольку общий native checktime проверяет только видимые окна. Debounce
+production 500ms не менялся; наблюдение длится 800ms и проверяет отсутствие
+самопроизвольного файла. Native conflict W12 подтверждается явным OK,
+проверяются сохранность обеих версий и modified.
+
+Исходный red: windows-deleted-files-red.txt, artifact 22298339049700.
+После уточнения UI готовности контроль финального сценария против целого
+старого config-source дал самостоятельный E211 без Gitsigns traceback:
+
+```powershell
+$env:FORGE_DELETED_E2E_CASE='много открытых'
+$env:FORGE_E2E_CONFIG_SOURCE='F:/repo/forge-nvim/.tests/editor-e2e/22298339049700/config-source'
+& .tools/neovim/windows-x64/bin/nvim.exe -l tests/e2e/deleted-files.test.lua > .tests/windows-deleted-files-baseline-final-red.txt 2>&1
+Remove-Item Env:FORGE_E2E_CONFIG_SOURCE
+Remove-Item Env:FORGE_DELETED_E2E_CASE
+```
+
+Artifact контрольного red: 36164862736900. Current focused: 5 PASS Windows,
+5 PASS Ubuntu. Для GitSigns начальный diff каждого файла проверяется по
+публичному b:gitsigns_status_dict пока файл видим: скрытый diff плагин
+намеренно откладывает. Неверный ранний locator ожидал added у всех hidden
+буферов и не мог завершиться; это ошибка ожидания, не red редактора.
+Public Fidget get_history наблюдает одно Files warning и повторный episode.
+Artifacts: screen/snapshot, file-notifications.json, signs-readiness.json,
+worktrees.txt, project/config-source. Приватные методы плагинов не вызывались.
+
+Исследованы локальные pinned sources Neogit autocmds/worktree actions,
+Gitsigns manager/attach, AutoSave events и Neovim fileio.c/autocmd docs.
+Первый вариант с default vim.notify после снятия E211 создавал новый
+hit-enter многострочным warning; заменён конкретным public Fidget notify.
+FileChangedShellPost при ignore не вызывается: отмена таймера идёт через
+native FileChangedShell cancel trigger AutoSave для реального opts.buf.
+Публичный Gitsigns detach освобождает watchers исчезнувших файлов; BufWritePost
+при восстановлении возвращает обычный attach. Пины/SDK тут не менялись.
+
+Отдельные незакрытые случаи сохранены в запускаемой диагностике:
+
+```powershell
+& .tools/neovim/windows-x64/bin/nvim.exe -l tests/diagnostics/delete-current-worktree.lua
+& .tools/neovim/windows-x64/bin/nvim.exe -l tests/diagnostics/delete-pending-attach.lua
+```
+
+IDE-034: Git/Neogit может не удалить сам текущий cwd на Windows, выставив
+второй force prompt, несмотря на уже изменившийся worktree list. IDE-035:
+rapid initial attach после исчезновения cwd может упасть в vim.system.
+Диагностика сохраняет соответствующие исходные шаги; эти проблемы не
+помечены PASS/SKIP или исправленными текущим buffer change.
+
+Итоги: Windows full 39 файлов/41 прогон — 38 PASS / 1 FAIL / 2 SKIP;
+FAIL — отдельный SDK CLI (partial ERROR на missing manifest), причина
+не установлена/IDE-031. Весь SDK файл затем 2 PASS. SDK CLI подключён к
+общему cli_probe: started/result/PID/argv/cwd/output в .tests/sdk-cli,
+outer assertion теперь печатает code/signal. Windows/POSIX оба прошли
+повтор SDK и CLI contracts; сроки и отсутствие retry сохранены.
+Ubuntu full 38 файлов/40 прогонов — 37 PASS / 0 FAIL / 3 SKIP. Новые 5,
+прежние buffer 8, Git 6, worktree refresh 3 и Diffview 7 PASS на обеих ОС.
+Windows quick 13/13 и trace 2/2, strict validate PASS. История §95 дописана
+к прежним 338647 байтам; audit deleted-files-history-prefix.json.
+
+Владелец явно поручил коммитить завершённые шаги и продолжать план:
+
+```powershell
+git diff --cached --name-only
+git diff --cached --check
+git commit -m "fix(ide): stabilize Windows SDK and deleted file buffers"
+git log -1 --oneline
+git status --short
+```
+
+Перед add проверены имена новых/изменённых файлов и отсутствие SECRET md
+среди tracked; .tests/.tools остаются игнорируемыми. Ни private SDK binary,
+ни build/runtime/исторические диагностические логи не добавляются в Git.

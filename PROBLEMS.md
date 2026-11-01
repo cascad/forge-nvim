@@ -10,9 +10,49 @@
 
 Маршрут и приоритеты: [рабочий план nvim_forge](docs/IDE_ROADMAP.md).
 Для новых пунктов используем следующий свободный ID `IDE-xxx`; исходный
-симптом хранится здесь, этап и состояние — в плане. Следующий ID: `IDE-032`.
+симптом хранится здесь, этап и состояние — в плане. Следующий ID: `IDE-036`.
 
 <!-- пиши ниже -->
+
+## IDE-034 — удаление самого текущего worktree на Windows
+
+Neogit Worktree Delete запрашивает смену cwd на main через scheduled chdir
+и начинает git worktree remove. Windows иногда оставляет каталог, показывает
+второй force prompt даже для чистого worktree; list уже может не содержать
+linked запись. Artifact 22804225008200. Воспроизведение без подмены Git:
+`& .tools/neovim/windows-x64/bin/nvim.exe -l tests/diagnostics/delete-current-worktree.lua`.
+В отличие от IDE-032 это отказ/частичный результат самого удаления до
+обработки оставшегося буфера. Точная роль cwd/открытых дескрипторов требует
+отдельной проверки. Пункт открыт, следующий после IDE-032.
+
+## IDE-035 — Gitsigns initial attach и исчезнувший worktree
+
+Быстрое открытие 12 файлов и удаление worktree до готовности initial diff
+может дать async vim.system ENOENT(cwd) в gitsigns manager update/attach
+(23207693774800). Hidden diff плагин намеренно откладывает до показа;
+одного существования буфера недостаточно для готовности signs.
+Публичный detach при FileChangedShell защищает последующие обновления,
+но не гарантирует отмену уже начавшегося initial attach.
+`tests/diagnostics/delete-pending-attach.lua` сохраняет эту последовательность;
+регресс IDE-032 отдельно ждёт готового diff каждого видимого файла, как
+в прежнем длительном commit/push сценарии. Приватные методы/пины не патчились.
+Пункт открыт; нужен детерминированный контроль завершения lifecycle/границы Git.
+
+IDE-032 → [FIXLOG §95](nvim_forge/FIXLOG.md#95-удалённый-файл-буфер-остаётся-доступным):
+Neogit refresh запускал checktime для оставшегося открытым удалённого файла,
+Native E211 мог блокировать ввод. Общая политика FileChangedShell сохраняет
+текст/modified, освобождает Gitsigns watchers и удерживает autosave до write/
+Save As; warning через Fidget не требует Enter. Контроль старого config-source
+в финальном сценарии даёт E211 (36164862736900), пять новых E2E и исходный
+IDE-GIT-3 прошли Windows/Ubuntu. Mac/GUI не проверены. IDE-034/035 — отдельные
+отказы до успешного удаления/готовности initial attach, остаются открытыми.
+
+IDE-033 → [FIXLOG §94](nvim_forge/FIXLOG.md#94-conpty-регресс-не-должен-менять-плагины-владельца):
+старый ConPTY набор запускал Forge из source config с настоящим user data,
+Lazy переписал neogit/neotest pin в source lazy-lock. Изменённый lock
+сохранён как улика, исходные байты восстановлены. Набор переведён на
+private config/data/cache/state с подготовленными pinned plugins и SDK
+общего runner; реальные child stdpath и source lock invariance проверяются.
 
 ## IDE-031 — единичный timeout Windows CLI entrypoint
 
@@ -27,6 +67,22 @@ timeout не увеличивался, launcher IDE-028 этот путь не �
 отдельно в `.tests/windows-worktree-refresh-recheck.txt`.
 Повтор обоих CLI случаев прошёл (0,5 секунды), код/timeout этого набора не
 менялись. Исходная причина timeout остаётся открытой; один повтор не фикс.
+
+Диагностика расширена в [FIXLOG §93](nvim_forge/FIXLOG.md#93-cli-timeout-сохраняем-доказательства):
+10 повторов/30 CLI процессов прошли, deadline 10s сохранён. Каждая попытка
+оставляет PID/argv/cwd/время/вывод/exit в `.tests/entrypoints-e2e`, ошибка
+также сохраняет fixture scripts. Timeout остаётся FAIL без retry;
+постоянные E2E проверяют частичный вывод, завершение child и spawn error.
+Исходная причина не установлена, IDE-031 не закрыта.
+
+В полном регрессе IDE-032 также единственный FAIL — SDK CLI:
+TestWindowsSDKCLI дошёл до missing manifest и сообщил ERROR, но внешний
+Python runner не получил завершённую unittest сводку. Артефакт
+`.tests/windows-deleted-files-full-logs/tests__e2e__windows-sdk.test.lua.log`.
+Точная причина/связь с прежним PowerShell timeout не доказана. SDK CLI теперь
+тоже сохраняет started/result с PID/argv/cwd/выводом в `.tests/sdk-cli`,
+а внешний assert включает code/signal. Deadlines 10s/30s не менялись,
+retry нет. Это диагностика семейства CLI ошибок, не объявленный фикс.
 
 IDE-030 → [FIXLOG §90](nvim_forge/FIXLOG.md#90-тестовые-runtime-заполнили-диск-c):
 569 копий editor runtime (551 старый + 18 оборванных) и 9 Go cache заняли
@@ -53,25 +109,18 @@ IDE-028 → [FIXLOG §91](nvim_forge/FIXLOG.md#91-neogit-согласованн�
 естественную серию visit, правильные Head/recent/log и сохранность Git/файлов.
 Три e2e Windows/Ubuntu прошли; Mac/GUI не проверены.
 
-## IDE-027 — единичное завершение Neovim в terminal/buffer e2e
-
-Первый полный Windows-регресс Git: IDE-BUF-1 (цикл вкладок и обычный terminal)
-получил `Редактор завершился во время nvim_exec_lua`, stderr пустой.
-`.tests/windows-git-full.txt`, artifact `.tests/editor-e2e/4960006794000/`.
-Остальные 7 buffer и все 5 Git e2e прошли. Повторный изолированный запуск
-всех 8 buffer e2e прошёл (`windows-git-buffers-recheck.txt`). Причина не
-установлена, исправлением Git этот сбой не объявляется. Сценарий уже входит
-в постоянный регресс; snapshot ошибки теперь сохраняет `child_exit`, если
-процесс успел сообщить его. Повтор при проверке очистки runtime:
-`.tests/editor-e2e/11614849831400/snapshot.json`, picker из дерева/terminal,
-`child_exit=3221225477` (Windows access violation), stderr пустой. Это не
-ошибка Lua cleanup; причина native crash пока не установлена. Продолжить
-диагностику отдельно от IDE-030. Последний полный Windows после очистки:
-`.tests/windows-diffview-runtime-final.txt` — 30 PASS / 1 FAIL (этот набор);
-artifact `.tests/editor-e2e/12179929834000/`, тот же child_exit=3221225477.
-В полном регрессе IDE-028 все 8 buffer e2e прошли. Native причина прежнего
-сбоя не установлена, пункт остаётся открытым; сведений Application Error/
-nvim CrashDumps на этой машине не найдено.
+IDE-027 → [FIXLOG §92](nvim_forge/FIXLOG.md#92-windows-terminal-conpty-lifecycle-и-временный-sdk):
+native access violation `nvim.exe!pty_proc_resize+0x1a`, нулевое чтение.
+Чистый Neovim без Forge воспроизводит сбой на первом цикле resize при
+завершении terminal echo. Указатель ConPTY остаётся доступен resize при
+background free/nested uv_run; патч убирает его заранее и защищает поздний
+resize. Исходники одного commit/компилятор: upstream red, patched 50 циклов
+green и 8 исходных buffer E2E green. Официальный 0.12.5 тоже падал в Forge.
+Владелец выбрал временный SDK Windows: `scripts/prepare-windows-sdk.ps1`,
+lock/patch, проверка manifest/SHA256 в `nvim_forge.cmd` и `scripts/test.ps1`.
+Linux/macOS используют официальный SDK; системный Windows nvim не заменён.
+Прямой `nvim` остаётся подвержен upstream ошибке. Mac/GUI не проверены;
+после подтверждённого upstream исправления убрать временный SDK отдельным шагом.
 
 IDE-026 → [FIXLOG §89](nvim_forge/FIXLOG.md#89-diffview-закрытие-во-время-загрузки):
 ранний close после списка истории давал async traceback/hit-enter

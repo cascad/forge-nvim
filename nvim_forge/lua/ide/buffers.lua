@@ -1,8 +1,12 @@
--- spec: IDE-BUF-1/2/3. Общая модель файлов, без управления tabpages/терминалом.
+-- spec: IDE-BUF-1/2/3/4. Общая модель файлов, без управления tabpages/терминалом.
 local M = {}
 local recent, closed, missing = {}, {}, {}
 local closing, cancelling_save = {}, {}
-function M.may_autosave(buf) return not closing[buf] or cancelling_save[buf] == true end
+local deleted = {}
+local disk_backed = {}
+function M.may_autosave(buf)
+    return cancelling_save[buf] == true or (not closing[buf] and not deleted[buf])
+end
 local tool_ft = {
     alpha=true, ['neo-tree']=true, aerial=true, ['dap-repl']=true,
     dapui_scopes=true, dapui_watches=true, dapui_stacks=true,
@@ -12,9 +16,30 @@ local tool_ft = {
     man=true, NeogitStatus=true, DiffviewFiles=true, DiffviewFileHistory=true,
 }
 
+local function is_document(buf)
+    return vim.api.nvim_buf_is_valid(buf) and vim.bo[buf].buftype == ''
+        and not tool_ft[vim.bo[buf].filetype]
+end
 function M.is_file(buf)
-    return vim.api.nvim_buf_is_valid(buf) and vim.bo[buf].buflisted
-        and vim.bo[buf].buftype == '' and not tool_ft[vim.bo[buf].filetype]
+    return is_document(buf) and vim.bo[buf].buflisted
+end
+
+local function note_missing(buf)
+    local name=vim.api.nvim_buf_get_name(buf)
+    if name=='' or missing[buf]==name then return end
+    missing[buf]=name
+    vim.schedule(function()
+        if vim.api.nvim_buf_is_valid(buf) and missing[buf]==name then
+            require('fidget').notify('File no longer available on disk: '..vim.fn.fnamemodify(name,':t')..
+                '\nТекст сохранён в буфере; :write / :saveas или <leader>bd.',
+                vim.log.levels.WARN,{annote='Files',key='missing-file:'..buf})
+        end
+    end)
+end
+
+local function detach_signs(buf)
+    local signs=package.loaded.gitsigns
+    if signs then signs.detach(buf) end
 end
 
 function M.is_editor_window(win)
@@ -56,13 +81,8 @@ function M.show(buf)
     M.focus_editor()
     vim.api.nvim_set_current_buf(buf)
     local name = vim.api.nvim_buf_get_name(buf)
-    if name ~= '' and vim.fn.filereadable(name)==0 and not missing[buf] then
-        missing[buf]=true
-        vim.schedule(function()
-            vim.notify('File no longer available on disk: '..vim.fn.fnamemodify(name,':t')..
-                '\n(use <leader>bd to drop this buffer)',vim.log.levels.WARN,{title='buffer'})
-        end)
-    elseif name ~= '' and vim.fn.filereadable(name)==1 then missing[buf]=nil end
+    if name ~= '' and vim.fn.filereadable(name)==0 then note_missing(buf)
+    elseif not deleted[buf] then missing[buf]=nil end
 end
 
 function M.cycle(direction)
@@ -172,6 +192,53 @@ end
 
 function M.setup()
     local group=vim.api.nvim_create_augroup('ForgeFileBufferHistory',{clear=true})
+    vim.api.nvim_create_autocmd('FileChangedShell',{group=group,callback=function(ev)
+        if vim.v.fcs_reason=='deleted' and is_document(ev.buf)
+            and vim.api.nvim_buf_get_name(ev.buf)~='' then
+            local first_deletion=not deleted[ev.buf]
+            deleted[ev.buf]=true
+            note_missing(ev.buf)
+            detach_signs(ev.buf)
+            -- Общий :checktime проверяет только видимые окна. При удалении
+            -- каталога освобождаем watchers скрытых загруженных файлов тоже;
+            -- явный :checktime N затем штатно отменит их pending autosave.
+            for buf,name in pairs(first_deletion and disk_backed or {}) do
+                if buf~=ev.buf and not deleted[buf] and is_document(buf)
+                    and vim.api.nvim_buf_is_loaded(buf) and vim.api.nvim_buf_get_name(buf)==name
+                    and not vim.uv.fs_stat(name) then
+                    deleted[buf]=true
+                    detach_signs(buf)
+                    note_missing(buf)
+                    vim.schedule(function()
+                        if vim.api.nvim_buf_is_valid(buf) and deleted[buf] then
+                            vim.cmd.checktime(tostring(buf))
+                        end
+                    end)
+                end
+            end
+            -- AutoSave отменяет pending timer в том же native событии для
+            -- ev.buf, включая скрытый буфер. В FileChangedShell нельзя
+            -- переключать буферы; Post при ignore вообще не вызывается.
+            cancelling_save[ev.buf]=true
+            vim.schedule(function() cancelling_save[ev.buf]=nil end)
+            vim.v.fcs_choice=''
+        elseif vim.v.fcs_choice=='' then
+            -- Наличие handler отключает default для ВСЕХ причин. Сохраняем
+            -- native warning/выбор при конфликте, mode/time и т.п.
+            vim.v.fcs_choice='ask'
+        end
+    end})
+    vim.api.nvim_create_autocmd({'BufWritePost','BufWipeout'},{group=group,callback=function(ev)
+        deleted[ev.buf],missing[ev.buf]=nil,nil
+        if ev.event=='BufWipeout' then disk_backed[ev.buf]=nil
+        else disk_backed[ev.buf]=vim.api.nvim_buf_get_name(ev.buf) end
+    end})
+    vim.api.nvim_create_autocmd('BufReadPost',{group=group,callback=function(ev)
+        disk_backed[ev.buf]=vim.api.nvim_buf_get_name(ev.buf)
+    end})
+    vim.api.nvim_create_autocmd('BufFilePost',{group=group,callback=function(ev)
+        missing[ev.buf]=nil
+    end})
     vim.api.nvim_create_autocmd('BufEnter',{group=group,callback=function(ev)
         if not M.is_file(ev.buf) then return end
         for i=#recent,1,-1 do if recent[i]==ev.buf then table.remove(recent,i) end end

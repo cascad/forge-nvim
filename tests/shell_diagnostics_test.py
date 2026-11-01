@@ -11,6 +11,8 @@ import unittest
 
 
 ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT / "tests/lib"))
+import cli_probe
 SPEC = importlib.util.spec_from_file_location(
     "shell_diagnostics", ROOT / "nvim_forge/scripts/diagnose-shell.py")
 DIAG = importlib.util.module_from_spec(SPEC)
@@ -192,6 +194,9 @@ class TestEntryPointsCLI(unittest.TestCase):
             self.shell = shutil.which("powershell") or shutil.which("pwsh")
             self.script = self.root / "scripts/test.ps1"
             shutil.copyfile(ROOT / "scripts/test.ps1", self.script)
+            (self.root / "scripts/lib").mkdir()
+            shutil.copyfile(ROOT / "scripts/lib/nvim-sdk.ps1", self.root / "scripts/lib/nvim-sdk.ps1")
+            self.env["FORGE_NVIM"] = "system"  # CLI argv/validation отдельно от SDK E2E.
             (self.bin / "nvim.cmd").write_text('@echo off\necho argv:%*\nexit /b 0\n', encoding="ascii")
             self.prefix = [self.shell, "-NoProfile", "-File", str(self.script)]
         else:
@@ -206,8 +211,9 @@ class TestEntryPointsCLI(unittest.TestCase):
             self.skipTest("нет системного shell для CLI entrypoint")
 
     def call(self, mode):
-        return subprocess.run(self.prefix + [mode], cwd=self.root, env=self.env,
-                              capture_output=True, text=True, timeout=10)
+        return cli_probe.run(self.prefix + [mode], cwd=self.root, env=self.env,
+                             timeout=10, artifacts=ROOT / ".tests/entrypoints-e2e",
+                             context_files=(self.script, self.root / "scripts/lib/nvim-sdk.ps1", *self.bin.iterdir()))
 
     def test_quick_and_e2e_forward_whole_suite_argument(self):
         # Регресс: PowerShell scalar-splat превращал 'unit' в u/n/i/t.
@@ -222,6 +228,62 @@ class TestEntryPointsCLI(unittest.TestCase):
         result = self.call("unknown-mode")
         self.assertNotEqual(result.returncode, 0)
         self.assertNotIn("argv:", result.stdout)
+
+
+class TestCLIProbeContract(unittest.TestCase):
+    """Процесс действительно пишет, падает/зависает; диагностика не делает retry."""
+
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.tmp.cleanup)
+        self.root = Path(self.tmp.name)
+        self.fixture = self.root / "fixture.py"
+        self.artifacts = self.root / "artifacts"
+
+    def invoke(self, source, timeout=10):
+        self.fixture.write_text(source, encoding="utf-8")
+        return cli_probe.run([sys.executable, "-B", str(self.fixture)], cwd=self.root,
+                             env=dict(os.environ), timeout=timeout,
+                             artifacts=self.artifacts, context_files=(self.fixture,))
+
+    def result(self):
+        import json
+        folders = list(self.artifacts.iterdir())
+        self.assertEqual(len(folders), 1, "диагностика не повторяет процесс")
+        return folders[0], json.loads((folders[0] / "result.json").read_text(encoding="utf-8"))
+
+    def test_failed_process_preserves_exit_output_and_fixture(self):
+        result = self.invoke('import sys\nprint("OUT_MARKER")\nprint("ERR_MARKER", file=sys.stderr)\nsys.exit(7)\n')
+        folder, data = self.result()
+        self.assertEqual(result.returncode, 7)
+        self.assertEqual(data["returncode"], 7)
+        self.assertIn("OUT_MARKER", data["stdout"])
+        self.assertIn("ERR_MARKER", data["stderr"])
+        self.assertGreater(data["pid"], 0)
+        self.assertFalse(data["timed_out"])
+        self.assertEqual((folder / "0-fixture.py").read_text(encoding="utf-8"), self.fixture.read_text(encoding="utf-8"))
+
+    def test_timeout_remains_failure_and_keeps_partial_output(self):
+        with self.assertRaises(subprocess.TimeoutExpired) as caught:
+            self.invoke('import sys, time\nprint("BEFORE_TIMEOUT", flush=True)\nprint("ERR_BEFORE_TIMEOUT", file=sys.stderr, flush=True)\ntime.sleep(60)\n', timeout=2)
+        folder, data = self.result()
+        self.assertTrue(data["timed_out"])
+        self.assertEqual(data["timeout"], 2)
+        self.assertIsNotNone(data["returncode"], "процесс должен завершиться до возврата")
+        self.assertIn("BEFORE_TIMEOUT", data["stdout"])
+        self.assertIn("ERR_BEFORE_TIMEOUT", data["stderr"])
+        self.assertEqual(caught.exception.output, data["stdout"])
+        self.assertTrue((folder / "0-fixture.py").is_file())
+
+    def test_missing_executable_preserves_spawn_error(self):
+        with self.assertRaises(OSError):
+            cli_probe.run([str(self.root / "absent-command")], cwd=self.root,
+                          env=dict(os.environ), timeout=10, artifacts=self.artifacts)
+        _, data = self.result()
+        self.assertIsNone(data["pid"])
+        self.assertIsNone(data["returncode"])
+        self.assertIn("error", data)
+        self.assertFalse(data["timed_out"])
 
 
 if __name__ == "__main__":

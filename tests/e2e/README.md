@@ -60,6 +60,20 @@ desktop clipboard и физическая доставка клавиш отме
 | Полный доступный регресс | `pwsh -NoProfile -File scripts/test.ps1 full` | `bash scripts/test.sh full` |
 
 В Windows допустим `powershell -NoProfile -File ...`, если pwsh отсутствует.
+Для Windows один раз явно подготовить SDK с исправлением IDE-027:
+
+```powershell
+powershell -NoProfile -File scripts/prepare-windows-sdk.ps1 -Download
+```
+
+На builder нужны Git, CMake/Ninja и MSVC C++ Build Tools; обычному запуску
+компилятор/сеть не нужны. `scripts/test.ps1` и `nvim_forge.cmd` используют
+один проверяемый runtime `.tools/neovim/windows-x64`, официальный POSIX
+SDK остаётся без изменений. Прямой `nvim -l ...` на Windows использует
+системный SDK, где native bug ещё воспроизводится; для focused проверок
+используй `& .tools/neovim/windows-x64/bin/nvim.exe -l ...`.
+Подготовка/lock/patch/A-B/override:
+[tests/diagnostics/README.md](../diagnostics/README.md).
 Команды — из корня чекаута. Прямой одинаковый entrypoint на всех ОС:
 `nvim -l tests/run.lua e2e`. Аргументы/фильтр существующего runner остаются
 доступны через `nvim -l tests/run.lua ...`.
@@ -405,16 +419,16 @@ shell/process/clipboard и подготовке VM. Крупные sleep, пер
 
 | Среда | Общие сценарии | Специальные проверки | Состояние |
 |---|---|---|---|
-| Windows native | CLI/IDE/languages | ConPTY, clipboard, ru/en, пути/venv | IDE-028 full: 30 PASS / 2 FAIL / 0 SKIP (32 файла); два падавших файла затем 2 PASS / 0 FAIL после исправления тестового транспорта. CLI timeout IDE-031 остаётся открытым, IDE-027 в этом full не повторился; GUI не проверен |
+| Windows native | CLI/IDE/languages | ConPTY, clipboard, ru/en, пути/venv | Full: 38 PASS / 1 FAIL (SDK CLI/IDE-031) / 2 SKIP, 39 файлов/41 прогон; SDK отдельно 2 PASS. IDE-032: 5 новых и исходный Git case PASS. ConPTY 66 PASS, GUI не проверен |
 | macOS | CLI/IDE/languages | zsh startup, Cmd, clipboard, arm64 при наличии | Ждёт VM/машину владельца |
-| Ubuntu | CLI/IDE/languages | apt/version check, bash/zsh, X11/Wayland по целевой сессии | Docker: 33 PASS, 0 FAIL, 3 SKIP (34 файла / 36 прогонов), включая 3 worktree refresh, 7 Diffview и 4 runtime E2E; прежние editor/language наборы тоже прошли, GUI не проверен |
+| Ubuntu | CLI/IDE/languages | apt/version check, bash/zsh, X11/Wayland по целевой сессии | Docker: 37 PASS / 0 FAIL / 3 SKIP, 38 файлов/40 прогонов; официальный SDK, 5 deleted-file и прежние editor/Git E2E прошли. GUI не проверен |
 | Mint | CLI/IDE/languages | apt/version check, bash/zsh, desktop clipboard | Временно отложен владельцем |
 
 Этот набор дополняет существующие `wezterm`, `install`, `trace`, `conpty`;
 их доказательства учитываются по фактической границе проверки, а не просто
 переносятся под ярлык e2e.
 
-Прогон 2026-11-01, рабочее дерево HEAD `4368fa1` с текущими изменениями:
+Предыдущий прогон 2026-11-01, рабочее дерево HEAD `4368fa1` с тогдашними изменениями:
 Windows Neovim 0.12.2, Ubuntu 24.04/Neovim 0.12.2. Ubuntu SKIP: реальная
 загрузка WezTerm (бинарник отсутствует), две дополнительные ветки установщиков
 под Bash 3.2 (интерпретатор отсутствует). Основные sandbox-сценарии
@@ -482,3 +496,71 @@ e2e в этом full прошли, IDE-027 остаётся открытым б�
 повторён на обеих ОС. Отчёты Windows full/recheck и Ubuntu full сохранены
 отдельно; старые FIXLOG байты проверены. Следующая диагностика Windows —
 IDE-027/031, затем ошибки push/конфликты. Mac/GUI/ConPTY не проверены.
+
+Уточнение IDE-027/031 (§92–93, HEAD 25dfbab с текущими изменениями):
+чистый terminal resize без Forge падает в pty_proc_resize на официальном
+Windows Neovim. A/B одного source commit/компилятора: upstream red на
+цикле 1, patched SDK 50 циклов green, все исходные 8 buffer E2E green.
+Владелец выбрал временный Windows SDK с явной подготовкой; в общем Lua
+нет Windows workaround. На Ubuntu официальный 0.12.2 прошёл 50 циклов.
+
+Добавлены постоянные файлы registry: windows-sdk.test.lua (настоящие
+launcher/test CLI выбранной ОС и native resize), native-probe.test.lua
+(CLI/cleanup/artifacts), entrypoint-diagnostics.test.lua (реальные ошибочный
+exit/stdout/stderr, timeout с частичным выводом и spawn error).
+Windows launcher проверяется в пути с пробелами и кириллицей, с настоящим
+SDK: argv/exit, same-process env restoration, broken/missing/stale manifest,
+явный system override, отказ preparer по неверному source/patch до build.
+POSIX использует официальный SDK без Windows manifest/build tools.
+
+IDE-031: 10 повторов/30 CLI процессов прошли без увеличения прежних 10s.
+Артефакты каждой попытки — .tests/entrypoints-e2e. Исходный timeout не
+объявлен исправленным; unit/CLI проверка намеренного timeout доказывает
+контракт диагностики, а не причину той ошибки. Native ConPTY lifecycle
+проверен core probe, доставка физических клавиш/GUI и Mac — отдельный долг.
+
+Windows full выбранным SDK: 38 файлов / 40 прогонов, 37 PASS / 1 FAIL /
+2 SKIP (обе дополнительные ветки Bash 3.2); 8 buffer, core probe и SDK CLI
+прошли. FAIL — IDE-032: E211/RPC timeout после удаления worktree с открытым
+файлом, artifact 20402797082900. Отдельно исходный IDE-GIT-3 прошёл на обоих
+SDK; источник блокировки остаётся открытым. Исходный full сохранён целиком,
+он не считается зелёным после частичного повтора.
+
+В конце того full обнаружена IDE-033: старый ConPTY reader использовал user
+plugins и переписал source lazy-lock. Изменённый lock сохранён, восстановлены
+точные прежние байты; после исправления изоляции весь ConPTY набор повторён:
+1 файл PASS, 0 FAIL/SKIP, включая реальные private stdpath и выбранный SDK.
+Source lock после него не менялся. Это программная проба через conpty.dll,
+не GUI/физическая клавиатура. Следующий открытый Git-регресс — IDE-032.
+
+Ubuntu final: 37 файлов/39 прогонов, 36 PASS / 0 FAIL / 3 SKIP
+(WezTerm отсутствует, две ветки Bash 3.2). Первый full имел единственный
+FAIL нового POSIX launcher CLI из-за CRLF рабочего nvim_forge.sh. Нормализован
+сам launcher по существующему .gitattributes, исходный red сохранён как
+ubuntu-stability-full-first.txt/report и SDK CLI log. После этого повторён
+полный Ubuntu, не только новый файл. Final Windows quick 13/13 и trace 2/2,
+strict validate PASS; SDK source/build/temp и runtime на F:, частные профили
+после завершения отсутствуют. Mac/GUI отдельно не запускались.
+
+IDE-032 (§95): FileChangedShell deleted сохраняет буфер/текст/modified,
+удерживает autosave и снимает watchers исчезнувших файлов. Конкретное Files
+warning показывает Fidget без hit-enter; другие native причины остаются ask.
+Новый deleted-files.test.lua содержит 5 real editor E2E: 12 loaded файлов
+worktree, успешное удаление после visit, hidden pending save/write/repeated
+episode, Save As, autoread/native conflict. Готовность signs наблюдается
+пока файл видим; общий checktime не проверяет hidden, для него используется
+явный номер. Windows focused 5 PASS, Ubuntu focused 5 PASS; старый полный
+config-source на том же сценарии даёт E211, artifact 36164862736900.
+
+Windows full: 39 файлов/41 прогон, 38 PASS / 1 FAIL / 2 SKIP (Bash 3.2).
+Пять новых и все прежние buffer/Git/worktree/Diffview прошли. Единственный
+FAIL — SDK CLI partial unittest ERROR на missing manifest без законченной
+сводки во внешнем deadline, причина не установлена (IDE-031). Отдельно весь
+SDK файл — 2 PASS; общий full остаётся красным. SDK CLI теперь тоже сохраняет
+started/result/PID в .tests/sdk-cli; deadlines не повышались, retry нет.
+
+Ubuntu full: 38 файлов/40 прогонов, 37 PASS / 0 FAIL / 3 SKIP. После
+диагностического уточнения helper SDK/CLI contracts отдельно повторены на
+обеих ОС. Full отчёты/логи сохранены с deleted-files префиксом. Mac/GUI
+не запускались. IDE-034 (удаление самого cwd) и IDE-035 (rapid initial attach)
+сохранены отдельными CLI в tests/diagnostics и остаются открытыми.

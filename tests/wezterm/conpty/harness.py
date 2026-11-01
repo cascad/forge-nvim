@@ -28,6 +28,7 @@ import threading
 import time
 
 CONPTY_DLL = os.environ.get('FORGE_CONPTY_DLL', r'C:\Program Files\WezTerm\conpty.dll')
+NVIM = os.environ.get('FORGE_TEST_NVIM', 'nvim')
 WEZTERM_VERSION = b'WezTerm 20240203-110809-5046fc22'
 
 PSEUDOCONSOLE_RESIZE_QUIRK = 0x2
@@ -145,7 +146,7 @@ def provenance():
         'conpty_sha256': sha,
         'conpty_version': _file_version(CONPTY_DLL),
         'wezterm': _first_line(['wezterm', '--version']),
-        'nvim': _first_line(['nvim', '--version']),
+        'nvim': _first_line([NVIM, '--version']),
         'layout': keyboard_layout(),
     }
 
@@ -299,12 +300,12 @@ def win32_key(vk, sc, uc, down, ctrl_state, repeat=1):
 READERS_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'readers')
 READERS = {
     # читатель → argv; журнал — в $FORGE_KEYLOG
-    'nvim': lambda: ['nvim', '--clean', '-u', 'NONE', '-i', 'NONE', '-n',
+    'nvim': lambda: [NVIM, '--clean', '-u', 'NONE', '-i', 'NONE', '-n',
                      '--cmd', 'luafile ' + os.path.join(READERS_DIR, 'nvim_onkey.lua')],
     'records': lambda: ['python', os.path.join(READERS_DIR, 'records.py')],
     'vt': lambda: ['python', os.path.join(READERS_DIR, 'vt.py')],
     # nvim_forge этого репо (NVIM_APPNAME + XDG_CONFIG_HOME задаёт вызывающий)
-    'nvim_forge': lambda: ['nvim', '--cmd', 'luafile ' + os.path.join(READERS_DIR, 'forge_onkey.lua')],
+    'nvim_forge': lambda: [NVIM, '--cmd', 'luafile ' + os.path.join(READERS_DIR, 'forge_onkey.lua')],
 }
 
 
@@ -313,7 +314,9 @@ def read_keys(reader, inputs, pause=0.25, timeout=60.0, env=None):
     → список (вход, [строки журнала на этот вход]). Журнал — во временном
     файле, удаляется на всех путях."""
     import tempfile
-    fd, log = tempfile.mkstemp(prefix='forge-conpty-', suffix='.log')
+    base = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(READERS_DIR))), '..', '.tests', 'tmp')
+    os.makedirs(base, exist_ok=True)
+    fd, log = tempfile.mkstemp(prefix='forge-conpty-', suffix='.log', dir=base)
     os.close(fd)
     try:
         with Session(READERS[reader](), env=dict(env or {}, FORGE_KEYLOG=log), timeout=timeout) as s:
