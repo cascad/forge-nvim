@@ -4414,3 +4414,166 @@ tests/lib/cli_probe.py, tests/windows_sdk_test.py, tests/e2e/windows-sdk.test.lu
 openspec/changes/handle-deleted-file-buffers/*, PROBLEMS.md,
 docs/IDE_ROADMAP.md, docs/AGENT_COMMANDS.md, docs/HISTORY.md,
 nvim_forge/QUICKSTART.md, tests/e2e/README.md, CLAUDE.md.
+
+
+### 96. Neogit: удаление текущего worktree после смены cwd
+
+Дата: 2026-11-01.
+Спека: IDE-GIT-7 (ADDED).
+Change: `fix-active-worktree-delete`.
+
+**Проблема.** IDE-034: после посещения linked worktree его обычное удаление
+на Windows иногда оставляло пустой каталог и показывало второй force prompt
+даже без изменений. Worktree list уже мог не содержать запись. Это отдельный
+сбой до успешного удаления, не прежний E211 буфера (IDE-032, §95).
+
+**Причина.** В закреплённом Neogit `d7bb91b42f984416adc6116d6ba8fba287857af3`
+`status:chdir(main)` ставит смену cwd в `vim.schedule`, а worktree action
+сразу начинает `git worktree remove`. CLI выбирает cwd по ещё прежнему
+`git.repo.worktree_root`. В trace 38223059880800 сначала spawn remove,
+затем Changing Dir main, затем exit 255/Permission denied.
+Обычный воспроизводимый `tests/diagnostics/git-worktree-cwd.py` проверяет
+три настоящих случая: cwd Git внутри linked; Git из main; Git из main при
+другом обычном процессе с cwd внутри linked. Windows даёт 255/0/255 с пустым
+каталогом в двух неуспешных случаях; Ubuntu — 0/0/0. Нативная отладка или
+чтение памяти для этой диагностики не требовались.
+
+**Изменение.** Временный минимальный патч: один
+`require("neogit.lib.async").util.scheduler()` после chdir. Он дожидается
+поставленного раньше перехода, прежде чем создаётся Git process. Существуют
+штатные Neogit UI/подтверждения, собственный Git backend не добавлялся.
+Общая реализация одинакова на Windows/macOS/Linux.
+
+`nvim_forge/patches/plugins.json` явно хранит базовую ревизию, точную замену
+и SHA256 файла до/после (71316bf6… / ea4a4e90…). Общий Lua applier проверяет
+HEAD при наличии `.git`, SHA и итог; неизвестное содержимое не меняет.
+Hash нормализует CRLF→LF, запись сохраняет исходные EOL. Повторная подготовка
+и check не пишут файл. Revert отменяет только точно известный патч.
+
+Подготовка выполняется явно: `:Lazy build neogit` с перезапуском редактора,
+или `nvim -l nvim_forge/scripts/prepare-plugins.lua` с тем же data/profile.
+CLI поддерживает `--plugin-root`, `--check`, `--revert`. Lazy commit закреплён
+по декларации; обычный update его не двигает. При открытии Git конфиг только
+проверяет готовность и при необходимости подсказывает подготовку. Локальный
+patch виден в Git checkout плагина как изменение; перед обновлением отменить
+известный patch, затем менять pin/декларацию и повторять регресс. Удаление
+временного решения — после подтверждённого upstream исправления, отдельным
+шагом; актуальный на момент исследования участок upstream имел ту же гонку.
+
+Явная prepare_editor экспортирует pinned исходники, вызывает тот же Lua CLI
+и записывает provenance в manifest. Editor/ConPTY harness проверяют реальный
+payload и manifest до запуска, не чинят его внутри теста. Docker готовит
+тот же вариант при build; тесты работают без сети. Git ceiling частного
+runtime не даёт искать репозиторий агента после исчезновения linked .git.
+Пользовательские плагины/профили при проверках не менялись.
+
+**Проверка/e2e.** Исходный UI red сохранён в
+`.tests/windows-current-worktree-baseline.txt` (каталог не удалён, force
+prompt), trace — 38223059880800. Приватный кандидат до принятия в конфиг:
+Windows 40230150572100 и Ubuntu 23583401673799 — PASS того же маршрута.
+
+Постоянный `active-worktree.test.lua` — два real editor E2E: чистый текущий
+linked с пробелами → delete → main → следующий visit → код; dirty → отказ
+force → сохранность файла/списка → внешний настоящий commit → повторный
+UI delete. Текст оставшегося буфера и main HEAD сохраняются. UI stage/commit
+editor отдельно проверяется прежним git-workflow, где Git backend настоящий.
+Ранний расширенный draft нового теста не выполнил stage на Windows/Ubuntu:
+locator видел имя файла в окне кода до обновления status. После разделения
+ожиданий Ubuntu прошёл, Windows снова не выполнил stage (42381080015400).
+Эти попытки не считаются red IDE-034; новый регресс сосредоточен на удалении,
+его переход dirty→clean готовится настоящим внешним Git commit.
+
+`plugin-backports.test.lua` — пять проверок: реальные apply/check/repeat/
+revert с LF/CRLF; отказ неизвестным payload/HEAD с сохранением байтов;
+отказ неподготовленного editor cache до запуска; CLI cwd repro; настоящий
+`:Lazy! build neogit` в частном редакторе. В последнем случае только копия
+плагина намеренно возвращается в исходное состояние, UI build готовит её,
+последующее открытие `:Neogit` не меняет mtime/hash. Вызовы UI идут через
+nvim_input; результаты Git и действие Lazy не подменялись.
+
+Focused Windows: 2 editor + 5 подготовки PASS; Ubuntu — те же 7 PASS.
+Логи `.tests/windows-ide034-active.txt`, `windows-ide034-backports.txt` и
+соответствующие `ubuntu-ide034-*`. Mac/GUI не запускались.
+
+**Вывод.** Порядок смены cwd важен и для процесса редактора, и для запускаемого
+Git. Buffer FileChangedShell не исправляет отказ самого удаления. Ожидание
+Neogit перехода устраняет эту гонку, сохраняя обычную защиту dirty. Удержание
+каталога сторонним процессом остаётся штатной ошибкой Git; IDE-035 (initial
+Gitsigns attach) и IDE-031 (редкий CLI timeout) здесь не объявлены исправленными.
+
+**Файлы.** nvim_forge/lua/ide/backports.lua, nvim_forge/patches/*,
+nvim_forge/scripts/prepare-plugins.lua, nvim_forge/lua/plugins/git.lua,
+tests/e2e/active-worktree.test.lua, tests/e2e/plugin-backports.test.lua,
+tests/diagnostics/git-worktree-cwd.py, tests/diagnostics/README.md,
+tests/diagnostics/delete-current-worktree.lua, tests/e2e/deleted-files.test.lua,
+tests/e2e/prepare_editor.py, tests/lib/editor.lua, tests/lib/conpty_profile.py,
+tests/containers/Dockerfile, tests/registry.lua, tests/README.md,
+tests/e2e/README.md, nvim_forge/QUICKSTART.md, PROBLEMS.md,
+docs/IDE_ROADMAP.md, docs/AGENT_COMMANDS.md, docs/HISTORY.md,
+openspec/changes/fix-active-worktree-delete/*.
+
+
+**Завершение интеграции после перезагрузки.** Ubuntu full — 40 файлов/
+42 прогона: 39 PASS / 0 FAIL / 3 SKIP (WezTerm отсутствует, две ветки Bash 3.2).
+Windows исходный full прерван по IDE-036: до прерывания 38 PASS / 0 FAIL /
+2 SKIP; единого итогового отчёта нет, этот запуск не считается полным PASS.
+Все editor/Git/deleted-file/Diffview проверки в нём прошли, SDK CLI тоже прошёл;
+это не устанавливает причину прежнего редкого timeout IDE-031.
+
+После рестарта отдельно завершены unit + trace + ConPTY: 16 файлов PASS /
+0 FAIL / 0 SKIP, 430 проверок. В ConPTY — 66 PASS, включая реальные private
+stdpath и выбранный SDK. Повтор plugin-backports.test.lua — 5 PASS, в том
+числе уточнённая подсказка повторить prepare_editor для тестового cache.
+Ubuntu этот helper после уточнения тоже повторён: 5 PASS. Старый source
+lazy-lock не изменился. Strict validate change и git diff --check прошли.
+Логи/отчёты: windows-ide034-full.txt (прерван), windows-ide034-tail.txt и
+*-tail-report.json, windows-ide034-backports-final.txt,
+ubuntu-ide034-full.txt и *-full-report.json, ubuntu-ide034-backports-final.txt.
+
+От прерывания остался private `conpty-profile-704v7zgm`, созданный 21:30:39;
+он не относится к успешному повтору. После проверки точного пути на F:,
+копии lock и отсутствия ссылок живых процессов профиль сохранён в
+`F:/forge-nvim-tmp/retired-profiles-20261101/`. Прямое удаление было отклонено
+автоматической проверкой (`blocked by policy`); выбран перенос с сохранением
+содержимого. Новые завершённые профили после повторов отсутствуют.
+
+
+### 97. Задержки Windows: перезапуск GPU не заменил рестарт ПК
+
+Дата: 2026-11-01. Связь: IDE-036. Статус: диагностика, причина не установлена.
+
+**Проблема.** Во время интеграции IDE-034 владелец сообщил о сильной задержке
+ввода и других программ, подозревая терминал. Собственный тестовый прогон
+остановлен целым проверенным деревом процессов; чужие окна не закрывались.
+
+**Наблюдения, не окончательная причина.** В живом `code --status` — три
+GPU RESULT_CODE_HUNG, ошибки Skia/shared context и software fallback.
+Несколько последовательных GPU PID занимали почти одно ядро. WezTerm
+в тех замерах использовал около 0,2–0,9% CPU и отвечал CLI за 128 ms.
+Свободно 24–25 GiB RAM, очереди диска пустые; AMD Graphics сообщала Code 43.
+Это доказывает GPU сбой Code, но не его единственную причинную связь со всей
+задержкой ввода/окон. Источник Code 43 также не установлен.
+
+**Попытка восстановления.** В 21:47 перезапущен только проверенный GPU child
+Code, без закрытия главного процесса/документов. До завершения child его CPU
+уже был 0%; это была попытка обновить контекст, а не доказанный фикс.
+Предложены штатный Win+Ctrl+Shift+B и запуск сохранённой работы Code с
+--disable-gpu. Владелец затем сообщил: ничего не помогло, кроме рестарта ПК.
+Следовательно, завершение GPU child не исправило этот эпизод. Конкретное
+устойчивое исправление не внесено, IDE-036 не закрыт.
+
+**Проверка.** Проверено вручную на Windows: Get-Process/CIM CPU deltas,
+RAM/disk/GPU counters, nvidia-smi, code --status, WezTerm mux list, журналы.
+Исходные результаты в ignored `.tests/performance-*`; команды описаны в
+docs/AGENT_COMMANDS.md §29. Владелец подтвердил восстановление после reboot
+и поручил продолжить план. Headless E2E этот системный эпизод не доказывает;
+исправление/регресс до установления причины не заявлены. macOS/Linux здесь
+не проверялись. Драйверы и глобальная конфигурация не менялись.
+
+**Вывод.** Различать подтверждённое зависание процесса, причину общих тормозов
+и меру, лишь снявшую текущий эпизод. При повторе сохранять живые counters/GPU
+status до рестарта; не объявлять WezTerm виновником либо Code единственной
+причиной по одной CPU-таблице.
+
+**Файлы.** docs/WINDOWS_UI_LAG_DIAGNOSTICS.md, PROBLEMS.md,
+docs/IDE_ROADMAP.md, docs/AGENT_COMMANDS.md, docs/HISTORY.md.

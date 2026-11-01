@@ -33,6 +33,10 @@ local function start(root, options, holder)
   local expected = {}
   for name, spec in pairs(lock) do expected[name] = spec.commit end
   assert(vim.deep_equal(expected, manifest.plugins), 'Подготовленные плагины не соответствуют lazy-lock.json; повтори prepare_editor.py')
+  local backports = dofile(root .. '/nvim_forge/lua/ide/backports.lua')
+  local ready, payload = pcall(backports.all, deps .. '/lazy', 'check')
+  assert(ready and vim.deep_equal(manifest.backports, payload),
+    'Тестовый backport не подготовлен; повтори python[3] -B tests/e2e/prepare_editor.py: ' .. vim.inspect(payload))
 
   local dir = root .. '/.tests/editor-e2e/' .. tostring(uv.hrtime())
   vim.fn.mkdir(dir, 'p')
@@ -62,6 +66,8 @@ local function start(root, options, holder)
     vim.fn.mkdir(env['XDG_' .. part .. '_HOME'], 'p')
   end
   env.NVIM_LOG_FILE = runtime .. '/nvim.log'
+  -- После удаления linked .git Git не должен найти родительский репозиторий агента.
+  env.GIT_CEILING_DIRECTORIES = runtime
   env.TMP, env.TEMP, env.TMPDIR = runtime .. '/tmp', runtime .. '/tmp', runtime .. '/tmp'
   vim.fn.mkdir(env.TMP, 'p')
   env.FORGE_E2E_CONFIG = root .. '/nvim_forge'

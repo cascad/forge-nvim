@@ -275,6 +275,9 @@ return {
     },
     {
         "NeogitOrg/neogit",
+        -- spec: IDE-GIT-7. Временный точечный backport, см. patches/README.md.
+        commit = require('ide.backports').revision('neogit'),
+        build = function(plugin) require('ide.backports').run('neogit', plugin.dir, 'apply') end,
         cmd = "Neogit",
         dependencies = {
             "nvim-lua/plenary.nvim",
@@ -302,5 +305,9 @@ return {
                 telescope = true,
             },
         },
+        config = function(plugin, opts)
+            require('ide.backports').run('neogit', plugin.dir, 'check')
+            require('neogit').setup(opts)
+        end,
     },
 }

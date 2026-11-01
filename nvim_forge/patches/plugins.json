@@ -1,0 +1,11 @@
+{
+  "neogit": {
+    "id": "IDE-034-worktree-delete-cwd",
+    "revision": "d7bb91b42f984416adc6116d6ba8fba287857af3",
+    "file": "lua/neogit/popups/worktree/actions.lua",
+    "before_sha256": "71316bf6f499fccb55689e3dd1f3a3711ee4fb632b0b7724075a56e10c022513",
+    "after_sha256": "ea4a4e90e2373718750583e9d6a755515a6b41231e4793fdccc9eef48d68b45c",
+    "before": "      status.instance():chdir(main.path)\n",
+    "after": "      status.instance():chdir(main.path)\n      require(\"neogit.lib.async\").util.scheduler()\n"
+  }
+}

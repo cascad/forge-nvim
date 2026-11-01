@@ -93,6 +93,14 @@ python -B tests/e2e/prepare_editor.py --download
 `--cache <lazy-directory>` и `--output <directory>`; тест читает альтернативный
 output через `FORGE_E2E_DEPS`. Docker выполняет подготовку при build.
 
+Подготовка также вызывает общий локальный Lua applier временного Neogit
+backport IDE-034; требуется Neovim (`--nvim <absolute-path>` выбирает binary).
+Manifest содержит базовый pin и SHA256 результата, editor/ConPTY harness
+проверяют реальный payload до запуска и не исправляют его. После добавления
+или изменения backport подготовку повторить даже при прежнем lazy-lock.
+Для установленного Forge отдельно выполнить `:Lazy build neogit` и перезапустить
+редактор. Подробности и обратимость — [patches/README.md](../../nvim_forge/patches/README.md).
+
 Быстрый запуск только редактора: `nvim -l tests/e2e/editor.test.lua`.
 
 Для DAP перед первым нативным `e2e`/`full` также подготовить совместимые
@@ -410,7 +418,7 @@ shell/process/clipboard и подготовке VM. Крупные sleep, пер
 | Базовое ядро редактора | Запуск, открыть/изменить/сохранить, дерево, имя/содержимое, буферы, фокус | `editor.test.lua`: Windows и Ubuntu PASS; Mac ждёт прогона |
 | IDE-BOOT-1/2 | Старт без установки инструментов, отсутствие предупреждения Go в .txt | `editor.test.lua`: Windows и Ubuntu PASS; Mac ждёт прогона; наличие gopls в Windows не фиксируется, отсутствие подтверждено в Ubuntu |
 | IDE-016–019, управление файлами | Создать/переименовать/переместить, cut/paste, отмена/конфликт, сохранённые буферы, общий маршрут/selector/zoom | `file-explorer.test.lua`: 7 real editor E2E; границы и результаты ниже |
-| Git/worktree | Локальный bare remote → worktree → изменение → commit/push; hunks/diff/history | `git-workflow.test.lua`: 6 real editor E2E, IDE-GIT-1/2/3/4, IDE-PANEL-5; `diffview-close.test.lua`: 7 сценариев IDE-GIT-5; `worktree-refresh.test.lua`: 3 сценария IDE-GIT-6 split/full/быстрый visit. Ошибки push/merge/rebase ещё открыты |
+| Git/worktree | Локальный bare remote → worktree → изменение → commit/push; hunks/diff/history | `git-workflow.test.lua`: 6 real editor E2E; `diffview-close.test.lua`: 7; `worktree-refresh.test.lua`: 3; `active-worktree.test.lua`: 2 IDE-GIT-7; `plugin-backports.test.lua`: 5, включая настоящий Lazy build/отсутствие записи при открытии Git. Ошибки push/merge/rebase ещё открыты |
 | Тестовый runtime IDE-030 | Реальное завершение редактора, сохранение артефактов, удаление своего профиля и отказ по чужому маркеру | `editor-runtime.test.lua`: 4 сценария, включая ошибку prepare и временный file lock внешнего процесса; `dap-output.test.lua` проверяет фактический go env GOCACHE |
 | Shell/jobs | Открыть terminal, job, закрыть/восстановить фокус | Не реализован; смена/закрытие файлов и базовый фокус покрыты ядром |
 | Языки | Для каждого языка LSP/format/run/debug/tests в применимых сочетаниях | Не реализован |
@@ -419,9 +427,9 @@ shell/process/clipboard и подготовке VM. Крупные sleep, пер
 
 | Среда | Общие сценарии | Специальные проверки | Состояние |
 |---|---|---|---|
-| Windows native | CLI/IDE/languages | ConPTY, clipboard, ru/en, пути/venv | Full: 38 PASS / 1 FAIL (SDK CLI/IDE-031) / 2 SKIP, 39 файлов/41 прогон; SDK отдельно 2 PASS. IDE-032: 5 новых и исходный Git case PASS. ConPTY 66 PASS, GUI не проверен |
+| Windows native | CLI/IDE/languages | ConPTY, clipboard, ru/en, пути/venv | IDE-034: частичный full 38 PASS / 0 FAIL / 2 SKIP, прерван по IDE-036. После reboot unit/trace/ConPTY 16 файлов PASS (ConPTY 66), подготовка 5 PASS; целый full не повторялся. IDE-031 открыт, GUI не проверен |
 | macOS | CLI/IDE/languages | zsh startup, Cmd, clipboard, arm64 при наличии | Ждёт VM/машину владельца |
-| Ubuntu | CLI/IDE/languages | apt/version check, bash/zsh, X11/Wayland по целевой сессии | Docker: 37 PASS / 0 FAIL / 3 SKIP, 38 файлов/40 прогонов; официальный SDK, 5 deleted-file и прежние editor/Git E2E прошли. GUI не проверен |
+| Ubuntu | CLI/IDE/languages | apt/version check, bash/zsh, X11/Wayland по целевой сессии | IDE-034 full: 39 PASS / 0 FAIL / 3 SKIP, 40 файлов/42 прогона; официальный SDK, editor/Git и 7 новых проверок прошли. GUI не проверен |
 | Mint | CLI/IDE/languages | apt/version check, bash/zsh, desktop clipboard | Временно отложен владельцем |
 
 Этот набор дополняет существующие `wezterm`, `install`, `trace`, `conpty`;

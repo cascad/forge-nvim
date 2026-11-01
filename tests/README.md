@@ -29,6 +29,9 @@ Editor e2e требует Git, ripgrep и подготовленные исхо�
 `nvim_forge/lazy-lock.json`: `python3 tests/e2e/prepare_editor.py --download`
 (Windows: `python`). Подготовка выполняется отдельно; отсутствие или
 расхождение зависимостей даёт FAIL с подсказкой. Docker готовит их при build.
+В подготовку входит временный Neogit backport, проверяемый по pin/SHA256;
+используется Neovim (`--nvim <path>`). Повторять подготовку также после
+изменения backport при том же lock. См. [patches](../nvim_forge/patches/README.md).
 Сам тест запускает настоящую сборку с подключённым RPC UI и приватным
 профилем; подробнее — [e2e/README.md](e2e/README.md).
 

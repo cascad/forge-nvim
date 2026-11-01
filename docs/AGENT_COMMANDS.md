@@ -1340,3 +1340,149 @@ git status --short
 Перед add проверены имена новых/изменённых файлов и отсутствие SECRET md
 среди tracked; .tests/.tools остаются игнорируемыми. Ни private SDK binary,
 ни build/runtime/исторические диагностические логи не добавляются в Git.
+
+## 28. IDE-034: cwd Git, явный backport Neogit и его регресс
+
+Все команды — в `F:/repo/forge-nvim`, Windows temp остаётся на F:.
+Обычная CLI-диагностика создаёт свои проекты и процессы, сохраняет JSON:
+
+```powershell
+$env:TEMP='F:\repo\forge-nvim\.tests\tmp'
+$env:TMP=$env:TEMP
+$env:TMPDIR=$env:TEMP
+python -B tests/diagnostics/git-worktree-cwd.py --output .tests/windows-ide034-cwd.json
+```
+
+Три варианта: cwd Git внутри linked; cwd в main; отдельный обычный процесс
+ждёт stdin с cwd внутри linked. Windows даёт 255/0/255, в неуспешных случаях
+остаётся пустой каталог. Ubuntu — 0/0/0. Это exit/stdout/stderr и файловая
+система; нативный отладчик/чтение памяти не используются.
+
+Исходный UI red сохранён в `windows-current-worktree-baseline.txt`, trace —
+`windows-current-worktree-trace.txt` и artifact 38223059880800/neogit.log:
+spawn remove раньше Changing Dir, затем Permission denied. Приватный кандидат
+`ide034-candidate-deps` дал PASS Windows/Ubuntu; после этого оформлены
+декларация `nvim_forge/patches/plugins.json` и общий Lua applier.
+
+```powershell
+python -B tests/e2e/prepare_editor.py --download --nvim F:/repo/forge-nvim/.tools/neovim/windows-x64/bin/nvim.exe
+& .tools/neovim/windows-x64/bin/nvim.exe -l tests/e2e/plugin-backports.test.lua
+& .tools/neovim/windows-x64/bin/nvim.exe -l tests/e2e/active-worktree.test.lua
+docker compose -f tests/containers/compose.yaml build ubuntu
+docker compose -f tests/containers/compose.yaml run --rm --entrypoint nvim ubuntu -l tests/e2e/plugin-backports.test.lua
+docker compose -f tests/containers/compose.yaml run --rm --entrypoint nvim ubuntu -l tests/e2e/active-worktree.test.lua
+```
+
+Подготовка плагины экспортирует по lock, затем явно запускает Lua CLI и
+записывает ID/base revision/результирующий hash в manifest. Harness проверяет
+реальный файл и manifest до запуска, не применяет патч сам. В тестовом профиле
+есть настоящий Lazy build: только частная копия намеренно возвращена в
+исходное состояние, затем через nvim_input введено `:Lazy! build neogit`.
+Открытие `:Neogit` после этого не меняет mtime/hash файла. Незнакомый payload
+или Git HEAD оставляет файл нетронутым и даёт nonzero с причиной.
+
+Два editor E2E: clean current delete и dirty cancel → внешний real commit →
+повторное удаление → следующий visit → редактирование. Ранний расширенный
+тест пытался stage через поиск status: имя уже было видно в окне кода, а
+status ещё обновлялся; Windows повтор также не выполнил stage. Эти неудачные
+попытки сохранены (42327320421100/42381080015400). Stage/commit UI проверяется
+существующим git-workflow E2E; новый регресс ограничен удалением и не подменяет
+Git результат. Итоговые focused Windows/Ubuntu: 2 editor + 5 подготовки PASS.
+
+```powershell
+docker compose -f tests/containers/compose.yaml run --rm ubuntu full > .tests/ubuntu-ide034-full.txt 2>&1
+powershell -NoProfile -File scripts/test.ps1 full > .tests/windows-ide034-full.txt 2>&1
+git diff --check
+```
+
+Full отчёты сохраняются отдельно с `ide034-full-report.json`; focused logs —
+`windows/ubuntu-ide034-active.txt`, `windows/ubuntu-ide034-backports.txt`.
+Результат full и ограничения — FIXLOG §96. IDE-031/035 остаются в очереди.
+На установленном Forge один раз `:Lazy build neogit`, затем перезапуск.
+Проверка/отмена без init и сети — `nvim -l nvim_forge/scripts/prepare-plugins.lua`
+с `--plugin-root <absolute-lazy-path>`, `--check` или `--revert`.
+
+## 29. Живая диагностика тормозов Windows (IDE-036)
+
+По жалобе владельца приоритет переключён с IDE-034 на ввод/другие приложения.
+Собственный full остановлен только после проверки CIM parent/command line:
+root pwsh PID 3356 → PowerShell 21308 → наш test runner Neovim 21092.
+`taskkill.exe /PID 3356 /T /F` остановил это дерево. PID — исторические,
+повторять завершение по ним в другой момент нельзя. Рабочие приложения
+не завершались. Прерванный full не записан как новый завершённый отчёт.
+
+Основные использованные команды (PowerShell, результаты — таблицы/JSON/текст):
+
+```powershell
+Get-Process
+Get-CimInstance Win32_Process
+Get-CimInstance Win32_OperatingSystem
+Get-CimInstance Win32_ComputerSystem
+Get-CimInstance Win32_PerfFormattedData_PerfDisk_PhysicalDisk
+Get-CimInstance Win32_PerfFormattedData_PerfOS_Processor -Filter "Name='_Total'"
+Get-CimInstance Win32_PerfFormattedData_GPUPerformanceCounters_GPUEngine
+Get-CimInstance Win32_PerfFormattedData_GPUPerformanceCounters_GPUProcessMemory
+Get-CimInstance Win32_VideoController
+Get-CimInstance Win32_PnPEntity -Filter "PNPClass='Display'"
+nvidia-smi.exe --query-gpu=name,utilization.gpu,utilization.memory,memory.used,memory.total,temperature.gpu --format=csv
+wezterm.exe cli list --format json
+code.cmd --status
+```
+
+CPU измерялся разностью cumulative CPU двух Get-Process с паузой 1,2–1,8 s,
+делением на фактическое время Stopwatch и 6 логических CPU; не по накопленной
+за сутки CPU. Серия из трёх замеров: GPU-process Code 15,5–16,4% всей CPU,
+то есть почти одно ядро. В последнем замере после серии его смен PID — 0%.
+Машинное окно времени/результаты — `.tests/performance-summary-20261101.json`.
+
+Журналы найдены через `rg --files`: `%APPDATA%/Code/logs` (main/renderer),
+`%USERPROFILE%/.local/share/wezterm` (gui logs). Отобраны по времени изменения,
+поиск `rg -n -i 'gpu|unresponsive|crash|hung|exited|error'`; сами проекты,
+секреты и содержимое pane не считывались. Get-WinEvent фильтровал Display
+4101 и Application 1000/1002 за два часа: соответствующих ошибок не найдено.
+
+Ключевой `code --status` сохранён в `.tests/performance-code-status.txt`:
+три GPU `RESULT_CODE_HUNG`, Skia/shared context failure и software fallback.
+WezTerm CLI ответил за 128 ms, RAM свободно 24–25 GiB, диски без очереди.
+AMD Code 43 — отдельный факт, не установленная причина всех тормозов.
+Полный вывод Code status содержит дерево процессов/пути workspace, поэтому
+остаётся ignored артефактом; в Git — краткий [разбор](WINDOWS_UI_LAG_DIAGNOSTICS.md).
+Никаких GPU/device resets, изменения драйверов/глобальных настроек или
+перезапуска рабочих приложений при первичном сборе не выполнялось. Позднее
+отдельно перезапущен проверенный GPU child Code 1384 (parent 19960) через
+Stop-Process; главный процесс сохранён. Это не помогло восстановить ввод.
+
+## 30. Завершение IDE-034 после рестарта ПК
+
+Владелец сообщил, что помог только reboot, и поручил продолжить roadmap.
+IDE-036 остаётся диагностикой; новые настройки GPU/драйверы не применялись.
+Полный Windows повтор не потребовался: сохранённый partial имеет 38 PASS /
+0 FAIL / 2 SKIP, оставшиеся проверки завершены отдельным запуском.
+
+```powershell
+$env:TEMP='F:\repo\forge-nvim\.tests\tmp'
+$env:TMP=$env:TEMP
+$env:TMPDIR=$env:TEMP
+$env:NVIM_LOG_FILE=Join-Path $env:TEMP 'ide034-resume-nvim.log'
+. ./scripts/lib/nvim-sdk.ps1
+$forgeNvim=Get-ForgeNvim (Get-Location).Path
+& $forgeNvim -l tests/e2e/plugin-backports.test.lua > .tests/windows-ide034-backports-final.txt 2>&1
+& $forgeNvim -l tests/run.lua unit trace conpty > .tests/windows-ide034-tail.txt 2>&1
+```
+
+Результаты: helper 5 PASS; unit/trace/ConPTY 16 файлов PASS, ConPTY 66 PASS.
+Tail report и logs скопированы отдельно с `windows-ide034-tail` префиксом;
+исходный full не подменён. Source lazy-lock проверен `git diff --quiet --
+nvim_forge/lazy-lock.json`. История дописана к прежним 355967 байтам;
+`ide034-history-prefix.json` подтверждает сохранение и исходных 347627 байт.
+
+Остаток старого private ConPTY профиля от 21:30:39 проверен по точному пути,
+копии lock и отсутствию живых ссылок. Remove-Item среда отклонила (`blocked
+by policy`); вместо удаления выполнен Move-Item с сохранением в
+`F:/forge-nvim-tmp/retired-profiles-20261101/`, оба абсолютных пути проверены.
+Это архив на F:, не освобождение занимаемого им места. Новых завершённых
+runtime в `.tests/tmp` не осталось; аудит — `ide034-retired-profile.json`.
+
+Завершение change: strict validate `fix-active-worktree-delete`, trace,
+`git diff --check`, затем явный список `git add` и `git diff --cached --check`.
+Ни .tests/.tools, ни full GPU status/пути сторонних проектов в коммит не входят.

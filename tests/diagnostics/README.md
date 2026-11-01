@@ -113,3 +113,32 @@ unknown-mode) прошли; исходная причина 10s timeout оста
 Новые launcher E2E проверяют настоящий SDK, argv с пробелами/кириллицей,
 exit code, восстановление env в том же PowerShell, broken manifest и
 явный system override. Они входят в общий registry.
+
+## IDE-034: удаление активного worktree
+
+```powershell
+python -B tests/diagnostics/git-worktree-cwd.py
+& .tools/neovim/windows-x64/bin/nvim.exe -l tests/e2e/plugin-backports.test.lua
+& .tools/neovim/windows-x64/bin/nvim.exe -l tests/e2e/active-worktree.test.lua
+```
+
+На Windows перед прямым запуском задать TEMP/TMP/TMPDIR в `.tests/tmp`.
+На Mac/Ubuntu: `python3`, официальный `nvim`; общий runner делает это сам.
+`git-worktree-cwd.py` создаёт частные Git fixtures и обычный дочерний процесс,
+удерживающий cwd. Windows: Git из linked или при таком процессе получает
+exit 255, оставляя пустой каталог; из main удаляет его. На POSIX все три
+удаления проходят. JSON — `.tests/git-worktree-cwd.json`.
+
+Trace исходного Neogit: Git remove spawn происходил до scheduled `Changing Dir`.
+Однострочный backport ждёт этот переход. ID/revision/SHA, явная подготовка,
+проверка и отмена — [patches](../../nvim_forge/patches/README.md).
+CLI/Lazy E2E проверяют LF/CRLF, повтор, неизвестные revision/payload, read-only
+check, revert и реальный `:Lazy build neogit`. Editor E2E удаляет чистый
+текущий worktree и сохраняет dirty при отказе force; внешний настоящий commit
+переводит fixture в чистое состояние для повторного UI удаления. UI commit
+отдельно покрыт `git-workflow.test.lua`.
+
+Старый `delete-current-worktree.lua` сохраняет исходную последовательность
+IDE-BUF-4; с подготовленным Neogit ожидается PASS. IDE-035 (rapid Gitsigns
+initial attach) остаётся отдельным `delete-pending-attach.lua`, не скрывается
+этим ожиданием смены cwd. Mac/GUI не проверены.

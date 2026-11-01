@@ -38,6 +38,9 @@ RUN GOTOOLCHAIN=local GOBIN=/opt/forge/bin go install github.com/go-delve/delve/
 ENV LANG=C.UTF-8
 RUN git config --system --add safe.directory /workspace && nvim --version
 COPY nvim_forge/lazy-lock.json /opt/forge/nvim_forge/lazy-lock.json
+COPY nvim_forge/patches/ /opt/forge/nvim_forge/patches/
+COPY nvim_forge/lua/ide/backports.lua /opt/forge/nvim_forge/lua/ide/backports.lua
+COPY nvim_forge/scripts/prepare-plugins.lua /opt/forge/nvim_forge/scripts/prepare-plugins.lua
 COPY tests/e2e/prepare_editor.py tests/e2e/prepare_tests.py tests/e2e/plugin-sources.json /opt/forge/tests/e2e/
 RUN python3 /opt/forge/tests/e2e/prepare_editor.py --download --output /opt/forge/editor-deps
 ENV FORGE_E2E_DEPS=/opt/forge/editor-deps

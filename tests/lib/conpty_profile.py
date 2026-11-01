@@ -4,6 +4,7 @@ import json
 import os
 from pathlib import Path
 import shutil
+import subprocess
 import tempfile
 
 
@@ -12,9 +13,15 @@ def isolated_forge(repo):
     repo = Path(repo)
     expected = json.loads((repo / "nvim_forge/lazy-lock.json").read_text(encoding="utf-8"))
     deps = Path(os.environ.get("FORGE_E2E_DEPS", str(repo / ".tests/editor-deps")))
-    prepared = json.loads((deps / "manifest.json").read_text(encoding="utf-8"))["plugins"]
-    if prepared != {k: v["commit"] for k, v in expected.items()}:
+    manifest = json.loads((deps / "manifest.json").read_text(encoding="utf-8"))
+    if manifest["plugins"] != {k: v["commit"] for k, v in expected.items()}:
         raise RuntimeError("ConPTY: повтори явную подготовку tests/e2e/prepare_editor.py")
+    checked = subprocess.run([os.environ.get("FORGE_TEST_NVIM", "nvim"), "-l",
+                              str(repo / "nvim_forge/scripts/prepare-plugins.lua"),
+                              "--plugin-root", str(deps / "lazy"), "--check"],
+                             capture_output=True, text=True, encoding="utf-8", timeout=30)
+    if checked.returncode or json.loads(checked.stdout) != manifest.get("backports"):
+        raise RuntimeError("ConPTY: повтори prepare_editor.py; backport не подготовлен: " + checked.stderr)
     base = repo / ".tests/tmp"
     base.mkdir(parents=True, exist_ok=True)
     before = (repo / "nvim_forge/lazy-lock.json").read_bytes()

@@ -91,7 +91,7 @@ local function worktree(e,linked,count,active)
     focus(e,'w','NeogitPopup');e:input('g');picker(e,'linked with space')
     e:wait('cwd linked',function() return norm(e:lua('return vim.fn.getcwd()'))==norm(linked) end)
     if vim.env.FORGE_DELETED_CURRENT_WORKTREE~='1' then
-      -- Отдельная диагностика сохраняет отказ Git при удалении самого cwd.
+      -- Активный cwd отдельно покрыт active-worktree.test.lua (IDE-034).
       -- Здесь проверяем IDE-BUF-4 после успешного удаления из main.
       focus(e,'w','NeogitPopup');e:input('g');picker(e,'project')
       e:wait('cwd main перед удалением',function() return norm(e:lua('return vim.fn.getcwd()'))==norm(e.project) end)

@@ -69,6 +69,8 @@ def main():
     parser.add_argument('--cache', type=Path, action='append', default=[])
     parser.add_argument('--download', action='store_true', help='Явно разрешить скачать отсутствующие pinned исходники')
     parser.add_argument('--output', type=Path, default=ROOT / '.tests/editor-deps')
+    parser.add_argument('--nvim', default=os.environ.get('FORGE_TEST_NVIM', 'nvim'),
+                        help='Neovim для общей локальной подготовки backports (без init/сети)')
     args = parser.parse_args()
     lock_raw = LOCK.read_bytes()
     lock = json.loads(lock_raw)
@@ -125,7 +127,13 @@ def main():
         catalog_path.write_text(json.dumps(catalog, indent=2, sort_keys=True) + '\n')
     if missing:
         parser.exit(2, 'Нет pinned исходников: ' + ', '.join(missing) + '\nИспользуй --download либо --cache с нужными git-объектами.\n')
-    manifest = {'lock_sha256': hashlib.sha256(lock_raw).hexdigest(), 'plugins': result}
+    prepared = subprocess.run([args.nvim, '-l', str(ROOT / 'nvim_forge/scripts/prepare-plugins.lua'),
+                               '--plugin-root', str((args.output / 'lazy').resolve())],
+                              capture_output=True, text=True, encoding='utf-8', timeout=30)
+    if prepared.returncode:
+        parser.exit(2, prepared.stdout + prepared.stderr)
+    manifest = {'lock_sha256': hashlib.sha256(lock_raw).hexdigest(), 'plugins': result,
+                'backports': json.loads(prepared.stdout)}
     (args.output / 'manifest.json').write_text(json.dumps(manifest, indent=2, sort_keys=True) + '\n')
     print('Prepared %d pinned plugins: %s' % (len(result), args.output))
 
