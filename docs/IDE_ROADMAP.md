@@ -13,7 +13,7 @@ IDE-001 параллельно ждёт диагностических данн�
 | Готово | Test-only cleanup IDE-047 | Коммит fa33150, E2E и §107; причина первичного RPC остаётся отдельной диагностикой |
 | Готово | IDE-041: E339 на очень длинном слове | Общая защита, по 3 UI + 10 smoke PASS Windows/Ubuntu; §108 |
 | Готово | IDE-009: основные рабочие панели | Tests/Test Output/Search/Tasks в Space w, query сохранён, по 6 новых + 19 прежних UI PASS Windows/Ubuntu; §109 |
-| Следующий шаг | Матрица шести языков | Проверить Go/Rust/Python/JS-Node/Bash/SQL: LSP, completion, format, run/debug/test; добавить реально отсутствующие сценарии |
+| Следующий шаг | Матрица шести языков | Первичный [аудит](LANGUAGE_MATRIX.md) готов; следующий результат — положительные Go LSP/format E2E, затем недостающие JS/Node/Bash/SQL и Rust/Python регресс |
 | После функциональной матрицы | Упрощение архитектуры | Общее ядро, явные системные границы и setup; сокращение дублирования с сохранением E2E |
 
 **Mac параллельно:** IDE-001 (zsh/Go до запуска nvim) и IDE-002 (Cmd+C)
@@ -262,6 +262,12 @@ Normal mode, прежние aliases сохранены:
 
 ## Этап 4. Языки
 
+Первичная [матрица кода и покрытия](LANGUAGE_MATRIX.md) снята 2026-11-02:
+Go/Rust/Python настроены частично, реальные положительные E2E пока преимущественно
+Go DAP/tests. JS/Node/Bash/SQL ещё не имеют полного языкового стека; подсветка
+и общие buffer completion/trim/tasks не считаются готовностью IDE языка.
+
+- [x] Первичный аудит конфигурации и покрытия шести языков, без новых PASS.
 - [ ] Матрица Go/Rust/Python/JS-Node/Bash/SQL: LSP, completion, definition,
   references, rename, diagnostics, format, run, debug и tests где применимо.
 - [ ] Сохранить работающие Go/Rust/Python; добавить отсутствующие JS/Node.js,

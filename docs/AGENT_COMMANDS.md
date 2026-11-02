@@ -2260,3 +2260,28 @@ rg/Get-Content/git diff. Список F обновлён `python -B .tests/updat
 добавлена только baseline-копия (67 файлов, 1.20 MiB), прежние замеры не
 повторялись; .tests/F_CLEANUP_PATHS.txt содержит 11 путей для ручной очистки.
 Каталоги/данные Docker не удалялись, Desktop/WSL не запускались/перезапускались.
+
+## 41. Первичная матрица языков — чтение кода
+
+```powershell
+rg --files nvim_forge/lua tests/e2e
+rg -n 'vim.lsp.config\(|vim.lsp.enable\(' nvim_forge/lua/plugins/lsp.lua
+rg -n 'formatters_by_ft|rust|python|golines|gofumpt|javascript|bash|sql' nvim_forge/lua/plugins/format.lua
+rg -n 'adapters|configurations|current_file_configs|debug_choices|project_python|include_configs' nvim_forge/lua/plugins/dap.lua
+Get-Content -LiteralPath nvim_forge/lua/plugins/tests.lua
+Get-Content -LiteralPath nvim_forge/lua/plugins/tasks.lua
+Get-Content -LiteralPath tests/registry.lua
+rg -n 'gotestsum|parser|go_version' tests/e2e/prepare_tests.py
+rg -n 'go_version|dlv_version' tests/e2e/prepare_dap.py
+python -B .tests/audit-language-matrix.py
+python -B .tests/check-work-panel-docs.py
+git diff --check
+```
+
+Get-Content выдаёт текст, rg — совпавшие строки и номера; код запускаемых
+программ/серверов этими чтениями не исполняется. Проверены явные LSP config/
+enable, formatter mappings, adapters/default launch, Treesitter languages,
+общие cmp/tasks и фактический registry E2E. JSON source SHA и граница аудита —
+.tests/language-matrix-code-audit.json. Итог — docs/LANGUAGE_MATRIX.md.
+Наличие настройки отделено от установленного binary и положительного E2E.
+Новых языковых PASS, установок или runtime изменений этот шаг не содержит.
