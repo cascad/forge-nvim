@@ -1,4 +1,13 @@
 {
+  "gitsigns.nvim": {
+    "id": "IDE-035-gitsigns-git-cwd",
+    "revision": "dd3f588bacbeb041be6facf1742e42097f62165d",
+    "file": "lua/gitsigns/git/cmd.lua",
+    "before_sha256": "a53e54cd164bdbee8fc10e5a7512d6e3641471be9d0339afdeaa334866d3441c",
+    "after_sha256": "6ae5b933ee49fb4c1c4745d3e2132f331e1250fadb181b588f8aa0136d3262d5",
+    "before": "  vim.list_extend(cmd, args)\n",
+    "after": "  if spec.cwd then\n    vim.list_extend(cmd, { '-C', spec.cwd })\n    spec.cwd = nil\n  end\n  vim.list_extend(cmd, args)\n"
+  },
   "neogit": {
     "id": "IDE-034-worktree-delete-cwd",
     "revision": "d7bb91b42f984416adc6116d6ba8fba287857af3",

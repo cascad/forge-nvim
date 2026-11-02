@@ -38,7 +38,7 @@ end
 local function check(name,dirty)
   T.check(name,function()
     local e,linked,next_path
-    local ok,err=pcall(function()
+    local ok,err=xpcall(function()
       e=require('editor').start(root,{env={GIT_CONFIG_NOSYSTEM='1',GIT_CONFIG_GLOBAL=vim.fn.has('win32')==1 and 'NUL' or '/dev/null',GIT_TERMINAL_PROMPT='0',NEOGIT_LOG_FILE='1',NEOGIT_LOG_LEVEL='trace'},prepare=function(project,_,runtime)
         for k,v in pairs({['user.name']='Fixture',['user.email']='fixture@example.invalid',['commit.gpgsign']='false',['core.autocrlf']='false',['core.hooksPath']=runtime..'/no-hooks'}) do git(project,'config',k,v) end
         git(project,'checkout','-b','main');git(project,'add','.');git(project,'commit','-m','fixture baseline')
@@ -74,10 +74,12 @@ local function check(name,dirty)
       e:wait('код доступен',function() return e:current_file()==norm(e.project..'/file_two.txt') end)
       e:input('A_EDITABLE<Esc>');e:wait('редактор принимает ввод',function() return e:lua('return vim.api.nvim_get_current_line()'):find('_EDITABLE',1,true)~=nil end)
       responsive(e)
-    end)
+    end,debug.traceback)
     if e then
       for _,path in ipairs(vim.fn.glob(e.runtime..'/cache/**/neogit.log',false,true)) do vim.uv.fs_copyfile(path,e.dir..'/neogit.log') end
-      local observed={cwd=e:lua('return vim.fn.getcwd()'),worktrees=git(e.project,'worktree','list','--porcelain')}
+      -- Даже на hit-enter сохранить исходную ошибку/экран и убрать свой runtime.
+      local cwd_ok,cwd=pcall(e.lua,e,'return vim.fn.getcwd()')
+      local observed={cwd=cwd_ok and cwd or tostring(cwd),worktrees=git(e.project,'worktree','list','--porcelain')}
       vim.fn.writefile({vim.json.encode(observed)},e.dir..'/worktree-observed.json')
       e:snapshot(name);io.stdout:write('  artifacts: '..e.dir..'\n');e:stop()
     end

@@ -29,6 +29,14 @@ public static class ForgeGitProxy
         var path = Path.ChangeExtension(Assembly.GetExecutingAssembly().Location, ".args");
         var prefix = File.ReadAllLines(path);
         var start = new ProcessStartInfo(prefix[0], String.Join(" ", prefix.Skip(1).Concat(args).Select(Quote)));
+        // Только для gate удаления: ожидающий proxy не удерживает linked cwd.
+        var stable = Environment.GetEnvironmentVariable("FORGE_GIT_PROXY_STABLE_CWD");
+        if (!String.IsNullOrEmpty(stable))
+        {
+            start.EnvironmentVariables["FORGE_GIT_PROXY_ORIGINAL_CWD"] = Environment.CurrentDirectory;
+            Environment.CurrentDirectory = stable;
+            start.WorkingDirectory = stable;
+        }
         start.UseShellExecute = false;
         start.CreateNoWindow = true;
         // При CreateNoWindow дочернему процессу нужны явные pipe handles.

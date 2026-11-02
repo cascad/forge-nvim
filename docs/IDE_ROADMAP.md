@@ -265,6 +265,10 @@ Normal mode, прежние aliases сохранены:
 - [x] IDE-034: удаление активного linked worktree после смены cwd; временный
   проверяемый backport Neogit с явной подготовкой, 2 editor + 5 подготовки E2E
   Windows/Ubuntu (§96). Mac остаётся отдельной проверкой.
+- [x] IDE-035: удаление между initial Git reads, сохранение текста и дальнейший
+  stage/unstage в нужном repo; 2 UI + 7 подготовки E2E Windows/Ubuntu (§99).
+- [ ] IDE-038: единичный Windows Permission denied при повторном удалении
+  после dirty cancel/commit/visit; установить удерживающий cwd/handle.
 
 Готово, когда обычная рабочая задача проходит от создания worktree до push
 без мыши и без необходимости искать необъявленные команды в конфиге.
@@ -335,8 +339,15 @@ IDE-037: владелец выбрал чистый Docker вместо восс
 Новый engine проверен container/volume write/read, данные на F:, AutoStart
 выключен. Lifecycle Desktop/WSL без отдельного поручения не менять. Старый
 диск сохранён; незавершённая копия не используется (удаление отклонено средой).
-Инструкция — `docs/DOCKER_WINDOWS_SETUP.md`. IDE-035 в реализации, Ubuntu
-проверки новой версии ещё не выполнены; не выдавать прежний Ubuntu full за них.
+Инструкция — `docs/DOCKER_WINDOWS_SETUP.md`. По подтверждению владельца engine
+запущен 2026-11-02; новый образ собран один раз, Ubuntu full IDE-035:
+41 файл/43 прогона, 40 PASS / 0 FAIL / 3 SKIP. Следующая проверка Git — IDE-038,
+затем rejected push и merge/rebase этапа 5. IDE-039 (ConPTY RU Ctrl+/)
+и IDE-040 (единичный RPC timeout) остаются отдельными открытыми пунктами.
+Windows IDE-035: 2 UI + 7 подготовки PASS. Интеграция семи файлов имеет
+6 PASS / 1 FAIL (active worktree, IDE-038); его отдельный повтор 2 PASS
+не является фиксом. Tail unit/trace/ConPTY: 15 PASS / 1 FAIL (IDE-039),
+65/66 ConPTY PASS. Mac/GUI не проверены; полный Windows PASS не заявлен.
 
 IDE-036: эпизод сильных тормозов ввода/окон закончился только после рестарта
 ПК, по сообщению владельца. GPU hangs Code и AMD Code 43 зафиксированы,

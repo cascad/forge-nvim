@@ -4644,3 +4644,111 @@ docker-clean-write-probe.txt, docker-clean-read-probe.txt. Полные наст
 
 **Файлы.** CLAUDE.md, PROBLEMS.md, docs/DOCKER_WINDOWS_SETUP.md,
 docs/IDE_ROADMAP.md, docs/AGENT_COMMANDS.md, docs/HISTORY.md.
+
+
+## 2026-11-02
+
+### 99. Gitsigns: незавершённый diff и исчезнувший worktree
+
+**Связь:** IDE-035; change `fix-gitsigns-deleted-worktree`.
+Спека: IDE-GIT-8 (ADDED).
+**Статус:** установленный ENOENT исправлен, новые E2E Windows/Ubuntu PASS;
+Mac/GUI непроверены. Отдельные IDE-038/039/040 остаются открытыми.
+
+**Проблема.** Быстрое открытие файлов и удаление worktree до готовности
+initial signs иногда вызывали async traceback/hit-enter, закрывая доступ
+к коду. IDE-032 сохранял текст и снимал watchers на FileChangedShell, но
+не гарантировал отмену уже начатого attach. Обычный быстрый repro мог
+пройти и не доказывал отсутствие ошибки.
+
+**Причина.** У закреплённого Gitsigns dd3f588bacbeb041be6facf1742e42097f62165d
+initial update читает index blob, затем HEAD:file. Если между ними удалён
+worktree, второй vim.system пытается запустить Git с отсутствующим cwd.
+Ошибка ENOENT выбрасывается до получения результата процесса и проходит
+через manager/attach/debounce. Это не обычный nonzero Git и не ошибка
+FileChangedShell. Существующий публичный detach не останавливает каждый
+уже исполняющийся callback.
+
+Детерминированный gate сохраняет настоящий stdout/stderr/code первого
+show, удерживает только доставку. Пользователь через Neogit удаляет linked;
+реальный remove завершается успешно, доставка его callback также удержана,
+чтобы уборка FileChangedShell не скрывала исследуемый промежуток. После
+возврата первого show следующий запуск воспроизводит ENOENT. Windows wrapper
+и Python заранее освобождают собственный cwd, чтобы gate сам не удерживал
+удаляемую папку. Первый baseline artifact 1783013359300 RED; вариант
+четырёх строк 2079365207200 GREEN. Постоянный red replay 2872589002600 и
+повтор из git archive конфига 89237bf (1055924081600) снова дали исходный
+traceback/hit-enter. Это настоящий Git, без синтеза результатов.
+
+**Изменение.** В git/cmd.lua Gitsigns запрошенный cwd передаётся штатным
+`git -C`, а process cwd убирается. Исчезнувший путь теперь проверяет Git,
+возвращая свой nonzero/stderr. Остальные аргументы/путь не подменяются main,
+нет retry/задержки, глобального error handler или runtime monkey patch
+приватных функций плагина. Для исходного и исправленного файла закреплены
+SHA256 в plugins.json; Lazy build и явный CLI используют общий applier
+IDE-034. Pin Gitsigns не обновлялся. Обычная загрузка только проверяет
+готовность, подготовка/снятие пишут известный payload по явной команде.
+
+CLI --plugin выбирает одну декларацию; без него остаётся подготовка всех.
+Неизвестное имя/содержимое сохраняется без изменения. README описывает
+`:Lazy build gitsigns.nvim` и restart существующей установки, проверку,
+снятие перед обновлением и удаление временного backport после подтверждённого
+upstream fix. У исследованного официального main 1e9d0fb... код всё ещё
+использовал process cwd; это анализ исходников, не upstream runtime A/B.
+
+**Проверка.** Новый gitsigns-worktree.test.lua: 2 real UI E2E на Windows
+patched SDK и Ubuntu official 0.12.2. Успешное удаление между reads не даёт
+ERROR/hit-enter, текст сохраняется, последующий main hunk stage/unstage
+работает. Dirty force cancel сохраняет worktree/текст, signs завершаются,
+stage/unstage меняет правильный linked index; main HEAD/index остаются прежними.
+Наблюдаются поздние callback. Plugin-backports: 7 PASS на обеих ОС, включая
+LF/CRLF/пробелы, selected apply/check/revert/repeat/unknown, настоящий Lazy
+build Gitsigns/Neogit и отсутствие повторной записи исходников при открытии.
+
+Windows последовательная интеграция семи файлов: 6 PASS / 1 FAIL;
+gitsigns 2, backports 7, прежние git-workflow 6, refresh 3, deleted-files 5,
+Diffview 7 прошли. Active worktree: первый случай PASS, второй Git remove
+вернул 255/Permission denied после cancel/внешнего commit/повторного visit.
+Это IDE-038. Его cleanup затем бросал ошибку чтения cwd на confirm и скрыл
+первичный traceback. Тест получил xpcall и защищённое чтение; новый прогон
+2 PASS не считается доказательством устранения Permission denied.
+Собственный оставшийся runtime после проверки owner/живых процессов
+экспортирован в artifact 551474721600 и убран штатным editor_runtime.remove;
+исходный экран потерян из-за прежнего cleanup, neogit.log сохранён.
+
+Windows tail unit/trace/ConPTY: 16 файлов, 15 PASS / 1 FAIL, 430 проверок.
+Все unit/trace прошли. Из 66 ConPTY — 65 PASS, один FAIL сравнения RU fixture.
+Повтор с read-only observer реального probe сохранил единственные отличия:
+Ctrl+/ replay/right_ctrl дают <C-_> вместо <C-N>, vt 1f вместо 0e. Это
+IDE-039; эталон не менялся. Foreground HKL против языка приватной консоли —
+гипотеза, не установленная причина. Предыдущий RPC timeout NeogitStatus
+3279984278000 отдельно записан как IDE-040: без изменения кода/deadline
+отдельный dirty и оба новых сценария прошли, причина timeout не доказана.
+
+Владелец включил Docker; агент Desktop/WSL не запускал/не перезапускал.
+На новом F: engine явно собран образ. Ubuntu full: 41 файл/43 прогона,
+40 PASS / 0 FAIL / 3 SKIP, 635 проверок. SKIP: WezTerm отсутствует и две
+ветки Bash 3.2. Все новые и прежние Git/deleted/worktree прошли, включая
+active worktree с улучшенной диагностикой. Full Windows PASS не заявлен;
+это targeted интеграция и отдельный tail с сохранёнными FAIL. Source lock
+не менялся. Артефакты windows-ide035-final-*.txt/integration.json,
+windows-ide035-active-diagnostic.txt, windows-ide035-tail-report.json/logs,
+windows-ide035-archive-red.txt, ide035-conpty-actual.json/diff.txt,
+ubuntu-ide035-build-fresh.txt, ubuntu-ide035-full-report.json/logs.
+
+**Вывод.** Ошибка запуска процесса и обычная ошибка Git требуют разных
+границ обработки. Передача выбранного пути самому Git оставляет привычный
+контракт ошибок без глобального подавления исключений редактора. Gate
+между реальными завершениями делает редкую гонку воспроизводимой и
+проверяет продолжение работы, а не только отсутствие сообщения. Зелёный
+повтор другого flaky сценария не устанавливает его причину: IDE-038/039/040
+отдельно сохранены в очереди. Backports временные, общие для целевых ОС.
+
+**Файлы.** nvim_forge/lua/plugins/git.lua, nvim_forge/patches/plugins.json,
+nvim_forge/patches/README.md, nvim_forge/scripts/prepare-plugins.lua,
+nvim_forge/QUICKSTART.md, tests/e2e/gitsigns-worktree.test.lua,
+tests/e2e/gitsigns_git_gate.py, tests/e2e/git_proxy_launcher.cs,
+tests/e2e/plugin-backports.test.lua, tests/e2e/active-worktree.test.lua,
+tests/registry.lua, tests/README.md, tests/e2e/README.md, PROBLEMS.md,
+docs/IDE_ROADMAP.md, docs/AGENT_COMMANDS.md, docs/HISTORY.md,
+openspec/changes/fix-gitsigns-deleted-worktree/*.

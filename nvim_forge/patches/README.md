@@ -43,3 +43,28 @@ nvim -l nvim_forge/scripts/prepare-plugins.lua --plugin-root /absolute/path/to/l
 удалить декларацию/build guard и прогнать `tests/e2e/active-worktree.test.lua`
 на Windows/Ubuntu/macOS. До этого патч остаётся временной частью подготовки.
 Он не устраняет удержание cwd сторонним процессом и IDE-035 (Gitsigns attach).
+
+## IDE-035: Gitsigns и исчезнувшая папка
+
+Для Gitsigns `dd3f588bacbeb041be6facf1742e42097f62165d` добавлен отдельный
+проверяемый backport: рабочая папка передаётся через `git -C`, а не process
+cwd. При её исчезновении сам Git возвращает nonzero/stderr; исключение
+запуска `vim.system` не блокирует initial diff. Семантика пути сохраняется,
+см. [Git -C](https://git-scm.com/docs/git). Глобальные ошибки редактора не
+перехватываются, результаты Git не подменяются.
+
+На существующей установке один раз `:Lazy build gitsigns.nvim`, затем
+перезапустить редактор. При другой установленной ревизии сначала
+`:Lazy restore gitsigns.nvim`. Обычная загрузка проверяет результат без записи.
+Default CLI готовит/проверяет все декларации; для отдельного плагина:
+
+```sh
+nvim -l nvim_forge/scripts/prepare-plugins.lua --plugin-root /absolute/path/to/lazy --plugin gitsigns.nvim
+nvim -l nvim_forge/scripts/prepare-plugins.lua --plugin-root /absolute/path/to/lazy --plugin gitsigns.nvim --check
+nvim -l nvim_forge/scripts/prepare-plugins.lua --plugin-root /absolute/path/to/lazy --plugin gitsigns.nvim --revert
+```
+
+Неизвестное имя/содержимое не изменяет файлы. Снятие патча перед заменой pin
+и подтверждение upstream fix выполняются отдельно с тем же E2E
+`tests/e2e/gitsigns-worktree.test.lua`. Этот backport не исправляет системные
+тормоза Windows, редкие CLI timeouts или удержание папки другим процессом.

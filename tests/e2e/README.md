@@ -418,7 +418,7 @@ shell/process/clipboard и подготовке VM. Крупные sleep, пер
 | Базовое ядро редактора | Запуск, открыть/изменить/сохранить, дерево, имя/содержимое, буферы, фокус | `editor.test.lua`: Windows и Ubuntu PASS; Mac ждёт прогона |
 | IDE-BOOT-1/2 | Старт без установки инструментов, отсутствие предупреждения Go в .txt | `editor.test.lua`: Windows и Ubuntu PASS; Mac ждёт прогона; наличие gopls в Windows не фиксируется, отсутствие подтверждено в Ubuntu |
 | IDE-016–019, управление файлами | Создать/переименовать/переместить, cut/paste, отмена/конфликт, сохранённые буферы, общий маршрут/selector/zoom | `file-explorer.test.lua`: 7 real editor E2E; границы и результаты ниже |
-| Git/worktree | Локальный bare remote → worktree → изменение → commit/push; hunks/diff/history | `git-workflow.test.lua`: 6 real editor E2E; `diffview-close.test.lua`: 7; `worktree-refresh.test.lua`: 3; `active-worktree.test.lua`: 2 IDE-GIT-7; `plugin-backports.test.lua`: 5, включая настоящий Lazy build/отсутствие записи при открытии Git. Ошибки push/merge/rebase ещё открыты |
+| Git/worktree | Локальный bare remote → worktree → изменение → commit/push; hunks/diff/history | `git-workflow.test.lua`: 6 real editor E2E; `diffview-close.test.lua`: 7; `worktree-refresh.test.lua`: 3; `active-worktree.test.lua`: 2 IDE-GIT-7; `gitsigns-worktree.test.lua`: 2 IDE-GIT-8; `plugin-backports.test.lua`: 7, включая настоящий Lazy build/отсутствие записи при открытии Git/файла. Ошибки push/merge/rebase ещё открыты |
 | Тестовый runtime IDE-030 | Реальное завершение редактора, сохранение артефактов, удаление своего профиля и отказ по чужому маркеру | `editor-runtime.test.lua`: 4 сценария, включая ошибку prepare и временный file lock внешнего процесса; `dap-output.test.lua` проверяет фактический go env GOCACHE |
 | Shell/jobs | Открыть terminal, job, закрыть/восстановить фокус | Не реализован; смена/закрытие файлов и базовый фокус покрыты ядром |
 | Языки | Для каждого языка LSP/format/run/debug/tests в применимых сочетаниях | Не реализован |
@@ -572,3 +572,19 @@ Ubuntu full: 38 файлов/40 прогонов, 37 PASS / 0 FAIL / 3 SKIP. П�
 обеих ОС. Full отчёты/логи сохранены с deleted-files префиксом. Mac/GUI
 не запускались. IDE-034 (удаление самого cwd) и IDE-035 (rapid initial attach)
 сохранены отдельными CLI в tests/diagnostics и остаются открытыми.
+
+IDE-035 (§99, 2026-11-02): initial index show → удаление linked → следующий
+HEAD show воспроизводится через прозрачный gate настоящих результатов Git.
+Два gitsigns-worktree E2E проверяют сохранение текста, отсутствие блокировки,
+последующий main stage/unstage и dirty cancel со stage именно linked index.
+Windows/Ubuntu — 2 PASS; plugin-backports — 7 PASS на обеих ОС, включая CLI
+--plugin и настоящий Lazy build Gitsigns. Baseline red можно повторить на
+config archive 89237bf и private upstream Gitsigns; команды — AGENT_COMMANDS §32.
+
+Ubuntu full новой версии: 41 файл/43 прогона, 40 PASS / 0 FAIL / 3 SKIP.
+Windows targeted интеграция: 6 файлов PASS / 1 FAIL (повторное active delete,
+IDE-038); улучшен сбор исходной ошибки/cleanup, его повтор 2 PASS не является
+фиксом Permission denied. Tail unit/trace/ConPTY: 15 PASS / 1 FAIL, 65/66
+ConPTY PASS. Единственное JSON отличие RU fixture — Ctrl+/ replay/right_ctrl
+в nvim/vt (IDE-039), эталон не менялся. Единичный RPC timeout при фокусе Git
+сохранён как IDE-040. Полный Windows PASS и проверка Mac/GUI не заявлены.

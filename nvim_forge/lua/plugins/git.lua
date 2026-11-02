@@ -3,6 +3,9 @@
 return {
     {
         "lewis6991/gitsigns.nvim",
+        -- spec: IDE-GIT-8. Исчезнувший путь обрабатывает сам Git через -C.
+        commit = require('ide.backports').revision('gitsigns.nvim'),
+        build = function(plugin) require('ide.backports').run('gitsigns.nvim', plugin.dir, 'apply') end,
         event = { "BufReadPre", "BufNewFile" },
         opts = {
             signs = {
@@ -36,6 +39,10 @@ return {
                 nm("<leader>ghB", gs.toggle_current_line_blame, "Git: toggle line blame")
             end,
         },
+        config = function(plugin, opts)
+            require('ide.backports').run('gitsigns.nvim', plugin.dir, 'check')
+            require('gitsigns').setup(opts)
+        end,
     },
     {
         "sindrets/diffview.nvim",

@@ -1554,3 +1554,87 @@ docker run --rm --network none --mount 'type=volume,source=<probe-volume>,target
 Копия не используется Docker; удаление не обходилось другим способом.
 Подробнее — [настройка и границы восстановления](DOCKER_WINDOWS_SETUP.md),
 история FIXLOG §98. Настройки и полные пользовательские журналы не коммитятся.
+
+## 32. Initial signs, исчезнувший worktree и регресс IDE-035
+
+Windows temp/logs/cache остаются на F:. Использовался проверяемый resolver SDK,
+без запуска системного nvim с известным ConPTY bug:
+
+```powershell
+$env:TEMP='F:\repo\forge-nvim\.tests\tmp'
+$env:TMP=$env:TEMP
+$env:TMPDIR=$env:TEMP
+$env:NVIM_LOG_FILE=Join-Path $env:TEMP 'ide035-windows-integration.log'
+. ./scripts/lib/nvim-sdk.ps1
+$forgeNvim=Get-ForgeNvim (Get-Location).Path
+foreach ($forgeCase in @('gitsigns-worktree','plugin-backports','git-workflow','worktree-refresh','deleted-files','active-worktree','diffview-close')) {
+  & $forgeNvim -l ('tests/e2e/'+$forgeCase+'.test.lua') > ('.tests/windows-ide035-final-'+$forgeCase+'.txt') 2>&1
+}
+& $forgeNvim -l tests/e2e/active-worktree.test.lua > .tests/windows-ide035-active-diagnostic.txt 2>&1
+& $forgeNvim -l tests/run.lua unit trace conpty > .tests/windows-ide035-tail.txt 2>&1
+```
+
+Фактический coordinator дополнительно сохранял start/exit/duration каждого
+файла в `windows-ide035-integration.json`, продолжая после FAIL. Отчёт и logs
+tail скопированы с отдельным префиксом `windows-ide035-tail`. Результаты:
+новые 2 UI и 7 подготовки PASS; интеграция 6 файлов PASS/1 FAIL (IDE-038),
+диагностический повтор active — 2 PASS, tail 15 PASS/1 FAIL (IDE-039).
+Старые красные файлы/отчёты не перезаписывались повтором.
+
+Для воспроизводимого red использован git archive прежнего конфига 89237bf
+в отдельную новую папку `.tests/ide035-baseline-config`, без checkout/изменения
+рабочего дерева. Папка предварительно проверялась на отсутствие:
+
+```powershell
+if (Test-Path -LiteralPath '.tests/ide035-baseline-config') { throw 'Baseline path exists; preserved' }
+New-Item -ItemType Directory -Path '.tests/ide035-baseline-config' | Out-Null
+git archive --format=tar --output=.tests/ide035-baseline-config.tar 89237bf nvim_forge
+tar -xf .tests/ide035-baseline-config.tar -C .tests/ide035-baseline-config
+$env:FORGE_GITSIGNS_E2E_CASE='initial show'
+$env:FORGE_GITSIGNS_SOURCE_VARIANT='upstream'
+$env:FORGE_E2E_CONFIG_SOURCE='F:/repo/forge-nvim/.tests/ide035-baseline-config/nvim_forge'
+& $forgeNvim -l tests/e2e/gitsigns-worktree.test.lua > .tests/windows-ide035-archive-red.txt 2>&1
+```
+
+Этот последний запуск намеренно RED (exit 1, artifact 1055924081600):
+backport снимается только в private копии Gitsigns, старый конфиг позволяет
+увидеть upstream async traceback/hit-enter. Настоящие Git stdout/stderr/code
+сохранены в git-gate. Переменные задавались лишь внутри отдельного shell
+вызова инструмента; green запуски их не наследовали. `gitsigns_git_gate.py`
+задерживает только доставку результатов, Windows argv launcher освобождает
+свой cwd. Git backend/результаты не подменяются.
+
+Docker сначала был выключен: docker info вернул отсутствие engine pipe.
+Desktop/WSL агент не запускал. После сообщения владельца «docker включил»
+прочитаны engine и CustomWslDistroDir (ожидается F:/wsl/DockerDesktopWSL-clean),
+затем выполнены:
+
+```powershell
+docker compose -f tests/containers/compose.yaml build ubuntu > .tests/ubuntu-ide035-build-fresh.txt 2>&1
+docker compose -f tests/containers/compose.yaml run --rm ubuntu full > .tests/ubuntu-ide035-full.txt 2>&1
+```
+
+Сборка готовит зависимости явно, test container — без сети. Ubuntu full:
+41 файл/43 прогона, 40 PASS/0 FAIL/3 SKIP, 635 проверок. Report и logs
+скопированы из `.tests/ubuntu/` с префиксом `ubuntu-ide035-full`; Mac/GUI
+не запускались. Engine после тестов агент не останавливал.
+
+ConPTY FAIL исследован ignored наблюдателем `observe-ide035-conpty.py`:
+через importlib загружен настоящий chords.test.py, wrapper probe только
+сохраняет возвращённый JSON, затем выполняется исходное сравнение fixture.
+`FORGE_TEST_NVIM` задан resolver SDK; `python -B` оставляет bytecode выключенным.
+Результат — `ide035-conpty-actual.json`, рекурсивный diff — `ide035-conpty-diff.txt`:
+только nvim/vt replay/right_ctrl Ctrl+/ отличаются (IDE-039). Эталон не менялся.
+
+Первый FAIL active worktree скрыл исходную ошибку на чтении cwd в cleanup.
+Теперь xpcall сохраняет первичный traceback, защищённый read не мешает
+snapshot/stop. Оставшийся runtime 28552-551475216700 проверен по точному
+пути/owner и отсутствию ссылок живых процессов (исключён собственный shell
+чтения). Config/project/log/owner скопированы в artifact 551474721600,
+потом `cleanup-ide035-orphan.lua` вызвал штатный editor_runtime.remove с
+проверкой canonical path/token/root. `ide035-orphan-cleanup.json` подтверждает
+удаление; первоначальный экран восстановить нельзя, это записано явно.
+
+OpenSpec: list/status/instructions apply для `fix-gitsigns-deleted-worktree`,
+затем strict validate. Проверены git diff --check, source lock и сохранность
+прежнего префикса FIXLOG. .tests/.tools/настройки пользователя не коммитятся.
