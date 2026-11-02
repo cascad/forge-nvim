@@ -46,7 +46,7 @@ function M.start(argv, options)
       if not ok then self.error = tostring(failure) end
     end,
     stderr = function(_, chunk) if chunk then self.stderr[#self.stderr + 1] = chunk end end,
-  }, function(result) self.exited = true; self.exit_code = result.code end)
+  }, function(result) self.exited = true; self.exit_code = result.code; self.exit_signal=result.signal end)
 
   function self:request(method, args)
     assert(not self.error and not self.exited, self.error or 'Дочерний редактор завершился')
@@ -54,7 +54,16 @@ function M.start(argv, options)
     local id = self.serial
     self.process:write(vim.mpack.encode({ 0, id, method, args or {} }))
     local ready = vim.wait(10000, function() return self.replies[id] or self.exited or self.error end, 5)
-    if not ready then self.process:kill(15); error('RPC timeout: ' .. method) end
+    if not ready then
+      local message='RPC timeout: '..method
+      self.failure=self.failure or {message=message,method=method,id=id,timeout_ms=10000,pid=self.process.pid}
+      if options.artifacts then
+        local ok,err=pcall(vim.fn.writefile,{vim.json.encode(self.failure)},options.artifacts..'/rpc-error.json')
+        if not ok then self.failure.artifact_error=tostring(err) end
+      end
+      self.process:kill(15)
+      error(message)
+    end
     assert(self.replies[id], self.error or ('Редактор завершился во время ' .. method))
     local response = self.replies[id]
     self.replies[id] = nil

@@ -2056,3 +2056,84 @@ report logs и неизменность прежних 413301 bytes FIXLOG. Ит
 Процессы вручную не убивались; после full --rm контейнер удалён автоматически,
 `docker ps --filter ancestor=forge-nvim-tests:ubuntu24.04-nvim0.12.2` пуст.
 Следующий полный прогон — после изменения/новых доказательств IDE-047.
+
+## 38. IDE-047: завершение child и сохранение первичной ошибки
+
+Изменение test-only, `preserve-editor-shutdown-evidence` с skip_specs=true.
+Runtime редактора/SDK и prepared image не менялись; rebuild/download не нужен.
+Новый `editor_process.stop` управляет только переданным собственным handle,
+сохраняет shutdown.json и возвращает отдельный cleanup verdict. Неуспешный
+graceful/TERM с необходимостью SIGKILL остаётся FAIL, даже если процесс убран.
+
+```powershell
+$env:TEMP = 'F:\repo\forge-nvim\.tests\tmp'
+$env:TMP = $env:TEMP; $env:TMPDIR = $env:TEMP
+$env:NVIM_LOG_FILE = Join-Path $env:TEMP 'ide047-regression.log'
+$env:npm_config_cache = 'F:\forge-nvim-tmp\npm-cache'
+. ./scripts/lib/nvim-sdk.ps1
+$forgeNvim = Get-ForgeNvim (Get-Location).Path
+& $forgeNvim -l tests/e2e/editor-process.test.lua
+& $forgeNvim -l tests/e2e/editor-runtime.test.lua
+& $forgeNvim -l tests/e2e/gitsigns-worktree.test.lua
+& $forgeNvim -l tests/e2e/gitsigns-live-read.test.lua
+# После Windows, на уже запущенном engine:
+docker compose -f tests/containers/compose.yaml run --rm --entrypoint nvim ubuntu -l tests/e2e/editor-process.test.lua
+docker compose -f tests/containers/compose.yaml run --rm --entrypoint nvim ubuntu -l tests/e2e/editor-runtime.test.lua
+docker compose -f tests/containers/compose.yaml run --rm --entrypoint nvim ubuntu -l tests/e2e/gitsigns-worktree.test.lua
+docker compose -f tests/containers/compose.yaml run --rm --entrypoint nvim ubuntu -l tests/e2e/gitsigns-live-read.test.lua
+docker compose -f tests/containers/compose.yaml run --rm -e 'FORGE_RUNTIME_E2E_CASE=зависший RPC' --entrypoint nvim ubuntu -l tests/e2e/editor-runtime.test.lua
+docker compose -f tests/containers/compose.yaml run --rm ubuntu full
+```
+
+Последовательный coordinator сохранил start/duration/code/log для восьми
+шагов в `.tests/ide047-targeted-progress.json`. Все exit 0; логи —
+windows/ubuntu-ide047-{editor-process,editor-runtime,gitsigns-worktree,gitsigns-live-read}.txt.
+В обеих ОС прежние Gitsigns 2+4 PASS. Финальные Windows process 1 PASS/1 SKIP,
+runtime 4 PASS/1 SKIP — process-final.txt/runtime-final.txt. Ubuntu process 2
+PASS, обычный runtime 4 PASS; затем добавленная полноценная forced runtime
+проверка отдельно 1 PASS (ubuntu-ide047-runtime-forced.txt, 30815923044938).
+Windows SIGSTOP отсутствует, поэтому две принудительные POSIX ветки — SKIP;
+Mac/GUI не проверены. Зелёные Git повторы не доказывают причину прежнего RPC.
+
+Baseline был получен Python subprocess.check_output(['git','show',
+'5e4dfe8:tests/lib/editor.lua']) и записан bytes без PowerShell UTF-16. SHA256
+d7f923b739ed873bd4a6e85d6e1633c523cedcedb9c9aa418383874faecff1b2.
+`Copy-Item -LiteralPath .tests/ide047-legacy-editor.lua -Destination
+.tests/ubuntu/ide047-legacy-editor.lua` нужен из-за отдельного volume .tests.
+Первый запуск без копии дал E484 (30310704969802), это ошибка подготовки,
+не runtime RED. После копии исходный assert воспроизведён 30319420967493;
+повтор конечным тестом с полным code/signal — 30836777527388:
+
+```powershell
+docker compose -f tests/containers/compose.yaml run --rm -e FORGE_EDITOR_PROCESS_CASE=forced -e FORGE_EDITOR_STOP_LEGACY_SOURCE=/workspace/.tests/ide047-legacy-editor.lua --entrypoint nvim ubuntu -l tests/e2e/editor-process.test.lua
+```
+
+Ожидается exit 1, «Дочерний Neovim не завершился» именно в старой функции.
+Adapter проверяет SHA и только экспортирует её, тело не меняется. Тест
+дожидается POSIX T-state через `ps -o stat= -p <свой PID>`, настоящий RPC
+timeout 10s и старые 2s + 2s. Finally принудительно завершает исключительно
+свой handle и пишет cleaned=true. Конечный RED имеет code 0 / signal 9;
+одного exit code недостаточно для определения обычного завершения.
+
+Новый helper: qa!/2s → SIGTERM/2s → SIGKILL/2s, shutdown.json до/после каждого
+этапа, первый rpc-error.json до сигнала. Повторный stop сохраняет исходный
+verdict. Editor stop сохраняет snapshot/project/config/manifest/stderr и
+освобождает профиль только после подтверждённого exit и сохранения artifacts;
+иначе оставляет runtime с явным путём. Первичный RPC и исключение caller
+не подменяются cleanup ошибкой. Runtime forced regression проверяет всю эту
+цепочку на настоящем редакторе, включая отсутствие каталога после остановки.
+
+После новых process/runtime проверок запущен один полный Ubuntu с текущей
+диагностикой: ubuntu-ide047-full.txt/report.json/full-logs. Это новый прогон
+после изменения инфраструктуры, прежние два Ubuntu IDE-043 FAIL сохранены.
+Desktop/WSL не запускались и не перезапускались.
+
+Итог IDE-047 full: 43 PASS/1 FAIL/3 SKIP, 45 файлов/47 прогонов, 653 checks,
+382.7s. Новые process/runtime и live read прошли; initial completed show/remove
+не дождался следующего Git-read — IDE-048. Shutdown у этого child успешен,
+без hard kill; исходное ожидание осталось в отчёте. Чистый full PASS не заявлен.
+`python -B .tests/audit-ide047.py` сверяет baseline RED/cleaned/signal,
+forced editor shutdown/snapshot/config, восемь targeted exit, сохранённые
+report/logs и неизменность прежней истории; summary.ok=false сохраняется.
+Результат — .tests/ide047-evidence-validation.json. После этого полный набор
+без нового связанного изменения не повторялся.

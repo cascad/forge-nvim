@@ -706,6 +706,38 @@ notifications/history/prompts/refs. Конечный RED: 27202749796900 (native
 teardown, IDE-047 остаётся открытым. Это не чистый Ubuntu full PASS;
 исходные report/logs не переписаны. Mac/GUI не проверены.
 
+IDE-047: процессный регресс `editor-process.test.lua` запускает настоящий
+clean Neovim через RPC. Обычный qa! проверяется на Windows/Ubuntu. На POSIX
+собственный child останавливается SIGSTOP, настоящий RPC deadline остаётся
+10s; остановка проходит qa!/2s → SIGTERM/2s → SIGKILL/2s. Успешный SIGKILL
+не превращает cleanup в PASS: helper возвращает ok=false с первичной ошибкой,
+editor caller завершает проверку FAIL. Windows SIGSTOP ветка — явный SKIP;
+Mac требует отдельного запуска. После каждого сценария тест обязан убрать
+свой child даже на baseline RED.
+
+`shutdown.json` содержит PID, этапы и elapsed, code **и signal**, первый RPC
+сбой и исходную ошибку caller. `rpc-error.json` пишется до первого SIGTERM;
+последующие snapshot не повторяют зависший RPC. После подтверждённого exit
+и сохранения artifacts runtime очищается; если это невозможно — остаётся с
+явным путём. Исходная ошибка передаётся `e:stop(primary_error)` из общего
+Gitsigns wrapper обоих файлов и из startup. Повторный stop сохраняет verdict.
+Проверки завершают только переданный собственный handle, без поиска по имени.
+Это исправляет cleanup/доказательства; причина первичного IDE-047 RPC
+timeout остаётся открытой, даже если отдельный Git повтор прошёл.
+
+Исходный stop_process из commit 5e4dfe8 можно проверить явно: Git show
+tests/lib/editor.lua сохранить в файл, на Ubuntu положить в .tests/ubuntu,
+задать FORGE_EDITOR_STOP_LEGACY_SOURCE=/workspace/.tests/ide047-legacy-editor.lua
+и FORGE_EDITOR_PROCESS_CASE=forced. Adapter сверяет SHA, экспортирует исходную
+локальную функцию без изменения её тела. Ожидаемый RED доходит до старого
+assert «Дочерний Neovim не завершился»; обязательный finally убирает child.
+Команды/артефакты — docs/AGENT_COMMANDS.md §38.
+
+IDE-047 targeted: Windows 11 PASS/2 POSIX SKIP, Ubuntu 13 PASS. Затем Ubuntu
+full — 43 PASS/1 FAIL/3 SKIP (653 checks); единственный FAIL — отдельное
+ожидание следующего completed Git-read, IDE-048. Cleanup/процессные сценарии
+прошли; первичный RPC IDE-047 и новый IDE-048 остаются открытыми.
+
 Ранний hook locator останавливался на строке push: длинный вывод оставлял
 причину ниже viewport. Keyboard search по literal cause открыл её; исходный
 FAIL 26077291181500 относится к locator, после него получен runtime RED

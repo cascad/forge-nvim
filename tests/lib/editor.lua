@@ -12,14 +12,9 @@ local function copy_tree(source, target)
   end
 end
 
-local function stop_process(rpc)
-  if not rpc or rpc.exited then return end
-  -- Уведомление без ожидания RPC-ответа: qa! завершает сам transport.
-  pcall(function() rpc.process:write(vim.mpack.encode({2,'nvim_command',{'qa!'}})) end)
-  if not vim.wait(2000,function() return rpc.exited end,10) then
-    rpc.process:kill(15)
-    assert(vim.wait(2000,function() return rpc.exited end,10), 'Дочерний Neovim не завершился')
-  end
+local function stop_process(rpc,dir,primary_error)
+  local result=require('editor_process').stop(rpc,dir,primary_error)
+  assert(result.ok,result.error)
 end
 
 local function start(root, options, holder)
@@ -101,7 +96,7 @@ local function start(root, options, holder)
   }, observer)
   local rpc = require('editor_rpc').start({ vim.v.progpath, '--headless', '--embed', '-i', 'NONE',
     '--cmd', 'lua dofile(' .. vim.inspect(observer) .. ')', '-u', config .. '/init.lua' }, {
-    cwd = project, env = env, clear_env = true, timeout = options.timeout,
+    cwd = project, env = env, clear_env = true, timeout = options.timeout, artifacts=dir,
   })
   holder.rpc=rpc
   local self = { rpc = rpc, dir = dir, project = project, runtime = runtime }
@@ -147,6 +142,7 @@ local function start(root, options, holder)
   function self:current_ft() return self:lua('return vim.bo.filetype') end
   function self:snapshot(label)
     local ok, state = pcall(function()
+      if self.rpc.failure then error(self.rpc.failure.message) end
       return self:lua([[local wins={}; for _,w in ipairs(vim.api.nvim_list_wins()) do local b=vim.api.nvim_win_get_buf(w); wins[#wins+1]={id=w,buf=b,file=vim.api.nvim_buf_get_name(b),ft=vim.bo[b].filetype,lines=vim.api.nvim_buf_get_lines(b,0,math.min(80,vim.api.nvim_buf_line_count(b)),false)} end; return {windows=wins,mode=vim.api.nvim_get_mode(),messages=vim.fn.execute('messages'),errmsg=vim.v.errmsg,notifications=vim.g.forge_e2e_notifications,installs=vim.g.forge_e2e_installs,spawns=_G.forge_e2e_spawns,config=vim.fn.stdpath('config'),data=vim.fn.stdpath('data')} ]])
     end)
     local suffix = label and ('-' .. label:gsub('[^%w_-]', '_')) or ''
@@ -155,7 +151,7 @@ local function start(root, options, holder)
     vim.fn.writefile({ vim.json.encode(self.rpc.notifications) }, self.dir .. '/notifications.json')
     vim.fn.writefile(self.rpc:screen_lines(), self.dir .. '/screen' .. suffix .. '.txt')
   end
-  function self:stop()
+  function self:stop(primary_error)
     if self.stopped then return end
     pcall(function() self:snapshot() end)
     local ok,err=pcall(function()
@@ -164,10 +160,21 @@ local function start(root, options, holder)
       assert(uv.fs_copyfile(manifest_path, self.dir .. '/dependency-manifest.json'))
       if vim.fn.filereadable(env.NVIM_LOG_FILE) == 1 then assert(uv.fs_copyfile(env.NVIM_LOG_FILE, self.dir .. '/nvim.log')) end
     end)
-    stop_process(self.rpc)
-    if not ok then holder.keep_runtime=true;error(tostring(err)..'; runtime сохранён: '..runtime) end
-    require('editor_runtime').remove(profile)
-    self.stopped=true
+    local stopped,stop_err=pcall(stop_process,self.rpc,self.dir,primary_error)
+    pcall(vim.fn.writefile,vim.split(table.concat(self.rpc.stderr),'\n'),self.dir..'/stderr.log')
+    local removed,remove_err=false,nil
+    if ok and self.rpc.exited then removed,remove_err=pcall(require('editor_runtime').remove,profile) end
+    self.stopped=removed
+    holder.keep_runtime=not removed
+    local errors={}
+    if not stopped then errors[#errors+1]=tostring(stop_err) end
+    if not ok then errors[#errors+1]='Artifacts: '..tostring(err) end
+    if remove_err then errors[#errors+1]='Runtime cleanup: '..tostring(remove_err) end
+    if #errors>0 then
+      if primary_error and not table.concat(errors,'\n'):find(primary_error,1,true) then table.insert(errors,1,primary_error) end
+      if holder.keep_runtime then errors[#errors+1]='runtime сохранён: '..runtime end
+      error(table.concat(errors,'\n'))
+    end
   end
   -- Подключение настоящего UI запускает UIEnter и VeryLazy.
   local ok, failure = pcall(function()
@@ -186,7 +193,7 @@ local function start(root, options, holder)
     self:wait('VimEnter настоящей сборки', function() return self:lua('return vim.v.vim_did_enter') == 1 end, 10000)
   end)
   if not ok then
-    self:stop()
+    self:stop(tostring(failure))
     error(tostring(failure) .. '; artifacts: ' .. dir)
   end
   return self
@@ -196,9 +203,10 @@ function M.start(root, options)
   local holder={}
   local ok,result=xpcall(function() return start(root,options,holder) end,debug.traceback)
   if ok then return result end
-  stop_process(holder.rpc)
+  local stopped,stop_err=pcall(stop_process,holder.rpc,holder.dir,tostring(result))
+  if not stopped and not tostring(result):find(tostring(stop_err),1,true) then result=tostring(result)..'\nCleanup: '..tostring(stop_err) end
   if holder.dir then pcall(vim.fn.writefile,vim.split(tostring(result),'\n'),holder.dir..'/start-error.txt') end
-  if holder.profile and not holder.keep_runtime then require('editor_runtime').remove(holder.profile) end
+  if holder.profile and not holder.keep_runtime and (not holder.rpc or holder.rpc.exited) then require('editor_runtime').remove(holder.profile) end
   error(result)
 end
 

@@ -155,7 +155,7 @@ local function check(name,dirty,mode,current)
         for file,kind in vim.fs.dir(gate) do if kind=='file' then vim.uv.fs_copyfile(gate..'/'..file,e.dir..'/git-gate/'..file) end end
       end
       vim.fn.writefile({git(e.project,'worktree','list','--porcelain')},e.dir..'/worktrees.txt')
-      e:snapshot(name);io.stdout:write('  artifacts: '..e.dir..'\n');e:stop()
+      e:snapshot(name);io.stdout:write('  artifacts: '..e.dir..'\n');e:stop(not ok and tostring(err) or nil)
     end
     assert(ok,err)
   end)

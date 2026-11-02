@@ -208,6 +208,7 @@ Neovim до нынешнего nvim_forge. Здесь одна последов�
 | §104 | [Neogit: читаемый вывод без terminal title и OSC](../nvim_forge/FIXLOG.md#104-neogit-читаемый-вывод-без-terminal-title-и-osc) |
 | §105 | [SDK E2E: отдельный deadline каждого сценария](../nvim_forge/FIXLOG.md#105-sdk-e2e-отдельный-deadline-каждого-сценария) |
 | §106 | [Git E2E: готовность панели после checkout](../nvim_forge/FIXLOG.md#106-git-e2e-готовность-панели-после-checkout) |
+| §107 | [Editor E2E: завершение child и первичная RPC ошибка](../nvim_forge/FIXLOG.md#107-editor-e2e-завершение-child-и-первичная-rpc-ошибка) |
 
 ## Как читать и дополнять
 

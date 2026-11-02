@@ -5328,3 +5328,87 @@ source SHA, before/after util во всех шести конечных Git arti
 Широкая интеграционная задача остаётся открытой из-за IDE-047; отдельный
 коммит исправляет доказанный OSC дефект и организацию SDK/Head проверок,
 не объявляя два RPC/teardown сбоя исправленными. Дальше — IDE-047, затем IDE-041.
+
+### 107. Editor E2E: завершение child и первичная RPC ошибка
+
+**Связь:** IDE-047; test-only change `preserve-editor-shutdown-evidence`,
+skip_specs=true. Пользовательское поведение, SDK/lock/плагины не менялись.
+**Статус:** cleanup/доказательства исправлены; причина первичного RPC зависания
+Gitsigns остаётся открытой. Mac/GUI и Windows SIGSTOP не проверены.
+
+**Проблема.** Во втором serial Ubuntu full IDE-043 два Gitsigns сценария
+завершились сообщением «Дочерний Neovim не завершился». Первая настоящая
+ошибка в snapshot была RPC timeout nvim_get_mode; stop исключение перекрыло
+её до assert caller. После SIGTERM/Finished в stderr два собственных child
+оставались Sl 1–3 минуты в docker top. Контейнер --rm завершился и удалился;
+живые процессы Windows/пользовательские приложения не трогались.
+
+**Причина.** Stop ограничивался qa!/2s и SIGTERM/2s, затем assert, без SIGKILL
+и без объединения с первичной ошибкой caller. Snapshot повторял RPC даже после
+уже установленного timeout; при неудачном cleanup runtime не освобождался.
+Это установленные дефекты инфраструктуры. Механизм первоначального зависания
+редактора ими не доказан: предыдущий serial full прошёл оба Gitsigns файла.
+
+**Изменение.** Общий test-only editor_process.stop использует только данный
+собственный handle: qa!/2s → SIGTERM/2s → SIGKILL/2s. Первый RPC timeout
+записывается в rpc-error.json до сигнала. Shutdown journal сохраняет PID,
+этапы/elapsed, исходную ошибку, отдельные code/signal, exit и cleanup verdict.
+Повторный stop возвращает тот же результат. Forced kill остаётся ok=false,
+editor caller получает FAIL вместе с первичной ошибкой.
+
+Editor stop сохраняет snapshot/project/config/manifest/stderr, после
+подтверждённого exit и сохранения artifacts удаляет собственный профиль даже
+при forced kill. Если exit/копирование/удаление не подтверждены, профиль
+остаётся с явным путём. Ошибки cleanup/копирования не стирают первичную.
+Startup и общий Gitsigns wrapper двух файлов передают исходное исключение;
+snapshot после timeout сохраняет уже известную ошибку/экран без нового RPC.
+Прежние 10s RPC и интервалы 2s не повышались; добавлен конечный этап cleanup.
+
+**Проверка/e2e.** Новый зарегистрированный editor-process.test.lua использует
+настоящий clean Neovim через RPC. Обычный qa! проверяет exit без сигналов и
+повторный stop. POSIX ветка останавливает исключительно свой child SIGSTOP,
+дожидается T через ps, получает настоящий 10s timeout, проверяет SIGKILL/exit,
+ok=false, первичную причину, оба журнала и повторный stop. На Windows SIGSTOP
+отсутствует: 1 PASS/1 SKIP; Ubuntu 2 PASS. Имена сигналов передаются native
+API, Linux/macOS чисел SIGSTOP в общей логике нет.
+
+Baseline 5e4dfe8:tests/lib/editor.lua извлечён Git bytes, SHA256
+d7f923b739ed873bd4a6e85d6e1633c523cedcedb9c9aa418383874faecff1b2.
+Явный adapter только экспортирует исходный stop_process, не меняя его тело.
+Конечный тест дошёл до старого assert: RED 30836777527388,
+ubuntu-ide047-legacy-red-final.txt. Finally убрал собственный child:
+cleaned=true, code 0 / signal 9. Это показывает, почему одного code мало.
+Ранее 30310704969802 дал E484 из-за отсутствия файла в отдельном .tests volume;
+после явного копирования получен настоящий RED 30319420967493. Ошибка
+подготовки не выдаётся за доказательство дефекта.
+
+Editor-runtime дополнен полноценной POSIX UI проверкой: start реальной сборки,
+SIGSTOP/первичный RPC timeout, e:stop(primary), подтверждённый exit, удалённый
+профиль, сохранённые config/snapshot/shutdown и FAIL с исходной причиной.
+Отдельный PASS 30815923044938; Windows этот сценарий SKIP. Обычные четыре
+runtime E2E прошли обе ОС, включая startup failure и owner marker.
+
+Последовательный targeted регресс: Windows 11 PASS/2 SKIP с конечными
+process/runtime проверками; Ubuntu 13 PASS (process 2, runtime 4 + forced 1,
+Gitsigns 2+4). Восемь основных команд записаны в
+ide047-targeted-progress.json; новый forced runtime выполнен отдельно.
+Затем один полный Ubuntu после изменения инфраструктуры: 43 PASS/1 FAIL/3 SKIP, 45 файлов/47 прогонов, 653 checks, 382.7s. Все новые process/runtime проверки и live read прошли; completed initial show/remove не дождался следующего Git-read (IDE-048, artifact 31150409957837). Shutdown у него ok=true/hard_kill=false; первичная ошибка сохранена, профиль убран. Это не чистый full PASS; исходный report и его logs сохранены отдельно.
+Сам по себе зелёный повтор Git не закрывает неизвестную первичную причину.
+
+**Вывод.** Исходная ошибка и результат cleanup — разные доказательства.
+Каждый этап остановки ограничен, принудительный exit не становится PASS,
+журнал включает signal и не перезаписывается повторной остановкой. Обычная
+работа и CI не управляют Desktop/WSL и чужими процессами; Mac/GUI требуют
+отдельного реального прогона. IDE-047 остаётся в очереди первичного RPC.
+
+**Файлы:** tests/lib/editor_process.lua, editor.lua, editor_rpc.lua,
+gitsigns_worktree.lua; tests/e2e/editor-process.test.lua,
+editor-runtime.test.lua, registry.lua; tests/e2e/README.md,
+docs/AGENT_COMMANDS.md §38, PROBLEMS/ROADMAP/HISTORY,
+openspec/changes/preserve-editor-shutdown-evidence/*.
+
+
+**Проверка перед коммитом IDE-047.** Strict validate PASS, Windows trace 2 файла PASS;
+Ubuntu trace прошёл в сохранённом full с одним отдельным IDE-048 FAIL.
+Проверены 177 local links, source SHA, baseline/forced/native artifacts,
+полнота report logs и неизменность прежних 428548 bytes истории.
