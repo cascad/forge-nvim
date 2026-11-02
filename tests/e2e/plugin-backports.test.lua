@@ -14,15 +14,16 @@ local function cli(dir,mode,plugin)
   return vim.system(args,{cwd=root,text=true,timeout=15000}):wait()
 end
 local deps=vim.env.FORGE_E2E_DEPS or root..'/.tests/editor-deps'
-local function companions(base,spec,eol,prepared)
+local function companions(base,spec,eol,prepared,plugin)
+  plugin=plugin or 'gitsigns.nvim'
   local out={}
   for _,extra in ipairs(spec.extra or {}) do
-    local text=bytes(deps..'/lazy/gitsigns.nvim/'..extra.file):gsub('\r\n','\n')
+    local text=bytes(deps..'/lazy/'..plugin..'/'..extra.file):gsub('\r\n','\n')
     if not prepared and vim.fn.sha256(text)==extra.after_sha256 then
       local a,b=assert(text:find(extra.after,1,true));text=text:sub(1,a-1)..extra.before..text:sub(b+1)
     end
     T.eq(vim.fn.sha256(text),prepared and extra.after_sha256 or extra.before_sha256)
-    local path=base..'/gitsigns.nvim/'..extra.file;local raw=text:gsub('\n',eol or '\n')
+    local path=base..'/'..plugin..'/'..extra.file;local raw=text:gsub('\n',eol or '\n')
     write(path,raw);out[#out+1]={path=path,raw=raw,spec=extra}
   end
   return out
@@ -38,18 +39,28 @@ T.check('IDE-GIT-7 CLI apply check repeat и revert сохраняют LF/CRLF',
     for _,eol in ipairs({'\n','\r\n'}) do
       local dir=base..(eol=='\n' and '/lf' or '/crlf');local path=dir..'/neogit/'..patch.file
       local raw=original:gsub('\n',eol);write(path,raw)
+      local files=companions(dir,patch,eol,false,'neogit')
       local missing=cli(dir,'--check');assert(missing.code~=0 and missing.stderr:find('Lazy build neogit',1,true),missing.stderr)
       T.eq(bytes(path),raw,'check не пишет исходный файл')
       local prepared=cli(dir);assert(prepared.code==0,prepared.stderr)
       T.eq(vim.json.decode(prepared.stdout).neogit.sha256,patch.after_sha256)
       local after=bytes(path);T.eq(vim.fn.sha256((after:gsub('\r\n','\n'))),patch.after_sha256)
+      for _,file in ipairs(files) do
+        T.eq(vim.json.decode(prepared.stdout).neogit.files[file.spec.file],file.spec.after_sha256)
+        T.eq(vim.fn.sha256((bytes(file.path):gsub('\r\n','\n'))),file.spec.after_sha256)
+        file.stat=vim.uv.fs_stat(file.path)
+        if eol=='\r\n' then assert(not bytes(file.path):gsub('\r\n',''):find('\n',1,true),'companion CRLF сохранён') end
+      end
       if eol=='\r\n' then assert(not after:gsub('\r\n',''):find('\n',1,true),'CRLF сохранён') end
       local stat=vim.uv.fs_stat(path)
       assert(cli(dir).code==0);assert(cli(dir,'--check').code==0)
       T.eq(vim.uv.fs_stat(path).mtime,stat.mtime,'повтор/check не пишет файл')
       T.eq(bytes(path),after)
+      for _,file in ipairs(files) do T.eq(vim.uv.fs_stat(file.path).mtime,file.stat.mtime) end
       assert(cli(dir,'--revert').code==0);T.eq(bytes(path),raw)
+      for _,file in ipairs(files) do T.eq(bytes(file.path),file.raw) end
       assert(cli(dir,'--revert').code==0);T.eq(bytes(path),raw)
+      for _,file in ipairs(files) do T.eq(bytes(file.path),file.raw) end
     end
   end)
 end)
@@ -89,23 +100,33 @@ T.check('IDE-GIT-7 CLI Git воспроизводит системную гра�
   T.eq(#vim.json.decode(vim.trim(r.stdout)),3)
 end)
 T.check('IDE-GIT-7 настоящий Lazy build готовит private плагин, открытие Git его не пишет',function()
-  local e,path
+  local e,path,paths
   local ok,err=pcall(function()
     e=require('editor').start(root,{prepare=function(_,env)
       local data=env.XDG_DATA_HOME..'/nvim_forge'..(vim.fn.has('win32')==1 and '-data' or '')..'/lazy'
       -- Моделируем существующую установку без патча только в собственном профиле.
       dofile(root..'/nvim_forge/lua/ide/backports.lua').run('neogit',data..'/neogit','revert')
       path=data..'/neogit/'..patch.file
+      -- Legacy IDE-034 уже подготовлен, новый util companion ещё исходный.
+      write(path,bytes(deps..'/lazy/neogit/'..patch.file))
+      paths={{path=path,spec=patch}}
+      for _,extra in ipairs(patch.extra or {}) do paths[#paths+1]={path=data..'/neogit/'..extra.file,spec=extra} end
     end})
     e:wait('IDE готова',function() return e:lua('return _G.forge_e2e_observed') end,10000)
-    T.eq(vim.fn.sha256((bytes(path):gsub('\r\n','\n'))),patch.before_sha256)
+    T.eq(vim.fn.sha256((bytes(path):gsub('\r\n','\n'))),patch.after_sha256)
+    for i,item in ipairs(paths) do if i>1 then T.eq(vim.fn.sha256((bytes(item.path):gsub('\r\n','\n'))),item.spec.before_sha256) end end
     e:input(':Lazy! build neogit<CR>')
-    e:wait('Lazy build применил backport',function() return vim.fn.sha256((bytes(path):gsub('\r\n','\n')))==patch.after_sha256 end,15000)
-    local stat=vim.uv.fs_stat(path)
+    e:wait('Lazy build применил все файлы backport',function()
+      for _,item in ipairs(paths) do if vim.fn.sha256((bytes(item.path):gsub('\r\n','\n')))~=item.spec.after_sha256 then return false end end
+      return true
+    end,15000)
+    for _,item in ipairs(paths) do item.stat=vim.uv.fs_stat(item.path) end
     e:input(':Neogit<CR>')
     e:wait('Git открыт',function() return e:current_ft()=='NeogitStatus' end,15000)
-    T.eq(vim.uv.fs_stat(path).mtime,stat.mtime,'config проверяет без записи')
-    T.eq(vim.fn.sha256((bytes(path):gsub('\r\n','\n'))),patch.after_sha256)
+    for _,item in ipairs(paths) do
+      T.eq(vim.uv.fs_stat(item.path).mtime,item.stat.mtime,'config проверяет без записи')
+      T.eq(vim.fn.sha256((bytes(item.path):gsub('\r\n','\n'))),item.spec.after_sha256)
+    end
     for _,n in ipairs(e.rpc.notifications) do assert(n.level<vim.log.levels.ERROR,n.message) end
   end)
   if e then e:snapshot('lazy-build');io.stdout:write('  artifacts: '..e.dir..'\n');e:stop() end
@@ -211,5 +232,28 @@ T.check('IDE-GIT-8 настоящий Lazy build готовит Gitsigns, отк
   end)
   if e then e:snapshot('gitsigns-build');io.stdout:write('  artifacts: '..e.dir..'\n');e:stop() end
   assert(ok,err)
+end)
+T.check('IDE-GIT-12 legacy Neogit companion обновляется явно, неизвестный сохраняет оба файла',function()
+  runtime(function(base)
+    for _,eol in ipairs({'\n','\r\n'}) do
+      local dir=base..(eol=='\n' and '/lf legacy' or '/crlf legacy')
+      local path=dir..'/neogit/'..patch.file
+      local prepared=bytes(deps..'/lazy/neogit/'..patch.file):gsub('\r\n','\n'):gsub('\n',eol)
+      write(path,prepared);local files=companions(dir,patch,eol,false,'neogit');assert(#files>0)
+      local stat=vim.uv.fs_stat(path)
+      local r=cli(dir,'--check');assert(r.code~=0 and r.stderr:find('Lazy build neogit',1,true),r.stderr)
+      T.eq(bytes(path),prepared);T.eq(vim.uv.fs_stat(path).mtime,stat.mtime)
+      for _,file in ipairs(files) do T.eq(bytes(file.path),file.raw) end
+      r=cli(dir);assert(r.code==0,r.stderr)
+      T.eq(bytes(path),prepared);T.eq(vim.uv.fs_stat(path).mtime,stat.mtime,'legacy primary не переписывается')
+      for _,file in ipairs(files) do T.eq(vim.fn.sha256((bytes(file.path):gsub('\r\n','\n'))),file.spec.after_sha256) end
+      assert(cli(dir,'--revert').code==0)
+      local raw=original:gsub('\n',eol);T.eq(bytes(path),raw)
+      local unknown=files[1].raw..'-- unknown util\n';write(files[1].path,unknown)
+      r=cli(dir);assert(r.code~=0 and r.stderr:find('неизвестное содержимое',1,true),r.stderr)
+      T.eq(bytes(path),raw,'primary не записывается до companion preflight')
+      T.eq(bytes(files[1].path),unknown)
+    end
+  end)
 end)
 T.finish()

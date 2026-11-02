@@ -205,6 +205,9 @@ Neovim до нынешнего nvim_forge. Здесь одна последов�
 | §101 | [ConPTY: сохраняем раскладки сессий и полный diff](../nvim_forge/FIXLOG.md#101-conpty-сохраняем-раскладки-сессий-и-полный-diff) |
 | §102 | [Git: отказ push и повтор без потери коммитов](../nvim_forge/FIXLOG.md#102-git-отказ-push-и-повтор-без-потери-коммитов) |
 | §103 | [Diffview: редактируемый результат merge и rebase](../nvim_forge/FIXLOG.md#103-diffview-редактируемый-результат-merge-и-rebase) |
+| §104 | [Neogit: читаемый вывод без terminal title и OSC](../nvim_forge/FIXLOG.md#104-neogit-читаемый-вывод-без-terminal-title-и-osc) |
+| §105 | [SDK E2E: отдельный deadline каждого сценария](../nvim_forge/FIXLOG.md#105-sdk-e2e-отдельный-deadline-каждого-сценария) |
+| §106 | [Git E2E: готовность панели после checkout](../nvim_forge/FIXLOG.md#106-git-e2e-готовность-панели-после-checkout) |
 
 ## Как читать и дополнять
 

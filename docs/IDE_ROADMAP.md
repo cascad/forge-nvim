@@ -1,6 +1,6 @@
 # nvim_forge — рабочий план мини-IDE
 
-Обновлено: 2026-10-31. Основная сборка: **nvim_forge**.
+Обновлено: 2026-11-02. Основная сборка: **nvim_forge**.
 Статус: базовые e2e настоящего nvim_forge работают на Windows и Ubuntu;
 фоновые установки инструментов редактора перенесены в явный setup.
 IDE-001 параллельно ждёт диагностических данных с Mac.
@@ -265,7 +265,9 @@ Normal mode, прежние aliases сохранены:
 - [x] IDE-GIT-11/IDE-044: merge/rebase resolve/continue и abort, Alt+e в
   writable result diff3 из дерева и версии; 4 real editor E2E Windows/Ubuntu (§103).
 - [ ] Credentials, interactive sequence editor и остальные ошибки Git;
-  очистка title/PTY output IDE-043 остаётся отдельно.
+  отдельные сценарии ещё открыты.
+- [x] IDE-GIT-12/IDE-043: полный OSC title/hyperlink удаляется до CSI,
+  видимый UTF-8/обычные пути сохранены; 3 UI + matrix 10, подготовка 9 (§104).
 - [x] IDE-028: быстрые visit между worktree с разными HEAD во время обновления
   status; согласованный Unicode-граф и 3 real editor e2e Windows/Ubuntu (§91).
 - [x] IDE-034: удаление активного linked worktree после смены cwd; временный
@@ -369,7 +371,18 @@ Neogit на Windows/Ubuntu. Runtime менять не потребовалось
 Согласование историй перед retry делается Git CLI в fixture: это не покрытие
 UI merge в том change. IDE-GIT-11 (§103) отдельно покрывает merge/rebase
 resolve/continue/abort и исправляет Alt+e в diff3; по 4 PASS Windows/Ubuntu.
-Credentials/sequence editor и IDE-043 остаются открытыми; Mac/GUI не проверены.
+Credentials/sequence editor остаются открытыми; Mac/GUI не проверены.
+IDE-043 закрыт в §104: util companion, явный Lazy build, baseline RED,
+native/hook UI и parser matrix; worktree primary и lock сохранены.
+IDE-045/046 (§105–106) исправляют организацию E2E: отдельные SDK сценарии с
+прежними deadline, UI Head перед поиском после checkout. Исходные FAIL сохранены.
+Windows unit/e2e/trace: 40 PASS/0 FAIL/0 SKIP, 486 checks; после последней
+правки ожидания все 6 Git workflow повторно PASS. Ubuntu full: сначала
+42 PASS/1 FAIL/3 SKIP (IDE-046), затем 41 PASS/2 FAIL/3 SKIP, 650 checks.
+В последнем все новые OSC/SDK/workflow проверки прошли; два прежних Gitsigns
+сценария дали RPC/teardown сбой IDE-047. Это не чистый Ubuntu full PASS.
+Сначала сохранить первичную ошибку и гарантировать cleanup собственных child
+в IDE-047; затем IDE-041. Без новых изменений полный набор не зацикливаем.
 
 IDE-038 (§100): process cwd явно common git-dir. Итоговый Windows
 unit/e2e/trace — 38 PASS/0 FAIL/0 SKIP (471 проверка); Ubuntu full —
@@ -382,8 +395,8 @@ unit/e2e/trace — 38 PASS/0 FAIL/0 SKIP (471 проверка); Ubuntu full —
 (IDE-042); raw FAIL сохранён, одиночный повтор 46 PASS и новый полный serial
 не устанавливают причину timeout. Тяжёлые наборы на этом хосте выполнять
 поочерёдно. IDE-039 (ConPTY Ctrl+/) остаётся диагностикой; обычные Git
-ошибки push и merge/rebase покрыты IDE-GIT-10/11. Дальше — IDE-043 output,
-IDE-041 (очень длинное слово/E339), исходный
+ошибки push, merge/rebase и читаемый output покрыты IDE-GIT-10/11/12.
+Дальше — IDE-041 (очень длинное слово/E339), исходный
 владелец handle IDE-038 и IDE-031/036/040 остаются открытыми; Mac/GUI не запускались.
 
 IDE-036: эпизод сильных тормозов ввода/окон закончился только после рестарта

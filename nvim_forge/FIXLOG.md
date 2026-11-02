@@ -5157,3 +5157,174 @@ openspec/changes/verify-git-conflicts/*.
 **Завершение перед коммитом.** Strict validate PASS; trace Windows/Ubuntu по
 7 PASS/1 SKIP; 169 local links, README table, source/test SHA PASS. Прежние
 404812 байт истории сохранены. Mac/GUI не объявляются проверенными.
+
+
+### 104. Neogit: читаемый вывод без terminal title и OSC
+
+**Связь:** IDE-043, этап 5, change `fix-neogit-output-osc`.
+Спека: IDE-GIT-12 (ADDED).
+**Статус:** завершённые OSC title/hyperlink с BEL/ST удаляются на общей
+текстовой границе Neogit. Mac/GUI и неполные streaming VT sequences не проверены.
+
+**Проблема.** После failed push на Windows INFO заканчивалось
+`:\Program Files\Git\cmd\git.EXE` и BEL. Ошибка читалась и retry работал,
+но служебный title засорял уведомления/историю. Исходные наблюдения — §102.
+
+**Причина.** Observer 24997056234800 записал вход настоящего
+remove_ansi_escape_codes: ESC]0;C:…BEL + CSI ?25h. Старый CSI pattern удалял
+только ESC]0;C, оставляя остаток title и BEL. На pin d7bb91b та же функция
+принимала byte 0x9B как отдельный control byte, хотя он бывает продолжением
+UTF-8; adjacent ASCII мог запускать ложное удаление части символа. Immutable
+upstream HEAD 697ad3e уже исключает этот byte, но полной OSC очистки ещё нет.
+Сверены официальные исходники
+[pin](https://github.com/NeogitOrg/neogit/blob/d7bb91b42f984416adc6116d6ba8fba287857af3/lua/neogit/lib/util.lua)
+и [upstream](https://github.com/NeogitOrg/neogit/blob/697ad3ee86a73cf6b6758b838d7a7d76cf3b9f86/lua/neogit/lib/util.lua).
+
+**Изменение.** В существующий pin/SHA backport добавлен util.lua companion.
+Завершённый OSC до BEL/ST удаляется целиком до CSI; payload pattern не
+пересекает ESC/BEL, поэтому чередование terminators сохраняет видимый текст
+между последовательностями. Убран 0x9B из CSI pattern, как в upstream.
+Обычные пути не фильтруются. Primary worktree actions.lua и lazy-lock не
+меняются; общий applier выполняет preflight всех файлов до записи. Нет
+runtime wrapper/OS ветки и установки при startup. Для existing install
+явно повторить `:Lazy build neogit`, затем перезапустить редактор.
+
+**Проверка/e2e.** Постоянный git-errors.test.lua теперь содержит 3 UI сценария
+и одну дополнительную parser matrix (10 строк). Новый bare pre-receive hook
+реально печатает цветной UTF-8 текст, OSC title и hyperlink, обычный путь,
+отклоняет push. Проверяются читаемый history, исходные local/remote refs/
+index, затем исправление hook и настоящий retry без force. Native missing
+origin проверяет INFO против независимого Git stderr, если INFO был создан,
+и историю без BEL. Ubuntu может завершить этот процесс раньше (без INFO);
+portable hook остаётся обязательным. Случайный чужой ERROR/confirm/E… не
+принимается автоматически.
+
+Baseline RED использует архив nvim_forge из 7938409 и явный upstream variant
+только для private util до старта child, с проверкой SHA и неизменным IDE-034
+primary. Конечный тест воспроизводит native INFO RED 27202749796900 и hook
+RED 27213070080100. Исходный util c21c09d… сохранён вместе с artifacts; parent
+prepared cache/плагины владельца не менялись. Матрица исходного util дала
+8 FAIL из 10; исправленного — 10 PASS. Ранний hook locator ожидал причину
+ниже viewport (26077291181500); после поиска внутри открытой command history
+получен настоящий runtime RED 26380326922600, а затем конечный повтор выше.
+
+Подготовка Windows явно обновила 66 pinned plugins. Девять CLI/Lazy проверок
+покрывают LF/CRLF обоих файлов, apply/check/repeat/revert, legacy primary-after/
+util-before, отказ на неизвестный companion до записи, настоящий Lazy build
+и отсутствие записи при открытии Git. Первые targeted Windows: git-errors
+4 PASS, plugin-backports 9 PASS. Полные результаты после исправления двух
+дефектов организации проверок (§105–106): Windows unit/e2e/trace — 40 PASS/0 FAIL/0 SKIP, 486 checks; после последней коррекции visible Head ещё 6 workflow PASS. Последний Ubuntu full — 41 PASS/2 FAIL/3 SKIP, 650 checks; OSC 4, подготовка 9, SDK 3 и workflow 6 PASS. Два прежних Gitsigns сценария дали RPC/teardown FAIL (IDE-047), поэтому чистый Ubuntu full PASS не заявлен. Первый Ubuntu full был 42 PASS/1 FAIL/3 SKIP из-за требования фокуса IDE-046. Все raw report и отдельные каталоги logs сохранены.
+
+Первый Windows unit/e2e/trace (38 PASS/2 FAIL, 480 checks) сохранён отдельно:
+SDK class исчерпал общий 30s, branch scenario искал строку до UI Head.
+Это не ошибки OSC patch; причины и изменения — следующие записи. Исходные
+FAIL не переписаны новым report. Docker image пересобран явно на уже
+работавшем engine; Desktop/WSL lifecycle и старые диски не менялись.
+
+**Вывод.** Control metadata удаляется по синтаксису на текстовой границе,
+а видимые UTF-8/пути сохраняются. Общая реализация подкреплена native и
+portable Git E2E, parser matrix не выдаётся за десять UI сценариев. Подготовка
+зависимостей остаётся явной и проверяемой; Mac/GUI требуют отдельного запуска.
+
+**Файлы:** patches/plugins.json, patches/README.md, plugins/git.lua,
+QUICKSTART.md, tests/e2e/git-errors.test.lua, plugin-backports.test.lua,
+tests/e2e/README.md, docs/AGENT_COMMANDS.md §37, roadmap/PROBLEMS/HISTORY,
+openspec/changes/fix-neogit-output-osc/*.
+
+
+### 105. SDK E2E: отдельный deadline каждого сценария
+
+**Связь:** IDE-045; интеграция change `fix-neogit-output-osc`.
+**Статус:** исправлена организация CLI E2E; production SDK/launcher и прежние
+10s команды / 30s сценария / 60s registry file не менялись. Причина медленного
+холодного запуска PowerShell сама по себе не установлена.
+
+**Проблема.** Первый Windows full IDE-043 оборвал TestWindowsSDKCLI кодом
+124/signal 15. При этом первые четыре метода успели завершиться, пятый
+исполнялся; штатный 50-cycle native resize probe прошёл. Одиночный запуск
+неизменённого файла затем дал 2 PASS — это не доказательство исправления.
+
+**Причина.** Lua передавал целый unittest class одному Python subprocess с
+общим 30s. Артефакты sdk-cli показывают 12 завершённых команд суммарно за
+27.28s, каждая ниже своего 10s. Следующая команда стартовала в 14:48:33.883808
+UTC; общий deadline был около 14:48:36.4. Её собственный probe записал
+record.json в 14:48:37.7445232, уже после принудительного завершения Python.
+У неё оставалось время по индивидуальному deadline; последний метод class
+ещё не был запущен. Нельзя подменять такой обрыв утверждением «shell завис».
+
+**Изменение.** Python --list-cases получает имена реальных методов через
+unittest loader. Lua запускает каждый найденный сценарий отдельно с прежним
+30s, сохраняет argv/PID/elapsed/result/stdout/stderr до/после запуска. Нет
+второго ручного списка методов, NTFS hardlink оптимизаций или смены shell.
+Прямой unittest class запуск сохранён, POSIX использует тот же механизм.
+
+**Проверка/e2e.** На Windows discovery + 6 настоящих CLI сценариев + native
+resize: 8 PASS (windows-ide043-sdk-cases.txt); новая организация также прошла
+общий регресс из §104. Ubuntu выполняет discovery + свой POSIX launcher +
+resize; Windows ветки там не выдаются за проверенные. Индивидуальные JSON —
+.tests/sdk-cases/<run> и .tests/ubuntu/sdk-cases/<run>, исходный timeout и поздний
+record — ide043-sdk-timeout-observation.json/ide043-sdk-outer-timeout.
+
+Оставшийся после принудительного обрыва fixture .tests/tmp/tmprhbyi1py
+не удалён: автоматическая проверка отклонила проверенную команду Remove-Item
+с «blocked by policy» до исполнения. Поздний record/metadata/started сохранены
+отдельным копированием; PID 12004 уже отсутствовал. Обхода запрета не было.
+
+**Вывод.** Независимые функциональные сценарии получают отдельные границы
+выполнения и артефакты. Бюджет одного процесса не должен молча объединять
+весь class; при следующем настоящем 10s/30s/60s сбое нужны новые доказательства.
+
+**Файлы:** tests/windows_sdk_test.py, tests/e2e/windows-sdk.test.lua,
+tests/e2e/README.md, change design/tasks, PROBLEMS/roadmap/HISTORY,
+docs/AGENT_COMMANDS.md §37.
+
+
+### 106. Git E2E: готовность панели после checkout
+
+**Связь:** IDE-046; интеграция change `fix-neogit-output-osc`.
+**Статус:** branch/commit/push ждёт UI Head перед поиском файла; приложение и
+лимиты не менялись. Это коррекция E2E, не общий runtime fix Neogit redraw.
+
+**Проблема.** Первый Windows full IDE-043 оставил курсор на пустой строке
+после создания ветки; row helper ждал имя файла и завершился FAIL. Artifact
+28125833716100 показывает нужный файл строкой выше и правильный новый Head.
+
+**Причина.** Проверка ждала checkout только через внешний Git CLI и сразу
+посылала поиск в ещё прежнюю status-панель. Neogit refresh запоминает cursor/
+view до Git dispatch, а после render восстанавливает их. Log фиксирует
+успешный checkout с меткой 3.52.82 и dispatch watcher redraw с метками
+3.53.88 и 3.55.61; отложенное восстановление могло перезаписать результат раннего
+поиска. CLI HEAD и готовность пользовательской панели — разные наблюдения.
+
+**Изменение.** После создания feature и возврата на main вызывается ожидание
+status_head. Оно проверяет NeogitStatus среди видимых окон текущего tab и
+строку Head нужной ветки, затем выполняется поиск/дальнейшее действие.
+Нет sleep, увеличения timeout или прямого вызова plugin handler.
+
+Первый Ubuntu full дал 42 PASS/1 FAIL/3 SKIP (650 checks): новый финальный
+status_head ошибочно требовал фокус Neogit, хотя после checkout main фокус
+уже был в коде. Artifact 28623620037732 показывает правильную видимую Head
+main, code cursor и точное уведомление Checked out branch main. Проверка
+готовности теперь читает видимую панель независимо от текущего окна; Git и
+focus policy не меняются. Исходный full сохранён отдельно от нового прогона.
+
+**Проверка/e2e.** Три targeted Windows повтора branch/commit/push дали по
+1 PASS; windows-ide043-branch-ready-{1,2,3}.txt. Финальный Windows workflow
+после чтения visible Head: 6 PASS; в последнем Ubuntu full все 6 workflow
+также прошли, включая commit/push в bare remote, историю и checkout main.
+Исходные FAIL и source/log сохранены отдельно.
+
+**Вывод.** Backend результат предшествует UI readiness. Тест пользовательского
+действия должен дождаться состояния панели, которым пользуется следующий
+ввод, и сохранять исходный FAIL; зелёный повтор без такого изменения не фикс.
+
+**Файлы:** tests/e2e/git-workflow.test.lua, change design/tasks,
+PROBLEMS/roadmap/HISTORY, docs/AGENT_COMMANDS.md §37.
+
+**Завершение шага IDE-043.** Strict validate PASS; trace Windows/Ubuntu —
+по 2 файла PASS (в основном trace по 7 PASS/1 SKIP). Проверены 176 local links,
+source SHA, before/after util во всех шести конечных Git artifacts и двух RED,
+полнота сохранённых logs и прежние 413301 bytes FIXLOG. Lock не менялся.
+Широкая интеграционная задача остаётся открытой из-за IDE-047; отдельный
+коммит исправляет доказанный OSC дефект и организацию SDK/Head проверок,
+не объявляя два RPC/teardown сбоя исправленными. Дальше — IDE-047, затем IDE-041.

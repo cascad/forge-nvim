@@ -155,4 +155,11 @@ class TestPOSIXSDKCLI(LauncherFixture):
 
 
 if __name__ == "__main__":
-    unittest.main(verbosity=2)
+    if sys.argv[1:2] == ["--list-cases"]:
+        if len(sys.argv) != 3 or sys.argv[2] not in ("TestWindowsSDKCLI", "TestPOSIXSDKCLI"):
+            raise SystemExit("usage: windows_sdk_test.py --list-cases <SDK test class>")
+        case_class = globals()[sys.argv[2]]
+        print(json.dumps([case_class.__name__ + "." + name
+                          for name in unittest.defaultTestLoader.getTestCaseNames(case_class)]))
+    else:
+        unittest.main(verbosity=2)

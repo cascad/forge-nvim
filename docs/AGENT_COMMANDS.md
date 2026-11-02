@@ -1,6 +1,6 @@
 # Команды агента: что выполняется и что я получаю
 
-Обновлено: 2026-10-31. Рабочая папка: `F:/repo/forge-nvim`.
+Обновлено: 2026-11-02. Рабочая папка: `F:/repo/forge-nvim`.
 
 Это каталог использованных команд и их вариантов, объединённых без повторов.
 Это справочник для обсуждения, а не побайтовый журнал всех вызовов: одинаковые
@@ -1930,3 +1930,129 @@ Windows 295,9s, Ubuntu 188,8s; причина различия скорости 
 Подробная история, включая ранний неверный locator, — FIXLOG §103.
 Финальные strict validate PASS, trace Windows/Ubuntu по 7 PASS/1 SKIP,
 169 local links, history prefix, source/test SHA и целостность README table PASS.
+
+## 37. IDE-043: OSC в выводе Neogit; IDE-045/046: организация E2E
+
+```powershell
+$env:TEMP = 'F:\repo\forge-nvim\.tests\tmp'
+$env:TMP = $env:TEMP; $env:TMPDIR = $env:TEMP
+$env:NVIM_LOG_FILE = Join-Path $env:TEMP 'ide043-verified.log'
+$env:npm_config_cache = 'F:\forge-nvim-tmp\npm-cache'
+. ./scripts/lib/nvim-sdk.ps1
+$forgeNvim = Get-ForgeNvim (Get-Location).Path
+python -B tests/e2e/prepare_editor.py --download --nvim $forgeNvim
+& $forgeNvim -l tests/e2e/git-errors.test.lua
+& $forgeNvim -l tests/e2e/plugin-backports.test.lua
+& $forgeNvim -l tests/e2e/windows-sdk.test.lua
+& $forgeNvim -l tests/run.lua unit e2e trace
+# Только после завершения Windows, на уже работающем engine:
+docker info --format '{{.ServerVersion}} {{.OSType}}'
+docker compose -f tests/containers/compose.yaml build ubuntu
+docker compose -f tests/containers/compose.yaml run --rm ubuntu full
+npx.cmd --yes @fission-ai/openspec@1.13.2 validate fix-neogit-output-osc --type change --strict --no-interactive
+```
+
+Подготовка явная: 66 pinned plugins, прежний lock; Neogit получил второй
+проверяемый файл util.lua. Старый образ имеет прежний manifest, поэтому build
+нужен один раз; запуск full сам ничего не скачивает. Desktop/WSL не запускаются
+и не перезапускаются. Для существующей установки — `:Lazy build neogit` и
+перезапуск редактора; это не команда в каждом shell startup.
+
+`git ls-remote https://github.com/NeogitOrg/neogit.git HEAD refs/heads/master`
+и Python urllib.request к immutable raw GitHub util (pin d7bb91b и upstream
+697ad3e) использовались только для чтения. Prepared cache — экспорт без .git:
+попытка `git -C .tests/editor-deps/lazy/neogit show <pin>:lua/neogit/lib/util.lua`
+не нашла файл (Git обнаружил родительский репозиторий); источник получен по
+immutable URL и сверен с исходными bytes. Нет клонирования поверх plugins.
+
+Ignored observer `.tests/observe-ide043.lua` записывал вход/выход настоящего
+remove_ansi_escape_codes и возвращал результат без изменений. Artifact
+24997056234800/ansi-observed.jsonl: полный OSC title на входе, хвост пути и
+BEL на выходе. В постоянном тесте такого runtime wrapper нет.
+
+Для повторяемого исходного RED был извлечён только nvim_forge из `git archive
+7938409` в `.tests/ide043-before-7938409`; Python tarfile проверил относительные
+пути перед распаковкой, plugins.json сверен с `git show`. Затем:
+
+```powershell
+$env:FORGE_E2E_CONFIG_SOURCE = (Resolve-Path .tests/ide043-before-7938409/nvim_forge).Path
+$env:FORGE_NEOGIT_OUTPUT_SOURCE_VARIANT = 'upstream'
+$env:FORGE_GIT_ERRORS_CASE = 'недоступный remote'
+& $forgeNvim -l tests/e2e/git-errors.test.lua
+$env:FORGE_GIT_ERRORS_CASE = 'hook OSC'
+& $forgeNvim -l tests/e2e/git-errors.test.lua
+$env:FORGE_E2E_CONFIG_SOURCE = $null
+$env:FORGE_NEOGIT_OUTPUT_SOURCE_VARIANT = $null
+$env:FORGE_GIT_ERRORS_CASE = $null
+```
+
+Variant восстанавливает исходный util только в private profile до запуска
+child, проверяет before/after SHA и сохраняет source в artifacts; старый
+worktree primary остаётся подготовленным. Parent cache/плагины владельца
+не меняются. RED 27202749796900 (native INFO), 27213070080100 (hook history);
+логи windows-ide043-final-{native,hook}-red.txt. Матрица исходного util:
+8 из 10 строк FAIL, `.tests/ide043-parser-red.json`. Это дополнительные
+parser assertions, а не десять пользовательских UI E2E.
+
+Первый широкий Windows прогон — windows-ide043-regression.txt/report.json/
+regression-logs: 40 файлов, 38 PASS/2 FAIL, 480 checks. Сохранён отдельно от
+нового windows-ide043-verified.txt/report.json/verified-logs. Запись каждого
+report.files[].log копируется в собственный каталог, поэтому следующий запуск
+tests/run.lua не уничтожает исходные доказательства.
+
+IDE-045: `Get-Content .tests/sdk-cli/<run>/started.json` и result.json,
+сравнение UTC/elapsed и `Get-CimInstance Win32_Process -Filter 'ProcessId =
+12004'` дали: 12 команд завершились за суммарные 27.28s, все ниже 10s;
+следующий probe записал record.json уже после общего 30s. Копии record/metadata/
+started — `.tests/ide043-sdk-outer-timeout`. Последний PID уже отсутствовал.
+Одиночный повтор старого теста прошёл, что само по себе не является фиксом.
+
+```powershell
+python -B tests/windows_sdk_test.py --list-cases TestWindowsSDKCLI
+# Lua вызывает каждый обнаруженный Class.test_name отдельно, например:
+python -X utf8 -B tests/windows_sdk_test.py TestWindowsSDKCLI.test_system_override_is_explicit_and_does_not_need_manifest
+$env:FORGE_GIT_E2E_CASE = 'branch commit push'
+& $forgeNvim -l tests/e2e/git-workflow.test.lua
+$env:FORGE_GIT_E2E_CASE = $null
+```
+
+Новая SDK организация сохраняет 10s/команда, 30s/сценарий, 60s/registry file.
+Фактический targeted SDK — windows-ide043-sdk-cases.txt, 8 PASS; discovery и
+каждый метод имеют argv/PID/elapsed/result в `.tests/sdk-cases/<run>`.
+Git branch повторён три раза: windows-ide043-branch-ready-{1,2,3}.txt, по PASS.
+Ожидание UI Head после checkout предшествует поиску строки. Исходный FAIL
+28125833716100 сохранён; лимиты/production Git не изменены.
+
+Удаление единственного оставшегося временного fixture
+`.tests/tmp/tmprhbyi1py` было отклонено автоматической проверкой («blocked by
+policy»), команда не исполнилась. Доказательства скопированы отдельной
+разрешённой командой без удаления; каталог оставлен. Обходов запрета нет.
+
+Первый Ubuntu full — ubuntu-ide043-full.txt/report.json/full-logs:
+42 PASS/1 FAIL/3 SKIP, 650 checks. Новый финальный status_head ошибочно
+требовал текущего фокуса Git; artifact 28623620037732 показывает code cursor
+и уже правильный видимый Head main. Готовность изменена на чтение NeogitStatus
+среди видимых окон текущего tab. Затем полный Windows git-workflow дал
+6 PASS (windows-ide043-visible-head.txt); Ubuntu full повторён без rebuild,
+отдельно в ubuntu-ide043-verified.txt/report.json/verified-logs.
+
+Одноразовый `python -B .tests/audit-ide043.py` сверяет перед/после SHA util
+в исходных двух RED и трёх Git artifacts каждой ОС, отсутствие ESC/BEL в
+истории, 8/10 исходных FAIL и 10/10 исправленных строк, полноту скопированных
+report logs и неизменность прежних 413301 bytes FIXLOG. Итог —
+.tests/ide043-evidence-validation.json. Это сверка доказательств, не новый E2E.
+Для наблюдения нагрузки использован read-only
+`docker stats --no-stream --format '{{.Name}} {{.CPUPerc}} {{.MemUsage}}'`;
+настройки engine не менялись.
+
+Второй Ubuntu full завершился 41 PASS/2 FAIL/3 SKIP (650 checks), оба FAIL
+в прежних Gitsigns UI, теперь IDE-047. Проверки OSC/backports/SDK/workflow
+прошли. Audit сохраняет summary.ok=false и точные известные FAIL, проверяя
+скопированные артефакты отдельно; он не меняет итог runner на PASS.
+`docker top b39c8fadecd9 -eo pid,ppid,stat,pcpu,etime,comm,args` и
+`docker exec b39c8fadecd9 ps -eLo pid,ppid,tid,stat,wchan:25,comm` только
+наблюдали собственный тестовый контейнер, сохранив process/thread-observation.txt.
+Два child оставались Sl после SIGTERM; один parent в момент снимка был D.
+Процессы вручную не убивались; после full --rm контейнер удалён автоматически,
+`docker ps --filter ancestor=forge-nvim-tests:ubuntu24.04-nvim0.12.2` пуст.
+Следующий полный прогон — после изменения/новых доказательств IDE-047.

@@ -295,7 +295,7 @@ return {
     },
     {
         "NeogitOrg/neogit",
-        -- spec: IDE-GIT-7. Временный точечный backport, см. patches/README.md.
+        -- spec: IDE-GIT-7, IDE-GIT-12. Временные cwd/output backports, см. patches/README.md.
         commit = require('ide.backports').revision('neogit'),
         build = function(plugin) require('ide.backports').run('neogit', plugin.dir, 'apply') end,
         cmd = "Neogit",

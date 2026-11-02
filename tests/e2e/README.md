@@ -94,12 +94,15 @@ python -B tests/e2e/prepare_editor.py --download
 output через `FORGE_E2E_DEPS`. Docker выполняет подготовку при build.
 
 Подготовка также вызывает общий локальный Lua applier временного Neogit
-backport IDE-034; требуется Neovim (`--nvim <absolute-path>` выбирает binary).
+backport IDE-034/043; требуется Neovim (`--nvim <absolute-path>` выбирает binary).
 Manifest содержит базовый pin и SHA256 результата, editor/ConPTY harness
 проверяют реальный payload до запуска и не исправляют его. После добавления
 или изменения backport подготовку повторить даже при прежнем lazy-lock.
 Для установленного Forge отдельно выполнить `:Lazy build neogit` и перезапустить
 редактор. Подробности и обратимость — [patches/README.md](../../nvim_forge/patches/README.md).
+IDE-043 добавляет util companion при прежнем lock: повторить prepare_editor.py
+и build Neogit. Manifest сравнивается целиком, включая оба hashes. На Linux
+контейнерная подготовка выполняется явным build образа; тестовый запуск без сети.
 
 Быстрый запуск только редактора: `nvim -l tests/e2e/editor.test.lua`.
 
@@ -418,7 +421,7 @@ shell/process/clipboard и подготовке VM. Крупные sleep, пер
 | Базовое ядро редактора | Запуск, открыть/изменить/сохранить, дерево, имя/содержимое, буферы, фокус | `editor.test.lua`: Windows и Ubuntu PASS; Mac ждёт прогона |
 | IDE-BOOT-1/2 | Старт без установки инструментов, отсутствие предупреждения Go в .txt | `editor.test.lua`: Windows и Ubuntu PASS; Mac ждёт прогона; наличие gopls в Windows не фиксируется, отсутствие подтверждено в Ubuntu |
 | IDE-016–019, управление файлами | Создать/переименовать/переместить, cut/paste, отмена/конфликт, сохранённые буферы, общий маршрут/selector/zoom | `file-explorer.test.lua`: 7 real editor E2E; границы и результаты ниже |
-| Git/worktree | Локальный bare remote → worktree → изменение → commit/push; hunks/diff/history; rejected/missing remote → retry | `git-workflow.test.lua`: 6 real editor E2E; `git-errors.test.lua`: 2 IDE-GIT-10; `git-conflicts.test.lua`: 4 IDE-GIT-11; `diffview-close.test.lua`: 7; `worktree-refresh.test.lua`: 3; `active-worktree.test.lua`: 2 IDE-GIT-7; `gitsigns-worktree.test.lua`: 2 IDE-GIT-8; `gitsigns-live-read.test.lua`: CLI + 3 UI IDE-GIT-9; `plugin-backports.test.lua`: 8, включая настоящий Lazy build/отсутствие записи при открытии Git/файла, обновление предыдущего payload и отказ на неизвестный companion до записи. Credentials, sequence editor и title tail IDE-043 открыты |
+| Git/worktree | Локальный bare remote → worktree → изменение → commit/push; hunks/diff/history; rejected/missing remote → retry | `git-workflow.test.lua`: 6 real editor E2E; `git-errors.test.lua`: 3 UI (IDE-GIT-10/12) + parser matrix 10 строк; `git-conflicts.test.lua`: 4 IDE-GIT-11; `diffview-close.test.lua`: 7; `worktree-refresh.test.lua`: 3; `active-worktree.test.lua`: 2 IDE-GIT-7; `gitsigns-worktree.test.lua`: 2 IDE-GIT-8; `gitsigns-live-read.test.lua`: CLI + 3 UI IDE-GIT-9; `plugin-backports.test.lua`: 9, включая настоящий Lazy build/отсутствие записи при открытии Git/файла, обновление предыдущего payload и отказ на неизвестный companion до записи. Credentials и sequence editor открыты; IDE-043 исправляет OSC output |
 | Тестовый runtime IDE-030 | Реальное завершение редактора, сохранение артефактов, удаление своего профиля и отказ по чужому маркеру | `editor-runtime.test.lua`: 4 сценария, включая ошибку prepare и временный file lock внешнего процесса; `dap-output.test.lua` проверяет фактический go env GOCACHE |
 | Shell/jobs | Открыть terminal, job, закрыть/восстановить фокус | Не реализован; смена/закрытие файлов и базовый фокус покрыты ядром |
 
@@ -433,7 +436,8 @@ nonzero, второй 0, ни одного --force. Сравниваются ref
 Git stderr независимого CLI используется только как oracle допустимого fatal
 этой private fixture. Остальные ERROR и нативные E… не подтверждаются Enter.
 INFO с точной первой fatal строкой может содержать весь вывод; его raw текст
-сохраняется. Windows title tail остаётся IDE-043, не скрывается очисткой.
+сохраняется. Этот raw title tail был зарегистрирован как IDE-043; его текущее
+исправление готовится явным Neogit build (см. раздел IDE-GIT-12 ниже).
 Отдельно: Mac и физическая GUI доставка клавиш не проверены.
 
 ```powershell
@@ -545,6 +549,16 @@ Windows launcher проверяется в пути с пробелами и к�
 SDK: argv/exit, same-process env restoration, broken/missing/stale manifest,
 явный system override, отказ preparer по неверному source/patch до build.
 POSIX использует официальный SDK без Windows manifest/build tools.
+
+IDE-045: Lua runner получает список методов через
+`python -B tests/windows_sdk_test.py --list-cases TestWindowsSDKCLI`
+(на POSIX — TestPOSIXSDKCLI) и запускает каждый метод отдельным Python
+процессом. Лимиты прежние: команда CLI 10s, один сценарий 30s, файл registry
+60s. Раньше все шесть Windows сценариев делили один 30s; при холодном запуске
+это обрывало допустимую команду. Артефакты discovery/каждого сценария —
+`.tests/sdk-cases/<run>/`: argv/PID/elapsed/code/stdout/stderr. Это не исправление
+неустановленной причины замедления PowerShell. Прямой запуск Python class
+по-прежнему поддерживается.
 
 IDE-031: 10 повторов/30 CLI процессов прошли без увеличения прежних 10s.
 Артефакты каждой попытки — .tests/entrypoints-e2e. Исходный timeout не
@@ -658,3 +672,41 @@ refs/index/files, prompts, notifications и snapshot. Полная сверка 
 .tests/git-conflicts-evidence-validation.json. GUI/физические Alt, credentials,
 sequence editor, конфликты delete/rename/binary и сложные многофайловые операции
 не объявляются покрытыми этими четырьмя сценариями.
+
+
+IDE-GIT-12/IDE-043: util companion удаляет завершённые OSC title/hyperlink
+с BEL/ST до CSI и сохраняет UTF-8. `git-errors.test.lua` теперь содержит
+3 настоящих UI E2E: divergence/retry, native missing-origin/retry и private
+pre-receive hook с цветной причиной/OSC/ссылкой/обычным путём → отказ → retry.
+Четвёртая protocol check — parser matrix 10 строк, это не 10 UI E2E.
+Матрица проверяет соседние разные BEL/ST, видимый текст ссылки, CSI, UTF-8
+рядом с ASCII и буквальный Windows path. До исправления 8 строк не совпадали,
+после — все 10 PASS. Полезный путь вне OSC остаётся в настоящем hook output.
+
+Кеш зависимостей подготовить повторно даже при прежнем lock; descriptor Neogit
+теперь содержит primary и util, исходники не исправляются тестом при старте.
+`plugin-backports.test.lua` — 9 проверок, включая LF/CRLF обоих файлов,
+legacy primary-after/util-before, неизвестный companion до любой записи и
+настоящий `:Lazy build neogit` с последующим read-only открытием.
+
+Для исходного UI RED используется только private source variant:
+`FORGE_NEOGIT_OUTPUT_SOURCE_VARIANT=upstream` требует явного
+`FORGE_E2E_CONFIG_SOURCE` с архивом 7938409 до IDE-043. Prepared parent cache
+остаётся новым; только util дочернего профиля возвращается к точной исходной
+SHA перед запуском, IDE-034 primary сохраняется. Normal run оба override
+очищает. В артефакте — neogit-util.lua, util_source SHA/variant, raw
+notifications/history/prompts/refs. Конечный RED: 27202749796900 (native INFO),
+27213070080100 (hook metadata). Это реальные Git результаты, не подмена вывода.
+
+Итог IDE-043 (§104–106): Windows unit/e2e/trace 40 PASS, 486 checks, после
+последней коррекции visible Head — ещё 6 workflow PASS. Ubuntu serial full
+сначала 42 PASS/1 FAIL/3 SKIP (лишнее требование фокуса теста), затем
+41 PASS/2 FAIL/3 SKIP, 650 checks. Все OSC/backport/SDK/workflow проверки
+прошли; два старых Gitsigns сценария дали первичный RPC timeout и ошибку
+teardown, IDE-047 остаётся открытым. Это не чистый Ubuntu full PASS;
+исходные report/logs не переписаны. Mac/GUI не проверены.
+
+Ранний hook locator останавливался на строке push: длинный вывод оставлял
+причину ниже viewport. Keyboard search по literal cause открыл её; исходный
+FAIL 26077291181500 относится к locator, после него получен runtime RED
+26380326922600. Обе попытки сохраняются в истории. Mac/GUI ещё требуют прогона.

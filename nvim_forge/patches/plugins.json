@@ -24,12 +24,21 @@
     ]
   },
   "neogit": {
-    "id": "IDE-034-worktree-delete-cwd",
+    "id": "IDE-034-043-neogit-cwd-output",
     "revision": "d7bb91b42f984416adc6116d6ba8fba287857af3",
     "file": "lua/neogit/popups/worktree/actions.lua",
     "before_sha256": "71316bf6f499fccb55689e3dd1f3a3711ee4fb632b0b7724075a56e10c022513",
     "after_sha256": "ea4a4e90e2373718750583e9d6a755515a6b41231e4793fdccc9eef48d68b45c",
     "before": "      status.instance():chdir(main.path)\n",
-    "after": "      status.instance():chdir(main.path)\n      require(\"neogit.lib.async\").util.scheduler()\n"
+    "after": "      status.instance():chdir(main.path)\n      require(\"neogit.lib.async\").util.scheduler()\n",
+    "extra": [
+      {
+        "file": "lua/neogit/lib/util.lua",
+        "before_sha256": "c21c09d4dd2dbcde124b113cec39d357e31e317366acd28bf52cc11ccc2f4f37",
+        "after_sha256": "c8d23331352fd316845ed4009ca5b87f9206cf5101adfc995b53260e8ec53e57",
+        "before": "local pattern_1 = \"[\\27\\155][][()#;?%d]*[A-PRZcf-ntqry=><~]\"\nlocal pattern_2 = \"[\\r\\n\\04\\08]\"\nlocal BLANK = \"\"\nlocal gsub = string.gsub\n\nfunction M.remove_ansi_escape_codes(s)\n  s, _ = gsub(s, pattern_1, BLANK)\n  s, _ = gsub(s, pattern_2, BLANK)\n  return s\nend",
+        "after": "-- 0x9B бывает продолжением UTF-8; OSC удаляем целиком до CSI.\nlocal pattern_1 = \"\\27[][()#;?%d]*[A-PRZcf-ntqry=><~]\"\nlocal pattern_2 = \"[\\r\\n\\04\\08]\"\nlocal BLANK = \"\"\nlocal gsub = string.gsub\n\nfunction M.remove_ansi_escape_codes(s)\n  s, _ = gsub(s, \"\\27%][^\\7\\27]*\\7\", BLANK)\n  s, _ = gsub(s, \"\\27%][^\\7\\27]*\\27\\\\\", BLANK)\n  s, _ = gsub(s, pattern_1, BLANK)\n  s, _ = gsub(s, pattern_2, BLANK)\n  return s\nend"
+      }
+    ]
   }
 }

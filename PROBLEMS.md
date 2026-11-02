@@ -10,21 +10,23 @@
 
 Маршрут и приоритеты: [рабочий план nvim_forge](docs/IDE_ROADMAP.md).
 Для новых пунктов используем следующий свободный ID `IDE-xxx`; исходный
-симптом хранится здесь, этап и состояние — в плане. Следующий ID: `IDE-043`.
+симптом хранится здесь, этап и состояние — в плане. Следующий ID: `IDE-048`.
 
-## IDE-043 — Neogit: хвост terminal title в INFO неудачного push
+## IDE-047 — Ubuntu: RPC timeout, зависший child и потеря первичной ошибки
 
-2026-11-02, IDE-GIT-10: при origin в отсутствующий локальный каталог
-Windows popup после двух fatal ERROR публикует полный stdout как INFO.
-В конце видны `:\Program Files\Git\cmd\git.EXE` и BEL. Подтверждено
-артефактами 12067894894100 и 12248002532900, notifications/screen и command
-history сохранены. Причина в обработке title/PTY ещё не установлена.
-В Ubuntu повторе 11050466845373 такого хвоста не наблюдалось.
-Commit/remote не теряются, ошибка читается, retry проходит. E2E принимает
-Enter только на известных уведомлениях/INFO с точной fatal строкой fixture;
-посторонние ERROR и нативные E… остаются FAIL. Это не исправление хвоста.
-Следующий шаг — отдельный регресс очистки control sequences на границе
-вывода и проверка upstream; без Windows-only фильтра путей. История — §102.
+2026-11-02, второй serial Ubuntu full IDE-043: gitsigns-worktree dirty и
+gitsigns-live-read clean завершились «Дочерний Neovim не завершился». Snapshot
+первого содержит исходный RPC timeout nvim_get_mode при открытии linked файла,
+но исключение e:stop перекрыло первичную ошибку. Child напечатал SIGTERM /
+Finished в stderr и остался жив Sl, два собственных процесса видны в docker
+top спустя 1–3 минуты. Артефакты 29211834204778 и 29296420074026; raw отчёт
+ubuntu-ide043-verified: 41 PASS/2 FAIL/3 SKIP, 650 checks. Предыдущий serial
+Ubuntu full прошёл оба этих файла, но имел иной дефект теста (IDE-046).
+Причина первичного зависания не установлена. Сохраняются process/thread
+observations; SIGKILL cleanup в helper пока отсутствует. Тестовый --rm
+контейнер завершился и удалён; Desktop/WSL не менялись. Нужны отдельные
+проверки завершения child и сохранения исходной ошибки, затем диагностика
+первичного RPC. Зелёный повтор не закроет эту проблему.
 
 ## IDE-042 — Ubuntu: единичный 60s timeout key-ownership unit
 
@@ -137,6 +139,22 @@ RAM свободно около 24–25 GiB, очереди диска пуст�
 поручил продолжить план после перезагрузки, тесты разрешено возобновить.
 
 <!-- пиши ниже -->
+
+IDE-043 → [FIXLOG §104](nvim_forge/FIXLOG.md#104-neogit-читаемый-вывод-без-terminal-title-и-osc):
+CSI filter удалял начало OSC, оставляя title/BEL. Общий util companion
+удаляет завершённый OSC до CSI и сохраняет UTF-8/видимые ссылки/обычные пути.
+3 настоящих Git UI сценария + matrix 10 строк, 9 проверок подготовки;
+baseline RED сохранён. Обновление явно: Lazy build neogit и restart.
+
+IDE-045 → [FIXLOG §105](nvim_forge/FIXLOG.md#105-sdk-e2e-отдельный-deadline-каждого-сценария):
+все SDK unittest методы делили один 30s, обрывая допустимую CLI команду.
+Discovery и отдельный процесс для каждого метода, прежние 10s/30s/60s,
+argv/PID/result artifacts. Холодное замедление shell не объявлено исправленным.
+
+IDE-046 → [FIXLOG §106](nvim_forge/FIXLOG.md#106-git-e2e-готовность-панели-после-checkout):
+Git CLI уже сменил ветку, UI ещё обновлялся и восстанавливал старый курсор.
+E2E ждёт status Head до поиска файла; исходный FAIL и три targeted повтора
+сохранены. Production Neogit и timeout не менялись.
 
 IDE-044 → [FIXLOG §103](nvim_forge/FIXLOG.md#103-diffview-редактируемый-результат-merge-и-rebase):
 Alt+e выбирал правую неизменяемую :3: версию вместо среднего результата

@@ -25,8 +25,14 @@ local function popup(e,key,title)
 end
 local function status_head(e,branch)
   e:wait('status загрузил '..branch,function()
-    return e:current_ft()=='NeogitStatus' and e:lua([[local branch=...;for _,line in ipairs(vim.api.nvim_buf_get_lines(0,0,-1,false)) do
-      if line:match('^Head:%s+%x+%s+'..vim.pesc(branch)..'%s') then return true end end;return false]],{branch})
+    return e:lua([[local branch=...;for _,win in ipairs(vim.api.nvim_tabpage_list_wins(0)) do
+      local buf=vim.api.nvim_win_get_buf(win)
+      if vim.bo[buf].filetype=='NeogitStatus' then
+        for _,line in ipairs(vim.api.nvim_buf_get_lines(buf,0,-1,false)) do
+          if line:match('^Head:%s+%x+%s+'..vim.pesc(branch)..'%s') then return true end
+        end
+      end
+    end;return false]],{branch})
   end,15000)
 end
 local function prompt(e,pattern)
@@ -201,6 +207,7 @@ check('IDE-GIT-2 branch commit push в локальный bare remote',function(
   popup(e,'b','Branch');e:input('c');picker(e,'main')
   prompt(e,'Create branch');e:input('forge-e2e-feature<CR>')
   e:wait('ветка выбрана',function() return git(e.project,'branch','--show-current')=='forge-e2e-feature' end)
+  status_head(e,'forge-e2e-feature')
   row(e,'file_one.txt');e:input('s')
   e:wait('staged файл',function() return git(e.project,'diff','--cached','--name-only')=='file_one.txt' end)
   commit_push(e,e.project,'forge-e2e-feature','forge e2e commit')
@@ -210,6 +217,7 @@ check('IDE-GIT-2 branch commit push в локальный bare remote',function(
   e:wait('история репозитория',function() local s=table.concat(e.rpc:screen_lines(),'\n');return s:find('forge e2e commit',1,true) and s:find('fixture baseline',1,true) end)
   focus(e,'q','NeogitStatus');popup(e,'b','Branch');e:input('b');picker(e,'main')
   e:wait('checkout main',function() return git(e.project,'branch','--show-current')=='main' end)
+  status_head(e,'main')
 end)
 
 check('IDE-GIT-3 worktree пробелы visit и защита dirty delete',function(e)
