@@ -101,6 +101,14 @@ return {
         config = function()
             local rust_external = require("config.rust_external")
             rust_external.mark(0)
+            -- spec: IDE-HL-1. Полное слово становится regex; ограничиваем его размер.
+            -- Короткие слова в длинной строке сохраняют подсветку и переходы.
+            local max_word_bytes = 4096
+            local function should_enable(bufnr)
+                if rust_external.mark(bufnr) then return false end
+                if bufnr ~= vim.api.nvim_get_current_buf() then return false end
+                return #vim.fn.expand("<cword>") <= max_word_bytes
+            end
             require("illuminate").configure({
                 providers = { "lsp", "regex" },
                 -- 250мс вместо 120 — illuminate шлёт LSP documentHighlight
@@ -111,17 +119,12 @@ return {
                 -- В очень больших файлах (stdlib, vendored deps) —
                 -- regex вместо LSP. Лимит щедрый.
                 large_file_cutoff = 5000,
-                large_file_overrides = { providers = { "regex" } },
+                large_file_overrides = { providers = { "regex" }, should_enable = should_enable },
                 filetypes_denylist = { "neo-tree", "Trouble", "trouble", "lazy", "mason", "dap-repl", "dap-view", "dap-view-term", "dap-view-help", "aerial", "OverseerList", "overseer", "overseer-list" },
                 under_cursor = true,
-                -- Не дёргаем LSP documentHighlight для буферов из
-                -- stdlib / ~/.cargo / ~/.rustup — там это блокирует ra
-                -- (см. lsp.lua: vim.b[buf].rust_external = true).
-                -- Подсветка через regex остаётся.
-                should_enable = function(bufnr)
-                    if rust_external.mark(bufnr) then return false end
-                    return true
-                end,
+                -- Внешние Rust буферы и сверхдлинные слова исключаются
+                -- одним callback, в том числе после large-file cutoff.
+                should_enable = should_enable,
             })
             -- Прыжки по референсам (когда illuminate уже подсветил)
             vim.keymap.set("n", "<A-n>", function() require("illuminate").goto_next_reference(true) end,

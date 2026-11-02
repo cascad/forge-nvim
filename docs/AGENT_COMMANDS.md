@@ -2137,3 +2137,56 @@ forced editor shutdown/snapshot/config, восемь targeted exit, сохран
 report/logs и неизменность прежней истории; summary.ok=false сохраняется.
 Результат — .tests/ide047-evidence-validation.json. После этого полный набор
 без нового связанного изменения не повторялся.
+
+
+## 39. IDE-041: E339 на длинном слове
+
+```powershell
+$env:TEMP = 'F:\repo\forge-nvim\.tests\tmp'
+$env:TMP = $env:TEMP; $env:TMPDIR = $env:TEMP
+$env:NVIM_LOG_FILE = Join-Path $env:TEMP 'ide041-green.log'
+$env:npm_config_cache = 'F:\forge-nvim-tmp\npm-cache'
+. ./scripts/lib/nvim-sdk.ps1
+$forgeNvim = Get-ForgeNvim (Get-Location).Path
+& $forgeNvim -l tests/e2e/reference-highlighting.test.lua
+& $forgeNvim -l tests/run.lua unit trace
+& $forgeNvim -l tests/e2e/editor.test.lua
+# После Windows:
+docker compose -f tests/containers/compose.yaml run --rm --entrypoint nvim ubuntu -l tests/e2e/reference-highlighting.test.lua
+docker compose -f tests/containers/compose.yaml run --rm --entrypoint nvim ubuntu -l tests/e2e/editor.test.lua
+npx.cmd --yes @fission-ai/openspec@1.13.2 validate guard-long-reference-words --type change --strict --no-interactive
+```
+
+Новые UI: по 3 PASS Windows/Ubuntu, smoke по 10 PASS; Windows unit/trace
+15 файлов PASS, 364 checks. Логи windows/ubuntu-ide041-{highlighting,smoke}.txt
+и windows-ide041-unit-trace.txt/report.json. Image/SDK/пины не менялись,
+rebuild/download не требовались; использован уже работающий engine.
+
+Baseline nvim_forge получен из git archive fa33150. Python tarfile проверил
+относительные пути, разрешённый корень nvim_forge, отсутствие ссылок/особых
+файлов и выходов за destination, затем extractall(filter='data') в
+.tests/ide041-before-fa33150. ide.lua побайтово совпал с git show, SHA256
+52d7b43c01d4049d69ae42197d505444675313bb2c4d441a2999f5a7627a1991.
+
+```powershell
+$env:FORGE_E2E_CONFIG_SOURCE = (Resolve-Path .tests/ide041-before-fa33150/nvim_forge).Path
+$env:FORGE_HIGHLIGHT_CASE = 'длинное слово'
+& $forgeNvim -l tests/e2e/reference-highlighting.test.lua
+$env:FORGE_E2E_CONFIG_SOURCE = $null
+$env:FORGE_HIGHLIGHT_CASE = $null
+```
+
+Ожидается RED: 37931338029900, screen содержит E339: Pattern too long,
+rpc-error.json — nvim_exec_lua. Это уже постоянный тест, не прежний prototype
+33978419604200. Prototype и отдельный clean provider probe сохранены только
+как диагностика: vim.regex compile 512 КиБ проходит; provider match_line на
+тех же bytes выдаёт E339/internal error. Скрипты .tests/ide041-{regex,provider}-probe.lua
+работали в собственных процессах, не меняли результат provider/SDK/plugins.
+
+Наблюдение файлов — Get-Content/Select-String; проверка source/файлов —
+`python -B .tests/audit-ide041.py`. Он сверяет source SHA всех шести GREEN
+artifacts и исходного RED, отсутствие E339/blocking в snapshot, запись FORGE_,
+5003 строки и большую строку, итоги 3+10 на ОС, 364 unit/trace и старый
+history prefix. Итог — .tests/ide041-evidence-validation.json.
+Raw v:errmsg не сбрасывается; проверяются видимые messages/notifications,
+реальные ввод/запись и курсор после Alt+n/p. Mac/физические клавиши не проверены.

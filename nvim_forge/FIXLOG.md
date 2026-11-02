@@ -5412,3 +5412,72 @@ openspec/changes/preserve-editor-shutdown-evidence/*.
 Ubuntu trace прошёл в сохранённом full с одним отдельным IDE-048 FAIL.
 Проверены 177 local links, source SHA, baseline/forced/native artifacts,
 полнота report logs и неизменность прежних 428548 bytes истории.
+
+
+### 108. Подсветка сверхдлинного слова без E339
+
+**Связь:** IDE-041; change `guard-long-reference-words`.
+Спека: IDE-HL-1 (ADDED).
+**Статус:** исправлено и проверено Windows/Ubuntu; Mac/физические клавиши
+не проверены. Пины, SDK, установка и подготовка зависимостей не менялись.
+
+**Проблема.** Первоначальный Git prototype открыл слово 512 КиБ и получил
+E339/hit-enter до нужного Git gate (2231812818600). Замена fixture на обычные
+строки позволила исследовать Git, но не исправляла редактор. Повторный UI
+prototype 33978419604200 подтвердил E339 и RPC timeout при подсветке.
+
+**Причина.** Пин vim-illuminate 0d1e936 строит literal regex по целому слову.
+Отдельный clean probe показал: компиляция vim.regex проходит даже на 512 КиБ,
+а реальный provider match_line переключается на backtracking и выдаёт
+E339/internal error. Pcall только вокруг компиляции эту ошибку не предотвращает.
+Лимит large_file_cutoff считал строки и не защищал одну большую строку;
+large_file_overrides не наследует should_enable из основного config.
+
+**Изменение.** Публичный should_enable ограничивает текущее слово 4096
+UTF-8 bytes. Общий callback стоит в обычных opts и large-file overrides,
+сохраняет исключение rust_external и отбрасывает неактивный buffer, чей
+cursor нельзя считать текущим. Сверхдлинное слово пропускается, обычное слово
+в том же буфере снова подсвечивается; редактирование/запись доступны.
+Бюджет относится к слову: короткие слова в длинной строке сохраняют переходы.
+Использован штатный config API без нового backport и системных веток.
+
+**Проверка/e2e.** Постоянный reference-highlighting.test.lua содержит 3 UI
+сценария: 512 КиБ слово → запись FORGE_ → обычное слово; кириллица на границе
+4096/4097 bytes; файл 5003 строки и восстановление обычных ссылок; строка
+длиннее 512 КиБ с короткими Unicode словами. Движения, edit/write и Alt+n/p
+передаются клавишами; экстмарки/курсор только наблюдаются через Neovim API.
+Provider и приватные handlers не вызываются напрямую.
+
+Исходный config nvim_forge извлечён из fa33150 с проверкой путей tar и
+побайтовым сравнением ide.lua с git show (SHA 52d7b43c…). Конечный тест на
+этом config дал RED 37931338029900: screen содержит E339, rpc-error.json
+сохраняет nvim_exec_lua timeout. После общего исправления по 3 PASS на ОС:
+Windows 37976568855600, 37987139871800, 37995240073800;
+Ubuntu 34746553709516, 34755697709172, 34761027914390.
+Никакие неожиданные prompts/ERROR/видимые E… не подтверждались автоматически.
+Raw v:errmsg сохраняется: silent! loadview может оставить E484 без видимого
+сообщения; проверяются messages/mode/notifications и реальные действия.
+
+Регресс: smoke editor по 10 PASS Windows/Ubuntu; Windows unit/trace 15 файлов
+PASS, 364 checks. Логи windows/ubuntu-ide041-{highlighting,smoke}.txt,
+windows-ide041-unit-trace.txt/report.json. Сверены config source SHA всех
+шести GREEN artifacts/исходного RED, сохранённые файлы, состояние UI,
+результаты и прежние 436423 bytes истории: ide041-evidence-validation.json.
+Известные IDE-047/048 не закрываются этими тестами; полный набор без связанного
+изменения не повторялся. Mac/GUI и реальная доставка Alt через WezTerm отдельно.
+
+**Вывод.** Ресурсный предел задаётся по причине нагрузки — размеру слова.
+Публичный callback защищает оба режима и сохраняет полезную работу с длинной
+строкой. Самой компиляции regex недостаточно для воспроизведения: регресс
+обязан выполнить реальную пользовательскую подсветку, движение и запись.
+
+**Файлы:** nvim_forge/lua/plugins/ide.lua, QUICKSTART.md;
+tests/e2e/reference-highlighting.test.lua, tests/registry.lua,
+tests/e2e/README.md; openspec/config.yaml и change guard-long-reference-words;
+PROBLEMS/IDE_ROADMAP/HISTORY/AGENT_COMMANDS §39.
+
+
+**Проверка перед коммитом IDE-041.** Strict validate PASS; финальный Windows
+trace 2 файла PASS. Source/тест SHA, 6 UI artifacts и исходный RED, 180 local
+links, таблица e2e и прежний history prefix проверены. SDK/lock/backports
+не менялись; полные повторы с известными IDE-047/048 не запускались.

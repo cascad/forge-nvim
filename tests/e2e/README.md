@@ -414,6 +414,7 @@ shell/process/clipboard и подготовке VM. Крупные sleep, пер
 | IDE-005, фокус | Код → Locals → Output → код; paused-сессия сохраняется | `debug-panels.test.lua`: Windows/Ubuntu PASS; Mac/GUI открыты |
 | IDE-006, ближайший тест | nearest/failing/file, результат/output; debug breakpoint/eval/continue, Esc/q | `test-runner.test.lua`: 5 Go E2E Windows/Ubuntu PASS; Mac/Python/Rust открыты; debug skipped в панели, итог в REPL |
 | IDE-007, snippet | Completion → ручной ввод вне поля → хвост отменён, текст сохранён | `snippet-input.test.lua`: 11 cmp/LuaSnip E2E Windows/Ubuntu PASS; Mac/ответы реальных LSP открыты |
+| IDE-HL-1, подсветка | Сверхдлинное слово → редактирование/запись → обычные ссылки; большой файл/строка | `reference-highlighting.test.lua`: 3 UI E2E Windows/Ubuntu PASS, Unicode boundary и Alt+n/p; Mac/GUI открыты |
 | IDE-012, codelldb discovery | Go/F9 без чужого WARN; F5 без binary → понятное сообщение, повтор, редактирование | `dap-discovery.test.lua`: 3 negative E2E Windows/Ubuntu PASS; Mac и positive Rust/C/C++ DAP открыты |
 | IDE-005/009 и IDE-014, Debug панели | Space w, real paused Locals/Output, q/Esc/help/zoom, внешний close, сохранность сессии/вывода | `debug-panels.test.lua`: 4 E2E Windows/Ubuntu PASS; Mac/GUI и остальные панели открыты |
 | IDE-008, Outline и IDE-015 | Открыть слева → найти/раскрыть символ → перейти в код → вернуться; Explorer/файлы/zoom и pending callbacks | `outline.test.lua`: 6 real Aerial E2E Windows/Ubuntu PASS; Mac/GUI и остальные языковые backend открыты |
@@ -737,6 +738,26 @@ IDE-047 targeted: Windows 11 PASS/2 POSIX SKIP, Ubuntu 13 PASS. Затем Ubunt
 full — 43 PASS/1 FAIL/3 SKIP (653 checks); единственный FAIL — отдельное
 ожидание следующего completed Git-read, IDE-048. Cleanup/процессные сценарии
 прошли; первичный RPC IDE-047 и новый IDE-048 остаются открытыми.
+
+IDE-HL-1/IDE-041: `reference-highlighting.test.lua` содержит три реальных
+editor UI сценария. Слово 512 КиБ → редактирование/запись → обычное слово;
+Unicode граница 4096/4097 UTF-8 bytes; файл 5003 строки; строка длиннее
+512 КиБ с короткими Unicode вхождениями. Extmarks наблюдаются публичным
+Neovim API, Alt+n/Alt+p реально меняют курсор; private provider/handlers
+напрямую не вызываются. Один callback should_enable применяется в обычном
+и large-file режимах, без нового backport/пина/SDK.
+
+Постоянный тест на исходном config archive fa33150 воспроизводит E339 /
+hit-enter и RPC timeout: Windows artifact 37931338029900. Сохранены screen,
+первичный RPC и исходный ide.lua; конечный test source тот же. Raw v:errmsg
+не обнуляется: silent! loadview может оставить прежний E484 без сообщения.
+Проверяются реальные действия, видимые messages/notifications и mode;
+неожиданные prompt/ERROR/видимые E… не подтверждаются автоматически.
+
+Итог IDE-041: по 3 новых UI + 10 smoke PASS Windows/Ubuntu; Windows unit/trace
+15 файлов PASS, 364 checks. Перед/после source и все 6 GREEN artifacts
+сверены в .tests/ide041-evidence-validation.json. Установки/обновления
+зависимостей не было; известные IDE-047/048 и Mac/GUI остаются открытыми.
 
 Ранний hook locator останавливался на строке push: длинный вывод оставлял
 причину ниже viewport. Keyboard search по literal cause открыл её; исходный
