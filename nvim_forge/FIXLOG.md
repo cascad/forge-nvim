@@ -4881,3 +4881,86 @@ openspec/changes/fix-repeated-worktree-delete/*.
 Read-only CLI check обоих backports и hashes обоих Gitsigns файлов PASS;
 прежние 377791 байт FIXLOG сохранены. Остатков own editor runtime после
 итоговых прогонов/обоих red replay нет.
+
+
+### 101. ConPTY: сохраняем раскладки сессий и полный diff
+
+**Связь:** IDE-039; change `record-conpty-layout-evidence` (tooling,
+`skip_specs: true`). Требования WT-KBD-9/WT-KEYS-10 не меняются.
+**Статус:** диагностический шаг завершён, причина двух исходных RU запусков
+и изоляция actual input HKL остаются открытыми. Это не runtime fix.
+
+**Проблема.** Два RU прогона ConPTY давали 65 PASS/1 FAIL: полный JSON
+отличался только replay/right_ctrl Ctrl+/ в nvim (`<C-_>` вместо `<C-N>`)
+и VT (`1f` вместо `0e`). Обычный FAIL предлагал обновить fixture, не оставляя
+полный actual и точный diff. Последующий EN повтор проходил, что само по
+себе не объясняло прежнюю ошибку.
+
+**Причина.** Проба выбирает один layout по foreground окну до начала всех
+сессий. Новый наблюдаемый запуск qz8hcow8 начался на RU: первые сессии имели
+RU primary HKL; во время четвёртой foreground сменился на EN. Следующие
+nvim/VT/records readers имели EN primary HKL. Результат по-прежнему помечен
+RU и разошёлся ровно теми четырьмя полями; с EN эталоном эти значения
+совпадают. Для этого повтора установлено смешение раскладок в одном прогоне.
+У двух старых запусков таких временных metadata нет: приписывать им ту же
+причину задним числом нельзя. Primary HKL reader и foreground не объявляются
+измерением input thread OpenConsole.
+
+**Изменение.** Добавлена постоянная `tests/diagnostics/conpty-layout.py`.
+Она делегирует настоящему main/probe, наблюдает создание/ввод/закрытие
+каждой Session и не меняет исходные проверки. Новый уникальный ignored
+каталог содержит log, actual, expected, difference, sessions и manifest:
+exit/status, layout, Windows build, SDK/DLL/OpenConsole и fixture SHA.
+Разные HKL подписаны по источнику. Сохраняется только синтетический ввод
+стенда. При FAIL остаётся exit 1; SKIP/exception отличаются от PASS.
+`--fixture` читает явно выбранную копию и не предоставляет обновления.
+
+**Проверка/e2e.** Настоящий SDK 0.12.2 с прежним Windows ConPTY патчем,
+реальные conpty.dll/OpenConsole и 11 частных сессий в каждом прогоне:
+
+- qz8hcow8: 65 PASS/1 FAIL, четыре поля diff, RU→EN; исходный raw FAIL
+  сохранён как windows-ide039-diagnostic-drift-red.txt.
+- xkb7szf1: 66 PASS/0 FAIL, diff пустой. Определённые foreground samples
+  только EN, один sample без foreground: это не доказательство непрерывно
+  фиксированной раскладки. Лог windows-ide039-diagnostic-repeat.txt.
+- l4yb4o5n: намеренно неверная частная копия с двумя `<IDE039-intentionally-wrong>`
+  дала exit 1, 65 PASS/1 FAIL и ровно эти два поля diff. Полный actual целиком
+  равен исходному EN эталону; исходный fixture не менялся. Foreground в этом
+  повторе тоже менялся. Это E2E пути диагностического FAIL, не воспроизведение
+  причины исходного RU. Лог windows-ide039-diagnostic-fail.txt.
+
+Все три before/after fixture SHA совпали; по 301 sample, observation errors
+нет. Итоговая сверка — .tests/ide039-evidence-validation.json. Первая попытка
+сверки слишком строго ожидала единственную foreground раскладку и для
+намеренного FAIL; она выявила смену metadata, а не дефект наблюдателя.
+Условие уточнено по фактической роли каждого прогона, raw данные сохранены.
+Source fixture, исходная проба/harness и lazy-lock не менялись. Остатков
+own editor runtime после прогонов не найдено.
+
+Ubuntu на уже работающем engine 28.5.1: диагностическая команда дала явный
+SKIP «не Windows». Trace 7 PASS/1 SKIP (нет manual references), strict
+validate PASS. Повторять тяжёлые Windows/Ubuntu наборы для отдельного
+read-only инструмента не требовалось; широкие результаты §100 не присваиваются
+ему. Mac и GUI доставка физических клавиш не проверены. Desktop/WSL не
+запускались, не перезапускались и не останавливались; Windows temp на F:.
+
+**Проверено вручную, ограничения.** Дополнительные ignored пробы: запрос
+GetConsoleKeyboardLayoutNameW вернул false/error 16385; смена HKL только
+собственного тестового потока между уже установленными layouts, flags=0
+с восстановлением, не изменила VT Ctrl+/ (1f). Это не способ закрепить
+раскладку ConPTY. ToUnicodeEx с искусственным keyboard state и flags=4 дал
+0 для Ctrl+OEM на обеих layouts. Читались upstream исходники Microsoft
+Terminal v1.19.10302.0; совпадение версии установленного OpenConsole с ними
+не доказано. Эти отрицательные наблюдения не устанавливают actual input HKL
+и не заменяют постоянную пробу.
+
+**Вывод.** Несогласованность среды нельзя исправлять перезаписью эталона.
+Теперь каждый повтор оставляет необходимые данные, сохраняя строгий FAIL.
+Следующий шаг IDE-039 — изоляция/проверка раскладки переводящего потока,
+явное различение нестабильной среды и регресса, устойчивые RU/EN прогоны.
+До этого пункт остаётся открытым; следующий функциональный шаг плана —
+Git rejected push, затем merge/rebase-конфликты.
+
+**Файлы:** tests/diagnostics/conpty-layout.py, tests/diagnostics/README.md,
+tests/e2e/README.md, PROBLEMS.md, docs/IDE_ROADMAP.md, docs/HISTORY.md,
+docs/AGENT_COMMANDS.md, openspec/changes/record-conpty-layout-evidence/*.

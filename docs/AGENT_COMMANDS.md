@@ -1758,3 +1758,56 @@ Ubuntu: 42 файла/44 прогона, 41 PASS/0 FAIL/3 SKIP, 640 провер
 final upstream red — 8351711096700 (исходный traceback/hit-enter); логи
 `windows-ide038-verified-previous-red.txt`, `-verified-upstream-red.txt`.
 Полный Windows с ConPTY и проверка Mac/GUI не заявлены.
+
+## 34. IDE-039: раскладки ConPTY и неизменённый вердикт
+
+```powershell
+$env:TEMP = 'F:\repo\forge-nvim\.tests\tmp'
+$env:TMP = $env:TEMP; $env:TMPDIR = $env:TEMP
+$env:NVIM_LOG_FILE = Join-Path $env:TEMP 'ide039-diagnostic.log'
+$env:PYTHONIOENCODING = 'utf-8'
+. ./scripts/lib/nvim-sdk.ps1
+$env:FORGE_TEST_NVIM = Get-ForgeNvim (Get-Location).Path
+python -B tests/diagnostics/conpty-layout.py
+python -B tests/diagnostics/conpty-layout.py --fixture .tests/ide039-wrong-fixture.json
+docker compose -f tests/containers/compose.yaml run --rm --entrypoint python3 ubuntu -B tests/diagnostics/conpty-layout.py
+& $env:FORGE_TEST_NVIM -l tests/trace.test.lua
+git diff --exit-code -- tests/wezterm/conpty/chords.test.py tests/wezterm/conpty/harness.py tests/wezterm/conpty/chords.fixture.json nvim_forge/lazy-lock.json
+```
+
+Вторая команда — только проверка диагностики: частная копия fixture содержит
+заведомо неверные `<IDE039-intentionally-wrong>` в replay/right_ctrl nvim
+Ctrl+/ **обеих** layouts. Её готовили Python json.load/deep structure edit/
+json.dump в ignored `.tests/ide039-wrong-fixture.json`; tracked JSON не менялся.
+Это ожидаемый exit 1, а не исправление/воспроизведение причины исходного RU.
+
+Наблюдатель вызывает настоящий main/probe; записывает argv, время,
+синтетический ввод, foreground HKL и отдельные HKL потока наблюдателя/
+primary thread reader. `GetForegroundWindow`, `GetWindowThreadProcessId`,
+`GetKeyboardLayout` — только чтение. Фактический HKL input thread OpenConsole
+этими значениями не объявляется. В каждом новом каталоге
+`.tests/artifacts/conpty-layout-*` — probe.log, actual/expected/difference,
+sessions и manifest с exit/status, OS build и SHA fixture/DLL/EXE/SDK.
+
+Фактические результаты: qz8hcow8 — 65 PASS/1 FAIL, RU→EN между сессиями,
+четыре поля; xkb7szf1 — 66 PASS/diff 0, определённые foreground только EN
+(один sample без foreground); l4yb4o5n — ожидаемый 65 PASS/1 FAIL и два поля
+неверной копии, настоящий actual целиком равен исходному EN эталону.
+В последнем foreground тоже менялся, это не устойчивый RU/EN контроль.
+Три fixture before/after SHA совпали; ошибки наблюдения отсутствуют.
+`.tests/ide039-evidence-validation.json` сохраняет сверку. Исходный raw FAIL
+сохранён как `windows-ide039-diagnostic-drift-red.txt`, повтор/неверная копия —
+`windows-ide039-diagnostic-repeat.txt` и `-fail.txt`.
+
+Дополнительные ручные наблюдения в ignored `.tests/`: GetConsoleKeyboardLayoutNameW
+вернул false/error 16385; HKL только собственного тестового потока менялся
+между уже установленными layouts через ActivateKeyboardLayout(flags=0) с
+восстановлением, VT Ctrl+/ остался 1f. ToUnicodeEx с flags=4 и искусственным
+массивом клавиш вернул 0 для Ctrl+OEM на RU/EN. Эти отрицательные пробы не
+устанавливают input HKL или причину старых запусков; они не часть исправления.
+Читались исходники Microsoft Terminal v1.19.10302.0 (архив 25646438 bytes на F:),
+использовались rg по локальным source-файлам; сборки/замены DLL не было.
+
+Ubuntu diagnostic — явный SKIP, trace 7 PASS/1 SKIP, strict validate PASS
+(`record-conpty-layout-evidence`, skip_specs: tooling). Lifecycle Desktop/WSL
+не менялся. IDE-039 остаётся открытым, Mac/GUI не проверены. История — §101.

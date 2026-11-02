@@ -349,6 +349,14 @@ IDE-037: владелец выбрал чистый Docker вместо восс
 отдельный прогон 65 PASS/1 FAIL, эталон не менялся. Полный Windows PASS
 с ConPTY не заявлен; Mac/GUI не проверены.
 
+IDE-039 (§101): постоянная `tests/diagnostics/conpty-layout.py` сохраняет
+actual/expected/diff, metadata каждой сессии и исходный вердикт. Наблюдаемый
+RU FAIL поймал RU → EN между сессиями и ровно четыре прежних отличия Ctrl+/;
+контрольный EN прошёл 66 проверок (один sample без foreground). Эталон не менялся. Изоляция
+раскладки input thread и устойчивое RU покрытие остаются открытыми; старые
+прогоны без metadata не приписываются этой причине задним числом. Следующий
+функциональный шаг — Git rejected push, затем merge/rebase.
+
 IDE-038 (§100): process cwd явно common git-dir. Итоговый Windows
 unit/e2e/trace — 38 PASS/0 FAIL/0 SKIP (471 проверка); Ubuntu full —
 41 PASS/0 FAIL/3 SKIP (42 файла/44 прогона, 640 проверок). Live 4, completed 2

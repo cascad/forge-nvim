@@ -427,9 +427,9 @@ shell/process/clipboard и подготовке VM. Крупные sleep, пер
 
 | Среда | Общие сценарии | Специальные проверки | Состояние |
 |---|---|---|---|
-| Windows native | CLI/IDE/languages | ConPTY, clipboard, ru/en, пути/venv | IDE-034: частичный full 38 PASS / 0 FAIL / 2 SKIP, прерван по IDE-036. После reboot unit/trace/ConPTY 16 файлов PASS (ConPTY 66), подготовка 5 PASS; целый full не повторялся. IDE-031 открыт, GUI не проверен |
+| Windows native | CLI/IDE/languages | ConPTY, clipboard, ru/en, пути/venv | IDE-038: unit/e2e/trace 38 PASS / 0 FAIL / 0 SKIP, 471 проверка. IDE-039: наблюдаемый RU→EN FAIL 65/1; отдельный стабильный EN 66 PASS. Полный full с устойчивым RU не заявлен; IDE-031/039/040 открыты, GUI не проверен |
 | macOS | CLI/IDE/languages | zsh startup, Cmd, clipboard, arm64 при наличии | Ждёт VM/машину владельца |
-| Ubuntu | CLI/IDE/languages | apt/version check, bash/zsh, X11/Wayland по целевой сессии | IDE-034 full: 39 PASS / 0 FAIL / 3 SKIP, 40 файлов/42 прогона; официальный SDK, editor/Git и 7 новых проверок прошли. GUI не проверен |
+| Ubuntu | CLI/IDE/languages | apt/version check, bash/zsh, X11/Wayland по целевой сессии | IDE-038 full: 41 PASS / 0 FAIL / 3 SKIP, 42 файла/44 прогона, 640 проверок; официальный SDK. ConPTY diagnostic — явный SKIP. GUI не проверен |
 | Mint | CLI/IDE/languages | apt/version check, bash/zsh, desktop clipboard | Временно отложен владельцем |
 
 Этот набор дополняет существующие `wezterm`, `install`, `trace`, `conpty`;

@@ -170,3 +170,38 @@ UI проверяет и чтение, начатое при уже текуще
 Это доказывает класс блокировки object read, а не владельца handle первого
 случайного отказа 551474721600. Для red replay прежнего backport используется
 source variant previous и отдельный config archive 199b1a7.
+
+## IDE-039: расхождение ConPTY и эталона
+
+```powershell
+$env:TEMP = Join-Path (Get-Location) '.tests/tmp'
+$env:TMP = $env:TEMP; $env:TMPDIR = $env:TEMP
+. ./scripts/lib/nvim-sdk.ps1
+$env:FORGE_TEST_NVIM = Get-ForgeNvim (Get-Location).Path
+python -B tests/diagnostics/conpty-layout.py
+```
+
+Можно добавить `--layout ru` или `--layout en`: исходная проба делает SKIP,
+если foreground language в начале не совпадает. Это условие стенда, а не
+доказательство языка переводящего потока каждой ConPTY. Проба занимает около
+1,5 минут; запускать отдельно от тяжёлых Windows/Ubuntu регрессов.
+
+В новом `.tests/artifacts/conpty-layout-*` сохраняются `probe.log`,
+`actual.json`, `expected.json`, `difference.json`, `sessions.json`, `manifest.json`.
+Последний содержит exit/status, Windows build, DLL/EXE SHA, SDK и fixture SHA;
+сессии — время, argv, синтетические входы и отдельные HKL foreground/observer/
+reader primary thread. Это метаданные, а не утверждение об actual input HKL.
+Инструмент не переключает раскладку, не меняет фокус/профиль/эталон. Исходные
+проверки и exit code сохраняются; при несовпадении остаётся FAIL. Вне Windows
+явный SKIP. `--fixture <частная-копия.json>` позволяет проверить путь FAIL
+на заведомо неверной read-only копии, не переписывая tracked fixture.
+
+IDE-039 остаётся открытым: два прежних RU FAIL отличались четырьмя полями
+Ctrl+/ (`<C-_>`/`1f` вместо `<C-N>`/`0e`), последующий EN повтор прошёл 66
+проверок. Новый наблюдаемый повтор поймал RU → EN между сессиями: root layout
+RU, следующие reader primary HKL EN, те же четыре отличия. Этот повтор
+объяснён; для старых нет ретроспективного доказательства. Смена HKL только у
+тестового потока не изменила VT Ctrl+/; прямой запрос console layout вернул
+false/error 16385. Эти отрицательные результаты не доказывают actual input HKL.
+Следующий шаг — изолировать/проверять раскладку переводящего потока, явно
+различать нестабильную среду и регресс и проверить устойчивые RU/EN прогоны.
