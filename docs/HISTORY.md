@@ -204,6 +204,7 @@ Neovim до нынешнего nvim_forge. Здесь одна последов�
 | §100 | [Живой Git object read без cwd удаляемого worktree](../nvim_forge/FIXLOG.md#100-живой-git-object-read-без-cwd-удаляемого-worktree) |
 | §101 | [ConPTY: сохраняем раскладки сессий и полный diff](../nvim_forge/FIXLOG.md#101-conpty-сохраняем-раскладки-сессий-и-полный-diff) |
 | §102 | [Git: отказ push и повтор без потери коммитов](../nvim_forge/FIXLOG.md#102-git-отказ-push-и-повтор-без-потери-коммитов) |
+| §103 | [Diffview: редактируемый результат merge и rebase](../nvim_forge/FIXLOG.md#103-diffview-редактируемый-результат-merge-и-rebase) |
 
 ## Как читать и дополнять
 

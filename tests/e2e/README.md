@@ -418,7 +418,10 @@ shell/process/clipboard и подготовке VM. Крупные sleep, пер
 | Базовое ядро редактора | Запуск, открыть/изменить/сохранить, дерево, имя/содержимое, буферы, фокус | `editor.test.lua`: Windows и Ubuntu PASS; Mac ждёт прогона |
 | IDE-BOOT-1/2 | Старт без установки инструментов, отсутствие предупреждения Go в .txt | `editor.test.lua`: Windows и Ubuntu PASS; Mac ждёт прогона; наличие gopls в Windows не фиксируется, отсутствие подтверждено в Ubuntu |
 | IDE-016–019, управление файлами | Создать/переименовать/переместить, cut/paste, отмена/конфликт, сохранённые буферы, общий маршрут/selector/zoom | `file-explorer.test.lua`: 7 real editor E2E; границы и результаты ниже |
-| Git/worktree | Локальный bare remote → worktree → изменение → commit/push; hunks/diff/history; rejected/missing remote → retry | `git-workflow.test.lua`: 6 real editor E2E; `git-errors.test.lua`: 2 IDE-GIT-10; `diffview-close.test.lua`: 7; `worktree-refresh.test.lua`: 3; `active-worktree.test.lua`: 2 IDE-GIT-7; `gitsigns-worktree.test.lua`: 2 IDE-GIT-8; `gitsigns-live-read.test.lua`: CLI + 3 UI IDE-GIT-9; `plugin-backports.test.lua`: 8, включая настоящий Lazy build/отсутствие записи при открытии Git/файла, обновление предыдущего payload и отказ на неизвестный companion до записи. Credentials, merge/rebase-конфликты и title tail IDE-043 открыты |
+| Git/worktree | Локальный bare remote → worktree → изменение → commit/push; hunks/diff/history; rejected/missing remote → retry | `git-workflow.test.lua`: 6 real editor E2E; `git-errors.test.lua`: 2 IDE-GIT-10; `git-conflicts.test.lua`: 4 IDE-GIT-11; `diffview-close.test.lua`: 7; `worktree-refresh.test.lua`: 3; `active-worktree.test.lua`: 2 IDE-GIT-7; `gitsigns-worktree.test.lua`: 2 IDE-GIT-8; `gitsigns-live-read.test.lua`: CLI + 3 UI IDE-GIT-9; `plugin-backports.test.lua`: 8, включая настоящий Lazy build/отсутствие записи при открытии Git/файла, обновление предыдущего payload и отказ на неизвестный companion до записи. Credentials, sequence editor и title tail IDE-043 открыты |
+| Тестовый runtime IDE-030 | Реальное завершение редактора, сохранение артефактов, удаление своего профиля и отказ по чужому маркеру | `editor-runtime.test.lua`: 4 сценария, включая ошибку prepare и временный file lock внешнего процесса; `dap-output.test.lua` проверяет фактический go env GOCACHE |
+| Shell/jobs | Открыть terminal, job, закрыть/восстановить фокус | Не реализован; смена/закрытие файлов и базовый фокус покрыты ядром |
+
 
 IDE-GIT-10 (FIXLOG §102): новые 2 и прежние 6 Git E2E прошли Windows/Ubuntu
 последовательно. В status `P u`, отказ force — `n`, `$` → строка push → `Tab`
@@ -443,8 +446,6 @@ docker compose -f tests/containers/compose.yaml run --rm --entrypoint nvim ubunt
 
 На Mac: `python3 -B tests/e2e/prepare_editor.py --download --nvim "$(command -v nvim)"`,
 затем `nvim -l tests/e2e/git-errors.test.lua`. Прогон на Mac требуется отдельно.
-| Тестовый runtime IDE-030 | Реальное завершение редактора, сохранение артефактов, удаление своего профиля и отказ по чужому маркеру | `editor-runtime.test.lua`: 4 сценария, включая ошибку prepare и временный file lock внешнего процесса; `dap-output.test.lua` проверяет фактический go env GOCACHE |
-| Shell/jobs | Открыть terminal, job, закрыть/восстановить фокус | Не реализован; смена/закрытие файлов и базовый фокус покрыты ядром |
 | Языки | Для каждого языка LSP/format/run/debug/tests в применимых сочетаниях | Не реализован |
 
 ## Матрица VM
@@ -631,3 +632,29 @@ Live 4, completed 2, подготовка 8 PASS на обеих ОС. Final pre
 Первый Ubuntu full имел единственный 60s timeout key-ownership (IDE-042);
 raw FAIL, отдельный 46 PASS и serial repeat сохранены раздельно. Повторы
 не устанавливают причину timeout. ConPTY IDE-039 и Mac/GUI остаются открытыми.
+
+
+IDE-GIT-11/IDE-044 (FIXLOG §103): `git-conflicts.test.lua` создаёт две локальные
+ветки с настоящим конфликтом и проверяет merge/rebase resolve/continue и
+отдельный abort — 4 PASS Windows/Ubuntu. Все действия Neogit/Diffview выполняются
+клавишами; после выбора ours/theirs проверяются файл/index/refs и завершение
+Git metadata. Merge имеет обе исходные вершины родителями; rebase даёт новый
+commit на main и сохраняет main, abort возвращает исходные HEAD/index/оба файла.
+
+Alt+e проверяется из file panel и из крайней правой версии. Исходный selector
+выбирал правую :3: панель (buftype=nowrite, modifiable=false), writable result
+находился посередине. Новый выбирает normal modifiable buffer. В baseline
+34f2054 постоянный тест даёт именно этот RED (13338206520000); прежний config
+в частном FORGE_E2E_CONFIG_SOURCE, plugin lock/payload те же. Ранний locator
+искал заголовок Unmerged вместо строки unmerged — его FAIL сохранён как
+ошибка тестового ожидания, а не причина runtime.
+
+Команды: `nvim -l tests/e2e/git-conflicts.test.lua` (Windows — SDK и temp на F:),
+`docker compose -f tests/containers/compose.yaml run --rm --entrypoint nvim ubuntu -l tests/e2e/git-conflicts.test.lua`.
+На Mac — официальный nvim после prepare_editor.py, проверка ещё не выполнялась.
+Фильтр `FORGE_GIT_CONFLICT_CASE='merge resolve'` оставляет один сценарий.
+Raw observations содержат diff_windows, after_alt_e/alt_e_from_panel, before/after
+refs/index/files, prompts, notifications и snapshot. Полная сверка — ignored
+.tests/git-conflicts-evidence-validation.json. GUI/физические Alt, credentials,
+sequence editor, конфликты delete/rename/binary и сложные многофайловые операции
+не объявляются покрытыми этими четырьмя сценариями.

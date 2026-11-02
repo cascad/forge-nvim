@@ -262,7 +262,10 @@ Normal mode, прежние aliases сохранены:
 - [x] IDE-025: стабильный cwd выбранного worktree при фокусе старых файлов.
 - [x] IDE-026: закрытие Diffview во время загрузки, повтор, другой view и
   возврат файла/раскладки; real Git gate и естественное раннее закрытие (§89).
-- [ ] Проверить merge/rebase-конфликты и обработку ошибок Git.
+- [x] IDE-GIT-11/IDE-044: merge/rebase resolve/continue и abort, Alt+e в
+  writable result diff3 из дерева и версии; 4 real editor E2E Windows/Ubuntu (§103).
+- [ ] Credentials, interactive sequence editor и остальные ошибки Git;
+  очистка title/PTY output IDE-043 остаётся отдельно.
 - [x] IDE-028: быстрые visit между worktree с разными HEAD во время обновления
   status; согласованный Unicode-граф и 3 real editor e2e Windows/Ubuntu (§91).
 - [x] IDE-034: удаление активного linked worktree после смены cwd; временный
@@ -358,13 +361,15 @@ RU FAIL поймал RU → EN между сессиями и ровно чет�
 контрольный EN прошёл 66 проверок (один sample без foreground). Эталон не менялся. Изоляция
 раскладки input thread и устойчивое RU покрытие остаются открытыми; старые
 прогоны без metadata не приписываются этой причине задним числом. Следующий
-функциональный шаг Git после IDE-GIT-10 — merge/rebase-конфликты.
+функциональный Git шаг IDE-GIT-11 завершён в §103; IDE-039 остаётся диагностикой.
 
 IDE-GIT-10 (§102): rejected/missing remote и повтор проверены в настоящем
 Neogit на Windows/Ubuntu. Runtime менять не потребовалось; два новых E2E
 постоянно входят в registry, прежние шесть тоже прошли на обеих ОС.
 Согласование историй перед retry делается Git CLI в fixture: это не покрытие
-UI merge. Credentials/merge/rebase и IDE-043 остаются открытыми; Mac/GUI не проверены.
+UI merge в том change. IDE-GIT-11 (§103) отдельно покрывает merge/rebase
+resolve/continue/abort и исправляет Alt+e в diff3; по 4 PASS Windows/Ubuntu.
+Credentials/sequence editor и IDE-043 остаются открытыми; Mac/GUI не проверены.
 
 IDE-038 (§100): process cwd явно common git-dir. Итоговый Windows
 unit/e2e/trace — 38 PASS/0 FAIL/0 SKIP (471 проверка); Ubuntu full —
@@ -376,8 +381,9 @@ unit/e2e/trace — 38 PASS/0 FAIL/0 SKIP (471 проверка); Ubuntu full —
 Первый Ubuntu full при параллельном Windows имел один 60s timeout key-ownership
 (IDE-042); raw FAIL сохранён, одиночный повтор 46 PASS и новый полный serial
 не устанавливают причину timeout. Тяжёлые наборы на этом хосте выполнять
-поочерёдно. IDE-039 (ConPTY Ctrl+/) остаётся диагностикой; следующий Git
-шаг — merge/rebase после IDE-GIT-10. IDE-041 (очень длинное слово/E339), исходный
+поочерёдно. IDE-039 (ConPTY Ctrl+/) остаётся диагностикой; обычные Git
+ошибки push и merge/rebase покрыты IDE-GIT-10/11. Дальше — IDE-043 output,
+IDE-041 (очень длинное слово/E339), исходный
 владелец handle IDE-038 и IDE-031/036/040 остаются открытыми; Mac/GUI не запускались.
 
 IDE-036: эпизод сильных тормозов ввода/окон закончился только после рестарта
@@ -407,7 +413,8 @@ IDE-030: старые тестовые профили и Go cache перенес
 очистка runtime и единый Windows cache исправлены, 4 lifecycle E2E (§90).
 IDE-028: согласованная история/граф при быстром visit, 3 real Git/editor
 e2e Windows/Ubuntu (§91). IDE-GIT-10 покрывает два отказа push (§102),
-следующий функциональный шаг Git — merge/rebase-конфликты этапа 5.
+IDE-GIT-11 — merge/rebase-конфликты (§103). Credentials/sequence editor
+и известные ошибки остаются в очереди этапа 5, далее упрощение/переносимость.
 IDE-027: причина установлена — native ConPTY lifecycle в Neovim Windows,
 подтверждены symbol/чистый repro и A/B одного source/компилятора (§92).
 Владелец выбрал временный Windows SDK с явной подготовкой, lock/patch/hash
@@ -429,7 +436,7 @@ worktree; явный backport закреплённого Neogit, 2 editor + 5 п
 Windows/Ubuntu (§96). Существующей установке нужен `:Lazy build neogit`
 и перезапуск; обычный startup исходники не меняет.
 IDE-035/038 покрывают initial attach и живой object read (§99–100),
-IDE-GIT-10 — отказы push (§102). Следующий Git шаг — merge/rebase-конфликты;
+IDE-GIT-10 — отказы push (§102), IDE-GIT-11 — конфликты (§103);
 IDE-031 и исходный владелец случайного handle IDE-038 остаются в диагностике.
 IDE-033: старый ConPTY набор менял source lock через user plugins;
 выделен private профиль и выбранный SDK, добавлена проверка изоляции (§94).

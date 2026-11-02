@@ -138,6 +138,11 @@ RAM свободно около 24–25 GiB, очереди диска пуст�
 
 <!-- пиши ниже -->
 
+IDE-044 → [FIXLOG §103](nvim_forge/FIXLOG.md#103-diffview-редактируемый-результат-merge-и-rebase):
+Alt+e выбирал правую неизменяемую :3: версию вместо среднего результата
+diff3. Selector теперь ищет modifiable normal buffer; обе карты view/file
+panel проверены с завершением/отменой merge/rebase: 4 E2E Windows/Ubuntu.
+
 IDE-035 → [FIXLOG §99](nvim_forge/FIXLOG.md#99-gitsigns-незавершённый-diff-и-исчезнувший-worktree):
 initial attach продолжал show с исчезнувшим process cwd и бросал ENOENT.
 Контролируемые настоящие Git results воспроизводят ошибку; временный

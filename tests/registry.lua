@@ -48,6 +48,7 @@ return {
   { file = 'tests/e2e/gitsigns-live-read.test.lua', suite = 'e2e', timeout = 240 },
   { file = 'tests/e2e/git-workflow.test.lua', suite = 'e2e', timeout = 300 },
   { file = 'tests/e2e/git-errors.test.lua', suite = 'e2e', timeout = 300 },
+  { file = 'tests/e2e/git-conflicts.test.lua', suite = 'e2e', timeout = 420 },
   { file = 'tests/e2e/worktree-refresh.test.lua', suite = 'e2e', timeout = 300 },
   { file = 'tests/e2e/diffview-close.test.lua', suite = 'e2e', timeout = 420 },
   { file = 'tests/e2e/editor-runtime.test.lua', suite = 'e2e', timeout = 180 },

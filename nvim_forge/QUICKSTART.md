@@ -304,7 +304,19 @@ push в upstream (для новой ветки предлагает remote). `l 
 Сообщение `Press ENTER…` подтверждается Enter; недоступный remote может
 показать несколько fatal сообщений подряд. Локальный commit сохраняется.
 После согласования истории или исправления origin повтори `P u` в той же
-сессии. Merge/rebase-конфликты и credentials проверяются отдельно.
+сессии. Конфликты проверяются отдельным набором; credentials остаются открытыми.
+
+Конфликты: `m m` запускает merge с выбранной веткой, `r e` — rebase на
+выбранный ref. После остановки `Space g d` открывает Diffview. `Space g F`
+фокусирует дерево, `Alt+e` — редактируемый результат, в том числе среднее
+окно diff3; `Alt+h/l` — крайние стороны. `[x`/`]x` переходят между конфликтами,
+`Space c o`/`Space c t` выбирают ours/theirs. Можно править результат обычным
+вводом. Сохрани `:w`, закрой просмотр `Space g q`, открой status `Space w g`
+и выполни `s` на файле. Затем `m m` завершает merge, `r r` продолжает rebase;
+commit editor подтверждается `Esc`, `ZZ`. `m a`/`r a` и Yes отменяют операцию.
+При rebase ours — уже перенесённая история на новой основе, theirs —
+переносимый commit; это [семантика Git](https://git-scm.com/docs/git-rebase),
+а не постоянные подписи «моё/чужое».
 
 Worktree: `w W` → путь → исходный ref → имя ветки; `w g` — список/посещение;
 `w D` — выбор и подтверждение удаления. На dirty worktree второй вопрос
@@ -337,8 +349,9 @@ Worktree/Open folder меняют его явно; `:ProjectRoot` определ
 время загрузки. Фокус возвращается сразу; загружающийся tab может ненадолго
 оставаться в фоне до завершения безопасной очистки. Повторный close из кода
 не закрывает файл. `Space e` из просмотра возвращает Explorer в исходном tab.
-Merge/rebase-конфликты и credentials ещё требуют e2e. Два отказа push
-покрыты `git-errors.test.lua` (IDE-GIT-10); UI merge не входит в этот тест.
+Два отказа push покрыты `git-errors.test.lua` (IDE-GIT-10); merge/rebase
+continue/abort — четырьмя `git-conflicts.test.lua` (IDE-GIT-11) на Windows/Ubuntu.
+Credentials и interactive sequence editor ещё требуют отдельных проверок.
 Быстрый worktree visit
 IDE-028 проверяется отдельным `worktree-refresh.test.lua` (FIXLOG §91).
 

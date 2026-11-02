@@ -1862,3 +1862,71 @@ rg/Get-Content читали исходники/registry/specs; секреты/en
 OpenSpec change — cover-rejected-git-push, история — FIXLOG §102.
 Финальные strict validate PASS, trace Windows/Ubuntu по 7 PASS/1 SKIP,
 167 local links, history prefix и SHA конечного теста PASS; runtime diff пустой.
+
+## 36. IDE-GIT-11/IDE-044: merge/rebase и фокус результата
+
+```powershell
+$env:TEMP = 'F:\repo\forge-nvim\.tests\tmp'
+$env:TMP = $env:TEMP; $env:TMPDIR = $env:TEMP
+$env:NVIM_LOG_FILE = Join-Path $env:TEMP 'git-conflicts-final.log'
+. ./scripts/lib/nvim-sdk.ps1
+$forgeNvim = Get-ForgeNvim (Get-Location).Path
+& $forgeNvim -l tests/e2e/git-conflicts.test.lua
+& $forgeNvim -l tests/e2e/diffview-close.test.lua
+& $forgeNvim -l tests/e2e/git-workflow.test.lua
+& $forgeNvim -l tests/e2e/git-errors.test.lua
+docker compose -f tests/containers/compose.yaml run --rm --entrypoint nvim ubuntu -l tests/e2e/git-conflicts.test.lua
+docker compose -f tests/containers/compose.yaml run --rm --entrypoint nvim ubuntu -l tests/e2e/diffview-close.test.lua
+docker compose -f tests/containers/compose.yaml run --rm --entrypoint nvim ubuntu -l tests/e2e/git-workflow.test.lua
+docker compose -f tests/containers/compose.yaml run --rm --entrypoint nvim ubuntu -l tests/e2e/git-errors.test.lua
+```
+
+Новые 4 сценария выполнялись сначала Windows, затем Ubuntu. Регресс 7+6+2
+запущен отдельным последовательным coordinator; состояние, PID/время/exit —
+`.tests/git-conflicts-regression-progress.json`. Логи новых случаев —
+windows/ubuntu-git-conflicts-all.txt; старых —
+windows/ubuntu-git-conflicts-{diffview-close,git-workflow,git-errors}-regression.txt.
+
+Для baseline из Git 34f2054 Python subprocess.check_output вызвал git archive
+по nvim_forge, tarfile проверил каждый разрешённый относительный путь и
+распаковал в ignored `.tests/git-conflicts-before-34f2054`. Git Lua сверялся
+байтами с git show 34f2054:nvim_forge/lua/plugins/git.lua. Затем:
+
+```powershell
+$env:FORGE_E2E_CONFIG_SOURCE = (Resolve-Path .tests/git-conflicts-before-34f2054/nvim_forge).Path
+$env:FORGE_GIT_CONFLICT_CASE = 'merge resolve'
+& $forgeNvim -l tests/e2e/git-conflicts.test.lua
+# После ожидаемого RED оба override очищены перед новым полным набором.
+$env:FORGE_E2E_CONFIG_SOURCE = $null
+$env:FORGE_GIT_CONFLICT_CASE = $null
+```
+
+Ожидаемый baseline RED — Alt+e в nowrite :3: версии, artifact 13338206520000,
+windows-git-conflicts-baseline-red.txt. Ранее initial locator неверно ожидал
+заголовок Unmerged (13006588063600); после исправления регистра получен
+runtime RED 13071035769100, первый полный merge candidate GREEN 13178890495000.
+
+Настоящий Git создаёт base/main/feature с конфликтом file_one и независимым
+изменением file_two. Ввод — popup/picker/confirm/Alt+e/выбор ours или theirs/
+write/stage/continue/ZZ/abort. Стороны и параметры окон читаются через публичные
+Neovim API; готовность Diffview — только наблюдение layout/entry, handlers
+напрямую не вызываются. Git CLI проверяет refs/index/файлы/parents и metadata.
+После abort сравниваются исходные HEAD/index/оба файла. Rebase ours проверен
+на main с сохранением независимого feature изменения; обозначения сверены с
+[официальным Git](https://git-scm.com/docs/git-rebase).
+
+Новые Windows artifacts: 13353016760800, 13363358438600, 13372599604900,
+13383521130600; Ubuntu: 12083175628610, 12089738791686, 12094686224946,
+12099893709274. По 4 PASS/0 FAIL/0 SKIP, code/runtime SHA и исходный RED
+сверены в `.tests/git-conflicts-evidence-validation.json`. Ожидаемые conflict
+ERROR принимаются точно; чужие ERROR, confirm и нативные E… не скрываются.
+Исправление общее: writable normal buffer среди diff окон; Alt+h/l остаются
+геометрическими сторонами. SDK/lock/backports не менялись, build/download
+не требовались. Engine уже работал, Desktop/WSL lifecycle не менялся.
+Mac/GUI, sequence editor и сложные delete/rename/binary конфликты не проверены.
+Итог регресса: по 7+6+2 PASS Windows/Ubuntu, вместе с новыми по 19 E2E на ОС.
+Сверены исходники Git Lua во всех 38 artifacts. Старые три набора:
+Windows 295,9s, Ubuntu 188,8s; причина различия скорости не устанавливалась.
+Подробная история, включая ранний неверный locator, — FIXLOG §103.
+Финальные strict validate PASS, trace Windows/Ubuntu по 7 PASS/1 SKIP,
+169 local links, history prefix, source/test SHA и целостность README table PASS.

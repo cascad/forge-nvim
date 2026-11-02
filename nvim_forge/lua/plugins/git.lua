@@ -170,7 +170,20 @@ return {
                 end
 
                 table.sort(wins, function(a, b) return a.col < b.col end)
-                local target = side == "left" and wins[1] or wins[#wins]
+                -- spec: IDE-GIT-11. В diff3 рабочий результат посередине;
+                -- геометрическая правая сторона может быть неизменяемой версией.
+                local target
+                if side == "editable" then
+                    for _, item in ipairs(wins) do
+                        local buf = vim.api.nvim_win_get_buf(item.win)
+                        if vim.bo[buf].buftype == "" and vim.bo[buf].modifiable and not vim.bo[buf].readonly then
+                            target = item
+                            break
+                        end
+                    end
+                else
+                    target = side == "left" and wins[1] or wins[#wins]
+                end
                 if target then
                     vim.api.nvim_set_current_win(target.win)
                 end
@@ -251,7 +264,7 @@ return {
                         { diff_modes, "<C-PageUp>", after_normal_mode(actions.select_prev_entry), { desc = "Diff: previous changed file" } },
                         { diff_modes, "<A-h>", after_normal_mode(function() focus_diff_side("left") end), { desc = "Diff: focus old side" } },
                         { diff_modes, "<A-l>", after_normal_mode(function() focus_diff_side("right") end), { desc = "Diff: focus new side" } },
-                        { diff_modes, "<A-e>", after_normal_mode(function() focus_diff_side("right") end), { desc = "Diff: focus editable side" } },
+                        { diff_modes, "<A-e>", after_normal_mode(function() focus_diff_side("editable") end), { desc = "Diff: focus editable side" } },
                     },
                     file_panel = {
                         { "n", "q", "<cmd>DiffviewClose<CR>", { desc = "Close diff view" } },
@@ -263,7 +276,7 @@ return {
                         { diff_modes, "<C-PageUp>", after_normal_mode(actions.select_prev_entry), { desc = "Diff: previous changed file" } },
                         { diff_modes, "<A-h>", after_normal_mode(function() focus_diff_side("left") end), { desc = "Diff: focus old side" } },
                         { diff_modes, "<A-l>", after_normal_mode(function() focus_diff_side("right") end), { desc = "Diff: focus new side" } },
-                        { diff_modes, "<A-e>", after_normal_mode(function() focus_diff_side("right") end), { desc = "Diff: focus editable side" } },
+                        { diff_modes, "<A-e>", after_normal_mode(function() focus_diff_side("editable") end), { desc = "Diff: focus editable side" } },
                     },
                     file_history_panel = {
                         { "n", "q", "<cmd>DiffviewClose<CR>", { desc = "Close diff history" } },

@@ -5060,3 +5060,100 @@ openspec/changes/cover-rejected-git-push/*.
 конечного теста; runtime/pin/patches/scripts diff пустой. Источник конечных
 2+2 E2E совпадает с зафиксированным SHA; результаты 6+6 прежнего workflow
 не подменены промежуточными ошибками ожиданий.
+
+
+### 103. Diffview: редактируемый результат merge и rebase
+
+**Связь:** IDE-044; этап 5; change `verify-git-conflicts`.
+Спека: IDE-GIT-11 (ADDED).
+**Статус:** Alt+e исправлен, merge/rebase resolve/continue и abort покрыты
+Windows/Ubuntu. Mac/физические GUI клавиши, sequence editor и сложные
+rename/delete/binary конфликты остаются непроверенными.
+
+**Проблема.** После покрытия отказов push не было сквозного доказательства
+работы с merge/rebase-конфликтами. При проверке обнаружен настоящий дефект:
+Alt+e, объявленный переходом к редактируемому результату, выбирал правую
+неизменяемую версию :3:, а рабочий файл diff3 находился посередине.
+
+**Причина.** Alt+e использовал тот же selector геометрически правого diff
+окна, что и Alt+l. В артефакте 13071035769100 слева версия :2: (nowrite,
+modifiable=false), посередине рабочий файл (normal, modifiable=true), справа
+:3: (nowrite, modifiable=false). readonly=false у всех: одного readonly
+недостаточно для определения возможности ввода. Экран после Alt+e показывал
+именно :3:. Постоянный тест на архиве config из 34f2054 воспроизвёл тот же
+RED (13338206520000); исходный Git Lua побайтово совпал с git show этого commit.
+
+Первый запуск 13006588063600 остановился раньше: locator ожидал заголовок
+Unmerged, хотя Neogit выводит строку unmerged в Unstaged changes. Исправление
+регистра ожидания не является runtime fix и отделено от доказанного RED.
+
+**Изменение.** Общий selector Alt+e ищет normal modifiable buffer без readonly
+среди diff окон по публичным атрибутам Neovim; обе карты view/file_panel
+используют его. Alt+h/l сохраняют выбор крайних сторон. Нет зависимости от
+платформы, фиксированного номера окна или внутренних объектов Diffview.
+
+Добавлен зарегистрированный `git-conflicts.test.lua`, четыре real editor E2E:
+merge resolve, merge abort, rebase resolve, rebase abort. CLI готовит две
+локальные ветки: конфликтующая строка и независимое изменение второго файла.
+Popup/picker/confirm, Diffview, переход из дерева/крайней версии через Alt+e,
+выбор theirs при merge/ours при rebase, запись, stage, continue/ZZ и abort
+выполняются клавишами. Git CLI — независимое наблюдение metadata/refs/index/
+parents/файлов. Ожидаемые conflict ERROR принимаются только по точному тексту;
+чужие ERROR, confirm и нативные E… не подтверждаются Enter.
+
+Merge проверяет обе исходные вершины родителями нового commit и неизменность
+feature. Rebase выбирает main результат первой строки, сохраняя независимое
+изменение feature во втором файле, создаёт commit на main с исходным subject
+и сохраняет main. Abort возвращает исходные HEAD/index/ветку/оба файла.
+Обозначения ours/theirs при rebase сверены с официальным git-rebase manual:
+ours — уже перенесённая серия на новой основе, theirs — переносимая ветка.
+
+В QUICKSTART добавлен полный клавиатурный путь конфликта и отмены; README,
+roadmap, история и команды согласованы. Оформление матрицы e2e восстановлено
+как непрерывная таблица после предыдущего добавления описания push.
+
+**Проверка/e2e.** Windows patched SDK 0.12.2 и Ubuntu официальный 0.12.2:
+по 4 новых PASS/0 FAIL/0 SKIP. Windows artifacts: 13353016760800,
+13363358438600, 13372599604900, 13383521130600. Ubuntu:
+12083175628610, 12089738791686, 12094686224946, 12099893709274
+(в .tests/ubuntu/editor-e2e). Первая кандидатная полная merge цепочка
+13178890495000 прошла до расширения постоянного теста двумя маршрутами Alt+e.
+Baseline RED 13338206520000 использует уже конечный тест с обоими маршрутами.
+
+Затем последовательно выполнены прежние Diffview close 7, Git workflow 6,
+Git errors 2 на Windows и Ubuntu: все PASS/0 FAIL/0 SKIP. Итого по 19 E2E на
+каждой ОС. Runtime Git Lua побайтово сверён во всех 38 artifacts с конечным
+источником, его SHA и SHA теста — .tests/git-conflicts-evidence-validation.json.
+Там же проверены after_alt_e/alt_e_from_panel, файлы abort/resolve, clean status
+и исходный baseline. Контроль был над реальными Git/config/плагинами без
+вызова приватных handlers напрямую или имитации результата merge/rebase.
+
+Логи — windows/ubuntu-git-conflicts-all.txt и
+windows/ubuntu-git-conflicts-{diffview-close,git-workflow,git-errors}-regression.txt.
+Координатор `.tests/git-conflicts-regression-progress.json` сохранил шесть
+code 0, PID и время; старые три набора заняли суммарно Windows 295,9s,
+Ubuntu 188,8s. Более медленный отдельный прогон не объявляется установленной
+причиной задержек IDE-036/042; таймауты ради результата не менялись.
+
+Engine 28.5.1 был уже запущен, containers network none; lifecycle Desktop/WSL
+не менялся. Образ/SDK/lock/backports не менялись, download/build не требовались.
+Windows runtime/temp на F:, после завершения own editor runtime не осталось.
+Широкий full/ConPTY не повторялся: изменён selector Diffview, покрыты новый
+путь и весь прежний Git/Diffview workflow; §100/101 не присваиваются этой
+версии как новый full. Mac/GUI остаются отдельной проверкой владельца.
+
+**Вывод.** В трёхстороннем diff геометрия не определяет editable результат.
+Клавиша редактирования должна выбирать его свойства, а стороны просматривать
+отдельными клавишами. Теперь исправление имеет воспроизводимый RED из Git
+и постоянные сценарии завершения/отмены на двух ОС. Следующие открытые
+проверки — IDE-043 title output, IDE-041 E339 и остальная матрица плана.
+
+**Файлы:** nvim_forge/lua/plugins/git.lua, tests/e2e/git-conflicts.test.lua,
+tests/registry.lua, nvim_forge/QUICKSTART.md, tests/e2e/README.md, PROBLEMS.md,
+docs/IDE_ROADMAP.md, docs/HISTORY.md, docs/AGENT_COMMANDS.md,
+openspec/changes/verify-git-conflicts/*.
+
+
+**Завершение перед коммитом.** Strict validate PASS; trace Windows/Ubuntu по
+7 PASS/1 SKIP; 169 local links, README table, source/test SHA PASS. Прежние
+404812 байт истории сохранены. Mac/GUI не объявляются проверенными.
