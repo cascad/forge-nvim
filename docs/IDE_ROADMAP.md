@@ -252,7 +252,10 @@ Normal mode, прежние aliases сохранены:
 
 - [x] Diff файла/изменений, stage/unstage hunks, история файла и репозитория.
 - [ ] Выбор/создание ветки, commit, push; понятные результаты и ошибки.
-  Happy path покрыт; отказ/rejected push, credentials и ошибки ещё открыты.
+  Happy path и два отказа push покрыты; credentials и остальные ошибки открыты.
+- [x] IDE-GIT-10: rejected push → No force → подробности `$` → обычный retry;
+  отсутствующий origin → код → исправление URL → тот же commit. Windows/Ubuntu
+  по 2 новых и 6 прежних Git E2E PASS (§102). Хвост title в Windows INFO — IDE-043.
 - [x] Worktree, обычный путь: список, создание, переход, удаление с защитой незакоммиченного.
 - [x] Общие Space w g/q/z/? и status q/Esc/g?, сохранение полного Git-tab.
 - [x] IDE-024: upstream исправление hunk patch Windows, без собственного Git backend.
@@ -355,7 +358,13 @@ RU FAIL поймал RU → EN между сессиями и ровно чет�
 контрольный EN прошёл 66 проверок (один sample без foreground). Эталон не менялся. Изоляция
 раскладки input thread и устойчивое RU покрытие остаются открытыми; старые
 прогоны без metadata не приписываются этой причине задним числом. Следующий
-функциональный шаг — Git rejected push, затем merge/rebase.
+функциональный шаг Git после IDE-GIT-10 — merge/rebase-конфликты.
+
+IDE-GIT-10 (§102): rejected/missing remote и повтор проверены в настоящем
+Neogit на Windows/Ubuntu. Runtime менять не потребовалось; два новых E2E
+постоянно входят в registry, прежние шесть тоже прошли на обеих ОС.
+Согласование историй перед retry делается Git CLI в fixture: это не покрытие
+UI merge. Credentials/merge/rebase и IDE-043 остаются открытыми; Mac/GUI не проверены.
 
 IDE-038 (§100): process cwd явно common git-dir. Итоговый Windows
 unit/e2e/trace — 38 PASS/0 FAIL/0 SKIP (471 проверка); Ubuntu full —
@@ -367,8 +376,8 @@ unit/e2e/trace — 38 PASS/0 FAIL/0 SKIP (471 проверка); Ubuntu full —
 Первый Ubuntu full при параллельном Windows имел один 60s timeout key-ownership
 (IDE-042); raw FAIL сохранён, одиночный повтор 46 PASS и новый полный serial
 не устанавливают причину timeout. Тяжёлые наборы на этом хосте выполнять
-поочерёдно. Следующий проверяемый регресс — IDE-039 (ConPTY Ctrl+/), затем
-Git rejected push/merge/rebase. IDE-041 (очень длинное слово/E339), исходный
+поочерёдно. IDE-039 (ConPTY Ctrl+/) остаётся диагностикой; следующий Git
+шаг — merge/rebase после IDE-GIT-10. IDE-041 (очень длинное слово/E339), исходный
 владелец handle IDE-038 и IDE-031/036/040 остаются открытыми; Mac/GUI не запускались.
 
 IDE-036: эпизод сильных тормозов ввода/окон закончился только после рестарта
@@ -397,8 +406,8 @@ IDE-026: безопасное закрытие загружающегося Diff
 IDE-030: старые тестовые профили и Go cache перенесены с C: на F:;
 очистка runtime и единый Windows cache исправлены, 4 lifecycle E2E (§90).
 IDE-028: согласованная история/граф при быстром visit, 3 real Git/editor
-e2e Windows/Ubuntu (§91). Следующий функциональный шаг Git — rejected
-push/ошибки, затем merge/rebase-конфликты этапа 5.
+e2e Windows/Ubuntu (§91). IDE-GIT-10 покрывает два отказа push (§102),
+следующий функциональный шаг Git — merge/rebase-конфликты этапа 5.
 IDE-027: причина установлена — native ConPTY lifecycle в Neovim Windows,
 подтверждены symbol/чистый repro и A/B одного source/компилятора (§92).
 Владелец выбрал временный Windows SDK с явной подготовкой, lock/patch/hash
@@ -419,8 +428,9 @@ IDE-034: ожидание смены cwd до Git remove исправляет у
 worktree; явный backport закреплённого Neogit, 2 editor + 5 подготовки E2E
 Windows/Ubuntu (§96). Существующей установке нужен `:Lazy build neogit`
 и перезапуск; обычный startup исходники не меняет.
-Следующие Git-регрессии — IDE-035 (initial attach GitSigns при быстром
-удалении), затем rejected push/конфликты. IDE-031 остаётся в диагностике.
+IDE-035/038 покрывают initial attach и живой object read (§99–100),
+IDE-GIT-10 — отказы push (§102). Следующий Git шаг — merge/rebase-конфликты;
+IDE-031 и исходный владелец случайного handle IDE-038 остаются в диагностике.
 IDE-033: старый ConPTY набор менял source lock через user plugins;
 выделен private профиль и выбранный SDK, добавлена проверка изоляции (§94).
 Владелец поручил агенту коммитить проверенные шаги и продолжать этот план

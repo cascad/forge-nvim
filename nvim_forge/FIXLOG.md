@@ -4964,3 +4964,99 @@ Git rejected push, затем merge/rebase-конфликты.
 **Файлы:** tests/diagnostics/conpty-layout.py, tests/diagnostics/README.md,
 tests/e2e/README.md, PROBLEMS.md, docs/IDE_ROADMAP.md, docs/HISTORY.md,
 docs/AGENT_COMMANDS.md, openspec/changes/record-conpty-layout-evidence/*.
+
+
+### 102. Git: отказ push и повтор без потери коммитов
+
+**Связь:** этап 5 IDE_ROADMAP; change `cover-rejected-git-push`.
+Спека: IDE-GIT-10 (ADDED).
+**Статус:** два пути отказа/retry покрыты Windows/Ubuntu. Runtime не потребовал
+исправления. Credentials, UI merge/rebase-конфликты и новое наблюдение
+IDE-043 остаются открытыми; Mac/GUI не проверены.
+
+**Проблема.** Успешные branch/commit/push уже имели E2E, но неизвестно было,
+сохраняются ли commit/index/remote при отказе и может ли пользователь прочитать
+причину и повторить операцию в той же сессии с клавиатуры.
+
+**Причина.** Пробел покрытия. Штатный Neogit уже предоставляет force confirm,
+уведомления и историю команд `$` с раскрытием Tab. Первый rejected сценарий
+сразу прошёл: обе истории сохранялись после No force, последующий обычный
+push отправлял согласованную историю. Для missing origin первоначальный
+тест неверно ожидал один summary ERROR и один Enter. Настоящий interactive
+runner выдаёт несколько fatal, затем INFO со stdout; каждый может открыть
+hit-enter. Это уточнение тестового сценария, не доказательство зависания IDE.
+
+Дополнительное наблюдение IDE-043: Windows INFO заканчивается путём
+`:\Program Files\Git\cmd\git.EXE` и BEL. Видно в 12067894894100 и
+12248002532900, в Ubuntu 11050466845373 хвоста не было. Причина обработки
+title/PTY ещё не установлена; эта запись не объявляет хвост исправленным.
+
+**Изменение.** Добавлен зарегистрированный `git-errors.test.lua`, два
+постоянных real editor E2E. Частные main/bare origin/peer дают divergence
+или отсутствующий remote без внешней сети/credentials. Stage, commit, push,
+No force, `$`/Tab/q/Esc и retry проходят настоящими клавишами через UI.
+Git CLI — подготовка и независимый оракул refs/index/файлов. После rejected
+fixture явно выполняет fetch/merge --no-edit с независимыми файлами: это
+не покрытие UI merge. Оба первоначальных commit остаются ancestors.
+
+Ожидаемый rejected ERROR принимается по точному тексту. Для missing origin
+настоящий отдельный CLI push сохраняет code 128 и stderr; допускаются только
+fatal fragments из этого stderr (PTY whitespace) и известный summary.
+INFO с точной первой fatal строкой fixture может содержать полный stdout.
+Прочие ERROR, неожиданный confirm и нативный E… на экране не подтверждаются
+Enter. Raw prompts/notifications/history сохраняются. Общий editor/RPC
+harness не менялся. После усиления этого ограничения оба новых сценария
+повторно прошли на обеих ОС.
+
+**Проверка/e2e.** Координатор последовательно выполнил Windows new 2 PASS,
+прежний git-workflow 6 PASS, затем Ubuntu new 2 PASS и прежний 6 PASS.
+`.tests/git-errors-verification-progress.json` содержит четыре code 0 и
+время, raw logs — windows/ubuntu-git-errors-verified.txt и
+windows/ubuntu-git-workflow-verified.txt. Runtime/pin/deps не менялись,
+подготовленный образ с bind mount новых тестов не требовал пересборки.
+
+Итог после строгого контроля hit-enter: Windows confirmed 2 PASS/0 FAIL/0 SKIP
+(12237093891300, 12248002532900); Ubuntu confirmed 2 PASS/0 FAIL/0 SKIP
+(11043480560157, 11050466845373, в .tests/ubuntu/editor-e2e).
+В каждой истории ровно два настоящих push, ни одного --force:
+rejected 1→0 на обеих ОС, missing Windows 128→0, Ubuntu 129→0. Для второго
+пути interactive runner может останавливать процесс после fatal, поэтому
+UI code не обязан совпадать с независимым CLI 128; существенны реальный
+nonzero, читаемая причина, сохранность данных и последующий code 0.
+Проверены local/remote HEAD, index, файл, clean status и ancestors после
+согласования, возврат в код и отсутствие установок. Сверка четырёх artifacts
+и SHA конечного теста — .tests/git-errors-evidence-validation.json.
+Own Windows editor runtime после прогонов не остался.
+
+Исходные неуспешные ожидания сохранены: windows-git-errors-initial.txt
+(1/1, первый fatal не принят), -missing.txt (0/1, второй hit-enter),
+-final.txt (1/1, строгое ожидание полного INFO не учитывало title tail).
+Эти raw FAIL не подменяются повторами. В confirmed Enter принимает только
+известный вывод своего сценария, хвост остаётся в raw и отдельной очереди.
+
+Windows — прежний patched SDK 0.12.2; Ubuntu — официальный 0.12.2 на уже
+работающем engine 28.5.1, network none. Desktop/WSL lifecycle не менялся.
+Temp/runtime Windows на F:, source lock/backport payload/SDK не менялись.
+Широкий full повторно не запускался: изменены тесты/документация, выполнены
+новые сценарии и весь прежний Git workflow на обеих ОС. Результаты §100
+не объявляются новым full. Trace/strict validate/links/diff и append-only
+prefix проверяются перед локальным коммитом.
+
+**Вывод.** Ошибка Git должна оставлять доступ к причине и повтору, сохраняя
+локальную и удалённую истории. Это проверено настоящими failures без
+автоматического force или отдельного Git backend. Нормальный fatal не нужно
+путать с падением редактора; одновременно нельзя маскировать неожиданный
+ERROR автоматическим Enter. Следующий функциональный Git шаг —
+merge/rebase-конфликты, очистка title/PTY output — отдельный IDE-043.
+
+**Файлы:** tests/e2e/git-errors.test.lua, tests/registry.lua,
+tests/e2e/README.md, nvim_forge/QUICKSTART.md, PROBLEMS.md,
+docs/IDE_ROADMAP.md, docs/HISTORY.md, docs/AGENT_COMMANDS.md,
+openspec/changes/cover-rejected-git-push/*.
+
+
+**Завершение перед коммитом.** Strict validate PASS; trace Windows/Ubuntu по
+7 PASS/1 SKIP. Проверены 167 local links, прежние 396556 байт истории и SHA
+конечного теста; runtime/pin/patches/scripts diff пустой. Источник конечных
+2+2 E2E совпадает с зафиксированным SHA; результаты 6+6 прежнего workflow
+не подменены промежуточными ошибками ожиданий.

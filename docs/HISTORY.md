@@ -203,6 +203,7 @@ Neovim до нынешнего nvim_forge. Здесь одна последов�
 | §99 | [Gitsigns: незавершённый diff и исчезнувший worktree](../nvim_forge/FIXLOG.md#99-gitsigns-незавершённый-diff-и-исчезнувший-worktree) |
 | §100 | [Живой Git object read без cwd удаляемого worktree](../nvim_forge/FIXLOG.md#100-живой-git-object-read-без-cwd-удаляемого-worktree) |
 | §101 | [ConPTY: сохраняем раскладки сессий и полный diff](../nvim_forge/FIXLOG.md#101-conpty-сохраняем-раскладки-сессий-и-полный-diff) |
+| §102 | [Git: отказ push и повтор без потери коммитов](../nvim_forge/FIXLOG.md#102-git-отказ-push-и-повтор-без-потери-коммитов) |
 
 ## Как читать и дополнять
 

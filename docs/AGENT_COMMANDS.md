@@ -1811,3 +1811,54 @@ sessions и manifest с exit/status, OS build и SHA fixture/DLL/EXE/SDK.
 Ubuntu diagnostic — явный SKIP, trace 7 PASS/1 SKIP, strict validate PASS
 (`record-conpty-layout-evidence`, skip_specs: tooling). Lifecycle Desktop/WSL
 не менялся. IDE-039 остаётся открытым, Mac/GUI не проверены. История — §101.
+
+## 35. IDE-GIT-10: rejected/missing remote и retry
+
+```powershell
+$env:TEMP = 'F:\repo\forge-nvim\.tests\tmp'
+$env:TMP = $env:TEMP; $env:TMPDIR = $env:TEMP
+$env:NVIM_LOG_FILE = Join-Path $env:TEMP 'git-errors-final.log'
+$env:PYTHONIOENCODING = 'utf-8'
+. ./scripts/lib/nvim-sdk.ps1
+$forgeNvim = Get-ForgeNvim (Get-Location).Path
+& $forgeNvim -l tests/e2e/git-errors.test.lua
+& $forgeNvim -l tests/e2e/git-workflow.test.lua
+docker compose -f tests/containers/compose.yaml run --rm --entrypoint nvim ubuntu -l tests/e2e/git-errors.test.lua
+docker compose -f tests/containers/compose.yaml run --rm --entrypoint nvim ubuntu -l tests/e2e/git-workflow.test.lua
+& $forgeNvim -l tests/trace.test.lua
+```
+
+Это последовательность, тяжёлые Windows/Ubuntu наборы не шли одновременно.
+Использован уже работающий engine/подготовленный образ; runtime/pins/dependencies
+не менялись, сборка образа не требовалась. Desktop/WSL lifecycle не менялся.
+Для одного случая задавался `FORGE_GIT_ERRORS_CASE='недоступный remote'`;
+перед парным прогоном фильтр очищен. Все Windows temp/runtime на F:.
+
+Fixture Git: init/commit → private bare origin → peer clone/commit/push либо
+remote set-url на отсутствующий private путь. UI stage/commit/push/confirm/`$`/
+Tab/q/Esc/retry отправлялись nvim_input; Git CLI проверял refs/index/содержимое.
+Перед retry rejected fixture выполняет fetch/merge --no-edit; UI merge не проверен.
+При missing origin отдельный настоящий CLI push даёт code 128/stderr для
+строгой сверки допустимых fatal; UI PTY может завершиться другим nonzero.
+В истории Neogit читаются только cmd/code/stdout/stderr, внутренние handlers
+напрямую не вызываются. Коды двух UI push: rejected 1→0 на обеих ОС;
+missing Windows 128→0, Ubuntu 129→0. Force отсутствует, файлы/index/refs сохранены.
+
+Логи `windows/ubuntu-git-errors-confirmed.txt`: по 2 PASS; прежний
+`windows/ubuntu-git-workflow-verified.txt`: по 6 PASS. После усиления проверки
+hit-enter повторены только новые случаи, прошлый workflow код не менялся.
+Координатор первого 2+6/2+6 прогона сохранял `.tests/git-errors-verification-progress.json`.
+Итоговые artifacts/command codes/SHA теста — `.tests/git-errors-evidence-validation.json`.
+Windows confirmed: 12237093891300/12248002532900; Ubuntu:
+11043480560157/11050466845373 (в `.tests/ubuntu/editor-e2e`).
+
+Исходные неуспешные тестовые ожидания оставлены в windows-git-errors-initial,
+-missing, -final: сначала ожидался один summary вместо настоящего fatal,
+затем один Enter вместо нескольких, затем строгая сверка увидела stdout INFO
+с title tail. Это уточнения сценария; runtime Neogit не менялся. Наблюдаемый
+хвост с git.EXE/BEL занесён IDE-043 и сохраняется в raw notifications/screen.
+Для чтения Unicode snapshots использовался Python с PYTHONIOENCODING=utf-8;
+rg/Get-Content читали исходники/registry/specs; секреты/env целиком не печатались.
+OpenSpec change — cover-rejected-git-push, история — FIXLOG §102.
+Финальные strict validate PASS, trace Windows/Ubuntu по 7 PASS/1 SKIP,
+167 local links, history prefix и SHA конечного теста PASS; runtime diff пустой.
