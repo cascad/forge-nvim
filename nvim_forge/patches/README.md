@@ -47,8 +47,13 @@ nvim -l nvim_forge/scripts/prepare-plugins.lua --plugin-root /absolute/path/to/l
 ## IDE-035: Gitsigns и исчезнувшая папка
 
 Для Gitsigns `dd3f588bacbeb041be6facf1742e42097f62165d` добавлен отдельный
-проверяемый backport: рабочая папка передаётся через `git -C`, а не process
-cwd. При её исчезновении сам Git возвращает nonzero/stderr; исключение
+проверяемый backport двух файлов. Обычный command builder передаёт нестабильный
+cwd через `git -C`. Repo-команды получают явный process cwd в общем git-dir,
+который сохраняется при удалении linked; файловые команды дополнительно
+получают `-C` выбранного worktree. Object reads `show` используют выбранный
+явный git-dir/HEAD без перехода в linked (IDE-038). Это работает и когда
+сам редактор уже находится в linked; наследовать его cwd недостаточно.
+При исчезновении пути/metadata сам Git возвращает nonzero/stderr; исключение
 запуска `vim.system` не блокирует initial diff. Семантика пути сохраняется,
 см. [Git -C](https://git-scm.com/docs/git). Глобальные ошибки редактора не
 перехватываются, результаты Git не подменяются.
@@ -64,7 +69,14 @@ nvim -l nvim_forge/scripts/prepare-plugins.lua --plugin-root /absolute/path/to/l
 nvim -l nvim_forge/scripts/prepare-plugins.lua --plugin-root /absolute/path/to/lazy --plugin gitsigns.nvim --revert
 ```
 
-Неизвестное имя/содержимое не изменяет файлы. Снятие патча перед заменой pin
+Неизвестное имя/содержимое не изменяет файлы. Companion files одной декларации
+проверяются и рассчитываются до начала записи; каждый файл пишется атомарно.
+Manifest включает hashes обоих файлов. Снятие патча перед заменой pin
 и подтверждение upstream fix выполняются отдельно с тем же E2E
-`tests/e2e/gitsigns-worktree.test.lua`. Этот backport не исправляет системные
+`tests/e2e/gitsigns-worktree.test.lua` и `gitsigns-live-read.test.lua`.
+Прежний известный payload IDE-035 с hash `6ae5b933…` обновляется тем же
+явным build/CLI: декларация previous хранит его точные SHA/фрагмент.
+Check прежней версии не пишет файл и просит build; apply переводит её
+в текущую, revert — в upstream. Чужие изменения по-прежнему отклоняются.
+Этот backport не исправляет системные
 тормоза Windows, редкие CLI timeouts или удержание папки другим процессом.

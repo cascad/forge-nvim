@@ -201,6 +201,7 @@ Neovim до нынешнего nvim_forge. Здесь одна последов�
 | Запись | Описание |
 |---|---|
 | §99 | [Gitsigns: незавершённый diff и исчезнувший worktree](../nvim_forge/FIXLOG.md#99-gitsigns-незавершённый-diff-и-исчезнувший-worktree) |
+| §100 | [Живой Git object read без cwd удаляемого worktree](../nvim_forge/FIXLOG.md#100-живой-git-object-read-без-cwd-удаляемого-worktree) |
 
 ## Как читать и дополнять
 

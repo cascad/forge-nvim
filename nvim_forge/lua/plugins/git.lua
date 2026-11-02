@@ -3,7 +3,7 @@
 return {
     {
         "lewis6991/gitsigns.nvim",
-        -- spec: IDE-GIT-8. Исчезнувший путь обрабатывает сам Git через -C.
+        -- spec: IDE-GIT-8, IDE-GIT-9. Git обрабатывает путь; object read не держит worktree.
         commit = require('ide.backports').revision('gitsigns.nvim'),
         build = function(plugin) require('ide.backports').run('gitsigns.nvim', plugin.dir, 'apply') end,
         event = { "BufReadPre", "BufNewFile" },

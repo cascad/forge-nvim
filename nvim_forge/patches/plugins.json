@@ -1,12 +1,27 @@
 {
   "gitsigns.nvim": {
-    "id": "IDE-035-gitsigns-git-cwd",
+    "id": "IDE-035-038-gitsigns-git-cwd",
     "revision": "dd3f588bacbeb041be6facf1742e42097f62165d",
     "file": "lua/gitsigns/git/cmd.lua",
     "before_sha256": "a53e54cd164bdbee8fc10e5a7512d6e3641471be9d0339afdeaa334866d3441c",
-    "after_sha256": "6ae5b933ee49fb4c1c4745d3e2132f331e1250fadb181b588f8aa0136d3262d5",
-    "before": "  vim.list_extend(cmd, args)\n",
-    "after": "  if spec.cwd then\n    vim.list_extend(cmd, { '-C', spec.cwd })\n    spec.cwd = nil\n  end\n  vim.list_extend(cmd, args)\n"
+    "after_sha256": "8b868903185464d435b1dab875630ebcb1ed2c45fb836ff1259cc0de94f6c633",
+    "previous": [
+      {
+        "sha256": "6ae5b933ee49fb4c1c4745d3e2132f331e1250fadb181b588f8aa0136d3262d5",
+        "after": "--- @class Gitsigns.Git.JobSpec : vim.SystemOpts\n--- @field ignore_error? boolean\n\n--- @async\n--- @param args string[]\n--- @param spec? Gitsigns.Git.JobSpec\n--- @return string[] stdout, string? stderr, integer code\nlocal function git_command(args, spec)\n  spec = spec or {}\n  if spec.cwd then\n    -- cwd must be a windows path and not a unix path\n    spec.cwd = util.cygpath(spec.cwd)\n  end\n\n  local cmd = {\n    'git',\n    '--no-pager',\n    '--no-optional-locks',\n    '--literal-pathspecs',\n    '-c',\n    'gc.auto=0', -- Disable auto-packing which emits messages to stderr\n    '-c',\n    'core.quotepath=off',\n    '-c',\n    'color.ui=false',\n    '-c',\n    'color.diff=false',\n  }\n  if spec.cwd then\n    vim.list_extend(cmd, { '-C', spec.cwd })\n    spec.cwd = nil\n  end\n  vim.list_extend(cmd, args)\n"
+      }
+    ],
+    "before": "--- @class Gitsigns.Git.JobSpec : vim.SystemOpts\n--- @field ignore_error? boolean\n\n--- @async\n--- @param args string[]\n--- @param spec? Gitsigns.Git.JobSpec\n--- @return string[] stdout, string? stderr, integer code\nlocal function git_command(args, spec)\n  spec = spec or {}\n  if spec.cwd then\n    -- cwd must be a windows path and not a unix path\n    spec.cwd = util.cygpath(spec.cwd)\n  end\n\n  local cmd = {\n    'git',\n    '--no-pager',\n    '--no-optional-locks',\n    '--literal-pathspecs',\n    '-c',\n    'gc.auto=0', -- Disable auto-packing which emits messages to stderr\n    '-c',\n    'core.quotepath=off',\n    '-c',\n    'color.ui=false',\n    '-c',\n    'color.diff=false',\n  }\n  vim.list_extend(cmd, args)\n",
+    "after": "--- @class Gitsigns.Git.JobSpec : vim.SystemOpts\n--- @field ignore_error? boolean\n--- @field stable_cwd? boolean\n\n--- @async\n--- @param args string[]\n--- @param spec? Gitsigns.Git.JobSpec\n--- @return string[] stdout, string? stderr, integer code\nlocal function git_command(args, spec)\n  spec = spec or {}\n  if spec.cwd then\n    -- cwd must be a windows path and not a unix path\n    spec.cwd = util.cygpath(spec.cwd)\n  end\n\n  local cmd = {\n    'git',\n    '--no-pager',\n    '--no-optional-locks',\n    '--literal-pathspecs',\n    '-c',\n    'gc.auto=0', -- Disable auto-packing which emits messages to stderr\n    '-c',\n    'core.quotepath=off',\n    '-c',\n    'color.ui=false',\n    '-c',\n    'color.diff=false',\n  }\n  if spec.cwd and not spec.stable_cwd then\n    vim.list_extend(cmd, { '-C', spec.cwd })\n    spec.cwd = nil\n  end\n  spec.stable_cwd = nil\n  vim.list_extend(cmd, args)\n",
+    "extra": [
+      {
+        "file": "lua/gitsigns/git/repo.lua",
+        "before_sha256": "ea66ed9d8ddba234e44508a65e5eb444e7d79cdcb4082ff44e6566654e2be3c1",
+        "after_sha256": "d01c298f48d8e0558cae79f4097e4654f7610b5127d09b8564e3eb1fa8eff3ed",
+        "before": "  spec = spec or {}\n  spec.cwd = self.toplevel\n\n  local args0 = { '--git-dir', self.gitdir }\n",
+        "after": "  spec = spec or {}\n  spec.cwd = self.commondir or get_commondir(self.gitdir)\n  spec.stable_cwd = true\n\n  local args0 = { '--git-dir', self.gitdir }\n  if args[1] ~= 'show' then\n    vim.list_extend(args0, { '-C', util.cygpath(self.toplevel) })\n  end\n"
+      }
+    ]
   },
   "neogit": {
     "id": "IDE-034-worktree-delete-cwd",

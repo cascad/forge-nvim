@@ -14,6 +14,19 @@ local function cli(dir,mode,plugin)
   return vim.system(args,{cwd=root,text=true,timeout=15000}):wait()
 end
 local deps=vim.env.FORGE_E2E_DEPS or root..'/.tests/editor-deps'
+local function companions(base,spec,eol,prepared)
+  local out={}
+  for _,extra in ipairs(spec.extra or {}) do
+    local text=bytes(deps..'/lazy/gitsigns.nvim/'..extra.file):gsub('\r\n','\n')
+    if not prepared and vim.fn.sha256(text)==extra.after_sha256 then
+      local a,b=assert(text:find(extra.after,1,true));text=text:sub(1,a-1)..extra.before..text:sub(b+1)
+    end
+    T.eq(vim.fn.sha256(text),prepared and extra.after_sha256 or extra.before_sha256)
+    local path=base..'/gitsigns.nvim/'..extra.file;local raw=text:gsub('\n',eol or '\n')
+    write(path,raw);out[#out+1]={path=path,raw=raw,spec=extra}
+  end
+  return out
+end
 local original=bytes(deps..'/lazy/neogit/'..patch.file):gsub('\r\n','\n')
 if vim.fn.sha256(original)==patch.after_sha256 then
   local first,last=assert(original:find(patch.after,1,true));original=original:sub(1,first-1)..patch.before..original:sub(last+1)
@@ -58,6 +71,7 @@ T.check('IDE-GIT-7 editor отклоняет неподготовленный pa
     local path=base..'/lazy/neogit/'..patch.file;write(path,original)
     local signs=vim.json.decode(table.concat(vim.fn.readfile(root..'/nvim_forge/patches/plugins.json'),'\n'))['gitsigns.nvim']
     write(base..'/lazy/gitsigns.nvim/'..signs.file,bytes(deps..'/lazy/gitsigns.nvim/'..signs.file))
+    companions(base..'/lazy',signs,'\n',true)
     write(base..'/manifest.json',bytes(deps..'/manifest.json'))
     local before=vim.env.FORGE_E2E_DEPS;vim.env.FORGE_E2E_DEPS=base
     local ok,err=pcall(require('editor').start,root)
@@ -107,26 +121,71 @@ T.check('IDE-GIT-8 CLI выбирает только Gitsigns, repeat/revert и 
       local dir=base..(eol=='\n' and '/lf with space' or '/crlf with space')
       local path=dir..'/gitsigns.nvim/'..spec.file;local sentinel=dir..'/neogit/'..patch.file
       local raw=source:gsub('\n',eol);write(path,raw);write(sentinel,'UNCHANGED_SENTINEL')
+      local files=companions(dir,spec,eol,false)
       local missing=cli(dir,'--check','gitsigns.nvim');assert(missing.code~=0);T.eq(bytes(path),raw)
       local r=cli(dir,nil,'gitsigns.nvim');assert(r.code==0,r.stderr)
       T.eq(vim.json.decode(r.stdout)['gitsigns.nvim'].sha256,spec.after_sha256)
+      local hashes=vim.json.decode(r.stdout)['gitsigns.nvim'].files or {}
+      for _,file in ipairs(files) do
+        T.eq(hashes[file.spec.file],file.spec.after_sha256)
+        T.eq(vim.fn.sha256((bytes(file.path):gsub('\r\n','\n'))),file.spec.after_sha256)
+        file.stat=vim.uv.fs_stat(file.path)
+      end
       T.eq(vim.fn.sha256((bytes(path):gsub('\r\n','\n'))),spec.after_sha256)
       if eol=='\r\n' then assert(not bytes(path):gsub('\r\n',''):find('\n',1,true)) end
       local stat=vim.uv.fs_stat(path);assert(cli(dir,nil,'gitsigns.nvim').code==0);assert(cli(dir,'--check','gitsigns.nvim').code==0)
       T.eq(vim.uv.fs_stat(path).mtime,stat.mtime)
+      for _,file in ipairs(files) do T.eq(vim.uv.fs_stat(file.path).mtime,file.stat.mtime) end
       r=cli(dir,nil,'unknown');assert(r.code~=0 and r.stderr:find('Неизвестный backport',1,true),r.stderr)
       assert(cli(dir,'--revert','gitsigns.nvim').code==0);T.eq(bytes(path),raw);T.eq(bytes(sentinel),'UNCHANGED_SENTINEL')
+      for _,file in ipairs(files) do T.eq(bytes(file.path),file.raw) end
+      for _,previous in ipairs(spec.previous or {}) do
+        local a,b=assert(source:find(spec.before,1,true))
+        local old=source:sub(1,a-1)..previous.after..source:sub(b+1)
+        T.eq(vim.fn.sha256(old),previous.sha256)
+        old=old:gsub('\n',eol);write(path,old)
+        local old_stat=vim.uv.fs_stat(path)
+        r=cli(dir,'--check','gitsigns.nvim');assert(r.code~=0);T.eq(bytes(path),old)
+        T.eq(vim.uv.fs_stat(path).mtime,old_stat.mtime)
+        r=cli(dir,nil,'gitsigns.nvim');assert(r.code==0,r.stderr)
+        T.eq(vim.fn.sha256((bytes(path):gsub('\r\n','\n'))),spec.after_sha256)
+        assert(cli(dir,'--revert','gitsigns.nvim').code==0);T.eq(bytes(path),raw)
+        write(path,old);assert(cli(dir,'--revert','gitsigns.nvim').code==0);T.eq(bytes(path),raw)
+      end
       write(path,raw..'-- unknown change\n');r=cli(dir,nil,'gitsigns.nvim');assert(r.code~=0);T.eq(bytes(path),raw..'-- unknown change\n')
+    end
+  end)
+end)
+T.check('IDE-GIT-9 неизвестный companion не меняет ни один файл прежнего backport',function()
+  local spec=vim.json.decode(table.concat(vim.fn.readfile(root..'/nvim_forge/patches/plugins.json'),'\n'))['gitsigns.nvim']
+  runtime(function(base)
+    for _,eol in ipairs({'\n','\r\n'}) do
+      local files=companions(base,spec,eol,false);assert(#files>0 and #spec.previous>0)
+      local path=base..'/gitsigns.nvim/'..spec.file
+      local source=bytes(deps..'/lazy/gitsigns.nvim/'..spec.file):gsub('\r\n','\n')
+      local a,b=assert(source:find(spec.after,1,true))
+      source=source:sub(1,a-1)..spec.previous[1].after..source:sub(b+1)
+      T.eq(vim.fn.sha256(source),spec.previous[1].sha256)
+      local old=source:gsub('\n',eol);write(path,old)
+      local unknown=files[1].raw..'-- unknown companion\n';write(files[1].path,unknown)
+      local r=cli(base,nil,'gitsigns.nvim');assert(r.code~=0 and r.stderr:find('неизвестное содержимое',1,true),r.stderr)
+      T.eq(bytes(path),old);T.eq(bytes(files[1].path),unknown)
     end
   end)
 end)
 T.check('IDE-GIT-8 настоящий Lazy build готовит Gitsigns, открытие файла не пишет исходник',function()
   local spec=vim.json.decode(table.concat(vim.fn.readfile(root..'/nvim_forge/patches/plugins.json'),'\n'))['gitsigns.nvim']
-  local e,path
+  local e,path,plugin_dir
   local ok,err=pcall(function()
     e=require('editor').start(root,{prepare=function(project,env,runtime)
       local dir=env.XDG_DATA_HOME..'/nvim_forge'..(vim.fn.has('win32')==1 and '-data' or '')..'/lazy/gitsigns.nvim'
+      plugin_dir=dir
       dofile(root..'/nvim_forge/lua/ide/backports.lua').run('gitsigns.nvim',dir,'revert');path=dir..'/'..spec.file
+      local previous=(spec.previous or {})[1]
+      if previous then
+        local source=bytes(path):gsub('\r\n','\n');local a,b=assert(source:find(spec.before,1,true))
+        write(path,source:sub(1,a-1)..previous.after..source:sub(b+1))
+      end
       -- Initial signs проверяем на tracked файле настоящего репозитория.
       for _,args in ipairs({{'config','user.name','Fixture'},{'config','user.email','fixture@example.invalid'},
         {'config','commit.gpgsign','false'},{'config','core.hooksPath',runtime..'/no-hooks'},
@@ -135,14 +194,19 @@ T.check('IDE-GIT-8 настоящий Lazy build готовит Gitsigns, отк
       end
     end})
     e:wait('IDE готова',function() return e:lua('return _G.forge_e2e_observed') end,10000)
-    T.eq(vim.fn.sha256((bytes(path):gsub('\r\n','\n'))),spec.before_sha256)
+    T.eq(vim.fn.sha256((bytes(path):gsub('\r\n','\n'))),spec.previous and spec.previous[1].sha256 or spec.before_sha256)
     e:input(':Lazy! build gitsigns.nvim<CR>')
-    e:wait('Gitsigns build завершён',function() return vim.fn.sha256((bytes(path):gsub('\r\n','\n')))==spec.after_sha256 end,15000)
-    local stat=vim.uv.fs_stat(path)
+    local paths={{path=path,spec=spec}}
+    for _,extra in ipairs(spec.extra or {}) do paths[#paths+1]={path=plugin_dir..'/'..extra.file,spec=extra} end
+    e:wait('Gitsigns build завершён',function()
+      for _,item in ipairs(paths) do if vim.fn.sha256((bytes(item.path):gsub('\r\n','\n')))~=item.spec.after_sha256 then return false end end
+      return true
+    end,15000)
+    for _,item in ipairs(paths) do item.stat=vim.uv.fs_stat(item.path) end
     if e:current_ft()=='lazy' then e:input('q');e:wait('Lazy закрыт',function() return e:current_ft()~='lazy' end) end
     e:input(':edit '..vim.fn.fnameescape(e.project..'/file_one.txt')..'<CR>')
     e:wait('initial signs готовы',function() return e:lua([[local d=vim.b.gitsigns_status_dict;return d and d.added~=nil]]) end,15000)
-    T.eq(vim.uv.fs_stat(path).mtime,stat.mtime)
+    for _,item in ipairs(paths) do T.eq(vim.uv.fs_stat(item.path).mtime,item.stat.mtime) end
     for _,n in ipairs(e.rpc.notifications) do assert(n.level<vim.log.levels.ERROR,n.message) end
   end)
   if e then e:snapshot('gitsigns-build');io.stdout:write('  artifacts: '..e.dir..'\n');e:stop() end

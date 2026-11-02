@@ -1638,3 +1638,123 @@ snapshot/stop. Оставшийся runtime 28552-551475216700 проверен 
 OpenSpec: list/status/instructions apply для `fix-gitsigns-deleted-worktree`,
 затем strict validate. Проверены git diff --check, source lock и сохранность
 прежнего префикса FIXLOG. .tests/.tools/настройки пользователя не коммитятся.
+
+## 33. Живой object read и cwd Git (IDE-038)
+
+Шесть естественных повторов dirty cancel/commit/visit прошли с private
+observer jobstart: argv, реальный cwd процесса/редактора/окон, PID.
+Наблюдения — artifacts 1684893932900…1759368027600, jobstart-trace.jsonl.
+Это не proof исправления: новый код тогда ещё не применялся. Команда
+`nvim -l .tests/ide038-observe-active.lua` запускалась выбранным SDK;
+observer сохранял реальные значения, не меняя результатов Git.
+
+Управляемая проверка теперь постоянная:
+
+```powershell
+python -B tests/diagnostics/git-object-read-cwd.py
+```
+
+Вывод — JSON трёх real Git fixtures. При живом show (pipe заполнен blob
+512 KiB) Windows remove получает 255 с `-C linked`, 0 с явным git-dir без -C,
+0 с git-dir без work-tree. Все варианты обязаны вернуть ровно linked blob
+из отличающегося HEAD и сохранить main HEAD/index/файл. POSIX ожидает 0 во
+всех случаях. Артефакт — `.tests/git-object-read-cwd.json`; own fixtures
+проверены по пути и удаляются, Windows temp на F:.
+
+Первый UI prototype с одним словом 512 KiB дал E339 до Git gate (IDE-041);
+его нельзя считать Git baseline. Следующий fixture из 1024 обычных строк
+дал реальный remove 255 (2580195205900). Private candidate изменял только
+свой plugin payload и descriptor/config, получил PASS (3030721802000);
+результат не подменял Git. После этого обновлены versioned descriptor и cache.
+
+```powershell
+$env:TEMP='F:\repo\forge-nvim\.tests\tmp'
+$env:TMP=$env:TEMP
+$env:TMPDIR=$env:TEMP
+$env:NVIM_LOG_FILE=Join-Path $env:TEMP 'ide038-focused.log'
+. ./scripts/lib/nvim-sdk.ps1
+$forgeNvim=Get-ForgeNvim (Get-Location).Path
+python -B tests/e2e/prepare_editor.py --download --nvim $forgeNvim
+& $forgeNvim -l tests/e2e/gitsigns-live-read.test.lua
+& $forgeNvim -l tests/e2e/gitsigns-worktree.test.lua
+& $forgeNvim -l tests/e2e/plugin-backports.test.lua
+```
+
+Focused первого варианта — 3 + 2 + 7 PASS, логи `windows-ide038-<имя-файла>.txt`.
+В новой CLI проверке previous точно известный payload IDE-035 не пишется
+через check (mtime тоже сохраняется), явно обновляется или снимается.
+Настоящий Lazy build проверяет обновление старого payload, а не только чистую
+установку. Неизвестные bytes/revision остаются ошибкой без записи.
+
+Red replay прежнего backport создавался отдельным git archive 199b1a7
+в новую `.tests/ide038-previous-config`, без checkout рабочего дерева:
+
+```powershell
+$env:FORGE_GITSIGNS_E2E_CASE='live show'
+$env:FORGE_GITSIGNS_SOURCE_VARIANT='previous'
+$env:FORGE_E2E_CONFIG_SOURCE='F:/repo/forge-nvim/.tests/ide038-previous-config/nvim_forge'
+& $forgeNvim -l tests/e2e/gitsigns-live-read.test.lua
+```
+
+Переменные задавались только в отдельном shell инструмента; обычный green
+их не наследовал. Red: 1 CLI PASS / 1 UI FAIL (Git 255), artifact 3708663398500,
+`windows-ide038-previous-red.txt`. Вернуть previous можно только известным
+applier старого private config, после снятия нового private payload.
+Режим completed IDE-035 сохраняет прежний upstream replay; режим live
+доказывает живой Git до release после remove/cancel, затем возвращает его
+настоящие code/stdout/stderr. Общие UI шаги — tests/lib/gitsigns_worktree.lua.
+
+```powershell
+docker compose -f tests/containers/compose.yaml build ubuntu > .tests/ubuntu-ide038-build.txt 2>&1
+docker compose -f tests/containers/compose.yaml run --rm ubuntu full > .tests/ubuntu-ide038-full.txt 2>&1
+& $forgeNvim -l tests/run.lua unit e2e trace > .tests/windows-ide038-regression.txt 2>&1
+```
+
+Использован уже работающий engine, Desktop/WSL не запускались и не
+останавливались. Report/logs обоих прогонов сохранены с отдельными
+ide038 префиксами. Это Windows unit/e2e/trace, не полный Windows с ConPTY:
+известный IDE-039 не объявляется устранённым. Точные итоговые результаты
+и ограничения — FIXLOG §100. Mac/GUI не запускались.
+
+Windows unit/e2e/trace: 38 файлов PASS, 469 проверок, 762,6s. Первый Ubuntu
+full: 40 PASS/1 FAIL/3 SKIP (42 файла/44 прогона, 613 видимых проверок),
+612,4s; FAIL — 60s timeout key-ownership, не законченная сводка самого файла.
+Наблюдатель `ide038-observe-keynames.lua` в ignored `.tests/ubuntu/` выключил
+буферизацию stdout и обернул NK.collect только отметками времени/результата:
+
+```powershell
+docker compose -f tests/containers/compose.yaml run --rm --entrypoint timeout -e FORGE_SANDBOX=/workspace/.tests/ide038-key-observe ubuntu 60s nvim -l /workspace/.tests/ide038-observe-keynames.lua
+```
+
+Прежний deadline, 46 PASS, collect около 2,16s; причины исходного timeout
+это не устанавливает (IDE-042). Затем полный Ubuntu выполнен отдельно,
+без параллельного Windows, с префиксом `ubuntu-ide038-serial-full`:
+41 PASS/0 FAIL/3 SKIP, 638 проверок, 303,2s. Первый report/logs не изменялись.
+В CLAUDE.md закреплён последовательный запуск тяжёлых наборов на этом хосте;
+это ограничение нагрузки, не исправление runtime и не доказательство причины
+единичного timeout. .tests/ide038-serial-provenance.json сохраняет условие запуска.
+
+Перед коммитом первый вариант проверен при уже текущем linked cwd:
+`FORGE_GITSIGNS_E2E_CASE='current linked'`, исходный gitsigns-live-read —
+Git 255, artifact 5849083854000. Наследование cwd оказалось недостаточным.
+Итог задаёт process cwd common git-dir, сохраняет выбранный git-dir/HEAD,
+а файловые команды получают -C своего toplevel. Typed stable_cwd очищается
+до spawn; обычные нестабильные cwd сохраняют защиту IDE-035.
+
+Applier проверяет primary и companion до записи; manifest хранит оба hash.
+Previous IDE-035 обновляется явно. Новая восьмая проверка CLI подтверждает:
+неизвестный companion оставляет оба файла, включая прежний cmd.lua, без
+изменения. Lazy build и обычное открытие проверяют оба файла/mtime.
+Итоговый focused — 4 live + 2 completed + 8 подготовки PASS.
+
+Итоговые прогоны выполнены последовательно одним coordinator:
+Windows unit/e2e/trace → build уже работающего Docker → Ubuntu full.
+Логи/report — `windows-ide038-verified-regression`,
+`ubuntu-ide038-verified-build/full`; состояние — `ide038-verified-progress.json`.
+Windows: 38 файлов PASS/0 FAIL/0 SKIP, 471 проверка, 609,4s.
+Ubuntu: 42 файла/44 прогона, 41 PASS/0 FAIL/3 SKIP, 640 проверок, 340,1s.
+Старые intermediate reports сохранены, их результаты не присваиваются
+этому варианту. Final previous red — 8339345485800 (настоящий remove 255),
+final upstream red — 8351711096700 (исходный traceback/hit-enter); логи
+`windows-ide038-verified-previous-red.txt`, `-verified-upstream-red.txt`.
+Полный Windows с ConPTY и проверка Mac/GUI не заявлены.

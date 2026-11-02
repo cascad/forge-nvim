@@ -142,3 +142,31 @@ check, revert и реальный `:Lazy build neogit`. Editor E2E удаляе�
 IDE-BUF-4; с подготовленным Neogit ожидается PASS. IDE-035 (rapid Gitsigns
 initial attach) остаётся отдельным `delete-pending-attach.lua`, не скрывается
 этим ожиданием смены cwd. Mac/GUI не проверены.
+
+## IDE-038: живое чтение Git-объекта
+
+```powershell
+python -B tests/diagnostics/git-object-read-cwd.py
+& .tools/neovim/windows-x64/bin/nvim.exe -l tests/e2e/gitsigns-live-read.test.lua
+```
+
+Первый сценарий CLI читает 512 KiB из отличающегося linked HEAD; pipe
+удерживает настоящий Git живым до завершения remove. С `-C linked`
+Windows даёт exit 255; с явным `--git-dir` без перехода в linked — exit 0,
+в том числе без `--work-tree`. Наследование cwd linked тоже даёт 255;
+явный process cwd в common git-dir даёт 0. На POSIX все пять случаев дают 0.
+Вывод обязан целиком совпадать с linked blob, main HEAD/index/файл сохраняются.
+JSON — `.tests/git-object-read-cwd.json`, временные Windows fixtures на F:.
+
+Editor gate имеет два режима: completed в IDE-GIT-8 удерживает только
+доставку уже готового результата; live в IDE-GIT-9 удерживает чтение pipe
+живого Git. Проверяются PID/состояние в начале и живой процесс непосредственно
+перед release после remove/cancel, затем настоящий code/stdout/stderr.
+Proxy освобождает собственный cwd, результат Git не синтезируется.
+UI проверяет и чтение, начатое при уже текущем linked cwd. Для него допустима
+отмена следующего update после detach; обязательны успешное удаление,
+сохранение текста и main stage/unstage. Старый completed регресс отдельно
+требует настоящий неуспешный запрос после удаления.
+Это доказывает класс блокировки object read, а не владельца handle первого
+случайного отказа 551474721600. Для red replay прежнего backport используется
+source variant previous и отдельный config archive 199b1a7.

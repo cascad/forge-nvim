@@ -45,6 +45,7 @@ return {
   { file = 'tests/e2e/plugin-backports.test.lua', suite = 'e2e', timeout = 180 },
   { file = 'tests/e2e/active-worktree.test.lua', suite = 'e2e', timeout = 180 },
   { file = 'tests/e2e/gitsigns-worktree.test.lua', suite = 'e2e', timeout = 240 },
+  { file = 'tests/e2e/gitsigns-live-read.test.lua', suite = 'e2e', timeout = 240 },
   { file = 'tests/e2e/git-workflow.test.lua', suite = 'e2e', timeout = 300 },
   { file = 'tests/e2e/worktree-refresh.test.lua', suite = 'e2e', timeout = 300 },
   { file = 'tests/e2e/diffview-close.test.lua', suite = 'e2e', timeout = 420 },

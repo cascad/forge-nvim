@@ -4752,3 +4752,132 @@ tests/e2e/plugin-backports.test.lua, tests/e2e/active-worktree.test.lua,
 tests/registry.lua, tests/README.md, tests/e2e/README.md, PROBLEMS.md,
 docs/IDE_ROADMAP.md, docs/AGENT_COMMANDS.md, docs/HISTORY.md,
 openspec/changes/fix-gitsigns-deleted-worktree/*.
+
+
+### 100. Живой Git object read без cwd удаляемого worktree
+
+**Связь:** IDE-038; change `fix-repeated-worktree-delete`.
+Спека: IDE-GIT-9 (ADDED).
+**Статус:** исправлен и проверен установленный класс живых object reads;
+владелец handle исходного случайного отказа 551474721600 не установлен.
+Mac/GUI и отдельные IDE-039/040/041/042 остаются открытыми.
+
+**Проблема.** Интеграция §99 после dirty cancel/commit/повторного visit
+получила Git remove 255/Permission denied, хотя cwd редактора уже main.
+Шесть private повторов с observer jobstart прошли и подтвердили main cwd
+редактора/окон/remove, но не объяснили первоначальный отказ. Одно ожидание
+смены cwd IDE-034 не освобождает cwd уже запущенного процесса Git.
+
+**Причина установленного класса.** Пока Git show читает большой объект,
+его собственный cwd может оставаться linked. Заполненный stdout pipe
+позволяет удержать настоящий Git живым, без подмены результата. CLI A/B:
+на Windows show с -C linked даёт remove 255; явный git-dir без -C из main
+даёт remove 0. Show сохраняет ровно blob linked HEAD, отличающегося от main.
+Real editor live gate повторил remove 255 (2580195205900). Это другой
+промежуток, чем IDE-035: там Git уже завершён, задержана доставка результата.
+
+**Отвергнутый неполный вариант.** Удаление -C для show при явном git-dir
+прошло первый private candidate (3030721802000), focused 3/2/7 и широкие
+прогоны. Перед коммитом добавлен случай уже текущего linked cwd: Git
+унаследовал его и снова удержал каталог (5849083854000, Git 255). Ранние
+зелёные результаты не относятся к окончательному исправлению. В первом
+prototype одно слово 512 KiB вызвало E339 до gate (2231812818600, IDE-041);
+для Git использованы 1024 обычных строки. Замена fixture не является
+исправлением E339 редактора.
+
+**Изменение.** Repo-команды Gitsigns получают явный process cwd в общем
+git-dir, сохраняющемся при удалении linked. Выбранный absolute git-dir
+остаётся аргументом, поэтому HEAD/объекты относятся к linked. Show не
+переходит в worktree; файловые команды дополнительно используют -C своего
+toplevel. Command builder сохраняет защиту IDE-035 для обычных нестабильных
+cwd и принимает очищаемый до spawn флаг стабильного metadata cwd.
+Глобальный cwd редактора не меняется. Нет blind retry/force, пауз перед
+удалением, собственного Git backend или runtime override приватных методов.
+
+Исправление остаётся временным backport того же Gitsigns pin dd3f588b...
+в двух файлах cmd.lua/repo.lua; итоговые SHA256 — 8b868903... / d01c298f....
+Один существующий applier проверяет все файлы выбранного plugin до записи,
+считает итоговые hashes, затем пишет каждый файл атомарно. Неизвестный
+companion не меняет даже известный прежний cmd.lua. И/O ошибка уже при
+записи может потребовать повторной явной подготовки; транзакция всего
+набора файлов не заявляется. Previous хранит точные прежние bytes/hash
+IDE-035 (6ae5b933...), apply обновляет их, revert снимает известные изменения,
+check ничего не пишет и просит build. Manifest дополнен hashes всех файлов.
+На существующей установке :Lazy build gitsigns.nvim и restart; source lock
+и plugin revision не менялись. Новая подготовка cache/образа явная.
+
+**Проверка.** Постоянный git-object-read-cwd.py: пять native вариантов,
+разные HEAD и полная проверка байтов linked blob, сохранности main HEAD/
+index/файла. Windows remove codes: with_C 255, explicit_only 0,
+explicit_without_worktree 0, inherited_linked 255, common_cwd 0. Ubuntu:
+все пять 0. Во всех вариантах настоящий Git ещё жив после remove,
+затем show завершается с code 0 и правильным выводом.
+
+Gitsigns-live-read: CLI + три real UI пути (4 PASS Windows/Ubuntu):
+удаление из main при живом read; dirty cancel и stage/unstage linked с
+другим HEAD; чтение при уже текущем linked cwd. Marker содержит PID,
+подтверждает живой процесс в начале и непосредственно до release после
+remove/cancel; сохраняются реальные code/stdout/stderr. Proxy сам не держит
+linked cwd. Проверены текст, отсутствие traceback/hit-enter и последующий
+main stage/unstage. В current linked update может быть отменён detach до
+следующего read; требование к пользовательскому результату сохраняется.
+Прежний completed IDE-035 отдельно требует настоящий неуспешный read
+после удаления и остаётся 2 PASS на обеих ОС.
+
+Подготовка: 8 PASS на обеих ОС. LF/CRLF/пробелы, previous upgrade/revert,
+read-only bytes/mtime, неизвестные payload/revision/name, multi-file
+preflight, настоящий Lazy build и отсутствие записи обоих source-файлов
+при открытии. Final baseline previous 199b1a7: 1 CLI PASS / 1 UI FAIL,
+настоящий remove 255 (8339345485800). Final baseline upstream 89237bf:
+исходный async traceback/hit-enter IDE-035 (8351711096700). Обе копии
+частные, рабочие плагины пользователя не переписывались.
+
+Итоговый Windows unit/e2e/trace: 38 файлов PASS / 0 FAIL / 0 SKIP,
+471 проверка, 609,4s. Итоговый Ubuntu full: 42 файла/44 прогона,
+41 PASS / 0 FAIL / 3 SKIP, 640 проверок, 340,1s. SKIP: WezTerm отсутствует
+и две ветки Bash 3.2. Git/worktree/deleted-file/Diffview, Go DAP/tests,
+панели и остальные выбранные editor E2E прошли. Это не полный Windows
+с ConPTY: последний отдельный ConPTY имел 65 PASS/1 FAIL (IDE-039),
+его fixture не менялся. Mac/GUI не запускались.
+
+Первый full промежуточного варианта при параллельном Windows получил один
+60s timeout key-ownership (IDE-042), 612,4s. Небуферизованный отдельный
+повтор прошёл 46 PASS, NK.collect около 2,16s; полный serial повтор того
+варианта — 41 PASS/0 FAIL/3 SKIP, 303,2s. Эти повторы не устанавливают
+причину timeout и не подменяют исходный красный report. На этом Windows
+хосте тяжёлые наборы теперь запускаются поочерёдно. Это планирование
+нагрузки, не runtime fix и не доказательство причины IDE-036/042.
+
+Итоговые logs/report сохранены отдельно с windows-ide038-verified-regression,
+ubuntu-ide038-verified-full/build, windows-ide038-verified-previous-red и
+-verified-upstream-red префиксами. Промежуточные full/serial/candidate/red
+артефакты сохранены под прежними именами. Последовательность —
+ide038-verified-progress.json. Desktop/WSL агент не запускал, не перезапускал
+и не останавливал: использован уже работающий engine. Windows temp/runtime
+на F:. Source lazy-lock не менялся; strict validate/trace/diff и префикс
+истории проверяются перед коммитом.
+
+**Вывод.** Нужно различать cwd редактора, ожидающего proxy и настоящего
+Git. Наследуемый cwd не гарантирует независимость от удаляемого worktree.
+Объекты читаются из выбранного git-dir при стабильном metadata cwd;
+файловые операции сохраняют собственный toplevel. Дополнительный current
+scenario поймал неполноту раннего решения до коммита. Новый управляемый
+регресс доказывает устранение этого класса, но не позволяет приписать
+первый случай конкретному PID задним числом или закрыть другие блокировки.
+
+**Файлы.** nvim_forge/lua/ide/backports.lua, nvim_forge/lua/plugins/git.lua,
+nvim_forge/patches/plugins.json, nvim_forge/patches/README.md,
+nvim_forge/QUICKSTART.md, tests/diagnostics/git-object-read-cwd.py,
+tests/diagnostics/README.md, tests/lib/gitsigns_worktree.lua,
+tests/e2e/gitsigns-live-read.test.lua, tests/e2e/gitsigns-worktree.test.lua,
+tests/e2e/gitsigns_git_gate.py, tests/e2e/plugin-backports.test.lua,
+tests/registry.lua, tests/e2e/README.md, CLAUDE.md, PROBLEMS.md,
+docs/IDE_ROADMAP.md, docs/HISTORY.md, docs/AGENT_COMMANDS.md,
+openspec/changes/fix-repeated-worktree-delete/*.
+
+
+**Завершение перед коммитом.** Strict validate change PASS; final trace 7 PASS/1 SKIP
+(нет ссылок на manual checklist в спеках), diff --check и source lock PASS.
+Read-only CLI check обоих backports и hashes обоих Gitsigns файлов PASS;
+прежние 377791 байт FIXLOG сохранены. Остатков own editor runtime после
+итоговых прогонов/обоих red replay нет.
