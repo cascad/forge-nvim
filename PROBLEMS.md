@@ -10,7 +10,7 @@
 
 Маршрут и приоритеты: [рабочий план nvim_forge](docs/IDE_ROADMAP.md).
 Для новых пунктов используем следующий свободный ID `IDE-xxx`; исходный
-симптом хранится здесь, этап и состояние — в плане. Следующий ID: `IDE-049`.
+симптом хранится здесь, этап и состояние — в плане. Следующий ID: `IDE-050`.
 
 ## IDE-048 — completed Gitsigns E2E не дождался следующего Git-read
 
@@ -427,6 +427,12 @@ FIXLOG). Источник текста — expression widget DAP; обычный
 семантику действий проверить на конфликты/терминалы прежде переназначений.
 Для терминала и полей ввода сохранить обычный ввод текста.
 
+2026-11-02: Debug/Outline/Files/Git дополнены Tests/Test Output/Search/Tasks:
+Space w t/r/f/b, общие q/Esc/help/zoom/focus и сохранение состояния.
+По 6 новых + 19 прежних UI проверок Windows/Ubuntu PASS —
+[FIXLOG §109](nvim_forge/FIXLOG.md#109-рабочие-панели-общий-space-w-и-сохранение-поиска).
+Mac/GUI, terminal/Trouble и физические клавиши остаются отдельными проверками.
+
 ## Ранее зарегистрированные проблемы
 
 ### IDE-010 — универсальная поддержка Windows/macOS/Ubuntu, Mint позже
@@ -466,6 +472,10 @@ Windows не срабатывают. Решить: псевдонимы в nvim_
 
 
 <!-- ────────── разобрано (переехало в nvim_forge/FIXLOG.md) ────────── -->
+
+IDE-049 → [FIXLOG §109](nvim_forge/FIXLOG.md#109-рабочие-панели-общий-space-w-и-сохранение-поиска):
+Search → Tasks → Search стирал запрос: close удалял backend buffers.
+Скрытие сохраняет buffer/context; конечный E2E RED на fe64757, GREEN Windows/Ubuntu.
 
 IDE-021 → [FIXLOG §83](nvim_forge/FIXLOG.md#83-файловые-вкладки-общая-модель-и-reopen):
 единый файловый цикл/BufferLine/picker, unloaded/readonly, панели/terminal,

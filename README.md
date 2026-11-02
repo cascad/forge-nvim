@@ -9,6 +9,7 @@
 Активные среды — Windows/macOS/Ubuntu; Mint пока отложен: [границы модулей](docs/PORTABLE_ARCHITECTURE.md).
 [E2E и команды прогонов внутри VM](tests/e2e/README.md).
 [Команды агента и формат получаемых результатов](docs/AGENT_COMMANDS.md).
+[Клавиши рабочих панелей Space w](nvim_forge/QUICKSTART.md#общий-маршрут-рабочих-панелей--space-w).
 [Единая история работ, причин и решений](docs/HISTORY.md), включая материалы
 из прежнего `F:/claude_code/vim`; новые исправления — в `nvim_forge/FIXLOG.md`.
 

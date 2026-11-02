@@ -38,6 +38,7 @@ return {
   { file = 'tests/e2e/test-runner.test.lua', suite = 'e2e', timeout = 360 },
   { file = 'tests/e2e/snippet-input.test.lua', suite = 'e2e', timeout = 180 },
   { file = 'tests/e2e/reference-highlighting.test.lua', suite = 'e2e', timeout = 180 },
+  { file = 'tests/e2e/work-panels.test.lua', suite = 'e2e', timeout = 240 },
   { file = 'tests/e2e/dap-discovery.test.lua', suite = 'e2e', timeout = 120 },
   { file = 'tests/e2e/debug-panels.test.lua', suite = 'e2e', timeout = 300 },
   { file = 'tests/e2e/outline.test.lua', suite = 'e2e', timeout = 180 },

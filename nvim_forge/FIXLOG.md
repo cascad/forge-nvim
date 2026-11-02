@@ -5481,3 +5481,74 @@ PROBLEMS/IDE_ROADMAP/HISTORY/AGENT_COMMANDS §39.
 trace 2 файла PASS. Source/тест SHA, 6 UI artifacts и исходный RED, 180 local
 links, таблица e2e и прежний history prefix проверены. SDK/lock/backports
 не менялись; полные повторы с известными IDE-047/048 не запускались.
+
+## 109. Рабочие панели: общий Space w и сохранение поиска
+
+Дата: 2026-11-02. Спека: IDE-PANEL-6/7/8 (ADDED), change
+unify-work-panel-controls. IDE-009; найденная потеря query — IDE-049.
+
+**Проблема.** Tests/Test Output/Search/Tasks были в registry, но не участвовали
+в общей модели Debug/Outline/Files/Git. Не было общего открытия с фокусом,
+контекстной помощи и zoom. Переключение Search → Tasks → Search стирало запрос.
+При подключении zoom Enter в Search не открывал выбранный найденный результат.
+
+**Причина.** Controls не распознавал четыре backend filetypes. Search close
+закрывал окна и принудительно удалял grug-far buffers, уничтожая query/context,
+хотя open уже поддерживал reuse. Grug-far определяет строку результата через
+bufwinid: при двух окнах одного buffer это исходное окно, а пользователь двигал
+курсор overlay. Overseer умеет читать текущее sidebar окно; гипотеза, будто он
+всегда читает сохранённое исходное, исходниками не подтвердилась.
+
+**Изменение.** Normal Space w t/r/f/b открывает и фокусирует Tests/Test Output/
+Search/Tasks. Общие hjkl/0, q/Esc/?/z и [focus] используют существующий controls;
+отложенный focus проверяет выбранный slot/component и отменяется общей командой.
+Карты применяются после native setup и при входе в окно; native справка Tests
+теперь g?. Перед native Grug-far Goto/Open/next/prev/preview выбранный cursor
+возвращается из overlay в исходное окно. Native callbacks Overseer тоже
+выполняются из обычной раскладки, сохраняя выбранную задачу при output split.
+Search close скрывает окна и сохраняет buffer/context. Прежние aliases,
+ws/wv/wo, normal/insert/terminal режимы и native backend actions сохранены.
+Общий код без новых платформенных веток, пинов, SDK и зависимостей.
+
+**Проверка/e2e.** Постоянный зарегистрированный work-panels.test.lua — шесть
+UI сценариев с настоящими Neotest/Go/gotestsum, Grug-far/rg и двумя process
+задачами Python из tasks.json. Проверяются routes, соседний фокус/0, помощь,
+Esc/hide/zoom, insert q/?, query и тот же buffer после hide/смены слота,
+переход к выбранному тесту без запуска, сохранение реального Go PASS/output,
+output выбранной beta и тот же job id до/после hide/release. Private handlers
+не вызываются; действия идут клавишами. Неожиданные ERROR/prompts не принимаются.
+
+Исходный config fe64757 извлечён из git archive с проверкой путей/типов и
+сверкой с git show. Legacy sF → ввод → jj → sF дал реальный query-loss RED
+42459823160800; конечный source повторил RED 43617957022000: получено пусто,
+ожидалось FORGE_SEARCH. Windows v2 сохранил FAIL Search zoom и прежнего
+Summary locator; v3 — 6 PASS. Имена файлов появляются до discovery Neotest:
+конечный E2E ждёт два теста в состоянии и отрисованном header перед Enter.
+Grug-far ждёт when_ready до ввода. Ошибочные get_status/get_instance и ранний
+ввод были исправлениями setup E2E. Дополнительное ожидание «wk из Tasks всегда
+попадает в код» было неверным из-за preview; теперь направление проверяет
+соседнее окно, а w0 отдельно — код. Исходные FAIL сохранены.
+
+Конечные Windows: 43335759352800, 43353367917800, 43368242662600,
+43384815920500, 43428636266200, 43455087458000 — 6 PASS.
+Ubuntu: 39826972562953, 39858237913912, 39878310378567,
+39886211775112, 39892062567174, 39899734700045 — 6 PASS.
+Прежний регресс на каждой ОС: Go tests 5, Debug panels 4, editor smoke 10 PASS.
+Windows unit/trace — 15 файлов PASS, 364 checks; strict validate PASS.
+Логи windows/ubuntu-work-panels-{green,test-runner,debug-panels,editor}.txt,
+Windows unit/trace report, source/markers/shutdown и прежний history prefix
+сверяются audit-work-panels.py → work-panels-evidence-validation.json.
+Windows и Ubuntu запускались последовательно на уже готовых зависимостях;
+Desktop/WSL не перезапускались. Это целевой регресс, не full PASS; IDE-047/048
+остаются открытыми. Mac/GUI/физическая доставка клавиш отдельно не проверены;
+terminal/Trouble и положительная языковая матрица ещё требуют расширения.
+
+**Вывод.** Общий controls может объединять существующие backend без нового
+менеджера окон. Скрытие должно сохранять рабочее состояние; zoom обязан
+согласовать выбранную строку с тем окном, по которому native action читает
+курсор. Готовность асинхронного discovery подтверждается данными/UI.
+
+**Файлы:** lua/ide/controls.lua, lua/ide/init.lua, lua/config/keymaps.lua,
+lua/plugins/tests.lua, README/QUICKSTART/KEYBINDINGS; tests/e2e/work-panels.test.lua,
+tests/registry.lua и E2E README; change unify-work-panel-controls;
+PROBLEMS, IDE_ROADMAP, HISTORY, AGENT_COMMANDS §40.

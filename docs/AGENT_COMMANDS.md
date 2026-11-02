@@ -2190,3 +2190,73 @@ artifacts и исходного RED, отсутствие E339/blocking в snaps
 history prefix. Итог — .tests/ide041-evidence-validation.json.
 Raw v:errmsg не сбрасывается; проверяются видимые messages/notifications,
 реальные ввод/запись и курсор после Alt+n/p. Mac/физические клавиши не проверены.
+
+## 40. IDE-009: Tests, Test Output, Search и Tasks
+
+```powershell
+$env:TEMP = 'F:\repo\forge-nvim\.tests\tmp'
+$env:TMP = $env:TEMP; $env:TMPDIR = $env:TEMP
+$env:NVIM_LOG_FILE = Join-Path $env:TEMP 'work-panels-green.log'
+$env:npm_config_cache = 'F:\forge-nvim-tmp\npm-cache'
+. ./scripts/lib/nvim-sdk.ps1
+$forgeNvim = Get-ForgeNvim (Get-Location).Path
+& $forgeNvim -l tests/e2e/work-panels.test.lua
+foreach ($forgeCase in @('test-runner', 'debug-panels', 'editor')) {
+    & $forgeNvim -l ('tests/e2e/' + $forgeCase + '.test.lua')
+    if ($LASTEXITCODE -ne 0) { throw "FAIL: $forgeCase" }
+}
+& $forgeNvim -l tests/run.lua unit trace
+# Только после Windows, на уже работающем engine; без build/download:
+docker version --format '{{.Server.Version}}'
+foreach ($forgeCase in @('work-panels', 'test-runner', 'debug-panels', 'editor')) {
+    docker compose -f tests/containers/compose.yaml run --rm --entrypoint nvim ubuntu -l ('tests/e2e/' + $forgeCase + '.test.lua')
+    if ($LASTEXITCODE -ne 0) { throw "FAIL Ubuntu: $forgeCase" }
+}
+npx.cmd --yes @fission-ai/openspec@1.13.2 validate unify-work-panel-controls --type change --strict --no-interactive
+```
+
+Каждый файл E2E запускает изолированные настоящие nvim_forge с pinned
+плагинами, принимает клавиши через nvim_input/RPC и наблюдает UI/процессы.
+Прямых вызовов private handlers Neotest/Overseer/Grug-far нет. Подготовленные
+Go/gotestsum/parser и плагины берутся из .tests; тесты не скачивают инструменты.
+PowerShell получает stdout/stderr и exit code; перенаправление `> файл 2>&1`
+сохраняет их. Скрин — текст реального grid, JSON — окна, buffers, mode,
+messages/notifications и спавны; config-source и work-panels.test.lua фиксируют
+исходники. shutdown.json отдельно фиксирует завершение собственного child.
+
+Логи: windows/ubuntu-work-panels-{green,test-runner,debug-panels,editor}.txt;
+windows-work-panels-unit-trace.txt/report.json, work-panels-validate.txt.
+Windows artifacts — .tests/editor-e2e, Ubuntu — .tests/ubuntu/editor-e2e.
+
+Baseline config получен из git archive fe64757 с проверкой путей tar,
+корня nvim_forge и отсутствия ссылок/особых файлов. Сравнен с git show.
+Тот же конечный legacy UI сценарий запускается так:
+
+```powershell
+$env:FORGE_E2E_CONFIG_SOURCE = (Resolve-Path .tests/work-panels-before-fe64757/nvim_forge).Path
+$env:FORGE_WORK_PANEL_CASE = 'legacy'
+try {
+    & $forgeNvim -l tests/e2e/work-panels.test.lua
+    # Ожидаемый exit 1: получено пусто, ожидалось FORGE_SEARCH.
+} finally {
+    $env:FORGE_E2E_CONFIG_SOURCE = $null
+    $env:FORGE_WORK_PANEL_CASE = $null
+}
+```
+
+Исходный RED query-loss 42459823160800, повтор конечным source
+43617957022000: windows-work-panels-final-source-red.txt. Промежуточный
+v2 сохранил FAIL выбора Search из zoom и раннего discovery Summary; v3 дал
+6 PASS. Дополнительный direction test сначала ошибочно ожидал код после
+wk из Tasks, где есть preview: исправлено ожидание соседнего окна, отдельный
+w0 проверяет код. Ранние неверные API/get_status/get_instance и ввод до
+Grug-far when_ready были ошибками тестового setup; продукт ради них не менялся.
+Все исходные логи сохранены. Полный регресс с IDE-047/048 не повторялся.
+
+Сверка source SHA, RED/GREEN, shutdown, fixture markers, регресса и прежнего
+history prefix: `python -B .tests/audit-work-panels.py` →
+.tests/work-panels-evidence-validation.json. Read-only наблюдение файлов —
+rg/Get-Content/git diff. Список F обновлён `python -B .tests/update-work-panel-cleanup.py`:
+добавлена только baseline-копия (67 файлов, 1.20 MiB), прежние замеры не
+повторялись; .tests/F_CLEANUP_PATHS.txt содержит 11 путей для ручной очистки.
+Каталоги/данные Docker не удалялись, Desktop/WSL не запускались/перезапускались.

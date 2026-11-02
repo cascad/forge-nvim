@@ -1,12 +1,19 @@
--- spec: IDE-PANEL-1/2/3/4/5 общий маршрут: DAP, Outline, Neo-tree, Git.
+-- spec: IDE-PANEL-1/2/3/4/5/6/7/8 общий маршрут рабочих панелей.
 local M = {}
 local zoom, help
 local active_win
+local pending_panel
+local work = { ['neotest-summary']='tests', ['neotest-output-panel']='tests_output',
+    ['grug-far']='search', OverseerList='tasks_output' }
+local backend_maps = {}
+local search_actions = { Goto=true, Open=true, ['Open Next']=true, ['Open Prev']=true, Preview=true }
 local titles = {
     dapui_scopes = 'Locals', dapui_watches = 'Watch', dapui_stacks = 'Call Stack',
     dapui_breakpoints = 'Breakpoints', ['dap-repl'] = 'Output / REPL',
     dapui_console = 'Debug Console', ['dap-terminal'] = 'Debug Terminal',
     aerial = 'Outline', ['neo-tree'] = 'Files', NeogitStatus = 'Git',
+    ['neotest-summary']='Tests', ['neotest-output-panel']='Test Output',
+    ['grug-far']='Search', OverseerList='Tasks',
 }
 local tree_components = { filesystem = 'explorer', buffers = 'buffers', git_status = 'git_status' }
 function M.tree_component(source) return tree_components[source] end
@@ -16,6 +23,7 @@ local function valid(win) return win and vim.api.nvim_win_is_valid(win) end
 local function ft(win) return vim.bo[vim.api.nvim_win_get_buf(win or 0)].filetype end
 local function component(win)
     local kind = ft(win)
+    if work[kind] then return work[kind] end
     if kind == 'neo-tree' then
         return tree_components[vim.b[vim.api.nvim_win_get_buf(win or 0)].neo_tree_source]
     end
@@ -57,6 +65,7 @@ end
 function M.tree_action() if zoom and ft(0) == 'neo-tree' then M.restore(true) end end
 
 function M.focus_code()
+    pending_panel = nil
     close_help(false)
     M.restore(false)
     if ft(0) == 'NeogitStatus' and #vim.api.nvim_tabpage_list_wins(0) == 1 and #vim.api.nvim_list_tabpages() > 1 then
@@ -67,24 +76,28 @@ function M.focus_code()
 end
 
 function M.direction(direction)
+    pending_panel = nil
     close_help(true)
     M.restore(true)
     vim.cmd('wincmd ' .. direction)
 end
 
 function M.locals()
+    pending_panel = nil
     close_help(false)
     M.restore(false)
     require('ide.dap').focus_section('scopes')
 end
 
 function M.output()
+    pending_panel = nil
     close_help(false)
     M.restore(false)
     require('ide.dap').focus_output()
 end
 
 function M.outline(toggle)
+    pending_panel = nil
     close_help(false)
     M.restore(false)
     local ide = require('ide')
@@ -94,6 +107,7 @@ function M.outline(toggle)
 end
 
 function M.explorer(source, toggle)
+    pending_panel = nil
     close_help(false)
     M.restore(false)
     local ide = require('ide')
@@ -104,12 +118,54 @@ function M.explorer(source, toggle)
 end
 
 function M.git()
+    pending_panel = nil
     close_help(false)
     M.restore(false)
     local ide = require('ide')
     ide.focus_main()
     ide.show('neogit')
     ide.focus_slot('right')
+end
+
+local function show_work(id)
+    close_help(false)
+    M.restore(false)
+    local ide = require('ide')
+    ide.focus_main()
+    pending_panel = id
+    ide.show(id)
+    local comp = ide.registry.get(id)
+    if comp.is_open() then pending_panel = nil;comp.focus() end
+end
+function M.tests() show_work('tests') end
+function M.test_output() show_work('tests_output') end
+function M.search() show_work('search') end
+function M.tasks() show_work('tasks_output') end
+
+-- Перед native действием вернуть выбранный cursor в обычное окно backend.
+-- Grug-far ищет окно через bufwinid; его карты ввода текста не трогаем.
+function M.work_maps(buf)
+    if not vim.api.nvim_buf_is_valid(buf) or not work[vim.bo[buf].filetype] then return end
+    for key, action in pairs({ q=M.hide, ['<Esc>']=M.cancel, ['?']=M.help }) do
+        vim.keymap.set('n',key,action,{buffer=buf,nowait=true,silent=true,desc='Panel: '..key})
+    end
+    local kind = vim.bo[buf].filetype
+    if kind ~= 'OverseerList' and kind ~= 'grug-far' then return end
+    backend_maps[buf] = backend_maps[buf] or {}
+    for _, map in ipairs(vim.api.nvim_buf_get_keymap(buf,'n')) do
+        if map.callback and map.expr~=1 and map.expr~=true and map.lhs~='q' and map.lhs~='?'
+            and map.lhs:lower()~='<esc>' and map.lhs~='j' and map.lhs~='k'
+            and (kind=='OverseerList' or search_actions[map.desc])
+            and backend_maps[buf][map.lhs]~=map.callback then
+            local callback=map.callback
+            local wrapped=function()
+                if zoom and ft(0)==kind then M.restore(true) end
+                return callback()
+            end
+            backend_maps[buf][map.lhs]=wrapped
+            vim.keymap.set('n',map.lhs,wrapped,{buffer=buf,silent=map.silent==1,nowait=map.nowait==1,desc=map.desc})
+        end
+    end
 end
 
 -- Neogit хранит окно backend. В overlay j/k остаются локальной навигацией;
@@ -138,6 +194,7 @@ function M.git_maps(buf)
 end
 
 function M.hide()
+    pending_panel = nil
     close_help(true)
     M.restore(true)
     local id = component(0)
@@ -159,11 +216,13 @@ function M.hide()
 end
 
 function M.cancel()
+    pending_panel = nil
     if M.restore(true) then return end
     M.focus_code()
 end
 
 function M.zoom()
+    pending_panel = nil
     close_help(true)
     if M.restore(true) then return end
     local source = vim.api.nvim_get_current_win()
@@ -183,6 +242,7 @@ function M.zoom()
 end
 
 function M.help()
+    pending_panel = nil
     close_help(true)
     local source = vim.api.nvim_get_current_win()
     local buf = vim.api.nvim_create_buf(false, true)
@@ -195,6 +255,8 @@ function M.help()
         'a               Outline слева',
         'e               Files слева',
         'g               Git справа',
+        't / r           Tests / Test Output',
+        'f / b           Search / Tasks',
         'q               скрыть текущую панель',
         'z               развернуть / вернуть',
         '?               эта подсказка', '',
@@ -218,6 +280,17 @@ function M.help()
         lines[#lines + 1] = 'Git: Tab — раскрыть diff, s/u — stage/unstage.'
         lines[#lines + 1] = 'c c — commit; P u — push; b — ветки; w — worktree.'
         lines[#lines + 1] = 'g? — штатная справка Neogit со всеми действиями.'
+    elseif ft(source) == 'neotest-summary' then
+        lines[#lines + 1] = 'Tests: Enter — раскрыть, i — код выбранного теста.'
+        lines[#lines + 1] = 'r — запустить, o — вывод; g? — native справка.'
+    elseif ft(source) == 'neotest-output-panel' then
+        lines[#lines + 1] = 'Test Output: q скрывает, Space w r возвращает вывод.'
+    elseif ft(source) == 'OverseerList' then
+        lines[#lines + 1] = 'Tasks: Enter — действие, o — вывод, Ctrl+s/v — split.'
+        lines[#lines + 1] = 'q скрывает список, job продолжает работу; g? — справка.'
+    elseif ft(source) == 'grug-far' then
+        lines[#lines + 1] = 'Search: i — ввод, Tab — поле, Enter — найденное место.'
+        lines[#lines + 1] = 'q скрывает с сохранением запроса; g? — search/replace.'
     end
     vim.api.nvim_buf_set_lines(buf, 0, -1, false, lines)
     vim.bo[buf].bufhidden = 'wipe'
@@ -252,6 +325,15 @@ function M.winbar()
 end
 
 function M.refresh()
+    if pending_panel then
+        local ide=require('ide')
+        local id=pending_panel
+        local comp=ide.registry.get(id)
+        if comp and comp.is_open() then
+            pending_panel=nil
+            if ide.current().slots[comp.slot]==id then comp.focus() end
+        end
+    end
     local current = vim.api.nvim_get_current_win()
     active_win = current
     if zoom and (not valid(zoom.source) or (current ~= zoom.win and not (help and current == help.win))) then
@@ -260,6 +342,7 @@ function M.refresh()
     if help and current ~= help.win then close_help(false) end
     for _, win in ipairs(vim.api.nvim_tabpage_list_wins(0)) do
         if titles[ft(win)] then vim.wo[win].winbar = winbar end
+        if work[ft(win)] then M.work_maps(vim.api.nvim_win_get_buf(win)) end
     end
     vim.cmd('redrawstatus')
 end
@@ -278,11 +361,16 @@ function M.setup()
             if vim.bo[ev.buf].filetype == 'NeogitStatus' then
                 return -- общие карты заданы в opts Neogit после FileType
             end
+            if work[vim.bo[ev.buf].filetype] then
+                vim.schedule(function() M.work_maps(ev.buf) end)
+                return
+            end
             for key, action in pairs({ q = M.hide, ['<Esc>'] = M.cancel, ['?'] = M.help }) do
                 vim.keymap.set('n', key, action, { buffer = ev.buf, nowait = true, silent = true, desc = 'Panel: ' .. key })
             end
         end,
     })
+    vim.api.nvim_create_autocmd('BufWipeout',{group=group,callback=function(ev) backend_maps[ev.buf]=nil end})
     vim.api.nvim_create_autocmd({ 'WinEnter', 'BufWinEnter', 'TabEnter', 'WinClosed' }, {
         group = group, callback = function() vim.schedule(M.refresh) end,
     })

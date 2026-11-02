@@ -5,6 +5,12 @@ Portable Neovim IDE config for Rust, Go and Python.
 This is one of several configs living in this repository. See the root
 `README.md` for the full layout and how the launchers isolate state.
 
+Общее управление панелями: `Space w t/r/f/b` — Tests / Test Output / Search /
+Tasks, `Space w h/j/k/l` — фокус, `Space w 0` — код. В панели normal `q` —
+скрыть, `?` — помощь, `Esc` — вернуть zoom/фокус в код; `Space w z` — zoom.
+Полная [шпаргалка](QUICKSTART.md#общий-маршрут-рабочих-панелей--space-w) и
+[справочник клавиш](KEYBINDINGS.md#5-windows--focus).
+
 ## Run locally (no install)
 
 Из корня репозитория:

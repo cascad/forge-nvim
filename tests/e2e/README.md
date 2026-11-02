@@ -192,6 +192,18 @@ Enter и русское wd; help/Esc/направления; Output zoom/restore
 не доказывает физическую раскладку/доставку WezTerm; Mac и PTY других
 адаптеров остаются отдельным долгом.
 
+Рабочие панели: `nvim -l tests/e2e/work-panels.test.lua` либо фильтр
+`--id IDE-PANEL-6/7/8`. Шесть сценариев проверяют общий Space w t/r/f/b,
+focus/help/Esc/hide/zoom, Go summary и реальный PASS/output, два process jobs
+и вывод выбранной beta, сохранение query/buffer и реальный rg переход из zoom.
+Jobs ждут release marker; проверяется тот же id, без повторного запуска.
+Для асинхронного Search ожидается when_ready, для Summary — discovery и render.
+Legacy query RED конечным source на config fe64757 — 43617957022000; по 6 новых
+и 19 релевантных прежних UI PASS Windows/Ubuntu. Source/snapshot/shutdown и
+markers сохранены; команды и пределы — AGENT_COMMANDS §40, FIXLOG §109.
+Это целевой набор, не полный PASS с известными IDE-047/048. Mac/GUI и
+terminal/Trouble требуют отдельных проверок.
+
 Outline: `nvim -l tests/e2e/outline.test.lua` или
 `nvim -l tests/run.lua e2e --id IDE-PANEL-3`. Шесть сценариев используют
 настоящий Aerial и встроенный в Neovim Lua Treesitter parser: старые aliases
@@ -418,7 +430,7 @@ shell/process/clipboard и подготовке VM. Крупные sleep, пер
 | IDE-012, codelldb discovery | Go/F9 без чужого WARN; F5 без binary → понятное сообщение, повтор, редактирование | `dap-discovery.test.lua`: 3 negative E2E Windows/Ubuntu PASS; Mac и positive Rust/C/C++ DAP открыты |
 | IDE-005/009 и IDE-014, Debug панели | Space w, real paused Locals/Output, q/Esc/help/zoom, внешний close, сохранность сессии/вывода | `debug-panels.test.lua`: 4 E2E Windows/Ubuntu PASS; Mac/GUI и остальные панели открыты |
 | IDE-008, Outline и IDE-015 | Открыть слева → найти/раскрыть символ → перейти в код → вернуться; Explorer/файлы/zoom и pending callbacks | `outline.test.lua`: 6 real Aerial E2E Windows/Ubuntu PASS; Mac/GUI и остальные языковые backend открыты |
-| IDE-009, панели | Одни действия навигации/отмены/скрытия во всех панелях | Debug, Outline, Neo-tree и Neogit status покрыты; tests/поиск/задачи ещё открыты |
+| IDE-009/049, панели | Общий focus/hide/help/zoom, Go summary/output, running task и query/selected search result | `work-panels.test.lua`: 6 UI E2E Windows/Ubuntu PASS; ранее Debug/Outline/Neo-tree/Neogit; Mac/GUI и terminal/Trouble открыты |
 | Базовое ядро редактора | Запуск, открыть/изменить/сохранить, дерево, имя/содержимое, буферы, фокус | `editor.test.lua`: Windows и Ubuntu PASS; Mac ждёт прогона |
 | IDE-BOOT-1/2 | Старт без установки инструментов, отсутствие предупреждения Go в .txt | `editor.test.lua`: Windows и Ubuntu PASS; Mac ждёт прогона; наличие gopls в Windows не фиксируется, отсутствие подтверждено в Ubuntu |
 | IDE-016–019, управление файлами | Создать/переименовать/переместить, cut/paste, отмена/конфликт, сохранённые буферы, общий маршрут/selector/zoom | `file-explorer.test.lua`: 7 real editor E2E; границы и результаты ниже |

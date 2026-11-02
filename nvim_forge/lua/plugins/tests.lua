@@ -85,6 +85,7 @@ return {
                 },
                 output = { open_on_run = false },
                 quickfix = { open = false },
+                summary = { mappings = { help = 'g?' } }, -- ? — общий panel help
             })
 
             -- То же правило, что и для LSP-диагностики (см. plugins/lsp.lua):

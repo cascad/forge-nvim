@@ -338,9 +338,8 @@ local default_components = {
             end
             pcall(vim.cmd, "GrugFar")
         end,
-        -- GrugFarClose закрывает только одно окно; обходим все, плюс
-        -- зачищаем сами буферы — иначе они остаются live и при следующем
-        -- `:GrugFar` всплывают как pre-existing.
+        -- spec: IDE-PANEL-8. Hide сохраняет запрос/context; open выше
+        -- переиспользует этот buffer при возврате или смене bottom-слота.
         close = function()
             for _, win in ipairs(vim.api.nvim_tabpage_list_wins(0)) do
                 if vim.api.nvim_win_is_valid(win) then
@@ -348,12 +347,6 @@ local default_components = {
                     if vim.bo[buf].filetype == "grug-far" then
                         pcall(vim.api.nvim_win_close, win, true)
                     end
-                end
-            end
-            for _, b in ipairs(vim.api.nvim_list_bufs()) do
-                if vim.api.nvim_buf_is_valid(b)
-                    and vim.bo[b].filetype == "grug-far" then
-                    pcall(vim.api.nvim_buf_delete, b, { force = true })
                 end
             end
         end,

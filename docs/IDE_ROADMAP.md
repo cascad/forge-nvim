@@ -12,8 +12,8 @@ IDE-001 параллельно ждёт диагностических данн�
 | Готово | IDE-043: читаемые ошибки Git | Коммит 5e4dfe8; OSC/title удалены, пользовательские Git E2E Windows/Ubuntu прошли |
 | Готово | Test-only cleanup IDE-047 | Коммит fa33150, E2E и §107; причина первичного RPC остаётся отдельной диагностикой |
 | Готово | IDE-041: E339 на очень длинном слове | Общая защита, по 3 UI + 10 smoke PASS Windows/Ubuntu; §108 |
-| Затем | Завершить общую модель панелей IDE-009 | Перенести tests, поиск и задачи в согласованный Space w; фокус/возврат/скрытие/zoom/help, короткая шпаргалка и E2E |
-| Затем | Матрица шести языков | Проверить Go/Rust/Python/JS-Node/Bash/SQL: LSP, completion, format, run/debug/test; добавить реально отсутствующие сценарии |
+| Готово | IDE-009: основные рабочие панели | Tests/Test Output/Search/Tasks в Space w, query сохранён, по 6 новых + 19 прежних UI PASS Windows/Ubuntu; §109 |
+| Следующий шаг | Матрица шести языков | Проверить Go/Rust/Python/JS-Node/Bash/SQL: LSP, completion, format, run/debug/test; добавить реально отсутствующие сценарии |
 | После функциональной матрицы | Упрощение архитектуры | Общее ядро, явные системные границы и setup; сокращение дублирования с сохранением E2E |
 
 **Mac параллельно:** IDE-001 (zsh/Go до запуска nvim) и IDE-002 (Cmd+C)
@@ -88,7 +88,7 @@ VS Code — референс возможностей; Claude Code — рефе�
 | IDE-006 | P2 | Запуск теста под курсором оставляет «No active session» поверх кода | 2 | Go nearest/file/debug и eval исправлены, E2E Win/Ubuntu; исходный Mac/Python/Rust открыты |
 | IDE-007 | P2 | Ручной ввод должен сбрасывать неактивный предлагаемый хвост сигнатуры | 2 | Исправлены параметры LuaSnip; 11 E2E Win/Ubuntu, Mac ещё не проверен (§71) |
 | IDE-008 | P2 | Outline в левой панели, как в VS Code | 3 | Общий маршрут, единый модуль и 6 E2E Windows/Ubuntu (§76–77); Mac/GUI открыты |
-| IDE-009 | P2 | Единое понятное управление фокусом и действиями панелей | 3 | Владелец выбрал Space w, пилот Debug готов; перенос остальных панелей открыт (§74) |
+| IDE-009 | P2 | Единое понятное управление фокусом и действиями панелей | 3 | Debug/Outline/Files/Git/Tests/Test Output/Search/Tasks подключены, E2E Windows/Ubuntu; Mac/GUI и terminal/Trouble отдельно (§74–109) |
 | IDE-010 | Сквозной | Универсальная сборка Windows/macOS/Ubuntu; Mint позже | Все | Границы модулей записаны; runtime ещё не переработан |
 | IDE-011 | Сквозной | E2E каждой фичи/бага, простые команды для VM | Все | CLI и базовый editor e2e готовы на Win/Ubuntu; Mac и полная матрица открыты |
 | IDE-012 | P2 | Отсутствующий codelldb предупреждает уже при открытии Go | 2 | Проверка перенесена на запуск; 3 E2E Windows/Ubuntu, Mac открыт (§72) |
@@ -242,8 +242,10 @@ Normal mode, прежние aliases сохранены:
 - [x] Дерево: общий маршрут, selector/источники, создание/rename/move/cut-paste,
   отмена/конфликт и сохранённые буферы; 7 E2E (§78–81).
 - [x] Git status: общий маршрут Space w g, q/Esc/help/zoom (§85).
-- [ ] Подключить tests, задачи/поиск к тому же маршруту;
-  свести подсказки m*/p*/P*/D*, сохраняя совместимые aliases.
+- [x] Tests/Test Output/Tasks/Search: Space w t/r/b/f, focus/hide/help/zoom,
+  query/results/jobs сохраняются; 6 новых E2E Windows/Ubuntu (§109).
+  Общая шпаргалка показывает один основной маршрут, aliases m*/p*/P*/D* сохранены.
+- [ ] Terminal/Trouble: оставшиеся локальные controls и E2E; IDE-023 отдельно.
 - [x] IDE-008 Windows/Ubuntu: открыть слева, найти/раскрыть символ, перейти
   в код, скрыть/вернуть фокус; дерево и Outline заменяют друг друга в left-слоте.
 - [ ] IDE-008 Mac/GUI: тот же сценарий на машине владельца.
@@ -419,7 +421,14 @@ IDE-047 (§107): cleanup/сохранение первой ошибки выпо
 IDE-041 (§108): реальный UI RED E339, общий word budget 4096 UTF-8 bytes
 и одинаковая защита в обычном/large-file режимах. По 3 новых + 10 smoke PASS
 Windows/Ubuntu; Windows unit/trace 15 файлов PASS, 364 checks. Следующий
-пользовательский этап — общий маршрут tests/поиска/задач Space w (IDE-009).
+пользовательский этап Space w завершён для tests/поиска/задач в §109.
+
+IDE-009/049 (§109): Tests/Test Output/Search/Tasks получили общий маршрут,
+контекстные действия и сохранение состояния; исправлены удаление поискового
+buffer и чтение старого cursor при Enter из zoom. По 6 новых и 19 прежних UI
+PASS Windows/Ubuntu, Windows unit/trace 364 checks. Следующий этап — фактическая
+матрица шести языков и недостающие рабочие сценарии; без полной переработки
+архитектуры до проверки функций. Mac/GUI, terminal/Trouble и IDE-047/048 открыты.
 
 IDE-038 (§100): process cwd явно common git-dir. Итоговый Windows
 unit/e2e/trace — 38 PASS/0 FAIL/0 SKIP (471 проверка); Ubuntu full —

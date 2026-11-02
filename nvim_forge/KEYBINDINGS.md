@@ -156,11 +156,24 @@
 | `<leader>wv`   | Vertical split                        | n    |
 | `<leader>ws`   | Horizontal split                      | n    |
 | `<leader>wh/j/k/l` | Move to left/down/up/right window | n    |
-| `<leader>wq`   | Close window                          | n    |
+| `<leader>wd` / `<leader>wc` | Locals / debug Output       | n    |
+| `<leader>wa` / `<leader>we` / `<leader>wg` | Outline / Files / Git | n |
+| `<leader>wt` / `<leader>wr` | Tests / Test Output         | n    |
+| `<leader>wf` / `<leader>wb` | Search / Tasks              | n    |
+| `<leader>w0`   | Вернуться в код                       | n    |
+| `<leader>wq`   | Скрыть панель; в коде закрыть окно     | n    |
+| `<leader>wz`   | Развернуть / вернуть рабочую панель    | n    |
+| `<leader>w?`   | Контекстная помощь                    | n    |
 | `<leader>wo`   | Keep only current window              | n    |
 | `<F6>` / `<S-F6>` | Cycle next/prev window focus _(Win+WezTerm: `<S-F6>` приходит как `<F18>`; вместо — `<C-w>W` (WT-KBD-6))_ | n/i/v/t |
 | `<F7>` / `<A-e>` | Focus editable editor window        | n/i/v/t |
 | `<C-w>h/j/k/l` | Native vim split move (не remap'нут)  | n    |
+
+В Debug/Outline/Files/Git/Tests/Test Output/Search/Tasks normal `q` скрывает,
+`?` открывает общую помощь, `Esc` возвращает zoom, иначе фокус в код.
+Native справка списков — `g?`. В insert q/? остаются текстом; из terminal
+`Esc Esc` переводит в normal, `F7` — в код. Поиск сохраняет запрос при
+скрытии/смене нижней панели; скрытие Tasks сохраняет выполняющийся процесс.
 
 ---
 
