@@ -47,6 +47,9 @@ ENV FORGE_E2E_DEPS=/opt/forge/editor-deps
 RUN python3 /opt/forge/tests/e2e/prepare_tests.py --download --output /opt/forge/test-deps
 ENV FORGE_E2E_TEST_DEPS=/opt/forge/test-deps
 ENV PATH="/opt/forge/test-deps/bin:${PATH}"
+COPY tests/e2e/prepare_lsp.py /opt/forge/tests/e2e/
+RUN python3 /opt/forge/tests/e2e/prepare_lsp.py --download --output /opt/forge/lsp-deps
+ENV FORGE_E2E_LSP_DEPS=/opt/forge/lsp-deps
 RUN useradd --create-home --uid 10001 forge
 ENV HOME=/home/forge
 USER forge

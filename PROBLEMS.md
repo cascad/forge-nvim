@@ -10,7 +10,7 @@
 
 Маршрут и приоритеты: [рабочий план nvim_forge](docs/IDE_ROADMAP.md).
 Для новых пунктов используем следующий свободный ID `IDE-xxx`; исходный
-симптом хранится здесь, этап и состояние — в плане. Следующий ID: `IDE-050`.
+симптом хранится здесь, этап и состояние — в плане. Следующий ID: `IDE-051`.
 
 ## IDE-048 — completed Gitsigns E2E не дождался следующего Git-read
 
@@ -472,6 +472,11 @@ Windows не срабатывают. Решить: псевдонимы в nvim_
 
 
 <!-- ────────── разобрано (переехало в nvim_forge/FIXLOG.md) ────────── -->
+
+IDE-050 → [FIXLOG §110](nvim_forge/FIXLOG.md#110-go-lsp-реальные-сценарии-и-fallback-форматирования):
+общие trim formatter блокировали LSP fallback при отсутствии golines/gofumpt.
+Исправлена общая политика и callers/health; исходный RED и 6 language UI PASS
+Windows. Ubuntu ожидает доступного engine; Mac/GUI/прочие языки не проверены.
 
 IDE-049 → [FIXLOG §109](nvim_forge/FIXLOG.md#109-рабочие-панели-общий-space-w-и-сохранение-поиска):
 Search → Tasks → Search стирал запрос: close удалял backend buffers.

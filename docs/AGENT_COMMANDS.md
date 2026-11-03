@@ -2285,3 +2285,81 @@ enable, formatter mappings, adapters/default launch, Treesitter languages,
 .tests/language-matrix-code-audit.json. Итог — docs/LANGUAGE_MATRIX.md.
 Наличие настройки отделено от установленного binary и положительного E2E.
 Новых языковых PASS, установок или runtime изменений этот шаг не содержит.
+
+## 42. Go language E2E и IDE-050
+
+```powershell
+$env:TEMP = 'F:\repo\forge-nvim\.tests\tmp'
+$env:TMP = $env:TEMP; $env:TMPDIR = $env:TEMP
+$env:NVIM_LOG_FILE = Join-Path $env:TEMP 'go-language.log'
+$env:npm_config_cache = 'F:\forge-nvim-tmp\npm-cache'
+$env:PYTHONIOENCODING = 'utf-8'
+. ./scripts/lib/nvim-sdk.ps1
+$forgeNvim = Get-ForgeNvim (Get-Location).Path
+python -B tests/e2e/prepare_lsp.py --download
+python -B tests/e2e/prepare_lsp.py
+& $forgeNvim -l tests/e2e/go-language.test.lua
+& $forgeNvim -l tests/e2e/test-runner.test.lua
+& $forgeNvim -l tests/e2e/editor.test.lua
+& $forgeNvim -l tests/run.lua unit trace
+npx.cmd --yes @fission-ai/openspec@1.13.2 validate verify-go-language-workflow --type change --strict --no-interactive
+npx.cmd --yes @fission-ai/openspec@1.13.2 validate fix-lsp-format-fallback --type change --strict --no-interactive
+python -B .tests/audit-go-language.py
+python -B .tests/check-work-panel-docs.py
+git diff --check
+```
+
+Версии фиксированы: [gopls v0.23.0](https://go.dev/gopls/release/v0.23.0),
+gofumpt v0.9.2, подготовленный SDK Go 1.26.0. Явный install -p 2 пишет только
+в .tests/lsp-deps, включая gopath/build-cache/tmp; module metadata/compiler/SHA
+попадают в manifest.json. Отдельные bin/format-bin позволяют проверить отсутствие
+внешнего formatter настоящим PATH, без подмены server/Conform. Повтор без
+--download не устанавливает инструменты. Программа редактора не меняет system
+PATH или go env. Runtime GOPROXY=off, GOTOOLCHAIN=local, telemetry off.
+
+Конечный log windows-go-language-final-green.txt: 6 UI PASS; Go tests 5 и smoke
+10 PASS; windows-go-language-unit-trace.txt/report.json — 364 checks.
+Артефакты 2671640002600…2695154623900 содержат config/test source, requests,
+lsp.log, language-state/action-state, project и shutdown. RPC только вводит
+клавиши и наблюдает публичные данные. Например formatter plan показывает
+trim+LSP, а реальный текст на диске доказывает форматирование и сохранение.
+Completion проверяется по source nvim_lsp, диагностике и исправленному файлу;
+health — настоящей командой checkhealth forge. Mac/физическая доставка клавиш
+не проверены; имя каталога Go workspace не означает покрытие go.work.
+
+Baseline извлечён `python -B .tests/export-go-format-baseline.py` через
+git archive 77e0fa9 с проверкой paths/types и сверкой format.lua с git show.
+
+```powershell
+$env:FORGE_E2E_CONFIG_SOURCE = (Resolve-Path .tests/go-language-before-77e0fa9/nvim_forge).Path
+$env:FORGE_GO_LANGUAGE_CASE = 'format LSP'
+try {
+    & $forgeNvim -l tests/e2e/go-language.test.lua
+    # Ожидаемый exit 1: common trim заблокировал LSP, код не изменился.
+} finally {
+    $env:FORGE_E2E_CONFIG_SOURCE = $null
+    $env:FORGE_GO_LANGUAGE_CASE = $null
+}
+```
+
+Конечный source RED 2795273491200 — windows-go-language-final-source-red.txt.
+До исправления plan: два trim, lsp=false, подходящий client есть, formatting
+request нет. После — LSP first и cleanup; проверены три manual routes и
+format_after_save с записью без второго write. Ранние v1/v2/v3 FAIL сохранены:
+ошибки тестового ввода/асинхронного Enter отделены от реального IDE-050.
+Сверка source SHA/файлов/запросов/прежнего FIXLOG prefix — go-language-evidence.json.
+
+Ubuntu команды подготовлены, **не запускались в этом шаге**: engine недоступен.
+
+```powershell
+# Только с уже работающим engine; Windows тяжёлый прогон должен закончиться.
+docker compose -f tests/containers/compose.yaml build ubuntu
+docker compose -f tests/containers/compose.yaml run --rm --entrypoint nvim ubuntu -l tests/e2e/go-language.test.lua
+docker compose -f tests/containers/compose.yaml run --rm --entrypoint nvim ubuntu -l tests/e2e/test-runner.test.lua
+docker compose -f tests/containers/compose.yaml run --rm --entrypoint nvim ubuntu -l tests/e2e/editor.test.lua
+```
+
+Два чтения docker version через subprocess.run с timeout 12s вернули отсутствие
+pipe dockerDesktopLinuxEngine; .tests/go-language-engine.json фиксирует code=1,
+stderr, UTC и lifecycle_changed=false. Desktop/WSL не запускались/не менялись.
+Full с IDE-047/048 не повторялся; их проблемы остаются отдельными.

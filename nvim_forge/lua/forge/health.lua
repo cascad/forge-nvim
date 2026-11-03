@@ -126,6 +126,7 @@ local function check_formatters()
 
     for _, ft in ipairs(fts) do
         local list = by_ft[ft]
+        if type(list) == 'function' then list = list(0) end
         if type(list) == "table" then
             local names = {}
             for _, name in ipairs(list) do
@@ -148,7 +149,7 @@ local function check_formatters()
                     end
                 end
 
-                local fallback = list.lsp_format == "fallback"
+                local fallback = list.lsp_format == "fallback" or list.lsp_format == "first"
                 local line = ("[%s] %s"):format(ft, table.concat(statuses, ", "))
                 if fallback then line = line .. "  [+ LSP fallback]" end
 

@@ -152,6 +152,23 @@ v1.13.0 с проверкой Go-модулей. Результат — `.tests/
 иначе из PATH. Runtime тестов не скачивает инструменты. Docker включает всё
 при build; после изменения preparer/lock пересобрать с `--build`.
 
+Go LSP/format E2E также требует явной подготовки (после Go SDK):
+
+```powershell
+python -B tests/e2e/prepare_lsp.py --download
+# Повтор без сети/установок проверяет metadata/SHA готовых binaries:
+python -B tests/e2e/prepare_lsp.py
+nvim -l tests/e2e/go-language.test.lua
+```
+
+На Windows используй подготовленный SDK, как указано выше; Mac/Ubuntu — python3.
+Фиксированы gopls v0.23.0 и gofumpt v0.9.2, сборка Go 1.26.0 с -p 2,
+GOTOOLCHAIN=local/GOENV=off. Module metadata и SHA — .tests/lsp-deps/manifest.json;
+server и formatter находятся в отдельных bin/format-bin для проверки fallback.
+Все Windows temp/build — на диске checkout. Альтернативный --output читается
+через FORGE_E2E_LSP_DEPS. Dockerfile готовит те же инструменты при явном build;
+runtime tests работают offline. Desktop/WSL runner не запускает.
+
 Пять сценариев используют реальный neotest, Go parser, gotestsum и Delve:
 nearest без запуска соседа, падающий nearest → весь файл → pass/fail/output
 → сохранение кода, eval без сессии, Esc/q из float и из кода, debug nearest
@@ -425,6 +442,7 @@ shell/process/clipboard и подготовке VM. Крупные sleep, пер
 | IDE-004, panic | Panic → stop event → текст в Output на паузе, сохранён после выхода | `dap-output.test.lua`: Go/Delve Windows/Ubuntu PASS; Mac/Python/Rust не проверены |
 | IDE-005, фокус | Код → Locals → Output → код; paused-сессия сохраняется | `debug-panels.test.lua`: Windows/Ubuntu PASS; Mac/GUI открыты |
 | IDE-006, ближайший тест | nearest/failing/file, результат/output; debug breakpoint/eval/continue, Esc/q | `test-runner.test.lua`: 5 Go E2E Windows/Ubuntu PASS; Mac/Python/Rust открыты; debug skipped в панели, итог в REPL |
+| Go language и IDE-FMT-1/IDE-050 | Настоящие gopls definition/references/rename/cmp/diagnostics, внешний/LSP format/save/health, cleanup без tools | `go-language.test.lua`: 6 UI PASS Windows; Ubuntu build/E2E ожидают engine, Mac/прочие языки не проверены |
 | IDE-007, snippet | Completion → ручной ввод вне поля → хвост отменён, текст сохранён | `snippet-input.test.lua`: 11 cmp/LuaSnip E2E Windows/Ubuntu PASS; Mac/ответы реальных LSP открыты |
 | IDE-HL-1, подсветка | Сверхдлинное слово → редактирование/запись → обычные ссылки; большой файл/строка | `reference-highlighting.test.lua`: 3 UI E2E Windows/Ubuntu PASS, Unicode boundary и Alt+n/p; Mac/GUI открыты |
 | IDE-012, codelldb discovery | Go/F9 без чужого WARN; F5 без binary → понятное сообщение, повтор, редактирование | `dap-discovery.test.lua`: 3 negative E2E Windows/Ubuntu PASS; Mac и positive Rust/C/C++ DAP открыты |

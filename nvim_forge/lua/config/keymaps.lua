@@ -394,7 +394,7 @@ nm("<A-j>", function() vim.lsp.buf.definition() end, "Go to definition")
 local function format_document()
     -- conform.nvim grabs this; до его загрузки fallback на LSP.
     local ok, conform = pcall(require, "conform")
-    if ok then conform.format({ async = true, lsp_format = "fallback" })
+    if ok then conform.format({ async = true })
     else vim.lsp.buf.format({ async = true }) end
 end
 nm("<S-A-f>", format_document, "Format document")

@@ -1,6 +1,6 @@
 # nvim_forge — рабочий план мини-IDE
 
-Обновлено: 2026-11-02. Основная сборка: **nvim_forge**.
+Обновлено: 2026-11-03. Основная сборка: **nvim_forge**.
 Статус: базовые e2e настоящего nvim_forge работают на Windows и Ubuntu;
 фоновые установки инструментов редактора перенесены в явный setup.
 IDE-001 параллельно ждёт диагностических данных с Mac.
@@ -13,7 +13,8 @@ IDE-001 параллельно ждёт диагностических данн�
 | Готово | Test-only cleanup IDE-047 | Коммит fa33150, E2E и §107; причина первичного RPC остаётся отдельной диагностикой |
 | Готово | IDE-041: E339 на очень длинном слове | Общая защита, по 3 UI + 10 smoke PASS Windows/Ubuntu; §108 |
 | Готово | IDE-009: основные рабочие панели | Tests/Test Output/Search/Tasks в Space w, query сохранён, по 6 новых + 19 прежних UI PASS Windows/Ubuntu; §109 |
-| Следующий шаг | Матрица шести языков | Первичный [аудит](LANGUAGE_MATRIX.md) готов; следующий результат — положительные Go LSP/format E2E, затем недостающие JS/Node/Bash/SQL и Rust/Python регресс |
+| Текущая проверка | Go LSP/format и IDE-050 | Windows 6 language + 15 прежних UI PASS, fallback исправлен (§110); Ubuntu требует работающего engine и явного build |
+| Затем | Остальная [матрица языков](LANGUAGE_MATRIX.md) | JS/Node LSP/format/run/debug/test, положительный Rust/Python регресс, затем Bash/SQL |
 | После функциональной матрицы | Упрощение архитектуры | Общее ядро, явные системные границы и setup; сокращение дублирования с сохранением E2E |
 
 **Mac параллельно:** IDE-001 (zsh/Go до запуска nvim) и IDE-002 (Cmd+C)
@@ -103,6 +104,7 @@ VS Code — референс возможностей; Claude Code — рефе�
 | IDE-021 | P2 | Удобные файловые вкладки/выбор/закрытие/reopen | 3 | Общая модель и 8 real editor E2E (§83) |
 | IDE-022 | P1 | Закрытие dirty файла меняет окна и запускает autosave до решения | 3 | Confirm до мутаций, защита autosave/Save/Discard/Cancel (§84) |
 | IDE-023 | P2 | Ctrl-\ из native terminal открывает ToggleTerm | 3 | Открыто для terminal/jobs; F7 проверен, Esc Esc — normal |
+| IDE-050 | P2 | Common trim блокирует LSP форматирование без внешних tools | 4 | Общая политика исправлена; RED/6 language UI PASS Windows (§110), Ubuntu/Mac ещё не проверены |
 
 P0 мешает базовой работе; P1 ломает основной сценарий; P2 — поведение и UX,
 которые последовательно доводим после критических проблем.
@@ -268,6 +270,9 @@ Go DAP/tests. JS/Node/Bash/SQL ещё не имеют полного языко�
 и общие buffer completion/trim/tasks не считаются готовностью IDE языка.
 
 - [x] Первичный аудит конфигурации и покрытия шести языков, без новых PASS.
+- [x] Go LSP/format Windows: definition/references/rename/completion/diagnostics,
+  внешний/LSP formatter, save/health и cleanup без tools; 6 UI E2E (§110).
+- [ ] Go language Ubuntu: явный build и те же E2E после появления engine.
 - [ ] Матрица Go/Rust/Python/JS-Node/Bash/SQL: LSP, completion, definition,
   references, rename, diagnostics, format, run, debug и tests где применимо.
 - [ ] Сохранить работающие Go/Rust/Python; добавить отсутствующие JS/Node.js,
@@ -435,6 +440,12 @@ buffer и чтение старого cursor при Enter из zoom. По 6 но
 PASS Windows/Ubuntu, Windows unit/trace 364 checks. Следующий этап — фактическая
 матрица шести языков и недостающие рабочие сценарии; без полной переработки
 архитектуры до проверки функций. Mac/GUI, terminal/Trouble и IDE-047/048 открыты.
+
+IDE-050 (§110): common trim ошибочно считался языковым formatter и блокировал
+LSP fallback. Порядок задаёт общий filetype resolver, callers его наследуют;
+cleanup без tools сохранён. Windows 6 новых UI, Go tests 5, smoke 10 и 364
+unit/trace PASS. Ubuntu engine 2026-11-03 недоступен, Docker lifecycle не менялся;
+проверка и сборка image остаются открытыми. Далее — JS/Node и остальная матрица.
 
 IDE-038 (§100): process cwd явно common git-dir. Итоговый Windows
 unit/e2e/trace — 38 PASS/0 FAIL/0 SKIP (471 проверка); Ubuntu full —

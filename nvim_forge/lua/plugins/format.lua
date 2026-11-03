@@ -37,6 +37,23 @@ local function notify_format_err(err)
         vim.log.levels.WARN, { title = "Format" })
 end
 
+-- spec: IDE-FMT-1. Common trim всегда доступен и мешает обычному fallback.
+-- Если языковых tools нет, сначала просим подходящий LSP, затем чистим текст.
+-- Conform сам проверяет document/range capability; без LSP остаётся cleanup.
+local function language_formatters(configured)
+    return function(bufnr)
+        local list = vim.deepcopy(configured)
+        for _, name in ipairs(list) do
+            if require('conform').get_formatter_info(name, bufnr).available then
+                list.lsp_format = list.lsp_format or 'fallback'
+                return list
+            end
+        end
+        list.lsp_format = 'first'
+        return list
+    end
+end
+
 -- Ручной формат с показом ошибки (для <S-A-f> / <leader>lf). quiet=true —
 -- чтобы conform НЕ показывал свой generic-popup "Formatter failed, see
 -- :ConformInfo" поверх нашего детального (callback с err.message всё равно
@@ -44,7 +61,7 @@ end
 -- ошибки всплывают через notify_on_error.
 local function format_with_errors(opts)
     opts = vim.tbl_extend("force",
-        { async = true, lsp_format = "fallback", quiet = true }, opts or {})
+        { async = true, quiet = true }, opts or {})
     require("conform").format(opts, function(err) notify_format_err(err) end)
 end
 
@@ -72,6 +89,7 @@ return {
             },
         },
         opts = {
+            default_format_opts = { lsp_format = 'fallback' },
             formatters_by_ft = {
                 rust   = { "rustfmt", lsp_format = "fallback" },
                 -- Go: golines + gofumpt поверх gopls.
@@ -126,7 +144,7 @@ return {
                     return
                 end
 
-                return { lsp_format = "fallback" }
+                return {} -- filetype выбирает порядок LSP/CLI, не затираем его
             end,
             formatters = {
                 stylua = {
@@ -144,6 +162,15 @@ return {
             },
             notify_on_error = true,
         },
+        config = function(_, options)
+            for ft, list in pairs(options.formatters_by_ft) do
+                if ft ~= '*' and type(list) == 'table' then
+                    options.formatters_by_ft[ft] = language_formatters(list)
+                end
+            end
+            options.formatters_by_ft['_'] = options.formatters_by_ft['_'] or language_formatters({})
+            require('conform').setup(options)
+        end,
         init = function()
             -- Toggle для autoformat (бывает нужно в legacy-проектах с шумной диффой)
             vim.api.nvim_create_user_command("FormatDisable", function(args)
@@ -161,7 +188,7 @@ return {
             -- сломано), а не молчание. На валидном файле — «Отформатировано».
             vim.api.nvim_create_user_command("Format", function(args)
                 local conform = require("conform")
-                local opts = { async = false, lsp_format = "fallback", timeout_ms = 4000, quiet = true }
+                local opts = { async = false, timeout_ms = 4000, quiet = true }
                 if args.range > 0 then
                     opts.range = {
                         ["start"] = { args.line1, 0 },

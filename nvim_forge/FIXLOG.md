@@ -5552,3 +5552,74 @@ terminal/Trouble и положительная языковая матрица �
 lua/plugins/tests.lua, README/QUICKSTART/KEYBINDINGS; tests/e2e/work-panels.test.lua,
 tests/registry.lua и E2E README; change unify-work-panel-controls;
 PROBLEMS, IDE_ROADMAP, HISTORY, AGENT_COMMANDS §40.
+
+## 110. Go LSP: реальные сценарии и fallback форматирования
+
+Дата: 2026-11-03. Спека: IDE-FMT-1 (ADDED), IDE-050, change
+fix-lsp-format-fallback. Подготовка/положительный регресс — companion
+verify-go-language-workflow (skip_specs: true, tests/tooling).
+
+**Проблема.** Go debug/tests проверялись, но gopls/completion/rename/format
+оставались настройками без положительных language E2E. Новый реальный тест
+показал: без golines/gofumpt доступный gopls не форматирует документ; код
+остаётся прежним и textDocument/formatting не отправляется.
+
+**Причина.** Conform включает общие trim_whitespace/trim_newlines в список
+доступных formatter. Fallback срабатывает только при пустом списке, поэтому
+cleanup маскировал отсутствие языкового formatter. Plan 1685513867400: два
+trim, lsp=false, при одном подходящем LSP client. Удаление trim ухудшило бы
+файлы без LSP/инструментов.
+
+**Изменение.** Публичные filetype-функции проверяют availability внешних
+formatter через get_formatter_info. Доступен внешний — прежний fallback;
+нет внешнего — LSP first, затем cleanup. Conform проверяет клиента для
+document/range; без LSP остаётся cleanup. Common trim сохранён, unknown ft
+получает ту же политику через _. Manual/shortcut/Format/format_after_save
+не затирают порядок безусловным fallback. Health читает динамические списки.
+Новых plugins/backports/SDK и системных runtime веток нет; guards autosave/
+disable сохранены. Специфические Rust/Python/Lua formatter ещё не проверены.
+
+prepare_lsp.py явно собирает gopls v0.23.0 и gofumpt v0.9.2 с Go 1.26.0,
+проверяет module metadata/compiler/SHA. Bin и format-bin разделены; Go -p 2,
+GOMAXPROCS=2, GOTOOLCHAIN=local, GOENV=off, telemetry off, Windows temp/build
+на F:. Повтор без --download проверяет tools без установки. Системный PATH/
+Go env не меняется; Dockerfile готовит те же инструменты при явном build.
+
+**Проверка/e2e.** Постоянный go-language.test.lua — 6 UI сценариев: gd/gr
+с настоящими location/quickfix; F2 rename объявления и двух usages на диске;
+cmp предложение именно nvim_lsp, Enter, реальная ошибка MissingForgeName/gl
+и её устранение; внешний gofumpt + checkhealth; LSP fallback Space lf/Format/
+Shift+Alt+f и самостоятельная запись format_after_save; Go/plaintext cleanup
+без LSP/tools. Fixture — dependency-free multi-file module с Unicode/пробелами
+в пути. Действия — клавишами; публичные clients/cmp/diagnostics/LspRequest и
+formatter plan только наблюдаются. Private handlers/server mocks не вызываются.
+
+Первая подготовка отвергла правильный compiler version: regex ожидал пробел
+после конца строки. Исправлен checker, не SDK. Ранние completion FAIL были
+ошибками ввода (returnForg) и Esc до асинхронного подтверждения Enter. Теперь
+ciw и ожидание принятого текста до Esc; настройки cmp не менялись. Исходные
+v1/v2/v3 логи сохранены. Observer использует vim.lsp.log.set_level без deprecation.
+
+Baseline config извлечён из 77e0fa9 с проверкой tar путей/типов; format.lua
+побайтово совпал с git show (SHA 3303b39d…). Конечный постоянный тест дал RED
+2795273491200: только trim, без LSP format request. Ранние RED 1263229145400/
+1473803432600/1685513867400/2381303234300 тоже сохранены. Конечные Windows
+GREEN: 2671640002600, 2676534738300, 2681118283700, 2685802647900,
+2690274841700, 2695154623900 — 6 PASS. Source, LSP log/requests, сохранённые
+файлы и shutdown — в artifacts. Регресс Windows: Go tests 5, editor smoke 10
+PASS; unit/trace 15 файлов, 364 checks PASS; strict validate обоих changes PASS.
+
+Ubuntu не проверен: два чтения docker version вернули отсутствие
+dockerDesktopLinuxEngine, последнее 2026-11-03 08:14:32 UTC. Desktop/WSL не
+запускались/не менялись; Ubuntu задачи остаются unchecked. Mac/GUI и другие
+языки отдельно не проверены. Full PASS не заявлен; IDE-047/048 остаются открытыми.
+
+**Вывод.** Language E2E отделяет настройку от реальной работы. Cleanup —
+завершающая стадия, но не доказательство наличия языкового formatter. Один
+порядок выбора наследуется всеми entrypoints и сохраняет работу без LSP/tools.
+
+**Файлы:** lua/plugins/format.lua, lua/config/keymaps.lua, lua/forge/health.lua;
+tests/e2e/prepare_lsp.py, go-language.test.lua, fixtures/go-language;
+registry.lua, containers/Dockerfile, E2E README; два OpenSpec changes/config.yaml;
+QUICKSTART/LANGUAGE_MATRIX/IDE_ROADMAP/PROBLEMS/HISTORY/AGENT_COMMANDS §42.
+Сверка source/RED/GREEN/старого history prefix — .tests/go-language-evidence.json.
