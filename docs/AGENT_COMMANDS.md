@@ -2363,3 +2363,101 @@ docker compose -f tests/containers/compose.yaml run --rm --entrypoint nvim ubunt
 pipe dockerDesktopLinuxEngine; .tests/go-language-engine.json фиксирует code=1,
 stderr, UTC и lifecycle_changed=false. Desktop/WSL не запускались/не менялись.
 Full с IDE-047/048 не повторялся; их проблемы остаются отдельными.
+
+## 43. JS/Node: реальные server, npm, js-debug и Jest
+
+Все команды из F:/repo/forge-nvim, login=false; разрешения повторно не нужны.
+Логи ниже — текст stdout/stderr, JSON — публичное состояние/metadata/snapshots,
+screen.txt — текст экрана настоящего дочернего Neovim. Физические клавиши
+WezTerm/GUI эти RPC проверки не подтверждают.
+
+```powershell
+$env:TEMP = 'F:\repo\forge-nvim\.tests\tmp'
+$env:TMP = $env:TEMP
+$env:TMPDIR = $env:TEMP
+$env:NVIM_LOG_FILE = Join-Path $env:TEMP 'node-verification.log'
+$env:npm_config_cache = 'F:\forge-nvim-tmp\npm-cache'
+$env:PYTHONIOENCODING = 'utf-8'
+. ./scripts/lib/nvim-sdk.ps1
+$forgeNvim = Get-ForgeNvim (Get-Location).Path
+python -B tests/e2e/prepare_editor.py --download --nvim $forgeNvim
+python -B tests/e2e/prepare_node.py --download --nvim $forgeNvim
+python -B tests/e2e/prepare_node.py --nvim $forgeNvim
+& $forgeNvim -l tests/e2e/node-language.test.lua > .tests/windows-node-language-final-v2.txt 2>&1
+& $forgeNvim -l tests/e2e/go-language.test.lua > .tests/windows-node-regression-go-language.txt 2>&1
+& $forgeNvim -l tests/e2e/test-runner.test.lua > .tests/windows-node-regression-go-tests.txt 2>&1
+& $forgeNvim -l tests/e2e/editor.test.lua > .tests/windows-node-regression-smoke.txt 2>&1
+& $forgeNvim -l tests/run.lua unit trace > .tests/windows-node-unit-trace-final.txt 2>&1
+npx.cmd --yes @fission-ai/openspec@1.13.2 validate add-node-language-workflow --type change --strict --no-interactive
+```
+
+Запуски тяжёлых suites последовательные. Подготовлено 67 plugins; Node SDK
+и js-debug release сверяются с официальными SHA, npm packages — с lock/integrity.
+Parser compiler outputs вынесены из runtime site. Npm использует разные
+пустые user/global npmrc, F: temp/cache и --ignore-scripts. Runtime ничего не
+устанавливает; npm offline, автоматическое скачивание TypeScript typings выключено.
+
+```powershell
+$env:FORGE_NODE_CASE = 'nearest/file'
+$env:FORGE_NODE_NEAREST_LEGACY = '1'
+try {
+    & $forgeNvim -l tests/e2e/node-language.test.lua > .tests/windows-node-nearest-final-source-red.txt 2>&1
+    # Ожидаемый exit 1: исходный Neotest не находит две обнаруженные позиции.
+} finally {
+    $env:FORGE_NODE_NEAREST_LEGACY = $null
+    $env:FORGE_NODE_CASE = $null
+}
+```
+
+Legacy source 9705605721000 имеет before SHA из patches/plugins.json;
+GREEN 9579516732100…9638353466600 сохраняют after SHA. Только private copy
+заменяется проверенным старым source до запуска. Постоянный тест одинаковый,
+подготовленные global deps остаются нетронутыми. Промежуточная попытка через
+Neotest path.real не решила проблему: это fnamemodify, а не системный realpath.
+
+Baseline отсутствующей Node функции извлечён inline Python через
+subprocess.check_output(['git','archive','193e794','nvim_forge']) и tarfile с
+проверкой всех paths/types. Пять runtime Lua сверены побайтово с git show.
+Только lazy-lock заменён совместимым текущим lock: 66 прежних pins неизменны,
+добавлен neotest-jest для строгого harness. Это runtime Lua 193e794 + compatibility
+lock, не объявление неизменённого checkout. Metadata — .tests/node-before-193e794/baseline.json.
+
+```powershell
+$env:FORGE_E2E_CONFIG_SOURCE = (Resolve-Path .tests/node-before-193e794/nvim_forge).Path
+$env:FORGE_NODE_CASE = 'файл и package script'
+try {
+    & $forgeNvim -l tests/e2e/node-language.test.lua > .tests/windows-node-feature-source-red.txt 2>&1
+    # Ожидаемый exit 1: :NodeRunFile ещё не существует (artifact 9712438189900).
+} finally {
+    $env:FORGE_E2E_CONFIG_SOURCE = $null
+    $env:FORGE_NODE_CASE = $null
+}
+```
+
+Чтения/диагностика: rg --files/rg -n, Get-Content, git diff/status/show,
+Python json/pathlib для узких выборок snapshot/LSP logs, git ls-remote для pins.
+Get-CimInstance Win32_Process ограничивался Node/Neovim данного checkout;
+процессы других проектов не завершались. Диагностический wrapper Neotest только
+наблюдал исходный file/row: javascript, строка 7, slash path; в конечном E2E его нет.
+LSP progress доказал готовность семантического проекта; callback сохраняет
+native handler, server ответы не подменяются. Renamed-process.json доказывает,
+что сохранённый модуль после переименования реально возвращает 42.
+
+8 новых UI PASS, 21 прежний UI PASS, 15 unit/trace файлов и 364 checks PASS.
+Raw v1…v12 FAIL сохранены: parser .exp, преждевременный LSP request, picker
+locator, сохранённый import alias, частичный :wall, regex path и async E5560
+не скрыты зелёным повтором. Source/config/test/hash audit — .tests/node-language-evidence.json.
+
+Docker проверялся только чтением version с timeout 12s; .tests/node-engine.json
+содержит code 1, отсутствующий pipe, UTC 2026-11-03T10:05:04.520588+00:00 и
+lifecycle_changed=false. Desktop/WSL не запускались/не менялись. Ubuntu команды
+ниже подготовлены, но не выполнялись; Mac запускается отдельно владельцем.
+
+```powershell
+# Только с уже работающим engine, после завершения Windows suites.
+docker compose -f tests/containers/compose.yaml build ubuntu
+docker compose -f tests/containers/compose.yaml run --rm --entrypoint nvim ubuntu -l tests/e2e/node-language.test.lua
+docker compose -f tests/containers/compose.yaml run --rm --entrypoint nvim ubuntu -l tests/e2e/go-language.test.lua
+docker compose -f tests/containers/compose.yaml run --rm --entrypoint nvim ubuntu -l tests/e2e/test-runner.test.lua
+docker compose -f tests/containers/compose.yaml run --rm --entrypoint nvim ubuntu -l tests/e2e/editor.test.lua
+```

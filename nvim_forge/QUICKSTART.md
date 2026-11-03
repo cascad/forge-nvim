@@ -527,3 +527,18 @@ IDE-028 проверяется отдельным `worktree-refresh.test.lua` (F
 
 Перезагрузить конфиг без рестарта — `:source $MYVIMRC`. Но для правок в
 `lua\plugins\*` проще `:Lazy reload <plugin>` либо рестарт.
+
+## JavaScript / Node.js
+
+Node.js с npm устанавливается явно. Project-local TypeScript Language Server,
+TypeScript, Prettier и Jest имеют приоритет над общими tools; debug требует
+явного `:MasonInstall js-debug-adapter`. После обновления сборки выполнить
+`:Lazy install` для нового neotest-jest. Для существующей установки также
+выполнить `:Lazy build neotest` и перезапустить редактор: применится проверяемый
+по pin/SHA патч путей nearest/file. Обычный startup plugin source не меняет.
+
+`Space j n` / `:NodeRun` выбирает package script; `Space j N` / `:NodeRunFile`
+запускает текущий JS в Tasks. F5 работает и без launch.json; F9 — breakpoint,
+Space d e — eval. Jest: Space T t / T f / T d — nearest / file / debug.
+Панели: Space w b — Tasks, w t — Tests, w r — Test Output, w c — DAP Output.
+Установка, ограничения и все команды: [Node workflow](../docs/NODE_WORKFLOW.md).

@@ -473,6 +473,12 @@ Windows не срабатывают. Решить: псевдонимы в nvim_
 
 <!-- ────────── разобрано (переехало в nvim_forge/FIXLOG.md) ────────── -->
 
+IDE-051 → [FIXLOG §111](nvim_forge/FIXLOG.md#111-node-язык-задачи-debug-и-jest):
+Neotest nearest не находит обнаруженные тесты при разных разделителях пути
+буфера и дерева. Общий системный realpath на границе nearest/file, явный
+pin/SHA backport; точный исходный plugin source даёт RED, Node UI Windows
+GREEN. Ubuntu/Mac пока не проверены. Обычный startup исходники не переписывает.
+
 IDE-050 → [FIXLOG §110](nvim_forge/FIXLOG.md#110-go-lsp-реальные-сценарии-и-fallback-форматирования):
 общие trim formatter блокировали LSP fallback при отсутствии golines/gofumpt.
 Исправлена общая политика и callers/health; исходный RED и 6 language UI PASS

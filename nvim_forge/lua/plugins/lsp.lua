@@ -783,6 +783,7 @@ return {
             }) do
                 if vim.fn.executable(binary) == 1 then vim.lsp.enable(server) end
             end
+            require('forge.node').setup_lsp()
         end,
     },
 }

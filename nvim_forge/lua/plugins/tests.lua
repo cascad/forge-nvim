@@ -8,10 +8,12 @@ return {
     { "rouge8/neotest-rust", ft = "rust" },
     { "fredrikaverpil/neotest-golang", ft = "go", commit = "65b2be63c3de00e6f15c05388ebdc8d603dbd727" },
     { "nvim-neotest/neotest-python", ft = "python" },
+    { 'nvim-neotest/neotest-jest', ft = { 'javascript', 'javascriptreact' }, commit = '0e7979d51301dfae5ef839d771bd28cf593fde3f' },
 
     {
         "nvim-neotest/neotest",
-        commit = "27bf921498043f7ecd821d6db68d05de244bbd02",
+        commit = require('ide.backports').revision('neotest'),
+        build = function(plugin) require('ide.backports').run('neotest', plugin.dir, 'apply') end,
         cmd = "Neotest",
         dependencies = {
             "nvim-neotest/nvim-nio",
@@ -21,6 +23,7 @@ return {
             "rouge8/neotest-rust",
             "fredrikaverpil/neotest-golang",
             "nvim-neotest/neotest-python",
+            'nvim-neotest/neotest-jest',
         },
         keys = {
             { "<leader>Tp", function() require("ide").toggle("tests") end,     desc = "Tests: side panel" },
@@ -71,6 +74,7 @@ return {
             end
 
             local consumers = {}
+            table.insert(adapters, require('forge.node').jest())
             local ok_overseer, overseer_consumer = pcall(require, "neotest.consumers.overseer")
             if ok_overseer then
                 consumers.overseer = overseer_consumer

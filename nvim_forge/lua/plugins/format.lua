@@ -109,6 +109,8 @@ return {
                 -- через <leader>la / <leader>lO (gopls предлагает ВЫБОР).
                 go     = { "golines", "gofumpt", lsp_format = "fallback" },
                 python = { "ruff_organize_imports", "ruff_format" },
+                javascript = { 'prettier', lsp_format = 'fallback' },
+                javascriptreact = { 'prettier', lsp_format = 'fallback' },
                 lua    = { "stylua", lsp_format = "fallback" },
 
                 json   = { "prettierd", "prettier", stop_after_first = true },
@@ -147,6 +149,7 @@ return {
                 return {} -- filetype выбирает порядок LSP/CLI, не затираем его
             end,
             formatters = {
+                prettier = require('forge.node').prettier(),
                 stylua = {
                     prepend_args = { "--indent-type", "Spaces", "--indent-width", "4", "--column-width", "120" },
                 },

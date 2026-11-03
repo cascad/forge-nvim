@@ -9,7 +9,7 @@
 **Основной объект — nvim_forge**, его реальные плагины, проекты и поведение
 редактора. WezTerm проверяет внешнюю границу клавиатуры/clipboard/GUI.
 Базовый editor e2e уже запускает настоящий Neovim с нашей сборкой,
-66 плагинами по lazy-lock.json, изолированным профилем и Git-проектом-фикстурой.
+67 плагинами по lazy-lock.json, изолированным профилем и Git-проектом-фикстурой.
 Проверяет запуск, дерево, открытие/изменение/сохранение файла, поиск имени и
 содержимого, буферы, фокус и отсутствие фоновых установок. Есть и CLI e2e
 инструментов тестирования/диагностики. Каждый шаг roadmap добавляет свои
@@ -793,3 +793,40 @@ hit-enter и RPC timeout: Windows artifact 37931338029900. Сохранены sc
 причину ниже viewport. Keyboard search по literal cause открыл её; исходный
 FAIL 26077291181500 относится к locator, после него получен runtime RED
 26380326922600. Обе попытки сохраняются в истории. Mac/GUI ещё требуют прогона.
+
+## JS / Node workflow
+
+После общих pinned plugins явно подготовить инструменты (Windows: выбранный
+SDK Neovim и TEMP/TMP/TMPDIR на диске checkout):
+
+```sh
+python -B tests/e2e/prepare_node.py --download --nvim <nvim>
+python -B tests/e2e/prepare_node.py --nvim <nvim>
+<nvim> -l tests/e2e/node-language.test.lua
+```
+
+На macOS/Ubuntu — python3. Node 24.11.0, TSLS 5.1.3, TypeScript 5.9.3,
+Prettier 3.6.2, Jest 30.2.0, js-debug 1.105.0, JS parser из pinned Treesitter.
+SDK/debug archives проверяются по SHA256; npm ci использует committed lock и
+integrity. Кэш/SDK/parser/manifest — .tests/node-deps, отдельный output можно
+задать --output и FORGE_E2E_NODE_DEPS. Повтор без --download не ставит tools.
+Linker .exp/.lib остаются в build, parser directory содержит только библиотеку;
+подготовка проверяет именно runtime lookup и реальный JS parse.
+
+Восемь UI E2E используют настоящие server/Prettier/npm/Node/Jest/js-debug,
+project-local dependencies, путь с пробелом/Unicode, native клавиши и панели.
+Проверяются definition/references/rename и сохранение, cmp source nvim_lsp,
+diagnostic/correction, format, NodeRun/File, F5 default/launch.json, stderr/stdout,
+breakpoint/eval/continue, nearest/file/output/debug tests, missing Node/adapter.
+Snapshots исключают node_modules, сохраняют source/lock/manifest/logs/shutdown;
+это исключение только для данных проекта, не для конфигурации редактора.
+
+Итог Windows: 8 PASS, прежние Go language 6 + Go tests 5 + smoke 10 PASS,
+unit/trace 364 checks PASS. Ubuntu image дополнен явным preparer, но build и
+прогоны пока не выполнялись: engine недоступен. Mac/GUI не проверены.
+
+IDE-051 replay: FORGE_NODE_CASE=nearest/file и FORGE_NODE_NEAREST_LEGACY=1
+восстанавливают точную исходную функцию только в private plugin copy до
+старта редактора. SHA до/после проверяются; global prepared source не меняется.
+Конечный постоянный тест даёт исходный RED «No tests found» при двух обнаруженных
+позициях; без legacy — GREEN. История/команды: FIXLOG §111 и AGENT_COMMANDS §43.

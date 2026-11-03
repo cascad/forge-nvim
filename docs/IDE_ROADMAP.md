@@ -14,7 +14,8 @@ IDE-001 параллельно ждёт диагностических данн�
 | Готово | IDE-041: E339 на очень длинном слове | Общая защита, по 3 UI + 10 smoke PASS Windows/Ubuntu; §108 |
 | Готово | IDE-009: основные рабочие панели | Tests/Test Output/Search/Tasks в Space w, query сохранён, по 6 новых + 19 прежних UI PASS Windows/Ubuntu; §109 |
 | Текущая проверка | Go LSP/format и IDE-050 | Windows 6 language + 15 прежних UI PASS, fallback исправлен (§110); Ubuntu требует работающего engine и явного build |
-| Затем | Остальная [матрица языков](LANGUAGE_MATRIX.md) | JS/Node LSP/format/run/debug/test, положительный Rust/Python регресс, затем Bash/SQL |
+| Готово на Windows | JS/Node и IDE-051 | 8 новых UI PASS: LSP/Prettier/Tasks/js-debug/Jest и missing tools (§111). Ubuntu требует engine, Mac открыт |
+| Затем | Остальная [матрица языков](LANGUAGE_MATRIX.md) | Положительный Python/Rust регресс, затем Bash/SQL; Node/Go Ubuntu после доступности engine |
 | После функциональной матрицы | Упрощение архитектуры | Общее ядро, явные системные границы и setup; сокращение дублирования с сохранением E2E |
 
 **Mac параллельно:** IDE-001 (zsh/Go до запуска nvim) и IDE-002 (Cmd+C)

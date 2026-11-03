@@ -5623,3 +5623,99 @@ tests/e2e/prepare_lsp.py, go-language.test.lua, fixtures/go-language;
 registry.lua, containers/Dockerfile, E2E README; два OpenSpec changes/config.yaml;
 QUICKSTART/LANGUAGE_MATRIX/IDE_ROADMAP/PROBLEMS/HISTORY/AGENT_COMMANDS §42.
 Сверка source/RED/GREEN/старого history prefix — .tests/go-language-evidence.json.
+
+## 111. Node: язык, задачи, debug и Jest
+
+**Дата:** 2026-11-03. **Спека:** IDE-NODE-1/2/3/4 (ADDED), change
+add-node-language-workflow. **Проблема:** исходная сборка не активировала JS
+server/formatter, не имела Node default DAP и Jest adapter. Наличие общих
+панелей не обеспечивало рабочий Node workflow. При реализации обнаружен
+IDE-051: nearest не находил уже обнаруженные тесты на Windows slash path.
+
+**Причина.** Команды npm ecosystem часто представлены .cmd/symlink wrappers,
+а пути проекта нельзя разбивать по пробелам. Neotest nearest брал raw путь
+буфера, дерево discovery хранило системный путь с другими разделителями.
+Его path.real оказался fnamemodify и не решил проблему; нужен системный
+fs_realpath. Native Jest adapter дополнительно превращал путь в regex:
+Jest находил файл по testMatch, но отбрасывал по несовпавшему path pattern.
+Callback strategy_config после async file I/O вызывал Vim API в fast event
+context, что дало E5560. Подготовка JS parser оставляла linker .exp/.lib рядом
+с .so: runtime lookup выбирал .exp и не мог загрузить parser.
+
+**Изменение.** Общий forge.node отделяет executable/JS entrypoint/root/tools
+от UI. Project/parent node_modules имеют приоритет над explicit shared tools,
+Mason/PATH; Node запускает CLI списком argv. ts_ls включается только при
+доступных tools, automatic typings acquisition отключён. Project-local
+Prettier наследует общий LSP/trim порядок §110. NodeRunFile/NodeRun и Space
+j N/j n создают обычные Overseer задачи с project cwd. js-debug предоставляет
+F5 текущего JS, node/pwa-node launch.json, breakpoint/eval/continue и вывод;
+missing Node/adapter дают WARN без загрузки tools или зависшей сессии.
+
+Для js-debug закреплён 127.0.0.1 и у клиента, и у standalone server. Первый
+вариант получил ECONNREFUSED; после явного host реальный DAP прошёл. IPv6
+binding исходного localhost отдельно не измерялся и не объявляется доказанной
+причиной. Pinned neotest-jest сохраняет native discovery/results/name filter,
+но build_spec получает native Node/Jest argv и literal --runTestsByPath
+(для directory --roots). DAP args берутся из итоговой команды. Публичный
+nio.scheduler переводит callbacks из fast event перед обращением к Neovim.
+
+IDE-051 исправлен в pinned Neotest через существующий явный pin/SHA backport:
+fs_realpath на границе nearest/file, без OS-ветки и изменения source на startup.
+Существующей установке нужны :Lazy build neotest и restart. Установка tools
+явная; prepare_node.py фиксирует Node 24.11.0, TSLS 5.1.3, TS 5.9.3,
+Prettier 3.6.2, Jest 30.2.0, js-debug 1.105.0, npm lock/integrity, SDK/debug
+SHA и JS grammar revision. Parser build outputs вынесены из runtime site,
+проверяется обычный runtime lookup. Windows temp/cache остаются на F:.
+Snapshot exclusion node_modules сохраняет исходники/lock/manifest, не копируя
+каждый раз большой reproducible dependency tree в artifacts.
+
+**Проверка/e2e.** Восемь постоянных UI сценариев на настоящем private Neovim:
+definition/references/rename и сохранение всех файлов; настоящий cmp nvim_lsp,
+diagnostic/correction; local Prettier; файл/npm script и Tasks output/status/cwd;
+F5 default/project launch.json и stderr/stdout; отсутствие Node/adapter;
+Jest nearest/file/pass/fail/output и real debug breakpoint/eval/continue.
+Проект содержит пробел/Unicode, использует реальные локальные dependencies.
+После rename отдельный Node действительно выполняет сохранённый модуль и
+возвращает 42. RPC вводит клавиши и наблюдает данные; private handlers и mock
+server не вызываются. Диагностический wrapper исходного run context удалён.
+
+Первый LSP locator отправлял definition до загрузки semantic project: syntax
+server возвращал только локальный binding. Серверные logs это доказали;
+тест ждёт native progress end. Ошибочная гипотеза о нормальном двухшаговом
+CommonJS definition отвергнута. References экспорта ведут к импорту, rename
+сохраняет локальное имя через alias; ожидания исправлены по реальным edits.
+UI-select проверяется по ordinal и готовому insert mode. После discovery
+тест явно фокусирует Tests перед native expand. Поздний FAIL rename/process
+прочитал диск после первого файла :wall: snapshot уже исполнялся с 42;
+теперь ждём запись всех четырёх файлов и unmodified buffers, stderr сохраняется.
+Ранние FAIL сохранены, отдельный зелёный повтор не выдаётся за runtime fix.
+
+Конечный legacy replay 9705605721000 восстанавливает exact before plugin source
+только в private copy (before/after SHA проверяются). Постоянный конечный тест
+даёт RED «No tests found» при двух обнаруженных позициях. Baseline отсутствующей
+Node функции 9712438189900 использует runtime Lua 193e794, побайтово сверенный
+с Git; только lock совместимости добавляет 67-й plugin, прежние 66 pins точны.
+Он даёт RED с отсутствующим NodeRunFile. Это не полностью неизменённый checkout.
+
+Конечный Windows GREEN 9579516732100…9638353466600 — 8 PASS/0 FAIL/0 SKIP.
+Регресс: Go language 6 + Go tests 5 + editor smoke 10 PASS; unit/trace —
+15 файлов, 364 checks PASS; strict OpenSpec validate PASS. --download и повтор
+без скачивания прошли; все 67 prepared plugins сверены с lock и backports.
+
+Ubuntu не проверен: docker version 2026-11-03 10:05:04 UTC вернул отсутствующий
+dockerDesktopLinuxEngine pipe, code 1. Desktop/WSL не запускались/не менялись;
+image обновлён, Ubuntu task остаётся unchecked. Mac/GUI, browser/TS transpilation
+и другие test frameworks не заявлены проверенными. IDE-047/048 и исходный
+Mac startup остаются отдельными открытыми задачами; full не повторялся.
+
+**Вывод.** Общий язык должен доказываться семантикой, настоящими процессами,
+результатами и отладкой. Канонизация пути и literal argv решают разные задачи;
+название path.real не доказывает реальный canonical path. Готовность LSP,
+асинхронного UI и завершение записи входят в корректный E2E locator.
+
+**Файлы:** lua/forge/node.lua, plugins/lsp/format/dap/tasks/tests.lua,
+lazy-lock/catalog, patches/plugins.json; prepare_node.py, node-tools lock,
+node-language.test.lua/fixtures, editor snapshot helper, registry/Dockerfile;
+OpenSpec change/config; NODE_WORKFLOW/QUICKSTART/LANGUAGE_MATRIX/IDE_ROADMAP,
+PROBLEMS/HISTORY/AGENT_COMMANDS §43. Сверка source/RED/GREEN и прежнего prefix
+FIXLOG — .tests/node-language-evidence.json.

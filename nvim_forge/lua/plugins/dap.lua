@@ -571,6 +571,7 @@ local function with_launch_buffer(fn)
 end
 
 local function run_config(dap_mod, cfg)
+    if require('forge.node').is_config(cfg) and not require('forge.node').debug_ready() then return end
     with_launch_buffer(function()
         dap_mod.run(cfg)
     end)
@@ -868,7 +869,10 @@ end
 local function current_file_configs(ft)
     if current_launch_path() == "" then return {} end
 
-    if ft == "rust" then
+    if ft == 'javascript' then
+        local config = require('forge.node').default_config(current_launch_path())
+        return config and { config } or {}
+    elseif ft == "rust" then
         local base = {
             type = "codelldb",
             request = "launch",
@@ -1327,6 +1331,7 @@ return {
             dap.providers.configs["dap.launch.json"] = function()
                 return {}
             end
+            require('forge.node').setup_dap(dap)
             vim.api.nvim_create_user_command("DapShowLog", dap_show_log, {
                 desc = "Open DAP log files",
                 force = true,

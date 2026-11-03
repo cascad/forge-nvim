@@ -2,13 +2,15 @@
 local M = {}
 local uv = vim.uv
 
-local function copy_tree(source, target)
+local function copy_tree(source, target, ignored)
   vim.fn.mkdir(target, 'p')
   for name, kind in vim.fs.dir(source) do
     local from, to = source .. '/' .. name, target .. '/' .. name
-    if kind == 'directory' then copy_tree(from, to)
-    elseif kind == 'file' then assert(uv.fs_copyfile(from, to))
-    else error('Неожиданный тип в подготовленных исходниках: ' .. from) end
+    if not (ignored and ignored[name]) then
+      if kind == 'directory' then copy_tree(from, to, ignored)
+      elseif kind == 'file' then assert(uv.fs_copyfile(from, to))
+      else error('Неожиданный тип в подготовленных исходниках: ' .. from) end
+    end
   end
 end
 
@@ -155,7 +157,7 @@ local function start(root, options, holder)
     if self.stopped then return end
     pcall(function() self:snapshot() end)
     local ok,err=pcall(function()
-      copy_tree(self.project, self.dir .. '/project')
+      copy_tree(self.project, self.dir .. '/project', options.snapshot_ignore)
       copy_tree(config, self.dir .. '/config-source')
       assert(uv.fs_copyfile(manifest_path, self.dir .. '/dependency-manifest.json'))
       if vim.fn.filereadable(env.NVIM_LOG_FILE) == 1 then assert(uv.fs_copyfile(env.NVIM_LOG_FILE, self.dir .. '/nvim.log')) end

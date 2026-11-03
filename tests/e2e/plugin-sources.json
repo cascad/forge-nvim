@@ -33,6 +33,7 @@
   "neogit": "NeogitOrg/neogit",
   "neotest": "nvim-neotest/neotest",
   "neotest-golang": "fredrikaverpil/neotest-golang",
+  "neotest-jest": "nvim-neotest/neotest-jest",
   "neotest-python": "nvim-neotest/neotest-python",
   "neotest-rust": "rouge8/neotest-rust",
   "nui.nvim": "MunifTanjim/nui.nvim",

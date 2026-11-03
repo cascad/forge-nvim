@@ -50,6 +50,10 @@ ENV PATH="/opt/forge/test-deps/bin:${PATH}"
 COPY tests/e2e/prepare_lsp.py /opt/forge/tests/e2e/
 RUN python3 /opt/forge/tests/e2e/prepare_lsp.py --download --output /opt/forge/lsp-deps
 ENV FORGE_E2E_LSP_DEPS=/opt/forge/lsp-deps
+COPY tests/e2e/prepare_node.py /opt/forge/tests/e2e/
+COPY tests/e2e/node-tools/ /opt/forge/tests/e2e/node-tools/
+RUN python3 /opt/forge/tests/e2e/prepare_node.py --download --output /opt/forge/node-deps
+ENV FORGE_E2E_NODE_DEPS=/opt/forge/node-deps
 RUN useradd --create-home --uid 10001 forge
 ENV HOME=/home/forge
 USER forge

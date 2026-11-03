@@ -40,5 +40,14 @@
         "after": "-- 0x9B бывает продолжением UTF-8; OSC удаляем целиком до CSI.\nlocal pattern_1 = \"\\27[][()#;?%d]*[A-PRZcf-ntqry=><~]\"\nlocal pattern_2 = \"[\\r\\n\\04\\08]\"\nlocal BLANK = \"\"\nlocal gsub = string.gsub\n\nfunction M.remove_ansi_escape_codes(s)\n  s, _ = gsub(s, \"\\27%][^\\7\\27]*\\7\", BLANK)\n  s, _ = gsub(s, \"\\27%][^\\7\\27]*\\27\\\\\", BLANK)\n  s, _ = gsub(s, pattern_1, BLANK)\n  s, _ = gsub(s, pattern_2, BLANK)\n  return s\nend"
       }
     ]
+  },
+  "neotest": {
+    "id": "IDE-051-neotest-nearest-realpath",
+    "revision": "27bf921498043f7ecd821d6db68d05de244bbd02",
+    "file": "lua/neotest/consumers/run.lua",
+    "before_sha256": "ae8377f5972ea01498892caa020b38448506e492dfe874ff3d507908bf6bcbe9",
+    "after_sha256": "efe8c689c57f013cffda369d44626b4877e7bd5bbecad8e477a327f38bdc3b80",
+    "before": "function neotest.run.get_tree_from_args(args, store)\n  args = args or {}\n  if type(args) == \"string\" then\n    args = { args }\n  end\n  local tree, adapter = (function()\n    if args.suite then\n      if not args.adapter then\n        args.adapter = client:get_adapters()[1]\n      end\n      return client:get_position(nil, args)\n    end\n    if args[1] then\n      local position_id = lib.files.path.real(args[1]) or args[1]\n      return client:get_position(position_id, args)\n    end\n    local file_path = nio.fn.expand(\"%:p\")\n    local row = nio.fn.getpos(\".\")[2] - 1\n    return client:get_nearest(file_path, row, args)\n  end)()\n  if tree and store then\n    last_run = { tree:data().id, vim.tbl_extend(\"keep\", args, { adapter = adapter }) }\n  end\n  return tree\nend\n",
+    "after": "function neotest.run.get_tree_from_args(args, store)\n  args = args or {}\n  if type(args) == \"string\" then\n    args = { args }\n  end\n  local tree, adapter = (function()\n    if args.suite then\n      if not args.adapter then\n        args.adapter = client:get_adapters()[1]\n      end\n      return client:get_position(nil, args)\n    end\n    if args[1] then\n      local position_id = (vim.uv or vim.loop).fs_realpath(args[1]) or lib.files.path.real(args[1]) or args[1]\n      return client:get_position(position_id, args)\n    end\n    local file_path = nio.fn.expand(\"%:p\")\n    file_path = (vim.uv or vim.loop).fs_realpath(file_path) or file_path\n    local row = nio.fn.getpos(\".\")[2] - 1\n    return client:get_nearest(file_path, row, args)\n  end)()\n  if tree and store then\n    last_run = { tree:data().id, vim.tbl_extend(\"keep\", args, { adapter = adapter }) }\n  end\n  return tree\nend\n"
   }
 }

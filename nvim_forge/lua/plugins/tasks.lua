@@ -50,6 +50,8 @@ return {
             "OverseerTaskAction",
         },
         keys = {
+            { '<leader>jn', function() require('forge.node').run_script() end, desc = 'Node: package script' },
+            { '<leader>jN', function() require('forge.node').run_file() end, desc = 'Node: run current file' },
             { "<leader>jj", function() require("ide").apply_layout("jobs") end,  desc = "Jobs: panel" },
             -- Запуск задачи/сборки авто-открывает Tasks (ide/triggers.lua: task:run).
             { "<leader>jr", function() vim.cmd("OverseerRun"); require("ide").triggers.fire("task:run") end,   desc = "Jobs: run task" },
@@ -76,6 +78,8 @@ return {
             local overseer = require("overseer")
             local vscode = require("overseer.vscode")
             overseer.setup(opts)
+            vim.api.nvim_create_user_command('NodeRun', function() require('forge.node').run_script() end, {})
+            vim.api.nvim_create_user_command('NodeRunFile', function() require('forge.node').run_file() end, {})
 
             overseer.register_template({
                 name = "cargo build (debug)",
