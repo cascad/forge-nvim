@@ -13,6 +13,7 @@
 [Фактическая матрица языков и следующие шаги](docs/LANGUAGE_MATRIX.md).
 [Bash: язык, запуск файла и Tests](docs/BASH_WORKFLOW.md).
 [SQL: язык, подключения, запросы и Results](docs/SQL_WORKFLOW.md).
+[SQLLogicTest: запуск SQL-тестов в Tests](docs/SQL_TESTS.md).
 [Единая история работ, причин и решений](docs/HISTORY.md), включая материалы
 из прежнего `F:/claude_code/vim`; новые исправления — в `nvim_forge/FIXLOG.md`.
 

@@ -6,9 +6,17 @@
 
 ## 2. Editor workflow
 
-- [ ] 2.1 Реализовать публичный Neotest adapter и `.slt` filetype, nearest=file script, file/all, настоящий report/output/error navigation, missing tools/DAP guard. Постоянные native editor UI E2E Windows: discovery без исполнения, source ea63bf5 RED, nearest/fail→fix→rerun/file/all/isolation/Unicode/stop/общие панели; обновить SQL guide/матрицу и FIXLOG/HISTORY (IDE-SQL-7).
+- [x] 2.1 Реализовать публичный Neotest adapter и `.slt` filetype, nearest=file script, file/all, настоящий report/output/error navigation, missing tools/DAP guard. Постоянные native editor UI E2E Windows: discovery без исполнения, source ea63bf5 RED, nearest/fail→fix→rerun/file/all/isolation/Unicode/stop/общие панели; обновить SQL guide/матрицу и FIXLOG/HISTORY (IDE-SQL-7).
+
+- [x] 2.2 IDE-070: companion pinned Neotest backport нормализует и directory/file paths на входе discovery. Source upstream-client replay и stop→другой file/invalid→empty UI без watchdog; apply/check/revert/unknown companion process E2E. FIXLOG/HISTORY/patch guide (IDE-TEST-6), Windows PASS и явные границы остальных ОС.
 
 ## 3. Интеграция
 
+- [x] 3.0 IDE-069: общий Run all consumer по documented Client API, actual multi-adapter/foreign-workspace UI и source RED empty-adapter; записать FIXLOG/HISTORY (IDE-TEST-5), общий Tests guide и результаты Windows. Непроверенные ОС остаются открытыми.
+
 - [ ] 3.1 Добавить SDK/UI suites в общий runner/Ubuntu recipe; последовательно Windows SQL query/SDK/common panels и затронутые language Tests, unit/trace/strict OpenSpec. Проверить sources/payload/pins/history prefix/shutdown, записать evidence/команды/roadmap и коммит. IDE-062 references оставить открытым.
 - [ ] 3.2 Те же native SDK/UI на Ubuntu при уже доступном engine и Mac владельца. Реальных запусков нет — оставить задачу открытой; Docker/WSL lifecycle не менять. Проверка: одинаковые команды SQL guide плюс platform artifacts.
+
+Интеграция 3.1 остаётся открытой: IDE-075 — Cargo worker пережил editor и
+сорвал cleanup, хотя assertions прошли. Изолированный повтор не заменяет
+постоянный lifecycle fix и его E2E; история §135.

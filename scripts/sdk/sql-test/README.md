@@ -1,8 +1,8 @@
 # Native SQLLogicTest/SQLite runner
 
-Спека: IDE-SQL-8. SDK — отдельный этап IDE-062; подключение к Neotest
-и editor UI E2E выполняются следующей задачей. Текущий editor этот runner
-автоматически не вызывает.
+Спека: IDE-SQL-8. SDK — отдельный этап IDE-062; `.slt` подключён к Neotest
+через [общие Tests/Test Output](../../../docs/SQL_TESTS.md). Открытие файла
+не исполняет SQL; runner запускается только явным test action.
 
 `forge-sqltest` использует официальный [sqllogictest-rs](https://github.com/risinglightdb/sqllogictest-rs)
 0.29.1 и rusqlite 0.41.1 с bundled SQLite. Cargo.lock фиксирует registry
@@ -81,5 +81,6 @@ location, unsupported system, compiler-free readiness и missing/corrupt SDK.
 Suite сохраняет exact SDK source/lock/preparer/test/manifest, native PID,
 stdout/stderr/exit и JSON reports в `.tests/sql-test-sdk/`.
 
-Ubuntu/macOS/ARM64 ещё не запускались. SQLite CLI PASS не означает готовность
-Neotest UI или semantic references; они остаются в IDE-062/OpenSpec tasks.
+Ubuntu/macOS/ARM64 ещё не запускались. Дополнительно 12 editor UI Windows
+проверяют Neotest workflow; их evidence отдельно от SDK process E2E.
+Semantic references остаются в IDE-062/OpenSpec tasks.

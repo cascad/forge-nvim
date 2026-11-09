@@ -256,4 +256,45 @@ T.check('IDE-GIT-12 legacy Neogit companion обновляется явно, н�
     end
   end)
 end)
+for _,eol in ipairs({'\n','\r\n'}) do
+  T.check('IDE-TEST-6 Neotest CLI companion apply check repeat revert '..(eol=='\n' and 'LF' or 'CRLF'),function()
+    runtime(function(base)
+      local spec=vim.json.decode(bytes(root..'/nvim_forge/patches/plugins.json')).neotest
+      local source=bytes(deps..'/lazy/neotest/'..spec.file):gsub('\r\n','\n')
+      T.eq(vim.fn.sha256(source),spec.after_sha256)
+      local a,b=assert(source:find(spec.after,1,true));source=source:sub(1,a-1)..spec.before..source:sub(b+1)
+      T.eq(vim.fn.sha256(source),spec.before_sha256)
+      local path=base..'/neotest/'..spec.file;local raw=source:gsub('\n',eol);write(path,raw)
+      local files=companions(base,spec,eol,false,'neotest');T.eq(#files,3)
+      assert(cli(base,'--check','neotest').code~=0);T.eq(bytes(path),raw)
+      local result=cli(base,nil,'neotest');T.eq(result.code,0,result.stderr)
+      local actual=vim.json.decode(result.stdout).neotest
+      T.eq(actual.files[spec.file],spec.after_sha256)
+      for _,item in ipairs(files) do T.eq(actual.files[item.spec.file],item.spec.after_sha256) end
+      local all={{path=path,spec=spec,raw=raw}};vim.list_extend(all,files)
+      for _,item in ipairs(all) do
+        T.eq(vim.fn.sha256((bytes(item.path):gsub('\r\n','\n'))),item.spec.after_sha256)
+        if eol=='\r\n' then assert(not bytes(item.path):gsub('\r\n',''):find('\n',1,true)) end
+        item.stat=vim.uv.fs_stat(item.path)
+      end
+      T.eq(cli(base,nil,'neotest').code,0);T.eq(cli(base,'--check','neotest').code,0)
+      for _,item in ipairs(all) do T.eq(vim.uv.fs_stat(item.path).mtime,item.stat.mtime) end
+      T.eq(cli(base,'--revert','neotest').code,0)
+      for _,item in ipairs(all) do T.eq(bytes(item.path),item.raw) end
+    end)
+  end)
+end
+T.check('IDE-TEST-6 unknown Neotest companion preserves all source files',function()
+  runtime(function(base)
+    local spec=vim.json.decode(bytes(root..'/nvim_forge/patches/plugins.json')).neotest
+    local main=bytes(deps..'/lazy/neotest/'..spec.file):gsub('\r\n','\n')
+    local a,b=assert(main:find(spec.after,1,true));main=main:sub(1,a-1)..spec.before..main:sub(b+1)
+    local path=base..'/neotest/'..spec.file;write(path,main)
+    local files=companions(base,spec,'\n',false,'neotest');local item=files[#files]
+    local unknown=item.raw..'\n-- unknown private modification\n';write(item.path,unknown)
+    local result=cli(base,nil,'neotest');assert(result.code~=0 and result.stderr:find('неизвестное содержимое',1,true),result.stderr)
+    T.eq(bytes(path),main);T.eq(bytes(item.path),unknown)
+    for i=1,#files-1 do T.eq(bytes(files[i].path),files[i].raw) end
+  end)
+end)
 T.finish()

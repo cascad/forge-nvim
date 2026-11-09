@@ -47,6 +47,7 @@ return {
   { file = 'tests/e2e/sql-language.test.lua', suite = 'e2e', timeout = 900 },
   { file = 'tests/e2e/sql-sdk.test.lua', suite = 'e2e', timeout = 90 },
   { file = 'tests/e2e/sql-test-sdk.test.lua', suite = 'e2e', timeout = 90 },
+  { file = 'tests/e2e/sql-tests.test.lua', suite = 'e2e', timeout = 420 },
   { file = 'tests/e2e/dap-discovery.test.lua', suite = 'e2e', timeout = 120 },
   { file = 'tests/e2e/debug-panels.test.lua', suite = 'e2e', timeout = 300 },
   { file = 'tests/e2e/outline.test.lua', suite = 'e2e', timeout = 180 },

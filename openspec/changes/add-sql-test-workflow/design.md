@@ -39,6 +39,25 @@ SQLRun/production connections и автоустановка Rust/CC/SDK. IDE-062
    host toolchain не устанавливается. Windows F-only HOME/cache/temp/target;
    проверка готового output не требует Rust/CC/оставленного target. Executable
    задаётся PATH или FORGE_SQLTEST_EXECUTABLE/g:forge_sqltest_executable.
+6. IDE-069: nt.run.run(cwd) выбирает первый adapter root, даже пустой. Общий
+   consumer использует документированные Client:get_adapters/get_position/
+   run_tree, выбирает непустые trees внутри cwd и запускает adapters последовательно.
+   Это consumer extension API, без прямого доступа к _state/_runner/_adapters.
+7. Отказ missing SDK/DAP возвращает genuine failed preflight через публичную
+   custom Strategy, без OS process и без SDK JSON. Возврат nil из leaf build_spec
+   создаёт лишний Neotest stacktrace «returned no data»; этот путь не используется.
+8. IDE-070: Windows BufAdd directory path с `/` не совпадает с native discovery
+   tree с `\`, и positions.merge бесконечно поднимается выше drive root.
+   Companion существующего pinned Neotest backport приводит path через
+   fs_realpath на входе _update_positions до parse_dir/file. Исправление только
+   в adapter оказалось недостаточным; SDK/hash/explicit prepare покрывают
+   общую границу. Диагностический watchdog служит только stack evidence;
+   постоянные RED/GREEN идут без него.
+   Второй companion library parent/real согласует directory lookup/open-buffer
+   roots: без него separators давали дубли adapters и чужие tests в tree.
+   Третий companion canonical adapter.root в adapter-group устраняет два pytest
+   namespace одной папки (IDE-072). Начальная гипотеза async focus не подтвердилась;
+   source test проверяет native root IDs 2→1 и настоящие pytest результаты.
 
 ## Risks / Trade-offs
 

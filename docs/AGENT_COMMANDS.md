@@ -3161,3 +3161,111 @@ Native bin/manifest/source/negative evidence не добавлены, ничег
 Docker engine не опрашивался, Desktop/WSL lifecycle не вызывался. Ubuntu/Mac/
 ARM64/Neotest UI/semantic references остаются незавершёнными. Перед локальным
 SDK commit проверены git diff --check/staged paths, tmp/tools не добавлялись.
+
+## 51. SQLLogicTest UI и общий Neotest: IDE-062/069–073, 2026-11-09
+
+Продолжение с 0126651. openspec-apply-change: add-sql-test-workflow,
+root F:/repo/forge-nvim, spec-driven, ready. После SDK добавлены UI,
+общий multi-adapter All и native identity требования IDE-TEST-5/6.
+instructions/status JSON — .tests/sql-test-ui-*.json. Не менялись main specs,
+67 plugin pins, native SQLS/SQL test binaries или системные SDK.
+
+Команды PowerShell выполнялись login:false. Каждому запускающему tools/script
+процессу задаются TEMP/TMP/TMPDIR и NVIM_LOG_FILE в F:/repo/forge-nvim/.tests/tmp,
+PYTHONIOENCODING=utf-8, npm cache F:/forge-nvim-tmp/npm-cache. Get-ForgeNvim
+из scripts/lib/nvim-sdk.ps1 выбирает поддерживаемый Windows SDK.
+
+```powershell
+npx.cmd --yes @fission-ai/openspec@1.13.2 status --change add-sql-test-workflow --json
+npx.cmd --yes @fission-ai/openspec@1.13.2 instructions apply --change add-sql-test-workflow --json
+git archive --format=zip --output=.tests/sql-tests-before-ea63bf5.zip ea63bf5 nvim_forge
+Expand-Archive -LiteralPath .tests/sql-tests-before-ea63bf5.zip -DestinationPath .tests/sql-tests-before-ea63bf5
+```
+
+Read-only code/source checks: rg/rg --files, Get-Content с выбранными диапазонами,
+git status/diff/show. Публичный Neotest Client API и native source читались из
+подготовленной pinned dependency; прямых calls к _state/_runner/_adapters в
+consumer нет. Lua wrappers fixture только наблюдают actual jobstart/exit;
+fault case меняет настоящий JSON file после exit и сохраняет native копию.
+
+```powershell
+$env:FORGE_E2E_CONFIG_SOURCE='<full source config>'
+$env:FORGE_SQL_TEST_CASE='discovery'
+& $forgeNvim -l tests/e2e/sql-tests.test.lua
+```
+
+Feature RED: ea63bf5 без adapter. Prototype source All — full private copy
+до consumer, тот же mixed SQL/Bats scenario. Path RED использует exact before
+SDK files только в private runtime; нужны одновременно full source config и
+FORGE_SQL_TEST_CLIENT_SOURCE / FORGE_SQL_TEST_FILE_SOURCE /
+FORGE_SQL_TEST_ADAPTERS_SOURCE. Каждая source SHA сверяется с declaration.
+Готовый SDK для replay не откатывается. Для Python namespace отдельно:
+FORGE_PYTHON_CASE='pytest nearest/file', FORGE_PYTHON_ADAPTER_GROUP_SOURCE
+с exact upstream adapter-group плюс full source config. Получено 2→1 roots,
+реальные nearest/file output/venv/neighbor assertions сохранены.
+
+Watchdog с jit.off сохранил loop stack Neotest merge, затем удалён из harness;
+он не считается GREEN. Сначала пробовали нормализацию только SQL file: directory
+branch остался сломан. Затем client+parent/real и root-group исправлены вместе.
+Source replay с sha256(gsub(...)) получил два аргумента и упал до child startup;
+этот нецелевой RED сохранён отдельно, правильный replay повторён после fix.
+
+```powershell
+python -B tests/e2e/prepare_editor.py --download --nvim $forgeNvim
+& $forgeNvim -l tests/e2e/sql-tests.test.lua
+& $forgeNvim -l tests/e2e/sql-language.test.lua
+& $forgeNvim -l tests/e2e/sql-sdk.test.lua
+& $forgeNvim -l tests/e2e/sql-test-sdk.test.lua
+& $forgeNvim -l tests/e2e/plugin-backports.test.lua
+& $forgeNvim -l tests/e2e/work-panels.test.lua
+& $forgeNvim -l tests/e2e/test-runner.test.lua
+& $forgeNvim -l tests/e2e/node-language.test.lua
+& $forgeNvim -l tests/e2e/python-language.test.lua
+& $forgeNvim -l tests/e2e/rust-language.test.lua
+& $forgeNvim -l tests/e2e/bash-language.test.lua
+& $forgeNvim -l tests/run.lua unit trace
+npx.cmd --yes @fission-ai/openspec@1.13.2 validate --all --strict --no-interactive
+python -B .tests/audit-sql-tests-evidence.py
+```
+
+Обычная preparation без download обнаружила отсутствие двух cache git-objects;
+явный --download взял locked official archives и подготовил все 67 plugins.
+Новые companions имеют before/after SHA, --check/repeat не пишут файл,
+unknown-last-companion отклоняется до записи всех четырёх файлов.
+`verify-sql-tests*.ps1` — сохранённые последовательные run scripts с остановкой
+на неуспехе. Повторяли только после нового изменения/конкретного отказа.
+Node observer nil до Jest исправлен без изменения product assertions. Pytest
+два root namespaces подтверждены exact source, предположение focus не доказано.
+Один поздний Node startup RPC timeout сохранён IDE-073; own child terminal,
+следующий run самостоятельный и не объявляет причину timeout устранённой.
+Rust default F5 один раз дал CodeLLDB timeout после успешного runInTerminal;
+изолированный case и новый полный suite проверялись без runtime изменений.
+Исходный отказ сохранён IDE-074, не выдан за исправленный случай.
+
+Tool exec возвращает stdout/stderr/exit или live session ID. При redirect
+вызов сначала выглядит пустым; я читаю log и poll именно этот ID до terminal.
+UI transport — native Nvim с attached line-grid UI, RPC вводит keys/наблюдает.
+Артефакты содержат source/config/dependency manifest, actual SDK companions,
+grid/screen/logs/JSON/SQLite files/PID/shutdown. Audit отличает exact final
+source RED, текущие positive runs и ранние нецелевые harness failures.
+
+Итог: 101 suite checks, 100 PASS/1 cleanup FAIL в последнем batch плюс
+изолированный Rust integration PASS; 365 unit/trace, 63 strict valid.
+Полный regression gate не закрыт. sql-tests-evidence.json сохраняет отдельно
+positive artifacts и неудачный cleanup. UI stdout/status и
+настоящие DB/TAP effects — evidence исполнения; settings не заменяют E2E.
+История §130–135, старые bytes сохранены. Git diff --check/staged paths и
+локальный commit завершают Windows шаг, push не выполняется.
+
+Read-only Test-Path проверил \\.\pipe\docker_engine и
+\\.\pipe\dockerDesktopLinuxEngine: False/False. Docker CLI/Desktop/WSL не
+вызывались. Dockerfile обновлён для явного будущего build, Ubuntu/Mac/ARM64/
+GUI/external DB не считаются PASS. F cleanup list прежняя (20), удаления нет.
+Нерешённые SQL references и startup RPC остаются в roadmap/inbox.
+
+IDE-075: orphan cargo clippy 6900 с manifest-path private profile. Read-only
+CIM/marker/resolved path проверили ownership. После записи process metadata
+Stop-Process применён только к этому process object; затем штатный guarded
+editor_runtime.remove повторно удалил own профиль. Ни общего taskkill, ни
+остановки чужого Cargo/Nvim не было. Новый isolated integration PASS не
+заменяет lifecycle fix; он следующий перед закрытием integration task.

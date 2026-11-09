@@ -60,3 +60,47 @@ compiler/scratch. Windows temp/build/cache остаются на диске chec
 - **WHEN** SQLite assertion или parser возвращает ошибку
 - **THEN** machine report и exit code содержат реальный failed и его причину
 - **AND** повреждённый/отсутствующий report не считается passed
+
+### Requirement: IDE-TEST-5 Run all при нескольких adapters
+
+Общий Space T A SHALL исполнять обнаруженные tests всех активных adapters
+в текущем cwd, пропуская пустые trees и чужие workspace. Порядок регистрации
+MUST NOT заставлять выбирать пустой adapter вместо настоящих tests.
+
+Платформы: все
+Проверка: tests/e2e/sql-tests.test.lua, tests/e2e/work-panels.test.lua
+
+#### Scenario: пустой adapter того же корня
+- **GIVEN** SQL workspace имеет `.slt` tests и активный Bats adapter без tests
+- **WHEN** пользователь запускает Space T A
+- **THEN** все SQL scripts выполняются ровно один раз с настоящими результатами
+- **AND** соседний adapter не перехватывает run и не создаёт ложный passed
+
+#### Scenario: несколько языков и другой workspace
+- **GIVEN** текущий cwd имеет tests нескольких adapters, другой workspace тоже открыт
+- **WHEN** пользователь запускает Run all
+- **THEN** исполняются tests каждого adapter внутри cwd
+- **AND** чужой workspace не запускается
+
+### Requirement: IDE-TEST-6 Единая identity путей discovery
+
+Neotest discovery SHALL использовать согласованные native пути для directory
+и file trees, включая пути из событий editor. Смена файла после query failure
+или stop MUST сохранять отзывчивость редактора и возможность запуска другого
+script; объединение деревьев не зацикливается из-за separators/aliases.
+
+Платформы: все
+Проверка: tests/e2e/sql-tests.test.lua, tests/e2e/python-language.test.lua,
+tests/e2e/plugin-backports.test.lua
+
+#### Scenario: смена script после stop или ошибки
+- **GIVEN** SQL test завершён ошибкой либо остановлен пользователем
+- **WHEN** пользователь открывает другой `.slt` и запускает его
+- **THEN** editor остаётся отзывчивым, другой script получает настоящий результат
+- **AND** native source RED и patched GREEN используют одинаковый UI scenario без watchdog
+
+#### Scenario: один namespace физического workspace
+- **GIVEN** pytest workspace обнаружен вместе с другими adapters
+- **WHEN** Root и directory/file events используют разные формы пути одной папки
+- **THEN** workspace получает один canonical adapter namespace
+- **AND** nearest/file/debug запускают ожидаемые настоящие tests без дублирования

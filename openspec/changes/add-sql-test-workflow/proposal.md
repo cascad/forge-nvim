@@ -18,6 +18,9 @@ IDE-062: SQL edit/query готов, но SQL-файлы не имеют наст
   ничего не устанавливает. Missing runner даёт понятное сообщение.
 - Реальные UI E2E, история причины/решений и команды на всех целевых ОС.
   Semantic references IDE-062 остаются отдельной незавершённой частью.
+- Найденные интеграцией IDE-069/070: Run all для нескольких adapters и
+  согласованные native path IDs discovery. Общий consumer и companion
+  существующего pinned Neotest backport; новые plugins не добавляются.
 
 ## Capabilities
 
@@ -26,6 +29,7 @@ IDE-062: SQL edit/query готов, но SQL-файлы не имеют наст
 - `sql-workflow`: IDE-SQL-7 — native SQLLogicTest/SQLite в Tests с реальными
   проверками ожидаемых данных, независимыми scripts и сохранённым output.
   Путь согласован с предыдущими SQL changes; в main inventory SQL ещё нет.
+  IDE-SQL-8 задаёт SDK, IDE-TEST-5/6 — найденные общие условия интеграции.
 
 ### Modified Capabilities
 

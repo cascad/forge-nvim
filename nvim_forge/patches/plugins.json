@@ -42,13 +42,36 @@
     ]
   },
   "neotest": {
-    "id": "IDE-051-neotest-nearest-realpath",
+    "id": "IDE-051-070-neotest-native-paths",
     "revision": "27bf921498043f7ecd821d6db68d05de244bbd02",
     "file": "lua/neotest/consumers/run.lua",
     "before_sha256": "ae8377f5972ea01498892caa020b38448506e492dfe874ff3d507908bf6bcbe9",
     "after_sha256": "efe8c689c57f013cffda369d44626b4877e7bd5bbecad8e477a327f38bdc3b80",
     "before": "function neotest.run.get_tree_from_args(args, store)\n  args = args or {}\n  if type(args) == \"string\" then\n    args = { args }\n  end\n  local tree, adapter = (function()\n    if args.suite then\n      if not args.adapter then\n        args.adapter = client:get_adapters()[1]\n      end\n      return client:get_position(nil, args)\n    end\n    if args[1] then\n      local position_id = lib.files.path.real(args[1]) or args[1]\n      return client:get_position(position_id, args)\n    end\n    local file_path = nio.fn.expand(\"%:p\")\n    local row = nio.fn.getpos(\".\")[2] - 1\n    return client:get_nearest(file_path, row, args)\n  end)()\n  if tree and store then\n    last_run = { tree:data().id, vim.tbl_extend(\"keep\", args, { adapter = adapter }) }\n  end\n  return tree\nend\n",
-    "after": "function neotest.run.get_tree_from_args(args, store)\n  args = args or {}\n  if type(args) == \"string\" then\n    args = { args }\n  end\n  local tree, adapter = (function()\n    if args.suite then\n      if not args.adapter then\n        args.adapter = client:get_adapters()[1]\n      end\n      return client:get_position(nil, args)\n    end\n    if args[1] then\n      local position_id = (vim.uv or vim.loop).fs_realpath(args[1]) or lib.files.path.real(args[1]) or args[1]\n      return client:get_position(position_id, args)\n    end\n    local file_path = nio.fn.expand(\"%:p\")\n    file_path = (vim.uv or vim.loop).fs_realpath(file_path) or file_path\n    local row = nio.fn.getpos(\".\")[2] - 1\n    return client:get_nearest(file_path, row, args)\n  end)()\n  if tree and store then\n    last_run = { tree:data().id, vim.tbl_extend(\"keep\", args, { adapter = adapter }) }\n  end\n  return tree\nend\n"
+    "after": "function neotest.run.get_tree_from_args(args, store)\n  args = args or {}\n  if type(args) == \"string\" then\n    args = { args }\n  end\n  local tree, adapter = (function()\n    if args.suite then\n      if not args.adapter then\n        args.adapter = client:get_adapters()[1]\n      end\n      return client:get_position(nil, args)\n    end\n    if args[1] then\n      local position_id = (vim.uv or vim.loop).fs_realpath(args[1]) or lib.files.path.real(args[1]) or args[1]\n      return client:get_position(position_id, args)\n    end\n    local file_path = nio.fn.expand(\"%:p\")\n    file_path = (vim.uv or vim.loop).fs_realpath(file_path) or file_path\n    local row = nio.fn.getpos(\".\")[2] - 1\n    return client:get_nearest(file_path, row, args)\n  end)()\n  if tree and store then\n    last_run = { tree:data().id, vim.tbl_extend(\"keep\", args, { adapter = adapter }) }\n  end\n  return tree\nend\n",
+    "extra": [
+      {
+        "file": "lua/neotest/client/init.lua",
+        "before_sha256": "0d9bae417e14ef2c6f381f58e83a002a11025afec840892e5821f53c9dd99319",
+        "after_sha256": "9ed90504b6511fddb1f4db66573ed3563b26767678747765c679abc91907937c",
+        "before": "function neotest.Client:_update_positions(path, args)\n  if not lib.files.exists(path) then",
+        "after": "function neotest.Client:_update_positions(path, args)\n  -- Forge IDE-070: file events and directory discovery must share native path IDs.\n  path = (vim.uv or vim.loop).fs_realpath(path) or path\n  if not lib.files.exists(path) then"
+      },
+      {
+        "file": "lua/neotest/lib/file/init.lua",
+        "before_sha256": "2996ffe4135f56599e6071d0b7858828e0221e55abf9f171ade602bbf88cfa6e",
+        "after_sha256": "a81339cab11895bff05fc5fccb2ee1af170528c2300b22aea7bdcb3e430b0085",
+        "before": "function neotest.lib.files.parent(path)\n  local elems = vim.split(path, neotest.lib.files.sep, { plain = true })\n  return table.concat(elems, neotest.lib.files.sep, 1, #elems - 1)\nend\n\n--- Path separator for the current OS\n---@type string\nneotest.lib.files.sep = (function()\n  local res\n  if jit then\n    local os = string.lower(jit.os)\n    if os == \"linux\" or os == \"osx\" or os == \"bsd\" then\n      res = \"/\"\n    else\n      res = \"\\\\\"\n    end\n  else\n    res = package.config:sub(1, 1)\n  end\n  logger.debug(\"Path separator:\", res)\n  return res\nend)()\n\n---@nodoc\nneotest.lib.files.path = {\n  sep = neotest.lib.files.sep,\n  exists = neotest.lib.files.exists,\n  real = function(path)\n    local normalized_path = nio.fn.fnamemodify(path, \":p\")\n    local exists = neotest.lib.files.exists(normalized_path)\n    return exists and normalized_path or nil, exists\n  end,\n}\n",
+        "after": "function neotest.lib.files.parent(path)\n  path = (vim.uv or vim.loop).fs_realpath(path) or path\n  local elems = vim.split(path, neotest.lib.files.sep, { plain = true })\n  return table.concat(elems, neotest.lib.files.sep, 1, #elems - 1)\nend\n\n--- Path separator for the current OS\n---@type string\nneotest.lib.files.sep = (function()\n  local res\n  if jit then\n    local os = string.lower(jit.os)\n    if os == \"linux\" or os == \"osx\" or os == \"bsd\" then\n      res = \"/\"\n    else\n      res = \"\\\\\"\n    end\n  else\n    res = package.config:sub(1, 1)\n  end\n  logger.debug(\"Path separator:\", res)\n  return res\nend)()\n\n---@nodoc\nneotest.lib.files.path = {\n  sep = neotest.lib.files.sep,\n  exists = neotest.lib.files.exists,\n  real = function(path)\n    local normalized_path = (vim.uv or vim.loop).fs_realpath(path) or nio.fn.fnamemodify(path, \":p\")\n    local exists = neotest.lib.files.exists(normalized_path)\n    return exists and normalized_path or nil, exists\n  end,\n}\n"
+      },
+      {
+        "file": "lua/neotest/adapters/init.lua",
+        "before_sha256": "7bd67f2b2ec851321db6f515704d583c08f65243b7dfb06661388bb12a9fcab1",
+        "after_sha256": "e2d3ac0334c97fd487cc4d63f71fbff8dab2d3da00b4600dba05b1a04a4f1740",
+        "before": "    if root then\n      table.insert(adapters, { adapter = adapter, root = root })",
+        "after": "    if root then\n      root = (vim.uv or vim.loop).fs_realpath(root) or root\n      table.insert(adapters, { adapter = adapter, root = root })"
+      }
+    ]
   },
   "nvim-dap": {
     "id": "IDE-053-dap-expected-adapter-exit",

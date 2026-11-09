@@ -3,6 +3,9 @@
 local opt = vim.opt
 local ru_keys = require("config.ru_keys")
 
+-- spec: IDE-SQL-7. SQLLogicTest — отдельный DSL, не production SQL для SQLS/Sqruff.
+vim.filetype.add({extension={slt='sqllogictest'}})
+
 -- Set this to true after configuring your terminal font to a Nerd Font
 -- variant, for example "CaskaydiaCove Nerd Font" or "JetBrainsMono Nerd Font".
 -- Neovim cannot bundle terminal glyphs by itself; the terminal font decides

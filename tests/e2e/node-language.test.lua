@@ -54,8 +54,9 @@ local function discover(e)
   e:input(' wt');e:wait('Tests открыт',function() return e:current_ft()=='neotest-summary' end)
   e:wait('Jest позиции готовы',function() return e:lua([[local n=require('neotest');for _,id in ipairs(n.state.adapter_ids()) do
     local s=n.state.status_counts(id);if s and (s.total or 0)>=2 then return true end end;return false]]) end,30000)
-  local positions=e:lua([[local n=require('neotest');local p={};for _,id in ipairs(n.state.adapter_ids()) do
-    p[id]=n.state.positions(id):to_list() end;return {positions=p,expand=vim.fn.maparg('e','n',false,true).desc,cursor=vim.api.nvim_win_get_cursor(0),file=vim.fn.expand('%:p'),ft=vim.bo.filetype}]])
+  local positions=e:lua([[local n=require('neotest');local p,pending={},{};for _,id in ipairs(n.state.adapter_ids()) do
+    local tree=n.state.positions(id);if tree then p[id]=tree:to_list() else pending[#pending+1]=id end end
+    return {positions=p,pending=pending,expand=vim.fn.maparg('e','n',false,true).desc,cursor=vim.api.nvim_win_get_cursor(0),file=vim.fn.expand('%:p'),ft=vim.bo.filetype}]])
   vim.fn.writefile({vim.json.encode(positions)},e.dir..'/positions.json')
   e:input(' wt');e:wait('Tests фокус после discovery',function() return e:current_ft()=='neotest-summary' and e:lua([[return vim.fn.maparg('e','n',false,true).buffer==1]]) end)
   e:input('Ge')

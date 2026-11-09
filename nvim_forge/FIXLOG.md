@@ -6521,3 +6521,197 @@ Docker/WSL не запускались; Ubuntu/Mac/ARM64 не проверены
 в add-sql-test-workflow tasks. **Файлы:** scripts/sdk/sql-test (Cargo/source/
 protocol guide), prepare_sql_test.py, sql-test-sdk.test.lua/basic.slt,
 registry и SQL workflow/roadmap/docs. Новых Neovim plugins/startup installs нет.
+
+## 130. SQLLogicTest: scripts в Tests и Test Output
+
+**Дата:** 2026-11-09. **Проблема:** IDE-062, test workflow после SDK §129.
+Спека: IDE-SQL-7 (ADDED).
+
+**Что было/причина.** Native runner уже сравнивал SQLite expected/actual,
+но `.slt` отсутствовали в Neotest. Query Results не заменяет test status,
+output, stop и повтор после исправления.
+
+**Изменение.** Публичный forge-sqltest adapter, отдельный sqllogictest filetype,
+один test leaf на полный script: nearest/file сохраняют setup/ordered state.
+All использует общий consumer (§131). Native argv без shell, JSON report вне
+PTY, настоящий status/line/output. Пустой/невалидный/damaged report не даёт
+passed; missing SDK/DAP — genuine failed preflight через public custom
+Strategy, без OS process/установки/лишнего Neotest traceback «returned no data».
+
+**Попытки.** Первая results-функция вызвала writefile после async read в fast
+callback (E5560); запись переведена на nio.fn. Raw stdout при corrupt report
+содержал ConPTY clear-screen и стирал объяснение failed в terminal Output:
+fallback теперь показывает собственную причину, не пересылая raw PTY.
+Ошибки первоначального harness (Lua long strings, неверная ожидаемая line
+и локальный z вместо общего Space w z) не считались product RED.
+
+**Проверка/e2e.** 12 native editor UI Windows: discovery без SQL/installs,
+nearest/file/all и independent SQLite DB, Unicode/space/quote argv,
+wrong expected→quickfix→edit/save→rerun, живой PID stop→другой script,
+missing SDK/DAP, invalid/empty, повреждение настоящего report после code 0,
+focus/help/zoom/hide/reopen без повторного query. Actual SQL counters и
+настоящий Bats подтверждают исполнение, SDK replies не подменяются.
+Feature source ea63bf5: тот же final test не находит scripts в Tests.
+Source/test/helper/config/SDK/files/UI/shutdown сохранены, финальный audit
+sql-tests-evidence.json. Script-source replay с E118 sha256 (gsub вернул
+два значения) исправлен и повторён; ранний отказ до startup не принят как RED.
+
+**Вывод/границы.** SQL tests доступны в общем workflow, отдельно от SQLRun.
+Native SDK/12 CLI checks — §129, UI — самостоятельное evidence. Include
+сохраняет истинные file/line в Output; стандартный Neotest Error не имеет
+filename, marker/quickfix parent script остаётся в его начале. Semantic
+references IDE-062 и остальные ОС не объявлены завершёнными.
+**Файлы:** forge/sql_tests.lua, options.lua, plugins/tests.lua,
+sql-tests.test.lua/sql_test_project.lua, registry/Dockerfile и SQL_TESTS/docs.
+
+## 131. Run all: несколько adapters одного workspace
+
+**Дата:** 2026-11-09. **Проблема:** IDE-069.
+Спека: IDE-TEST-5 (FIX).
+
+**Что было.** Space T A передавал cwd обычному nt.run.run. Первый adapter
+directory tree перехватывал запрос: рядом с SQL даже пустой Bats root оставлял
+SQL без запуска. При двух языках выполнялся лишь один adapter.
+
+**Причина/изменение.** Native Neotest directory lookup выбирает один adapter.
+Consumer forge_runner через документированные Client:get_adapters/get_position/
+run_tree собирает непустые trees cwd и исполняет adapters последовательно.
+Прямого доступа к _state/_runner/_adapters нет. При cwd выше корня выбирает
+вложенный root, при cwd внутри — его subtree; чужие roots исключены по
+границе пути, порядок регистрации не задаёт результат.
+
+**Проверка/e2e.** Точный prototype source с прежним mapping даёт RED на final
+mixed UI. GREEN: SQL basic/other/wrong counters ровно по 1, настоящий Bats
+создаёт один marker; statuses 3 passed/1 failed. All работает без открытия
+Tests заранее; другой открытый SQL workspace сохраняет counter 0. Нет
+подменённых adapter результатов или искусственных successful replies.
+
+**Вывод.** All относится ко всем обнаруженным adapters cwd, не к первому
+tree. Проверка одним языком не доказывает эту семантику.
+**Файлы:** forge/test_runner.lua, plugins/tests.lua, SQL UI/fixtures/spec/docs.
+
+## 132. Neotest: native identity directory/file paths
+
+**Дата:** 2026-11-09. **Проблема:** IDE-070.
+Спека: IDE-TEST-6 (FIX).
+
+**Что было.** Stop→другой script и invalid→empty зависали в собственном child;
+RPC через 10 s завершал его SIGTERM. Это не было crash native SQL runner:
+остановленный PID уже вышел, loop начинался при добавлении другого buffer.
+
+**Причина.** Native discovery directory tree использовал Windows `\`, события
+file/directory приносили `/`. Library parent делил строку только по native
+separator, real возвращал fnamemodify с другой формой. positions.merge не
+находил общего parent и бесконечно оборачивал drive root. Watchdog сохранил
+stack Tree:add_child→wrap_with_parent→merge→update_positions. Его диагностический
+PASS не засчитан: hook прервал loop, то есть изменил исследуемое выполнение.
+
+**Изменение.** Companion существующего pinned Neotest backport приводит path
+через fs_realpath на входе _update_positions, второй — в library parent/real.
+Нормализация только adapter file не решила directory branch, этот опыт
+сохранён. Общая граница действует на всех ОС; string-only Windows обхода нет.
+Третий root companion — §134. Source pin и primary nearest patch не менялись.
+
+**Проверка/e2e.** Те же final UI на точных before client/file/adapter-group в
+private runtime дают ожидаемый RPC timeout после native stop/file switch;
+исходный SDK не откатывается. GREEN без hook/jit.off: другой test действительно
+выполняется, counters/JSON/PID/shutdown подтверждены. Apply/check/repeat/revert
+LF/CRLF и unknown-last-companion E2E проверяют все четыре файла до записи.
+Новая явная подготовка SDK выполнена, 67 plugins/5 declarations/pins сохранены.
+
+**Вывод.** Path identity надо согласовывать до построения directory/file trees.
+Это причина конкретного воспроизведения, не объяснение системных тормозов.
+**Файлы:** patches/plugins.json/README, plugin-backports.test.lua,
+SQL UI source replay/helper, IDE-TEST-6/spec/docs.
+
+## 133. Node E2E: pending tree в диагностическом снимке
+
+**Дата:** 2026-11-09. **Проблема:** IDE-071.
+Спека: IDE-NODE-4 (FIX).
+
+**Что было/причина.** Общий регресс дал 7 PASS/1 FAIL до запуска Jest debug:
+snapshot вызывал state.positions(id):to_list() для другого pending adapter.
+Public API допускает nil во время discovery. Первичный stack/исходный test
+совпадают с Git 0126651, это ошибка observer, не отказ debugger.
+
+**Изменение/проверка.** Snapshot пропускает nil tree и явно сохраняет pending
+IDs. Ожидание настоящих Jest tests, nearest/file assertions и native
+breakpoint/eval/continue остались прежними. Финальный полный Node E2E прогон
+проверяет 8 cases; отдельный startup отказ описан §135, он не замалчивается.
+
+**Вывод.** Observer обязан учитывать transient API state, не останавливая
+проверку поведения. **Файлы:** node-language.test.lua, PROBLEMS/HISTORY/docs.
+
+## 134. Neotest: canonical adapter root без дубля pytest namespace
+
+**Дата:** 2026-11-09. **Проблема:** IDE-072.
+Спека: IDE-TEST-6 (FIX).
+
+**Что было.** Python nearest/file запустил оба pytest test вместо одного.
+Артефакт показал два neotest-python namespace одной физической папки с разными
+separators. Готовность одного tree не гарантировала состояние выбранного
+второго. Debug nearest в другом child проходил.
+
+**Причина/изменение.** Adapter-group сохранял root провайдера без canonical
+identity; library real уже возвращал native путь, и open-buffer fallback
+добавлял другой root ID. Третий companion приводит adapter.root через тот же
+fs_realpath до регистрации. Предыдущие client/file companions и SDK primary
+не переписывают unrelated code; explicit preparation обновляет manifest.
+
+**Проверка/e2e.** Постоянный Python nearest/file дополнительно проверяет один
+namespace и реальную исходную cursor line. Точный upstream adapter-group на
+том же final test даёт 2 namespaces вместо 1; patched — 1 и настоящий pytest
+nearest/file с venv/output/neighbor marker. Source/helper/before-after SHA
+сохранены. Гипотеза async focus не подтверждена: диагностические expand/getpos
+дали одинаковую line 8; legacy input replay тоже мог проходить. Никакого
+нового изменения consumer nearest по этой гипотезе не делалось.
+
+**Вывод.** Canonical root, parent/real и discovery обязаны описывать одну
+физическую identity для каждого adapter. **Файлы:** third Neotest companion,
+python-language.test.lua/python_project.lua, patch/source E2E/spec/docs.
+
+## 135. SQL tests: общий регресс и открытая startup диагностика
+
+**Дата:** 2026-11-09. **Проверка:** IDE-SQL-7/8, IDE-TEST-5/6.
+
+**Результат.** Windows suites: SQL tests 12, query 20, SQL SDK 2,
+SQL test SDK 12, backports 12, common panels 6, Go test-runner 5,
+Node/Python/Rust/Bash по 8. Из 101 checks последнего набора 100 PASS, один
+Rust integration FAIL на cleanup после успешных assertions. Изолированный
+тот же integration PASS; общий regression gate остаётся открытым. Это разные
+типы запуска, не 101 GUI test. Unit/trace 365 PASS, OpenSpec 63 strict valid. Runtime/source/payload/
+67 pins/5 declarations/3 Neotest companions и штатный positive shutdown
+сверяет sql-tests-evidence.json. История добавлена без изменения старых bytes.
+
+**Открытая проблема IDE-073.** Один Node nearest/file child (29678239013200)
+не дошёл до сценария: nvim_ui_attach id 1, 10000 ms, PID 8432. Framework
+завершил собственный child SIGTERM без hard kill, затем подтверждено отсутствие
+собственных оставшихся nvim/node/sqls процессов. Причина неизвестна; snapshot
+до первого reply ограничен rpc-error/start-error/shutdown. Новый успешный
+прогон не объявляет этот timeout исправленным; это продолжение primary RPC
+диагностики §107/IDE-047, не доказательство системной причины или SQL bug.
+
+**Открытая проблема IDE-074.** Rust default F5 в одном batch (30484781261100)
+прошёл initialize/initialized/setBreakpoints и успешный reverse runInTerminal,
+но после «Launching ...forge_app.exe» CodeLLDB не дал ожидаемого продолжения.
+WARN nvim-dap открыл hit-enter. Остальные 7 Rust cases прошли; отдельный тот
+же F5 — PASS без изменения runtime. Причина неизвестна, retry не объявлен fix;
+логи/уведомление/экран сохранены отдельно от итоговых положительных проверок.
+
+**Открытая проблема IDE-075.** Новый полный Rust прогон прошёл F5, но
+integration case не смог убрать private runtime, хотя Neovim вышел code 0.
+CIM показал оставшийся cargo clippy PID 6900 с точным manifest-path этого
+профиля, родитель уже отсутствовал; остались state/lsp.log/nio.log.
+Проверены marker canonical/root/token и resolved F: path, process metadata
+сохранена. Завершён только подтверждённый own worker; штатный guarded
+editor_runtime.remove затем удалил профиль. Изолированный test повторён,
+но lifecycle не объявлен исправленным. Следующий шаг — containment потомков
+тестового editor; task integration не закрыт, Rust analysis не отключался.
+
+**Границы/вывод.** Ubuntu recipe дополнен, engine pipes read-only проверены:
+оба отсутствовали, Docker CLI/Desktop/WSL lifecycle не вызывались. Mac/Ubuntu/
+ARM64/GUI/внешние DB не запускались. IDE-062 semantic references остаются
+следующим шагом; include cross-file quickfix — явное ограничение Neotest Error.
+F cleanup list прежняя: 20 каталогов, ничего не удалено. Windows temp/profile/
+build остались на F; сохранённый C: LSP log неизменён. **Файлы:** test registry,
+Docker recipe, SQL_TESTS/матрица/roadmap, AGENT_COMMANDS и evidence artifacts.

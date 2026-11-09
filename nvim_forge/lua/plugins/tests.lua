@@ -32,7 +32,7 @@ return {
             -- Запуск тестов авто-открывает Test Output (ide/triggers.lua: test:run).
             { "<leader>Tt", function() nt().run.run(); require("ide").triggers.fire("test:run") end,                    desc = "Tests: run nearest" },
             { "<leader>Tf", function() nt().run.run(vim.fn.expand("%")); require("ide").triggers.fire("test:run") end,  desc = "Tests: run file" },
-            { "<leader>TA", function() nt().run.run(vim.fn.getcwd()); require("ide").triggers.fire("test:run") end,     desc = "Tests: run all" },
+            { "<leader>TA", function() nt().forge_runner.all(); require("ide").triggers.fire("test:run") end,           desc = "Tests: run all" },
             { "<leader>Td", function() nt().run.run({ strategy = "dap" }) end, desc = "Tests: debug nearest" },
             { "<leader>Ts", function() nt().run.stop() end,                   desc = "Tests: stop" },
             { "<leader>Ta", function() nt().run.attach() end,                 desc = "Tests: attach" },
@@ -76,8 +76,10 @@ return {
             end
 
             local consumers = {}
+            consumers.forge_runner = require('forge.test_runner')
             table.insert(adapters, require('forge.node').jest())
             table.insert(adapters, require('forge.bash').tests())
+            table.insert(adapters, require('forge.sql_tests'))
             local ok_overseer, overseer_consumer = pcall(require, "neotest.consumers.overseer")
             if ok_overseer then
                 consumers.overseer = overseer_consumer

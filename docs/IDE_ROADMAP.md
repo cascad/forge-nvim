@@ -19,9 +19,10 @@ IDE-001 параллельно ждёт диагностических данн�
 | Готово на Windows | Rust/Cargo, IDE-054/055 | 8 real UI PASS; пути/argv/JSON test adapter и output исправлены (§114–115), 37 прежних UI + 9 backports + 364 checks PASS; [команды](RUST_WORKFLOW.md). Ubuntu/Mac открыты |
 | Готово на Windows | Bash edit/run/tests, IDE-056/058 | 8 real UI PASS: sourced LSP, shfmt, Tasks и Bats; Unicode rename исправлен (§116–117). [Команды](BASH_WORKFLOW.md). Ubuntu/Mac открыты |
 | Готово на Windows | SQL editor/query, IDE-060/061/063–068 | 20 SQL UI + 2 SDK CLI PASS, native SQLS comments fix/readiness и cache Results при смене workspace (§119–128); 6 common panel UI и 365 unit/trace PASS. Прежние 72 UI/9 backports сохранены как отдельный прогон. Ubuntu/Mac/ARM64/внешние DB не проверены |
-| Текущий этап | Остаток SQL workflow, IDE-062 | SQL test framework/Neotest и semantic references workflow с реальными E2E; SQLS references provider отсутствует. Продолжить матрицу, не подменяя SQL tests успешным SELECT |
-| Основа готова на Windows | IDE-062: native SQL test SDK | SQLLogicTest/SQLite, locked explicit build/readiness и 12 process E2E PASS (§129). Следующий шаг — Neotest adapter и editor UI; references остаются отдельной задачей |
-| Затем | Остальная [матрица языков](LANGUAGE_MATRIX.md) | SQL tests/references IDE-062, Bash DAP IDE-057; language Ubuntu после доступности engine |
+| Готово на Windows | IDE-062: SQLLogicTest в Tests | 12 native SDK checks и 12 editor UI PASS (§129–132): nearest/file/all, expected/fix/rerun, stop/output/panels; общий All и native paths исправлены. [Команды](SQL_TESTS.md). Остальные ОС открыты |
+| Текущий этап | Завершить общий regression gate | IDE-075: Rust Cargo worker пережил editor и сорвал cleanup; собственный остаток убран, нужен постоянный lifecycle fix/E2E. IDE-073/074 startup/CodeLLDB timeouts сохранены отдельно, причина не установлена |
+| Следующий этап | Остаток SQL workflow, IDE-062 | Semantic references с реальными E2E; SQLS references provider отсутствует. Не подменять references текстовым поиском. Вложенный SLT error показывает точную location в Output; cross-file quickfix остаётся ограничением Neotest |
+| Затем | Остальная [матрица языков](LANGUAGE_MATRIX.md) | SQL references IDE-062, Bash DAP IDE-057; language Ubuntu после доступности engine |
 | После функциональной матрицы | Упрощение архитектуры | Общее ядро, явные системные границы и setup; сокращение дублирования с сохранением E2E |
 
 **Mac параллельно:** IDE-001 (zsh/Go до запуска nvim) и IDE-002 (Cmd+C)

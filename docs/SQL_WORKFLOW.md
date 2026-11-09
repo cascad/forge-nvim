@@ -110,11 +110,13 @@ batch нет: выполненные backend statements могут уже изм
 SQLS 0.2.48 использует codepoint координаты и ошибается на первом символе rename.
 Версионный adapter исправляет эту границу; другие версии не патчатся вслепую.
 SQLS не предоставляет semantic references; поиск текста их не заменяет.
-SQL test framework остаётся отдельным IDE-062, procedural debug требует backend.
+SQL tests описаны отдельно ниже; IDE-062 сохраняет semantic references,
+procedural debug требует backend.
 
-Для test framework уже подготовлен отдельный [native SQLLogicTest SDK](../scripts/sdk/sql-test/README.md)
-с 12 process E2E Windows. Подключение `.slt` к Tests/Output и semantic
-references ещё не реализованы; SDK CLI проверки не считаются editor UI PASS.
+Для test framework есть отдельный [native SQLLogicTest SDK](../scripts/sdk/sql-test/README.md)
+и [`.slt` в общих Tests/Test Output](SQL_TESTS.md): 12 process E2E и 12 editor
+UI Windows PASS. Semantic references ещё не реализованы; SDK CLI и editor
+UI evidence проверяются отдельно.
 
 Upstream SQLS 0.2.48 классифицирует SELECT с ведущим комментарием как Exec.
 Нужен подготовленный forge.1 вариант: `Query OK` старого backend не означает

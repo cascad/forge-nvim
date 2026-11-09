@@ -10,16 +10,39 @@
 
 Маршрут и приоритеты: [рабочий план nvim_forge](docs/IDE_ROADMAP.md).
 Для новых пунктов используем следующий свободный ID `IDE-xxx`; исходный
-симптом хранится здесь, этап и состояние — в плане. Следующий ID: `IDE-069`.
+симптом хранится здесь, этап и состояние — в плане. Следующий ID: `IDE-076`.
 
-## IDE-068 — SQL Results: видимая панель после смены workspace
+## IDE-075 — E2E Rust: Cargo worker переживает editor и удерживает runtime
 
-2026-11-09: видимая Results оставляла rows/header другого workspace; пустой
-root наследовал чужой вывод. select менял root/record без render, а общий
-ide.show пропускает open видимого component. Source d43c094: три точных RED.
-Выбор теперь обновляет buffer; постоянные UI проверяют cache двух SQLite,
-пустой root, late reply и counters без повторного SQL. История — FIXLOG §128,
-change fix-sql-results-workspace-switch; Windows проверен, Ubuntu/Mac открыты.
+2026-11-09: Rust integration assertions прошли, Neovim PID 12532 вышел code 0,
+но runtime cleanup failed (30860580344400). В marker-owned профиле
+20116-30860580650100 остался cargo clippy PID 6900, родитель 19152 уже отсутствовал;
+удерживались state/lsp.log и nio.log. Проверены canonical path/root/token и
+точный --manifest-path профиля, сохранена process metadata, завершён только
+этот worker. Штатный editor_runtime.remove после его выхода удалил профиль.
+Изолированный integration repeat PASS; это не исправляет orphan lifecycle.
+Нужна общая containment/остановка потомков тестового editor на системной
+границе, без выключения настоящего анализа/подмены tests. Полный integration
+gate остаётся открытым. История FIXLOG §135.
+
+## IDE-074 — Rust default F5: редкий CodeLLDB timeout после runInTerminal
+
+2026-11-09: Rust batch 7 PASS/1 FAIL (30484781261100), default F5.
+CodeLLDB initialize/initialized/setBreakpoints прошли, runInTerminal получил
+успешный response, после «Launching ...forge_app.exe» нет ожидаемого ответа/
+breakpoint и nvim-dap WARN открыл hit-enter. Причина неизвестна. Изолированный
+тот же F5 прошёл без изменения runtime; это не доказательство исправления.
+Сохранены dap log/screen/notifications, отдельный повтор; FIXLOG §135.
+
+## IDE-073 — E2E startup: редкий RPC timeout на nvim_ui_attach
+
+2026-11-09: один Node nearest/file case не дошёл до сценария: request id 1
+nvim_ui_attach, 10000 ms, child PID 8432. Артефакт 29678239013200 содержит
+rpc-error/start-error/shutdown; child завершён SIGTERM, hard_kill=false,
+оставшихся собственных nvim/node/sqls процессов не обнаружено. Причина не
+установлена; не объявлять следствием Root/SQL и не считать исправленным
+успешным новым прогоном. Связано с прежней диагностикой primary RPC IDE-047.
+Нужны transport/startup evidence при следующем воспроизведении; FIXLOG §135.
 
 ## IDE-062 — SQL: отдельный test framework и references workflow
 
@@ -29,8 +52,9 @@ SQLLogicTest/DB-specific tests), не подменённого успешным 
 семантические references. Продолжить после edit/query этапа, с постоянными E2E.
 
 2026-11-09: native SQLLogicTest/SQLite SDK готов отдельно (12 process E2E
-Windows, FIXLOG §129). Editor adapter/UI и semantic references ещё открыты;
-SQLite assertion readiness не заменяет эти проверки. План —
+Windows, FIXLOG §129). Editor adapter/UI прошёл 12 native UI E2E Windows (§130–135);
+общий integration gate открыт из-за IDE-075, semantic references ещё открыты.
+SQLite assertion readiness не заменяет UI/проверки других ОС. План —
 openspec/changes/add-sql-test-workflow/tasks.md.
 
 ## IDE-057 — Bash debug: выбор отдельного Linux backend для Windows
@@ -504,6 +528,53 @@ Windows не срабатывают. Решить: псевдонимы в nvim_
 
 
 <!-- ────────── разобрано (переехало в nvim_forge/FIXLOG.md) ────────── -->
+
+IDE-072 → FIXLOG §134: Neotest: один pytest workspace получает два namespaces.
+
+2026-11-09: Python nearest/file дал 1 passed + 1 failed вместо одного nearest.
+Артефакт содержит два neotest-python roots одной физической папки с разными
+separators. Root adapter-group теперь canonical через fs_realpath, согласован
+с discovery/library boundary. Точный upstream adapter-group даёт устойчивый
+RED «2 namespaces, expected 1», patched — один namespace и верные результаты.
+Синхронизация cursor test усилена; гипотеза потери фокуса не подтверждена.
+Change add-sql-test-workflow, IDE-TEST-6; история FIXLOG §134.
+
+IDE-071 → FIXLOG §133: Node E2E observer: ещё не готовый tree другого adapter.
+
+2026-11-09: общий регресс дал Node 7 PASS/1 FAIL до Jest debug. Diagnostic
+snapshot вызывал n.state.positions(id):to_list() без nil guard, хотя API
+допускает pending root. Наличие другого adapter изменило timing; test не дошёл
+до backend. Снимок теперь сохраняет pending отдельно. Настоящие Jest/debug
+assertions не изменены, полный повтор Node 8 PASS; история FIXLOG §133.
+
+IDE-070 → FIXLOG §132: Neotest: бесконечное объединение trees после смены SQL файла.
+
+2026-11-09: реальные stop→другой script и invalid→empty UI зависали в child
+после BufAdd. Диагностический watchdog сохранил stack wrap_with_parent/merge
+в Neotest; directory path и file path Windows имели разные separators.
+Нормализовать только adapter file недостаточно: directory parse получает
+путь события. Исправление на общей границе _update_positions, pinned companion
+backport Neotest; source replay точного upstream client, постоянные UI без
+watchdog. Change add-sql-test-workflow, IDE-TEST-6; системные тормоза не объясняет.
+
+IDE-069 → FIXLOG §131: Run all выбирает пустой adapter того же workspace.
+
+2026-11-09, SQL UI regression: в корне активны пустой forge-bats и SQL tests;
+Space T A вызывает nt.run.run(cwd), Neotest выбирает первый tree корня,
+SQL runner не запускается. Нужен общий consumer Run all для adapters с tests
+в cwd, без предпочтения порядка регистрации. Native counters/PID доказывают
+source RED; исправление и регресс — add-sql-test-workflow, IDE-TEST-5.
+
+IDE-068 → FIXLOG §128: SQL Results: видимая панель после смены workspace.
+
+2026-11-09: видимая Results оставляла rows/header другого workspace; пустой
+root наследовал чужой вывод. select менял root/record без render, а общий
+ide.show пропускает open видимого component. Source d43c094: три точных RED.
+Выбор теперь обновляет buffer; постоянные UI проверяют cache двух SQLite,
+пустой root, late reply и counters без повторного SQL. История — FIXLOG §128,
+change fix-sql-results-workspace-switch; Windows проверен, Ubuntu/Mac открыты.
+
+
 
 IDE-067 → [FIXLOG §127](nvim_forge/FIXLOG.md#127-sql-sdk-readiness-проверка-без-build-scratch-и-compiler):
 SDK readiness использует отдельный temp profile, не требует build scratch/

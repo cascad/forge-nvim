@@ -980,7 +980,7 @@ RED на d43c094; DB counters исключают повторное выполн
 SQL tests/references — IDE-062. Ubuntu image дополнен, но build/run и
 Mac/ARM64/GUI/внешние RDBMS не проверены; Desktop/WSL не запускаются ради теста.
 
-## SQLLogicTest SDK (этап до editor adapter)
+## SQLLogicTest SDK и editor workflow
 
 `python -B tests/e2e/prepare_sql_test.py --download --rustc <rustc>` явно
 собирает locked native SQLite runner предоставленными Rust/CC (-j2).
@@ -991,4 +991,33 @@ assertion без build/download/compiler/scratch; output по умолчанию
 их сборка/запуск не проверены. Обычный runner не требует Python или Bash.
 Exact sources/lock/test/preparer/manifest, process PID/stdout/stderr/exit и
 JSON сохранены. [Protocol, команды и границы](../../scripts/sdk/sql-test/README.md).
-Это не editor UI PASS: Neotest adapter остаётся следующей задачей IDE-062.
+SDK process checks проверяются отдельно от editor UI.
+
+`<nvim> -l tests/e2e/sql-tests.test.lua` — 12 настоящих UI Windows PASS:
+nearest/file/all с setup/private SQLite, ошибкой и исправлением/save/rerun,
+quickfix, Unicode/space/quote argv, stop живого PID, missing runner/DAP guard,
+invalid/empty scripts, damaged real report и общие focus/help/zoom/hide.
+Реальные SQL counters исключают фиктивное исполнение. Mixed All запускает
+настоящий native Bats рядом с SQL, другой открытый workspace не запускается.
+Для mixed case нужны явно подготовленные Bash deps. Нет подмены SQL/replies;
+fault case повреждает настоящий файл report после exit, сохраняя native копию.
+
+IDE-069: прежний Run all выбирал один adapter корня; consumer через
+documented Client API обходит непустые trees cwd. IDE-070: Neotest discovery
+смешивал native/file-event paths, merge зацикливался при смене файла. Три
+companions pinned backport нормализуют update_positions, library parent/real
+и adapter-group root (IDE-072, один pytest namespace вместо двух).
+`<nvim> -l tests/e2e/plugin-backports.test.lua` включает native CLI E2E для
+apply/check/repeat/revert LF/CRLF и отказа неизвестного последнего companion
+до записи всех четырёх файлов. Pin не менялся; явный `:Lazy build neotest`.
+
+Source RED сохраняет feature config ea63bf5, prototype All и точные upstream
+client/file/adapter-group companions в private runtime. Original SDK files не меняются
+для replay; FORGE_SQL_TEST_CLIENT_SOURCE/FORGE_SQL_TEST_FILE_SOURCE/
+FORGE_SQL_TEST_ADAPTERS_SOURCE допустимы
+только вместе с full FORGE_E2E_CONFIG_SOURCE, SHA обязаны совпасть с before.
+Все final source/UI test/helper SHA сохранены; диагностический watchdog
+использовался только для stack, постоянные RED/GREEN идут без него.
+Фильтр UI: FORGE_SQL_TEST_CASE. [Клавиши/подготовка/границы](../../docs/SQL_TESTS.md).
+Ubuntu recipe дополнен, engine не запускается. Mac/Ubuntu/ARM64/GUI открыты;
+SQL semantic references остаются IDE-062.

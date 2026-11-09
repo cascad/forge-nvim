@@ -93,3 +93,24 @@ Check прежней версии не пишет файл и просит build
 в текущую, revert — в upstream. Чужие изменения по-прежнему отклоняются.
 Этот backport не исправляет системные
 тормоза Windows, редкие CLI timeouts или удержание папки другим процессом.
+
+## Neotest: native paths и смена файла (IDE-070)
+
+Прежний primary IDE-051 nearest realpath сохраняется. Три companions pinned
+27bf921498043f7ecd821d6db68d05de244bbd02 нормализуют native пути в
+client _update_positions, library files.parent/path.real и adapter-group root.
+BufAdd directory
+path с `/` на Windows смешивался с discovery tree `\`: positions.merge мог
+бесконечно оборачивать drive root. Несогласованные parent/real также создавали
+дубли roots и присоединяли tests другого workspace. Это причина конкретных
+воспроизведённых SQL UI зависаний, не диагноз системных тормозов Windows.
+
+На существующей установке явно `:Lazy build neotest`, затем restart.
+`nvim -l nvim_forge/scripts/prepare-plugins.lua --plugin-root <lazy> --plugin neotest`
+использует тот же applier; --check/--revert проверяют/возвращают все четыре файла.
+Ревизия и 67 pins не менялись. Неизвестный последний companion отклоняется
+до записи primary и предыдущих companions. LF/CRLF сохраняются; повтор/check
+не меняет mtime. Native process E2E находятся в plugin-backports.test.lua,
+настоящие file-switch/stop/workspace E2E — sql-tests.test.lua.
+Source RED использует точные before-файлы в private runtime, prepared SDK
+не откатывается. Штатный GREEN идёт без diagnostic watchdog.

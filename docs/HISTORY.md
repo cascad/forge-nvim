@@ -248,6 +248,12 @@ Python реализован и проверен 2026-11-03; после возо�
 | §127 | [SQL SDK readiness: проверка без build scratch и compiler](../nvim_forge/FIXLOG.md#127-sql-sdk-readiness-проверка-без-build-scratch-и-compiler) |
 | §128 | [SQL Results: выбранный workspace обновляет видимый вывод](../nvim_forge/FIXLOG.md#128-sql-results-выбранный-workspace-обновляет-видимый-вывод) |
 | §129 | [SQL tests: native SQLLogicTest/SQLite SDK](../nvim_forge/FIXLOG.md#129-sql-tests-native-sqllogictestsqlite-sdk) |
+| §130 | [SQLLogicTest: scripts в Tests и Test Output](../nvim_forge/FIXLOG.md#130-sqllogictest-scripts-в-tests-и-test-output) |
+| §131 | [Run all: несколько adapters одного workspace](../nvim_forge/FIXLOG.md#131-run-all-несколько-adapters-одного-workspace) |
+| §132 | [Neotest: native identity directory/file paths](../nvim_forge/FIXLOG.md#132-neotest-native-identity-directoryfile-paths) |
+| §133 | [Node E2E: pending tree в диагностическом снимке](../nvim_forge/FIXLOG.md#133-node-e2e-pending-tree-в-диагностическом-снимке) |
+| §134 | [Neotest: canonical adapter root без дубля pytest namespace](../nvim_forge/FIXLOG.md#134-neotest-canonical-adapter-root-без-дубля-pytest-namespace) |
+| §135 | [SQL tests: общий регресс и открытая startup диагностика](../nvim_forge/FIXLOG.md#135-sql-tests-общий-регресс-и-открытая-startup-диагностика) |
 
 ## Как читать и дополнять
 

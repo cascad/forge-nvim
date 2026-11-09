@@ -45,6 +45,18 @@ function M.start(root,on_create)
       FORGE_PYTHON_PATH='',FORGE_DEBUGPY_ADAPTER='',FORGE_DEBUGPY_PYTHON='',
       FORGE_NODE_EXECUTABLE=manifest.node,FORGE_NODE_TOOLS=deps..'/tools'},
     prepare=function(project,env,runtime)
+      if vim.env.FORGE_PYTHON_ADAPTER_GROUP_SOURCE then
+        assert(vim.env.FORGE_E2E_CONFIG_SOURCE,'Root replay requires original config metadata')
+        local spec
+        for _,item in ipairs(read(root..'/nvim_forge/patches/plugins.json').neotest.extra) do
+          if item.file=='lua/neotest/adapters/init.lua' then spec=item end end
+        assert(spec,'Missing root companion declaration')
+        local source=vim.env.FORGE_PYTHON_ADAPTER_GROUP_SOURCE
+        local f=assert(io.open(source,'rb'));local raw=f:read('*a');f:close()
+        assert(vim.fn.sha256((raw:gsub('\r\n','\n')))==spec.before_sha256,'Replay must be exact upstream source')
+        local data=env.XDG_DATA_HOME..'/nvim_forge'..(win and '-data' or '')
+        assert(uv.fs_copyfile(source,data..'/lazy/neotest/'..spec.file))
+      end
       if vim.env.FORGE_PYTHON_DAP_LEGACY then
         local patch=read(root..'/nvim_forge/patches/plugins.json')['nvim-dap']
         local data=env.XDG_DATA_HOME..'/nvim_forge'..(win and '-data' or '')
@@ -74,6 +86,7 @@ function M.start(root,on_create)
   e.log_cache=e:lua([[return vim.fn.stdpath('cache')]])
   e.log_state=e:lua([[return vim.fn.stdpath('log')]])
   e.log_lsp=e:lua([[return vim.lsp.log.get_filename()]])
+  assert(uv.fs_copyfile(e:lua([[return vim.fn.stdpath('data')..'/lazy/neotest/lua/neotest/adapters/init.lua']]),e.dir..'/neotest-adapters-source.lua'))
   assert(uv.fs_copyfile(e:lua([[return vim.fn.stdpath('data')..'/lazy/nvim-dap/lua/dap/session.lua']]),e.dir..'/dap-session-source.lua'))
   vim.fn.writefile(vim.split(prepared_output,'\n',{plain=true}),e.dir..'/venv-prepare.txt')
   vim.fn.writefile({vim.json.encode(manifest)},e.dir..'/python-dependencies.json')
