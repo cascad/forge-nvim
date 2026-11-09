@@ -16,7 +16,8 @@ IDE-001 параллельно ждёт диагностических данн�
 | Текущая проверка | Go LSP/format и IDE-050 | Windows 6 language + 15 прежних UI PASS, fallback исправлен (§110); Ubuntu требует работающего engine и явного build |
 | Готово на Windows | JS/Node и IDE-051 | 8 новых UI PASS: LSP/Prettier/Tasks/js-debug/Jest и missing tools (§111). Ubuntu требует engine, Mac открыт |
 | Готово на Windows | Python, IDE-052/053 | 8 real UI PASS: venv/LSP/Ruff/debugpy/pytest; общий selector и классификация ожидаемого adapter close (§112–113). 29 прежних UI PASS; Ubuntu/Mac открыты |
-| Затем | Остальная [матрица языков](LANGUAGE_MATRIX.md) | Положительный Rust/Cargo workspace регресс, затем Bash/SQL; language Ubuntu после доступности engine |
+| Готово на Windows | Rust/Cargo, IDE-054/055 | 8 real UI PASS; пути/argv/JSON test adapter и output исправлены (§114–115), 37 прежних UI + 9 backports + 364 checks PASS; [команды](RUST_WORKFLOW.md). Ubuntu/Mac открыты |
+| Затем | Остальная [матрица языков](LANGUAGE_MATRIX.md) | Bash/SQL; language Ubuntu после доступности engine |
 | После функциональной матрицы | Упрощение архитектуры | Общее ядро, явные системные границы и setup; сокращение дублирования с сохранением E2E |
 
 **Mac параллельно:** IDE-001 (zsh/Go до запуска nvim) и IDE-002 (Cmd+C)

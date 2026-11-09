@@ -5,7 +5,9 @@ local function nt()
 end
 
 return {
-    { "rouge8/neotest-rust", ft = "rust" },
+    { "rouge8/neotest-rust", ft = "rust",
+        commit = require('ide.backports').revision('neotest-rust'),
+        build = function(plugin) require('ide.backports').run('neotest-rust', plugin.dir, 'apply') end },
     { "fredrikaverpil/neotest-golang", ft = "go", commit = "65b2be63c3de00e6f15c05388ebdc8d603dbd727" },
     { "nvim-neotest/neotest-python", ft = "python" },
     { 'nvim-neotest/neotest-jest', ft = { 'javascript', 'javascriptreact' }, commit = '0e7979d51301dfae5ef839d771bd28cf593fde3f' },

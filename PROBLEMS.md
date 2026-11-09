@@ -10,7 +10,7 @@
 
 Маршрут и приоритеты: [рабочий план nvim_forge](docs/IDE_ROADMAP.md).
 Для новых пунктов используем следующий свободный ID `IDE-xxx`; исходный
-симптом хранится здесь, этап и состояние — в плане. Следующий ID: `IDE-054`.
+симптом хранится здесь, этап и состояние — в плане. Следующий ID: `IDE-056`.
 
 ## IDE-048 — completed Gitsigns E2E не дождался следующего Git-read
 
@@ -472,6 +472,17 @@ Windows не срабатывают. Решить: псевдонимы в nvim_
 
 
 <!-- ────────── разобрано (переехало в nvim_forge/FIXLOG.md) ────────── -->
+
+IDE-055 → [FIXLOG §115](nvim_forge/FIXLOG.md#115-rust-debug-tests-результат-сохраняет-настоящий-output):
+Rust debug получал passed, но translate_results терял ссылку на настоящий
+stdout. Result сохраняет output path; path-only intermediate source RED
+6332668693900, GREEN 6304221991400 с marker 42 и raw stdout. Ubuntu/Mac открыты.
+
+IDE-054 → [FIXLOG §114](nvim_forge/FIXLOG.md#114-rust-cargo-workspace-язык-и-переносимый-запуск-тестов):
+Rust test IDs смешивали разделители, Cargo discovery использовал shell/regex
+JSON. Общая path/argv/JSON граница исправляет nearest/file/integration/debug;
+source RED 6311864893500/6318353725000/6324948175500, 8 Rust UI Windows PASS.
+67 pins/4 прежних backports сохранены; startup ничего не ставит. Ubuntu/Mac открыты.
 
 IDE-053 → [FIXLOG §113](nvim_forge/FIXLOG.md#113-dap-ожидаемый-shutdown-и-настоящие-ошибки-adapter):
 успешный pytest debug перекрывался WARN adapter exit 1 после client close.

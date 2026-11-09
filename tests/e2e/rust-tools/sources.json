@@ -1,0 +1,72 @@
+{
+  "nextest_version": "0.9.151",
+  "codelldb_version": "1.12.2",
+  "platforms": {
+    "win32-x64": {
+      "nextest": {
+        "url": "https://github.com/nextest-rs/nextest/releases/download/cargo-nextest-0.9.151/cargo-nextest-0.9.151-x86_64-pc-windows-msvc.zip",
+        "archive": "cargo-nextest-0.9.151-x86_64-pc-windows-msvc.zip",
+        "sha256": "ba35ee0ce14ace65cd8c7aaa9613adb7d2644b0fe3866e85131eb4c269786efb"
+      },
+      "codelldb": {
+        "url": "https://github.com/vadimcn/codelldb/releases/download/v1.12.2/codelldb-win32-x64.vsix",
+        "archive": "codelldb-win32-x64.vsix",
+        "sha256": "aa3f45175da3850973632fef1a1af0ed2382866bfd3dcd836544973831388a25"
+      }
+    },
+    "linux-x64": {
+      "nextest": {
+        "url": "https://github.com/nextest-rs/nextest/releases/download/cargo-nextest-0.9.151/cargo-nextest-0.9.151-x86_64-unknown-linux-gnu.tar.gz",
+        "archive": "cargo-nextest-0.9.151-x86_64-unknown-linux-gnu.tar.gz",
+        "sha256": "1d4ce302b820c41f4b89c5fb9bce45f0f0c94882c1cf08fc360caf08be6e7df4"
+      },
+      "codelldb": {
+        "url": "https://github.com/vadimcn/codelldb/releases/download/v1.12.2/codelldb-linux-x64.vsix",
+        "archive": "codelldb-linux-x64.vsix",
+        "sha256": "b85b45a8570051d535b0927c6c9da11c39f3a056c73559064647faf7f37f637d"
+      }
+    },
+    "linux-arm64": {
+      "nextest": {
+        "url": "https://github.com/nextest-rs/nextest/releases/download/cargo-nextest-0.9.151/cargo-nextest-0.9.151-aarch64-unknown-linux-gnu.tar.gz",
+        "archive": "cargo-nextest-0.9.151-aarch64-unknown-linux-gnu.tar.gz",
+        "sha256": "3e35e8f6913af92558ba09d7155f74e35dd1f0024ef3cd891637433ae4eacbdd"
+      },
+      "codelldb": {
+        "url": "https://github.com/vadimcn/codelldb/releases/download/v1.12.2/codelldb-linux-arm64.vsix",
+        "archive": "codelldb-linux-arm64.vsix",
+        "sha256": "f7c83ad67cc860fe6d753e8123b57a4db89c1fb00aef4b85a2f858334cdbaeb0"
+      }
+    },
+    "darwin-x64": {
+      "nextest": {
+        "url": "https://github.com/nextest-rs/nextest/releases/download/cargo-nextest-0.9.151/cargo-nextest-0.9.151-universal-apple-darwin.tar.gz",
+        "archive": "cargo-nextest-0.9.151-universal-apple-darwin.tar.gz",
+        "sha256": "d1d7d025d4bfc9fb154cd76aea3949bd78534829a0589abefa6e5dd4edb135dd"
+      },
+      "codelldb": {
+        "url": "https://github.com/vadimcn/codelldb/releases/download/v1.12.2/codelldb-darwin-x64.vsix",
+        "archive": "codelldb-darwin-x64.vsix",
+        "sha256": "8270a342929bdc0deb6d7d3931c08d5ba6018265f840dd0508c4247fb8d32e8d"
+      }
+    },
+    "darwin-arm64": {
+      "nextest": {
+        "url": "https://github.com/nextest-rs/nextest/releases/download/cargo-nextest-0.9.151/cargo-nextest-0.9.151-universal-apple-darwin.tar.gz",
+        "archive": "cargo-nextest-0.9.151-universal-apple-darwin.tar.gz",
+        "sha256": "d1d7d025d4bfc9fb154cd76aea3949bd78534829a0589abefa6e5dd4edb135dd"
+      },
+      "codelldb": {
+        "url": "https://github.com/vadimcn/codelldb/releases/download/v1.12.2/codelldb-darwin-arm64.vsix",
+        "archive": "codelldb-darwin-arm64.vsix",
+        "sha256": "c836b81c6f2da467b5920a376a7bfc849dc4b4d81b19779dedf1c685cb4aa1a0"
+      }
+    }
+  },
+  "rust_grammar": {
+    "revision": "77a3747266f4d621d0757825e6b11edcbf991ca5",
+    "url": "https://codeload.github.com/tree-sitter/tree-sitter-rust/tar.gz/77a3747266f4d621d0757825e6b11edcbf991ca5",
+    "archive": "rust-grammar.tar.gz",
+    "sha256": "dee82ddfd01bfc3a8ed201cc03b56448107d3217a4b3a7a8fc7fa6bc32b2405b"
+  }
+}

@@ -1,14 +1,15 @@
 # Матрица языков nvim_forge
 
 Первичный срез 2026-11-02, runtime commit `657ab41`; обновление 2026-11-03
-добавляет Go language (§110), Node (§111) и Python (§112–113) E2E Windows. «Настроено» означает запись
+добавляет Go language (§110), Node (§111) и Python (§112–113) E2E Windows.
+Обновление 2026-11-09 добавляет Rust (§114–115). «Настроено» означает запись
 в сборке; установленный binary, запуск server и корректность его ответа ещё
 требуют E2E. Windows/macOS/Ubuntu используют одну языковую конфигурацию.
 
 | Язык | LSP в обычном старте | Форматирование | Debug / Tests | Доказанное покрытие |
 |---|---|---|---|---|
 | Go | gopls, если доступен в PATH | golines → gofumpt, LSP fallback | Delve; neotest-golang/gotestsum | DAP/tests/панели Windows/Ubuntu; 6 новых LSP/format UI E2E Windows PASS. Ubuntu language ожидает engine; Mac не проверен |
-| Rust | rust_analyzer, если binary доступен | rustfmt, LSP fallback | codelldb + cargo build; neotest-rust | Отсутствующий codelldb проверен; положительный Rust debug/test и семантический LSP ещё не покрыты |
+| Rust | rust_analyzer, если binary доступен | rustfmt, LSP fallback | codelldb + Cargo preLaunch build; neotest-rust/nextest | 8 real UI E2E Windows PASS: cross-crate LSP, format/save, default/alternate/project debug, nearest/file/integration/debug tests и output. Ubuntu/Mac и stdlib navigation не проверены |
 | Python | pyright/ruff; общий project Python selector для Pyright/DAP | ruff_organize_imports → ruff_format | debugpy default/launch.json; neotest-python/pytest | 8 real UI E2E Windows PASS: venv dependency, LSP, explicit path, format/save, default/project debug, pytest/debug, unexpected adapter exit. Ubuntu/Mac не проверены |
 | JS / Node.js | ts_ls через Node/TSLS, только при доступных tools; auto typings download отключён | Project-local Prettier, LSP fallback | NodeRun/File → Tasks; js-debug default/launch.json; Neotest Jest | 8 real UI E2E Windows PASS: язык/format/run/debug/nearest/file/debug test/missing tools. Ubuntu/Mac не проверены |
 | Bash | Явной активации shell server нет | Языкового formatter для sh/bash нет | Shell debug/test adapter не настроен | Проверки наших shell scripts не являются Bash IDE E2E |
@@ -60,7 +61,10 @@ python-deps — pinned wheelhouse/tools venv, Pyright и Python parser, host SDK
    IDE-052 согласует Pyright и DAP interpreter; IDE-053 убирает ложный WARN
    после client-initiated adapter close, неожиданный exit 23/stderr остаётся видим.
    Ubuntu/Mac и managers Poetry/Pipenv/Conda остаются отдельной проверкой.
-   Следующий language шаг — положительный Rust/Cargo workspace сценарий.
+   Rust Windows также проверен: [Cargo workspace workflow](RUST_WORKFLOW.md),
+   8 UI PASS. IDE-054 исправляет native path/argv/JSON adapter, IDE-055 сохраняет
+   настоящий debug test output. Прежний регресс 37 UI + 9 backports и 364 checks PASS.
+   Ubuntu/Mac/GUI/stdlib navigation/cross-compile остаются отдельной проверкой.
 4. Bash и SQL: добавить минимальные рабочие сценарии с E2E. У SQL отдельно
    определить dialect/профиль выполнения; DAP не является обязательным
    аналогом отладки исполняемой программы. До выбора инструментов сверить

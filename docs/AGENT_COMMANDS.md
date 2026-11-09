@@ -2577,3 +2577,141 @@ docker compose -f tests/containers/compose.yaml run --rm --entrypoint nvim ubunt
 Ubuntu остаётся открытой задачей трёх changes. Mac/GUI/managed Python env
 не проверены; запуск на Mac отдельно обеспечивает владелец. Старый baseline
 добавлен в ignored список ручной очистки F:, доказательства и tools сохранены.
+
+## 45. Rust: Cargo workspace, nextest, CodeLLDB и два source replay
+
+2026-11-09, baseline 047f827. PowerShell без профиля, cwd F:/repo/forge-nvim.
+Host SDK уже установлен: Rust/rust-analyzer 1.96.1, rustfmt/clippy/rust-src;
+его установка/обновление не выполнялись. Runtime code меняет только Rust
+test adapter через pinned two-file backport; остальные pins/backports сохранены.
+
+```powershell
+$env:TEMP='F:\repo\forge-nvim\.tests\tmp'
+$env:TMP=$env:TEMP
+$env:TMPDIR=$env:TEMP
+$env:NVIM_LOG_FILE=Join-Path $env:TEMP 'rust-final-nvim.log'
+$env:PYTHONIOENCODING='utf-8'
+$env:npm_config_cache='F:\forge-nvim-tmp\npm-cache'
+. ./scripts/lib/nvim-sdk.ps1
+$forgeNvim=Get-ForgeNvim (Get-Location).Path
+rustup show active-toolchain
+rustc --version --verbose
+cargo --version
+rust-analyzer --version
+rustfmt --version
+python -B tests/e2e/prepare_rust.py --download --nvim $forgeNvim
+python -B tests/e2e/prepare_rust.py --nvim $forgeNvim
+python -B tests/e2e/prepare_editor.py --download --nvim $forgeNvim
+& $forgeNvim -l tests/e2e/rust-language.test.lua > .tests/windows-rust-language-final-v2.txt 2>&1
+```
+
+CodeLLDB 1.12.2/nextest 0.9.151 берутся из официальных release archives,
+grammar — pinned Treesitter revision. Platform URLs/SHA — rust-tools/sources.json,
+готовые tools/cache/probe/manifest — .tests/rust-deps. SDK paths/версии/hash
+сохраняются, shim auto-install запрещён. Повтор без --download проверяет
+payload и host hashes, parser и сохранённый compile probe; manifest не пишет.
+Его проверяет и сам debug E2E после настоящего CodeLLDB (readiness-after-debug.txt).
+Три новых CPython __pycache__ не являются изменением pinned payload;
+остальные hashes строгие. SDK compile probe компилируется только при явной подготовке.
+
+Первые два download завершились HTTP 504 CodeLLDB CDN; .tests/windows-rust-prepare-v1/v2.txt.
+Тот же официальный URL с ?download=1 скачан Python urllib.request, принят
+только по прежнему SHA (windows-rust-codelldb-fetch.txt). Повтор HTTP 5xx
+встроен в preparer; иной источник/версия не подставлялись. Релиз metadata
+сохранены rust-nextest-release.json/rust-codelldb-release.json. Подготовка
+v3 и финальная v4 PASS. Начальный post-debug repeat FAIL из-за cache, причина
+и исправление описаны в FIXLOG §114. Runtime __pycache__ остаётся на F:.
+
+IDE-054 replay: оба точных before SHA восстанавливаются в private plugin copy
+до startup. Общая подготовка и конфигурация не меняются.
+
+```powershell
+$env:FORGE_RUST_LEGACY='1'
+foreach ($case in @('nextest','debug nearest')) {
+    $env:FORGE_RUST_CASE=$case
+    & $forgeNvim -l tests/e2e/rust-language.test.lua
+    if ($LASTEXITCODE -ne 1) { throw "Ожидался исходный RED: $case" }
+}
+Remove-Item Env:FORGE_RUST_LEGACY,Env:FORGE_RUST_CASE
+```
+
+Финальные логи windows-rust-tests-final-source-red-v2.txt (2 FAIL),
+windows-rust-debug-final-source-red-v2.txt (1 FAIL). Artifacts
+6311864893500/6318353725000 — неправильные test IDs и 0 passed;
+6324948175500 — настоящий Cargo discovery не вернул program.
+
+IDE-055 replay сохраняет уже исправленные paths/argv, возвращая только
+известный path-only dap.lua SHA 79c27c8d… без output link:
+
+```powershell
+$env:FORGE_RUST_CASE='debug nearest'
+$env:FORGE_RUST_OUTPUT_LEGACY='1'
+try {
+    & $forgeNvim -l tests/e2e/rust-language.test.lua > .tests/windows-rust-output-final-source-red-v2.txt 2>&1
+    if ($LASTEXITCODE -ne 1) { throw 'Ожидался source RED output' }
+} finally {
+    Remove-Item Env:FORGE_RUST_OUTPUT_LEGACY,Env:FORGE_RUST_CASE
+}
+```
+
+Artifact 6332668693900: breakpoint/eval/real passed работают, Test Output пуст;
+test-stdout.txt сохраняет настоящий marker 42. GREEN debug 6304221991400
+сохраняет тот же stdout и показывает его в панели. Все окончательные GREEN:
+6256627256700, 6264638446300, 6272738220300, 6277917419600, 6284426391400,
+6291456749500, 6298229789700, 6304221991400. 8 PASS/0 FAIL/0 SKIP.
+Между final-v1 и final-v2 добавлены ID/SELF имена, сохранение stdout и
+post-debug readiness. Старые результаты не объявляются результатами нового файла.
+V1…v5 и отдельный syntax-red сохранены с разбором ошибок теста в §114.
+
+```powershell
+foreach ($suite in @('python-language','node-language','go-language','test-runner','editor','plugin-backports')) {
+    & $forgeNvim -l "tests/e2e/$suite.test.lua" > ".tests/windows-rust-regression-$suite.txt" 2>&1
+    if ($LASTEXITCODE -ne 0) { throw "Регресс: $suite" }
+}
+& $forgeNvim -l tests/run.lua unit trace > .tests/windows-rust-unit-trace.txt 2>&1
+Copy-Item -LiteralPath .tests/report.json -Destination .tests/rust-unit-trace-report.json
+python -B tests/e2e/prepare_rust.py --nvim $forgeNvim > .tests/windows-rust-prepare-final-repeat-v2.txt 2>&1
+python -B .tests/audit-rust-evidence.py
+```
+
+37 прежних пользовательских checks (Python 8/Node 8/Go language 6/Go tests 5/
+smoke 10 в одной session), 9 backport E2E и 364 unit/trace PASS. Audit сверяет
+все текущие runtime Lua/lock/patches с сохранёнными config-source, тест/helper
+во всех Rust GREEN/RED, actual plugin source SHA, отдельный intermediate
+output RED, raw stdout/panel, shutdown, 67 прежних pins/4 backports и prefix
+FIXLOG. Результат .tests/rust-language-evidence.json. Read-only формы
+rg/Get-Content/git diff/status, Python JSON/hash и filtered CIM такие же,
+как в предыдущих разделах. Таймауты ожидания не считаются root cause.
+
+```powershell
+npx.cmd --yes @fission-ai/openspec@1.13.2 new change verify-rust-language-workflow
+npx.cmd --yes @fission-ai/openspec@1.13.2 new change fix-rust-test-workspace-paths
+npx.cmd --yes @fission-ai/openspec@1.13.2 validate verify-rust-language-workflow --type change --strict --no-interactive
+npx.cmd --yes @fission-ai/openspec@1.13.2 validate fix-rust-test-workspace-paths --type change --strict --no-interactive
+```
+
+Перед artifacts прочитаны status/instructions proposal/specs/design/tasks,
+затем instructions apply и context files обоих changes (формы команд §44).
+Tests-only change явно skip_specs; runtime delta IDE-TEST-3/4 в test-runner.
+
+Docker проверялся только subprocess.run docker version --format с timeout
+12s: .tests/rust-engine.json, 2026-11-09T08:37:58.517370Z, missing pipe/code 1,
+lifecycle_changed=false. SDK/Ubuntu image добавлены в Dockerfile, но эти
+команды не выполнялись (только после уже работающего engine):
+
+```powershell
+docker compose -f tests/containers/compose.yaml build ubuntu
+docker compose -f tests/containers/compose.yaml run --rm --entrypoint nvim ubuntu -l tests/e2e/rust-language.test.lua
+docker compose -f tests/containers/compose.yaml run --rm --entrypoint nvim ubuntu -l tests/e2e/python-language.test.lua
+docker compose -f tests/containers/compose.yaml run --rm --entrypoint nvim ubuntu -l tests/e2e/node-language.test.lua
+docker compose -f tests/containers/compose.yaml run --rm --entrypoint nvim ubuntu -l tests/e2e/go-language.test.lua
+docker compose -f tests/containers/compose.yaml run --rm --entrypoint nvim ubuntu -l tests/e2e/test-runner.test.lua
+docker compose -f tests/containers/compose.yaml run --rm --entrypoint nvim ubuntu -l tests/e2e/editor.test.lua
+```
+
+Rustup-init 1.28.2 Linux SHA получены с официальных .sha256; SDK 1.96.1
+manifest checksum проверен чтением, установка запланирована только внутри
+явного image build. Windows SDK не менялся. Ubuntu/Mac/GUI/stdlib navigation/
+cross-compile не PASS; свежий offline sysroot metadata warning cfg-if сохранён.
+Ненужный draft каталог добавлен в F_CLEANUP_PATHS, ничего не удалялось;
+активные tools/.tools/editor-e2e и старые Docker данные сохраняются.

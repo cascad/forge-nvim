@@ -870,3 +870,39 @@ Windows: 8 Python PASS, Node 8 + Go language 6 + Go tests 5 + smoke 10 PASS,
 Ubuntu image дополнен preparer, но не собран: engine недоступен при read-only
 проверке 2026-11-09. Docker Desktop/WSL не запускались. Mac/GUI и managed
 Python env отдельно не проверены. История/команды: FIXLOG §112–113, AGENT_COMMANDS §44.
+
+## Rust: подготовка и Cargo workspace
+
+После общих plugins нужен установленный host Rust с rust-analyzer, rustfmt,
+clippy и rust-src. SDK не устанавливается/обновляется preparer. На Windows
+использовать выбранный Neovim SDK и TEMP/TMP/TMPDIR на диске checkout.
+
+```sh
+python -B tests/e2e/prepare_rust.py --download --nvim <nvim>
+python -B tests/e2e/prepare_rust.py --nvim <nvim>
+<nvim> -l tests/e2e/rust-language.test.lua
+```
+
+На macOS/Ubuntu — python3. Версии/sysroot/hash host SDK записываются в
+manifest; compile probe проверяет native linker до запуска UI. CodeLLDB 1.12.2,
+cargo-nextest 0.9.151 и parser из pinned Treesitter подготовлены по SHA из
+rust-tools/sources.json в .tests/rust-deps. Повтор без --download не ставит tools.
+Другой каталог: --output/FORGE_E2E_RUST_DEPS, на Windows — диск checkout.
+
+Private offline workspace с двумя local crates и несколькими targets имеет
+отдельные Cargo home/target/temp; UI F5 сам выполняет preLaunch build, fixture
+не предоставляет готовый executable. Source/locks/manifest/logs сохраняются,
+target не дублируется в snapshot. FORGE_RUST_CASE ограничивает случаи по имени.
+Workflow и пользовательские команды — [RUST_WORKFLOW.md](../../docs/RUST_WORKFLOW.md).
+Наличие tools/успешная подготовка не являются PASS UI; текущие результаты
+и IDE-054 отслеживаются в verify-rust-language-workflow/fix-rust-test-workspace-paths.
+Ubuntu/Mac/GUI пока не проверены, Docker Desktop/WSL не запускаются ради теста.
+
+Итог Windows 2026-11-09: 8 Rust PASS; прежние language/smoke 37 сценариев,
+backport E2E 9 и unit/trace 364 checks PASS. Source replay IDE-054/055 и
+границы — FIXLOG §114–115 / AGENT_COMMANDS §45. При debug E2E readiness
+проверяется повторно без скачивания после настоящего CodeLLDB; generated
+__pycache__ исключён из immutable payload, остальные source/tool SHA строгие.
+Источник stdout сохраняется как test-stdout.txt. Отдельно не проверены
+stdlib navigation, cross-compile и native GUI; offline sysroot metadata warning
+про cfg-if сохранён в evidence. Ubuntu image ещё не build/run, engine недоступен.

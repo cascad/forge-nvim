@@ -5849,3 +5849,136 @@ result в ошибку и должна сохранять настоящий fai
 **Файлы:** patches/plugins.json, plugins/dap.lua build; Python E2E/helper,
 OpenSpec delta, пользовательские docs и AGENT_COMMANDS §44. Source/hash audit
 и сохранность прежнего FIXLOG prefix — .tests/python-language-evidence.json.
+
+## 114. Rust: Cargo workspace, язык и переносимый запуск тестов
+
+**Дата:** 2026-11-09. Baseline 047f827, Windows x64.
+**Проблема:** IDE-054 и отсутствующий положительный Rust language регресс.
+**Спека:** IDE-TEST-3/4 (ADDED), change fix-rust-test-workspace-paths;
+tests-only verify-rust-language-workflow не меняет runtime контракт.
+
+**Что было.** В сборке существовали rust-analyzer/rustfmt, Cargo target
+selection/preLaunchTask, codelldb и neotest-rust. Наличие конфигурации не
+доказывало работу. Настоящий workspace с двумя local crates в Unicode/space
+пути обнаруживал три теста, но nextest запускал ноль, integration тоже
+отфильтровывался. Debug nearest завершался без program/Run aborted.
+Исходные v1 artifacts 4240005644900/4290858553400/4341546473800 сохранены.
+
+**Причина.** Cargo/Neovim/plenary возвращали разные разделители пути.
+Unit test identity становился src::tests::nearest_pass вместо Cargo
+tests::nearest_pass; integration identity получал лишнее имя файла.
+Package/target проверялись сравнением ненормализованных строк. Отдельно
+debug discovery склеивал cargo test --manifest-path=... в shell строку
+без quoting и разбирал compiler-artifact JSON regex, зависящим от separator.
+Даже созданный Cargo executable не мог надёжно сопоставиться исходному файлу.
+
+**Что сделали.** Сохранили текущий neotest-rust pin
+2c9941d4a358839918fac21d20fc8fef0e1ad05f. Общий normalized realpath на
+границе package/source и корректный относительный Rust module name;
+nextest получает native argv с отдельным filter expression. Cargo discovery
+вызывает vim.system argv/cwd, читает построчный настоящий JSON и принимает
+только test compiler-artifact с executable. Сравнение module source также
+нормализуется. Нет Windows runner, shell quoting обхода, заранее собранного
+binary или отключения validation program. Два файла — pin/SHA backport через
+уже существующий companion mechanism; apply/check/revert явно, startup не пишет.
+Все 67 plugins pins и четыре прежних backports сохранены.
+
+Явный prepare_rust.py использует host SDK (здесь Rust 1.96.1, rust-analyzer,
+rustfmt/clippy/rust-src), не устанавливает/обновляет его. Сохраняет sysroot,
+версии, host binary hashes и настоящий compile probe. CodeLLDB 1.12.2,
+cargo-nextest 0.9.151, Rust parser из pinned Treesitter готовятся по SHA
+в .tests/rust-deps. Windows caches/temp/build на F:. Offline private fixture
+имеет Cargo home/target отдельно от source; target исключён из snapshots.
+F5 обязан собрать ещё отсутствующий binary собственным preLaunchTask.
+
+**Попытки и проверка.** Ранние FAIL не удалены. V1 отправлял LSP action до
+окончания indexing; публичный serverStatus теперь даёт барьер quiescent.
+V2 посылал Esc до применения completionItem/resolve и ошибочно ждал input
+prompt от Space d e: реальная команда открывает hover выбранного выражения.
+V3 breakpoint на println! получил от CodeLLDB «Resolved locations: 3» и
+повторно останавливался на другом участке макроса. Fixture ставит breakpoint
+на обычное присваивание. V4 проверял устаревший filetype dapui_console,
+хотя native stdout уже был виден в dap-terminal. Это поправки тестовой
+последовательности/наблюдения, не runtime fixes. V5 ошибся в test status
+aggregator (не включил skipped); поправлен aggregator. Одна последующая
+syntax ошибка Lua long string сохранена отдельно как windows-rust-language-syntax-red.
+
+Post-debug readiness дополнительно выявил три настоящих CPython __pycache__
+файла, созданных CodeLLDB: неизменные payload/host hashes не должны считаться
+повреждёнными из-за новых bytecode caches. Preparer не включает __pycache__
+в immutable payload. Без --download он только читает готовые данные,
+проверяет/исполняет сохранённый probe и не переписывает manifest; запись в
+подготовленный каталог не требуется. Non-root Ubuntu запуск отдельно не проверен.
+Постоянный debug E2E после реального CodeLLDB вызывает readiness CLI без
+скачивания и сравнивает manifest. SHA всех исходных payload по-прежнему строгие.
+Начальные HTTP 504 официального CodeLLDB asset преодолены другой cache key
+того же asset; SHA тот же. Preparer повторяет только HTTP 5xx, не принимает
+иной payload/источник. Новая установка system SDK отсутствует.
+
+Окончательный набор проверяет LSP definition/references/rename между crates,
+completion/diagnostics/correction, rustfmt manual/on-save; F5 default и
+alternate/project launch.json с уникальным argument/output, native build,
+breakpoint/eval 42/continue/stdout/stderr; nearest/file pass+fail, integration,
+debug test/output. Адресные ID IDE-TEST-3/4 и SELF cases зарегистрированы.
+Source replay восстанавливает точные два before SHA только в private copy
+до UI. На том же окончательном тесте nearest/integration дают 0 passed и
+debug — отсутствие program; общая подготовка не меняется. Точные IDs,
+source/hash и сводка — .tests/rust-language-evidence.json, команды §45.
+
+Windows: 8 Rust UI PASS; прежние Python 8 + Node 8 + Go language 6 + Go tests
+5 + smoke 10 PASS; backport E2E 9 PASS; 15 unit/trace файлов, 364 checks PASS.
+Strict validate обоих changes PASS; старый FIXLOG prefix сохранён.
+
+**Границы.** Ubuntu image дополнен явным Rust 1.96.1/rustup-init 1.28.2
+с официальными SHA и tool preparer. Build/run не выполнялись: read-only
+docker version 2026-11-09T08:37:58.517370Z вернул missing engine pipe/code 1.
+Desktop/WSL не запускались/не менялись. Ubuntu/Mac/GUI/cross-compile не PASS.
+Fresh offline Cargo cache не имеет registry dependencies stdlib (cfg-if);
+analyzer пишет warning и использует source fallback. Проверены project LSP
+сценарии, навигация внутрь stdlib этим набором не доказана.
+
+**Вывод.** Rust workspace надо проверять с несколькими packages/targets и
+реальными test IDs. Shell/regex разбор структурированных Cargo данных ломает
+универсальность; общая граница argv/JSON/path устраняет причину.
+
+**Файлы:** plugins/tests.lua, patches/plugins.json; prepare_rust.py,
+rust-tools/sources.json, rust-language fixtures/E2E, rust_project helper,
+registry/Dockerfile; changes, RUST_WORKFLOW/README/матрица/roadmap/команды.
+
+## 115. Rust debug tests: результат сохраняет настоящий output
+
+**Дата:** 2026-11-09. **Проблема:** IDE-055.
+**Спека:** IDE-TEST-4 (ADDED), тот же fix-rust-test-workspace-paths.
+
+**Что было.** После исправления paths/argv из §114 debug nearest реально
+собирался, останавливался, вычислял value=42 и возвращал passed. При этом
+Space w r открывал пустую панель. Artifact 5214758329100/windows-rust-language-v4
+сохранён: отсутствие output больше не скрывается успешным test status.
+
+**Причина.** CodeLLDB пишет stdout test harness в stdio[2]. Adapter читает
+файл и переводит строку test ... ok в passed, но translate_results возвращает
+только status. Neotest output consumer читает именно result.output; без этой
+ссылки не получает ни сохранённый текст, ни повод показать его в панели.
+
+**Что сделали.** Каждый результат DAP translator сохраняет настоящий
+output_path. Не генерируем вывод из status, не копируем console в tests и
+не ослабляем проверку. Дополнение входит в companion dap.lua того же pinned
+backport. Известный промежуточный path-only SHA
+79c27c8dfb181a05923392c109e39f8fdb755f3ec579c6af6f231d3efdd1c742
+сохранён как previous для явного обновления и изолированного source replay.
+
+**Проверка.** Окончательный debug E2E ставит breakpoint, hover показывает 42,
+continue завершает один выбранный тест, соседний fail-marker отсутствует.
+Space w r содержит RUST_TEST_VALUE 42; исходный stdout сохраняется отдельным
+test-stdout.txt вместе с DAP log, adapter source, result counts и snapshot.
+FORGE_RUST_OUTPUT_LEGACY восстанавливает только path-only dap.lua в private
+copy: breakpoint/eval/real passed работают, но тот же output assertion RED.
+Два исходных SHA (до §114 и после §114/до §115) различаются, поэтому причинные
+доказательства двух исправлений не смешаны. IDs и hashes — evidence JSON §114.
+8 Rust/37 прежних UI, 9 backports и 364 unit/trace PASS; Ubuntu/Mac открыты.
+
+**Вывод.** Успешный статус и доступность вывода — отдельные пользовательские
+условия. Регресс должен проверять содержимое панели, а не только passed.
+
+**Файлы:** companion neotest-rust/dap.lua backport, Rust debug E2E/replay/
+stdout artifacts, docs и задачи change. История только дописана.

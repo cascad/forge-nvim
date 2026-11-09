@@ -4,7 +4,7 @@ FROM ubuntu:24.04@sha256:fe81560990fae86dc4743202b2cb4d3df98d0bcf949173cecef15ce
 ARG TARGETARCH
 ENV DEBIAN_FRONTEND=noninteractive
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    bash ca-certificates curl git python3 python3-venv ripgrep fd-find unzip gcc libc6-dev \
+    bash ca-certificates curl git python3 python3-venv libpython3.12 ripgrep fd-find unzip gcc libc6-dev \
     && rm -rf /var/lib/apt/lists/*
 # Официальные assets v0.12.2 и SHA256:
 # https://github.com/neovim/neovim/releases/expanded_assets/v0.12.2
@@ -35,6 +35,23 @@ RUN set -eu; \
 ENV PATH="/opt/go/bin:/opt/forge/bin:${PATH}"
 RUN GOTOOLCHAIN=local GOBIN=/opt/forge/bin go install github.com/go-delve/delve/cmd/dlv@v1.26.3 \
     && go version && dlv version
+# Rust готовится только при явном build образа; Desktop/WSL runner не запускает.
+# SHA: static.rust-lang.org/rustup/archive/1.28.2/<target>/rustup-init.sha256.
+ENV RUSTUP_HOME=/opt/forge/rustup CARGO_HOME=/opt/forge/cargo
+ENV PATH="/opt/forge/cargo/bin:${PATH}"
+RUN set -eu; \
+    case "$TARGETARCH" in \
+      amd64) target=x86_64-unknown-linux-gnu; sha=20a06e644b0d9bd2fbdbfd52d42540bdde820ea7df86e92e533c073da0cdd43c ;; \
+      arm64) target=aarch64-unknown-linux-gnu; sha=e3853c5a252fca15252d07cb23a1bdd9377a8c6f3efa01531109281ae47f841c ;; \
+      *) exit 2 ;; \
+    esac; \
+    curl --fail --location --retry 3 \
+      "https://static.rust-lang.org/rustup/archive/1.28.2/${target}/rustup-init" -o /tmp/rustup-init; \
+    echo "$sha  /tmp/rustup-init" | sha256sum -c -; \
+    chmod +x /tmp/rustup-init; \
+    /tmp/rustup-init -y --no-modify-path --profile minimal --default-toolchain 1.96.1; \
+    rustup component add --toolchain 1.96.1 rust-analyzer rustfmt clippy rust-src; \
+    rm /tmp/rustup-init
 ENV LANG=C.UTF-8
 RUN git config --system --add safe.directory /workspace && nvim --version
 COPY nvim_forge/lazy-lock.json /opt/forge/nvim_forge/lazy-lock.json
@@ -59,6 +76,10 @@ COPY tests/e2e/python-tools/ /opt/forge/tests/e2e/python-tools/
 COPY tests/e2e/fixtures/python-language/dependency/ /opt/forge/tests/e2e/fixtures/python-language/dependency/
 RUN python3 /opt/forge/tests/e2e/prepare_python.py --download --output /opt/forge/python-deps --node-deps /opt/forge/node-deps
 ENV FORGE_E2E_PYTHON_DEPS=/opt/forge/python-deps
+COPY tests/e2e/prepare_rust.py /opt/forge/tests/e2e/
+COPY tests/e2e/rust-tools/ /opt/forge/tests/e2e/rust-tools/
+RUN python3 /opt/forge/tests/e2e/prepare_rust.py --download --output /opt/forge/rust-deps
+ENV FORGE_E2E_RUST_DEPS=/opt/forge/rust-deps
 RUN useradd --create-home --uid 10001 forge
 ENV HOME=/home/forge
 USER forge

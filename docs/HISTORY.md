@@ -232,6 +232,8 @@ Python реализован и проверен 2026-11-03; после возо�
 |---|---|
 | §112 | [Python: project venv и реальный workflow](../nvim_forge/FIXLOG.md#112-python-project-venv-и-реальный-workflow) |
 | §113 | [DAP: ожидаемый shutdown и настоящие ошибки adapter](../nvim_forge/FIXLOG.md#113-dap-ожидаемый-shutdown-и-настоящие-ошибки-adapter) |
+| §114 | [Rust: Cargo workspace, язык и переносимый запуск тестов](../nvim_forge/FIXLOG.md#114-rust-cargo-workspace-язык-и-переносимый-запуск-тестов) |
+| §115 | [Rust debug tests: результат сохраняет настоящий output](../nvim_forge/FIXLOG.md#115-rust-debug-tests-результат-сохраняет-настоящий-output) |
 
 ## Как читать и дополнять
 

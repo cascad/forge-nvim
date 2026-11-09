@@ -552,3 +552,12 @@ settings.python.pythonPath сохраняется. После обновлени
 `:Lazy build nvim-dap` и restart: подготовится pin/SHA патч ложного WARN после
 ожидаемого закрытия adapter. Реальные неожиданные adapter ошибки остаются видимыми.
 Полная подготовка и команды: [Python workflow](../docs/PYTHON_WORKFLOW.md).
+
+## Rust Cargo workspace
+
+SDK с rust-analyzer/rustfmt/clippy/rust-src готовится явно; для Tests нужен
+cargo-nextest, для debug — CodeLLDB. После обновления выполнить
+`:Lazy build neotest-rust` и restart: применится pin/SHA backport выбора
+тестов/executable и сохранения debug output. F5 сам собирает Cargo binary;
+Space T t / T f / T d — nearest / file / debug. Подготовка, ограничения и
+команды: [Rust workflow](../docs/RUST_WORKFLOW.md).

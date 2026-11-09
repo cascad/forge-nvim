@@ -42,6 +42,7 @@ return {
   { file = 'tests/e2e/go-language.test.lua', suite = 'e2e', timeout = 300 },
   { file = 'tests/e2e/node-language.test.lua', suite = 'e2e', timeout = 900 },
   { file = 'tests/e2e/python-language.test.lua', suite = 'e2e', timeout = 900 },
+  { file = 'tests/e2e/rust-language.test.lua', suite = 'e2e', timeout = 900 },
   { file = 'tests/e2e/dap-discovery.test.lua', suite = 'e2e', timeout = 120 },
   { file = 'tests/e2e/debug-panels.test.lua', suite = 'e2e', timeout = 300 },
   { file = 'tests/e2e/outline.test.lua', suite = 'e2e', timeout = 180 },
