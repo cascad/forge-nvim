@@ -3039,3 +3039,64 @@ SDK/compiler probe 510.2 MiB добавлен в ручную очистку п�
 metadata вне каталога. F_CLEANUP_PATHS теперь содержит 18 путей; активный SDK,
 official comparison backend и source/UI evidence сохраняются, удаления нет.
 История §126–127, IDE-062/Ubuntu/Mac/ARM64/GUI/внешние DB остаются открытыми.
+
+## 49. SQL Results: IDE-068, 2026-11-09
+
+Продолжение с d43c094. Новый change fix-sql-results-workspace-switch создан
+штатным CLI 1.13.2: context/list/status/instructions proposal/specs/design/tasks,
+затем instructions apply. Root F:/repo/forge-nvim, schema spec-driven, ready;
+4 tasks. JSON instructions сохранены как .tests/sql-results-*.json.
+
+Как и прежде, PowerShell запускается с -NoProfile (tool login:false).
+TEMP/TMP/TMPDIR и NVIM_LOG_FILE — .tests/tmp на F, npm cache —
+F:/forge-nvim-tmp/npm-cache. . scripts/lib/nvim-sdk.ps1; Get-ForgeNvim выбирает
+поддерживаемый .tools/neovim/windows-x64/bin/nvim.exe, не системный Nvim.
+
+```powershell
+git archive --format=zip --output=.tests/sql-results-before-d43c094.zip d43c094 nvim_forge
+Expand-Archive -LiteralPath .tests/sql-results-before-d43c094.zip -DestinationPath .tests/sql-results-before-d43c094
+$env:FORGE_E2E_CONFIG_SOURCE='F:/repo/forge-nvim/.tests/sql-results-before-d43c094/nvim_forge'
+$env:FORGE_SQL_CASE='IDE-068'
+& $forgeNvim -l tests/e2e/sql-language.test.lua
+```
+
+Final source log: windows-sql-results-source-red-v3.txt, 0 PASS/3 FAIL именно
+на expected output assertions. До этого первая версия oracle могла принять
+старый Done за новый reply; её ранний FAIL не засчитан как product regression.
+Исправлена синхронизация по настоящему buffer/mode и публичному LspRequest
+complete, без sleeps/подмены SQL/backend. Дальше test/helper не менялись.
+
+```powershell
+Remove-Item Env:FORGE_E2E_CONFIG_SOURCE -ErrorAction SilentlyContinue
+& $forgeNvim -l tests/e2e/sql-language.test.lua
+Remove-Item Env:FORGE_SQL_CASE -ErrorAction SilentlyContinue
+& $forgeNvim -l tests/e2e/sql-language.test.lua
+& $forgeNvim -l tests/e2e/sql-sdk.test.lua
+& $forgeNvim -l tests/e2e/work-panels.test.lua
+& $forgeNvim -l tests/run.lua unit trace
+npx.cmd --yes @fission-ai/openspec@1.13.2 validate --all --strict --no-interactive
+python -B .tests/audit-sql-results-evidence.py
+```
+
+Это последовательные запуски, при ненулевом exit следующий не стартует.
+Логи windows-sql-results-{focused-green,full,sdk,panels,unit,openspec}.txt:
+3 focused и 20 full SQL UI, 2 SDK CLI, 6 common panel UI, 365 unit/trace PASS,
+62 strict valid. E2E используют реальные native Nvim+UI/RPC, SQLS и SQLite;
+public completion только наблюдается. Query counters/EXCLUSIVE lock и
+видимый output проверяются постоянным тестом. Capture включает exact final
+test/helper, config-source, dependency manifest, logs/UI и shutdown.json.
+
+Audit сравнивает каждую runtime Lua в RED с Git d43c094, GREEN — с текущими
+исходниками, а test/helper SHA одинаковы в обоих. Runtime diff ровно ide/sql.lua;
+SDK/meta/payload/67 pins неизменны, все 32 editor launches (20+3+3+6) завершены
+штатно с exit 0 без hard kill. Три ожидаемых assertion RED — exit suite 1,
+не crash child. SDK CLI code 0/2 проверяется отдельно. prefix FIXLOG сохранён
+по исходным bytes/SHA; старый C: LSP log неизменён. Итог:
+.tests/sql-results-evidence.json, история §128; F cleanup list прежняя (18).
+
+Ubuntu/macOS не запускались; engine probe/lifecycle не вызывался. Команды
+в SQL_WORKFLOW.md применимы на реальном host. IDE-062 не закрыт: next step —
+SQL test framework/Neotest и отдельно semantic references, не успешный SELECT.
+Локальный commit завершает IDE-068, task 3.2 других ОС остаётся открытой;
+push не выполняется. git diff --check/status и точный список staged files
+проверяются перед commit, локальные .tests/.tools не добавляются.

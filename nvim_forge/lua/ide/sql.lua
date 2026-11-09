@@ -7,9 +7,6 @@ local function view()
     return views[tab],tab
 end
 function M.root() return view().root end
-function M.select(root)
-    local v=view();v.root=root;v.record=v.records[root]
-end
 local function window()
     for _,win in ipairs(vim.api.nvim_tabpage_list_wins(0)) do
         if vim.bo[vim.api.nvim_win_get_buf(win)].filetype=='forge-sql' then return win end
@@ -32,6 +29,12 @@ local function render(v)
     vim.bo[buf].modifiable=true
     vim.api.nvim_buf_set_lines(buf,0,-1,false,lines)
     vim.bo[buf].modifiable=false
+end
+-- spec: IDE-SQL-6. Выбор обновляет buffer даже у уже видимого component:
+-- общий ide.show в этом случае намеренно не вызывает open повторно.
+function M.select(root)
+    local v=view();v.root=root;v.record=v.records[root]
+    render(v)
 end
 function M.open()
     local v=view();render(v)

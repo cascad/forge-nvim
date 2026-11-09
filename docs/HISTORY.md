@@ -246,6 +246,7 @@ Python реализован и проверен 2026-11-03; после возо�
 | §125 | [SQL: повторяемый регресс и границы этапа](../nvim_forge/FIXLOG.md#125-sql-повторяемый-регресс-и-границы-этапа) |
 | §126 | [SQLS: комментарий перед SELECT больше не теряет rows](../nvim_forge/FIXLOG.md#126-sqls-комментарий-перед-select-больше-не-теряет-rows) |
 | §127 | [SQL SDK readiness: проверка без build scratch и compiler](../nvim_forge/FIXLOG.md#127-sql-sdk-readiness-проверка-без-build-scratch-и-compiler) |
+| §128 | [SQL Results: выбранный workspace обновляет видимый вывод](../nvim_forge/FIXLOG.md#128-sql-results-выбранный-workspace-обновляет-видимый-вывод) |
 
 ## Как читать и дополнять
 

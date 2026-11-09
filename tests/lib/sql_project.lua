@@ -67,8 +67,8 @@ function M.counter(e,second)
   local r=vim.system({e.sql_python,'-B','-c',script,e.sql_project..'/db/'..(second and 'second.sqlite3' or 'dev ü.sqlite3')},{text=true}):wait()
   assert(r.code==0,r.stderr);return tonumber(vim.trim(r.stdout))
 end
-function M.other_workspace(e)
-  local target=(e.project..'/Other SQL ü'):gsub('\\','/')
+function M.other_workspace(e,name)
+  local target=(e.project..'/'..(name or 'Other SQL ü')):gsub('\\','/')
   vim.fn.mkdir(target..'/db','p')
   for _,file in ipairs({'.sqls.json','.sqruff','aliases.sql','db/dev ü.sqlite3','db/second.sqlite3'}) do
     assert(vim.uv.fs_copyfile(e.sql_project..'/'..file,target..'/'..file))

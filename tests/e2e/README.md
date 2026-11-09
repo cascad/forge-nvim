@@ -942,7 +942,7 @@ Bash debug остаётся IDE-057; обычные tests не открываю�
 на Windows pinned portable Zig. Go SDK автоматически не ставится.
 Windows: Forge SDK, TEMP/TMP/TMPDIR/NVIM_LOG_FILE на диске checkout.
 
-`<nvim> -l tests/e2e/sql-language.test.lua` — 17 real UI cases Windows PASS:
+`<nvim> -l tests/e2e/sql-language.test.lua` — 20 real UI cases Windows PASS:
 schema completion/definition/hover/alias rename с первого символа и emoji,
 Sqruff parse diagnostics/gl/correction, project manual/save style и autosave
 без форматирования, unsaved batch с actual DB counters, precise same-line
@@ -973,5 +973,9 @@ upstream executeQuery test PASS. Вариант upstream — для отрица
 --download отклоняется. IDE-067 source RED — полный tests/e2e из 79230c3.
 SDK CLI artifacts включают exact script/test SHA и native stdout/stderr;
 Windows private readiness profile удаляется и при отказе variant switch.
+IDE-068: visible/hidden/reverse selection сохранённого Results двух SQLite
+workspace, пустой root и поздний ответ при выбранном другом root. Три source
+RED на d43c094; DB counters исключают повторное выполнение. Harness ждёт
+новый публичный LspRequest complete, а не оставшийся Done прошлого запроса.
 SQL tests/references — IDE-062. Ubuntu image дополнен, но build/run и
 Mac/ARM64/GUI/внешние RDBMS не проверены; Desktop/WSL не запускаются ради теста.

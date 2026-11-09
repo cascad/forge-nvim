@@ -10,7 +10,16 @@
 
 Маршрут и приоритеты: [рабочий план nvim_forge](docs/IDE_ROADMAP.md).
 Для новых пунктов используем следующий свободный ID `IDE-xxx`; исходный
-симптом хранится здесь, этап и состояние — в плане. Следующий ID: `IDE-068`.
+симптом хранится здесь, этап и состояние — в плане. Следующий ID: `IDE-069`.
+
+## IDE-068 — SQL Results: видимая панель после смены workspace
+
+2026-11-09: видимая Results оставляла rows/header другого workspace; пустой
+root наследовал чужой вывод. select менял root/record без render, а общий
+ide.show пропускает open видимого component. Source d43c094: три точных RED.
+Выбор теперь обновляет buffer; постоянные UI проверяют cache двух SQLite,
+пустой root, late reply и counters без повторного SQL. История — FIXLOG §128,
+change fix-sql-results-workspace-switch; Windows проверен, Ubuntu/Mac открыты.
 
 ## IDE-062 — SQL: отдельный test framework и references workflow
 

@@ -18,7 +18,7 @@ IDE-001 параллельно ждёт диагностических данн�
 | Готово на Windows | Python, IDE-052/053 | 8 real UI PASS: venv/LSP/Ruff/debugpy/pytest; общий selector и классификация ожидаемого adapter close (§112–113). 29 прежних UI PASS; Ubuntu/Mac открыты |
 | Готово на Windows | Rust/Cargo, IDE-054/055 | 8 real UI PASS; пути/argv/JSON test adapter и output исправлены (§114–115), 37 прежних UI + 9 backports + 364 checks PASS; [команды](RUST_WORKFLOW.md). Ubuntu/Mac открыты |
 | Готово на Windows | Bash edit/run/tests, IDE-056/058 | 8 real UI PASS: sourced LSP, shfmt, Tasks и Bats; Unicode rename исправлен (§116–117). [Команды](BASH_WORKFLOW.md). Ubuntu/Mac открыты |
-| Готово на Windows | SQL editor/query, IDE-060/061/063–067 | 17 SQL UI + 2 SDK CLI PASS, native SQLS comments fix/readiness (§119–127); прежние 72 UI/9 backports и повтор 365 unit/trace PASS. Ubuntu/Mac/ARM64/внешние DB не проверены |
+| Готово на Windows | SQL editor/query, IDE-060/061/063–068 | 20 SQL UI + 2 SDK CLI PASS, native SQLS comments fix/readiness и cache Results при смене workspace (§119–128); 6 common panel UI и 365 unit/trace PASS. Прежние 72 UI/9 backports сохранены как отдельный прогон. Ubuntu/Mac/ARM64/внешние DB не проверены |
 | Текущий этап | Остаток SQL workflow, IDE-062 | SQL test framework/Neotest и semantic references workflow с реальными E2E; SQLS references provider отсутствует. Продолжить матрицу, не подменяя SQL tests успешным SELECT |
 | Затем | Остальная [матрица языков](LANGUAGE_MATRIX.md) | SQL tests/references IDE-062, Bash DAP IDE-057; language Ubuntu после доступности engine |
 | После функциональной матрицы | Упрощение архитектуры | Общее ядро, явные системные границы и setup; сокращение дублирования с сохранением E2E |

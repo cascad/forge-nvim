@@ -6425,3 +6425,47 @@ exact script/test SHA, native stdout/stderr, PID и immutable SDK manifest.
 **Вывод.** Готовность проверяется по реальным payload/ABI/versions, а не
 по оставленному build мусору; проверка не превращается в повторную установку.
 **Файлы:** prepare_sql.py, sql-sdk.test.lua/registry, IDE-SQL-5/spec/docs.
+
+## 128. SQL Results: выбранный workspace обновляет видимый вывод
+
+**Дата:** 2026-11-09. **Проблема:** IDE-068. **Спека:** IDE-SQL-6 (FIX).
+
+**Что было.** После query двух workspace Space j o мог оставить в видимой
+панели rows/header второго, хотя пользователь уже выбрал первый. Workspace
+без query также показывал прежние чужие строки. Найдено при продолжении
+SQL workflow, до отдельного IDE-062 tests/references.
+
+**Причина.** ide.sql.select менял root/record, но не обновлял buffer.
+Перерисовка была только в open/update; общий ide.show намеренно не вызывает
+open для уже видимого component. Backend/cache были корректны, отображение
+отставало от явного выбора. Менять идемпотентность всех панелей не требуется.
+
+**Изменение.** select вызывает существующий render выбранной записи сразу.
+Пустой root получает штатное «Нет результатов», cached output не запускает
+SQL повторно. Поздний callback другого root обновляет только его cache,
+не перехватывая выбранный вывод. SDK/keys/pins/общий менеджер не менялись.
+
+**Исходное воспроизведение.** Три final UI cases на полном config-source
+d43c094 — RED по фактическим rows/header: visible cache (22867460417000),
+empty workspace (22872441254000), выбор другого cache при Running/DB lock
+(22877269852300). Все source/test/helper/payload сохранены. Первую попытку
+visible case не засчитали: ожидание старого Done могло опередить отправку
+нового query. Harness теперь ждёт реальные текст+normal mode и следующий
+публичный LspRequest complete своего клиента. Final source replay и GREEN
+используют одинаковые test/helper SHA; replies и время завершения не подменены.
+
+**Проверка/e2e.** Три постоянных regression: visible/hidden/reverse cache двух
+настоящих SQLite, пустой root, поздний ответ после настоящего EXCLUSIVE lock.
+DB counters доказывают отсутствие повторного SQL. Windows: focused 3/3,
+полный SQL 20/20, SDK CLI 2/2, common work panels 6/6, unit/trace 365 PASS;
+OpenSpec 62 items strict valid. Все native editor children вышли штатно,
+без hard kill. Audit sql-results-evidence.json сверил все runtime Lua source,
+test/helper SHA, неизменный SDK/payload/67 pins, byte prefix истории и C: log.
+Из runtime изменён только ide/sql.lua. Ubuntu/Mac/ARM64/GUI/внешние DB остаются
+непроверенными; Docker/WSL lifecycle не трогали. IDE-062 остаётся следующим шагом.
+
+**Вывод.** Явный выбор контекста должен обновлять отображение независимо от
+повторного открытия панели. UI regression проверяет видимый текст и реальную
+БД; одного внутреннего selected root или статуса Done для этого недостаточно.
+**Файлы:** ide/sql.lua, sql-language.test.lua, sql_project.lua,
+fix-sql-results-workspace-switch и SQL workflow/матрица/roadmap/docs.

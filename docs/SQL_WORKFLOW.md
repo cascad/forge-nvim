@@ -135,12 +135,17 @@ Private workspace с двумя SQLite, Unicode/space paths, counters и real DB
 сохраняет source/config/UI grid/LSP log/запущенные PID и shutdown artifacts.
 Доставка физических клавиш из GUI проверяется отдельно.
 
-Windows: 17 SQL UI + 2 native SDK CLI checks PASS. Повтор readiness не требует
+Windows: 20 SQL UI + 2 native SDK CLI checks PASS. Повтор readiness не требует
 компилятора/build scratch, использует отдельный временный профиль и сохраняет
 manifest/binaries; смена sqls-variant без --download отклоняется (IDE-067).
 Официальный вариант для source RED: --sqls-variant upstream --download с
 отдельным --output и FORGE_E2E_SQL_DEPS. Readiness существующего output
 сохраняет его manifest variant; при миграции укажи patched явно.
+
+`Space j o` выбирает сохранённый результат workspace текущего SQL-файла,
+обновляя даже уже видимую панель. Для workspace без запуска будет «Нет
+результатов». Переключение не исполняет SQL повторно; поздний ответ другого
+workspace остаётся в его кэше (IDE-068, три постоянных UI regression).
 
 Ubuntu при уже работающем engine:
 

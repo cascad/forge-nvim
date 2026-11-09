@@ -13,7 +13,7 @@
 | Python | pyright/ruff; общий project Python selector для Pyright/DAP | ruff_organize_imports → ruff_format | debugpy default/launch.json; neotest-python/pytest | 8 real UI E2E Windows PASS: venv dependency, LSP, explicit path, format/save, default/project debug, pytest/debug, unexpected adapter exit. Ubuntu/Mac не проверены |
 | JS / Node.js | ts_ls через Node/TSLS, только при доступных tools; auto typings download отключён | Project-local Prettier, LSP fallback | NodeRun/File → Tasks; js-debug default/launch.json; Neotest Jest | 8 real UI E2E Windows PASS: язык/format/run/debug/nearest/file/debug test/missing tools. Ubuntu/Mac не проверены |
 | Bash | bashls через native Node/JS, guarded tools | shfmt, .editorconfig, async save | BashRunFile → Tasks; Bats public adapter; DAP открыт IDE-057 | 8 real UI E2E Windows PASS: sourced LSP/rename/completion/diagnostics, format, args/cwd/output/status, nearest/file/оба Bats syntax/regex Unicode, missing tools. Ubuntu/Mac/Bash 3.2/GUI не проверены |
-| SQL | sqls, guarded tool/config/DB; schema/alias actions | Sqruff CLI diagnostics/format, project dialect/style, async explicit save | SQLRun/Connect/Results/Stop; SQLS 0.2.48+forge.1; tests/references открыты IDE-062 | Windows 17 real UI + 2 SDK CLI PASS: язык, Unicode, format/autosave, SQLite queries/selection/profiles/lock/stop/panels/missing environment и leading comments (IDE-066). Readiness без scratch/compiler (IDE-067). Ubuntu/Mac/ARM64/внешние DB не проверены |
+| SQL | sqls, guarded tool/config/DB; schema/alias actions | Sqruff CLI diagnostics/format, project dialect/style, async explicit save | SQLRun/Connect/Results/Stop; SQLS 0.2.48+forge.1; tests/references открыты IDE-062 | Windows 20 real UI + 2 SDK CLI PASS: язык, Unicode, format/autosave, SQLite queries/selection/profiles/lock/stop/panels/missing environment и leading comments (IDE-066). Readiness без scratch/compiler (IDE-067), cache Results при смене workspace (IDE-068). Ubuntu/Mac/ARM64/внешние DB не проверены |
 
 Общий cmp уже подключает LSP, snippets, buffer и path. Buffer completion
 не доказывает семантический completion языка. Conform имеет общий trim
@@ -67,11 +67,12 @@ python-deps — pinned wheelhouse/tools venv, Pyright и Python parser, host SDK
    Ubuntu/Mac/GUI/stdlib navigation/cross-compile остаются отдельной проверкой.
 4. Bash Windows edit/run/tests проверен: [команды и границы](BASH_WORKFLOW.md).
    DAP отдельно IDE-057; Ubuntu/Mac ждут реального прогона.
-5. SQL Windows edit/query: [команды и подготовка](SQL_WORKFLOW.md), 17 real UI
+5. SQL Windows edit/query: [команды и подготовка](SQL_WORKFLOW.md), 20 real UI
    PASS. SQLS schema, Sqruff CLI, exact snapshots, профили двух workspace,
    Results/common controls, lock/stop/reconnect и missing environment проверены.
    IDE-066 исправлен малым pinned native SQLS source patch, исходный backend
    сохраняет RED. 2 SDK CLI E2E проверяют readiness/variant guard (IDE-067).
+   IDE-068: три UI проверяют видимый cache/пустой root/late reply без rerun.
    IDE-062: SQL tests/references остаются обязательными.
    Ubuntu/Mac/ARM64/внешние DB и procedural debugger не объявляются PASS.
 
