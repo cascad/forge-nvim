@@ -99,3 +99,30 @@ Results и сохранять отзывчивость ввода. Снимок 
 - **WHEN** пользователь открывает/сохраняет SQL и вызывает SQLRun без tools/config/SQLite файла
 - **THEN** редактор остаётся доступным, состояние объяснено, установки и лишней БД нет
 - **AND** обычные SQL действия не создают DAP session или No active session overlay
+
+### Requirement: IDE-SQL-5 Явная подготовка и проверка SQL SDK
+
+Подготовка SHALL проверять pinned source/patch/payload и собирать выбранный
+native SQLS только по явному --download с предоставленным Go SDK. Readiness
+MUST работать без compiler/build scratch, не менять подготовленные payload/
+manifest и не менять вариант без явной подготовки. Временный профиль проверки
+SHALL быть отдельным от установленного SDK; Windows temp остаётся на диске checkout.
+
+Платформы: все
+Проверка: tests/e2e/sql-sdk.test.lua; tests/e2e/sql-language.test.lua (IDE-066)
+
+#### Scenario: native SDK с проверенным исправлением
+- **GIVEN** pinned upstream source/patch и предоставленные Go >=1.25/native CC
+- **WHEN** владелец явно готовит patched SQLS
+- **THEN** actual -version обозначает вариант, Go locks сохраняются, metadata содержит before/after SHA
+- **AND** тот же real SQLite UI regression проходит, official upstream воспроизводит IDE-066
+
+#### Scenario: IDE-067 readiness без build scratch
+- **GIVEN** SDK содержит manifest, binaries/parser и проверяемые archives, но build scratch/компиляторы отсутствуют
+- **WHEN** владелец вызывает readiness без --download
+- **THEN** проверяет настоящий native ABI/versions без установки, payload/manifest не меняются
+- **AND** временный профиль удаляется после проверки, SDK scratch не создаётся
+
+#### Scenario: смена варианта требует подготовки
+- **WHEN** readiness запрошена с другим sqls-variant
+- **THEN** завершает работу с понятным сообщением о --download и сохраняет SDK

@@ -25,6 +25,11 @@ RED и регресс, а не доверие advertised capabilities.
   публичные события закреплённого auto-save.nvim; явное save форматирует.
 - IDE-064: диагностика Sqruff через async native CLI/stdin, поскольку 0.44.0
   LSP теряет parse-errors/dialect overrides; debounce/cancel и защита от старых ответов.
+- IDE-066: проверить вариант SQLS 0.2.48+forge.1 с малым source patch native
+  query classification; исходный SQL отправляется БД без изменений. Подготовка
+  варианта явная, Go SDK предоставляется машиной, Windows CGO compiler изолирован.
+- IDE-067: readiness не зависит от оставленного build scratch и не пишет
+  профиль в SDK. Отдельные real CLI E2E native проверки/variant guards.
 
 Этот change покрывает editing/query workflow. SQL test framework/Neotest
 остаётся следующим обязательным пунктом полного SQL roadmap; отсутствие

@@ -10,15 +10,7 @@
 
 Маршрут и приоритеты: [рабочий план nvim_forge](docs/IDE_ROADMAP.md).
 Для новых пунктов используем следующий свободный ID `IDE-xxx`; исходный
-симптом хранится здесь, этап и состояние — в плане. Следующий ID: `IDE-067`.
-
-## IDE-066 — SQLS: SELECT после комментария теряет rows
-
-2026-11-09, reconnect UI отправил `-- typing during lock\nSELECT name FROM users;`.
-SQLS 0.2.48 ответил Query OK, 0 row affected вместо Alice. Native
-database.QueryExecType классифицирует первый word `--` как Exec, хотя запрос
-валиден. Artifact 16688404473300. Это отдельный backend bug; выбранное решение
-и исходный регресс должны войти в SQL change до объявления полного query PASS.
+симптом хранится здесь, этап и состояние — в плане. Следующий ID: `IDE-068`.
 
 ## IDE-062 — SQL: отдельный test framework и references workflow
 
@@ -498,6 +490,17 @@ Windows не срабатывают. Решить: псевдонимы в nvim_
 
 
 <!-- ────────── разобрано (переехало в nvim_forge/FIXLOG.md) ────────── -->
+
+IDE-067 → [FIXLOG §127](nvim_forge/FIXLOG.md#127-sql-sdk-readiness-проверка-без-build-scratch-и-compiler):
+SDK readiness использует отдельный temp profile, не требует build scratch/
+compiler, сохраняет payload/manifest и запрещает implicit variant switch.
+Два real CLI E2E PASS Windows, исходный prepare_sql.py 79230c3 даёт RED.
+
+IDE-066 → [FIXLOG §126](nvim_forge/FIXLOG.md#126-sqls-комментарий-перед-select-больше-не-теряет-rows):
+native SQLS 0.2.48+forge.1 выбирает Query/Exec после AST comments, сохраняя
+исходный SQL. 17 SQL UI PASS Windows, official upstream сохраняет RED.
+Pinned source/patch/build/SHA и Go locks проверены; Ubuntu/Mac не PASS.
+
 
 IDE-065 → [FIXLOG §123](nvim_forge/FIXLOG.md#123-sqlstop-штатный-выход-не-становится-crash):
 SQLStop/Connect помечают ожидаемый exit своего backend; native false crash

@@ -1,0 +1,23 @@
+{
+  "upstream_version": "0.2.48",
+  "version": "0.2.48+forge.1",
+  "revision": "7fcf633",
+  "patch": "scripts/sdk/sqls-query-comments.patch",
+  "patch_sha256": "b0085e581ca87b4a9b6c99338d89d40a22e2b7b9f2dbe816483342233080e216",
+  "files": {
+    "internal/handler/execute_command.go": {
+      "before_sha256": "3cf332e5a6a461e89e09fc39586bf946ef193bffe8bbe1405a28ca2f1a247b7d",
+      "after_sha256": "6bacf30ad21db49742d54eb0e1706950728ae42dab2b15b4c6873851188e5399"
+    },
+    "main.go": {
+      "before_sha256": "d61ce107125f26774487065cffd0515e095d0ad49f2b256b239ff009367ebdd9",
+      "after_sha256": "e995b44371fd889a41d8a69cc79b2a7919f6ba1311392447d595cbaa34f3a7fd"
+    }
+  },
+  "windows_cc": {
+    "version": "0.15.2",
+    "url": "https://ziglang.org/download/0.15.2/zig-x86_64-windows-0.15.2.zip",
+    "archive": "zig-x86_64-windows-0.15.2.zip",
+    "sha256": "3a0ed1e8799a2f8ce2a6e6290a9ff22e6906f8227865911fb7ddedc3cc14cb0c"
+  }
+}

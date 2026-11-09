@@ -17,7 +17,7 @@
 - [x] 3.1 IDE-SQL-3 SQLRun immutable snapshot buffer/visual, без statement splitter; real UI unsaved batch/actual DB writes и same-line Unicode/literal/marker selection, guide и история.
 - [x] 3.2 Native connection objects/picker aliases, выбранный SQLS client каждого workspace и switching; real UI две БД/schema/rows, отсутствие credential labels и лишних DB files, docs и история.
 - [x] 3.3 SQL Results в common registry/controls и SQLStop session; real UI focus/zoom/help/hide/show без повторного SQL, lock/stop с подтверждённым завершением собственного backend PID, ошибка query и отзывчивое редактирование; guide/FIXLOG/HISTORY.
-- [ ] 3.4 IDE-066: выбрать и проверить backend fix leading-comment SELECT; постоянный line/block-comment/batch/literal UI RED на official SQLS и GREEN на исправленном backend, pinned source/patch/build/readiness на предоставленном SDK, отдельная история. 16 начальных UI не закрывают этот bug.
+- [x] 3.4 IDE-066/067: проверить native backend fix leading-comment SELECT; постоянный line/block-comment/batch/literal UI RED на official SQLS и GREEN на исправленном backend, pinned source/patch/build/readiness на предоставленном SDK. SDK CLI E2E без scratch/compiler и variant guard, source 79230c3 RED, отдельная история. Итог Windows: 17 SQL UI + 2 SDK CLI PASS; Go locks/payload/source audit PASS. Другие ОС не проверены.
 
 ## 4. Отсутствующая среда
 

@@ -935,21 +935,22 @@ Bash debug остаётся IDE-057; обычные tests не открываю�
 
 ## SQL editing/query
 
-После общих plugins: `python -B tests/e2e/prepare_sql.py --download --nvim <nvim>`.
+После общих plugins: `python -B tests/e2e/prepare_sql.py --download --sqls-variant patched --go <go-1.25+> --nvim <nvim>`.
 Повтор без --download только проверяет sources/payload/versions/parser, без
-установки. SQLS 0.2.48, Sqruff 0.44.0 и SQL parser закреплены по official SHA.
-На Ubuntu/Mac — python3. Native SQLS amd64 assets включают SQLite; ARM64
-source build требует предоставленные Go >=1.25/CC, SDK автоматически не ставится.
+установки. SQLS 0.2.48+forge.1, Sqruff 0.44.0 и SQL parser закреплены по SHA.
+На Ubuntu/Mac — python3. Source SDK использует предоставленные Go >=1.25/CC,
+на Windows pinned portable Zig. Go SDK автоматически не ставится.
 Windows: Forge SDK, TEMP/TMP/TMPDIR/NVIM_LOG_FILE на диске checkout.
 
-`<nvim> -l tests/e2e/sql-language.test.lua` — 16 real UI cases Windows PASS:
+`<nvim> -l tests/e2e/sql-language.test.lua` — 17 real UI cases Windows PASS:
 schema completion/definition/hover/alias rename с первого символа и emoji,
 Sqruff parse diagnostics/gl/correction, project manual/save style и autosave
 без форматирования, unsaved batch с actual DB counters, precise same-line
 Unicode/semicolon literal selection, две connection/два workspace, Results
 focus/zoom/help/hide/reopen без повторного SQL, snapshot под настоящим lock,
 late callback после hide/tab switch, SQLStop/смерть своего backend PID/reconnect,
-реальный unexpected exit и missing tools/config/DB без установки/пустой БД/DAP.
+реальный unexpected exit, leading line/block comments/batch/literal с actual
+rows и missing tools/config/DB без установки/пустой БД/DAP.
 
 Private fixture использует host Python sqlite3, native SQLS и настоящие
 file-backed БД. UI/RPC только вводит клавиши и наблюдает, не подменяет SQL/
@@ -964,6 +965,13 @@ IDE-064: Sqruff LSP 0.44.0 теряет parse-errors/dialect flags, поэтом
 async CLI/stdin lint с debounce/cancel/changedtick guard заменяет его LSP.
 IDE-065: expected SQL stop нормализуется на per-client RPC boundary до
 native/core crash UI; unexpected exit по-прежнему виден.
-IDE-066 leading-comment SELECT остаётся открытым backend bug, не PASS.
+IDE-066 исправлен native source SDK: только Query/Exec classification по
+существующему AST и version marker, исходный SQL сохраняется. Go locks и
+upstream executeQuery test PASS. Вариант upstream — для отрицательного replay.
+`<nvim> -l tests/e2e/sql-sdk.test.lua` — 2 реальных CLI E2E: SDK без tmp и
+компиляторов остаётся Ready, payload/manifest неизменны, variant change без
+--download отклоняется. IDE-067 source RED — полный tests/e2e из 79230c3.
+SDK CLI artifacts включают exact script/test SHA и native stdout/stderr;
+Windows private readiness profile удаляется и при отказе variant switch.
 SQL tests/references — IDE-062. Ubuntu image дополнен, но build/run и
 Mac/ARM64/GUI/внешние RDBMS не проверены; Desktop/WSL не запускаются ради теста.

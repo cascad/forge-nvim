@@ -85,7 +85,19 @@ query engine, не меняем plugin pins, SDK на старте и польз
 - IDE-066: official SQLS QueryExecType берёт первый word (`--` вместо SELECT)
   и выбирает Exec. Нужен отдельный native backend fix; вариант — pinned source
   patch с явной сборкой, альтернативный — drivers' CLI. Владелец получил выбор.
-  Пока это открытая задача 3.4, начальные 16 UI не доказательство её решения.
+  Проверяется первый вариант как отдельный SDK candidate: Go CGO probe на
+  Windows с pinned Zig 0.15.2 прошёл, системный LLVM/MSVC несовместим с -mthreads.
+  SQLS уже разобрал statements: patch выбирает classification prefix после
+  его AST comment/whitespace nodes, БД получает прежний query string. Нет
+  Lua SQL rewriting/нового splitter. Pinned source/patch/before-after SHA,
+  native argv build с предоставленным Go >=1.25, GOTOOLCHAIN=local, -p=2.
+  Upstream variant остаётся для исходного RED; SDK/compiler не ставятся при
+  старте редактора. Пока задача 3.4 открыта, начальные 16 UI не её доказательство.
+- IDE-067: прежняя readiness зависела от out/tmp и использовала build profile
+  в установленном SDK. Она получает отдельный TemporaryDirectory на F: для
+  Windows, native temp для POSIX. Постоянный CLI E2E использует SDK с Unicode/
+  space path без tmp и отсутствующие Go/CC, проверяет native Ready/immutability
+  и запрет variant switch; исходный prepare_sql.py из 79230c3 должен дать RED.
 - ARM64 sqls build требует SDK/CC только в явной подготовке. На этой машине
   не выдаём source build Mac за PASS. Ubuntu Docker engine не запускается.
 - Первую CLI пробу LSP записал в старый C: log, восстановлен ровно прежний

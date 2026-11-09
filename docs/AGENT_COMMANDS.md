@@ -2957,3 +2957,85 @@ push не выполняется. Подробная история — FIXLOG �
 Один повтор audit был ошибочно запущен одновременно с перезаписью validation
 log и увидел незавершённый файл. Это зависимые операции: итоговый audit
 запускается после завершения strict validation. Продуктовые тесты не менялись.
+
+## 48. SQL native SDK: IDE-066/067, 2026-11-09
+
+После 79230c3 выполнен следующий шаг того же change. Go SDK предоставлен
+из .tests/dap-tools/go/bin/go.exe (1.26.0); ничего не ставилось в систему.
+Source/patch/две before-after SHA — scripts/sdk/sqls.json. Windows CC —
+Zig 0.15.2 из official index, archive SHA 3a0ed1e8799a2f8ce2a6e6290a9ff22e6906f8227865911fb7ddedc3cc14cb0c.
+Все те же TEMP/TMP/TMPDIR/NVIM_LOG_FILE и npm cache находятся на F.
+
+Ручной compiler probe: минимальный import C, Go build -p=2, затем запуск
+полученного exe. С LLVM/MSVC ошибка -mthreads; с Zig GNU target exit 0.
+Это проверка compiler, не PASS query. SDK Go build/test использует CGO=1,
+GOTOOLCHAIN=local, GOENV=off, GOWORK=off, отдельные module/build/temp caches;
+стандартный parallelism 2, память Go по умолчанию 512MiB. Профили child HOME/
+APPDATA/XDG изолированы. Default runtime редактора Go build не вызывает.
+
+```powershell
+python -B tests/e2e/prepare_sql.py --download --sqls-variant patched --output .tests/sql-candidate-deps --go .tests/dap-tools/go/bin/go.exe --nvim $forgeNvim
+python -B tests/e2e/prepare_sql.py --output .tests/sql-candidate-deps --nvim $forgeNvim
+$env:FORGE_E2E_SQL_DEPS='F:/repo/forge-nvim/.tests/sql-candidate-deps'
+$env:FORGE_SQL_CASE='IDE-066'
+& $forgeNvim -l tests/e2e/sql-language.test.lua
+```
+
+Подготовка проверяет source SHA, git apply --check/apply с command-local
+core.autocrlf=false, after SHA, настоящие Go build и upstream Test_executeQuery,
+неизменные Go locks, actual binary version, hashes и parser ABI. V1 поймал
+Git CRLF conversion; V2 собрался/прошёл Go test, но version assert не прошёл:
+main.version — const, -X не действует. Source marker исправлен, V3 Prepared.
+Ни hashes, ни требование rows не ослаблялись. Metadata хранит Go/CC/source/
+patch/locks; scanner.c выдаёт upstream strncpy warning, сборка успешна.
+
+Кандидат перенесён в default deps, прежний official SDK — в sql-upstream-deps.
+Команда PowerShell заранее проверила absolute source/destination внутри
+workspace, отсутствие reparse points/занятого backup и variant manifest.
+Два Move-Item -LiteralPath с rollback, manifest SHA прежний; удаления нет.
+sql-sdk-promotion.json сохраняет old/new paths. В manifest build-context
+остаётся историческое место сборки, бинарные hashes не менялись при переносе.
+
+```powershell
+& $forgeNvim -l tests/e2e/sql-language.test.lua
+& $forgeNvim -l tests/e2e/sql-sdk.test.lua
+python -B tests/e2e/prepare_sql.py --nvim $forgeNvim
+```
+
+17 real editor UI PASS на default patched deps; 2 real process CLI E2E PASS.
+SDK CLI использует payload/manifest/archives в space/Unicode path без out/tmp
+и отсутствующие --go/--cc: Ready, files неизменны. Variant switch без download
+даёт code 2. Temporary profile на F удалён после успеха и отказа, проверяется PID.
+Readiness не требует compiler или source-build scratch.
+
+Отрицательные replay:
+
+```powershell
+$env:FORGE_E2E_SQL_DEPS='F:/repo/forge-nvim/.tests/sql-upstream-deps'
+$env:FORGE_SQL_CASE='IDE-066'
+& $forgeNvim -l tests/e2e/sql-language.test.lua
+git archive --format=zip --output=.tests/sql-readiness-full-before-79230c3.zip 79230c3 tests/e2e
+# Распаковать архив в отдельный source dir, затем:
+$env:FORGE_SQL_PREPARE_SOURCE='<source>/tests/e2e/prepare_sql.py'
+$env:FORGE_SQL_SDK_CASE='IDE-067'
+& $forgeNvim -l tests/e2e/sql-sdk.test.lua
+```
+
+Те же final tests: official backend → нет rows (counter действительно 4);
+исходный CLI → требует --download из-за отсутствующего tmp. Первый частичный
+CLI source bundle не включал prepare_editor и не был принят как исходный RED.
+Полный tests/e2e snapshot дал точную ожидаемую причину. Явные filters и override
+script относятся к harness, backend/CLI replies не подменяются.
+
+Разовый .tests/verify-sql-sdk.ps1 последовательно выполнил source RED,
+неизменную readiness, SDK CLI, unit/trace и strict OpenSpec. Итог 365 checks/
+15 файлов PASS, 61 items strict valid. Runtime Lua не менялся с 79230c3;
+прежние 72 UI/9 backports не повторялись без нового затронувшего их изменения.
+`python -B .tests/audit-sql-sdk-evidence.py` проверяет исходный tree целиком
+(ровно 2 изменённых Go файла), patch/SDK/payload/locks, 17 UI sources/shutdown,
+2 CLI outputs, оба RED, prefix FIXLOG/старый C: log. Итог sql-sdk-evidence.json.
+
+SDK/compiler probe 510.2 MiB добавлен в ручную очистку после сохранения его
+metadata вне каталога. F_CLEANUP_PATHS теперь содержит 18 путей; активный SDK,
+official comparison backend и source/UI evidence сохраняются, удаления нет.
+История §126–127, IDE-062/Ubuntu/Mac/ARM64/GUI/внешние DB остаются открытыми.

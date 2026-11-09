@@ -9,11 +9,28 @@ definition/hover и alias rename; Sqruff — diagnostics и форматиров
 
 ## Подготовка
 
-Явно установи sqls и sqruff в PATH или задай абсолютные executable через
+Явно подготовь SQLS 0.2.48+forge.1 и Sqruff 0.44.0 в PATH или задай executable через
 FORGE_SQLS_EXECUTABLE / FORGE_SQRUFF_EXECUTABLE (Lua g:forge_sqls_executable /
-g:forge_sqruff_executable). Проверенные версии: SQLS 0.2.48 и Sqruff 0.44.0.
-Официальный SQLS binary — amd64; ARM64 требует native Go >=1.25/C compiler
-для сборки закреплённого source. Автоматической установки Go при открытии нет.
+g:forge_sqruff_executable). Forge-вариант исправляет потерю rows после ведущих
+комментариев (IDE-066); upstream 0.2.48 сохранён для воспроизведения бага.
+
+```sh
+python -B tests/e2e/prepare_sql.py --download --sqls-variant patched --output .tools/sql --go <go-1.25+> --nvim <nvim>
+```
+
+Нужны подготовленные editor-deps/catalog, предоставленный Go >=1.25 и C compiler.
+На Windows явно готовится portable Zig 0.15.2 для native CGO GNU target;
+Linux/macOS используют native CC. --go-cc задаёт свой Go CC command, --cc —
+compiler SQL parser. Все Windows caches/build/temp остаются на диске checkout.
+Системный PATH не переписывается: добавь `.tools/sql/bin` сам или укажи полный
+путь к `sqls[.exe]`/`sqruff[.exe]` в перечисленных overrides. SQL parser можно
+подготовить штатным явным `:TSInstall sql`.
+
+Source/patch/before-after SHA — [SDK metadata](../scripts/sdk/sqls.json).
+Patch использует уже построенный native SQLS AST для выбора Query/Exec,
+БД получает исходный SQL со всеми комментариями/hints/literals. Go SDK
+не устанавливается; подготовка source выполняется только по явному --download,
+Go -p=2 и GOTOOLCHAIN=local. Открытие SQL не вызывает Go/компилятор.
 
 В корне workspace создай private `.sqls.json`:
 
@@ -95,20 +112,19 @@ SQLS 0.2.48 использует codepoint координаты и ошибае�
 SQLS не предоставляет semantic references; поиск текста их не заменяет.
 SQL test framework остаётся отдельным IDE-062, procedural debug требует backend.
 
-Открытый IDE-066: upstream SQLS 0.2.48 классифицирует SELECT с ведущим
-комментарием как Exec и возвращает `Query OK, 0 row affected` без строк.
-Существующие 16 UI cases не закрывают этот backend bug; решение/отдельный
-регресс и проверка сборки записываются в SQL change. Не считать такой ответ
-подтверждением отсутствия rows в БД.
+Upstream SQLS 0.2.48 классифицирует SELECT с ведущим комментарием как Exec.
+Нужен подготовленный forge.1 вариант: `Query OK` старого backend не означает
+отсутствия rows. Исходный RED и фикс проверяются отдельным IDE-066 UI.
 
 ## Повторяемые проверки
 
 После явной подготовки общих plugins:
 
 ```sh
-python -B tests/e2e/prepare_sql.py --download --nvim <nvim>
+python -B tests/e2e/prepare_sql.py --download --sqls-variant patched --go <go-1.25+> --nvim <nvim>
 python -B tests/e2e/prepare_sql.py --nvim <nvim>
 <nvim> -l tests/e2e/sql-language.test.lua
+<nvim> -l tests/e2e/sql-sdk.test.lua
 ```
 
 На Ubuntu/Mac — python3. Windows использует Forge SDK и TEMP/TMP/TMPDIR/
@@ -118,6 +134,13 @@ FORGE_SQL_CASE фильтрует case по подстроке. Native tools/par
 Private workspace с двумя SQLite, Unicode/space paths, counters и real DB lock
 сохраняет source/config/UI grid/LSP log/запущенные PID и shutdown artifacts.
 Доставка физических клавиш из GUI проверяется отдельно.
+
+Windows: 17 SQL UI + 2 native SDK CLI checks PASS. Повтор readiness не требует
+компилятора/build scratch, использует отдельный временный профиль и сохраняет
+manifest/binaries; смена sqls-variant без --download отклоняется (IDE-067).
+Официальный вариант для source RED: --sqls-variant upstream --download с
+отдельным --output и FORGE_E2E_SQL_DEPS. Readiness существующего output
+сохраняет его manifest variant; при миграции укажи patched явно.
 
 Ubuntu при уже работающем engine:
 

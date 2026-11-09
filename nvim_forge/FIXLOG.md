@@ -6333,3 +6333,95 @@ IDE-062 tests/references и остальные платформы остаютс
 и неподтверждённые среды; успешный повтор не подменяет причину исправления.
 **Файлы:** tests/e2e/sql-language.test.lua, tests/lib/sql_project.lua, registry,
 SQL_WORKFLOW/LANGUAGE_MATRIX/IDE_ROADMAP/AGENT_COMMANDS/HISTORY и SQL change.
+
+## 126. SQLS: комментарий перед SELECT больше не теряет rows
+
+**Дата:** 2026-11-09. **Проблема:** IDE-066. **Спека:** IDE-SQL-3/5 (FIX/ADDED).
+
+**Что было.** После §119–125 native upstream 0.2.48 отправлял SELECT с
+ведущим комментарием через Exec: вместо rows появлялся Query OK, иногда с
+чужим last RowsAffected. Исходный batch действительно менял counter на 4,
+но не возвращал Alice/вычисленный literal. Первый RED 19260631761000;
+повтор на сохранённом official SDK — 21530768035600, тот же final UI test.
+
+**Причина.** QueryExecType получает первый whitespace-separated word
+полного query (`--`/`/*`), а не первый исполняемый token уже построенного AST.
+Это ошибка backend, не отсутствие данных в SQLite или проблема панели.
+
+**Изменение.** Малый source patch SQLS: classification prefix выбирается
+после leading AST whitespace/comment nodes. В Query/Exec передаётся прежняя
+query string целиком: comments, optimizer hints и literals не переписываются.
+Своя SQL grammar/splitter в Lua не появляется, Go dependencies не меняются.
+Вторая изменённая строка source — native version marker 0.2.48+forge.1.
+Metadata фиксирует source/patch/before-after SHA двух Go файлов.
+
+**Подготовка.** Явный --download, предоставленный Go >=1.25, CGO=1,
+GOTOOLCHAIN=local, Go -p=2. Windows использует pinned portable Zig 0.15.2
+с GNU target; LLVM/MSVC не поддерживает CGO -mthreads. POSIX использует
+native CC; Mac/Linux source build без реального запуска не объявлен PASS.
+SDK/compiler/cache/profile Windows находятся на F, Go SDK не устанавливался.
+Fresh output выбирает patched, существующий manifest сохраняет свой variant;
+смена требует --download. При миграции вариант указывается явно.
+
+**Попытки.** Проверка after SHA поймала Git core.autocrlf conversion на Windows:
+apply получает core.autocrlf=false только в собственном SDK source repo.
+Сборка/родной executeQuery test прошли, но version check затем выявил, что
+upstream version — const, -X его не меняет. Marker внесён в source patch,
+неверный linker flag удалён. --go приводится к абсолютному executable до
+смены cwd. Ни checksum assertions, ни требование реальных rows не ослаблялись.
+
+**Проверка/e2e.** Native patched build и upstream Test_executeQuery PASS;
+Go.mod/go.sum побайтно неизменны. Все 17 SQL UI PASS: прежние 16 сценариев и
+новый leading line/block comments + batch write + literal '/* literal */ -- 😀;ю'.
+Counter=4, другой DB=0, настоящие rows/literals присутствуют. Default deps
+переключены на проверенный SDK двумя checked F:-only moves; official SDK
+сохранён как sql-upstream-deps, ничего не удалено. Readiness после переноса
+Ready, manifest неизменён. Source/context paths в manifest описывают место
+сборки; relocation отдельно записан в sql-sdk-promotion.json.
+
+**Audit.** sql-sdk-evidence.json проверяет весь upstream source tree: изменены
+только два declared Go файла, остальные совпадают; source/patch/payload/Go
+locks и final UI test SHA строгие. Runtime Lua совпадает с 79230c3: прежние
+72 UI/9 backports не повторялись без нового изменения этих интеграций;
+SQL backend полностью проверен 17 UI, unit/trace снова 365 PASS, OpenSpec
+61 strict valid. Ubuntu/Mac/ARM64/GUI/внешние DB остаются непроверенными.
+
+**Вывод.** Исправление находится в native classifier и не меняет исполняемый
+SQL. Поддерживаемый временный SDK готовится явно, обычный старт редактора
+не запускает Go build или установку. SQL tests/references остаются IDE-062.
+**Файлы:** scripts/sdk/sqls.json, sqls-query-comments.patch; sql_sdk.py,
+prepare_sql.py, comments.sql/SQL UI, Dockerfile и SQL workflow/docs.
+
+## 127. SQL SDK readiness: проверка без build scratch и compiler
+
+**Дата:** 2026-11-09. **Проблема:** IDE-067. **Спека:** IDE-SQL-5 (FIX).
+
+**Что было.** prepare_sql.py из 79230c3 требовала out/tmp для readiness,
+даже при готовых manifest/binaries/parser/archives. Там же размещался профиль
+проверки. После удаления scratch подготовленный SDK ошибочно считался
+неподготовленным; путь мешал проверке установленного readonly tool tree.
+
+**Причина.** Наличие build directory использовалось как readiness marker,
+а temporary HOME/XDG/core log были привязаны к output вместо отдельного
+профиля проверяющего процесса.
+
+**Изменение.** Marker — manifest. Повтор использует отдельный TemporaryDirectory:
+на Windows в проверенном workspace F:/.tests/tmp, на POSIX — native temp.
+Private HOME/APPDATA/XDG/core log создаются там и удаляются при успехе/ошибке.
+Скомпилированному SDK для проверки не нужны Go, CC или out/tmp. Вариант
+SDK остаётся immutable без явного --download.
+
+**Проверка/e2e.** Новый постоянный sql-sdk.test.lua выполняет настоящий CLI
+на SDK в Unicode/space path без tmp и с отсутствующими --go/--cc: Ready.
+Manifest/payload hashes сохранены, SDK scratch не создан. Другой variant
+возвращает code 2 с полезным сообщением; свой temporary profile удалён в обоих
+случаях. Это два process E2E, отдельно от 17 editor UI.
+Тот же final test на полном tests/e2e snapshot 79230c3 даёт ожидаемый RED
+«Сначала явно prepare_sql.py --download» (20961974952300). Первый неполный
+source bundle не импортировал prepare_editor и не был засчитан как RED;
+контроль причины потребовал полный исходный snapshot. Артефакты содержат
+exact script/test SHA, native stdout/stderr, PID и immutable SDK manifest.
+
+**Вывод.** Готовность проверяется по реальным payload/ABI/versions, а не
+по оставленному build мусору; проверка не превращается в повторную установку.
+**Файлы:** prepare_sql.py, sql-sdk.test.lua/registry, IDE-SQL-5/spec/docs.
