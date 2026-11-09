@@ -6109,3 +6109,227 @@ unit/trace: 365 checks, 15 файлов PASS; восемь Bash UI исполь�
 **Вывод.** Реестр перечисляет executable suites, исходники проектов имеют
 отдельный документированный корень. **Файлы:** tests/lib/trace.lua,
 trace.test.lua, tests/README.md; тот же change интеграции Bash.
+
+## 119. SQL: схема, запросы и общие Results
+
+**Дата:** 2026-11-09. **Проблема:** IDE-060. **Спека:** IDE-SQL-1/2/3/4 (ADDED),
+change add-sql-edit-query-workflow.
+
+**Что было.** В be5b6bc SQL не имел language/query workflow. Baseline UI
+14811063692500 с настоящими tools/SQLite не дождался SQL LSP; успешная
+подготовка tools сама по себе не считалась работой редактора.
+
+**Причина.** Отсутствовали guarded SQLS registration, formatter/diagnostics,
+native connection configuration и frontend выполнения/результатов.
+Сначала проверен npm sql-language-server 1.7.1: 704-package isolated probe
+на Node 24 падает ERR_PACKAGE_PATH_NOT_EXPORTED. Этот stack отклонён; lock,
+исходники и crash сохранены, каталоги tools/npm-cache внесены в ручную очистку.
+
+**Изменение.** Native SQLS 0.2.48 для схемы, Sqruff 0.44.0 для lint/format,
+SQL parser из pinned catalog; явная подготовка/SHA/manifest/readiness. JSON
+.sqls.json передаёт native connection object без переписывания credentials.
+Missing SQLite проверяется до подключения; обычный open не исполняет SQL.
+SQLRun передаёт неизменяемый buffer/точный visual snapshot через public
+didOpen/executeQuery/didClose; свой statement splitter не используется.
+SQLConnect пересоздаёт только SQLS своего workspace. SQL Results — common
+bottom component с focus/zoom/help/hide; SQLStop прекращает backend session.
+Поздний reply обновляет скрытый buffer, не открывает панель в другой вкладке.
+
+**Проверка/e2e.** Windows 16 real UI PASS в windows-sql-regress-sql-language.txt:
+schema completion/gd/K/F2, ASCII/emoji alias edits, parse diagnostics/gl/fix,
+project manual/save style, autosave без форматирования; actual SQLite batch/
+counters, unsaved source, same-line visual с literal '😀;ю' и marker statements,
+две БД и два независимых workspace, SQL Results/common controls без повторного
+query, snapshot под real exclusive lock/hide/tab switch, SQLStop с actual PID
+death/reconnect, unexpected backend exit, missing tools/config/DB без install/
+пустой БД/DAP. SQLRun не вызывает write; unsaved case явно выключает штатный
+autosave через ASToggle. Сохранены private source/config/project, manifest,
+LSP log, PID/events/final-mode, UI grid и graceful shutdown. Общий Windows
+регресс и итоговый audit записываются отдельно после завершения.
+
+**Попытки.** Tests первоначально искали parse severity Error, но Sqruff CLI
+публикует Warning; oracle проверяет реальную Unparsable diagnostic и её
+исчезновение. SELECT 42 без FROM не ждёт SQLite lock; финальный snapshot
+читает users. Ожидание только basename aliases.sql преждевременно принимало
+буфер другого workspace: теперь сверяется полный путь. Mapped F7/Esc и
+следующие действия разделены ожиданием фокуса/normal/insert; фактический
+server/fixture не подменяется. Все промежуточные FAIL сохранены.
+
+**Границы.** IDE-066: upstream SQLS SELECT после ведущего комментария возвращает
+Query OK без rows; это отдельный открытый backend bug, не полный SQL PASS.
+SQL tests/semantic references — IDE-062; процедурный DAP требует backend.
+Ubuntu engine недоступен в read-only probe 11:49:41 UTC; image дополнен,
+Desktop/WSL не запускались. Mac/ARM64 source build/GUI и внешние RDBMS не PASS.
+67 plugins/существующие backports/системные shell не менялись.
+
+**Вывод.** UI PASS опирается на actual SQL/schema/DB side effects и отрицательные
+сценарии, отдельно от advertised capabilities и наличия binary. Общий query
+frontend не закрывает известные ошибки конкретного backend.
+**Файлы:** forge/sql.lua, ide/sql.lua, LSP/format/TS/keymaps/registry/controls,
+SQL fixture/helper/preparer/tests, Dockerfile, SQL_WORKFLOW/LANGUAGE_MATRIX.
+
+## 120. SQLS: первый символ rename и Unicode координаты
+
+**Дата:** 2026-11-09. **Проблема:** IDE-061. **Спека:** IDE-SQL-1 (FIX).
+
+**Что было.** Native 0.2.48 rename на первом символе alias возвращал null;
+после emoji координаты обычного UTF-16 клиента не совпадали с lexer. Реальный
+UI source 15099658220800: gd/K работают, F2 не меняет alias.
+
+**Причина.** SQLS lexer считает []rune/codepoints, но initialize не объявляет
+encoding. Definition добавляет единицу перед walker; rename этого не делает.
+Response edits уже правильные zero-based codepoints; их менять не требуется.
+
+**Изменение.** Асинхронный cached -version только при SQL attach. Для известной
+0.2.48 client.offset_encoding=utf-32, public RPC rename request получает
+character+1. Ответы/другие методы/неизвестные версии не переписываются.
+
+**Проверка/e2e.** ASCII first-character и emoji-before-alias UI PASS: все usages
+текущего statement меняются, соседний statement и literal побайтно сохранены.
+Native raw RPC/исходники и исходный UI RED сохранены; final E2E постоянный.
+**Вывод.** SQLS semantic protocol адаптируется на границе конкретной версии;
+правка ответов или слепая UTF-16 трактовка повредили бы SQL.
+**Файлы:** forge/sql_protocol.lua, forge/sql.lua, sql-language.test.lua, spec/docs.
+
+## 121. Autosave: публичные события вместо старых callbacks
+
+**Дата:** 2026-11-09. **Проблема:** IDE-063. **Спека:** IDE-SQL-2 (FIX).
+
+**Что было.** Набор неполного SQL вызывал Conform ERROR, корректный SQL сам
+переформатировался после debounce. Source 15801598876300: тот же UI получил
+uppercase/2-space format вместо набранного raw SQL.
+
+**Причина.** opts.callbacks.before_saving/after_saving больше не вызываются
+закреплённым auto-save.nvim. Глобальный user_auto_save_active оставался false;
+Conform не отличал фоновый autosave от явного write.
+
+**Изменение.** Public User AutoSaveWritePre/Post с data.saved_buffer помечают
+только этот buffer на синхронный интервал write. Conform читает buffer-local
+guard. Удалены неработающие callbacks и 50ms global reset; noautocmd=false
+сохранён, фоновые LSP/checkOnSave получают обычные события записи.
+
+**Проверка/e2e.** Настоящий native Sqruff: после фактического autosave и
+дополнительных 1200ms raw текст на диске/в памяти не меняется; явный write
+форматирует и сохраняет. Parse correction не вызывает formatter ERROR.
+Deleted-files 5 UI PASS; buffers/языковой регресс фиксируются итоговым audit.
+**Вывод.** Guard привязан к реальному write конкретного buffer, а не к
+устаревшему API или глобальному временному окну.
+**Файлы:** plugins/editor.lua, plugins/format.lua, SQL UI/spec/docs.
+
+## 122. Sqruff: parse diagnostics через native CLI
+
+**Дата:** 2026-11-09. **Проблема:** IDE-064. **Спека:** IDE-SQL-2 (FIX).
+
+**Что было.** Sqruff LSP показывал style Warning для SELECT FROM ;, но не
+Unparsable section даже с --parsing-errors. Source 15850406074200 и CLI JSON
+показывают различие, UI diagnostics v1/v2 FAIL сохранены.
+
+**Причина.** В official 0.44.0 cli-lib Commands::Lsp передаёт только config
+path/ignore_local_config; LSP создаёт Linter с collect_parse_errors=false.
+CLI dialect override также не передаётся LSP. Объявленная поддержка flag
+в help не доказывает его применение конкретной командой.
+
+**Изменение.** Один async Sqruff lint --parsing-errors --format json по stdin
+вместо его LSP. Project .sqruff/explicit dialect сохраняются; debounce 500ms,
+отмена старого процесса, changedtick/identity guard и public vim.diagnostic.
+Нет второго lint процесса рядом с LSP и нет синхронного formatter при наборе.
+Conform fix остаётся native с project style.
+
+**Проверка/e2e.** Настоящая parse Warning видна по gl и исчезает после правки;
+manual/save форматирует в uppercase/2-space style проекта. Без tools SQL
+редактируется без install/DAP. Native CLI replies и UI/logs сохранены.
+**Вывод.** Проверяется фактический diagnostic content, а не случайный style
+warning или один только успешный запуск language server.
+**Файлы:** forge/sql_diagnostics.lua, forge/sql.lua, SQL tests/spec/docs.
+**Источник:** https://github.com/quarylabs/sqruff/blob/v0.44.0/crates/cli-lib/src/lib.rs
+
+## 123. SQLStop: штатный выход не становится crash
+
+**Дата:** 2026-11-09. **Проблема:** IDE-065. **Спека:** IDE-SQL-3 (FIX).
+
+**Что было.** SQLStop действительно завершал процесс под DB lock, но появлялся
+«LSP-сервер упал»/hit-enter. Source 16308820053800 воспроизводит это; первая
+правка только on_exit callback не убрала второй native core WARN.
+
+**Причина.** Windows forced terminate возвращает code=1/signal=15. Forge
+общий on_exit и native Client:_on_exit независимо сообщают crash. Глобальный
+mute для всех LSP скрыл бы чужое падение и зависел бы от времени.
+
+**Изменение.** Только SQLStop/SQLConnect отмечают ожидаемый выход конкретного
+RPC lifetime/client. На публичной dispatcher boundary expected exit передаётся
+native client как clean 0/0 до обоих crash UI; новый Run не переиспользует
+stopping client. Unexpected exit не получает эту отметку. Generation guard
+не позволяет позднему reply заменить Stopped или результаты нового profile.
+
+**Проверка/e2e.** Реальный SQLite lock, редактирование во время Running,
+SQLStop, фактическая смерть собственного backend PID, отсутствие false WARN,
+reconnect с новым PID и настоящими rows PASS. Отдельный тест убивает backend
+вне SQLStop: crash виден, обе штатные warning notifications прочитаны, ввод
+продолжается. Reconnect case пока удаляет добавленный комментарий перед новым
+query: IDE-066 открыт и не маскируется успешным stop.
+**Вывод.** Expected shutdown — состояние конкретного backend lifetime,
+а не подавление сообщений по строке или глобальный таймер.
+**Файлы:** forge/sql.lua, SQL native UI tests/spec/docs.
+
+## 124. SQL probes: изоляция LSP log на F
+
+**Дата:** 2026-11-09. **Проблема:** ручная bare SQLLS probe записала свой LSP log на C:.
+
+**Что было.** NVIM_LOG_FILE перенесён на F, но vim.lsp.log использовал default
+C:/Users/cascad/AppData/Local/nvim-data/lsp.log. Probe дописала 7475 bytes
+после прежнего 10307-byte пользовательского prefix.
+
+**Причина.** Core log и LSP stdpath log — разные назначения; одного TEMP/
+NVIM_LOG_FILE недостаточно для bare -u NONE процесса.
+
+**Изменение.** Собственный tail сохранён в sql-research/sqlls-startup-log-tail.log;
+восстановлен ровно прежний prefix, старые записи не удалены. Дальнейшие bare
+probes и permanent prepare_sql.py задают изолированные HOME/USERPROFILE/
+LOCALAPPDATA/APPDATA/XDG config/data/state/cache и temp/core log на F.
+Editor E2E использует общий private runtime, а не профиль владельца.
+
+**Проверка.** c-log-restoration.json хранит SHA сохранённого prefix:
+2f9b9b9620f1e09b4547212f3a02a951a62e3edf1933fe69ee416dd4889dc1b4,
+длина 10307. Повторные CLI/UI probes пишут собственные logs в F artifacts;
+prefix сверяется итоговым audit. Это восстановление побочного эффекта probes,
+не исправление Mac/zsh startup IDE-001.
+**Вывод.** Для ручного запуска LSP изолируется весь stdpath вместе с core log.
+**Файлы:** prepare_sql.py, sql_project/editor_runtime, локальные probe/evidence scripts.
+
+## 125. SQL: повторяемый регресс и границы этапа
+
+**Дата:** 2026-11-09. **Спека:** IDE-SQL-1/2/3/4 (ADDED/FIX).
+
+**Проверка.** Последовательный Windows regression: 16 SQL и 72 прежних
+UI checks PASS (Bash/Rust/Python/Node/Go/test runner/editor/buffers/deleted-files/
+work-panels), отдельно 9 backports и 365 unit/trace PASS. 61 OpenSpec items
+strict valid. Последний SQL после исправления защитного error cleanup снова
+16 PASS. Повтор без download — Ready, manifest не изменён.
+
+**Исходное воспроизведение.** Тот же final sql-language.test.lua на пяти
+сохранённых полных config-source даёт ожидаемый RED: нет SQLS, rename первого
+символа, autosave изменил текст, нет parse diagnostics, false crash на SQLStop.
+Первый stop replay поймал ошибку самого cleanup: чтение final-mode уже
+закрытого child заменяло primary error. Наблюдение защищено pcall, повтор
+сохранил исходный SQLStop status/RPC timeout и artifacts. Произвольный exit 1
+не считается доказательством причины; controller проверяет expected reason.
+
+**Audit.** sql-language-evidence.json: 81 сохранённый artifact каталога для
+UI/backport suites (несколько checks используют один editor), runtime Lua SHA
+совпадают с checkout, финальный test SHA сохранён и в GREEN, и в пяти RED.
+Payload/source hashes SQL tools/parser проверены, 67 pins/прежние backports
+неизменны. Все GREEN editor shutdown завершены без hard kill. Prefix FIXLOG
+496429 bytes имеет прежний SHA f4a2b717de75d783e302087f5e92c0a8b614b4cdfa0aa1226856622a0eabbc56;
+старый C: LSP log — ровно сохранённые 10307 bytes. Temp/runtime Windows на F.
+
+**Границы.** Desktop/WSL lifecycle не менялся, Ubuntu/Mac/ARM64/GUI/внешние DB
+не проверены. SQL change остаётся открытым: IDE-066 требует backend fix,
+IDE-062 tests/references и остальные платформы остаются в roadmap. Это
+законченный проверенный edit/query core, а не объявление полной IDE готовой.
+Два rejected npm каталога (216.4 MiB) добавлены к F_CLEANUP_PATHS: всего 17,
+только список для владельца, удаления не выполнялись.
+
+**Вывод.** Отдельно фиксируются product GREEN, исходный RED, harness errors
+и неподтверждённые среды; успешный повтор не подменяет причину исправления.
+**Файлы:** tests/e2e/sql-language.test.lua, tests/lib/sql_project.lua, registry,
+SQL_WORKFLOW/LANGUAGE_MATRIX/IDE_ROADMAP/AGENT_COMMANDS/HISTORY и SQL change.

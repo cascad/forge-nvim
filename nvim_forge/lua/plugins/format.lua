@@ -93,6 +93,7 @@ return {
             formatters_by_ft = {
                 sh = { 'shfmt', lsp_format = 'fallback' },
                 bash = { 'shfmt', lsp_format = 'fallback' },
+                sql = language_formatters({ 'sqruff' }),
                 rust   = { "rustfmt", lsp_format = "fallback" },
                 -- Go: golines + gofumpt поверх gopls.
                 --   * golines — РАЗБИВАЕТ длинные строки (gofmt/gofumpt
@@ -144,7 +145,7 @@ return {
                 -- Форматируем ТОЛЬКО на явном сохранении (:w / Ctrl+S), и то
                 -- асинхронно. Autosave продолжает кормить LSP-диагностики и
                 -- rust-analyzer checkOnSave/clippy (autocmd'ы записи включены).
-                if vim.g.user_auto_save_active then
+                if vim.b[bufnr].user_auto_save_active then
                     return
                 end
 
@@ -152,6 +153,7 @@ return {
             end,
             formatters = {
                 prettier = require('forge.node').prettier(),
+                sqruff = require('forge.sql').formatter(),
                 stylua = {
                     prepend_args = { "--indent-type", "Spaces", "--indent-width", "4", "--column-width", "120" },
                 },

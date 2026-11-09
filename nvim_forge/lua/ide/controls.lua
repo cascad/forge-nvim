@@ -4,7 +4,7 @@ local zoom, help
 local active_win
 local pending_panel
 local work = { ['neotest-summary']='tests', ['neotest-output-panel']='tests_output',
-    ['grug-far']='search', OverseerList='tasks_output' }
+    ['grug-far']='search', OverseerList='tasks_output', ['forge-sql']='sql.results' }
 local backend_maps = {}
 local search_actions = { Goto=true, Open=true, ['Open Next']=true, ['Open Prev']=true, Preview=true }
 local titles = {
@@ -13,7 +13,7 @@ local titles = {
     dapui_console = 'Debug Console', ['dap-terminal'] = 'Debug Terminal',
     aerial = 'Outline', ['neo-tree'] = 'Files', NeogitStatus = 'Git',
     ['neotest-summary']='Tests', ['neotest-output-panel']='Test Output',
-    ['grug-far']='Search', OverseerList='Tasks',
+    ['grug-far']='Search', OverseerList='Tasks', ['forge-sql']='SQL Results',
 }
 local tree_components = { filesystem = 'explorer', buffers = 'buffers', git_status = 'git_status' }
 function M.tree_component(source) return tree_components[source] end
@@ -141,6 +141,7 @@ function M.tests() show_work('tests') end
 function M.test_output() show_work('tests_output') end
 function M.search() show_work('search') end
 function M.tasks() show_work('tasks_output') end
+function M.sql_results() show_work('sql.results') end
 
 -- Перед native действием вернуть выбранный cursor в обычное окно backend.
 -- Grug-far ищет окно через bufwinid; его карты ввода текста не трогаем.
@@ -291,6 +292,9 @@ function M.help()
     elseif ft(source) == 'grug-far' then
         lines[#lines + 1] = 'Search: i — ввод, Tab — поле, Enter — найденное место.'
         lines[#lines + 1] = 'q скрывает с сохранением запроса; g? — search/replace.'
+    elseif ft(source) == 'forge-sql' then
+        lines[#lines + 1] = 'SQL: Space j o — output, j q — запрос из кода, j x — stop session.'
+        lines[#lines + 1] = 'q скрывает результаты; повторное открытие не выполняет SQL.'
     end
     vim.api.nvim_buf_set_lines(buf, 0, -1, false, lines)
     vim.bo[buf].bufhidden = 'wipe'

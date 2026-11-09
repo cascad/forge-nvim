@@ -1,0 +1,75 @@
+{
+  "versions": {
+    "sqls": "0.2.48",
+    "sqruff": "0.44.0"
+  },
+  "sqls_source": {
+    "url": "https://codeload.github.com/sqls-server/sqls/tar.gz/refs/tags/v0.2.48",
+    "archive": "sqls-v0.2.48.tar.gz",
+    "sha256": "dd8a27fc0ed440807969968ae4d6f9fa650c3bf6a827c1e69b70ec361b6657fc"
+  },
+  "grammar": {
+    "url": "https://codeload.github.com/derekstride/tree-sitter-sql/tar.gz/851e9cb257ba7c66cc8c14214a31c44d2f1e954e",
+    "archive": "tree-sitter-sql-851e9cb257ba7c66cc8c14214a31c44d2f1e954e.tar.gz",
+    "sha256": "b6fcc2d9295d5e1a9540d7e08b0f1fb9ef4eaf8d9110a2c7158e81083417fc64",
+    "revision": "851e9cb257ba7c66cc8c14214a31c44d2f1e954e"
+  },
+  "platforms": {
+    "win32-x64": {
+      "sqruff": {
+        "url": "https://github.com/quarylabs/sqruff/releases/download/v0.44.0/sqruff-windows-x86_64.zip",
+        "archive": "sqruff-windows-x86_64.zip",
+        "sha256": "cc560417978ef4f170a84449b68b92f9bdfc990041728c8d724bf98ecce8725d"
+      },
+      "sqls": {
+        "url": "https://github.com/sqls-server/sqls/releases/download/v0.2.48/sqls-windows-0.2.48.zip",
+        "archive": "sqls-windows-0.2.48.zip",
+        "sha256": "df6453b2ddcb4e748547d0288b826251a24af099749dc7a9ddea587aac3d4365"
+      }
+    },
+    "linux-x64": {
+      "sqruff": {
+        "url": "https://github.com/quarylabs/sqruff/releases/download/v0.44.0/sqruff-linux-x86_64-musl.tar.gz",
+        "archive": "sqruff-linux-x86_64-musl.tar.gz",
+        "sha256": "3d0dd223770e99fb17199c16327bdf15bf238261a001815aa172f140817d7e9a"
+      },
+      "sqls": {
+        "url": "https://github.com/sqls-server/sqls/releases/download/v0.2.48/sqls-linux-0.2.48.zip",
+        "archive": "sqls-linux-0.2.48.zip",
+        "sha256": "30047b92c41658c821b7803d2c2a3a1ce4e17ee769ceff6f24bb9e3daaf5d4dc"
+      }
+    },
+    "linux-arm64": {
+      "sqruff": {
+        "url": "https://github.com/quarylabs/sqruff/releases/download/v0.44.0/sqruff-linux-aarch64-musl.tar.gz",
+        "archive": "sqruff-linux-aarch64-musl.tar.gz",
+        "sha256": "51f7be35efb9585aafd9240323792bedef7e5bd3dd48bcc686c7b7b60be4cc32"
+      },
+      "sqls": {
+        "source_build": true
+      }
+    },
+    "darwin-x64": {
+      "sqruff": {
+        "url": "https://github.com/quarylabs/sqruff/releases/download/v0.44.0/sqruff-darwin-x86_64.tar.gz",
+        "archive": "sqruff-darwin-x86_64.tar.gz",
+        "sha256": "ebc6c05781c2144cf581549ee9288138401a9df94162117d0d96554c23dbc7a7"
+      },
+      "sqls": {
+        "url": "https://github.com/sqls-server/sqls/releases/download/v0.2.48/sqls-darwin-0.2.48.zip",
+        "archive": "sqls-darwin-0.2.48.zip",
+        "sha256": "b44165ca597a4b4298d56657bc911aa3ca8a591befefde4e29566923c6229f3d"
+      }
+    },
+    "darwin-arm64": {
+      "sqruff": {
+        "url": "https://github.com/quarylabs/sqruff/releases/download/v0.44.0/sqruff-darwin-aarch64.tar.gz",
+        "archive": "sqruff-darwin-aarch64.tar.gz",
+        "sha256": "a4246a192080b9d9d6ef3a747fce3cba4daed42da3c80a097670cd4ed4c4fa41"
+      },
+      "sqls": {
+        "source_build": true
+      }
+    }
+  }
+}

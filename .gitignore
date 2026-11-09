@@ -15,6 +15,7 @@ spell/
 .luarc.jsonc
 .vscode/
 .idea/
+.sqls.json
 
 *.swp
 *.swo

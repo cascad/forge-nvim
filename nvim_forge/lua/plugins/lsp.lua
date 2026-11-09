@@ -72,6 +72,8 @@ return {
                 "bash-language-server",
                 "shfmt",
                 "shellcheck",
+                "sqls",
+                "sqruff",
                 -- DAP
                 -- Delve follows Go runtime/compiler internals closely. Keep it
                 -- current so project toolchain upgrades do not break debugging.
@@ -789,6 +791,7 @@ return {
             end
             require('forge.node').setup_lsp()
             require('forge.bash').setup_lsp()
+            require('forge.sql').setup_lsp()
         end,
     },
 }

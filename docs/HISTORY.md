@@ -237,6 +237,13 @@ Python реализован и проверен 2026-11-03; после возо�
 | §116 | [Bash: язык, native Tasks и Bats Tests](../nvim_forge/FIXLOG.md#116-bash-язык-native-tasks-и-bats-tests) |
 | §117 | [Bash rename: URI aliases больше не стирают аргументы](../nvim_forge/FIXLOG.md#117-bash-rename-uri-aliases-больше-не-стирают-аргументы) |
 | §118 | [Trace: project fixtures отделены от самостоятельных suites](../nvim_forge/FIXLOG.md#118-trace-project-fixtures-отделены-от-самостоятельных-suites) |
+| §119 | [SQL: схема, запросы и общие Results](../nvim_forge/FIXLOG.md#119-sql-схема-запросы-и-общие-results) |
+| §120 | [SQLS: первый символ rename и Unicode координаты](../nvim_forge/FIXLOG.md#120-sqls-первый-символ-rename-и-unicode-координаты) |
+| §121 | [Autosave: публичные события вместо старых callbacks](../nvim_forge/FIXLOG.md#121-autosave-публичные-события-вместо-старых-callbacks) |
+| §122 | [Sqruff: parse diagnostics через native CLI](../nvim_forge/FIXLOG.md#122-sqruff-parse-diagnostics-через-native-cli) |
+| §123 | [SQLStop: штатный выход не становится crash](../nvim_forge/FIXLOG.md#123-sqlstop-штатный-выход-не-становится-crash) |
+| §124 | [SQL probes: изоляция LSP log на F](../nvim_forge/FIXLOG.md#124-sql-probes-изоляция-lsp-log-на-f) |
+| §125 | [SQL: повторяемый регресс и границы этапа](../nvim_forge/FIXLOG.md#125-sql-повторяемый-регресс-и-границы-этапа) |
 
 ## Как читать и дополнять
 

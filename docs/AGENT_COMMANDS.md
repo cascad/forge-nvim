@@ -2829,3 +2829,131 @@ docker compose -f tests/containers/compose.yaml run --rm --entrypoint nvim ubunt
 Mac/Bash 3.2/GUI/DAP остаются открытыми; Bash DAP — IDE-057. Только локальный
 commit проверенного шага, без push. Активные tools и evidence сохраняются;
 прежний список ненужных F каталогов .tests/F_CLEANUP_PATHS.txt не удалялся.
+
+## 47. SQL: реальные tools/БД/UI и найденные общие bugs, 2026-11-09
+
+Все shell calls — из F:/repo/forge-nvim, login=false/без загрузки профиля.
+Перед прямым запуском задавались:
+
+```powershell
+$env:TEMP='F:/repo/forge-nvim/.tests/tmp'
+$env:TMP=$env:TEMP; $env:TMPDIR=$env:TEMP
+$env:NVIM_LOG_FILE="$env:TEMP/sql-regression.log"
+$env:npm_config_cache='F:/forge-nvim-tmp/npm-cache'
+$env:PYTHONIOENCODING='utf-8'
+. ./scripts/lib/nvim-sdk.ps1
+$forgeNvim=Get-ForgeNvim (Get-Location).Path
+```
+
+Get-Content -TotalCount/-Tail и Select-Object -Skip/-First читали code/specs/
+логи; rg --files / rg -n — имена/строки. Git status/diff/log и Get-FileHash
+показывали paths/diff/SHA, без исполнения прочитанного текста. Читать лучше
+небольшие нужные части: большие batch outputs инструмент обрезает по tokens.
+Tool result содержит stdout/stderr, exit_code, elapsed time; session_id —
+работающий процесс. write_stdin с пустым вводом только получает продолжение.
+
+OpenSpec list/status/instructions apply подтвердили root F: и spec-driven
+change add-sql-edit-query-workflow. После новых IDE-063/064/065/066 план
+уточнён, основные specs/ не переписывались. Проверка:
+
+```powershell
+npx.cmd --yes @fission-ai/openspec@1.13.2 validate --all --strict --no-interactive
+```
+
+61 items PASS. Info о длинных requirements сохранён, это не FAIL и не
+подтверждение прохождения всех платформ/ручных сценариев.
+
+Исследование: official npm metadata/tar/lock, GitHub release assets/raw sources,
+SQLS 0.2.48 source и native JSON-RPC, Sqruff 0.44.0 CLI/LSP replies. Неподходящий
+SQLLS 1.7.1 npm stack установлен только в isolated probe с --ignore-scripts,
+Node 24 завершил его ERR_PACKAGE_PATH_NOT_EXPORTED. Не runtime зависимость.
+Native sqls -version, sqruff --version/lint/lsp --help и pinned sources
+проверены фактически, не только по README. Raw probes — .tests/sql-rpc-*.json.
+
+```powershell
+python -B tests/e2e/prepare_sql.py --download --nvim $forgeNvim
+python -B tests/e2e/prepare_sql.py --nvim $forgeNvim
+& $forgeNvim -l tests/e2e/sql-language.test.lua
+```
+
+Первая команда явно скачивает/проверяет hashes и собирает parser. Повтор
+без --download проверяет готовность без установки. Windows — official SQLS
+binary; ARM64 source build без реального запуска не PASS. Child env содержит
+изолированные HOME/USERPROFILE/APPDATA/LOCALAPPDATA/XDG/temp на F, а не только
+core log. Один ранний bare probe дописал 7475 bytes в default C: LSP log;
+свой tail сохранён, ровно старый 10307-byte prefix восстановлен и проверяется
+SHA. Факт/причина/исправление — FIXLOG §124, c-log-restoration.json.
+
+E2E создаёт настоящие private SQLite через host Python stdlib, нативный SQLS,
+Sqruff и Neovim с 67 pinned plugins. RPC вводит клавиши, наблюдает public LSP/
+cmp/diagnostic/panel состояния; fake SQL/LSP replies нет. Counter SELECT
+проверяет настоящие DB writes, lock.py удерживает actual EXCLUSIVE transaction,
+uv.kill(pid,0) проверяет именно свой SQLS process. Сохраняются project/config/
+sources, manifests/SHA, UI grid/screen, logs/PID/events/final-mode/shutdown.
+Открытие query/Results не объявляется PASS по одному только наличию команды.
+
+```powershell
+$env:FORGE_E2E_CONFIG_SOURCE='F:/repo/forge-nvim/.tests/editor-e2e/<source>/config-source'
+$env:FORGE_SQL_CASE='<substring>'
+& $forgeNvim -l tests/e2e/sql-language.test.lua
+```
+
+Тот же постоянный test replay: baseline 14811063692500 → SQLS not ready;
+15099658220800 → alias rename; 15801598876300 → autosave изменил raw text;
+15850406074200 → нет parse diagnostic; 16308820053800 → false crash на SQLStop.
+Результаты .tests/sql-source-red-results.json и отдельные windows-sql-source-red
+logs. Controller .tests/run-sql-source-red.ps1 требует именно ожидаемую причину,
+а не произвольный exit 1. Первый stop replay потерял primary error при чтении
+final-mode уже закрытого child; cleanup-наблюдение защищено pcall, повтор
+сохранил исходный SQLStop failure. Полные старые config-source не
+переписываются. CASE не меняет product behavior, только выбирает сценарий.
+
+```powershell
+& $forgeNvim -l tests/e2e/bash-language.test.lua
+& $forgeNvim -l tests/e2e/rust-language.test.lua
+& $forgeNvim -l tests/e2e/python-language.test.lua
+& $forgeNvim -l tests/e2e/node-language.test.lua
+& $forgeNvim -l tests/e2e/go-language.test.lua
+& $forgeNvim -l tests/e2e/test-runner.test.lua
+& $forgeNvim -l tests/e2e/editor.test.lua
+& $forgeNvim -l tests/e2e/buffers.test.lua
+& $forgeNvim -l tests/e2e/deleted-files.test.lua
+& $forgeNvim -l tests/e2e/work-panels.test.lua
+& $forgeNvim -l tests/e2e/plugin-backports.test.lua
+& $forgeNvim -l tests/run.lua unit trace
+```
+
+Разовый .tests/run-sql-regression.ps1 выполняет их последовательно после SQL,
+останавливается при FAIL, сохраняет exit/time/log в sql-regression-results.json.
+Итог до backend IDE-066: 16 SQL + 72 других UI + 9 backports + 365 unit/trace
+PASS; 15 unit/trace файлов PASS, ручные/UNCOVERED IDs в report остаются видны.
+Новые прогонки не выполняются параллельно с Docker/другими тяжёлыми средами.
+
+`python -B .tests/sql-engine-probe.py` вызывает только docker version с 12s
+timeout: .tests/sql-engine.json, 11:49:41 UTC, missing engine pipe. Desktop/WSL
+не запускаются. Dockerfile дополнен SQL prep; Ubuntu build/run пока не делались.
+Mac/GUI/ARM64 source build/внешние DB не получают Windows PASS.
+
+Следующий backend IDE-066 исследуется отдельно: LLVM clang/MSVC не подходит
+Go CGO (-mthreads). F:-only Zig 0.15.2 probe скачан по official index/SHA и
+распакован .tests/sql-research/zig-probe; это ещё не build/PASS исправленного
+SQLS и не изменение default runtime. Go SDK автоматически не устанавливался.
+Выбор source fix/отдельные DB CLI вынесен в вопрос владельцу, task 3.4 открыт.
+
+`python -B .tests/sql-research/update-cleanup-list.py` сохранил rejected npm
+package/lock вне tools и добавил tools/npm-cache (216.4 MiB) в F_CLEANUP_PATHS
+и inventory/candidates. Теперь 17 каталогов для ручного удаления; ничего не
+удалено, SQL deps/источники/артефакты/активный compiler probe сохранены.
+FIXLOG дописывается bytes append с проверкой прежних 496429 bytes/SHA;
+никакой команды на удаление старого Docker VHDX или пользовательских файлов нет.
+
+`python -B .tests/audit-sql-evidence.py` проверяет counts/logs, соответствие
+runtime Lua checkout всем 81 artifact snapshots, final test SHA в GREEN/пяти
+RED, graceful shutdown, sources/payload SHA, прежние pins/backports, prefix
+FIXLOG и восстановленный C: log. Итог .tests/sql-language-evidence.json.
+Локальный commit сохраняет завершённый core, tasks 3.4/5.1 остаются открытыми;
+push не выполняется. Подробная история — FIXLOG §119–125.
+
+Один повтор audit был ошибочно запущен одновременно с перезаписью validation
+log и увидел незавершённый файл. Это зависимые операции: итоговый audit
+запускается после завершения strict validation. Продуктовые тесты не менялись.

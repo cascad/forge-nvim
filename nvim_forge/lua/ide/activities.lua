@@ -14,6 +14,7 @@ local M = {}
 -- ------------------------------------------------------------------
 
 local tool_filetypes = {
+    ['forge-sql'] = true,
     ["neo-tree"] = true,
     ["dap-repl"] = true,
     ["dap-view"] = true,

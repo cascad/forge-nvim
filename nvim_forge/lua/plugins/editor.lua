@@ -84,6 +84,21 @@ return {
         "okuuva/auto-save.nvim",
         cmd = { "ASToggle" },
         event = { "InsertLeave", "TextChanged" },
+        init = function()
+            -- spec: IDE-SQL-2 (IDE-063). Эти User events — публичный API
+            -- закреплённого auto-save.nvim; opts.callbacks он не вызывает.
+            local group = vim.api.nvim_create_augroup('ForgeAutoSaveWrite', { clear = true })
+            vim.api.nvim_create_autocmd('User', {
+                group = group,
+                pattern = { 'AutoSaveWritePre', 'AutoSaveWritePost' },
+                callback = function(event)
+                    local buf = event.data and event.data.saved_buffer
+                    if buf and vim.api.nvim_buf_is_valid(buf) then
+                        vim.b[buf].user_auto_save_active = event.match == 'AutoSaveWritePre'
+                    end
+                end,
+            })
+        end,
         opts = {
             enabled = true,
             trigger_events = {
@@ -95,16 +110,6 @@ return {
             -- этот флаг и НЕ форматирует такие сохранения, но autocmd'ы
             -- остаются включены, поэтому rust-analyzer checkOnSave/clippy
             -- продолжает запускаться автоматически.
-            callbacks = {
-                before_saving = function()
-                    vim.g.user_auto_save_active = true
-                end,
-                after_saving = function()
-                    vim.defer_fn(function()
-                        vim.g.user_auto_save_active = false
-                    end, 50)
-                end,
-            },
             condition = function(buf)
                 if not require('ide.buffers').may_autosave(buf) then return false end
                 local ft = vim.bo[buf].filetype
@@ -118,7 +123,7 @@ return {
                 -- Autosave должен работать даже когда в коде есть ошибки:
                 -- это нужно LSP/линтерам, test discovery и привычному IDE-flow.
                 -- Форматирование фоновых autosave-записей отключено в
-                -- conform.nvim через vim.g.user_auto_save_active.
+                -- conform.nvim через vim.b[buf].user_auto_save_active.
                 return true
             end,
             write_all_buffers = false,

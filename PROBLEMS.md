@@ -10,7 +10,22 @@
 
 Маршрут и приоритеты: [рабочий план nvim_forge](docs/IDE_ROADMAP.md).
 Для новых пунктов используем следующий свободный ID `IDE-xxx`; исходный
-симптом хранится здесь, этап и состояние — в плане. Следующий ID: `IDE-060`.
+симптом хранится здесь, этап и состояние — в плане. Следующий ID: `IDE-067`.
+
+## IDE-066 — SQLS: SELECT после комментария теряет rows
+
+2026-11-09, reconnect UI отправил `-- typing during lock\nSELECT name FROM users;`.
+SQLS 0.2.48 ответил Query OK, 0 row affected вместо Alice. Native
+database.QueryExecType классифицирует первый word `--` как Exec, хотя запрос
+валиден. Artifact 16688404473300. Это отдельный backend bug; выбранное решение
+и исходный регресс должны войти в SQL change до объявления полного query PASS.
+
+## IDE-062 — SQL: отдельный test framework и references workflow
+
+Полная матрица SQL ещё требует выбора/реального Neotest сценария (например,
+SQLLogicTest/DB-specific tests), не подменённого успешным SELECT. Sqls 0.2.48
+не объявляет references provider; gd/rename/query и текстовый поиск не закрывают
+семантические references. Продолжить после edit/query этапа, с постоянными E2E.
 
 ## IDE-057 — Bash debug: выбор отдельного Linux backend для Windows
 
@@ -483,6 +498,27 @@ Windows не срабатывают. Решить: псевдонимы в nvim_
 
 
 <!-- ────────── разобрано (переехало в nvim_forge/FIXLOG.md) ────────── -->
+
+IDE-065 → [FIXLOG §123](nvim_forge/FIXLOG.md#123-sqlstop-штатный-выход-не-становится-crash):
+SQLStop/Connect помечают ожидаемый exit своего backend; native false crash
+устранён, unexpected exit остаётся видимым. Lock/PID death/reconnect UI PASS.
+
+IDE-064 → [FIXLOG §122](nvim_forge/FIXLOG.md#122-sqruff-parse-diagnostics-через-native-cli):
+Sqruff CLI/stdin сохраняет parse errors/dialect, потерянные его LSP 0.44.0;
+один debounce/cancellable lint и public diagnostics. Реальный parse/gl/fix PASS.
+
+IDE-063 → [FIXLOG §121](nvim_forge/FIXLOG.md#121-autosave-публичные-события-вместо-старых-callbacks):
+устаревшие callbacks заменены public User write events и buffer-local guard.
+Autosave сохраняет набранный текст, явное save форматирует; исходный RED и регресс.
+
+IDE-061 → [FIXLOG §120](nvim_forge/FIXLOG.md#120-sqls-первый-символ-rename-и-unicode-координаты):
+SQLS 0.2.48 protocol boundary: UTF-32 и character+1 только rename request.
+ASCII/emoji edits/соседние statements проверены реальным UI, исходный RED сохранён.
+
+IDE-060 → [FIXLOG §119–125](nvim_forge/FIXLOG.md#119-sql-схема-запросы-и-общие-results):
+SQL edit/query core — 16 UI PASS Windows, общий регресс и история сохранены.
+Это не закрывает IDE-066 backend comments/IDE-062 tests/references и остальные ОС.
+
 
 IDE-059 → [FIXLOG §118](nvim_forge/FIXLOG.md#118-trace-project-fixtures-отделены-от-самостоятельных-suites):
 пять исходных trace FAIL для .sh data; fixtures имеют явную границу,

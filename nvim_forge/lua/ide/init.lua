@@ -298,6 +298,13 @@ local default_components = {
         is_open = function() return any_window_with_ft("OverseerList") end,
     },
     {
+        id = 'sql.results', slot = 'bottom', title = 'SQL Results', filetypes = { 'forge-sql' },
+        open = function() require('ide.sql').open() end,
+        close = function() require('ide.sql').close() end,
+        is_open = function() return require('ide.sql').is_open() end,
+        focus = function() require('ide.sql').focus() end,
+    },
+    {
         id = "tests_output", slot = "bottom", title = "Test Output",
         filetypes = { "neotest-output-panel" },
         open = function()

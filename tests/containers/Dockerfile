@@ -84,6 +84,10 @@ COPY tests/e2e/prepare_bash.py /opt/forge/tests/e2e/
 COPY tests/e2e/bash-tools/ /opt/forge/tests/e2e/bash-tools/
 RUN python3 /opt/forge/tests/e2e/prepare_bash.py --download --output /opt/forge/bash-deps --node-deps /opt/forge/node-deps
 ENV FORGE_E2E_BASH_DEPS=/opt/forge/bash-deps
+COPY tests/e2e/prepare_sql.py /opt/forge/tests/e2e/
+COPY tests/e2e/sql-tools/ /opt/forge/tests/e2e/sql-tools/
+RUN python3 /opt/forge/tests/e2e/prepare_sql.py --download --output /opt/forge/sql-deps
+ENV FORGE_E2E_SQL_DEPS=/opt/forge/sql-deps
 RUN useradd --create-home --uid 10001 forge
 ENV HOME=/home/forge
 USER forge

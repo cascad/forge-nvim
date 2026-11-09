@@ -1,0 +1,255 @@
+-- spec: IDE-SQL-1/2/3/4. Настоящие native SQL tools и editor UI.
+local root=vim.fn.fnamemodify(debug.getinfo(1,'S').source:sub(2),':p:h:h:h')
+package.path=root..'/tests/lib/?.lua;'..package.path
+local T=require('check')
+local function content(e) return e:lua([[return table.concat(vim.api.nvim_buf_get_lines(0,0,-1,false),'\n')]]) end
+local function open(e,file)
+  local path=e.sql_project..'/'..file
+  e:input(':edit '..vim.fn.fnameescape(path)..'<CR>')
+  e:wait('SQL file '..file,function() return e:current_file()==path and e:current_ft()=='sql' end)
+end
+local function language(e,file)
+  open(e,file)
+  e:wait('SQLS готов',function() return e:lua([[for _,c in ipairs(vim.lsp.get_clients({bufnr=0,name='sqls'})) do
+    if c.initialized and vim.fn.maparg('gd','n',false,true).buffer==1 then return true end end;return false]]) end,30000)
+end
+local function state(e)
+  return e:lua([[return {mode=vim.api.nvim_get_mode(),messages=vim.fn.execute('messages'),notifications=vim.g.forge_e2e_notifications,
+    installs=vim.g.forge_e2e_installs,spawns=_G.forge_e2e_spawns,sql_spawns=_G.forge_sql_spawns,diagnostics=vim.diagnostic.get(0),
+    connection_map=vim.fn.maparg(' jc','n',false,true).desc,selection=debug.getinfo(vim.ui.select,'S').source,events=_G.forge_sql_events,
+    clients=vim.tbl_map(function(c) return {name=c.name,root=c.root_dir,encoding=c.offset_encoding,initialized=c.initialized} end,vim.lsp.get_clients())} ]])
+end
+local function output(e)
+  return e:lua([[for _,b in ipairs(vim.api.nvim_list_bufs()) do if vim.api.nvim_buf_is_loaded(b) and vim.bo[b].filetype=='forge-sql' then
+    return table.concat(vim.api.nvim_buf_get_lines(b,0,-1,false),'\n') end end;return '']])
+end
+local function done(e)
+  e:wait('SQL query completed',function() return output(e):find('Status: Done',1,true)~=nil or output(e):find('Status: Error',1,true)~=nil end,20000)
+  assert(output(e):find('Status: Done',1,true),output(e))
+end
+local function noautosave(e)
+  e:input(':ASToggle<CR>');e:wait('autosave disabled explicitly',function() return e:lua([[return not require('auto-save').enabled()]]) end)
+end
+local function lock(e)
+  e.sql_lock_release=e.sql_project..'/lock-release'
+  vim.fn.delete(e.sql_lock_release)
+  local ready=e.sql_project..'/lock-ready';vim.fn.delete(ready)
+  e.sql_lock=vim.system({e.sql_python,'-B',e.sql_project..'/lock.py',e.sql_project..'/db/dev ü.sqlite3',ready,e.sql_lock_release},{text=true})
+  e:wait('real SQLite lock acquired',function() return vim.fn.filereadable(ready)==1 end,5000)
+end
+local function unlock(e)
+  vim.fn.writefile({'release'},e.sql_lock_release)
+  local r=e.sql_lock:wait(5000);e.sql_lock=nil;assert(r.code==0,r.stderr)
+end
+local function check(name,fn,missing)
+  if vim.env.FORGE_SQL_CASE and not name:find(vim.env.FORGE_SQL_CASE,1,true) then return end
+  T.check(name,function()
+    local e
+    local ok,err=pcall(function()
+      require('sql_project').start(root,function(child) e=child end,missing)
+      for _,p in ipairs({'tests/e2e/sql-language.test.lua','tests/lib/sql_project.lua'}) do assert(vim.uv.fs_copyfile(root..'/'..p,e.dir..'/'..vim.fs.basename(p))) end
+      fn(e)
+      local s=state(e);T.eq(s.installs,0);assert(not s.mode.blocking,'неожиданный prompt');assert(not s.messages:match('E%d%d%d+:'),s.messages)
+      for _,n in ipairs(s.notifications) do assert(n.level<vim.log.levels.ERROR,n.message) end
+    end)
+    if e then
+      if e.sql_lock then unlock(e) end
+      local mode_ok,mode=pcall(function() return e.rpc:request('nvim_get_mode',{}) end)
+      vim.fn.writefile({vim.json.encode(mode_ok and mode or {error=tostring(mode)})},e.dir..'/final-mode.json')
+      local got,s=pcall(state,e);if got then vim.fn.writefile({vim.json.encode(s)},e.dir..'/sql-state.json') end
+      if vim.fn.filereadable(e.log_lsp)==1 then assert(vim.uv.fs_copyfile(e.log_lsp,e.dir..'/lsp.log')) end
+      e:snapshot(name);io.stdout:write('  artifacts: '..e.dir..'\n');e:stop(not ok and tostring(err) or nil)
+    end
+    assert(ok,err)
+  end)
+end
+check('IDE-SQL-1 schema definition hover и alias rename с первого символа',function(e)
+  language(e,'run.sql');T.eq(require('sql_project').counter(e),0)
+  open(e,'aliases.sql')
+  e:input('gg0fu');e:wait('alias first character',function() return e:lua([[return vim.fn.expand('<cword>')]])=='u' end)
+  e:input('gd');e:wait('definition alias declaration',function() return e:lua([[return vim.api.nvim_win_get_cursor(0)[2] ]])==28 end)
+  e:input('gg0/name<CR>K')
+  e:wait('SQL hover schema',function() return e:lua([[for _,w in ipairs(vim.api.nvim_list_wins()) do if vim.api.nvim_win_get_config(w).relative~='' and
+    table.concat(vim.api.nvim_buf_get_lines(vim.api.nvim_win_get_buf(w),0,-1,false),'\n'):find('TEXT',1,true) then return true end end;return false]]) end,15000)
+  e:input('<Esc>')
+  e:input('gg0fu<F2>');e:wait('rename prompt',function() return e.rpc:request('nvim_get_mode',{}).mode=='c' end)
+  e:input('<C-u>person<CR>');e:wait('alias rename сохраняет SQL',function() return content(e):find('SELECT person.name FROM users AS person WHERE person.id = 1;',1,true)~=nil end,15000)
+  assert(content(e):find('SELECT u.name FROM users AS u WHERE u.id = 2;',1,true),content(e))
+end)
+check('IDE-SQL-1 IDE-061 Unicode codepoints и alias edits',function(e)
+  language(e,'unicode.sql');e:input('gg0/u.name<CR>gd')
+  e:wait('Unicode definition',function() return e:lua([[local line=vim.api.nvim_get_current_line();return vim.api.nvim_win_get_cursor(0)[2]==assert(line:find('AS u',1,true))+2]]) end)
+  e:input('gg0/u.name<CR><F2>');e:wait('Unicode rename prompt',function() return e.rpc:request('nvim_get_mode',{}).mode=='c' end)
+  e:input('<C-u>person<CR>')
+  e:wait('Unicode rename preserves literals',function() return content(e)=="SELECT '😀;ю' AS marker, person.name FROM users AS person WHERE person.id = 1;" end,15000)
+  T.eq(e:lua([[return vim.lsp.get_clients({name='sqls'})[1].offset_encoding]]),'utf-32')
+end)
+check('IDE-SQL-1 real schema completion',function(e)
+  language(e,'complete.sql');e:input('gg0/NEEDS_COMPLETION<CR>ciw')
+  e:wait('insert ready',function() return e.rpc:request('nvim_get_mode',{}).mode=='i' end)
+  e:input('na<C-Space>')
+  e:wait('SQL schema cmp name',function() return e:lua([[local c=require('cmp');if not c.visible() then return false end;for _,entry in ipairs(c.get_entries()) do
+    if entry.source.name=='nvim_lsp' and entry.completion_item.label=='name' then return true end end;return false]]) end,20000)
+  for _=1,30 do
+    if e:lua([[local s=require('cmp').get_selected_entry();return s and s.source.name=='nvim_lsp' and s.completion_item.label=='name' or false]]) then break end
+    e:input('<C-n>');vim.wait(60)
+  end
+  e:input('<CR>');e:wait('completion inserted',function() return content(e):find('u.name',1,true)~=nil end);e:input('<Esc>')
+  assert(not content(e):find('NEEDS_COMPLETION',1,true))
+end)
+check('IDE-SQL-2 Sqruff diagnostics gl correction',function(e)
+  language(e,'aliases.sql');e:input('ggVGcSELECT FROM ;<Esc>')
+  e:wait('SQL parse diagnostic',function() return e:lua([[for _,d in ipairs(vim.diagnostic.get(0)) do if d.message:lower():find('unpars',1,true) then return true end end;return false]]) end,15000)
+  e:input('gl');e:wait('SQL diagnostic UI',function() return e:lua([[for _,w in ipairs(vim.api.nvim_list_wins()) do if vim.api.nvim_win_get_config(w).relative~='' and
+    table.concat(vim.api.nvim_buf_get_lines(vim.api.nvim_win_get_buf(w),0,-1,false),'\n'):lower():find('pars',1,true) then return true end end;return false]]) end)
+  e:input('<Esc>ggVGcSELECT 42 AS answer;<Esc>')
+  e:wait('SQL correction',function() return e:lua([[for _,d in ipairs(vim.diagnostic.get(0)) do if d.message:lower():find('unpars',1,true) then return false end end;return true]]) end,15000)
+end)
+check('IDE-SQL-2 Sqruff manual и save project style',function(e)
+  open(e,'format.sql');e:input(' lf')
+  local expected='SELECT\n  id, name\nFROM users\nWHERE id = 1;'
+  e:wait('SQL manual formatter',function() return content(e)==expected end,15000)
+  e:input('ggVGcselect<CR>id,name<CR>from users<CR>where id=1;<Esc>:write<CR>')
+  e:wait('SQL formatter save persisted',function() return table.concat(vim.fn.readfile(e.sql_project..'/format.sql'),'\n')==expected end,15000)
+end)
+check('IDE-SQL-2 IDE-063 autosave preserves typing explicit save formats',function(e)
+  language(e,'format.sql')
+  local raw='select\nid,name\nfrom users\nwhere id=2;'
+  local expected='SELECT\n  id, name\nFROM users\nWHERE id = 2;'
+  e:input('ggVGcselect<CR>id,name<CR>from users<CR>where id=2;<Esc>')
+  e:wait('autosave wrote edited SQL',function() return not e:lua([[return vim.bo.modified]]) and
+    table.concat(vim.fn.readfile(e.sql_project..'/format.sql'),'\n')~=table.concat(vim.fn.readfile(root..'/tests/e2e/fixtures/sql-language/format.sql'),'\n') end)
+  local deadline=vim.uv.hrtime()+1200000000
+  e:wait('background save settled',function() return vim.uv.hrtime()>=deadline end,4000)
+  T.eq(content(e),raw,'autosave must preserve typed SQL')
+  T.eq(table.concat(vim.fn.readfile(e.sql_project..'/format.sql'),'\n'),raw)
+  e:input(':write<CR>')
+  e:wait('explicit save formats and persists',function() return content(e)==expected and
+    table.concat(vim.fn.readfile(e.sql_project..'/format.sql'),'\n')==expected end,15000)
+end)
+check('IDE-SQL-3 unsaved batch real writes и common results controls',function(e)
+  language(e,'run.sql');noautosave(e)
+  local disk=table.concat(vim.fn.readfile(e.sql_project..'/run.sql'),'\n')
+  e:input('ggVGcUPDATE counters SET value = value + 7;<CR>SELECT 42 AS snapshot_answer;<Esc> jq')
+  done(e);assert(output(e):find('42',1,true),output(e))
+  T.eq(require('sql_project').counter(e),7);T.eq(require('sql_project').counter(e,true),0)
+  T.eq(table.concat(vim.fn.readfile(e.sql_project..'/run.sql'),'\n'),disk,'query must not write source')
+  e:input(' jo');e:wait('SQL Results focus',function() return e:current_ft()=='forge-sql' end)
+  local result=output(e)
+  e:input(' wz');e:wait('SQL Results zoom',function() return e:lua([[return vim.api.nvim_win_get_config(0).relative~='']]) end)
+  e:input('?');e:wait('SQL Results help',function() return e:current_ft()=='forge-panel-help' end)
+  e:input('q<Esc>');e:wait('SQL Results restored',function() return e:current_ft()=='forge-sql' and e:lua([[return vim.api.nvim_win_get_config(0).relative=='']]) end)
+  e:input('q');e:wait('SQL Results hidden code focus',function() return e:current_ft()=='sql' and not e:has_window('forge-sql') end)
+  e:input(' jo');e:wait('SQL Results reopened',function() return e:current_ft()=='forge-sql' end)
+  T.eq(output(e),result);T.eq(require('sql_project').counter(e),7,'reopening must not execute SQL')
+  e:input('<F7>');e:wait('SQL code F7',function() return e:current_ft()=='sql' end)
+end)
+check('IDE-SQL-3 exact visual Unicode literal and same-line markers',function(e)
+  language(e,'visual.sql');noautosave(e)
+  e:input('gg0/SELECT<CR>v/; UPDATE<CR> jq')
+  done(e);assert(output(e):find('😀;ю',1,true) and output(e):find('Alice',1,true),output(e))
+  T.eq(require('sql_project').counter(e),0,'statements outside exact selection must not run')
+end)
+check('IDE-SQL-3 two connections rows schema and safe picker',function(e)
+  language(e,'aliases.sql');e:input('ggVGcSELECT name FROM users WHERE id = 1;<Esc> jq')
+  done(e);assert(output(e):find('Alice',1,true),output(e))
+  local primary=e.sql_project;local other=require('sql_project').other_workspace(e)
+  e.sql_project=other;language(e,'aliases.sql')
+  local other_id=e:lua([[return vim.lsp.get_clients({bufnr=0,name='sqls'})[1].id]])
+  local other_pid=e:lua([[return _G.forge_sql_spawns[#_G.forge_sql_spawns].pid]])
+  e.sql_project=primary;language(e,'aliases.sql')
+  e:wait('code before connection picker',function() return e:current_ft()=='sql' end)
+  e:input(' jc');e:wait('SQL connection picker',function() return e:current_ft()=='TelescopePrompt' end)
+  local screen=table.concat(e.rpc:screen_lines(),'\n');assert(not screen:find('dataSourceName',1,true) and not screen:find('mode=rw',1,true),screen)
+  e:input('Second');e:wait('Second selected',function() return e:lua([[local e=require('telescope.actions.state').get_selected_entry();return e and e.ordinal:find('Second',1,true)~=nil or false]]) end)
+  e:input('<CR>');e:wait('Second SQLS initialized',function() return e:lua([[for _,n in ipairs(vim.g.forge_e2e_notifications) do if n.message=='SQL: Second' then return true end end;return false]]) end,20000)
+  e:input(' jq');done(e);assert(output(e):find('Second',1,true) and output(e):find('Bob',1,true) and not output(e):find('Alice',1,true),output(e))
+  e:input('ggVGcSELECT u.extra FROM users AS u;<Esc>')
+  e:wait('new SQL text in normal mode',function() return content(e)=='SELECT u.extra FROM users AS u;' and e.rpc:request('nvim_get_mode',{}).mode=='n' end)
+  e:input('gg0/extra<CR>ciw');e:wait('connection completion insert',function() return e.rpc:request('nvim_get_mode',{}).mode=='i' end)
+  e:input('ex<C-Space>')
+  e:wait('schema from Second connection',function() return e:lua([[for _,e in ipairs(require('cmp').get_entries()) do if e.source.name=='nvim_lsp' and e.completion_item.label=='extra_column' then return true end end;return false]]) end,15000)
+  e:input('<Esc>');T.eq(require('sql_project').counter(e),0);T.eq(require('sql_project').counter(e,true),0)
+  assert(vim.uv.kill(other_pid,0),'other workspace backend must survive profile switch')
+  e.sql_project=other;language(e,'aliases.sql')
+  T.eq(e:lua([[return vim.lsp.get_clients({bufnr=0,name='sqls'})[1].id]]),other_id)
+  e:input(' jq');done(e);assert(output(e):find('Alice',1,true) and not output(e):find('Bob',1,true),output(e))
+  e.sql_project=primary
+end)
+check('IDE-SQL-3 query error stays in Results editing remains available',function(e)
+  language(e,'error.sql');e:input(' jq')
+  e:wait('real database error',function() return output(e):find('Status: Error',1,true) and output(e):find('missing_forge_column',1,true) end,15000)
+  e:input('<F7>gg0i-- still editable<CR><Esc>')
+  e:wait('editing after database error',function() return content(e):find('-- still editable',1,true)~=nil end)
+end)
+check('IDE-SQL-3 immutable snapshot while DB is locked',function(e)
+  language(e,'aliases.sql');noautosave(e);lock(e)
+  e:input('ggVGcSELECT 42 AS original_snapshot FROM users WHERE id = 1;<Esc>')
+  e:wait('normal before locked snapshot query',function() return e.rpc:request('nvim_get_mode',{}).mode=='n' end)
+  e:input(' jq')
+  e:wait('query Running under real lock',function() return output(e):find('Status: Running',1,true)~=nil end)
+  e:input('<F7>ggVGcSELECT 99 AS changed_buffer;<Esc>')
+  e:wait('typing during query',function() return content(e):find('changed_buffer',1,true)~=nil end)
+  e:input(' jo');e:wait('Running results focus',function() return e:current_ft()=='forge-sql' end)
+  e:input('q');e:wait('Running results hidden',function() return e:current_ft()=='sql' and not e:has_window('forge-sql') end)
+  e:input(':tabnew<CR>');e:wait('other tab while query runs',function() return e:current_ft()~='sql' end)
+  unlock(e);done(e)
+  assert(output(e):find('original_snapshot',1,true) and output(e):find('42',1,true) and not output(e):find('changed_buffer',1,true),output(e))
+  T.eq(e:lua([[for _,w in ipairs(vim.api.nvim_tabpage_list_wins(0)) do if vim.bo[vim.api.nvim_win_get_buf(w)].filetype=='forge-sql' then return true end end;return false]]),false,'late reply must not open another tab panel')
+  e:input(':tabprevious<CR>');e:wait('query source tab returned',function() return e:current_ft()=='sql' end)
+  assert(not e:has_window('forge-sql'),'completion must respect hidden results')
+  e:input(' jo');e:wait('finished snapshot after returning',function() return e:current_ft()=='forge-sql' end)
+  assert(output(e):find('Status: Done',1,true),output(e))
+end)
+check('IDE-SQL-3 SQLStop kills own locked backend and next run reconnects',function(e)
+  language(e,'aliases.sql');noautosave(e)
+  local pid=e:lua([[return _G.forge_sql_spawns[#_G.forge_sql_spawns].pid]])
+  assert(vim.uv.kill(pid,0),'backend must be alive before stop')
+  lock(e);e:input('ggVGcSELECT name FROM users;<Esc>')
+  e:wait('normal before locked stop query',function() return e.rpc:request('nvim_get_mode',{}).mode=='n' end)
+  e:input(' jq')
+  e:wait('locked query Running',function() return output(e):find('Status: Running',1,true)~=nil end)
+  e:input('<F7>gg0i-- typing during lock<CR><Esc> jx')
+  e:wait('SQLStop status',function() return output(e):find('Status: Stopped',1,true)~=nil end)
+  e:wait('owned backend PID exited',function() return not vim.uv.kill(pid,0) end,7000)
+  unlock(e)
+  local stop_output=output(e);local deadline=vim.uv.hrtime()+600000000
+  e:wait('late callback settled',function() return vim.uv.hrtime()>=deadline end,2000);T.eq(output(e),stop_output)
+  e:input('ggdd');e:wait('remove edit before next query',function() return content(e)=='SELECT name FROM users;' end)
+  e:input(' jq');done(e);assert(output(e):find('Alice',1,true),output(e))
+  assert(e:lua([[return _G.forge_sql_spawns[#_G.forge_sql_spawns].pid]])~=pid,'new query must reconnect')
+end)
+check('IDE-SQL-3 IDE-065 unexpected SQLS exit remains visible',function(e)
+  language(e,'aliases.sql')
+  local pid=e:lua([[return _G.forge_sql_spawns[#_G.forge_sql_spawns].pid]])
+  assert(vim.uv.kill(pid,15))
+  e:wait('unexpected backend exit notification',function()
+    for _,n in ipairs(e.rpc.notifications) do if n.message:find('LSP-сервер упал',1,true) then return true end end
+    return false
+  end,7000)
+  e:wait('unexpected crash notices read',function()
+    if e.rpc:request('nvim_get_mode',{}).blocking then
+      local last=e.rpc.notifications[#e.rpc.notifications]
+      e:ack_warning(last.message:find('LSP-сервер упал',1,true) and 'LSP-сервер упал' or 'Client sqls quit')
+      return false
+    end
+    return #e.rpc.notifications>=2
+  end,7000)
+  e:input('gg0i-- edit after backend crash<CR><Esc>')
+  e:wait('editable after real crash',function() return content(e):find('edit after backend crash',1,true)~=nil end)
+end)
+for _,missing in ipairs({'tools','config','database'}) do
+  check('IDE-SQL-4 missing '..missing..' no install no empty database no DAP',function(e)
+    open(e,'aliases.sql');e:input('gg0i-- editing without environment<CR><Esc>:write<CR>')
+    e:wait('SQL without environment saved',function() return table.concat(vim.fn.readfile(e.sql_project..'/aliases.sql'),'\n'):find('editing without environment',1,true)~=nil end)
+    local before=e:lua([[return #vim.g.forge_e2e_notifications]])
+    e:input(' jq');e:wait('one useful missing environment notice',function() return e:lua([[return #vim.g.forge_e2e_notifications]])>before end)
+    local messages=e:lua([[return vim.g.forge_e2e_notifications]])
+    T.eq(#messages,before+1);assert(messages[#messages].message:find(missing=='tools' and 'sqls' or missing=='config' and '.sqls.json' or 'SQLite',1,true),vim.inspect(messages))
+    T.eq(vim.fn.filereadable(e.sql_project..'/db/missing.sqlite3'),0)
+    assert(not e:has_window('dap-repl') and not e:has_window('dapui_scopes'))
+    T.eq(e:lua([[return package.loaded.dap and require('dap').session()~=nil or false]]),false)
+    assert(not table.concat(e.rpc:screen_lines(),'\n'):find('No active session',1,true))
+  end,missing)
+end
+T.finish()

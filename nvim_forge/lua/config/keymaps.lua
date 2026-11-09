@@ -703,6 +703,7 @@ end, "Toggle: inlay hints (buffer)")
 nm("<leader>ts", "<cmd>set spell!<CR>",        "Toggle: spell")
 
 -- Окна (helix space.w)
+require('forge.sql').setup()
 nm("<leader>wv", "<C-w>v", "Window: vsplit")
 nm("<leader>ws", "<C-w>s", "Window: hsplit")
 local panel_controls = require('ide.controls')

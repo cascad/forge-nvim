@@ -14,7 +14,7 @@ local languages = {
     "vim", "vimdoc", "query",
     "markdown", "markdown_inline",
     "json", "yaml", "toml",
-    "bash", "regex",
+    "bash", "regex", "sql",
     "c", "cpp", "cmake",
     "html", "css", "javascript", "typescript",
     "diff", "git_config", "gitcommit", "gitignore", "gitattributes",

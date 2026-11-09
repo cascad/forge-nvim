@@ -13,7 +13,7 @@
 | Python | pyright/ruff; общий project Python selector для Pyright/DAP | ruff_organize_imports → ruff_format | debugpy default/launch.json; neotest-python/pytest | 8 real UI E2E Windows PASS: venv dependency, LSP, explicit path, format/save, default/project debug, pytest/debug, unexpected adapter exit. Ubuntu/Mac не проверены |
 | JS / Node.js | ts_ls через Node/TSLS, только при доступных tools; auto typings download отключён | Project-local Prettier, LSP fallback | NodeRun/File → Tasks; js-debug default/launch.json; Neotest Jest | 8 real UI E2E Windows PASS: язык/format/run/debug/nearest/file/debug test/missing tools. Ubuntu/Mac не проверены |
 | Bash | bashls через native Node/JS, guarded tools | shfmt, .editorconfig, async save | BashRunFile → Tasks; Bats public adapter; DAP открыт IDE-057 | 8 real UI E2E Windows PASS: sourced LSP/rename/completion/diagnostics, format, args/cwd/output/status, nearest/file/оба Bats syntax/regex Unicode, missing tools. Ubuntu/Mac/Bash 3.2/GUI не проверены |
-| SQL | Явной активации SQL server нет | Языкового SQL formatter нет | Выполнение запросов и test adapter не настроены | SQL IDE E2E нет; dialect/connection workflow ещё не определён |
+| SQL | sqls, guarded tool/config/DB; schema/alias actions | Sqruff CLI diagnostics/format, project dialect/style, async explicit save | SQLRun/Connect/Results/Stop; tests/references открыты IDE-062 | Windows 16 real UI PASS: язык, Unicode rename, parse diagnostics, manual/save/autosave, настоящие SQLite queries/selection/profiles/lock/stop/panels/missing environment. IDE-066 leading-comment SELECT ещё открыт; Ubuntu/Mac/ARM64/внешние DB не проверены |
 
 Общий cmp уже подключает LSP, snippets, buffer и path. Buffer completion
 не доказывает семантический completion языка. Conform имеет общий trim
@@ -23,7 +23,7 @@ Markdown само по себе не включает его для JS: тепе
 добавляет test/debug adapter для каждого языка. Generic задачи из tasks.json
 можно запускать, но это ещё не готовые language run/test команды.
 
-Treesitter list содержит Go/Rust/Python/JS/TS/Bash; SQL в явном списке нет.
+Treesitter list содержит Go/Rust/Python/JS/TS/Bash/SQL.
 Это список для явной подготовки, не доказательство наличия всех parsers на
 машине. Подготовка текущих test-deps собирает Go parser и gotestsum;
 dap-tools готовит Go/Delve; lsp-deps — фиксированные gopls/gofumpt для language
@@ -66,11 +66,13 @@ python-deps — pinned wheelhouse/tools venv, Pyright и Python parser, host SDK
    настоящий debug test output. Прежний регресс 37 UI + 9 backports и 364 checks PASS.
    Ubuntu/Mac/GUI/stdlib navigation/cross-compile остаются отдельной проверкой.
 4. Bash Windows edit/run/tests проверен: [команды и границы](BASH_WORKFLOW.md).
-   DAP отдельно IDE-057; Ubuntu/Mac ждут реального прогона. SQL: добавить
-   рабочие сценарии с E2E. У SQL отдельно
-   определить dialect/профиль выполнения; DAP не является обязательным
-   аналогом отладки исполняемой программы. До выбора инструментов сверить
-   официальную документацию и системные границы.
+   DAP отдельно IDE-057; Ubuntu/Mac ждут реального прогона.
+5. SQL Windows edit/query: [команды и подготовка](SQL_WORKFLOW.md), 16 real UI
+   PASS. SQLS schema, Sqruff CLI, exact snapshots, профили двух workspace,
+   Results/common controls, lock/stop/reconnect и missing environment проверены.
+   IDE-066: native SQLS теряет rows у SELECT после комментария — нужен отдельный
+   backend fix с RED/GREEN. IDE-062: SQL tests/references остаются обязательными.
+   Ubuntu/Mac/ARM64/внешние DB и procedural debugger не объявляются PASS.
 
 Для каждого изменения: spec до кода, исходный RED для бага, постоянный E2E,
 последовательные Windows/Ubuntu прогоны, FIXLOG с причиной и отдельный commit.
