@@ -3299,3 +3299,66 @@ POSIX — отдельная process group с явно записанной гр
 Docker/WSL и системные настройки не менялись. git diff --check и точные staged
 paths проверяются перед локальным docs commit; runtime tests не повторялись
 после изменений только плановых Markdown файлов.
+
+## 53. IDE-075: actual orphan RED и process scope, 2026-11-09
+
+openspec-apply-change: fix-editor-descendant-lifetime, schema spec-driven;
+root/list/status/apply JSON сохранены в .tests/descendants-*. Code context —
+CLAUDE, proposal/design/tasks, editor helpers и прежние process/runtime E2E.
+Все shell commands login:false; TEMP/TMP/TMPDIR и NVIM_LOG_FILE в
+F:/repo/forge-nvim/.tests/tmp, npm cache F:/forge-nvim-tmp/npm-cache,
+PYTHONIOENCODING=utf-8. Windows Nvim выбран через scripts/lib/nvim-sdk.ps1
+Get-ForgeNvim с настоящей проверкой поддерживаемого SDK/payload.
+
+```powershell
+git archive --format=zip --output=.tests/descendants-driver-eeae06c.zip eeae06c tests/lib
+Expand-Archive -LiteralPath .tests/descendants-driver-eeae06c.zip -DestinationPath .tests/descendants-before-eeae06c
+$env:FORGE_DESCENDANT_DRIVER_SOURCE='F:/repo/forge-nvim/.tests/descendants-before-eeae06c/tests/lib'
+$env:FORGE_DESCENDANT_CASE='orphan'
+& $forgeNvim -l tests/e2e/editor-descendants.test.lua
+Remove-Item Env:FORGE_DESCENDANT_DRIVER_SOURCE,Env:FORGE_DESCENDANT_CASE
+& $forgeNvim -l tests/e2e/editor-descendants.test.lua
+```
+
+Exact source проверяет SHA четырёх driver files eeae06c, final test/fixture
+копируются в artifact. Baseline 4 целевых RED: три живых orphan после stop,
+один настоящий private runtime cleanup/file-lock FAIL. Unique control/release
+files освобождают только свои Python fixtures; чужой child продолжает работу
+до отдельного release. Никакого общего taskkill/поиска имени процесса.
+
+Windows Job Object API вызывается через LuaJIT FFI. Startup gate находится
+первым --cmd перед observer/init; только успешный assign разрешает продолжение.
+Проверено 5 native cases. Native OpenProcess(0) argument fault injection
+проверяет реальный отказ API/cleanup, не возвращает fake result.
+
+```powershell
+& .tests/verify-descendants.ps1
+& .tests/verify-descendants-compatibility.ps1
+python -B .tests/audit-descendants.py
+```
+
+Первый временный script последовательно запускает rust-language/editor-process/
+editor-runtime/sql-tests/work-panels, unit trace и strict OpenSpec; второй —
+sql-language/sql-sdk/sql-test-sdk/plugin-backports/test-runner/node-language/
+python-language/bash-language. Каждый останавливается на nonzero exit.
+Redirect logs .tests/windows-descendants-*.txt; stdout tool может сначала
+быть пустым. Live exec sessions 62115/73675 poll тем же write_stdin до terminal;
+observational timeout не служит причиной перезапуска. Посредине тяжёлых прогонов
+параллельного Docker/Windows regression не было.
+
+Итог: 111 native suite checks PASS, 0 FAIL, 2 POSIX SIGSTOP SKIP, 365 unit/trace,
+64 strict valid. descendants-evidence.json содержит exact hashes/red/green/
+SDK/scope shutdown/runtime absence/history prefix. Вся production Lua и
+67 pins прежние. Native attached UI/RPC не доказывает WezTerm GUI/clipboard.
+IDE-073/074 причины остаются открытыми, успешный прогон не переименован в fix.
+
+Read-only Test-Path двух engine pipes: False/False. Docker/WSL не запускались.
+Get-PSDrive C/F использован только для свободного места. POSIX branch/Ubuntu
+procps recipe не native PASS; отдельные platform tasks остаются открытыми.
+FIXLOG §136 дописан raw append, предыдущие bytes и C: LSP log сохранены.
+Перед local commit — git diff --check, explicit staged paths и diff --cached;
+push не выполняется, каталоги из F cleanup list не удаляются.
+
+После завершения текущего Windows пункта владелец попросил остановиться
+для другой работы. Следующий пункт не начинается, goal ставится на паузу
+после истории/коммита; остальные platform tasks остаются открытыми.

@@ -27,26 +27,44 @@ function M.start(argv, options)
       elseif batch[1] == 'grid_clear' then self.screen = {} end
     end
   end
-  self.process = vim.system(argv, {
-    cwd = options.cwd, env = options.env, clear_env = true, stdin = true, timeout = options.timeout or 60000,
-    stdout = function(err, chunk)
-      if err then self.error = err end
-      if not chunk then return end
-      local ok, failure = pcall(function()
-        local pos = 1
-        while pos <= #chunk do
-          local message
-          message, pos = unpacker(chunk, pos)
-          if message then
-            if message[1] == 1 then self.replies[message[2]] = message
-            elseif message[1] == 2 then notification(message) end
+  self.scope=require('process_scope').new()
+  local spawned,failure=pcall(function()
+    local command=self.scope:command(argv,options)
+    self.process = vim.system(command, vim.tbl_extend('force',self.scope.spawn_options,{
+      cwd = options.cwd, env = options.env, clear_env = true, stdin = true, timeout = options.timeout or 60000,
+      stdout = function(err, chunk)
+        if err then self.error = err end
+        if not chunk then return end
+        local ok, failure = pcall(function()
+          local pos = 1
+          while pos <= #chunk do
+            local message
+            message, pos = unpacker(chunk, pos)
+            if message then
+              if message[1] == 1 then self.replies[message[2]] = message
+              elseif message[1] == 2 then notification(message) end
+            end
           end
-        end
-      end)
-      if not ok then self.error = tostring(failure) end
-    end,
-    stderr = function(_, chunk) if chunk then self.stderr[#self.stderr + 1] = chunk end end,
-  }, function(result) self.exited = true; self.exit_code = result.code; self.exit_signal=result.signal end)
+        end)
+        if not ok then self.error = tostring(failure) end
+      end,
+      stderr = function(_, chunk) if chunk then self.stderr[#self.stderr + 1] = chunk end end,
+    }), function(result) self.exited = true; self.exit_code = result.code; self.exit_signal=result.signal end)
+    self.scope:attach(self.process.pid)
+  end)
+  if not spawned then
+    if self.process then
+      pcall(function() self.process:kill('sigkill') end)
+      vim.wait(2000,function() return self.exited end,10)
+    end
+    local closed,cleanup=pcall(self.scope.close,self.scope)
+    if not closed then cleanup={ok=false,error=tostring(cleanup)} end
+    if options.artifacts then
+      pcall(vim.fn.writefile,{vim.json.encode({error=tostring(failure),pid=self.process and self.process.pid,
+        exited=self.exited,scope=cleanup})},options.artifacts..'/process-scope-start.json')
+    end
+    error(tostring(failure)..(not cleanup.ok and ('; Scope cleanup: '..tostring(cleanup.error)) or ''))
+  end
 
   function self:request(method, args)
     assert(not self.error and not self.exited, self.error or 'Дочерний редактор завершился')

@@ -1021,3 +1021,46 @@ FORGE_SQL_TEST_ADAPTERS_SOURCE допустимы
 Фильтр UI: FORGE_SQL_TEST_CASE. [Клавиши/подготовка/границы](../../docs/SQL_TESTS.md).
 Ubuntu recipe дополнен, engine не запускается. Mac/Ubuntu/ARM64/GUI открыты;
 SQL semantic references остаются IDE-062.
+
+## IDE-075: lifecycle потомков тестового editor
+
+`editor-descendants.test.lua` запускает настоящий Neovim и Python worker,
+который открывает реальный файл и переживает своего intermediate parent.
+Отдельный контрольный процесс вне editor scope должен остаться живым.
+Проверяются обычный qa!, уже завершившийся root, принудительный root exit,
+private runtime настоящей IDE и native attach failure до пользовательского init.
+
+Windows: 5 native E2E PASS. Тот же final orphan test с exact driver eeae06c
+даёт 4 целевых RED: три живых worker после stop и реальный runtime/file-lock
+cleanup FAIL. Baseline fixture освобождает только свой worker через уникальный
+control file, сохраняет отказ и не оставляет процессы/runtime.
+
+```powershell
+$env:TEMP="$PWD/.tests/tmp"; $env:TMP=$env:TEMP; $env:TMPDIR=$env:TEMP
+$env:NVIM_LOG_FILE="$env:TEMP/descendants.log"
+. ./scripts/lib/nvim-sdk.ps1
+$forgeNvim=Get-ForgeNvim $PWD.Path
+& $forgeNvim -l tests/e2e/editor-descendants.test.lua
+```
+
+Фильтр: `FORGE_DESCENDANT_CASE=orphan` или `startup`. Для source replay
+`FORGE_DESCENDANT_DRIVER_SOURCE` указывает на `tests/lib` из `git archive
+eeae06c tests/lib`; test сверяет четыре exact source SHA и сохраняет копии.
+Без override используются текущие drivers. Suite включён в общий e2e реестр.
+
+Общий process scope вызывается из RPC launcher/stop. Windows backend использует
+анонимный Job Object с kill-on-close и startup barrier до init: spawn→assign→
+release. Job active counts/termination/error/elapsed записываются в shutdown.json
+вместе с прежними main code/signal/primary error. Scope закрывается и после уже
+вышедшего root; ошибка scope не становится успешным cleanup. Реальный отказ
+OpenProcess в отдельном case — явный argument fault injection, не fake reply.
+
+POSIX backend использует отдельную process group и TERM/wait/KILL. Намеренно
+отделившаяся session не принадлежит исходному PGID; совместимость language
+workers требует настоящих platform integration E2E. Ubuntu/macOS пока не
+запускались; Windows PASS не доказывает POSIX/GUI. Docker/WSL не запускаются
+тестовым каркасом. macOS: `nvim -l tests/e2e/editor-descendants.test.lua` в
+подготовленном окружении; native OpenProcess case там имеет явный SKIP.
+Для проверки live/zombie members POSIX backend использует `ps`: на macOS он
+штатный, в Ubuntu recipe явно добавлен пакет `procps`. Recipe не заменяет
+реальный build/run и не объявляется проверенным по Windows результатам.

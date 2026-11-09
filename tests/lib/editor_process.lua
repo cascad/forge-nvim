@@ -30,12 +30,17 @@ function M.stop(rpc,dir,primary_error)
       signal('sigkill')
     end
   end
+  if rpc and rpc.scope then
+    local ok,result=pcall(rpc.scope.close,rpc.scope)
+    data.scope=ok and result or {ok=false,error=tostring(result)}
+  end
   data.exited=not not exited();data.exit_code=rpc and rpc.exit_code;data.exit_signal=rpc and rpc.exit_signal
   stage(data.exited and 'exited' or 'still_running')
-  data.ok=data.exited and not data.hard_kill and not data.artifact_error
+  data.ok=data.exited and not data.hard_kill and not data.artifact_error and (not data.scope or data.scope.ok)
   if not data.ok then
     data.error=not data.exited and 'Дочерний Neovim не завершился после SIGKILL'
       or data.hard_kill and 'Дочерний Neovim потребовал SIGKILL; cleanup остаётся FAIL'
+      or data.scope and not data.scope.ok and ('Process scope cleanup: '..tostring(data.scope.error))
       or 'Не сохранён журнал shutdown: '..data.artifact_error
     if data.primary_error then data.error=data.primary_error..'\nCleanup: '..data.error end
   end

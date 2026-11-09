@@ -12,24 +12,6 @@
 Для новых пунктов используем следующий свободный ID `IDE-xxx`; исходный
 симптом хранится здесь, этап и состояние — в плане. Следующий ID: `IDE-076`.
 
-## IDE-075 — E2E Rust: Cargo worker переживает editor и удерживает runtime
-
-2026-11-09: Rust integration assertions прошли, Neovim PID 12532 вышел code 0,
-но runtime cleanup failed (30860580344400). В marker-owned профиле
-20116-30860580650100 остался cargo clippy PID 6900, родитель 19152 уже отсутствовал;
-удерживались state/lsp.log и nio.log. Проверены canonical path/root/token и
-точный --manifest-path профиля, сохранена process metadata, завершён только
-этот worker. Штатный editor_runtime.remove после его выхода удалил профиль.
-Изолированный integration repeat PASS; это не исправляет orphan lifecycle.
-Нужна общая containment/остановка потомков тестового editor на системной
-границе, без выключения настоящего анализа/подмены tests. Полный integration
-gate остаётся открытым. История FIXLOG §135.
-
-Постоянное исправление запланировано отдельно:
-[fix-editor-descendant-lifetime](openspec/changes/fix-editor-descendant-lifetime/tasks.md).
-Общий process scope с системными backend и постоянным orphan/file-lock E2E;
-наличие плана не означает, что lifecycle уже исправлен.
-
 ## IDE-074 — Rust default F5: редкий CodeLLDB timeout после runInTerminal
 
 2026-11-09: Rust batch 7 PASS/1 FAIL (30484781261100), default F5.
@@ -533,6 +515,17 @@ Windows не срабатывают. Решить: псевдонимы в nvim_
 
 
 <!-- ────────── разобрано (переехало в nvim_forge/FIXLOG.md) ────────── -->
+
+IDE-075 → [FIXLOG §136](nvim_forge/FIXLOG.md#136-e2e-завершение-editor-охватывает-собственных-потомков):
+Windows test runtime больше не полагается на exit одного Neovim. Job Object
+установлен до init, остаток собственных потомков завершается до удаления
+профиля. Реальный orphan/file lock, чужой child и native attach failure:
+5 PASS, тот же final test на driver eeae06c — 4 RED. Полный Rust 8 PASS,
+общий затронутый Windows регресс 111 PASS/2 POSIX SKIP, 365 unit/trace.
+Исходный orphan cargo clippy (30860580344400) описан §135; его внутренняя
+причина не приписывается scope. Ubuntu/macOS/native POSIX verification
+остаются открытыми в fix-editor-descendant-lifetime, IDE-073/074 отдельно.
+
 
 IDE-072 → FIXLOG §134: Neotest: один pytest workspace получает два namespaces.
 

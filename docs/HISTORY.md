@@ -255,6 +255,8 @@ Python реализован и проверен 2026-11-03; после возо�
 | §134 | [Neotest: canonical adapter root без дубля pytest namespace](../nvim_forge/FIXLOG.md#134-neotest-canonical-adapter-root-без-дубля-pytest-namespace) |
 | §135 | [SQL tests: общий регресс и открытая startup диагностика](../nvim_forge/FIXLOG.md#135-sql-tests-общий-регресс-и-открытая-startup-диагностика) |
 
+| §136 | [E2E: завершение editor охватывает собственных потомков](../nvim_forge/FIXLOG.md#136-e2e-завершение-editor-охватывает-собственных-потомков) |
+
 ## Как читать и дополнять
 
 - FIXLOG — фактические записи и границы проверок. Точный порядок внутри

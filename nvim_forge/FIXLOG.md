@@ -6715,3 +6715,66 @@ ARM64/GUI/внешние DB не запускались. IDE-062 semantic refere
 F cleanup list прежняя: 20 каталогов, ничего не удалено. Windows temp/profile/
 build остались на F; сохранённый C: LSP log неизменён. **Файлы:** test registry,
 Docker recipe, SQL_TESTS/матрица/roadmap, AGENT_COMMANDS и evidence artifacts.
+
+## 136. E2E: завершение editor охватывает собственных потомков
+
+**Дата:** 2026-11-09. **Проблема:** IDE-075, продолжение §135.
+**Область:** test-only change fix-editor-descendant-lifetime; пользовательские
+LSP/DAP/Tasks и main specs не меняются.
+
+**Что было.** Rust assertions прошли и Neovim вышел code 0, но cargo clippy
+пережил editor и удерживал private runtime. Ручное освобождение подтверждённого
+worker и успешный isolated repeat из §135 не являлись постоянным исправлением.
+
+**Причина.** editor_process.stop управлял только главным RPC child. Выход root
+не означает завершение потомков: intermediate parent может уже отсутствовать,
+а orphan держит файлы. Проверка дерева процессов после выхода родителя теряет
+такую связь. Воспроизведение eeae06c показало main exit 0/cleanup ok при живом
+worker; попытка удаления реального runtime сохраняла marker и закономерно FAIL.
+Почему внутренний clippy worker не завершился самостоятельно, не установлено;
+исправляется доказанный пробел владения ресурсами тестового каркаса.
+
+**Изменение.** Общий process scope в RPC launcher/stop; системная реализация
+в отдельных modules. Windows — анонимный Job Object с kill-on-close без
+breakaway. Первый --cmd barrier удерживает child до assign и release, прежде
+observer/user init. После штатного qa! scope завершает оставшихся участников,
+ожидает active count 0 и закрывает handle; затем прежний guarded manager
+удаляет runtime. Scope закрывается и при раннем root exit/startup failure.
+Native attach error не запускает init и не переводится в unscoped fallback.
+Shutdown сохраняет main code/signal/primary error, отдельный scope verdict,
+active counts/actions/elapsed. Повторный stop сохраняет тот же результат.
+
+**Проверка/e2e.** Пять Windows native cases: orphan из startup/обычный qa,
+уже вышедший root, принудительный root exit с исходной ошибкой, runtime
+настоящей IDE и реальный отказ OpenProcess(0) до init. Worker действительно
+открывает файл, intermediate parent уже вышел, отдельный чужой worker жив.
+Fault case изменяет argument настоящего API, успешные replies не подменяются.
+Тот же final orphan test на четырёх exact driver files eeae06c даёт 4 RED:
+три оставшихся worker и runtime file-lock FAIL. Baseline cleanup через unique
+release files убирает только свои fixtures/marker-owned profile, сохраняя RED.
+Final test/helper/driver/backend sources и native state сохранены в artifacts.
+
+Windows последовательный регресс: прежние 101 checks (SQL query/tests/оба SDK,
+backports/common panels/Go Tests/Node/Python/Rust/Bash) плюс 5 новых process,
+1 editor-process и 4 editor-runtime = 111 PASS, 0 FAIL, 2 POSIX SIGSTOP SKIP.
+Полный Rust 8 PASS включает clippy, F5/launch.json, nextest/integration/debug.
+Unit/trace 365 PASS; strict OpenSpec 64 valid. Audit descendants-evidence.json
+сверяет source SHA, production Lua/67 pins без изменений, SDK payload,
+scope active_after=0, отсутствие private runtime и старый prefix FIXLOG.
+Прежний C: LSP log побайтно неизменён. Это native UI/RPC и CLI, не GUI proof.
+
+**Границы.** POSIX backend реализует отдельную process group и TERM/wait/KILL;
+намеренно отделившаяся session требует собственного lifecycle. Для live/zombie
+проверки используется ps, procps явно добавлен Ubuntu recipe. Ubuntu engine
+сейчас недоступен, Docker/WSL lifecycle не менялся; build/run и macOS не
+проверены, platform tasks остаются открытыми. IDE-073 startup RPC и IDE-074
+редкий CodeLLDB timeout не объявлены исправленными новым успешным batch.
+Windows temp/build/profile остаются на F, список F cleanup прежний, удаления
+его каталогов не было. Product SQL references IDE-062 остаются открытыми.
+
+**Вывод.** Windows lifecycle gap закрыт постоянным source RED/GREEN и
+интеграцией настоящих backend; SQL Windows integration gate можно завершить.
+Наличие POSIX кода не заменяет его platform E2E и не закрывает общий roadmap.
+**Файлы:** tests/lib/editor_rpc.lua/editor_process.lua/process_scope*.lua,
+editor-descendants.test.lua/process_worker.py/registry, Dockerfile/E2E README,
+change tasks, PROBLEMS/IDE_ROADMAP/SQL_TESTS/HISTORY/AGENT_COMMANDS.

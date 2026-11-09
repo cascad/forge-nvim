@@ -20,8 +20,8 @@ IDE-001 параллельно ждёт диагностических данн�
 | Готово на Windows | Bash edit/run/tests, IDE-056/058 | 8 real UI PASS: sourced LSP, shfmt, Tasks и Bats; Unicode rename исправлен (§116–117). [Команды](BASH_WORKFLOW.md). Ubuntu/Mac открыты |
 | Готово на Windows | SQL editor/query, IDE-060/061/063–068 | 20 SQL UI + 2 SDK CLI PASS, native SQLS comments fix/readiness и cache Results при смене workspace (§119–128); 6 common panel UI и 365 unit/trace PASS. Прежние 72 UI/9 backports сохранены как отдельный прогон. Ubuntu/Mac/ARM64/внешние DB не проверены |
 | Готово на Windows | IDE-062: SQLLogicTest в Tests | 12 native SDK checks и 12 editor UI PASS (§129–132): nearest/file/all, expected/fix/rerun, stop/output/panels; общий All и native paths исправлены. [Команды](SQL_TESTS.md). Остальные ОС открыты |
-| Текущий этап | Завершить общий regression gate | IDE-075: Rust Cargo worker пережил editor и сорвал cleanup; собственный остаток убран, нужен постоянный lifecycle fix/E2E. IDE-073/074 startup/CodeLLDB timeouts сохранены отдельно, причина не установлена |
-| Следующий этап | Остаток SQL workflow, IDE-062 | Semantic references с реальными E2E; SQLS references provider отсутствует. Не подменять references текстовым поиском. Вложенный SLT error показывает точную location в Output; cross-file quickfix остаётся ограничением Neotest |
+| Готово на Windows | IDE-075: lifecycle и Windows integration gate | Собственный process scope, 5 новых native E2E и 4 source RED; 111 checks PASS/2 POSIX SKIP, 365 unit/trace, 64 strict valid (§136). Ubuntu/Mac и причины IDE-073/074 открыты |
+| Следующий этап после паузы | Остаток SQL workflow, IDE-062 | Semantic references с реальными E2E; SQLS references provider отсутствует. Не подменять references текстовым поиском. Вложенный SLT error показывает точную location в Output; cross-file quickfix остаётся ограничением Neotest |
 | Затем | Остальная [матрица языков](LANGUAGE_MATRIX.md) | SQL references IDE-062, Bash DAP IDE-057; language Ubuntu после доступности engine |
 | После функциональной матрицы | Упрощение архитектуры | Общее ядро, явные системные границы и setup; сокращение дублирования с сохранением E2E |
 
@@ -29,11 +29,11 @@ IDE-001 параллельно ждёт диагностических данн�
 ждут измерений/GUI на Mac. Сборщик startup готов; после trace исправляется
 конкретный инициатор. Windows и Ubuntu не заменяют такую проверку.
 
-SQL Tests Windows шаг сохранён в `eeae06c`; общий regression gate остаётся
-открытым. Ближайшее исправление IDE-075 оформлено отдельным
-[планом process lifecycle](../openspec/changes/fix-editor-descendant-lifetime/tasks.md):
-сначала целевой source RED orphan/file-lock, затем общий scope, системные
-backend и настоящий Rust regression. Это текущая точка продолжения.
+SQL Tests Windows шаг сохранён в `eeae06c`; IDE-075 и его Windows regression
+gate завершены (§136). [Process lifecycle](../openspec/changes/fix-editor-descendant-lifetime/tasks.md)
+имеет 3/6 задач: POSIX/native platform verification остаётся открытой.
+По просьбе владельца работа приостановлена после этого пункта. После
+возобновления — SQL semantic references IDE-062; IDE-073/074 остаются отдельно.
 
 **Ограничение текущего шага:** полный Ubuntu IDE-047 — 43 PASS/1 FAIL/3 SKIP,
 653 checks. Cleanup/процессные проверки прошли; новый FAIL ожидания Git-read
@@ -401,6 +401,11 @@ normal-привязки. IDE-005/008 проверены на Windows/Ubuntu; Mac
 другую версию и ждёт проверки. Общая локальная модель остальных панелей открыта.
 
 ## Текущая точка продолжения
+
+2026-11-09: остановка по просьбе владельца после Windows IDE-075 (§136).
+Актуальный следующий пункт — SQL semantic references IDE-062 в таблице
+ближайшего маршрута выше. Следующие абзацы сохраняют контекст прежних этапов;
+их исторические результаты не заменяют текущую platform matrix.
 
 IDE-037: владелец выбрал чистый Docker вместо восстановления прежнего диска.
 Новый engine проверен container/volume write/read, данные на F:, AutoStart

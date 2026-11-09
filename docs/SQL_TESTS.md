@@ -106,6 +106,9 @@ Source RED: ea63bf5 без feature, прототип с прежним All, то
 Neotest companion files. Диагностический watchdog дал stack evidence,
 постоянные RED/GREEN работают без него.
 
+Windows integration после IDE-075 прошёл общий регресс: 111 native checks
+PASS, 2 POSIX SKIP, 365 unit/trace, 64 strict valid (§136). Отдельные
+IDE-073/074 причины startup/CodeLLDB timeout остаются открытыми.
 Ubuntu recipe содержит SDK, но build/run и Mac/ARM64/GUI ещё не проверены.
 При уже доступном engine можно явно собрать image и запустить:
 

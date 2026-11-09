@@ -14,9 +14,9 @@
 
 - [x] 3.0 IDE-069: общий Run all consumer по documented Client API, actual multi-adapter/foreign-workspace UI и source RED empty-adapter; записать FIXLOG/HISTORY (IDE-TEST-5), общий Tests guide и результаты Windows. Непроверенные ОС остаются открытыми.
 
-- [ ] 3.1 Добавить SDK/UI suites в общий runner/Ubuntu recipe; последовательно Windows SQL query/SDK/common panels и затронутые language Tests, unit/trace/strict OpenSpec. Проверить sources/payload/pins/history prefix/shutdown, записать evidence/команды/roadmap и коммит. IDE-062 references оставить открытым.
+- [x] 3.1 Добавить SDK/UI suites в общий runner/Ubuntu recipe; последовательно Windows SQL query/SDK/common panels и затронутые language Tests, unit/trace/strict OpenSpec. Проверить sources/payload/pins/history prefix/shutdown, записать evidence/команды/roadmap и коммит. IDE-062 references оставить открытым.
 - [ ] 3.2 Те же native SDK/UI на Ubuntu при уже доступном engine и Mac владельца. Реальных запусков нет — оставить задачу открытой; Docker/WSL lifecycle не менять. Проверка: одинаковые команды SQL guide плюс platform artifacts.
 
-Интеграция 3.1 остаётся открытой: IDE-075 — Cargo worker пережил editor и
-сорвал cleanup, хотя assertions прошли. Изолированный повтор не заменяет
-постоянный lifecycle fix и его E2E; история §135.
+Windows интеграция 3.1 завершена после постоянного IDE-075 lifecycle fix:
+111 native checks PASS, 2 POSIX SKIP, 365 unit/trace и 64 strict valid;
+история §136. Ubuntu/Mac задача 3.2 остаётся открытой, references IDE-062 отдельно.
