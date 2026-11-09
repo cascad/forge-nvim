@@ -6469,3 +6469,55 @@ test/helper SHA, неизменный SDK/payload/67 pins, byte prefix исто�
 БД; одного внутреннего selected root или статуса Done для этого недостаточно.
 **Файлы:** ide/sql.lua, sql-language.test.lua, sql_project.lua,
 fix-sql-results-workspace-switch и SQL workflow/матрица/roadmap/docs.
+
+## 129. SQL tests: native SQLLogicTest/SQLite SDK
+
+**Дата:** 2026-11-09. **Проблема:** IDE-062, первый этап test framework.
+**Спека:** IDE-SQL-8 (ADDED).
+
+**Что было.** SQL edit/query уже имел real UI regression, но успешный SELECT
+в Results не давал Tests assertions/expected comparison. Отдельного native
+SQL test runner не было. Semantic references также остаются нерешёнными.
+
+**Причина/решение.** Официальный sqllogictest-bin имеет MySQL/PostgreSQL/
+External engines, SQLite нет; External требует Bash. Для универсального
+native SQLite выбран небольшой Rust CLI на официальной sqllogictest 0.29.1
+и rusqlite 0.41.1 с bundled SQLite, Cargo.lock (107 registry dependencies).
+Парсинг/условия/сравнение expected выполняет библиотека, не Lua parser.
+Один script/process — private in-memory DB, setup/named connections разделяют
+её; новый process независим. Unit тестирования остаётся полным `.slt` script.
+Runtime не требует Rust/Python/Bash, не читает рабочие connections/DB.
+
+**Изменение.** Native JSON protocol сохраняет root script, настоящий error
+file/line, comparison output и число реально исполненных assertions до exit,
+в обход PTY. Empty/all-skipped и unsupported system не становятся passed.
+Явный prepare_sql_test.py --download использует предоставленные Rust/CC,
+locked release build -j2 и caches/private HOME/temp на диске checkout.
+Повтор readiness проверяет source/lock/binary/version и реальный SQLite
+assertion без compiler, Cargo cache/target/build scratch и без download.
+
+**Проверка/e2e.** Первая native сборка 43.64 s, затем 9 process checks PASS.
+До коммита добавлены три пограничных regression: parser error во вложении
+не называл реальный file, unsupported system во вложении менял root report
+identity, manifest без binary давал FileNotFound traceback/code 1. Тот же
+final test дал 9 PASS/3 FAIL на первой реализации; source/lock/preparer/
+native binary сохранены. Исправлены location mapping и missing payload guard.
+Final: 12 checks PASS, 15 реальных native/preparer processes, compiler-free
+readiness на copy только manifest/bin, без target/cargo-home/tmp. Native
+SQLite проверяет setup/expected SQL errors/Unicode/NULL/empty/real, wrong
+expected/line, parser/empty/skips, named connections/isolation и include.
+SDK payload/manifest immutable, профили readiness удалены и при отказах.
+
+**Интеграция/границы.** 365 unit/trace PASS, 63 OpenSpec strict valid.
+Audit sql-test-sdk-evidence.json сверяет final/source test SHA, Cargo registry
+checksums по primary metadata, полный неизменный editor Lua tree/67 pins,
+native reports/exit, старый prefix FIXLOG и C: log. Прежние SQL 20 UI/2 SDK/
+6 panels из §128 не повторялись без изменения runtime. В ручную F cleanup
+добавлены только target/cargo-home; binary/manifest/evidence сохраняются.
+Docker/WSL не запускались; Ubuntu/Mac/ARM64 не проверены.
+
+**Вывод.** SDK CLI готов отдельно. Neotest adapter, `.slt` filetype/editor UI
+и semantic references ещё не реализованы и не объявлены PASS; продолжение
+в add-sql-test-workflow tasks. **Файлы:** scripts/sdk/sql-test (Cargo/source/
+protocol guide), prepare_sql_test.py, sql-test-sdk.test.lua/basic.slt,
+registry и SQL workflow/roadmap/docs. Новых Neovim plugins/startup installs нет.

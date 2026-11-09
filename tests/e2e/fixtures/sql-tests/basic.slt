@@ -1,0 +1,24 @@
+statement ok
+CREATE TABLE items (id INTEGER PRIMARY KEY, name TEXT);
+
+statement count 2
+INSERT INTO items VALUES (2, 'Beta'), (1, 'Алиса 😀; quote'' ü');
+
+query IT rowsort
+SELECT id, name FROM items;
+----
+1 Алиса 😀; quote' ü
+2 Beta
+
+query TTR
+SELECT NULL, '', 1.25;
+----
+NULL (empty) 1.250
+
+query I
+SELECT SUM(id) FROM items;
+----
+3
+
+statement error
+INSERT INTO missing_table VALUES (1);

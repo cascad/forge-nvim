@@ -979,3 +979,16 @@ RED на d43c094; DB counters исключают повторное выполн
 новый публичный LspRequest complete, а не оставшийся Done прошлого запроса.
 SQL tests/references — IDE-062. Ubuntu image дополнен, но build/run и
 Mac/ARM64/GUI/внешние RDBMS не проверены; Desktop/WSL не запускаются ради теста.
+
+## SQLLogicTest SDK (этап до editor adapter)
+
+`python -B tests/e2e/prepare_sql_test.py --download --rustc <rustc>` явно
+собирает locked native SQLite runner предоставленными Rust/CC (-j2).
+`python -B tests/e2e/prepare_sql_test.py` проверяет payload/version/реальный
+assertion без build/download/compiler/scratch; output по умолчанию .tests/sql-test-deps.
+`<nvim> -l tests/e2e/sql-test-sdk.test.lua` — 12 native process E2E Windows PASS.
+Для другого output: FORGE_E2E_SQL_TEST_DEPS. Ubuntu/Mac используют python3;
+их сборка/запуск не проверены. Обычный runner не требует Python или Bash.
+Exact sources/lock/test/preparer/manifest, process PID/stdout/stderr/exit и
+JSON сохранены. [Protocol, команды и границы](../../scripts/sdk/sql-test/README.md).
+Это не editor UI PASS: Neotest adapter остаётся следующей задачей IDE-062.

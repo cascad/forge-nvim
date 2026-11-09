@@ -28,6 +28,11 @@ SQLLogicTest/DB-specific tests), не подменённого успешным 
 не объявляет references provider; gd/rename/query и текстовый поиск не закрывают
 семантические references. Продолжить после edit/query этапа, с постоянными E2E.
 
+2026-11-09: native SQLLogicTest/SQLite SDK готов отдельно (12 process E2E
+Windows, FIXLOG §129). Editor adapter/UI и semantic references ещё открыты;
+SQLite assertion readiness не заменяет эти проверки. План —
+openspec/changes/add-sql-test-workflow/tasks.md.
+
 ## IDE-057 — Bash debug: выбор отдельного Linux backend для Windows
 
 2026-11-09, аудит следующего языкового этапа. Официальный bash-debug 0.3.9

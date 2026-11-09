@@ -112,6 +112,10 @@ SQLS 0.2.48 использует codepoint координаты и ошибае�
 SQLS не предоставляет semantic references; поиск текста их не заменяет.
 SQL test framework остаётся отдельным IDE-062, procedural debug требует backend.
 
+Для test framework уже подготовлен отдельный [native SQLLogicTest SDK](../scripts/sdk/sql-test/README.md)
+с 12 process E2E Windows. Подключение `.slt` к Tests/Output и semantic
+references ещё не реализованы; SDK CLI проверки не считаются editor UI PASS.
+
 Upstream SQLS 0.2.48 классифицирует SELECT с ведущим комментарием как Exec.
 Нужен подготовленный forge.1 вариант: `Query OK` старого backend не означает
 отсутствия rows. Исходный RED и фикс проверяются отдельным IDE-066 UI.

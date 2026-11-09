@@ -3100,3 +3100,64 @@ SQL test framework/Neotest и отдельно semantic references, не усп�
 Локальный commit завершает IDE-068, task 3.2 других ОС остаётся открытой;
 push не выполняется. git diff --check/status и точный список staged files
 проверяются перед commit, локальные .tests/.tools не добавляются.
+
+## 50. IDE-062: native SQL test SDK до editor adapter, 2026-11-09
+
+После ea63bf5 создан add-sql-test-workflow через OpenSpec 1.13.2 context/list/
+new/status/instructions proposal/specs/design/tasks/apply. Root текущий repo,
+spec-driven, ready, 4 tasks; первый task допускает отдельный SDK commit.
+Источник SQL test format/runner — official sqllogictest-rs; CLI engines без
+SQLite, External вызывает Bash. Crates.io API/version archive проверены по
+registry SHA; research/metadata лежат в .tests/sql-test-research. Прямые версии
+sqllogictest 0.29.1/rusqlite 0.41.1, 107 registry dependencies зафиксированы
+Cargo.lock; собственный package — 108-й элемент lock. SQLite native 3.54.1.
+
+Все команды PowerShell tool выполнялись login:false. TEMP/TMP/TMPDIR и
+NVIM_LOG_FILE — F:/repo/forge-nvim/.tests/tmp, npm cache — F:/forge-nvim-tmp/npm-cache.
+Первичный Cargo generate-lockfile использовал явные F: CARGO_HOME/TARGET_DIR,
+предоставленные rustc/cargo из sysroot прежнего rust-deps (1.96.1),
+RUSTUP_AUTO_INSTALL=0. NativeSDK host Rust/CC не устанавливались.
+
+```powershell
+& '<provided sysroot>/bin/cargo.exe' generate-lockfile --manifest-path scripts/sdk/sql-test/Cargo.toml
+python -B tests/e2e/prepare_sql_test.py --download --rustc '<provided sysroot>/bin/rustc.exe'
+& $forgeNvim -l tests/e2e/sql-test-sdk.test.lua
+```
+
+Первый locked release build -j2: 43.64 s, 9 process checks PASS. После добавления
+трёх пограничных cases тот же final suite дал 9 PASS/3 FAIL. Исправлены include
+parser error file, include system root identity и missing payload guard.
+Старые native binary/source/lock/preparer/test/manifest сохранены в artifacts
+windows-sql-test-sdk-v2-red.txt; это precommit native implementation, не ошибка
+уже выпущенного ea63bf5. Сам editor runtime тогда и сейчас неизменён.
+
+```powershell
+& '<provided sysroot>/bin/rustfmt.exe' --edition 2021 scripts/sdk/sql-test/src/main.rs
+python -B tests/e2e/prepare_sql_test.py --download --rustc '<provided sysroot>/bin/rustc.exe'
+& $forgeNvim -l tests/e2e/sql-test-sdk.test.lua
+& $forgeNvim -l tests/run.lua unit trace
+npx.cmd --yes @fission-ai/openspec@1.13.2 validate --all --strict --no-interactive
+python -B .tests/audit-sql-test-sdk.py
+```
+
+Логи windows-sql-test-{prepare-v2,sdk-final,sdk-unit,sdk-openspec}.txt:
+12 process E2E/15 actual native+preparer processes PASS, 365 unit/trace PASS,
+63 strict valid. Новый suite зарегистрирован как e2e. Report/readiness
+используют настоящую SQLite; case с missing compiler выполняется на SDK
+copy только bin/manifest, без target/cargo-home/tmp. Immutable hashes/profile
+cleanup проверяются и для успешной readiness, и для rejected SDK. Без Rust,
+Python или Bash именно обычное исполнение runner; preparer требует Python.
+
+Audit сверяет source/registry checksums, одинаковый final test в RED/GREEN,
+сохранённые старые SDK/source failures, actual error file/root identity,
+все process exit/signal, runtime Lua/67 pins, prefix FIXLOG/C: log.
+Итог .tests/sql-test-sdk-evidence.json, история §129. Editor 20 SQL UI/2 SQL
+SDK CLI/6 panels из §128 остаются отдельным evidence, runtime не менялся.
+Новых UI PASS в этом шаге нет; adapter/source ea63bf5 replay — следующая задача.
+
+После успешной readiness .tests/sql-test-deps/target и cargo-home добавлены
+в ручную F cleanup inventory с размером; F_CLEANUP_PATHS содержит 20 путей.
+Native bin/manifest/source/negative evidence не добавлены, ничего не удалено.
+Docker engine не опрашивался, Desktop/WSL lifecycle не вызывался. Ubuntu/Mac/
+ARM64/Neotest UI/semantic references остаются незавершёнными. Перед локальным
+SDK commit проверены git diff --check/staged paths, tmp/tools не добавлялись.
