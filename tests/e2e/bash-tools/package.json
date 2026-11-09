@@ -1,0 +1,8 @@
+{
+  "name": "forge-bash-e2e-tools",
+  "private": true,
+  "version": "1.0.0",
+  "dependencies": {
+    "bash-language-server": "5.8.1"
+  }
+}

@@ -69,6 +69,9 @@ return {
                 "ruff",
                 "lua-language-server",
                 "rust-analyzer",
+                "bash-language-server",
+                "shfmt",
+                "shellcheck",
                 -- DAP
                 -- Delve follows Go runtime/compiler internals closely. Keep it
                 -- current so project toolchain upgrades do not break debugging.
@@ -785,6 +788,7 @@ return {
                 if vim.fn.executable(binary) == 1 then vim.lsp.enable(server) end
             end
             require('forge.node').setup_lsp()
+            require('forge.bash').setup_lsp()
         end,
     },
 }

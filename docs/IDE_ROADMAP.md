@@ -17,7 +17,8 @@ IDE-001 параллельно ждёт диагностических данн�
 | Готово на Windows | JS/Node и IDE-051 | 8 новых UI PASS: LSP/Prettier/Tasks/js-debug/Jest и missing tools (§111). Ubuntu требует engine, Mac открыт |
 | Готово на Windows | Python, IDE-052/053 | 8 real UI PASS: venv/LSP/Ruff/debugpy/pytest; общий selector и классификация ожидаемого adapter close (§112–113). 29 прежних UI PASS; Ubuntu/Mac открыты |
 | Готово на Windows | Rust/Cargo, IDE-054/055 | 8 real UI PASS; пути/argv/JSON test adapter и output исправлены (§114–115), 37 прежних UI + 9 backports + 364 checks PASS; [команды](RUST_WORKFLOW.md). Ubuntu/Mac открыты |
-| Затем | Остальная [матрица языков](LANGUAGE_MATRIX.md) | Bash/SQL; language Ubuntu после доступности engine |
+| Готово на Windows | Bash edit/run/tests, IDE-056/058 | 8 real UI PASS: sourced LSP, shfmt, Tasks и Bats; Unicode rename исправлен (§116–117). [Команды](BASH_WORKFLOW.md). Ubuntu/Mac открыты |
+| Затем | Остальная [матрица языков](LANGUAGE_MATRIX.md) | Bash DAP (IDE-057, Linux backend), SQL dialect/workflow; language Ubuntu после доступности engine |
 | После функциональной матрицы | Упрощение архитектуры | Общее ядро, явные системные границы и setup; сокращение дублирования с сохранением E2E |
 
 **Mac параллельно:** IDE-001 (zsh/Go до запуска nvim) и IDE-002 (Cmd+C)
@@ -267,15 +268,18 @@ Normal mode, прежние aliases сохранены:
 
 ## Этап 4. Языки
 
-Первичная [матрица кода и покрытия](LANGUAGE_MATRIX.md) снята 2026-11-02:
-Go/Rust/Python настроены частично, реальные положительные E2E пока преимущественно
-Go DAP/tests. JS/Node/Bash/SQL ещё не имеют полного языкового стека; подсветка
-и общие buffer completion/trim/tasks не считаются готовностью IDE языка.
+Первичная [матрица кода и покрытия](LANGUAGE_MATRIX.md) снята 2026-11-02;
+текущие Windows результаты Go/Node/Python/Rust/Bash обновлены в ней отдельно.
+Подсветка и общие buffer completion/trim/tasks не считаются готовностью IDE
+языка. SQL, Bash DAP и непроверенные целевые ОС сохраняют открытые задачи.
 
 - [x] Первичный аудит конфигурации и покрытия шести языков, без новых PASS.
 - [x] Go LSP/format Windows: definition/references/rename/completion/diagnostics,
   внешний/LSP formatter, save/health и cleanup без tools; 6 UI E2E (§110).
 - [ ] Go language Ubuntu: явный build и те же E2E после появления engine.
+- [x] Bash Windows edit/run/tests: 8 real UI, исходный RED и Unicode rename
+  регресс (§116–117), без новых plugins и startup installs.
+- [ ] Bash DAP: IDE-057, выбор Linux backend Windows; Ubuntu/Mac Bash UI.
 - [ ] Матрица Go/Rust/Python/JS-Node/Bash/SQL: LSP, completion, definition,
   references, rename, diagnostics, format, run, debug и tests где применимо.
 - [ ] Сохранить работающие Go/Rust/Python; добавить отсутствующие JS/Node.js,

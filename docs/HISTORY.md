@@ -234,6 +234,9 @@ Python реализован и проверен 2026-11-03; после возо�
 | §113 | [DAP: ожидаемый shutdown и настоящие ошибки adapter](../nvim_forge/FIXLOG.md#113-dap-ожидаемый-shutdown-и-настоящие-ошибки-adapter) |
 | §114 | [Rust: Cargo workspace, язык и переносимый запуск тестов](../nvim_forge/FIXLOG.md#114-rust-cargo-workspace-язык-и-переносимый-запуск-тестов) |
 | §115 | [Rust debug tests: результат сохраняет настоящий output](../nvim_forge/FIXLOG.md#115-rust-debug-tests-результат-сохраняет-настоящий-output) |
+| §116 | [Bash: язык, native Tasks и Bats Tests](../nvim_forge/FIXLOG.md#116-bash-язык-native-tasks-и-bats-tests) |
+| §117 | [Bash rename: URI aliases больше не стирают аргументы](../nvim_forge/FIXLOG.md#117-bash-rename-uri-aliases-больше-не-стирают-аргументы) |
+| §118 | [Trace: project fixtures отделены от самостоятельных suites](../nvim_forge/FIXLOG.md#118-trace-project-fixtures-отделены-от-самостоятельных-suites) |
 
 ## Как читать и дополнять
 

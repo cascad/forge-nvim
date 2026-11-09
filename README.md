@@ -11,6 +11,7 @@
 [Команды агента и формат получаемых результатов](docs/AGENT_COMMANDS.md).
 [Клавиши рабочих панелей Space w](nvim_forge/QUICKSTART.md#общий-маршрут-рабочих-панелей--space-w).
 [Фактическая матрица языков и следующие шаги](docs/LANGUAGE_MATRIX.md).
+[Bash: язык, запуск файла и Tests](docs/BASH_WORKFLOW.md).
 [Единая история работ, причин и решений](docs/HISTORY.md), включая материалы
 из прежнего `F:/claude_code/vim`; новые исправления — в `nvim_forge/FIXLOG.md`.
 
@@ -23,7 +24,7 @@ Neovim against that config **without touching** your system
 
 | Folder        | Launchers (Win / Unix)                | Purpose                                                |
 |---------------|---------------------------------------|--------------------------------------------------------|
-| `nvim_forge/` | `nvim_forge.cmd` / `nvim_forge.sh`    | Main IDE config (Rust / Go / Python). Bespoke, panel-driven. |
+| `nvim_forge/` | `nvim_forge.cmd` / `nvim_forge.sh`    | Main IDE config (Rust / Go / Python / JS / Bash). Bespoke, panel-driven. |
 | `nvim_astro/` | `nvim_astro.cmd`                      | AstroNvim v6 + astrocommunity baseline for comparison. |
 | `nvim-ide/`   | `nvim-ide.cmd`                        | `ldelossa/nvim-ide`-based testbed. Used to prototype panel UX. |
 

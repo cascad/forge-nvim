@@ -64,6 +64,12 @@ Neovim и базовые leader-привязки доступны также в 
 
 ## Проверка архитектуры
 
+Bash (§116–117): общий forge.bash использует Node resolver и общие Tasks;
+forge.bats — публичный Neotest adapter, а forge.bash_host изолирует native
+interpreter, Windows WSL rejection, cygpath и MSYS env только дочернего Bats.
+Новых plugin pins и копий конфигурации по ОС нет. Windows workflow проверен
+реальными UI; Ubuntu/Mac/Bash 3.2/DAP требуют отдельных запусков.
+
 IDE-027 (§92 FIXLOG): подтверждена ошибка ConPTY в самом Windows Neovim,
 воспроизводимая без Forge/плагинов. Временный SDK вынесен за границу Lua:
 `scripts/prepare-windows-sdk.ps1`, source/patch lock, отдельный runtime в

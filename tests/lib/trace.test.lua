@@ -118,6 +118,13 @@ end
 
 local BASE, MUTATED
 
+T.check('SELF: project fixtures не suites, shell checks вне fixtures требуют реестр', function()
+  T.eq(trace.is_check_file('tests/e2e/fixtures/bash-language/run.sh'), false)
+  T.eq(trace.is_check_file('tests/e2e/fixtures/project/data.test.lua'), false)
+  T.eq(trace.is_check_file('tests/new-check.sh'), true)
+  T.eq(trace.is_check_file('tests/e2e/new-feature.test.lua'), true)
+end)
+
 T.check('SELF: копия дерева в .tests/trace-fixture собирается, trace на ней работает', function()
   vim.fn.delete(FIX, 'rf')
   for _, rel in ipairs(COPY) do copy_tree(B.root, FIX, rel) end

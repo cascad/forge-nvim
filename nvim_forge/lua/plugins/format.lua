@@ -91,6 +91,8 @@ return {
         opts = {
             default_format_opts = { lsp_format = 'fallback' },
             formatters_by_ft = {
+                sh = { 'shfmt', lsp_format = 'fallback' },
+                bash = { 'shfmt', lsp_format = 'fallback' },
                 rust   = { "rustfmt", lsp_format = "fallback" },
                 -- Go: golines + gofumpt поверх gopls.
                 --   * golines — РАЗБИВАЕТ длинные строки (gofmt/gofumpt

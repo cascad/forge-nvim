@@ -10,7 +10,18 @@
 
 Маршрут и приоритеты: [рабочий план nvim_forge](docs/IDE_ROADMAP.md).
 Для новых пунктов используем следующий свободный ID `IDE-xxx`; исходный
-симптом хранится здесь, этап и состояние — в плане. Следующий ID: `IDE-056`.
+симптом хранится здесь, этап и состояние — в плане. Следующий ID: `IDE-060`.
+
+## IDE-057 — Bash debug: выбор отдельного Linux backend для Windows
+
+2026-11-09, аудит следующего языкового этапа. Официальный bash-debug 0.3.9
+требует Bash 4+/cat/mkfifo/rm/pkill и жёстко использует WSL launcher в win32
+ветке; Git Bash не является его штатным backend. Git Bash 5.2.37 здесь умеет
+mkfifo (реальный probe PASS), но pkill отсутствует; это не доказательство
+совместимости adapter. WSL не запускался, внешняя среда не менялась.
+Владельцу задан выбор Docker/WSL/другого Linux host/VM. DAP остаётся отдельной
+открытой работой полного Bash roadmap; текущие язык/run/tests его не подменяют.
+Источники: .tests/bash-debug-readme.md, pinned VSIX SHA и bash-fifo-probe.json.
 
 ## IDE-048 — completed Gitsigns E2E не дождался следующего Git-read
 
@@ -472,6 +483,19 @@ Windows не срабатывают. Решить: псевдонимы в nvim_
 
 
 <!-- ────────── разобрано (переехало в nvim_forge/FIXLOG.md) ────────── -->
+
+IDE-059 → [FIXLOG §118](nvim_forge/FIXLOG.md#118-trace-project-fixtures-отделены-от-самостоятельных-suites):
+пять исходных trace FAIL для .sh data; fixtures имеют явную границу,
+настоящие suites вне неё по-прежнему требуют реестр. Selfcheck/mutations PASS.
+
+IDE-058 → [FIXLOG §117](nvim_forge/FIXLOG.md#117-bash-rename-uri-aliases-больше-не-стирают-аргументы):
+повторные edits под percent-URI aliases применялись дважды и стирали args.
+Bash handler объединяет дубли; настоящий shorter rename и source replay
+подтверждены. Windows PASS, Ubuntu/Mac требуют прогона.
+
+IDE-056 → [FIXLOG §116](nvim_forge/FIXLOG.md#116-bash-язык-native-tasks-и-bats-tests):
+guarded Bash-LSP/shfmt/native Tasks/Bats, 8 UI Windows PASS с source RED;
+67 pins неизменны, подготовка явная. DAP отдельно IDE-057, Ubuntu/Mac открыты.
 
 IDE-055 → [FIXLOG §115](nvim_forge/FIXLOG.md#115-rust-debug-tests-результат-сохраняет-настоящий-output):
 Rust debug получал passed, но translate_results терял ссылку на настоящий

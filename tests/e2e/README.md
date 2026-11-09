@@ -906,3 +906,29 @@ __pycache__ исключён из immutable payload, остальные source/t
 Источник stdout сохраняется как test-stdout.txt. Отдельно не проверены
 stdlib navigation, cross-compile и native GUI; offline sysroot metadata warning
 про cfg-if сохранён в evidence. Ubuntu image ещё не build/run, engine недоступен.
+
+## Bash edit/run/tests
+
+`python -B tests/e2e/prepare_bash.py --download --nvim <nvim>` — явная
+подготовка; повтор без `--download` проверяет SHA/versions без установки.
+Сначала нужны подготовленные plugins/Node, host native Bash и C compiler.
+На Ubuntu/macOS — python3. Windows использует подготовленный Forge SDK,
+TEMP/TMP/TMPDIR/NVIM_LOG_FILE в .tests/tmp на диске checkout.
+
+`<nvim> -l tests/e2e/bash-language.test.lua` — восемь настоящих UI cases:
+sourced definition/references/rename (IDE-058 URI aliases), LSP completion/
+ShellCheck diagnostics, manual/save shfmt и .editorconfig, native args/cwd/
+stdout/stderr/exit 7 + успешный hotkey task; Bats nearest/file/два синтаксиса,
+literal regex/Unicode и соседние markers; отсутствие tools без WSL/install.
+Private BASH_ENV fixture имеет положительный CLI контроль, затем редактор
+обязан не исполнять startup hook. Tests adapter использует официальный Bats
+declaration DSL; Bash parser не подменяет Bats grammar.
+
+Tools pinned в bash-tools/package-lock.json и sources.json: Bash-LSP 5.8.1,
+shfmt 3.14.1, ShellCheck 0.11.0, Bats 1.14.0, parser из catalog. Host Bash/Node
+не устанавливаются; manifest/hash и private source/config/logs/snapshots
+сохраняются. Ни plugin pins, ни backports не меняются.
+Workflow/примеры/команды: [BASH_WORKFLOW.md](../../docs/BASH_WORKFLOW.md).
+`FORGE_BASH_CASE` — фильтр случаев по имени; `FORGE_E2E_BASH_DEPS` — готовые tools.
+Ubuntu image дополнен, но engine недоступен; Mac/GUI/Bash 3.2 не PASS.
+Bash debug остаётся IDE-057; обычные tests не открывают DAP session.

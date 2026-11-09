@@ -5982,3 +5982,130 @@ copy: breakpoint/eval/real passed работают, но тот же output asse
 
 **Файлы:** companion neotest-rust/dap.lua backport, Rust debug E2E/replay/
 stdout artifacts, docs и задачи change. История только дописана.
+
+## 116. Bash: язык, native Tasks и Bats Tests
+
+**Дата:** 2026-11-09. **Проблема:** IDE-056, baseline 4b859b8.
+**Спека:** IDE-SH-1/2/3/4 (ADDED), change add-bash-edit-run-tests.
+
+**Что было.** Bash grammar в catalog не обеспечивал IDE workflow: отсутствовали
+активация server, shfmt, запуск текущего script и Tests adapter. Общие shell
+install checks не проверяли работу пользователя с Bash в редакторе.
+
+**Причина.** Не были подключены языковые инструменты и native process boundary.
+В Windows PATH bash.exe здесь ведёт в WSL, а native Git Bash находится отдельно.
+Наличие Neotest/Tasks само по себе не добавляет поддержку языка.
+
+**Изменение.** forge.bash подключает guarded Bash-LSP через существующий
+Node+JS resolver и BashRunFile/Space j b через общие Tasks. Conform использует
+shfmt и .editorconfig, ShellCheck выдаёт настоящие LSP diagnostics. Установка
+tools остаётся явной. forge.bash_host разрешает executable в полный путь до
+проверки WSL guard (включая override `bash`), переводит пути через cygpath и
+ограничивает MSYS winsymlinks:lnk окружением Bats child. Пользовательский режим
+winsymlinks сохраняется. BASH_ENV/ENV очищаются, profile не читается.
+
+forge.bats использует публичный Neotest adapter interface. Discovery повторяет
+declaration DSL Bats: @test и function-comment @test; script при этом не
+исполняется. Neotest сам разбивает file/dir на отдельные test trees, поэтому
+у каждого теста свой process key. Фильтр точный, regex metacharacters escaping
+проверен настоящим запуском. Статус требует настоящий exit 0 и TAP plan/ok
+одного теста. Report Bats записывается отдельным файлом до exit и сохраняется
+как result.output; ошибка CLI без report использует process output.
+
+**Проверка/e2e.** Восемь UI cases Windows PASS: sourced definition/references/
+rename, completion/diagnostics/correction, manual/save shfmt, args с пробелом/
+Unicode/cwd/stdout/stderr/exit 7 и успешный hotkey run, canonical/comment Bats,
+nearest/file/pass/fail/output, literal regex/Unicode, отсутствие tools и WSL.
+Startup fixture имеет положительный CLI контроль BASH_ENV; после него ни
+один редакторский запуск hook не исполнил. Все child shutdown завершились
+штатно. Финал .tests/windows-bash-final.txt; неизменённый baseline даёт RED
+на bashls ready и shfmt manual в source-red-lsp/format-final.
+
+Pinned Bash-LSP 5.8.1/npm lock, shfmt 3.14.1, ShellCheck 0.11.0, Bats 1.14.0
+и parser подготовлены явно на F:. Host Git Bash 5.2.37 и Node 24.11.0 только
+переиспользованы. Readiness после UI не скачивал и не менял manifest. 67 plugin
+pins и пять прежних backports неизменны. Прежний Windows регресс: 45 UI
+(Rust/Python/Node/Go/tests/smoke), 9 backport checks PASS; unit/trace 365 PASS.
+Source/hash/profile/prefix audit и strict OpenSpec PASS. Evidence:
+.tests/bash-language-evidence.json, команды — AGENT_COMMANDS §46.
+
+**Попытки, объясняющие итог.** Bashunit 0.49.0 и 0.53.0 запускали prefix
+соседа даже при file:line/file::name; anchored regex не поддерживается.
+Выбран Bats 1.14.0, исходные CLI FAIL сохранены. Bash grammar не понимает
+@test blocks; header shim тоже не дал надёжного дерева двух tests, поэтому
+использованы правила самого bats-preprocess. Несколько RunSpecs одного file
+делили process key Neotest; публичный fallback по test trees решает это без
+патча plugin. Anchored разбор PTY TAP давал failed при видимом ok; machine
+report убрал зависимость статуса от terminal transport. Дополнительная ручная
+проба `nvim -u NONE -i NONE -l .tests/bash-pty-proof.lua` на Windows записала
+в callback только control sequences, TAP появился в parent stdout; raw/json
+сохранены. Это bare headless диагностика, не отдельный UI PASS и не фикс SDK.
+Первое ожидание shfmt ошибочно требовало разбить допустимый one-line if;
+fixture сделана multiline для проверки отступов. cwd проверяется через native
+realpath, поскольку /tmp и /f могут обозначать один каталог. Эти уточнения
+проверки не объявляются исправлениями runtime.
+
+**Границы.** Ubuntu image/registry подготовлены, но engine probe 09:40:46 UTC
+вернул missing dockerDesktopLinuxEngine; lifecycle не менялся. Ubuntu/Mac/
+Bash 3.2/GUI не проверены. Bash DAP остаётся IDE-057 и не подменяется обычными
+tests. Исходная zsh/Go задержка IDE-001 этой работой не закрывается.
+
+**Вывод.** Языковой workflow доказывается действием в редакторе и реальным
+выводом. Машинный report отделён от terminal rendering, системные детали —
+от общей логики. Новых plugins и платформенных копий конфигурации нет.
+
+**Файлы:** forge/bash.lua, bash_host.lua, bats.lua, LSP/format/tasks/tests
+registrations; prepare_bash.py, bash-tools lock/SHA, fixtures/helper/UI E2E,
+Ubuntu image/registry, BASH_WORKFLOW и матрица/roadmap.
+
+## 117. Bash rename: URI aliases больше не стирают аргументы
+
+**Дата:** 2026-11-09. **Проблема:** IDE-058.
+**Спека:** IDE-SH-1 (ADDED), тот же add-bash-edit-run-tests.
+
+**Что было.** Настоящий F2 rename calculate_answer → twice_forge оставлял
+в use.sh `twice_forge` без аргументов 21 и 2. Definition/references уже работали.
+Исходный FAIL/artifact 9132154881700 и LSP reply сохранены.
+
+**Причина.** Bash-LSP 5.8.1 индексирует файл под URI с `%C3%BC`, Neovim
+открывает его с `%c3%bc`. Workspace edit возвращает оба ключа с одинаковыми
+правками. Диапазоны правильны, но второе применение после более короткого
+rename удаляет следующий текст. Это не ошибка границы symbol range.
+
+**Изменение.** Только Bash rename handler канонизирует file URI по native
+пути, объединяет edits одного файла и удаляет точные дубли. Разные edits
+сохраняются, затем вызывается стандартный обработчик Neovim.
+
+**Проверка/e2e.** Первый постоянный Bash UI case проверяет references двух
+вызовов и сохранённый rename library/обоих вызовов вместе с аргументами.
+Финальный config PASS; source replay промежуточного config без handler снова
+даёт RED `rename usages`, в snapshot аргументы исчезают. Source/hash audit
+сверяет конкретный config и оба percent-URI в reply; файл
+.tests/windows-bash-source-red-rename-final.txt. Ubuntu/Mac ещё не проверены.
+
+**Вывод.** Проверка rename должна сохранять окружающий текст, в том числе
+при Unicode путях; успешный LSP response сам по себе этого не гарантирует.
+**Файлы:** forge/bash.lua, bash-language.test.lua, spec scenario, docs/history.
+
+## 118. Trace: project fixtures отделены от самостоятельных suites
+
+**Дата:** 2026-11-09. **Проблема:** IDE-059, интеграция Bash E2E.
+
+**Что было.** Unit/trace дал пять FAIL «файл вне реестра» для use.sh/run.sh/
+complete.sh/format.sh/lib/math.sh в tests/e2e/fixtures/bash-language.
+Исходный .tests/windows-bash-unit-trace.txt и report сохранены.
+
+**Причина.** is_check_file считал любой .sh в tests/ отдельным набором;
+раньше shell source fixtures там не было. Регистрация этих файлов как suites
+неверно запускала бы данные проекта отдельными тестами.
+
+**Изменение.** Единственная явная граница данных tests/e2e/fixtures/ исключена
+из классификации suites; .sh/.test.lua вне неё по-прежнему требуют реестр.
+Имена/расширения настоящих Bash fixtures сохранены.
+
+**Проверка/e2e.** Новая selfcheck проверяет обе стороны границы; прежний
+mutation test по-прежнему ловит каждый незарегистрированный suite. Итог
+unit/trace: 365 checks, 15 файлов PASS; восемь Bash UI используют эти fixtures.
+**Вывод.** Реестр перечисляет executable suites, исходники проектов имеют
+отдельный документированный корень. **Файлы:** tests/lib/trace.lua,
+trace.test.lua, tests/README.md; тот же change интеграции Bash.

@@ -80,6 +80,10 @@ COPY tests/e2e/prepare_rust.py /opt/forge/tests/e2e/
 COPY tests/e2e/rust-tools/ /opt/forge/tests/e2e/rust-tools/
 RUN python3 /opt/forge/tests/e2e/prepare_rust.py --download --output /opt/forge/rust-deps
 ENV FORGE_E2E_RUST_DEPS=/opt/forge/rust-deps
+COPY tests/e2e/prepare_bash.py /opt/forge/tests/e2e/
+COPY tests/e2e/bash-tools/ /opt/forge/tests/e2e/bash-tools/
+RUN python3 /opt/forge/tests/e2e/prepare_bash.py --download --output /opt/forge/bash-deps --node-deps /opt/forge/node-deps
+ENV FORGE_E2E_BASH_DEPS=/opt/forge/bash-deps
 RUN useradd --create-home --uid 10001 forge
 ENV HOME=/home/forge
 USER forge

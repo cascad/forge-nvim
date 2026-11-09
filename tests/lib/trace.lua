@@ -49,6 +49,9 @@ M.CATEGORIES = {
 
 --- Файл проверок (по имени).
 function M.is_check_file(path)
+  -- Fixtures — исходники проектов под тестом, их запускает editor E2E.
+  -- Это не самостоятельные suites (в том числе Bash .sh/.test.lua data).
+  if path:match('^tests/e2e/fixtures/') then return false end
   return path:match('%.test%.lua$') ~= nil or path:match('%.sh$') ~= nil
 end
 

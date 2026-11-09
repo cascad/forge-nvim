@@ -2715,3 +2715,117 @@ manifest checksum проверен чтением, установка запла
 cross-compile не PASS; свежий offline sysroot metadata warning cfg-if сохранён.
 Ненужный draft каталог добавлен в F_CLEANUP_PATHS, ничего не удалялось;
 активные tools/.tools/editor-e2e и старые Docker данные сохраняются.
+
+## 46. Bash: native language/run/Bats и исходные воспроизведения
+
+2026-11-09, baseline 4b859b8. Рабочий каталог только F:/repo/forge-nvim;
+все shell tools вызываются с login:false. До команд, создающих temp:
+
+```powershell
+$env:TEMP='F:/repo/forge-nvim/.tests/tmp'
+$env:TMP=$env:TEMP
+$env:TMPDIR=$env:TEMP
+$env:NVIM_LOG_FILE="$env:TEMP/bash.log"
+$env:npm_config_cache='F:/forge-nvim-tmp/npm-cache'
+$env:PYTHONIOENCODING='utf-8'
+. ./scripts/lib/nvim-sdk.ps1
+$forgeNvim=Get-ForgeNvim (Get-Location).Path
+```
+
+Чтение: git status --short / git log -3 --oneline, rg --files и rg -n по
+runtime/tests/docs, Get-Content -TotalCount / Select-Object -Skip/-First,
+Get-Content <лог> -Tail. Результат инструмента — текст stdout/stderr,
+exit_code, время; session_id означает продолжающийся процесс, не PASS.
+Последующий write_stdin с пустым вводом только забирает его результат.
+Get-FileHash и Python hashlib читали SHA; Git diff --check проверял whitespace.
+
+OpenSpec context/list/status/instructions apply читались для
+add-bash-edit-run-tests; локальный root подтверждён на F:. Строгая проверка:
+
+```powershell
+npx.cmd --yes @fission-ai/openspec@1.13.2 validate add-bash-edit-run-tests --type change --strict --no-interactive
+```
+
+Версии/документация исследовались в официальных npm/GitHub releases/raw/
+codeload и исходниках закреплённых пакетов. Проверены Git Bash --version,
+cygpath, FIFO и MSYS symlink modes. PATH System32/bash.exe не исполнялся.
+Bashunit 0.49/0.53 CLI показали запуск prefix соседа; JSON command/result
+сохранены в .tests/bash-cli-*.json. Bats 1.14 exact regex проходит; lnk mode
+проверен без администратора. Это CLI proof, не PASS пользовательского UI.
+
+```powershell
+python -B tests/e2e/prepare_bash.py --download --nvim $forgeNvim > .tests/windows-bash-prepare-v2.txt 2>&1
+python -B tests/e2e/prepare_bash.py --nvim $forgeNvim > .tests/windows-bash-readiness.txt 2>&1
+& $forgeNvim -l tests/e2e/bash-language.test.lua > .tests/windows-bash-final.txt 2>&1
+```
+
+Первая команда явно готовит lock/SHA tools/parser, host SDK переиспользует.
+Вторая только проверяет готовность, в том числе после настоящих UI runs.
+Третья создаёт восемь private проектов и настоящий Neovim с 67 pinned plugins.
+RPC передаёт клавиши через nvim_input и наблюдает публичные LSP/cmp/
+diagnostics/Neotest/Overseer состояния. Подключён UI grid Neovim; доставка
+из WezTerm GUI проверяется отдельно. Видны screen.txt/snapshot.json,
+полный config-source/project/test/helper, LSP log, dependency SHA и shutdown.
+Никакие canned LSP ответы, mock runner или заранее собранные результаты
+не используются. TAP report Bats не проходит через PTY.
+
+Промежуточные FAIL v1–v6/pre-report сохранены. Среди них: IDE-058 duplicate
+rename, неверное первоначальное ожидание shfmt, cwd aliases, неподходящее
+Bash TS дерево Bats, общий process key нескольких specs и PTY TAP parsing.
+Попытки/причины/разделение harness и runtime записаны в FIXLOG §116–118.
+
+```powershell
+git archive --format=zip --output=.tests/bash-before-4b859b8.zip 4b859b8 nvim_forge
+Expand-Archive -LiteralPath .tests/bash-before-4b859b8.zip -DestinationPath .tests/bash-before-4b859b8 -Force
+$env:FORGE_E2E_CONFIG_SOURCE='F:/repo/forge-nvim/.tests/bash-before-4b859b8/nvim_forge'
+$env:FORGE_BASH_CASE='definition'
+& $forgeNvim -l tests/e2e/bash-language.test.lua
+```
+
+Тот же E2E на baseline даёт RED bashls ready; CASE=shfmt даёт RED formatting.
+Для IDE-058 config-source 9132154881700 без rename handler даёт RED rename
+usages, аргументы исчезают. Исходный config побайтно сверён с Git/source;
+финал проверен тем же тестом. Логи source-red-{lsp,format,rename}-final,
+результаты .tests/bash-final-results.json. Одноразовый run-bash-final.ps1
+последовательно выполнил GREEN и три ожидаемых RED. В Windows PowerShell 5
+redirect native stderr при ErrorActionPreference=Stop обрывает такой probe;
+для ожидаемых RED использован Continue и явное сравнение exit codes.
+Логи PS5 с BOM читаются как UTF-16; JSON/sources — по их фактической encoding.
+
+Ручная bare headless проба, без UI: `& $forgeNvim -u NONE -i NONE -l
+.tests/bash-pty-proof.lua`. Реальный jobstart pty/Bats exit 0, callback raw
+содержал control sequences, TAP появился в parent stdout. Сохранены
+.tests/bash-pty-proof.raw/.json; это наблюдение канала, не отдельный E2E PASS.
+
+Регресс выполнен последовательно, тяжёлые среды не запускались вместе:
+
+```powershell
+& $forgeNvim -l tests/e2e/rust-language.test.lua
+& $forgeNvim -l tests/e2e/python-language.test.lua
+& $forgeNvim -l tests/e2e/node-language.test.lua
+& $forgeNvim -l tests/e2e/go-language.test.lua
+& $forgeNvim -l tests/e2e/test-runner.test.lua
+& $forgeNvim -l tests/e2e/editor.test.lua
+& $forgeNvim -l tests/e2e/plugin-backports.test.lua
+& $forgeNvim -l tests/run.lua unit trace
+```
+
+Итог: 45 прежних UI + 9 backports PASS; первый trace FAIL сохранён отдельно,
+после fixture boundary и selfcheck — 365 checks PASS. Финальный Bash — 8 PASS.
+Source/hash/profile/67 pins/неизменные backports/FIXLOG prefix и повторная
+readiness проверены `python -B .tests/audit-bash-evidence.py`; итог
+.tests/bash-language-evidence.json. Исходные 485901 bytes FIXLOG имеют SHA
+6054491844937494fec8b8050928ef227d9d16671bb7d4e4607fa24b1e87d4ad.
+
+`docker version --format '{{json .Server}}'` — только read-only engine probe,
+.tests/bash-engine.json, 09:40:46 UTC, code 1/missing pipe. Lifecycle не менялся.
+Ubuntu Dockerfile дополнен; следующие команды пока не выполнялись:
+
+```powershell
+docker compose -f tests/containers/compose.yaml build ubuntu
+docker compose -f tests/containers/compose.yaml run --rm --entrypoint nvim ubuntu -l tests/e2e/bash-language.test.lua
+```
+
+Mac/Bash 3.2/GUI/DAP остаются открытыми; Bash DAP — IDE-057. Только локальный
+commit проверенного шага, без push. Активные tools и evidence сохраняются;
+прежний список ненужных F каталогов .tests/F_CLEANUP_PATHS.txt не удалялся.

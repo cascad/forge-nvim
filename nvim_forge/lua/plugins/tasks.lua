@@ -50,6 +50,7 @@ return {
             "OverseerTaskAction",
         },
         keys = {
+            { '<leader>jb', function() require('forge.bash').run_file() end, desc = 'Bash: run current file' },
             { '<leader>jn', function() require('forge.node').run_script() end, desc = 'Node: package script' },
             { '<leader>jN', function() require('forge.node').run_file() end, desc = 'Node: run current file' },
             { "<leader>jj", function() require("ide").apply_layout("jobs") end,  desc = "Jobs: panel" },
@@ -78,6 +79,7 @@ return {
             local overseer = require("overseer")
             local vscode = require("overseer.vscode")
             overseer.setup(opts)
+            vim.api.nvim_create_user_command('BashRunFile', function(args) require('forge.bash').run_file(args.fargs) end, {nargs='*',complete='file'})
             vim.api.nvim_create_user_command('NodeRun', function() require('forge.node').run_script() end, {})
             vim.api.nvim_create_user_command('NodeRunFile', function() require('forge.node').run_file() end, {})
 
