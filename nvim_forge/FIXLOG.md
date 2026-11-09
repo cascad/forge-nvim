@@ -5719,3 +5719,133 @@ node-language.test.lua/fixtures, editor snapshot helper, registry/Dockerfile;
 OpenSpec change/config; NODE_WORKFLOW/QUICKSTART/LANGUAGE_MATRIX/IDE_ROADMAP,
 PROBLEMS/HISTORY/AGENT_COMMANDS §43. Сверка source/RED/GREEN и прежнего prefix
 FIXLOG — .tests/node-language-evidence.json.
+
+## 112. Python: project venv и реальный workflow
+
+**Дата:** реализация и Windows E2E 2026-11-03; сверка и оформление 2026-11-09.
+**Спека:** IDE-PY-1 (ADDED), fix-python-project-interpreter;
+verify-python-language-workflow — tests/tooling, skip_specs.
+
+**Проблема.** IDE-052: Pyright не видел dependency, установленную только
+в неактивированном project .venv, хотя DAP/pytest использовали эту среду.
+Обычные definition/references/rename работали, а gd в dependency завершался
+No locations found. Положительный Python workflow ранее не был покрыт E2E.
+
+**Причина.** Выбор project Python существовал внутри DAP; Pyright не получал
+python.pythonPath и искал библиотеки в другом окружении. Наличие LSP client
+не доказывало доступность проектных dependencies.
+
+**Изменение.** forge.python.resolve вынес прежний порядок DAP: валидный
+forge_python_path/FORGE_PYTHON_PATH, VIRTUAL_ENV, CONDA_PREFIX, .venv/venv/.env/env
+в project roots, затем python3/python PATH. Системная граница — Scripts/bin
+и executable Conda. DAP передаёт прежние roots; Pyright before_init задаёт
+pythonPath по своему root, сохраняя явную настройку. Neotest сохраняет native
+resolver managers. Выбор не создаёт среду и не устанавливает инструменты.
+
+prepare_python.py явно готовит wheelhouse/tools venv, Pyright npm и Python
+parser. Host Python >=3.10 предоставляет машина; Windows проверен с 3.14.0.
+Зафиксированы pytest 9.2.0, debugpy 1.8.22, Ruff 0.17.3, Pyright 1.1.414,
+полные wheel/npm locks и hashes, grammar v0.25.0/SHA. Повтор без --download
+проверяет готовые данные. Native Node SDK переиспользован; Python SDK не ставится.
+Private project venv создаётся offline до UI; собственная dependency реально
+собирается в wheel, ставится pip и исполняется. Temp/build/pycache Windows на F:.
+
+**Проверка/e2e.** Постоянный python-language.test.lua проверяет multi-file
+definition/references/rename, gd в project site-packages, настоящий nvim_lsp
+completion, diagnostics/correction, сохранение explicit Python path и штатную
+LspPyrightSetPythonPath, Ruff manual/save, F5 default/project и реальный venv,
+stdout/stderr/breakpoint/eval/continue, pytest nearest/file/output/debug и отказ
+adapter (§113). Проект содержит пробел/Unicode. Snapshot исключает .venv/cache,
+но сохраняет source/locks/manifest/logs и результаты настоящего UI.
+
+Исходный runtime 6988af1 извлечён git archive без изменения lock67; lsp.lua,
+dap.lua и lock побайтово сверены с Git. Конечный source RED 14425984911000
+не находит dependency, settings не содержат pythonPath. Ранние RED
+11098768461700 и повтор Python v2 подтверждают тот же симптом. Конечный
+GREEN 14182018358300…14299729697900 — 8 PASS. Все runtime Lua и test/helper
+sources сверены с текущими; для test text учтена только нормализация CRLF/LF.
+
+Промежуточные ошибки теста сохранены: C-Space до готовности insert mapping,
+декорированный ordinal picker, сложная DAP table в RPC predicate, совпадение
+answer внутри calculate_answer и key notation для буквального <. Исправлены
+locators/waits, не поведение редактора. Длинный prefix переносится в terminal
+output: принадлежность venv подтверждается программой через сравнение Paths.
+Принятие explicit interpreter проверяется native message Pyright, не ожиданием
+диагностики; после штатной смены пути настоящий gd подтверждает project среду.
+
+Windows регресс: Node 8, Go language 6, Go tests 5, editor smoke 10 PASS;
+unit/trace 15 файлов и 364 checks PASS. Повтор без скачивания и strict validate
+трёх changes прошли. Это результаты прогона 2026-11-03, подтверждённые source
+audit 2026-11-09; новый полный прогон без изменения runtime не требовался.
+Ubuntu image дополнен подготовкой, но build/E2E не запускались: engine недоступен
+при чтении version 2026-11-09 07:40:31 UTC. Desktop/WSL не менялись.
+Ubuntu задачи остаются открытыми; Mac/GUI и managers отдельно не проверены.
+
+**Вывод.** Общий interpreter должен обеспечивать и семантику, и реальный запуск.
+Переход в установленную dependency и sys.prefix программы проверяют это сильнее,
+чем присутствие server в конфигурации.
+
+**Файлы:** forge/python.lua, plugins/lsp.lua/dap.lua; prepare_python.py,
+python-tools locks/sources, python-language.test.lua, python_project.lua/fixtures,
+registry/Dockerfile; OpenSpec changes/config и PYTHON_WORKFLOW/QUICKSTART,
+LANGUAGE_MATRIX/IDE_ROADMAP/PROBLEMS/HISTORY/AGENT_COMMANDS §44.
+Source audit: .tests/python-language-evidence.json.
+
+## 113. DAP: ожидаемый shutdown и настоящие ошибки adapter
+
+**Дата:** реализация и E2E 2026-11-03; сверка и оформление 2026-11-09.
+**Спека:** IDE-DAP-5 (ADDED), fix-dap-adapter-shutdown-warning.
+
+**Проблема.** IDE-053: pytest debug реально останавливался на breakpoint,
+eval возвращал 42, после continue pytest писал 1 passed и target exitCode=0.
+Затем возникал WARN adapter exited with 1; hit-enter перекрывал test result.
+
+**Причина.** Pinned nvim-dap при client close закрывает stdin и сам посылает
+SIGINT stdio adapter. Process callback вызывал onexit и предупреждал о любом
+nonzero code, не различая ожидаемый shutdown. Debugpy logs завершались штатно,
+stderr был пуст. Libuv на Windows реализует SIGINT завершением процесса;
+это подтверждено его документацией, а не предположением об ошибке Python 3.14.
+Артефакты 12313750968000/12489517786400 сохраняют protocol и process logs.
+
+**Изменение.** В process callback сохраняется closed ДО onexit. Если клиент
+уже инициировал close, ненулевой code не создаёт ложный WARN. Если process
+умер раньше запроса client close, прежние WARN/stderr сохраняются. Raw exit
+logging не переписывается. Transport, SDK, порядок сигналов/таймаутов не менялись.
+Это общий pin/SHA backport к nvim-dap 45a69eba683a2c448dd9ecfc4de89511f0646b5f,
+применяемый только явным Lazy build/prepare через существующий механизм.
+Существующей установке нужны :Lazy build nvim-dap и restart; startup source
+не переписывает. Отдельная Windows ветка и downgrade debugpy не понадобились.
+
+**Проверка/e2e.** Конечный permanent replay 14376411621700 восстанавливает
+exact before plugin source только в private copy до старта UI; SHA проверяются,
+global prepared deps остаются after. Настоящий pytest debug даёт source RED:
+target exit 0, adapter exit 1, WARN/hit-enter. GREEN 14281600243600 проходит
+breakpoint/eval/continue, ждёт реальный adapter process exit в log и настоящий
+Neotest result; ложного WARN нет, raw process code сохранён.
+
+Negative GREEN 14299729697900 задаёт публичную user adapter configuration:
+реальный Python process пишет FORGE_ADAPTER_FAILURE в stderr и выходит с 23.
+Запуск через project launch.json/F5 даёт прежний WARN, сохраняет stderr,
+закрывает session и позволяет отредактировать/сохранить файл. Протокол/server/
+handlers не подменяются: это контролируемый отказ настоящего subprocess.
+Первый negative setup менял override после загрузки DAP и запустил обычный
+adapter; второй запускал Python без args, который ждал EOF. Эти отказы тестового
+setup сохранены, final negative использует однозначный exit 23.
+
+Изолированный debugpy print нескольких аргументов мог перемежаться со stderr:
+fixture печатает целый marker/argument одним f-string. Это исправление тестового
+сообщения, не обещание порядка между двумя независимыми потоками.
+Logs берутся по сохранённым путям до cleanup даже при blocking prompt;
+неудачная RPC диагностика не стирает первичную ошибку.
+
+Windows: 8 Python + 29 прежних UI PASS, 364 unit/trace checks PASS, strict
+validate PASS. Ubuntu/Mac/GUI не проверены; engine недоступен. Первичные
+IDE-006 на Mac, IDE-047/048 и shell startup не объявляются исправленными.
+
+**Вывод.** Ошибка target, неожиданный отказ adapter и остановка по запросу
+frontend — разные события. Classification не должна превращать успешный test
+result в ошибку и должна сохранять настоящий failure.
+
+**Файлы:** patches/plugins.json, plugins/dap.lua build; Python E2E/helper,
+OpenSpec delta, пользовательские docs и AGENT_COMMANDS §44. Source/hash audit
+и сохранность прежнего FIXLOG prefix — .tests/python-language-evidence.json.

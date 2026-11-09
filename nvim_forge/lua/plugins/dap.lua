@@ -674,16 +674,6 @@ local function path_executable(name)
     return resolved ~= "" and resolved or name
 end
 
-local function python_in_env(env_dir)
-    if not env_dir or env_dir == "" then
-        return nil
-    end
-    if vim.fn.has("win32") == 1 then
-        return env_dir .. "/Scripts/python.exe"
-    end
-    return env_dir .. "/bin/python"
-end
-
 local function debugpy_adapter_in_env(env_dir)
     if not env_dir or env_dir == "" then
         return nil
@@ -735,40 +725,7 @@ local function python_project_roots()
 end
 
 local function project_python()
-    local explicit = executable_path(path_from_env_or_global("forge_python_path", "FORGE_PYTHON_PATH"))
-    if explicit then
-        return explicit
-    end
-
-    local venv = vim.env.VIRTUAL_ENV
-    local venv_python = executable_path(python_in_env(venv))
-    if venv_python then
-        return venv_python
-    end
-
-    local conda = vim.env.CONDA_PREFIX
-    local conda_python = executable_path(
-        conda and (vim.fn.has("win32") == 1 and (conda .. "/python.exe") or (conda .. "/bin/python"))
-    )
-    if conda_python then
-        return conda_python
-    end
-
-    for _, root in ipairs(python_project_roots()) do
-        for _, folder in ipairs({ ".venv", "venv", ".env", "env" }) do
-            local candidate = executable_path(python_in_env(root .. "/" .. folder))
-            if candidate then
-                return candidate
-            end
-        end
-    end
-
-    local from_path = path_executable("python3") or path_executable("python")
-    if from_path then
-        return from_path
-    end
-
-    return "python"
+    return require('forge.python').resolve(python_project_roots())
 end
 
 local function debugpy_adapter_executable()
@@ -1179,6 +1136,8 @@ return {
     -- =====================================================================
     {
         "mfussenegger/nvim-dap",
+        commit = require('ide.backports').revision('nvim-dap'),
+        build = function(plugin) require('ide.backports').run('nvim-dap', plugin.dir, 'apply') end,
         dependencies = {
             "rcarriga/nvim-dap-ui",                -- см. plugins/dap-ui.lua
             "theHamsta/nvim-dap-virtual-text",

@@ -493,6 +493,7 @@ return {
 
             -- ----------- pyright -----------
             vim.lsp.config("pyright", {
+                before_init = require('forge.python').before_pyright_init,
                 settings = {
                     python = {
                         analysis = {

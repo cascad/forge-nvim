@@ -4,7 +4,7 @@ FROM ubuntu:24.04@sha256:fe81560990fae86dc4743202b2cb4d3df98d0bcf949173cecef15ce
 ARG TARGETARCH
 ENV DEBIAN_FRONTEND=noninteractive
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    bash ca-certificates curl git python3 ripgrep fd-find unzip gcc libc6-dev \
+    bash ca-certificates curl git python3 python3-venv ripgrep fd-find unzip gcc libc6-dev \
     && rm -rf /var/lib/apt/lists/*
 # Официальные assets v0.12.2 и SHA256:
 # https://github.com/neovim/neovim/releases/expanded_assets/v0.12.2
@@ -54,6 +54,11 @@ COPY tests/e2e/prepare_node.py /opt/forge/tests/e2e/
 COPY tests/e2e/node-tools/ /opt/forge/tests/e2e/node-tools/
 RUN python3 /opt/forge/tests/e2e/prepare_node.py --download --output /opt/forge/node-deps
 ENV FORGE_E2E_NODE_DEPS=/opt/forge/node-deps
+COPY tests/e2e/prepare_python.py /opt/forge/tests/e2e/
+COPY tests/e2e/python-tools/ /opt/forge/tests/e2e/python-tools/
+COPY tests/e2e/fixtures/python-language/dependency/ /opt/forge/tests/e2e/fixtures/python-language/dependency/
+RUN python3 /opt/forge/tests/e2e/prepare_python.py --download --output /opt/forge/python-deps --node-deps /opt/forge/node-deps
+ENV FORGE_E2E_PYTHON_DEPS=/opt/forge/python-deps
 RUN useradd --create-home --uid 10001 forge
 ENV HOME=/home/forge
 USER forge

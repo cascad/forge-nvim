@@ -10,7 +10,7 @@
 
 Маршрут и приоритеты: [рабочий план nvim_forge](docs/IDE_ROADMAP.md).
 Для новых пунктов используем следующий свободный ID `IDE-xxx`; исходный
-симптом хранится здесь, этап и состояние — в плане. Следующий ID: `IDE-051`.
+симптом хранится здесь, этап и состояние — в плане. Следующий ID: `IDE-054`.
 
 ## IDE-048 — completed Gitsigns E2E не дождался следующего Git-read
 
@@ -472,6 +472,18 @@ Windows не срабатывают. Решить: псевдонимы в nvim_
 
 
 <!-- ────────── разобрано (переехало в nvim_forge/FIXLOG.md) ────────── -->
+
+IDE-053 → [FIXLOG §113](nvim_forge/FIXLOG.md#113-dap-ожидаемый-shutdown-и-настоящие-ошибки-adapter):
+успешный pytest debug перекрывался WARN adapter exit 1 после client close.
+Pin/SHA backport различает запрошенную остановку и неожиданный отказ;
+raw exit остаётся в логе, настоящий exit 23/stderr виден. Исходный source RED
+14376411621700, Windows GREEN 14281600243600/14299729697900; Ubuntu/Mac открыты.
+
+IDE-052 → [FIXLOG §112](nvim_forge/FIXLOG.md#112-python-project-venv-и-реальный-workflow):
+Pyright не получал project interpreter и не находил dependency в неактивированном
+.venv. Общий selector LSP/DAP задаёт pythonPath до initialize и сохраняет
+explicit setting. Исходный runtime 6988af1 RED 14425984911000; 8 Python UI
+Windows PASS, включая definition в site-packages. Ubuntu/Mac открыты.
 
 IDE-051 → [FIXLOG §111](nvim_forge/FIXLOG.md#111-node-язык-задачи-debug-и-jest):
 Neotest nearest не находит обнаруженные тесты при разных разделителях пути

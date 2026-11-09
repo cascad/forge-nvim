@@ -542,3 +542,13 @@ TypeScript, Prettier и Jest имеют приоритет над общими t
 Space d e — eval. Jest: Space T t / T f / T d — nearest / file / debug.
 Панели: Space w b — Tasks, w t — Tests, w r — Test Output, w c — DAP Output.
 Установка, ограничения и все команды: [Node workflow](../docs/NODE_WORKFLOW.md).
+
+## Python project venv
+
+Project .venv используется и Pyright, и Python DAP без shell activation.
+Для LSP нужны доступные Pyright/Ruff, для tests/debug — pytest/debugpy в среде.
+Общий override interpreter: forge_python_path/FORGE_PYTHON_PATH; явный
+settings.python.pythonPath сохраняется. После обновления выполнить
+`:Lazy build nvim-dap` и restart: подготовится pin/SHA патч ложного WARN после
+ожидаемого закрытия adapter. Реальные неожиданные adapter ошибки остаются видимыми.
+Полная подготовка и команды: [Python workflow](../docs/PYTHON_WORKFLOW.md).

@@ -830,3 +830,43 @@ IDE-051 replay: FORGE_NODE_CASE=nearest/file и FORGE_NODE_NEAREST_LEGACY=1
 старта редактора. SHA до/после проверяются; global prepared source не меняется.
 Конечный постоянный тест даёт исходный RED «No tests found» при двух обнаруженных
 позициях; без legacy — GREEN. История/команды: FIXLOG §111 и AGENT_COMMANDS §43.
+
+## Python: project venv, Pyright, Ruff, debugpy и pytest
+
+Сначала подготовить общие plugins и Node SDK по разделам выше. На Windows
+использовать Neovim SDK из scripts/lib/nvim-sdk.ps1 и TEMP/TMP/TMPDIR на F:.
+Python предоставляет целевая машина (>=3.10); preparer не устанавливает SDK.
+
+```sh
+python -B tests/e2e/prepare_python.py --download --nvim <nvim>
+python -B tests/e2e/prepare_python.py --nvim <nvim>
+<nvim> -l tests/e2e/python-language.test.lua
+```
+
+На macOS/Ubuntu — python3. Проверенный Windows Python 3.14.0; Pyright 1.1.414,
+pytest 9.2.0, debugpy 1.8.22, Ruff 0.17.3. В tests/e2e/python-tools сохранены
+полные wheel/npm locks и SHA. Tool venv, wheelhouse, parser и caches находятся
+в .tests/python-deps. Повтор без --download проверяет готовность без установки.
+Переопределение: --output и FORGE_E2E_PYTHON_DEPS; Windows output на диске checkout.
+
+Private Unicode/space project получает настоящий .venv offline из wheelhouse,
+включая отдельно собранную локальную dependency. Venv не активируется в shell.
+Восемь UI E2E проверяют LSP navigation/rename/completion/diagnostics, определение
+в site-packages, сохранение explicit Python setting, Ruff manual/on-save,
+F5 default/launch.json, breakpoint/eval/continue/stdout/stderr, pytest nearest/
+file/output/debug и неожиданный adapter exit. Используются реальные процессы.
+Snapshots сохраняют source/locks/manifest/logs/shutdown, исключая venv/cache.
+Подробное поведение и команды пользователя — [Python workflow](../../docs/PYTHON_WORKFLOW.md).
+
+IDE-052 исходный runtime 6988af1 воспроизводится через FORGE_E2E_CONFIG_SOURCE
+и FORGE_PYTHON_CASE='LSP definition'. IDE-053: FORGE_PYTHON_CASE='pytest debug'
+и FORGE_PYTHON_DAP_LEGACY=1 восстанавливают исходный pinned session.lua в private
+plugin copy до startup; SHA проверяется, общая подготовка не меняется.
+Оба окончательных теста дают исходный RED; с исправлениями GREEN. Настоящий
+adapter exit 23/stderr по-прежнему даёт WARN и не блокирует редактирование.
+
+Windows: 8 Python PASS, Node 8 + Go language 6 + Go tests 5 + smoke 10 PASS,
+364 unit/trace checks PASS. Запуски 2026-11-03, source/hash audit 2026-11-09.
+Ubuntu image дополнен preparer, но не собран: engine недоступен при read-only
+проверке 2026-11-09. Docker Desktop/WSL не запускались. Mac/GUI и managed
+Python env отдельно не проверены. История/команды: FIXLOG §112–113, AGENT_COMMANDS §44.

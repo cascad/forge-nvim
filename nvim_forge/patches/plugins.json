@@ -49,5 +49,14 @@
     "after_sha256": "efe8c689c57f013cffda369d44626b4877e7bd5bbecad8e477a327f38bdc3b80",
     "before": "function neotest.run.get_tree_from_args(args, store)\n  args = args or {}\n  if type(args) == \"string\" then\n    args = { args }\n  end\n  local tree, adapter = (function()\n    if args.suite then\n      if not args.adapter then\n        args.adapter = client:get_adapters()[1]\n      end\n      return client:get_position(nil, args)\n    end\n    if args[1] then\n      local position_id = lib.files.path.real(args[1]) or args[1]\n      return client:get_position(position_id, args)\n    end\n    local file_path = nio.fn.expand(\"%:p\")\n    local row = nio.fn.getpos(\".\")[2] - 1\n    return client:get_nearest(file_path, row, args)\n  end)()\n  if tree and store then\n    last_run = { tree:data().id, vim.tbl_extend(\"keep\", args, { adapter = adapter }) }\n  end\n  return tree\nend\n",
     "after": "function neotest.run.get_tree_from_args(args, store)\n  args = args or {}\n  if type(args) == \"string\" then\n    args = { args }\n  end\n  local tree, adapter = (function()\n    if args.suite then\n      if not args.adapter then\n        args.adapter = client:get_adapters()[1]\n      end\n      return client:get_position(nil, args)\n    end\n    if args[1] then\n      local position_id = (vim.uv or vim.loop).fs_realpath(args[1]) or lib.files.path.real(args[1]) or args[1]\n      return client:get_position(position_id, args)\n    end\n    local file_path = nio.fn.expand(\"%:p\")\n    file_path = (vim.uv or vim.loop).fs_realpath(file_path) or file_path\n    local row = nio.fn.getpos(\".\")[2] - 1\n    return client:get_nearest(file_path, row, args)\n  end)()\n  if tree and store then\n    last_run = { tree:data().id, vim.tbl_extend(\"keep\", args, { adapter = adapter }) }\n  end\n  return tree\nend\n"
+  },
+  "nvim-dap": {
+    "id": "IDE-053-dap-expected-adapter-exit",
+    "revision": "45a69eba683a2c448dd9ecfc4de89511f0646b5f",
+    "file": "lua/dap/session.lua",
+    "before_sha256": "425625856ebd6af275cd49a9aade0b1cfed841912f4183ac1292c33d828ef35e",
+    "after_sha256": "c9d6b6310096607060f15f8c0a2860bf6e819630dbac29de69e3daf369846a6a",
+    "before": "    log:info('Process exit', adapter.command, code, pid_or_err)\n    onexit()\n    if code == 0 then\n",
+    "after": "    log:info('Process exit', adapter.command, code, pid_or_err)\n    -- Клиент сам закрывает stdio и посылает сигнал; это ожидаемый shutdown.\n    local stopped_by_client = closed\n    onexit()\n    if code == 0 or stopped_by_client then\n"
   }
 }

@@ -2461,3 +2461,119 @@ docker compose -f tests/containers/compose.yaml run --rm --entrypoint nvim ubunt
 docker compose -f tests/containers/compose.yaml run --rm --entrypoint nvim ubuntu -l tests/e2e/test-runner.test.lua
 docker compose -f tests/containers/compose.yaml run --rm --entrypoint nvim ubuntu -l tests/e2e/editor.test.lua
 ```
+
+## 44. Python: venv, реальные tools и lifecycle adapter
+
+Реализация/прогоны 2026-11-03, после возобновления source audit 2026-11-09.
+Ниже команды этого шага; всё выполняется из F:/repo/forge-nvim в PowerShell
+без загрузки профиля. Нужен host Python >=3.10, здесь 3.14.0; Python SDK
+не скачивается. Node SDK уже явно подготовлен по §43. Тяжёлые suite идут
+последовательно. Результат команды — exit code и текст в указанном файле.
+
+```powershell
+$env:TEMP='F:\repo\forge-nvim\.tests\tmp'
+$env:TMP=$env:TEMP
+$env:TMPDIR=$env:TEMP
+$env:NVIM_LOG_FILE=Join-Path $env:TEMP 'python-language-nvim.log'
+$env:npm_config_cache='F:\forge-nvim-tmp\npm-cache'
+$env:PYTHONIOENCODING='utf-8'
+. ./scripts/lib/nvim-sdk.ps1
+$forgeNvim=Get-ForgeNvim (Get-Location).Path
+python -B tests/e2e/prepare_editor.py --download --nvim $forgeNvim
+python -B tests/e2e/prepare_python.py --download --nvim $forgeNvim
+python -B tests/e2e/prepare_python.py --nvim $forgeNvim
+& $forgeNvim -l tests/e2e/python-language.test.lua > .tests/windows-python-language-final-v2.txt 2>&1
+& $forgeNvim -l tests/e2e/node-language.test.lua > .tests/windows-python-regression-node.txt 2>&1
+& $forgeNvim -l tests/e2e/go-language.test.lua > .tests/windows-python-regression-go-language.txt 2>&1
+& $forgeNvim -l tests/e2e/test-runner.test.lua > .tests/windows-python-regression-go-tests.txt 2>&1
+& $forgeNvim -l tests/e2e/editor.test.lua > .tests/windows-python-regression-smoke.txt 2>&1
+& $forgeNvim -l tests/run.lua unit trace > .tests/windows-python-unit-trace.txt 2>&1
+```
+
+Preparer проверяет wheel/npm lock/hash, tool venv, offline dependency wheel,
+parser и manifest; без --download не устанавливает tools. Private project
+venv создаётся до UI без сети, получает dependency только в site-packages.
+Снимки не копируют .venv/pycache; source/locks/logs/manifest сохраняются.
+Все parser build outputs/cache/temp остаются на F:. Есть user guide
+[PYTHON_WORKFLOW.md](PYTHON_WORKFLOW.md), включая явный :Lazy build nvim-dap.
+
+IDE-052: точный nvim_forge из git archive 6988af1 распакован Python zipfile
+в .tests/python-before-6988af1 (перед извлечением проверяются относительные
+пути архива). lsp.lua, dap.lua и lazy-lock.json сверены побайтно с git show,
+67 pins не подменяются. Окончательный постоянный E2E на исходном runtime:
+
+```powershell
+$env:FORGE_E2E_CONFIG_SOURCE='F:/repo/forge-nvim/.tests/python-before-6988af1/nvim_forge'
+$env:FORGE_PYTHON_CASE='LSP definition'
+try {
+    & $forgeNvim -l tests/e2e/python-language.test.lua > .tests/windows-python-interpreter-final-source-red.txt 2>&1
+    if ($LASTEXITCODE -ne 1) { throw 'Ожидался исходный RED с кодом 1' }
+} finally {
+    Remove-Item Env:FORGE_E2E_CONFIG_SOURCE,Env:FORGE_PYTHON_CASE -ErrorAction SilentlyContinue
+}
+```
+
+Artifact 14425984911000: Pyright settings без pythonPath, реальный unresolved
+import и отсутствие definition в project venv. Исходный RED IDE-053:
+
+```powershell
+$env:FORGE_PYTHON_CASE='pytest debug'
+$env:FORGE_PYTHON_DAP_LEGACY='1'
+try {
+    & $forgeNvim -l tests/e2e/python-language.test.lua > .tests/windows-python-dap-final-source-red.txt 2>&1
+    if ($LASTEXITCODE -ne 1) { throw 'Ожидался исходный RED с кодом 1' }
+} finally {
+    Remove-Item Env:FORGE_PYTHON_CASE,Env:FORGE_PYTHON_DAP_LEGACY -ErrorAction SilentlyContinue
+}
+```
+
+Helper восстанавливает точный before SHA session.lua только в private copy
+до запуска редактора; общий prepared plugin не меняется. Artifact
+14376411621700: test exit 0, adapter raw exit 1 и ложный WARN. В GREEN
+14281600243600 остаётся raw exit 1 в dap.log, но после client close нет WARN.
+Отдельный настоящий Python subprocess пишет FORGE_ADAPTER_FAILURE в stderr
+и выходит 23: artifact 14299729697900 сохраняет WARN/лог и возможность edit/save.
+Это контролируемый отказ процесса, без подмены DAP протокола.
+
+Финальные 8 Python artifacts: 14182018358300, 14198701240900, 14214853743900,
+14230668924400, 14246208419100, 14264782000800, 14281600243600, 14299729697900.
+Прежний регресс: Node 8, Go language 6, Go tests 5, smoke 10 checks в одной
+editor session; всего 29 сценариев, 20 sessions. Unit/trace: 15 файлов,
+364 checks PASS (.tests/python-unit-trace-report.json). Ранние FAIL сохранены
+и разобраны в FIXLOG §112–113; повтор PASS не заменяет source RED.
+
+```powershell
+python -B .tests/python-evidence-audit.py
+npx.cmd --yes @fission-ai/openspec@1.13.2 list --json
+npx.cmd --yes @fission-ai/openspec@1.13.2 status --change verify-python-language-workflow --json
+npx.cmd --yes @fission-ai/openspec@1.13.2 instructions apply --change verify-python-language-workflow --json
+npx.cmd --yes @fission-ai/openspec@1.13.2 validate verify-python-language-workflow --type change --strict --no-interactive
+npx.cmd --yes @fission-ai/openspec@1.13.2 validate fix-python-project-interpreter --type change --strict --no-interactive
+npx.cmd --yes @fission-ai/openspec@1.13.2 validate fix-dap-adapter-shutdown-warning --type change --strict --no-interactive
+```
+
+status/instructions прочитаны также для обоих fix changes. Source audit
+сверяет runtime/lock/backports во всех GREEN с текущим деревом, окончательные
+test/helper, исходные before SHA, настоящий negative exit/stderr, результат
+unit/trace и неизменный prefix старого FIXLOG; единственная нормализация текста
+— CRLF/LF теста. Результат .tests/python-language-evidence.json. Чтение файлов
+через rg/Get-Content, diff/status/log через git, структурированные отчёты/hash
+через Python: те же read-only формы, что в предыдущих разделах.
+
+Read-only Docker probe 2026-11-09T07:40:31.982157Z: code 1, pipe
+dockerDesktopLinuxEngine отсутствует; .tests/python-resume-engine.json,
+lifecycle_changed=false. Desktop/WSL не запускались/не менялись. Ниже команды
+для уже работающего engine, они в этом шаге не выполнялись:
+
+```powershell
+docker compose -f tests/containers/compose.yaml build ubuntu
+docker compose -f tests/containers/compose.yaml run --rm --entrypoint nvim ubuntu -l tests/e2e/python-language.test.lua
+docker compose -f tests/containers/compose.yaml run --rm --entrypoint nvim ubuntu -l tests/e2e/node-language.test.lua
+docker compose -f tests/containers/compose.yaml run --rm --entrypoint nvim ubuntu -l tests/e2e/go-language.test.lua
+docker compose -f tests/containers/compose.yaml run --rm --entrypoint nvim ubuntu -l tests/e2e/test-runner.test.lua
+docker compose -f tests/containers/compose.yaml run --rm --entrypoint nvim ubuntu -l tests/e2e/editor.test.lua
+```
+
+Ubuntu остаётся открытой задачей трёх changes. Mac/GUI/managed Python env
+не проверены; запуск на Mac отдельно обеспечивает владелец. Старый baseline
+добавлен в ignored список ручной очистки F:, доказательства и tools сохранены.

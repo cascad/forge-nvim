@@ -1,7 +1,7 @@
 # Матрица языков nvim_forge
 
 Первичный срез 2026-11-02, runtime commit `657ab41`; обновление 2026-11-03
-добавляет Go language (§110) и Node workflow (§111) E2E Windows. «Настроено» означает запись
+добавляет Go language (§110), Node (§111) и Python (§112–113) E2E Windows. «Настроено» означает запись
 в сборке; установленный binary, запуск server и корректность его ответа ещё
 требуют E2E. Windows/macOS/Ubuntu используют одну языковую конфигурацию.
 
@@ -9,7 +9,7 @@
 |---|---|---|---|---|
 | Go | gopls, если доступен в PATH | golines → gofumpt, LSP fallback | Delve; neotest-golang/gotestsum | DAP/tests/панели Windows/Ubuntu; 6 новых LSP/format UI E2E Windows PASS. Ubuntu language ожидает engine; Mac не проверен |
 | Rust | rust_analyzer, если binary доступен | rustfmt, LSP fallback | codelldb + cargo build; neotest-rust | Отсутствующий codelldb проверен; положительный Rust debug/test и семантический LSP ещё не покрыты |
-| Python | pyright и ruff, если binaries доступны | ruff_organize_imports → ruff_format | debugpy; neotest-python/pytest | Есть настройка project Python/venv; положительные Python LSP/debug/test E2E ещё не покрыты |
+| Python | pyright/ruff; общий project Python selector для Pyright/DAP | ruff_organize_imports → ruff_format | debugpy default/launch.json; neotest-python/pytest | 8 real UI E2E Windows PASS: venv dependency, LSP, explicit path, format/save, default/project debug, pytest/debug, unexpected adapter exit. Ubuntu/Mac не проверены |
 | JS / Node.js | ts_ls через Node/TSLS, только при доступных tools; auto typings download отключён | Project-local Prettier, LSP fallback | NodeRun/File → Tasks; js-debug default/launch.json; Neotest Jest | 8 real UI E2E Windows PASS: язык/format/run/debug/nearest/file/debug test/missing tools. Ubuntu/Mac не проверены |
 | Bash | Явной активации shell server нет | Языкового formatter для sh/bash нет | Shell debug/test adapter не настроен | Проверки наших shell scripts не являются Bash IDE E2E |
 | SQL | Явной активации SQL server нет | Языкового SQL formatter нет | Выполнение запросов и test adapter не настроены | SQL IDE E2E нет; dialect/connection workflow ещё не определён |
@@ -26,7 +26,9 @@ Treesitter list содержит Go/Rust/Python/JS/TS/Bash; SQL в явном с
 Это список для явной подготовки, не доказательство наличия всех parsers на
 машине. Подготовка текущих test-deps собирает Go parser и gotestsum;
 dap-tools готовит Go/Delve; lsp-deps — фиксированные gopls/gofumpt для language
-E2E; node-deps — Node/TSLS/TypeScript/Prettier/Jest/js-debug и JS parser.
+E2E; node-deps — Node/TSLS/TypeScript/Prettier/Jest/js-debug и JS parser;
+python-deps — pinned wheelhouse/tools venv, Pyright и Python parser, host SDK
+предоставляет машина. Python E2E проверен с CPython 3.14.0 Windows.
 Изолированные tests не подтверждают наличие
 остальных инструментов в пользовательском профиле.
 
@@ -54,8 +56,11 @@ E2E; node-deps — Node/TSLS/TypeScript/Prettier/Jest/js-debug и JS parser.
    Native argv/literal test paths и canonical Neotest nearest исправляют
    Windows пути без отдельного runtime под ОС. Ubuntu ожидает engine;
    Mac/браузер/TS transpilation/source maps/другие test frameworks не проверены.
-3. Rust/Python: подтвердить уже имеющийся функционал положительными
-   Cargo workspace и venv/pytest сценариями, затем исправлять доказанные сбои.
+3. Python Windows проверен: [venv/LSP/debug/pytest](PYTHON_WORKFLOW.md), 8 UI PASS.
+   IDE-052 согласует Pyright и DAP interpreter; IDE-053 убирает ложный WARN
+   после client-initiated adapter close, неожиданный exit 23/stderr остаётся видим.
+   Ubuntu/Mac и managers Poetry/Pipenv/Conda остаются отдельной проверкой.
+   Следующий language шаг — положительный Rust/Cargo workspace сценарий.
 4. Bash и SQL: добавить минимальные рабочие сценарии с E2E. У SQL отдельно
    определить dialect/профиль выполнения; DAP не является обязательным
    аналогом отладки исполняемой программы. До выбора инструментов сверить
