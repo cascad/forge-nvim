@@ -3269,3 +3269,33 @@ Stop-Process применён только к этому process object; зат�
 editor_runtime.remove повторно удалил own профиль. Ни общего taskkill, ни
 остановки чужого Cargo/Nvim не было. Новый isolated integration PASS не
 заменяет lifecycle fix; он следующий перед закрытием integration task.
+
+## 52. План IDE-075: lifetime собственных test workers, 2026-11-09
+
+После SQL UI commit eeae06c код процесса не менялся. Прочитаны текущие
+editor_rpc/editor_process/editor_runtime, их настоящие E2E и предыдущий
+fix-editor-test-runtime. Read-only Microsoft Job Objects/limits/accounting
+и libuv process docs сопоставлены с локальным vim.system detach help.
+
+Все shell commands login:false; TEMP/TMP/TMPDIR на F:/repo/forge-nvim/.tests/tmp,
+npm_config_cache=F:/forge-nvim-tmp/npm-cache. OpenSpec 1.13.2:
+
+```powershell
+npx.cmd --yes @fission-ai/openspec@1.13.2 context --json
+npx.cmd --yes @fission-ai/openspec@1.13.2 new change fix-editor-descendant-lifetime
+npx.cmd --yes @fission-ai/openspec@1.13.2 instructions proposal --change fix-editor-descendant-lifetime --json
+npx.cmd --yes @fission-ai/openspec@1.13.2 instructions design --change fix-editor-descendant-lifetime --json
+npx.cmd --yes @fission-ai/openspec@1.13.2 instructions tasks --change fix-editor-descendant-lifetime --json
+npx.cmd --yes @fission-ai/openspec@1.13.2 status --change fix-editor-descendant-lifetime --json
+npx.cmd --yes @fission-ai/openspec@1.13.2 validate fix-editor-descendant-lifetime --type change --strict --no-interactive
+```
+
+JSON/logs сохранены в .tests/descendants-*. Change test-only, skip_specs=true;
+proposal/design/tasks готовы, strict valid. Это проверка плана, не runtime
+GREEN: все 6 implementation/platform tasks открыты. Следующий запуск —
+постоянный orphan/file-lock E2E с source eeae06c RED. Windows backend — job,
+POSIX — отдельная process group с явно записанной границей detached sessions;
+реальные language workers/ConPTY требуют своей проверки до platform PASS.
+Docker/WSL и системные настройки не менялись. git diff --check и точные staged
+paths проверяются перед локальным docs commit; runtime tests не повторялись
+после изменений только плановых Markdown файлов.

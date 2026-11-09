@@ -25,6 +25,11 @@
 границе, без выключения настоящего анализа/подмены tests. Полный integration
 gate остаётся открытым. История FIXLOG §135.
 
+Постоянное исправление запланировано отдельно:
+[fix-editor-descendant-lifetime](openspec/changes/fix-editor-descendant-lifetime/tasks.md).
+Общий process scope с системными backend и постоянным orphan/file-lock E2E;
+наличие плана не означает, что lifecycle уже исправлен.
+
 ## IDE-074 — Rust default F5: редкий CodeLLDB timeout после runInTerminal
 
 2026-11-09: Rust batch 7 PASS/1 FAIL (30484781261100), default F5.

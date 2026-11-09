@@ -29,6 +29,12 @@ IDE-001 параллельно ждёт диагностических данн�
 ждут измерений/GUI на Mac. Сборщик startup готов; после trace исправляется
 конкретный инициатор. Windows и Ubuntu не заменяют такую проверку.
 
+SQL Tests Windows шаг сохранён в `eeae06c`; общий regression gate остаётся
+открытым. Ближайшее исправление IDE-075 оформлено отдельным
+[планом process lifecycle](../openspec/changes/fix-editor-descendant-lifetime/tasks.md):
+сначала целевой source RED orphan/file-lock, затем общий scope, системные
+backend и настоящий Rust regression. Это текущая точка продолжения.
+
 **Ограничение текущего шага:** полный Ubuntu IDE-047 — 43 PASS/1 FAIL/3 SKIP,
 653 checks. Cleanup/процессные проверки прошли; новый FAIL ожидания Git-read
 зарегистрирован IDE-048. Он не становится PASS и не объявляется исправлением
