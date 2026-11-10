@@ -7739,3 +7739,62 @@ Windows cleanup использует собственный Job Object, root PID
 
 **Файлы:** PROBLEMS.md, docs/IDE_ROADMAP.md, docs/HISTORY.md,
 docs/AGENT_COMMANDS.md; runtime Docker/WSL не изменён.
+
+
+## 155. Поиск окна кода: native обзор и разные обязанности
+
+2026-11-10. IDE-080; найден IDE-088.
+Change review-code-window-ownership, skip_specs=true: диагностический
+инструмент и документация; product Lua/SDK/67 pins не меняются.
+
+**Проблема/вопрос.** После Output policy проверить, можно ли убрать три
+разных поиска окна кода без изменения focus/create/relocate/restore.
+По одним похожим названиям функции казались дублированием.
+
+**Причина различий.** State принимает обычный не-floating buffer и умеет
+создать main split; activities только ищет/focus, но исключает лишь nofile/
+prompt и часть tool filetypes. Guard выбирает цель переноса, исключает markers/
+Edgy, предпочитает clean main, затем крупнейшее editor-окно; не создаёт split.
+Tool таблицы используются также session cleanup и buffer-only relocation,
+поэтому замена общего списка меняет больше, чем focus.
+
+**Что сделано.** Добавлен bounded native tests/diagnostics/code-window.lua,
+таблица обязанностей и сценариев в docs/CODE_WINDOW_REVIEW.md. Probe не
+оборачивает API и не подменяет session. По одному private profile на normal,
+float-only, terminal-only, live-marker, session-winfix; public guard.sweep и
+Persistence.load, копия native session-файла. Для legacy fixture прямой
+Persistence.save после localoptions сохраняет winfix, SavePre cleanup
+сознательно не вызывается. Это проверка загрузки такого native файла, не autosave.
+
+**Проверка.** Source 7fe45bc; Windows и Ubuntu по 5 финальных native profiles.
+Normal два файла: одинаковый первый main, без создания лишнего split.
+Float-only: activities выбирает floating файл, state создаёт normal main.
+Настоящий PTY: activities выбирает terminal до и после создания отдельного
+main; F7 подтверждённо переводит в main, Space m d открывает реальные Debug
+панели и возвращает фокус в terminal. Это IDE-088, пока не исправлен и ещё
+не оформлен как постоянный assertion RED; diagnostic process success не
+равен исправлению наблюдённого поведения.
+Live marker: state считает окно main, public guard переносит файл и закрывает
+marked source. Native session с winfix: реальный LoadPost показывает два файла/
+winfix; после штатных callbacks одно code окно без winfix + Explorer, оба
+файловых buffers загружены. Синхронные и settled 200–250 ms снимки различаются.
+
+10 финальных profiles: native exit/signal=0, api_errors=[], полная native quit
+цепочка, own scopes empty. По 63 runtime/pin/patch источника каждого profile
+совпадают с checkout, source probe также сверен. IDs, поля и команды в обзоре;
+.tests/audit-code-window.py и code-window-evidence.json — сводный аудит.
+Первый Windows пилот из 5 profiles использовался для выбора дополнительного
+настоящего F7/md действия; финальные 5 повторены после этого изменения probe.
+Windows/Ubuntu тяжёлые запуски последовательны; Ubuntu готовый image offline,
+Docker Desktop/WSL не запускались/не перенастраивались агентом.
+
+**Вывод.** Общий finder целиком не нужен: обязанности разные. Следующий
+небольшой product change — IDE-088 с постоянным RED и согласованным ordinary
+window predicate для focus-only поиска, с прежними SQL/legacy исключениями.
+Создание main, guard relocation и session cleanup не объединять механически.
+macOS/GUI, полное autosave, multi-tab/unsaved restore, настоящий DAP restart
+и tool-only startup с реальными панелями не доказаны этими fixtures.
+
+**Файлы:** tests/diagnostics/code-window.lua / README, CODE_WINDOW_REVIEW,
+PANEL_OWNERSHIP_REVIEW, FEATURE_REVIEW, IDE_ROADMAP, PROBLEMS/HISTORY,
+AGENT_COMMANDS и test-only OpenSpec change.

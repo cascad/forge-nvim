@@ -30,7 +30,8 @@ IDE-001 параллельно ждёт диагностических данн�
 | Capture готов, причина открыта | IDE-085 | Повторный source RED, 3 native trace E2E и helper source/quit/error capture; Windows 19 PASS/2 SKIP, Ubuntu 20 PASS/1 SKIP (§152). При следующих регрессах собирать новый timeline; product fix не заявлен |
 | Готово Windows/Ubuntu | IDE-086: общая политика Output | Один resolver, сохранение REPL/PTY/history; по 19 native checks и 13 clean exits/scopes; §153. Mac открыт |
 | Диагностика открыта | IDE-087: остановка Docker backend | В 17:06:41 backend закрыл API после com.docker.build exit status 15; инициатор неизвестен (§154). Desktop/WSL агент не управляет, повтор после включения владельцем прошёл |
-| Следующий read-only срез | Поиск окна кода | Сопоставить state/activities/panel_guard, определить одинаковые predicates и native restore/tool-only/float/terminal scenarios; затем отдельный небольшой change |
+| Обзор готов Windows/Ubuntu | Поиск окна кода | [Сравнение и native evidence](CODE_WINDOW_REVIEW.md): по 5 profiles, роли find/create/relocate различаются; полный merge не нужен (§155) |
+| Следующий конкретный change | IDE-088: focus-only выбор окна кода | Native F7 → Debug View уводит фокус в первый PTY. Постоянный RED и согласованное ordinary-window правило; создание main и guard/session cleanup сохраняются раздельно |
 | Отложено до готового backend | Остаток SQL workflow, IDE-062 | SQLS references provider отсутствует. Собственный binder/index/LSP fork отменён (§143); не подменять references grep и не объявлять полную SQL поддержку |
 | Затем | Остальная [матрица языков](LANGUAGE_MATRIX.md) | SQL references IDE-062, Bash DAP IDE-057; Mac/native и оставшиеся сценарии матрицы |
 | После функциональной матрицы | Упрощение архитектуры | Общее ядро, явные системные границы и setup; сокращение дублирования с сохранением E2E |

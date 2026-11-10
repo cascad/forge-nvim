@@ -167,3 +167,16 @@ Native Mac/GUI открыт; новый manager/backend/pins/backports не до
 Следующий read-only срез — сравнение find_main_window/is_main_window с
 activities/panel_guard, сценарии restore/tool-only/float/terminal до runtime
 объединения. Завершённый Output срез не доказывает, что эти finders эквивалентны.
+
+
+## Поиск окна кода — native review после IDE-086
+
+[CODE_WINDOW_REVIEW](CODE_WINDOW_REVIEW.md) сопоставляет find/create/relocate.
+По 5 native profiles Windows/Ubuntu, source 7fe45bc: normal, float-only,
+настоящий PTY, marked file и Persistence restore native session с winfix.
+Общий finder целиком отклонён: разные side effects и правила guard target.
+Найден IDE-088: F7 → Space m d выбирает первый PTY при существующем code main;
+focus-only predicate требует отдельного fix и постоянного regression RED.
+Activities tool list участвует в session cleanup; менять его целиком ради
+focus нельзя. Guard marker/Edgy/winfix и создание split сохраняются раздельно.
+Runtime/pins/SDK в диагностическом change не менялись. Границы — FIXLOG §155.

@@ -1,5 +1,15 @@
 # Диагностика native terminal и CLI
 
+## IDE-080/088: поиск окна кода и restore
+
+`nvim -l tests/diagnostics/code-window.lua` — пять private native profiles:
+normal, float-only, terminal-only, live-marker, session-winfix. SDK/editor deps
+готовятся заранее; на Windows выбранный patched SDK и TEMP на диске checkout.
+`FORGE_WINDOW_CASE` ограничивает запуск одним profile. JSON и screens сохраняются
+в `.tests/editor-e2e/`, итог — `.tests/code-window-review.json`.
+Probe не меняет runtime и не включён в общий regression registry.
+Результаты/ограничения и команды Docker — [CODE_WINDOW_REVIEW](../../docs/CODE_WINDOW_REVIEW.md).
+
 ## IDE-080/083: project/focus/idle и Peek baseline
 
 После явной подготовки editor/Go/gopls SDK, из корня checkout:

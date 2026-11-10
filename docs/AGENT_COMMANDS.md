@@ -4396,3 +4396,54 @@ JSON читается через read_bytes, stdout UTF-8/ensure_ascii. Свод
 .tests/ide086-history-before.json; после append проверены прежние байты
 FIXLOG/AGENT_COMMANDS и additions-only diff. Коммит выполняется явно по списку
 связанных файлов; секреты/tmp/SDK/lock не stage, push не выполняется.
+
+
+## 68. IDE-080/088: window discovery review, 2026-11-10
+
+Рабочий каталог F:/repo/forge-nvim, PowerShell login=false. Чтение rg по
+directories с -g '*.lua', Get-Content narrow slices, git status/log/diff.
+Сопоставлены state/activities/panel_guard/marks, Persistence upstream pinned
+source в .tests/editor-deps, текущий plugin editor.lua и session cleanup.
+
+OpenSpec 1.13.2 с npm_config_cache=F:/forge-nvim-tmp/npm-cache:
+context --json; list --json; new change review-code-window-ownership;
+status / instructions proposal/design/tasks/apply --change ... --json.
+Root F:/repo/forge-nvim, schema spec-driven, skip_specs=true. Применяется
+test-only change, а не продуктовая классификация. Основные specs не меняются.
+
+Windows:
+```powershell
+$env:TEMP='F:/repo/forge-nvim/.tests/tmp'
+$env:TMP=$env:TEMP; $env:TMPDIR=$env:TEMP
+$env:NVIM_LOG_FILE="$env:TEMP/code-window-review.log"
+. ./scripts/lib/nvim-sdk.ps1
+$forgeNvim=Get-ForgeNvim (Get-Location).Path
+& $forgeNvim -l tests/diagnostics/code-window.lua > .tests/code-window-windows.txt 2>&1
+```
+Первый пилот 5 profiles дал основания добавить настоящий F7/md шаг.
+После правки probe повторён целиком: финальные 5 profiles в обзоре.
+Probe копирует свой source и native session, пишет code-window.json,
+snapshots, controller/native quit, shutdown. Terminal worker — собственный
+nvim --clean --headless с ограничением 60 s, останавливается jobstop по его id.
+
+Ubuntu после завершения Windows, read-only docker version подтвердил 28.5.1:
+```powershell
+docker compose -f tests/containers/compose.yaml run --rm --no-deps --entrypoint nvim ubuntu -l tests/diagnostics/code-window.lua > .tests/code-window-ubuntu.txt 2>&1
+```
+Один готовый offline контейнер, без build/download, без управления Desktop/WSL.
+Итоговые 5 Ubuntu profiles также воспроизвели terminal focus и float candidate.
+Это диагностические наблюдения, не пять product PASS/исправлений.
+
+Аудит через Python read_bytes/UTF-8:
+```powershell
+python -B .tests/audit-code-window.py
+npx.cmd --yes @fission-ai/openspec@1.13.2 validate --all --strict --no-interactive > .tests/code-window-openspec.txt 2>&1
+git diff --check
+git diff --name-only -- nvim_forge/lua nvim_forge/init.lua nvim_forge/lazy-lock.json nvim_forge/patches/plugins.json
+```
+10 финальных profiles, exit/signal=0, api_errors=[], scopes empty; по 63 runtime/
+pin/patch источника и source probe сверены. .tests/code-window-evidence.json;
+before raw prefix SHA/size .tests/code-window-history-before.json. FIXLOG §155
+и diary §68 дописаны без изменения прежних байтов; HISTORY ссылка добавлена.
+Production/regression suites не повторялись без изменения runtime.
+Mac/GUI непроверен; IDE-088 зарегистрирован и ожидает отдельный assertion RED/fix.

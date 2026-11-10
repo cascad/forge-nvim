@@ -10,7 +10,20 @@
 
 Маршрут и приоритеты: [рабочий план nvim_forge](docs/IDE_ROADMAP.md).
 Для новых пунктов используем следующий свободный ID `IDE-xxx`; исходный
-симптом хранится здесь, этап и состояние — в плане. Следующий ID: `IDE-088`.
+симптом хранится здесь, этап и состояние — в плане. Следующий ID: `IDE-089`.
+
+## IDE-088 — Debug View возвращает фокус в terminal вместо кода
+
+2026-11-10, native Windows/Ubuntu, source 7fe45bc: настоящий PTY в первом
+окне, отдельное normal code окно существует. F7 подтверждённо переводит
+в код; Space m d открывает sidebar/REPL и переводит фокус обратно в PTY.
+activities.find_code_window отвергает лишь nofile/prompt и часть tool filetypes,
+поэтому принимает terminal (и отдельный floating file fixture). State terminal
+отвергает. Artifacts Windows 25722298083800 / Ubuntu 963889831727.
+Probe — tests/diagnostics/code-window.lua; это наблюдение, не product fix.
+Далее постоянный regression RED и согласованная focus-only классификация;
+создание split, guard relocation и session cleanup сохраняются отдельно.
+[Обзор](docs/CODE_WINDOW_REVIEW.md), FIXLOG §155.
 
 ## IDE-087 — Docker backend исчез во время Windows E2E
 

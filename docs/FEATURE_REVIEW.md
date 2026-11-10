@@ -370,7 +370,10 @@ language/test roots, interpreter/tools и save/format разобраны в
   process/PTY lifecycle не объединять с видимостью. Это пока план, не runtime fix.
   IDE-081/082/083/084 уже выполнены; capture IDE-085 готов, причина открыта.
   IDE-086 Output policy проверен на Windows/Ubuntu (§153).
-  Далее поиск окна кода. Удаления optional UI по-прежнему требуют выбора.
+  Поиск окна кода разобран: [CODE_WINDOW_REVIEW](CODE_WINDOW_REVIEW.md),
+  по 5 native profiles Windows/Ubuntu. Следующий fix — IDE-088 focus в PTY;
+  широкое объединение find/create/relocate отклонено по разным обязанностям.
+  Удаления optional UI по-прежнему требуют выбора.
   Project/session restart и uniform interpreter/root policies требуют отдельных
   сценариев; существующие Git результаты не заменяют их полной проверки.
 
