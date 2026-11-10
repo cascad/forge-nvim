@@ -7186,3 +7186,85 @@ zsh до nvim (IDE-001) этим редакторным stack не объясн�
 **Файлы:** WORKSPACE_TOOL_REVIEW, FEATURE_REVIEW, PANEL_OWNERSHIP_REVIEW,
 IDE_ROADMAP, PROBLEMS, tests/diagnostics/go-statusline.lua и README,
 HISTORY/AGENT_COMMANDS.
+
+## 147. Feature review: baseline проекта и Peek RED
+
+**Дата:** 2026-11-10. **Область:** IDE-080/083/084, без runtime изменений.
+
+**Проблема.** Для первого небольшого refactor/bugfix нужен общий обзор
+реальных фич/покрытия, понятная цена UI и фактические project/focus/idle данные.
+Loaded-флаг и существующий backend не доказывают работающий keyboard workflow.
+
+**Причина IDE-083.** Glance defaults содержат настоящие functions для
+j/k/Enter/v/s/Esc/q. Наш opts.mappings.list заменяет семь значений строками
+next/previous/jump/close. Pinned Glance передаёт их напрямую в vim.keymap.set:
+это буквальные Vim keys, не action names. Native q вызывает E21 и оставляет
+Glance. Непереопределённый Q работает. Установлена причина q; поведение всех
+остальных keys ещё нужно проверить будущим permanent regression.
+Рекомендация — удалить ненужный override и использовать готовые defaults,
+без нового plugin/обёртки. Исправления runtime в этом коммите нет.
+
+**Изменение.** FEATURE_REVIEW содержит общую coverage карту с реальными suites,
+конкретный список сохранить/упростить/убрать по выбору и порядок небольших
+changes. Проверены ссылки и наличие 27 названных permanent suites в реестре.
+Fact review готов; выбор удаления optional UI остаётся открытым.
+PROBLEMS/roadmap согласованы: сначала IDE-082, затем IDE-083, async Outline
+focus IDE-084 требует отдельной проверки. Следующий ID IDE-085.
+
+**Native baseline, не feature PASS.** profile-project.lua: три fresh profiles
+Windows и три Ubuntu, один Go fixture с Unicode/path spaces, настоящий
+подготовленный gopls/Go, GOTOOLCHAIN=local/proxy off/private caches, Go CPU=2.
+OS runs последовательны, Docker engine был доступен 28.5.1, lifecycle не меняли.
+Driver/current-folder entry/Go initialized/Outline data/direct focus/idle/gpd
+измерены раздельно. Snapshot фокуса первого Outline также сохранён отдельно.
+
+Windows medians: driver 6416 ms (с copying), current-project entry 1363 ms,
+file→gopls 3386 ms, Outline data 2435 ms, direct focus 10.3 ms, gpd 143 ms;
+Nvim RSS idle/project 28.59/50.56 MiB, CPU за ~1s idle 16.0 ms.
+Ubuntu: 5040/88/269/240/3.5/39 ms; RSS 26.63/44.90 MiB, idle CPU 17.1 ms.
+Driver копирует dependencies, Windows runtime на F:, guest — native filesystem;
+кэши подготовлены. Это не сравнение ОС/cold restart и не объяснение исходных
+зависаний. Lazy Windows clock wall (real_cputime=false), Ubuntu CPU (true):
+1380.6/169.8 ms не являются одним и тем же startup показателем.
+RSS/CPU только Nvim, без LSP/прочих процессов и WezTerm; три samples/секунда
+idle не доказывают системную производительность.
+
+В каждом из 6 profiles gpd показывает реальное library.go/Double, q даёт
+E21/остаётся Glance с rhs=close, Q закрывает и возвращает исходный Go.
+Controller сохраняет все результаты и выходит code=1: RED 3/3 на каждой ОС.
+Child editors exit=0, scopes ok/empty, installs=0. Source diagnostic и 78
+config files проверены, pins/SDK/production/assertions не менялись.
+Windows artifacts 10310785798200/10327577855000/10344309595000,
+Ubuntu 9265858326624/9281597222561/9295146798511.
+Сводки .tests/review-project-windows.json и
+.tests/ubuntu/review-project-ubuntu.json; .tests/audit-project-review.py,
+.tests/project-review-evidence.json проверяют sources/results/RED/scopes/history.
+
+**Пилоты и уточнение IDE-084.** 9776803557200 ждал Aerial после Space w h,
+но это относительный сосед: между code/Outline был Alpha. Это неверное
+ожидание diagnostic, сохранён source profile-project-failed.lua. Использован
+существующий прямой Space w a, продукт не меняли. 9924028232400 ждал вместе
+focus+Use и получил timeout; final snapshot содержит символы, но не current
+window ID. Раннее объяснение этого pilot как постоянной потери фокуса было
+слишком сильным; причина по нему не установлена. 10080530780300 дошёл до
+Peek/q и дал настоящий E21/незакрывшийся Glance. Все raw FAIL сохранены,
+child/scopes завершились. Deadline не увеличивали.
+
+В последних profiles first_outline_focus aerial 3/3 Windows, 2/3 Ubuntu,
+один Ubuntu — go сразу после готовности символов. Последующий direct focus
+работает. IDE-084 investigation отделяет готовность данных от устойчивого
+фокуса; не объявляем fleeting snapshot доказательством вечного сбоя.
+
+**Проверка.** Native evidence audit, 27 suite/links audit, git diff check и
+raw history prefix. Unit/trace/strict из §145 не переименованы в новый прогон;
+runtime/spec/permanent assertions здесь не менялись. Mac/GUI/physical keys,
+полный project restart/session restore и визуальные ruler markers открыты.
+
+**Вывод.** Большой фактический review выполнен, разрешённых удалений UI пока нет.
+Работу продолжать отдельными IDE-082/083 changes с permanent native RED,
+затем проверенными Go/language/panel regression и commit. Не писать свой
+LSP/server/sorter/новый panel framework. Дополнительные UI/SQLLogicTest и
+общий refactor принимать отдельно с явными потерями; ядро не вырезать по LOC.
+
+**Файлы:** FEATURE_REVIEW, IDE_ROADMAP, PROBLEMS,
+tests/diagnostics/profile-project.lua и README, HISTORY/AGENT_COMMANDS.

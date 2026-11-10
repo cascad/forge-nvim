@@ -271,6 +271,7 @@ Python реализован и проверен 2026-11-03; после возо�
 | §144 | [Review: upstream patches, частный UI и native fzf gap](../nvim_forge/FIXLOG.md#144-review-upstream-patches-частный-ui-и-native-fzf-gap) |
 | §145 | [DAP и панели: карта ответственности перед рефакторингом](../nvim_forge/FIXLOG.md#145-dap-и-панели-карта-ответственности-перед-рефакторингом) |
 | §146 | [Git/root review и пассивные Go процессы](../nvim_forge/FIXLOG.md#146-gitroot-review-и-пассивные-go-процессы) |
+| §147 | [Feature review: baseline проекта и Peek RED](../nvim_forge/FIXLOG.md#147-feature-review-baseline-проекта-и-peek-red) |
 
 ## Как читать и дополнять
 

@@ -1,7 +1,7 @@
 # IDE-080 — обзор фич и стоимости поддержки перед рефакторингом
 
-Дата: 2026-11-10. Статус: инвентаризация, upstream source review и частное UI
-сравнение; решения об удалении фич и рефакторинг ещё не выполнены. Основа —
+Дата: 2026-11-10. Статус: фактический обзор, coverage/ownership и bounded native
+baseline готовы; выбор удаления фич и runtime изменения ещё впереди. Основа —
 runtime 7463915 после отмены собственного SQL prototype. Требования не сокращаются
 до того, что сейчас легче проверить.
 
@@ -226,7 +226,108 @@ fallback в health и проверять native/fallback ветки отдель
 sorter E2E. При исправлении нужен постоянный regression, а не изменение
 ожидаемого loaded-флага ради зелёного теста.
 
-## Что должно быть готово до рефакторинга
+## Реальная coverage карта и границы
+
+Это сопоставление существующего source/реестра и записанных результатов, не
+новый полный regression. Общая граница всех строк: Mac и физический GUI/input
+здесь не запускались; не превращаем наличие plugin в доказательство функции.
+
+| Пользовательская возможность | Постоянные editor E2E / источник | Что остаётся за границей |
+|---|---|---|
+| Файлы/дерево, create/rename/move/cut/paste | file-explorer, editor, deleted-files | Разные filesystem/permissions и Mac; неизвестные редкие ошибки отдельно |
+| Вкладки/закрытие/reopen, удалённый файл | buffers, deleted-files, native ConPTY/buffer gates | Tabpage/session restore не равен файловым вкладкам |
+| Поиск имени/контента/replace panel | editor (Telescope + настоящий rg), work-panels (grug-far/query/zoom/result) | Native fzf отсутствует в test SDK (IDE-081); полный replace workflow не считать доказанным одной панелью |
+| Git/hunks/status/diff/history/worktree/commit/local push | git-workflow, git-errors/conflicts, diffview-close, active-worktree, gitsigns/worktree-refresh | Credentials/sequence editor, первый неизвестный IDE-038 handle и GUI |
+| Общие panel keys/focus/zoom/help | debug-panels, outline, file-explorer, work-panels, git-workflow | Первый async Go Outline focus — IDE-084; произвольный tool-only/restore layout ещё нужен |
+| Debug/output/panic/nearest/eval | dap-output, test-runner, language suites, dap-discovery | Не каждый adapter/exception/reopen путь; Bash DAP открыт IDE-057 |
+| Go/Rust/Python/Node editing/format/run/debug/tests | go/node/python/rust-language; LANGUAGE_MATRIX с фактическими counts | Monorepo/stdlib/необычные env отдельно; Go passive work — IDE-082 |
+| Bash и SQL | bash/sql-language, sql-tests, sql-sdk/sql-test-sdk | SQL references IDE-062 не поддержан готовым backend; внешние DB/Mac, Bash DAP открыты |
+| Autosave и explicit async format | language suites, deleted-files, прежний IDE-050 regression | Сложные simultaneous save/edit/cancel не закрывать одним successful format |
+| Terminal buffers/jobs/tasks | buffers (настоящий terminal), work-panels (Overseer/tasks/output) | Это не полный ToggleTerm/shell/multiple-terminal regression |
+| Recent projects/Alpha/persistence | Git root/history E2E и runtime source review | Полный native :restart/open-folder и session restore отдельными сценариями ещё не покрыты |
+| Peek/breadcrumbs/overview ruler | Новый native Go diagnostic: gpd preview и navic Use; source/старый private UI вариант | q RED IDE-083; gpr/gpt/gpi, ruler markers и визуальный GUI отдельно |
+| WezTerm/shell startup/clipboard | Собственные wezterm/install/ConPTY наборы, manual checklists | Они дополняют Nvim E2E; исходные Mac/zsh/Cmd+C не проверены |
+
+Все названные editor suites присутствуют в tests/registry.lua; diagnostics не
+выдаются за постоянный feature regression. Точная языковая полнота —
+[LANGUAGE_MATRIX](LANGUAGE_MATRIX.md), границы транспорта/SDK —
+[E2E README](../tests/e2e/README.md).
+
+## Ограниченный project/focus/idle baseline
+
+Три свежих native profiles на ОС с одним fixture из go-language: go.mod,
+library.go и use.go в каталоге с пробелом/Unicode. Настоящий подготовленный
+gopls; GOTOOLCHAIN=local, proxy/offline и private caches. Source/config/pins
+одинаковы; Windows и Ubuntu запускались последовательно, CPU Go ограничен 2.
+Повторяемая команда — [profile-project.lua](../tests/diagnostics/profile-project.lua).
+
+| Медиана, 3 samples | Windows | Ubuntu |
+|---|---|---|
+| Driver start, включая копирование SDK/config | 6416 ms | 5040 ms |
+| cd + вход в уже выбранный project/Explorer | 1363 ms | 88 ms |
+| edit Go → initialized gopls | 3386 ms | 269 ms |
+| Первый Outline → символ Use виден | 2435 ms | 240 ms |
+| Прямой code/Outline focus, 18 переходов на ОС | 10,3 ms | 3,5 ms |
+| Первый gpd → реальный library.go preview | 143 ms | 39 ms |
+| RSS только Nvim: idle → project | 28,59 → 50,56 MiB | 26,63 → 44,90 MiB |
+| CPU только Nvim за ~1 s idle | 16,0 ms | 17,1 ms |
+
+Это не сравнение скорости ОС и не пользовательский cold startup benchmark:
+driver копирует зависимости, Windows fixture на F:, контейнерный runtime на
+native Linux filesystem, shared SDK/cache уже подготовлены. Полный restart
+при открытии другого проекта не измерялся. Тайминги input/фокуса включают RPC.
+RSS/CPU не включают gopls/прочие процессы, WezTerm или систему в целом; одна
+секунда и три samples недостаточны для вывода об исходных системных зависаниях.
+Lazy startuptime отдельно: Windows median 1380,6 ms с real_cputime=false,
+Ubuntu 169,8 ms с real_cputime=true. Это разные часы, их нельзя сравнивать
+как одинаковый wall-clock startup показатель.
+
+В 6/6 profiles gpd показывает определение, но q вызывает E21 и оставляет
+Glance. Source объясняет IDE-083: семь строковых overrides подменили штатные
+function mappings. Default Q не переопределён, закрывает Peek и возвращает код.
+Diagnostic сохраняет RED и выходит code=1 после сбора; child editors exit=0,
+scopes empty. Успешный сбор данных не выдаётся за работающий keyboard workflow.
+Правильное упрощение — убрать лишний mappings override, затем проверить keys
+постоянным native E2E, без нового слоя/плагина.
+
+Сразу после первых данных Outline фокус aerial в Windows 3/3, Ubuntu 2/3;
+один раз Ubuntu сохранил go. Позднейший прямой Space w a работает. IDE-084
+сохраняет investigation: определить устойчивый результат async opening,
+а не объявлять мгновенный snapshot доказательством постоянного сбоя. Ранний
+pilot ждал focus+symbols вместе; его финальный snapshot не хранит current win,
+поэтому прежнее предположение о причине уточняется, а raw timeout сохраняется.
+
+Артефакты Windows 10310785798200/10327577855000/10344309595000;
+Ubuntu 9265858326624/9281597222561/9295146798511. В каждом source diagnostic,
+78 config sources, snapshots до/после Peek q, LSP manifest, profile/shutdown.
+Сводки `.tests/review-project-windows.json`,
+`.tests/ubuntu/review-project-ubuntu.json`; audit/метрики —
+`.tests/audit-project-review.py`, `.tests/project-review-evidence.json`.
+
+## Рекомендуемый набор и порядок изменений
+
+Решений об удалении пользовательских фич пока нет. Это конкретные предложения
+по завершённому фактическому обзору; выбор дополнительных UI ещё открыт.
+
+| Действие | Что сохранить | Что убрать / какой результат проверить |
+|---|---|---|
+| IDE-082: отложить Delve discovery и сделать Go label пассивным | Настоящий project SDK для language/build/debug и явный toolchain picker | Ненужные subprocess при edit; не запрещать GOTOOLCHAIN глобально |
+| IDE-083: вернуть готовые Glance defaults | Peek и его штатные keys | Удалить семь ошибочных overrides; q/Esc/Enter/navigation/splits через native regression |
+| IDE-084 + Output policy | Первое открытие/focus, output history и PTY lifetime | Проверить async readiness и общий выбор канала; не новый panel manager |
+| IDE-081: явная fzf capability | Рабочий быстрый поиск и честный fallback | Gate по готовому artifact вместо наличия build tool; optional/must policy и regression |
+| Breadcrumbs/ruler | Outline, Problems, gd/gr; Peek по запросу | Рекомендуется убрать barbecue/navic/satellite после выбора UX; вариант без 4 UI уже проверен частно, удаления по 3 требуют своего regression |
+| Git/DAP/panel ядро | Gitsigns + Neogit + Diffview, state/registry + DAP UI + Edgy, guard | Сокращать только дублирующие правила, не разные рабочие роли |
+| Alpha/project/persistence | Folder/recents/session workflows | Сначала native restart/restore coverage, затем оценка цены удаления/упрощения |
+| Comment.nvim и вторичные helpers | Line/block comments и RU/EN keys | Сравнение со штатным Nvim, без потери block/context действий ради минус одного plugin |
+| SQLLogicTest | SQL queries/schema/format и Tests остальных языков | Отдельно решить нужность SQL assertion runner/SDK; не удалять рабочий SQL вместе с ним |
+| Временные patches/Windows SDK | Проверенные исправления и portability | Снимать только после native equivalent regression на готовом upstream |
+
+Первый небольшой change — IDE-082, затем IDE-083. После каждого свой RED,
+permanent E2E, Windows/Ubuntu regression, история и commit. Mac gates явно
+остаются открытыми. Выбранные UI-удаления и общий refactor не смешивать с этим
+bugfix. Нужного нового LSP/framework из обзора не следует.
+
+## Готовность фактического обзора
 
 Вторая часть ownership review завершена: Git-интерфейсы, выбранный workspace,
 language/test roots, interpreter/tools и save/format разобраны в
@@ -238,17 +339,18 @@ language/test roots, interpreter/tools и save/format разобраны в
 - [x] Зафиксировать пользовательскую цель и запрет собственного language ядра.
 - [x] Снять live inventory и сверить все 67 pins; разделить plugin/dependency/glue.
 - [x] Составить карту фич, слоёв и предварительных кандидатов; сохранить ограничения.
-- [ ] Проверить использование вторичных UI/хоткеев в повседневных сценариях,
-  представить короткий конкретный набор оставить/убрать/заменить с потерями.
+- [x] Сопоставить вторичные UI/хоткеи с контролируемыми workflow, показать
+  варианты оставить/убрать/заменить и потери. Реальное предпочтение владельца
+  и визуальные ruler/GUI проверки остаются отдельными открытыми решениями.
 - [x] Проверить upstream source для 5 plugin backports, SQLS и Windows Neovim;
   exact SHA/contexts записаны выше. Native regression новых versions не выполнялся.
-- [ ] Измерить startup/открытие проекта/файла/фокус/idle нагрузку на одинаковых
-  fixture проектах. Не приписывать системные зависания терминалу по гипотезе.
-  Первые idle/text-buffer samples выше; project load/focus/остальные ОС ещё открыты.
-- [ ] Сопоставить feature coverage с реальными editor E2E и явными Mac/GUI gaps.
+- [x] Снять ограниченный startup/current-project/file/focus/idle baseline
+  Windows/Ubuntu на одинаковом fixture. Cold restart/GUI/Mac не измерялись,
+  исходные системные зависания этим не объяснены; границы и часы указаны выше.
+- [x] Сопоставить feature coverage с реальными editor E2E и явными Mac/GUI gaps.
   Для DAP/panels карта готова: PANEL_OWNERSHIP_REVIEW; Go focus/output и первый
   Rust PTY проверены, остальные adapters/restore/физические клавиши разграничены.
-- [ ] Предложить порядок небольших изменений; у каждого — сохраняемый UX,
+- [x] Предложить порядок небольших изменений; у каждого — сохраняемый UX,
   удаляемая ответственность, регресс и проверяемая польза. Только затем рефакторинг.
   DAP-кандидаты: единый выбор Output, затем одинаковые части поиска окна кода;
   process/PTY lifecycle не объединять с видимостью. Это пока план, не runtime fix.

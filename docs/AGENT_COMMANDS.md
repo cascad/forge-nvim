@@ -3759,3 +3759,71 @@ blocked by policy. Не выполнена, другим инструменто�
 История raw append с SHA256 prefix guard. Коммит только явных review/
 diagnostic/history paths: git add, diff --cached --check/numstat, commit,
 status --short; без push и изменения pins/SDK.
+
+## 61. Project baseline, Peek RED и итоговый review, 2026-11-10
+
+Назначение: bounded project/focus/idle cost и реальная keyboard проверка
+дополнительного Peek до runtime изменений. FEATURE_REVIEW содержит итоговый
+список действий/coverage; IDE-083 q остаётся RED, IDE-084 investigation.
+Не новый LSP/backend и не сокращение требований до loaded-флагов.
+
+Чтения: git status/log; Get-Content конкретных частей FEATURE_REVIEW/roadmap,
+LANGUAGE_MATRIX/registry, editor driver, Go fixtures/language/Outline/editor/
+work-panel/buffer suites, ide state/controls/components, plugins/ide и pinned
+Glance config/list source. rg по mappings/focus/filetype/keys. Source показывает
+прямую передачу строкового action в vim.keymap.set. JSON читался как UTF-8 bytes;
+ошибочная cp1251 печать раннего просмотра не меняла native artifacts.
+
+Windows запуск, TEMP/TMP/TMPDIR и NVIM_LOG_FILE в F:/repo/forge-nvim/.tests/tmp,
+GOMAXPROCS=2, GOFLAGS=-p=2:
+```powershell
+. ./scripts/lib/nvim-sdk.ps1
+$forgeNvim=Get-ForgeNvim (Get-Location).Path
+$env:FORGE_E2E_CONFIG_SOURCE='F:/repo/forge-nvim/nvim_forge'
+$env:FORGE_PROJECT_REVIEW_SAMPLES='3'
+$env:FORGE_PROJECT_REVIEW_OUTPUT='F:/repo/forge-nvim/.tests/review-project-windows.json'
+& $forgeNvim -l tests/diagnostics/profile-project.lua > .tests/review-project-windows.txt 2>&1
+```
+Перед этим 3 single-sample pilots: -windows-pilot/-pilot2/-pilot3.txt и
+соответствующие artifacts, сохранённые при FAIL. Ошибка ожидания relative
+Space w h исправлена на canonical direct Space w a; source первого pilot
+скопирован в его artifact до изменения. Символы/first focus отделены без
+ослабления результата Peek q: все финальные samples явно сохраняют failure,
+выход controller=1. Q — штатный cleanup, не подмена результата q.
+Каждый child закрыт штатно, own groups пусты.
+
+Engine readiness: Python subprocess docker info --format {{.ServerVersion}},
+deadline 7s; code=0/28.5.1. Ubuntu запуск после terminal Windows result:
+```powershell
+docker compose -f tests/containers/compose.yaml run --rm --entrypoint bash ubuntu -c 'GOMAXPROCS=2 GOFLAGS=-p=2 FORGE_PROJECT_REVIEW_SAMPLES=3 FORGE_PROJECT_REVIEW_OUTPUT=/workspace/.tests/review-project-ubuntu.json nvim -l tests/diagnostics/profile-project.lua' > .tests/ubuntu/review-project-ubuntu.txt 2>&1
+```
+Controller code=1 с IDE-083 RED 3/3; 3 child exit=0/scope empty.
+Desktop/WSL не запускали/останавливали/перенастраивали.
+
+Что получено: project-profile.json с phase timings, native getrusage
+(sec/usec), RSS, Lazy stats/real_cputime, first_outline_focus, q outcome/
+messages/rhs и Q cleanup; source diagnostic/LSP manifest/config, snapshots
+project-ready/peek-definition/peek-after-q, native shutdown. Никаких fake
+LSP responses. GOTOOLCHAIN local/offline/private GOPATH/GOCACHE в diagnostic
+не является product fix IDE-082.
+
+```powershell
+python -B .tests/audit-project-review.py
+git diff --check
+git diff --stat
+git status --short
+```
+Audit: 6 exact controller/config snapshots (78 files), gopls/navic/winbar,
+36 direct focus transitions, q rhs=close/E21/Glance + Q cleanup, native exit/
+own scope, прежние raw history bytes; medians записаны в
+.tests/project-review-evidence.json. Отдельный Python links/registry audit
+подтвердил source links и 27 mapped permanent suites. Benchmark thresholds нет.
+Windows Lazy wall vs Ubuntu CPU clocks не сравниваются напрямую; driver
+includes copying. CPU/RSS только child Nvim, без LSP/WezTerm/system; Mac и
+cold project restart/restore не измерялись. Unit/trace/strict повторно не
+запускались: product/spec/permanent assertions прежние, §145 остаётся историей.
+
+Review/PROBLEMS/roadmap согласованы, IDE-083/084 зарегистрированы. FIXLOG §147
+и этот diary только raw append, HISTORY обновлён. Перед commit — повторный
+evidence/prefix audit, git add только явных review/diagnostic/history paths,
+git diff --cached --check/numstat, git commit, git status --short; без push.

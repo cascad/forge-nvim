@@ -1,5 +1,42 @@
 # Диагностика native terminal и CLI
 
+## IDE-080/083: project/focus/idle и Peek baseline
+
+После явной подготовки editor/Go/gopls SDK, из корня checkout:
+
+```powershell
+$env:TEMP='F:/repo/forge-nvim/.tests/tmp'
+$env:TMP=$env:TEMP; $env:TMPDIR=$env:TEMP
+$env:NVIM_LOG_FILE="$env:TEMP/project-review.log"
+$env:GOMAXPROCS='2'; $env:GOFLAGS='-p=2'
+. ./scripts/lib/nvim-sdk.ps1
+$forgeNvim=Get-ForgeNvim (Get-Location).Path
+& $forgeNvim -l tests/diagnostics/profile-project.lua
+```
+
+Ubuntu/macOS: `nvim -l tests/diagnostics/profile-project.lua`.
+FORGE_PROJECT_REVIEW_SAMPLES=1..5, default 3; FORGE_PROJECT_REVIEW_OUTPUT
+задаёт output вместо `.tests/project-review.json`. Каждый fresh profile
+использует Go fixture, настоящий gopls, proxy off/local toolchain и private
+GOPATH. Source SDK/manifest должны быть заранее подготовлены. Windows temp/cache
+на F:, native guest temp в Ubuntu. На одном хосте ОС-наборы последовательны.
+
+Измеряются driver start (с copying), вход в текущий project/Explorer, Go/LSP,
+первые symbols, прямой Space w a / Space w 0, ~1s editor idle CPU/RSS и gpd.
+Это не cold restart/GUI benchmark и не CPU/memory всего дерева процессов.
+Lazy часы Windows/Linux могут отличаться — см. real_cputime в raw report.
+
+Проверка q остаётся честным RED IDE-083: в текущем runtime literal mapping
+даёт E21 и оставляет Glance. Native Q используется только для cleanup,
+после сбора source/snapshots/report всех profiles controller выходит code=1
+с числом failures. Ненулевой код здесь не превращать в PASS или SKIP.
+Project-profile содержит peek_q_closed, after_peek_q и first_outline_focus;
+готовность symbols не равна установившемуся фокусу (IDE-084).
+
+Все artifacts содержат profile-project.lua, project-profile.json, LSP manifest,
+config-source, snapshots до/после q и shutdown.json. Сводка и ограничения —
+[FEATURE_REVIEW](../../docs/FEATURE_REVIEW.md).
+
 ## IDE-082: Go-команды при открытии файла
 
 После явной подготовки editor SDK и Go 1.26.0, из корня checkout:

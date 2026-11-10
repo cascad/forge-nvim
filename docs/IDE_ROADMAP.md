@@ -22,7 +22,8 @@ IDE-001 параллельно ждёт диагностических данн�
 | Готово на Windows | IDE-062: SQLLogicTest в Tests | 12 native SDK checks и 12 editor UI PASS (§129–132): nearest/file/all, expected/fix/rerun, stop/output/panels; общий All и native paths исправлены. [Команды](SQL_TESTS.md). Ubuntu 12 SDK/12 UI PASS; Mac открыт |
 | Готово на Windows | IDE-075: lifecycle и Windows integration gate | Собственный process scope, 5 новых native E2E и 4 source RED; 111 checks PASS/2 POSIX SKIP, 365 unit/trace, 64 strict valid (§136). Ubuntu/Mac и причины IDE-073/074 открыты |
 | Готово Windows/Ubuntu | IDE-077/078/079: process lifecycle и observers | Ubuntu 119 PASS/1 Windows-only SKIP, 365 unit/trace; Windows 27 текущих checks PASS (§137–139). Product Lua/67 pins прежние; Mac/GUI открыты |
-| Текущий этап | IDE-080: обзор фич и наслоений | [Карта возможностей/слоёв](FEATURE_REVIEW.md), [все 67 plugins/dependencies](PLUGIN_INVENTORY.md). Оценить оставить/убрать/заменить, backports и цену; до этого runtime не рефакторить |
+| Обзор готов, выбор удалений открыт | IDE-080: фичи, слои, цена и coverage | [Общий обзор/рекомендации](FEATURE_REVIEW.md), [все 67 plugins](PLUGIN_INVENTORY.md), DAP/root/tool ownership и bounded native baseline. Большой переписи нет; UX-удаления ещё не выбраны |
+| Следующий конкретный change | IDE-082, затем IDE-083 | Убрать ненужную Go/Delve work при edit и неправильный Glance mappings override. Постоянный native RED/regression, сохранённые language/debug/tests; IDE-084 — отдельная проверка первого Outline focus |
 | Отложено до готового backend | Остаток SQL workflow, IDE-062 | SQLS references provider отсутствует. Собственный binder/index/LSP fork отменён (§143); не подменять references grep и не объявлять полную SQL поддержку |
 | Затем | Остальная [матрица языков](LANGUAGE_MATRIX.md) | SQL references IDE-062, Bash DAP IDE-057; Mac/native и оставшиеся сценарии матрицы |
 | После функциональной матрицы | Упрощение архитектуры | Общее ядро, явные системные границы и setup; сокращение дублирования с сохранением E2E |
@@ -56,6 +57,13 @@ Git/workspace/tools/save разобраны в [WORKSPACE_TOOL_REVIEW](WORKSPACE
 После review это приоритетный небольшой fix с RED и Go language/debug/tests.
 Глобально запрещать GOTOOLCHAIN=auto или переписывать готовый LSP не планируется;
 исходная задержка zsh до nvim на Mac этим не объяснена.
+
+Фактическая часть большого review сведена в FEATURE_REVIEW (§147): coverage
+всего ядра/явные gaps, 3 project/focus/idle samples на Windows и Ubuntu.
+Peek q остаётся RED 6/6 (IDE-083); default Q завершает cleanup, native scopes
+пусты. Решение о breadcrumbs/ruler/Peek не подменяется тишиной; defaults пока
+прежние. Следующая работа — небольшие отдельные bug changes IDE-082/083,
+после них проверка первого Outline focus и остальной согласованный порядок.
 
 SQL references — [отдельный change](../openspec/changes/add-sql-semantic-references/tasks.md):
 §142 сохраняет исходный RED и исследование собственного resolver. Этот подход

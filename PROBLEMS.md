@@ -10,7 +10,37 @@
 
 Маршрут и приоритеты: [рабочий план nvim_forge](docs/IDE_ROADMAP.md).
 Для новых пунктов используем следующий свободный ID `IDE-xxx`; исходный
-симптом хранится здесь, этап и состояние — в плане. Следующий ID: `IDE-083`.
+симптом хранится здесь, этап и состояние — в плане. Следующий ID: `IDE-085`.
+
+## IDE-084 — первое открытие Go Outline: готовность данных и фокус
+
+2026-11-10, investigation/coverage gap из IDE-080. В одинаковом native Go
+fixture после появления Use/OtherUse первый фокус был aerial в 3/3 Windows
+и 2/3 Ubuntu profiles; один Ubuntu snapshot сохранил go. Последующие прямые
+Space w a / Space w 0 прошли во всех шести profiles. Это не доказательство
+постоянной потери фокуса или установленной причины гонки.
+
+Ранний Windows pilot ждал одновременно aerial focus и Use, получил timeout;
+финальный snapshot содержит символы, но не текущий window ID. Нельзя задним
+числом отличить задержку символов от фокуса по этому артефакту. Нужен отдельный
+native regression первого асинхронного открытия: готовность, устойчивый фокус,
+Alpha/несколько main windows и поздние callbacks. Сейчас это не исправление.
+Источники/профили — FEATURE_REVIEW.md и FIXLOG §147.
+
+## IDE-083 — Glance Peek: строки вместо функций в mappings
+
+2026-11-10, настоящий gpd показывает definition в library.go, но q оставляет
+Peek и вызывает E21 (modifiable off). Воспроизведено в 3 Windows + 3 Ubuntu
+profiles. Штатный непереопределённый Q закрывает окно и возвращает исходный код.
+
+plugins/ide.lua заменяет семь штатных list mappings (j/k/Enter/v/s/Esc/q)
+строками next/previous/jump/close. Pinned Glance передаёт значения напрямую
+в vim.keymap.set и ожидает функции; строки становятся буквальными клавишами
+Vim. Причина q установлена; остальные keys требуют собственного regression.
+Удаление лишнего mappings override возвращает уже существующие upstream
+действия без нового glue. Сначала change и постоянный native keyboard E2E;
+до исправления диагностический project profile честно выходит с code=1.
+Runtime пока не менялся. Source/RED/ограничения — FEATURE_REVIEW.md, §147.
 
 ## IDE-082 — Go/Delve discovery и statusline запускают toolchain work на edit
 
@@ -64,6 +94,9 @@ docs/PLUGIN_INVENTORY.md; живые плагины и рабочие фичи �
 Карта DAP/panel ownership и границы regression — docs/PANEL_OWNERSHIP_REVIEW.md;
 по 9 native E2E Windows/Ubuntu с trace. Выбор Output и поиск code window —
 кандидаты на отдельные небольшие изменения, не объявленные исправления.
+Фактический срез обзора дополнен project/focus/idle baseline, общей coverage
+картой и конкретными рекомендациями (§147). Выбор удаления optional UI открыт;
+материалов достаточно для отдельных исправлений IDE-082/083 без большой переписи.
 
 ## IDE-076 — оформление рамок и заголовков панелей по примеру Termide
 
