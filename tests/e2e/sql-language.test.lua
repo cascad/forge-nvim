@@ -305,6 +305,20 @@ check('IDE-SQL-3 IDE-065 unexpected SQLS exit remains visible',function(e)
   language(e,'aliases.sql')
   local pid=e:lua([[return _G.forge_sql_spawns[#_G.forge_sql_spawns].pid]])
   assert(vim.uv.kill(pid,15))
+  local exited
+  e:wait('native SQLS exit tuple recorded',function()
+    -- Parent читает журнал, даже если child стоит на настоящем hit-enter.
+    for _,line in ipairs(vim.fn.readfile(e.sql_exit_log)) do
+      local row=vim.json.decode(line)
+      if row.pid==pid then exited=row;return true end
+    end
+    return false
+  end,7000)
+  assert(type(exited.code)=='number' and type(exited.signal)=='number','native exit tuple записан')
+  assert(exited.code~=0 or exited.signal~=0,'настоящий unexpected exit не превратился в чистый stop')
+  vim.fn.writefile({vim.json.encode(exited)},e.dir..'/sqls-unexpected-exit.json')
+  -- Neovim 0.12.2 добавляет core warning для nonzero code либо сигнала кроме 15.
+  local core_warning=exited.code~=0 or (exited.signal~=0 and exited.signal~=15)
   e:wait('unexpected backend exit notification',function()
     for _,n in ipairs(e.rpc.notifications) do if n.message:find('LSP-сервер упал',1,true) then return true end end
     return false
@@ -315,7 +329,12 @@ check('IDE-SQL-3 IDE-065 unexpected SQLS exit remains visible',function(e)
       e:ack_warning(last.message:find('LSP-сервер упал',1,true) and 'LSP-сервер упал' or 'Client sqls quit')
       return false
     end
-    return #e.rpc.notifications>=2
+    local own,core=false,false
+    for _,notice in ipairs(e.rpc.notifications) do
+      own=own or notice.message:find('LSP-сервер упал',1,true)~=nil
+      core=core or notice.message:find('Client sqls quit',1,true)~=nil
+    end
+    return own and (not core_warning or core)
   end,7000)
   e:input('gg0i-- edit after backend crash<CR><Esc>')
   e:wait('editable after real crash',function() return content(e):find('edit after backend crash',1,true)~=nil end)

@@ -6778,3 +6778,142 @@ Windows temp/build/profile остаются на F, список F cleanup пр�
 **Файлы:** tests/lib/editor_rpc.lua/editor_process.lua/process_scope*.lua,
 editor-descendants.test.lua/process_worker.py/registry, Dockerfile/E2E README,
 change tasks, PROBLEMS/IDE_ROADMAP/SQL_TESTS/HISTORY/AGENT_COMMANDS.
+
+## 137. POSIX: editor jobs входят в собственный scope
+
+**Дата:** 2026-11-09. **Проблема:** IDE-077, продолжение IDE-075/§136.
+**Область:** test-only fix-editor-descendant-lifetime; production Lua/specs не меняются.
+
+**Что было/причина.** После включения Docker владельцем обычные uv.spawn
+cases прошли Ubuntu, но настоящий Neovim jobstart создавал другую process
+group. Orphan наследовал её и переживал root qa!, хотя старый scope уже
+считал свою единственную группу пустой. Источник 054ee05 подтверждён SHA;
+реальные PID/PGID/session сохранены. Группы не определяются по имени процесса.
+
+**Изменение.** Test-only startup observer устанавливается до user init и
+фиксирует фактические jobstart/termopen/отделённые uv.spawn в private JSONL.
+Parent читает registry после root exit и завершает только зарегистрированные
+группы. Native callbacks/argv/return tuple сохранены, включая три значения
+ENOENT. Ledger пишет через libuv FS, допустимый в fast callback. Старый
+Windows Job Object не менялся. В test container включён init для reap zombies;
+при build Delve ограничены GOMAXPROCS/Go parallelism до двух, без настройки Desktop.
+
+**Попытка.** Первый вариант уведомлял parent через RPC. Поздний lualine Git
+job не смог отправить notification: assert оставлял hit-enter, Rust дал
+0 PASS/8 FAIL. Это ошибка нашего observer, не Rust language/DAP. Такой канал
+не подходит для владения ресурсами при shutdown; заменён независимым журналом.
+Исходные logs/экран/артефакты сохранены отдельно, не перезаписаны GREEN.
+
+**Проверка/e2e.** Постоянный native jobstart case: intermediate parent умер,
+worker удерживает файл, чужой child жив. Тот же final test с exact scope
+054ee05 — целевой RED; новый module — GREEN. Windows 6 PASS; Ubuntu 5 PASS/
+1 Windows-only SKIP. Editor-process Ubuntu 2 PASS, editor-runtime 5 PASS,
+включая настоящий SIGSTOP/RPC timeout и принудительный exit с FAIL verdict;
+полный Rust 8 PASS. После двух SQL observer исправлений (§138–139) общий
+Ubuntu language/process/SDK набор — 119 PASS/1 SKIP, unit/trace 365 PASS.
+Audit posix-validation-evidence.json проверяет source SHA, scope groups,
+первичную ошибку forced stop, production Lua/67 pins без изменений и SDK/UI
+artifacts; 87 проверенных shutdown, включая два ожидаемых forced FAIL.
+
+**Вывод/границы.** Root exit не доказывает завершение его jobs. На Ubuntu
+подтверждены собственные группы actual language workers и cleanup; Mac/GUI
+не запускались. Намеренно daemonized sessions внутри стороннего backend,
+обходящие наблюдаемые spawn API, требуют отдельного lifecycle, а не kill по имени.
+**Файлы:** process_scope_posix.lua, editor-descendants.test.lua/process_worker.py,
+compose.yaml/Dockerfile, E2E README, change/docs/history/commands.
+
+## 138. SQL E2E: перенос terminal не скрывает PASS
+
+**Дата:** 2026-11-09. **Проблема:** IDE-078. **Область:** test observer IDE-SQL-7.
+
+**Что было.** Первый Ubuntu SQLLogicTest дал 11 PASS/1 FAIL. Native JSON
+содержал passed/checks=8, process code 0, настоящий DB counter=1; Output был
+виден. Из-за длинного POSIX path терминал перенёс `8 SQL ch` / `ecks`, и
+поиск непрерывной строки в buffer rows ложно истёк по deadline.
+
+**Причина/изменение.** Observer принимал physical terminal rows за logical
+строку. Только проверка видимого header объединяет rows и по-прежнему ищет
+PASS и число checks. Реальные process/status/DB assertions остались прежними;
+native report или вывод не подменяются.
+
+**Проверка/e2e.** Artifact 1977638049010 содержит exact test 054ee05, native
+report и snapshot с разрывом header; audit подтверждает обе части причины.
+Тот же case Windows PASS, полный Ubuntu SQLLogicTest 12 PASS. Правки product
+adapter/SDK не потребовались. **Вывод:** формат terminal rows зависит от ширины
+и длины пути, не от успешности теста. **Файлы:** sql-tests.test.lua, E2E/docs/history.
+
+## 139. SQL E2E: crash notices по настоящему exit tuple
+
+**Дата:** 2026-11-09. **Проблема:** IDE-079. **Область:** test observer IDE-SQL-3.
+
+**Что было.** Ubuntu SQL query дал 19 PASS/1 FAIL: после настоящего kill
+SQLS собственное crash warning было видно, prompt отсутствовал, но observer
+ждал не менее двух notices. На Windows native callback code=1/signal=0
+давал core warning Neovim; на Linux code=0/signal=15 его нет. В Neovim 0.12.2
+core условие — nonzero code либо ненулевой signal, отличный от 15.
+
+**Изменение.** Fixture записывает raw native callback в private JSONL до
+передачи исходному callback. Parent читает файл независимо от hit-enter,
+проверяет настоящий ненулевой exit/signal и ожидает реальные own/core notices
+по tuple вместо константного количества. Потом проверяет редактирование.
+Callback/return tuple не меняются; production crash/SQLStop logic прежние.
+
+**Попытки.** Чтение child Lua до подтверждения prompt блокировало RPC; данные
+перенесены в parent-readable журнал. Проверка signal==15 тоже неверна на
+Windows: requested kill 15 даёт native signal 0 и code 1. Не нормализовали
+эти реальные значения ради теста; проверяется неожиданное завершение.
+
+**Проверка/e2e.** Artifact 2348848720255 сохраняет exact test/helper 054ee05
+и единственное настоящее notice. Финальные raw tuples подтверждены на обеих
+ОС; focused Windows/Ubuntu PASS и полные SQL query 20 PASS на каждой ОС.
+**Вывод:** platform-specific exit tuple и дополнительные core сообщения
+наблюдаем, не заменяем выдуманными одинаковыми replies.
+**Файлы:** sql_project.lua/sql-language.test.lua, E2E/docs/history/commands.
+
+## 140. Docker: принадлежность хранилищ и заблокированный cleanup
+
+**Дата:** 2026-11-09. **Поручение:** удалить неиспользуемое, созданное агентом;
+чужое не трогать. **Это запись результата проверки, не успешного удаления.**
+
+**Что установлено.** Настройки и WSL registry указывают на рабочий
+F:/wsl/DockerDesktopWSL-clean. Исходный DockerDesktopWSL существует с 2025 года;
+F:/wsl/Ubuntu — отдельный ранее созданный distro. Они не удалялись.
+Copy-state/время создания подтверждают собственную незавершённую копию
+DockerDesktopWSL-recovered-20261101 из §97: единственный VHDX 503452794880
+bytes. Она не зарегистрирована, read-only exclusive open успешен.
+
+**Действие/ограничение.** Подготовлено удаление только этой копии с проверками
+абсолютного пути, reparse points, registry и сохранности оригинала. Автоматическая
+проверка отклонила CreateProcess до исполнения shell: `blocked by policy`,
+без детальной причины. Ничего не удалено (0 bytes), попытки обхода не было.
+После отказа выполнены только чтения/запись audit metadata; engine 28.5.1 жив.
+
+**Проверка/вывод.** .tests/docker-owned-recovery-cleanup-20261109.json хранит
+provenance, targetPresent=true, active storage, original metadata и отказ.
+В DOCKER_WINDOWS_SETUP.md дан точный путь/ручная команда владельцу. Рабочее
+хранилище, оригинал и Ubuntu сохранены, Desktop/WSL не переключались.
+**Файлы:** DOCKER_WINDOWS_SETUP/HISTORY/AGENT_COMMANDS и ignored audit journal.
+
+## 141. Повторный аудит и внешнее состояние хранилищ
+
+**Дата:** 2026-11-10. **Область:** проверка evidence и исторических записей.
+
+**Что было/причина.** При возобновлении аудит прошёл проверки native E2E,
+но остановился на требовании, чтобы внешние резервные диски всё ещё существовали.
+Журнал §140 описывает момент отказа 9 ноября и не обещает неизменность дисков.
+Сейчас Test-Path показывает отсутствие старого DockerDesktopWSL и копии
+-recovered-20261101; рабочий -clean и Ubuntu существуют. Агент их не удалял;
+кто и каким способом изменил внешние каталоги, из этого наблюдения неизвестно.
+
+**Изменение.** Исторический JSON оставлен без изменений. Аудит сохраняет
+текущее наличие внешних каталогов отдельным полем; если оригинал существует,
+по-прежнему проверяет его размер. Исходные source RED, native shutdown/exit,
+production Lua/67 pins и append-only prefix остаются обязательными проверками.
+DOCKER_WINDOWS_SETUP уточняет дату наблюдения; старые записи не переписаны.
+
+**Проверка/вывод.** Повторный аудит исходных артефактов и git diff --check;
+strict OpenSpec 64/64 PASS. Это повторная проверка evidence, а не новый запуск
+119 Ubuntu/27 Windows checks. Native результаты и ограничения Mac/GUI
+остаются прежними. Наличие внешнего backup не является критерием E2E PASS.
+**Файлы:** DOCKER_WINDOWS_SETUP, HISTORY, IDE_ROADMAP, AGENT_COMMANDS;
+ignored audit-posix-validation.py/posix-validation-evidence.json.

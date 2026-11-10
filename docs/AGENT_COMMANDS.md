@@ -3362,3 +3362,102 @@ push не выполняется, каталоги из F cleanup list не уд
 После завершения текущего Windows пункта владелец попросил остановиться
 для другой работы. Следующий пункт не начинается, goal ставится на паузу
 после истории/коммита; остальные platform tasks остаются открытыми.
+
+## 54. Возобновление, Ubuntu, Termide и проверка Docker ownership, 2026-11-09
+
+Владелец возобновил план, включил Docker, попросил записать оформление Termide
+и вернуть lazy-lock к проверенным версиям. До restore сохранён
+.tests/lazy-lock-before-requested-restore.json. `git restore --
+nvim_forge/lazy-lock.json` вернул Neogit d7bb91b/Neotest 27bf921; сверены
+patch revisions, diff lock пуст. Никакого переноса backports на случайные HEAD.
+Termide записан IDE-076 с предварительным upstream reference и прототипом
+одной панели; UI не менялся.
+
+Shell login:false, все Windows TEMP/TMP/TMPDIR/NVIM_LOG_FILE на F:/repo/forge-nvim/
+.tests/tmp, npm cache F:/forge-nvim-tmp/npm-cache. Read-only docker info/image
+inspect, settings CustomWslDistroDir и registry Lxss подтвердили работающий
+engine и F:/wsl/DockerDesktopWSL-clean. Desktop/WSL lifecycle не переключался.
+
+```powershell
+docker compose -f tests/containers/compose.yaml build --progress plain ubuntu
+docker compose -f tests/containers/compose.yaml run --rm --no-deps --entrypoint nvim ubuntu -l tests/e2e/editor-descendants.test.lua
+docker compose -f tests/containers/compose.yaml run --rm --no-deps --entrypoint bash ubuntu /workspace/.tests/verify-posix-scope.sh
+```
+
+Старый image 2 ноября не имел language SDK. Явный build подготовил все SDK;
+test runtime network_mode=none. Delve build ограничен двумя Go workers;
+Cargo SDK preparers уже -j2. Новый image digest 88715ed404e0ec1177dbb3700b7d95c38ac0956cad3e05876ab1e80805dd729c.
+Build session 25527 poll тем же handle до terminal, не перезапускался из-за
+observational timeout. Контейнерные init/процессы не являются lifecycle Desktop.
+
+IDE-077: uv.spawn сначала PASS, native jobstart — реальный RED; worker PGID
+отличается от root. Source 054ee05 сохранён .tests/posix-before-054ee05.lua,
+в Ubuntu volume тот же файл. Для replay:
+
+```powershell
+docker compose -f tests/containers/compose.yaml run --rm --no-deps -e FORGE_DESCENDANT_CASE=jobstart -e FORGE_POSIX_SCOPE_SOURCE=/workspace/.tests/posix-before-054ee05.lua --entrypoint nvim ubuntu -l tests/e2e/editor-descendants.test.lua
+```
+
+После RPC prototype Rust 0/8 FAIL; логи сохранены в *rpc-registration-failed*
+и ubuntu-posix-integration-rpc-failed.txt. Ledger заменил transport зависимость.
+Финальный source replay 3605884409857 RED, Ubuntu descendants 5 PASS/1 SKIP,
+Windows 6 PASS. Наблюдение сохраняет native error tuple ENOENT и чужой child.
+
+Первый общий Ubuntu прервался на SQL tests 11/1 (terminal wrap IDE-078),
+следующий на SQL query 19/1 (count notices IDE-079). Исходные logs/артефакты
+сохранены с suffix output-wrap-red/crash-observer-red. Правили только observers.
+Ожидание raw tuple через child RPC на prompt и signal==15 на Windows тоже
+зафиксированы как неудачные попытки, не product bug/подтверждённый фикс.
+Новый exit JSONL сохраняет Windows 1/0 и Linux 0/15 без подмены callbacks.
+
+Временный verify-posix-scope.sh выполнял suites последовательно, останавливаясь
+на FAIL. После исправлений продолжали с изменённой suite, прежние завершённые
+результаты сохранены: process/runtime/Rust, затем SQL Tests, затем SQL query/
+SDK/backports/panels/Go/Node/Python/Bash и unit trace. Host Windows SQL 20,
+scope 6, SQL test changed case 1 — 27 текущих checks PASS. Ubuntu 119 PASS/
+1 Windows-only SKIP, 365 unit/trace. `python -B .tests/audit-posix-validation.py`
+сверяет exact source, payload/config/pins, raw exits, scopes/shutdown и старый
+FIXLOG prefix. Не объявляется полный GUI/ConPTY или Mac PASS.
+
+Исследование SQL references: SQLS local pinned handler/rename; публичные
+sources через GitHub fetch для RainLib 5a3c530 (SQLite columns name matching,
+project kinds без Column), Postgres LSP capabilities, Neovim v0.12.2 client
+exit predicate. Копии .tests/sql-references-sources; provider flag не считается
+доказательством binding. IDE-062 остаётся открытым, нового SQL backend нет.
+
+По отдельному поручению владельца проверено F:/wsl: Get-Item/CreationTime,
+copy-state/provenance, settings и Lxss, read-only exclusive File.Open. Рабочий
+-clean и чужие old/Ubuntu оставлены. Попытка удалить только собственную
+cancelled -recovered-20261101 отклонена автоматической проверкой до исполнения
+shell (`blocked by policy`). Повторного удаления/обхода не было. Journal
+docker-owned-recovery-cleanup-20261109.json фиксирует targetPresent и 0 deleted
+bytes; manual command — в DOCKER_WINDOWS_SETUP.md. F cleanup list не изменяли.
+
+FIXLOG §137–140 дописан raw append; прежние bytes сохранены. Strict validation,
+git diff --check и explicit staged paths проверяются перед local commit,
+push не выполняется. Mac/GUI, SQL semantic references и IDE-073/074 открыты.
+
+## 55. Возобновление и проверка перед commit, 2026-11-10
+
+Прочитаны git status/log/diff, CLAUDE.md, openspec/config.yaml, proposal/design/tasks
+fix-editor-descendant-lifetime. OpenSpec list/status/instructions apply подтверждают
+локальный root и 5/7 задач; Mac verification остаётся открытой. Команды:
+
+```powershell
+$env:TEMP='F:/repo/forge-nvim/.tests/tmp'
+$env:TMP=$env:TEMP; $env:TMPDIR=$env:TEMP
+$env:PYTHONIOENCODING='utf-8'
+$env:npm_config_cache='F:/forge-nvim-tmp/npm-cache'
+python -B .tests/audit-posix-validation.py
+npx.cmd --yes @fission-ai/openspec@1.13.2 validate --all --strict
+git diff --check
+```
+
+Первый audit остановился на текущем отсутствии внешних backup. Test-Path
+показал old и recovered отсутствующими, -clean и Ubuntu существующими.
+Новых Remove-Item, смены настроек и lifecycle Docker/WSL не было. Исторический
+журнал отказа не изменён; audit различает его и текущее состояние (§141).
+После этого повторная проверка evidence и strict 64/64, explicit git add
+только 22 изменённых tracked paths, diff --cached --check и local commit.
+Новые тесты после изменений только документации не запускались; .tests/.tools
+и lazy-lock не входят в commit. Следующий функциональный пункт — SQL references.

@@ -1030,9 +1030,10 @@ SQL semantic references остаются IDE-062.
 Проверяются обычный qa!, уже завершившийся root, принудительный root exit,
 private runtime настоящей IDE и native attach failure до пользовательского init.
 
-Windows: 5 native E2E PASS. Тот же final orphan test с exact driver eeae06c
-даёт 4 целевых RED: три живых worker после stop и реальный runtime/file-lock
-cleanup FAIL. Baseline fixture освобождает только свой worker через уникальный
+Windows: 6 native E2E PASS; Ubuntu: 5 PASS/1 Windows-only SKIP, включая
+orphan из native jobstart и проверку ENOENT tuple. Предыдущий срез §136 с exact
+driver eeae06c сохраняет 4 целевых RED: три живых worker после stop и реальный
+runtime/file-lock cleanup FAIL. Baseline fixture освобождает свой worker через уникальный
 control file, сохраняет отказ и не оставляет процессы/runtime.
 
 ```powershell
@@ -1055,12 +1056,31 @@ release. Job active counts/termination/error/elapsed записываются в
 вышедшего root; ошибка scope не становится успешным cleanup. Реальный отказ
 OpenProcess в отдельном case — явный argument fault injection, не fake reply.
 
-POSIX backend использует отдельную process group и TERM/wait/KILL. Намеренно
-отделившаяся session не принадлежит исходному PGID; совместимость language
-workers требует настоящих platform integration E2E. Ubuntu/macOS пока не
-запускались; Windows PASS не доказывает POSIX/GUI. Docker/WSL не запускаются
-тестовым каркасом. macOS: `nvim -l tests/e2e/editor-descendants.test.lua` в
+POSIX backend использует собственную группу root и группы реальных editor
+jobstart/termopen/отделённых uv.spawn. Startup observer пишет actual PID/PGID
+в private append-only JSONL; cleanup читает его после root exit и применяет
+TERM/wait/KILL только к этим группам. Registry не зависит от закрывающегося
+RPC и не меняет argv/callbacks/return tuple. `shutdown.json` сохраняет список
+групп, их API, действия и live state. Намеренно отделившийся внутри backend
+daemon требует отдельного lifecycle; поиск/kill по имени не используется.
+
+IDE-077 source replay: `FORGE_POSIX_SCOPE_SOURCE` указывает на точный
+`tests/lib/process_scope_posix.lua` из 054ee05 (SHA проверяется),
+`FORGE_DESCENDANT_CASE=jobstart`. На native Ubuntu старый module даёт один
+целевой RED; текущий — GREEN с прежним сценарием и живым чужим child.
+Для контейнера включён `init: true`, чтобы reap orphan zombies. Engine
+запускает владелец, тестовый каркас не управляет Desktop/WSL.
+
+Mac/GUI остаются непроверенными; Windows PASS не доказывает POSIX/GUI.
+macOS: `nvim -l tests/e2e/editor-descendants.test.lua` в
 подготовленном окружении; native OpenProcess case там имеет явный SKIP.
 Для проверки live/zombie members POSIX backend использует `ps`: на macOS он
-штатный, в Ubuntu recipe явно добавлен пакет `procps`. Recipe не заменяет
-реальный build/run и не объявляется проверенным по Windows результатам.
+штатный, в Ubuntu recipe явно добавлен пакет `procps`. Образ пересобран
+2026-11-09; отдельные language gates отмечаются по фактическим прогонам.
+
+SQL observer regressions IDE-078/079: terminal rows могут разрывать заголовок
+native PASS, поэтому UI assertion учитывает перенос, сохраняя реальные
+process/DB/status проверки. Unexpected SQLS exit записывается в отдельный
+native JSONL: parent читает raw code/signal без blocking RPC на hit-enter.
+Нужные crash notices определяются по этому tuple и поведению Neovim 0.12.2,
+а не фиксированным числом сообщений. Production LSP/query код не менялся.

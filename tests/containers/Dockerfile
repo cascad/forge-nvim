@@ -33,7 +33,7 @@ RUN set -eu; \
     echo "$sha  /tmp/go.tar.gz" | sha256sum -c -; \
     tar xzf /tmp/go.tar.gz -C /opt; rm /tmp/go.tar.gz
 ENV PATH="/opt/go/bin:/opt/forge/bin:${PATH}"
-RUN GOTOOLCHAIN=local GOBIN=/opt/forge/bin go install github.com/go-delve/delve/cmd/dlv@v1.26.3 \
+RUN GOMAXPROCS=2 GOFLAGS=-p=2 GOTOOLCHAIN=local GOBIN=/opt/forge/bin go install github.com/go-delve/delve/cmd/dlv@v1.26.3 \
     && go version && dlv version
 # Rust готовится только при явном build образа; Desktop/WSL runner не запускает.
 # SHA: static.rust-lang.org/rustup/archive/1.28.2/<target>/rustup-init.sha256.

@@ -16,7 +16,9 @@ if mode == 'parent':
         stderr=subprocess.DEVNULL, close_fds=True,
     )
     (control / 'parent.json').write_text(
-        json.dumps({'pid': os.getpid(), 'worker': child.pid}), encoding='utf-8')
+        json.dumps({'pid': os.getpid(), 'worker': child.pid,
+                    'group': os.getpgrp() if os.name == 'posix' else None,
+                    'session': os.getsid(0) if os.name == 'posix' else None}), encoding='utf-8')
 elif mode == 'worker':
     target.parent.mkdir(parents=True, exist_ok=True)
     with target.open('w', encoding='utf-8') as held:
@@ -25,7 +27,9 @@ elif mode == 'worker':
         ready = control / 'ready.json'
         pending = control / 'pending.json'
         pending.write_text(json.dumps({'pid': os.getpid(), 'parent': os.getppid(),
-                                       'target': str(target)}), encoding='utf-8')
+                                       'target': str(target),
+                                       'group': os.getpgrp() if os.name == 'posix' else None,
+                                       'session': os.getsid(0) if os.name == 'posix' else None}), encoding='utf-8')
         pending.replace(ready)
         deadline = time.monotonic() + 30
         while not (control / 'release').exists():

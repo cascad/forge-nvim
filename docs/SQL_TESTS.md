@@ -109,7 +109,8 @@ Neotest companion files. Диагностический watchdog дал stack ev
 Windows integration после IDE-075 прошёл общий регресс: 111 native checks
 PASS, 2 POSIX SKIP, 365 unit/trace, 64 strict valid (§136). Отдельные
 IDE-073/074 причины startup/CodeLLDB timeout остаются открытыми.
-Ubuntu recipe содержит SDK, но build/run и Mac/ARM64/GUI ещё не проверены.
+Ubuntu image собран: 12 native SDK и 12 editor UI PASS; общий Ubuntu набор
+119 PASS/1 Windows-only SKIP, 365 unit/trace (§137–139). Mac/ARM64/GUI ещё не проверены.
 При уже доступном engine можно явно собрать image и запустить:
 
 ```sh

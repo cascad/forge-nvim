@@ -10,7 +10,24 @@
 
 Маршрут и приоритеты: [рабочий план nvim_forge](docs/IDE_ROADMAP.md).
 Для новых пунктов используем следующий свободный ID `IDE-xxx`; исходный
-симптом хранится здесь, этап и состояние — в плане. Следующий ID: `IDE-076`.
+симптом хранится здесь, этап и состояние — в плане. Следующий ID: `IDE-080`.
+
+## IDE-076 — оформление рамок и заголовков панелей по примеру Termide
+
+2026-11-09, пожелание владельца: понравились обрамления окон Termide;
+исследовать, можно ли перенять оформление для nvim_forge.
+Предварительный референс — [Termide](https://github.com/termide/termide),
+[описание рамок/заголовков](https://github.com/termide/termide/blob/main/doc/en/architecture.md).
+Перед реализацией сверить выбранный образец с тем, который смотрел владелец.
+
+Изучить цельные рамки, встроенные заголовки, оформление активной/неактивной
+области и свёрнутых панелей. Проверить ограничения обычных Neovim split и
+текущих Edgy/winbar/statusline; сначала небольшой прототип на одной панели.
+Сохранить Space w, читаемость, рабочую площадь, zoom/resize/возврат фокуса,
+клавиатурное управление и переносимость Windows/macOS/Ubuntu. Полный стиль
+применять после проверки прототипа; визуальный референс не означает миграцию
+на другой редактор. Нужны постоянные UI E2E и отдельная visual/GUI проверка.
+Это запланированное исследование/UX, не реализованная возможность.
 
 ## IDE-074 — Rust default F5: редкий CodeLLDB timeout после runInTerminal
 
@@ -40,9 +57,17 @@ SQLLogicTest/DB-specific tests), не подменённого успешным 
 
 2026-11-09: native SQLLogicTest/SQLite SDK готов отдельно (12 process E2E
 Windows, FIXLOG §129). Editor adapter/UI прошёл 12 native UI E2E Windows (§130–135);
-общий integration gate открыт из-за IDE-075, semantic references ещё открыты.
+Windows integration gate закрыт в §136, semantic references ещё открыты.
 SQLite assertion readiness не заменяет UI/проверки других ОС. План —
 openspec/changes/add-sql-test-workflow/tasks.md.
+
+Проверка источников 2026-11-09: SQLS 0.2.48 не имеет references handler;
+RainLib/lsp_sqls 5a3c530 имеет provider/SQLite, но columns references сравнивают
+token names без schema binding, а project index не содержит column kind.
+Это не закрывает semantic references при одинаковых именах разных таблиц.
+Postgres Language Server текущего среза также не объявляет references.
+Нужен resolver с настоящей binding/scope моделью; подсветка/grep не заменяют
+требование. Исходники исследования сохранены в `.tests/sql-references-sources`.
 
 ## IDE-057 — Bash debug: выбор отдельного Linux backend для Windows
 
@@ -515,6 +540,24 @@ Windows не срабатывают. Решить: псевдонимы в nvim_
 
 
 <!-- ────────── разобрано (переехало в nvim_forge/FIXLOG.md) ────────── -->
+
+IDE-077 → [FIXLOG §137](nvim_forge/FIXLOG.md#137-posix-editor-jobs-входят-в-собственный-scope):
+native jobstart создавал другую group, orphan переживал root. Startup JSONL
+регистрирует реальные собственные группы, cleanup завершает их до удаления
+runtime. Exact scope 054ee05 RED; Windows 6 PASS, Ubuntu 5 PASS/1 SKIP и
+весь Ubuntu 119 PASS/1 SKIP. Mac/daemon sessions вне spawn API остаются отдельно.
+
+IDE-078 → [FIXLOG §138](nvim_forge/FIXLOG.md#138-sql-e2e-перенос-terminal-не-скрывает-pass):
+terminal переносил `8 SQL checks` между rows, observer ошибочно ждал цельную
+строку. Native JSON/code/DB были PASS; исправлена только проверка header.
+Исходный exact test 054ee05 RED; Windows case и Ubuntu SQL tests 12 PASS.
+
+IDE-079 → [FIXLOG §139](nvim_forge/FIXLOG.md#139-sql-e2e-crash-notices-по-настоящему-exit-tuple):
+observer ожидал два crash notices на всех ОС. Native tuple Windows 1/0,
+Linux 0/15; Neovim core предупреждает по-разному. Сохранён raw exit journal,
+ожидаются реальные сообщения без blocking child Lua на prompt. Оба SQL query
+набора 20 PASS; product LSP/SQLStop logic не менялась.
+
 
 IDE-075 → [FIXLOG §136](nvim_forge/FIXLOG.md#136-e2e-завершение-editor-охватывает-собственных-потомков):
 Windows test runtime больше не полагается на exit одного Neovim. Job Object

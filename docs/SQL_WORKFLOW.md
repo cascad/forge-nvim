@@ -115,7 +115,7 @@ procedural debug требует backend.
 
 Для test framework есть отдельный [native SQLLogicTest SDK](../scripts/sdk/sql-test/README.md)
 и [`.slt` в общих Tests/Test Output](SQL_TESTS.md): 12 process E2E и 12 editor
-UI Windows PASS. Semantic references ещё не реализованы; SDK CLI и editor
+UI Windows/Ubuntu PASS. Semantic references ещё не реализованы; SDK CLI и editor
 UI evidence проверяются отдельно.
 
 Upstream SQLS 0.2.48 классифицирует SELECT с ведущим комментарием как Exec.
@@ -141,7 +141,7 @@ Private workspace с двумя SQLite, Unicode/space paths, counters и real DB
 сохраняет source/config/UI grid/LSP log/запущенные PID и shutdown artifacts.
 Доставка физических клавиш из GUI проверяется отдельно.
 
-Windows: 20 SQL UI + 2 native SDK CLI checks PASS. Повтор readiness не требует
+Windows/Ubuntu: по 20 SQL UI + 2 native SDK CLI checks PASS. Повтор readiness не требует
 компилятора/build scratch, использует отдельный временный профиль и сохраняет
 manifest/binaries; смена sqls-variant без --download отклоняется (IDE-067).
 Официальный вариант для source RED: --sqls-variant upstream --download с

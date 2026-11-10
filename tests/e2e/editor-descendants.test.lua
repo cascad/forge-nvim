@@ -3,6 +3,13 @@ package.path=root..'/tests/lib/?.lua;'..package.path
 local source=vim.env.FORGE_DESCENDANT_DRIVER_SOURCE
 if source and source~='' then package.path=source..'/?.lua;'..package.path end
 local T=require('check')
+local posix_source=vim.env.FORGE_POSIX_SCOPE_SOURCE
+if posix_source and posix_source~='' then
+  assert(vim.fn.has('win32')==0 and not source,'POSIX replay нужен native Unix без driver override')
+  local raw=table.concat(vim.fn.readfile(posix_source,'b'),'\n'):gsub('\r\n','\n')
+  T.eq(vim.fn.sha256(raw),'cc71f6408e0752f654c0fd7448d92b1ed83b1f6cec5e2a5a2db9bf09e0291f2e','exact scope 054ee05')
+  package.loaded.process_scope_posix=assert(loadstring(raw,'@'..posix_source))()
+end
 local baseline={
   ['editor.lua']='66531d6fe919f61089d18cacf357ec339bd4c044a714da48e311cedff3ed2126',
   ['editor_rpc.lua']='1b937039ecac80675bdaf561f818817ec2fec5ad9ab312c2c32b0cb3fc1828c6',
@@ -25,8 +32,16 @@ local function control(dir,name)
   local path=dir..'/'..name;vim.fn.mkdir(path,'p');return path
 end
 local launch=[[
-  local python,fixture,target,control=...
+  local python,fixture,target,control,native_job=...
   _G.forge_worker_parent_exit=nil
+  if native_job then
+    local job=vim.fn.jobstart({python,'-B',fixture,'parent',target,control},{on_exit=function(_,code)
+      _G.forge_worker_parent_exit={code=code,signal=0}
+    end})
+    assert(job>0,'native jobstart не запустил intermediate parent')
+    _G.forge_worker_parent_pid=vim.fn.jobpid(job)
+    return _G.forge_worker_parent_pid
+  end
   local handle
   handle=assert(vim.uv.spawn(python,{args={'-B',fixture,'parent',target,control}},function(code,signal)
     _G.forge_worker_parent_exit={code=code,signal=signal}
@@ -35,7 +50,7 @@ local launch=[[
   _G.forge_worker_parent_pid=handle:get_pid()
   return _G.forge_worker_parent_pid
 ]]
-local function check(name,real_editor,exit_mode)
+local function check(name,real_editor,exit_mode,native_job)
   if vim.env.FORGE_DESCENDANT_CASE and not name:find(vim.env.FORGE_DESCENDANT_CASE,1,true) then return end
   T.check('SELF: EDITOR-DESCENDANTS '..name,function()
     local dir=root..'/.tests/editor-descendants-e2e/'..tostring(uv.hrtime())
@@ -51,7 +66,7 @@ local function check(name,real_editor,exit_mode)
       assert(uv.fs_copyfile(path,dir..'/'..file))
     end
     for _,file in ipairs({'process_scope.lua','process_scope_windows.lua','process_scope_posix.lua'}) do
-      local path=root..'/tests/lib/'..file
+      local path=(file=='process_scope_posix.lua' and posix_source) or (root..'/tests/lib/'..file)
       if not source and vim.fn.filereadable(path)==1 then
         assert(uv.fs_copyfile(path,dir..'/'..file))
         code_sources[file]=vim.fn.sha256((table.concat(vim.fn.readfile(path,'b'),'\n'):gsub('\r\n','\n')))
@@ -70,15 +85,21 @@ local function check(name,real_editor,exit_mode)
         local marker=read(e.runtime..'/.forge-e2e-owner.json')
         profile={path=e.runtime,canonical=marker.path,root=marker.root,token=marker.token,parent=assert(uv.fs_realpath(vim.fs.dirname(e.runtime)))}
         target=e.runtime..'/state/owned-worker-held.txt'
-        e:lua(launch,{python,fixture,target,own})
+        e:lua(launch,{python,fixture,target,own,native_job or false})
       else
         local bootstrap=dir..'/launch.lua'
         vim.fn.writefile({'assert(loadstring('..vim.inspect(launch)..'))('..vim.inspect(python)..','..
-          vim.inspect(fixture)..','..vim.inspect(target)..','..vim.inspect(own)..')'},bootstrap)
+          vim.inspect(fixture)..','..vim.inspect(target)..','..vim.inspect(own)..','..tostring(native_job or false)..')'},bootstrap)
         rpc=require('editor_rpc').start({vim.v.progpath,'--headless','--embed','-u','NONE','-i','NONE',
           '--cmd','lua dofile('..vim.inspect(bootstrap)..')'},
           {cwd=root,timeout=30000,artifacts=dir,env=vim.tbl_extend('force',vim.fn.environ(),{NVIM_LOG_FILE=dir..'/nvim.log'})})
       end
+      local spawn_failure=rpc:request('nvim_exec_lua',{[[
+        local function pack(...) return {n=select('#',...),...} end
+        local out=pack(vim.uv.spawn('__forge_e2e_missing_executable_077__',{},function() end))
+        return {n=out.n,missing=out[1]==nil,code=out[3]}
+      ]],{}})
+      T.eq(spawn_failure,{n=3,missing=true,code='ENOENT'},'native spawn failure tuple сохранён')
       wait('intermediate parent завершён до editor',function()
         local data=rpc:request('nvim_exec_lua',{'return _G.forge_worker_parent_exit',{}})
         return type(data)=='table' and data.code==0
@@ -142,6 +163,7 @@ local function check(name,real_editor,exit_mode)
   end)
 end
 check('orphan из startup, обычный qa и чужой child',false,'normal')
+check('orphan из native jobstart, обычный qa и чужой child',false,'normal',true)
 check('orphan после уже завершившегося root',false,'early')
 check('orphan после принудительного root exit сохраняет primary error',false,'killed')
 check('реальный editor очищает runtime после orphan file lock',true,'normal')

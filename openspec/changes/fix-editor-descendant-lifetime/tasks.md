@@ -9,8 +9,11 @@
 
 - [ ] 2.1 Реализовать POSIX process-group backend за тем же интерфейсом; изолировать own PGID до config, TERM/wait/KILL и сохранение forced-stop FAIL. Те же native E2E, SIGSTOP/RPC регресс и editor-runtime на Ubuntu/macOS; проверить фактическую принадлежность native language workers и явно отделённые sessions. Если engine/Mac недоступны, оставить platform verification открытой, записать команды/непроверенные границы, не объявлять общий PASS и не управлять Desktop/WSL.
 
+- [x] 2.2 IDE-077: native jobstart regression, exact POSIX scope 054ee05 RED, startup registration фактических process groups и общий cleanup без kill чужого child. Проверить native Ubuntu descendants/process/runtime и Windows Job Object regression, дописать FIXLOG/HISTORY/команды/README. Mac verification из 2.1 остаётся открытой.
+
 ## 3. Общая интеграция
 
+
 - [x] 3.1 Последовательно Windows: полный Rust language suite с реальными clippy/F5/debug tests, process/runtime, SQL Tests/common panels, unit/trace и strict OpenSpec. Проверить scope/shutdown/worker absence/runtime cleanup, exact sources и append-only историю; дописать FIXLOG/HISTORY/команды/PROBLEMS/roadmap и коммит. Только реальный успешный требуемый прогон закрывает integration 3.1 add-sql-test-workflow; IDE-073/074 без причины/фикса остаются открытыми.
-- [ ] 3.2 Ubuntu при уже доступном engine: те же process/runtime/Rust/SQL и явная подготовка SDK; приложить реальные platform artifacts и результаты. Без engine задача остаётся открытой, Docker/WSL lifecycle не менять.
+- [x] 3.2 Ubuntu при уже доступном engine: те же process/runtime/Rust/SQL и явная подготовка SDK; приложить реальные platform artifacts и результаты. Без engine задача остаётся открытой, Docker/WSL lifecycle не менять.
 - [ ] 3.3 macOS владельца: те же native process/runtime/language сценарии через scripts/test.sh и отдельные GUI/WezTerm проверки, если изменится доставка клавиш. Внести фактические результаты; отсутствие Mac не заменять Windows/POSIX кодом или unit. Mint отложен.

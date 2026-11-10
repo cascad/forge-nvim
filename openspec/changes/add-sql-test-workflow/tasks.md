@@ -20,3 +20,5 @@
 Windows интеграция 3.1 завершена после постоянного IDE-075 lifecycle fix:
 111 native checks PASS, 2 POSIX SKIP, 365 unit/trace и 64 strict valid;
 история §136. Ubuntu/Mac задача 3.2 остаётся открытой, references IDE-062 отдельно.
+
+- [x] 3.3 IDE-078/079: terminal-wrap и platform exit-notices observers. Исходные test/helper 054ee05 дают целевые Ubuntu RED; исправлены только наблюдения, Windows focused/full SQL и Ubuntu SQL tests 12/query 20 PASS. История §138–139. Ubuntu часть 3.2 выполнена (оба SDK/UI), Mac оставляет 3.2 открытой.

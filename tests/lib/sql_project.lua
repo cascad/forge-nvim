@@ -51,9 +51,26 @@ for name,person,extra in [('dev ü.sqlite3','Alice',''),('second.sqlite3','Bob',
   if on_create then on_create(e) end
   e.sql_project=(e.project..'/SQL workspace ü'):gsub('\\','/');e.sql_python=python;e.sql_deps=deps
   e.log_lsp=e:lua([[return vim.lsp.log.get_filename()]])
-  e:lua([[vim.lsp.log.set_level('debug');_G.forge_sql_spawns={};local spawn=vim.uv.spawn;
-    vim.uv.spawn=function(cmd,opts,...) local h,pid=spawn(cmd,opts,...);local name=cmd:gsub('\\','/'):lower();
-      if name:match('/sqls%.exe$') or name:match('/sqls$') then _G.forge_sql_spawns[#_G.forge_sql_spawns+1]={cmd=cmd,args=opts.args,pid=pid} end;return h,pid end]])
+  e.sql_exit_log=e.dir..'/sqls-native-exits.jsonl'
+  vim.fn.writefile({},e.sql_exit_log)
+  e:lua([[local exit_log=...;vim.lsp.log.set_level('debug');_G.forge_sql_spawns={};local spawn=vim.uv.spawn;
+    local function pack(...) return {n=select('#',...),...} end
+    vim.uv.spawn=function(cmd,opts,on_exit)
+      local name=cmd:gsub('\\','/'):lower()
+      if not (name:match('/sqls%.exe$') or name:match('/sqls$')) then return spawn(cmd,opts,on_exit) end
+      local record={cmd=cmd,args=opts.args}
+      local result=pack(spawn(cmd,opts,function(code,signal)
+        record.code=code;record.signal=signal
+        local file,err=vim.uv.fs_open(exit_log,'a',384)
+        if file then
+          local _,write_error=vim.uv.fs_write(file,vim.json.encode({pid=record.pid,code=code,signal=signal})..'\n',-1)
+          vim.uv.fs_close(file);record.exit_log_error=write_error
+        else record.exit_log_error=err end
+        if on_exit then return on_exit(code,signal) end
+      end))
+      record.pid=result[2];_G.forge_sql_spawns[#_G.forge_sql_spawns+1]=record
+      return unpack(result,1,result.n)
+    end]],{e.sql_exit_log})
   e:lua([[_G.forge_sql_events={};vim.api.nvim_create_autocmd({'WinEnter','WinClosed','BufEnter','FileType'}, {callback=function(ev)
     local all=_G.forge_sql_events;all[#all+1]={event=ev.event,match=ev.match,buf=ev.buf,win=vim.api.nvim_get_current_win(),ft=vim.bo.filetype};
     if #all>250 then table.remove(all,1) end end})]])

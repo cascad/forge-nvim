@@ -43,6 +43,20 @@ Docker/WSL, исправлять независимые IDE-073/074 или сч�
    failure остаются FAIL даже после успешного освобождения ресурсов. Сигналы
    группе runner или произвольным PID запрещены.
 5. Отдельная POSIX session намеренно отделившегося backend не входит в PGID.
+   Native Ubuntu выявил IDE-077: Neovim jobstart сам создаёт отдельную группу,
+   которую orphan наследует после смерти промежуточного процесса. Оборачиваем
+   настоящие jobstart/termopen/uv.spawn в test-only startup observer: сохраняем
+   фактический PID/group в private append-only JSONL journal до возврата caller.
+   Первый прототип RPC notification оказался ненадёжен при late lualine job
+   и закрывающемся канале: оставлял hit-enter (8 Rust FAIL). Журнал не зависит
+   от transport; parent читает его после exit, до cleanup. Fast callback пишет
+   через synchronous libuv FS, без запрещённых vim.fn API; native return tuple
+   сохраняется целиком, в том числе ENOENT. В контейнере init reaps orphan zombies.
+   Parent scope учитывает только эти собственные группы, не делает поиск/kill
+   по имени процесса. Регистрация ставится до observer/user init и не меняет
+   argv, callbacks, PID, exit code или результат вызова. Scope завершает все
+   зарегистрированные группы, с native source RED на module 054ee05 и GREEN
+   для настоящего jobstart, uv.spawn и чужого child. Изменён только test driver.
    Это явная граница process-group механизма, не обещание sandbox всех daemon.
    Применимые native LSP/DAP/Tests проверяются настоящими integration E2E;
    если их worker отделяется, до закрытия platform gate требуется дополнительное

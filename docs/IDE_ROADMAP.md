@@ -1,6 +1,6 @@
 # nvim_forge — рабочий план мини-IDE
 
-Обновлено: 2026-11-09. Основная сборка: **nvim_forge**.
+Обновлено: 2026-11-10. Основная сборка: **nvim_forge**.
 Статус: базовые e2e настоящего nvim_forge работают на Windows и Ubuntu;
 фоновые установки инструментов редактора перенесены в явный setup.
 IDE-001 параллельно ждёт диагностических данных с Mac.
@@ -13,16 +13,17 @@ IDE-001 параллельно ждёт диагностических данн�
 | Готово | Test-only cleanup IDE-047 | Коммит fa33150, E2E и §107; причина первичного RPC остаётся отдельной диагностикой |
 | Готово | IDE-041: E339 на очень длинном слове | Общая защита, по 3 UI + 10 smoke PASS Windows/Ubuntu; §108 |
 | Готово | IDE-009: основные рабочие панели | Tests/Test Output/Search/Tasks в Space w, query сохранён, по 6 новых + 19 прежних UI PASS Windows/Ubuntu; §109 |
-| Текущая проверка | Go LSP/format и IDE-050 | Windows 6 language + 15 прежних UI PASS, fallback исправлен (§110); Ubuntu требует работающего engine и явного build |
-| Готово на Windows | JS/Node и IDE-051 | 8 новых UI PASS: LSP/Prettier/Tasks/js-debug/Jest и missing tools (§111). Ubuntu требует engine, Mac открыт |
-| Готово на Windows | Python, IDE-052/053 | 8 real UI PASS: venv/LSP/Ruff/debugpy/pytest; общий selector и классификация ожидаемого adapter close (§112–113). 29 прежних UI PASS; Ubuntu/Mac открыты |
-| Готово на Windows | Rust/Cargo, IDE-054/055 | 8 real UI PASS; пути/argv/JSON test adapter и output исправлены (§114–115), 37 прежних UI + 9 backports + 364 checks PASS; [команды](RUST_WORKFLOW.md). Ubuntu/Mac открыты |
-| Готово на Windows | Bash edit/run/tests, IDE-056/058 | 8 real UI PASS: sourced LSP, shfmt, Tasks и Bats; Unicode rename исправлен (§116–117). [Команды](BASH_WORKFLOW.md). Ubuntu/Mac открыты |
-| Готово на Windows | SQL editor/query, IDE-060/061/063–068 | 20 SQL UI + 2 SDK CLI PASS, native SQLS comments fix/readiness и cache Results при смене workspace (§119–128); 6 common panel UI и 365 unit/trace PASS. Прежние 72 UI/9 backports сохранены как отдельный прогон. Ubuntu/Mac/ARM64/внешние DB не проверены |
-| Готово на Windows | IDE-062: SQLLogicTest в Tests | 12 native SDK checks и 12 editor UI PASS (§129–132): nearest/file/all, expected/fix/rerun, stop/output/panels; общий All и native paths исправлены. [Команды](SQL_TESTS.md). Остальные ОС открыты |
+| Готово Windows/Ubuntu | Go LSP/format и IDE-050 | По 6 language UI PASS, fallback исправлен (§110); Ubuntu image/прогон выполнены, Mac открыт |
+| Готово на Windows | JS/Node и IDE-051 | 8 новых UI PASS: LSP/Prettier/Tasks/js-debug/Jest и missing tools (§111). Ubuntu 8 UI PASS после build, Mac открыт |
+| Готово на Windows | Python, IDE-052/053 | 8 real UI PASS: venv/LSP/Ruff/debugpy/pytest; общий selector и классификация ожидаемого adapter close (§112–113). 29 прежних UI PASS; Ubuntu language workflow также проверен; Mac открыт |
+| Готово на Windows | Rust/Cargo, IDE-054/055 | 8 real UI PASS; пути/argv/JSON test adapter и output исправлены (§114–115), 37 прежних UI + 9 backports + 364 checks PASS; [команды](RUST_WORKFLOW.md). Ubuntu language workflow также проверен; Mac открыт |
+| Готово на Windows | Bash edit/run/tests, IDE-056/058 | 8 real UI PASS: sourced LSP, shfmt, Tasks и Bats; Unicode rename исправлен (§116–117). [Команды](BASH_WORKFLOW.md). Ubuntu language workflow также проверен; Mac открыт |
+| Готово на Windows | SQL editor/query, IDE-060/061/063–068 | 20 SQL UI + 2 SDK CLI PASS, native SQLS comments fix/readiness и cache Results при смене workspace (§119–128); 6 common panel UI и 365 unit/trace PASS. Прежние 72 UI/9 backports сохранены как отдельный прогон. Ubuntu 20 SQL UI/2 SDK также PASS; Mac/ARM64/внешние DB не проверены |
+| Готово на Windows | IDE-062: SQLLogicTest в Tests | 12 native SDK checks и 12 editor UI PASS (§129–132): nearest/file/all, expected/fix/rerun, stop/output/panels; общий All и native paths исправлены. [Команды](SQL_TESTS.md). Ubuntu 12 SDK/12 UI PASS; Mac открыт |
 | Готово на Windows | IDE-075: lifecycle и Windows integration gate | Собственный process scope, 5 новых native E2E и 4 source RED; 111 checks PASS/2 POSIX SKIP, 365 unit/trace, 64 strict valid (§136). Ubuntu/Mac и причины IDE-073/074 открыты |
-| Следующий этап после паузы | Остаток SQL workflow, IDE-062 | Semantic references с реальными E2E; SQLS references provider отсутствует. Не подменять references текстовым поиском. Вложенный SLT error показывает точную location в Output; cross-file quickfix остаётся ограничением Neotest |
-| Затем | Остальная [матрица языков](LANGUAGE_MATRIX.md) | SQL references IDE-062, Bash DAP IDE-057; language Ubuntu после доступности engine |
+| Готово Windows/Ubuntu | IDE-077/078/079: process lifecycle и observers | Ubuntu 119 PASS/1 Windows-only SKIP, 365 unit/trace; Windows 27 текущих checks PASS (§137–139). Product Lua/67 pins прежние; Mac/GUI открыты |
+| Текущий этап | Остаток SQL workflow, IDE-062 | Semantic references с реальными E2E; SQLS references provider отсутствует. Не подменять references текстовым поиском. Вложенный SLT error показывает точную location в Output; cross-file quickfix остаётся ограничением Neotest |
+| Затем | Остальная [матрица языков](LANGUAGE_MATRIX.md) | SQL references IDE-062, Bash DAP IDE-057; Mac/native и оставшиеся сценарии матрицы |
 | После функциональной матрицы | Упрощение архитектуры | Общее ядро, явные системные границы и setup; сокращение дублирования с сохранением E2E |
 
 **Mac параллельно:** IDE-001 (zsh/Go до запуска nvim) и IDE-002 (Cmd+C)
@@ -31,9 +32,10 @@ IDE-001 параллельно ждёт диагностических данн�
 
 SQL Tests Windows шаг сохранён в `eeae06c`; IDE-075 и его Windows regression
 gate завершены (§136). [Process lifecycle](../openspec/changes/fix-editor-descendant-lifetime/tasks.md)
-имеет 3/6 задач: POSIX/native platform verification остаётся открытой.
-По просьбе владельца работа приостановлена после этого пункта. После
-возобновления — SQL semantic references IDE-062; IDE-073/074 остаются отдельно.
+имеет 5/7 задач: Ubuntu часть проверена, Mac/native platform verification остаётся открытой.
+Работа возобновлена: SQL semantic references IDE-062; IDE-073/074 остаются
+отдельно. Владелец запустил Docker — доступные Ubuntu проверки выполняются
+через существующий engine без управления Desktop/WSL.
 
 **Ограничение текущего шага:** полный Ubuntu IDE-047 — 43 PASS/1 FAIL/3 SKIP,
 653 checks. Cleanup/процессные проверки прошли; новый FAIL ожидания Git-read
@@ -221,6 +223,13 @@ Mac остаётся непроверенным. Дальше растим по�
 
 ## Этап 3. Единая клавиатурная модель панелей
 
+- [ ] IDE-076: рамки и заголовки панелей по образцу Termide. Исследовать
+  [референс](https://github.com/termide/termide/blob/main/doc/en/architecture.md),
+  ограничения Neovim split и Edgy/winbar/statusline; сделать прототип одной
+  панели, сравнить активную/неактивную рамку и title. Затем решить, применять
+  ли ко всем панелям. Сохранить Space w, zoom/resize, рабочую площадь и
+  Windows/macOS/Ubuntu; реализация требует UI E2E и visual/GUI проверки.
+
 Первый пилот — **Run & Debug**: он сразу проверяет переходы между кодом,
 Locals, стеком и Output. После проверки переносим модель на Outline,
 файлы, тесты, Git, поиск и задачи.
@@ -286,10 +295,10 @@ Normal mode, прежние aliases сохранены:
 - [x] Первичный аудит конфигурации и покрытия шести языков, без новых PASS.
 - [x] Go LSP/format Windows: definition/references/rename/completion/diagnostics,
   внешний/LSP formatter, save/health и cleanup без tools; 6 UI E2E (§110).
-- [ ] Go language Ubuntu: явный build и те же E2E после появления engine.
+- [x] Go language Ubuntu: явный build и те же 6 E2E, вместе с остальной матрицей (§137–139).
 - [x] Bash Windows edit/run/tests: 8 real UI, исходный RED и Unicode rename
   регресс (§116–117), без новых plugins и startup installs.
-- [ ] Bash DAP: IDE-057, выбор Linux backend Windows; Ubuntu/Mac Bash UI.
+- [ ] Bash DAP: IDE-057, выбор Linux backend Windows; Mac Bash UI. Ubuntu edit/run/tests проверены (§137).
 - [ ] Матрица Go/Rust/Python/JS-Node/Bash/SQL: LSP, completion, definition,
   references, rename, diagnostics, format, run, debug и tests где применимо.
 - [ ] Сохранить работающие Go/Rust/Python; добавить отсутствующие JS/Node.js,
@@ -402,7 +411,7 @@ normal-привязки. IDE-005/008 проверены на Windows/Ubuntu; Mac
 
 ## Текущая точка продолжения
 
-2026-11-09: остановка по просьбе владельца после Windows IDE-075 (§136).
+2026-11-09: работа возобновлена после Windows IDE-075 (§136), Docker доступен.
 Актуальный следующий пункт — SQL semantic references IDE-062 в таблице
 ближайшего маршрута выше. Следующие абзацы сохраняют контекст прежних этапов;
 их исторические результаты не заменяют текущую platform matrix.

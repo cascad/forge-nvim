@@ -70,7 +70,11 @@ check('IDE-SQL-7 discovery nearest shared setup without installs or DAP',functio
   discover(e);T.eq(#jobs(e),0);T.eq(counters(e).basic,0)
   run(e,'18G Tt',1,0)
   local c=counters(e);T.eq(c.basic,1);T.eq(c.other,0);T.eq(c.wrong,0)
-  e:wait('native PASS output',function() return text(e,'neotest-output-panel'):find('8 SQL checks',1,true)~=nil end)
+  e:wait('native PASS output',function()
+    -- Terminal может перенести заголовок между rows из-за длинного native path.
+    local output=text(e,'neotest-output-panel'):gsub('\n','')
+    return output:find('PASS',1,true) and output:find('8 SQL checks',1,true)
+  end)
 end)
 check('IDE-SQL-7 failed expected quickfix line edit save and rerun',function(e)
   discover(e,'wrong.slt');run(e,' Tf',0,1)
