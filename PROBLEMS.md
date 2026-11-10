@@ -86,6 +86,13 @@ initialized, reopen716.4ms после hide, без нового stopped event. �
 воспроизводится; нужен постоянный startup-hide E2E и устранение watchdog,
 с сохранением auto-open при initialized/новом breakpoint. Исходное разовое
 событие не имело этой трассы, единственность его причины не утверждается.
+§164: постоянный startup-hide E2E дал source f6b0f60 RED и patched PASS.
+800ms watchdog/helper удалены. Ещё снят преждевременный stopped_thread_id
+guard: pinned nvim-dap заполняет поле после async threads reply, actual stopped
+event остаётся основанием открыть панели той же активной сессии. Проверены
+hidden после deadline → новый breakpoint/реальные Locals42 → тот же PTY/stdout.
+22 Windows checks/16 profiles, quick353/strict79 PASS. Source/runtime snapshots
+сверены; Ubuntu/Mac gates открыты, historical caller без trace не объявлен единственным.
 
 ## IDE-089 — Windows Neovim: PPID-only обход принимает более старый процесс за потомка
 

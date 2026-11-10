@@ -4856,3 +4856,46 @@ ide094-history-before.json, raw append§163/§75 и Git additions-only.
 Microsoft primary docs прочитаны для layout и junction removal, только ссылки
 в README; не объявлялось установленным, кто создал исходный Content.IE5.
 Native Mac/Ubuntu не запускались; Docker/WSL не трогались, SDK unchanged.
+
+
+## 76. IDE-090: startup hide и actual stopped, 2026-11-10
+
+OpenSpec respect-explicit-debug-hide proposal/design/IDE-PANEL-14/tasks,
+instructions apply ready. До runtime edits добавлен permanent native E2E.
+Программа sleep4s до breakpoint, user keys закрывают UI до700ms после actual
+initialized, после1200ms проверяется отсутствие reopening. Далее реальный
+breakpoint должен вернуть sidebar/Locals42/same PTY, F5 дописать stdout.
+
+```powershell
+& .tools/neovim/windows-x64/bin/nvim.exe -l tests/e2e/debug-startup-visibility.test.lua
+powershell -NoProfile -File .tests/run-ide090-fixed.ps1
+python -B .tests/audit-startup-visibility.py
+powershell -NoProfile -File scripts/test.ps1 quick
+npx.cmd --yes @fission-ai/openspec@1.13.2 validate --all --strict --no-interactive
+```
+
+Первые source RED38923734706800 — unwanted reopen. После только удаления
+watchdog: hide сохранён, но late breakpoint не открывает панели; inspected
+39247539295900 имеет stopped1/thread/frame/verified breakpoint и stdout.
+Read-only pinned session.lua:703..750 coroutine ждёт threads до stopped ID,
+dispatch1114..1121 вызывает after listener до завершения coroutine. Убран
+premature stopped_thread_id guard, session identity и schedule сохранены.
+
+Финальный source replay: git archive --format=zip f6b0f60 nvim_forge в
+.tests/ide090-startup-baseline.zip, при extract каждый path проверен внутри
+отдельного .tests/ide090-startup-baseline. FORGE_E2E_CONFIG_SOURCE указывает на
+полную baseline копию; parent test/helper/SDK те же. Old RED39735636034500,
+текущий PASS39743782951600. Final test bytes совпадают в обоих artifacts,
+полные config snapshots сверены с archive/current source. Нет mocks часов,
+стопов, terminal или UI; DAP event listeners записывают наблюдаемые timestamps.
+Cleanup negative fixture через public dap.terminate, primary failure сохранён.
+
+Targeted suites последовательно: output-policy3, dap-output4, debug-panels4,
+debug-toggle2, test-runner5, Python default/project1, Node default F51,
+Rust default F51, плюс startup1. Всего22 PASS/16 UI profiles: native0,
+APIerrors[], no helper signals, scope after0. Go2/-p=2, TEMP/log F:. Quick353,
+strict79. Аудит/evidence .tests/ide090-startup-*. SDK/locks прежние.
+History prefix bytes/SHA перед append§164/§76 сохранены, additions-only.
+Ubuntu/Mac не запускались, Docker/WSL не опрашивались и не управлялись;
+gates открыты, OpenSpec1.4 pending. Source runtime стал короче, UI timers
+не добавлены. Следующий шаг — отдельный IDE-093 helper padding fix.

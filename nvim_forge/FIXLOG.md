@@ -8322,3 +8322,65 @@ Docker/WSL не опрашивались и не управлялись в эт�
 **Файлы:** tests/lib/editor_runtime.lua, tests/e2e/runtime-links.test.lua,
 create_directory_link.py, registry, OpenSpec change, diagnostics README,
 PROBLEMS/IDE_ROADMAP/HISTORY/AGENT_COMMANDS.
+
+
+## 164. Debug hide: без startup watchdog, с actual stopped
+
+Дата: 2026-11-10. IDE-090, продолжение доказанного механизма §162.
+Спека: IDE-PANEL-14 (ADDED), respect-explicit-debug-hide.
+
+**Проблема и причина.** Старый800ms callback после initialized проверял лишь
+отсутствие bottom. Он не отличал ошибку открытия от явного q/toggle и вызывал
+show_section заново: sidebar появлялся, PTY оставался скрытым. §162 сохранил
+реальный caller1419 без нового stopped event. Исторический одиночный32921392974800
+не имеет такой трассы; воспроизведён и исправлен механизм того же класса,
+а не доказана единственность причины старого события.
+
+**Постоянный Source RED.** Rust/CodeLLDB программа имеет4s sleep перед реальным
+breakpoint. PTY появляется, wc/q/du скрывают Debug до700ms после actual
+initialized. Через1200ms панели обязаны оставаться скрытыми. На source f6b0f60
+test39735636034500 даёт RED: Debug reopened before a new stopped event,
+probe.stopped0 и pending-window precondition пройдены. Native exit/signal0,
+APIerrors[], own scope after0; source replay использует полный Git archive
+f6b0f60 и финальный неизменённый test file, совпавшие hashes проверены.
+
+**Изменение.** Удалены watchdog и его единственный bottom_debug_visible helper
+(28 старых строк). Первоначальное открытие остаётся у initialized/runInTerminal,
+следующее — у actual stopped. Нет нового timer, flags или view controller.
+
+**Вторая половина regression выявила прежний дефект.** Только удалить watchdog
+оказалось недостаточно: Debug оставался скрыт, но на новом breakpoint не
+возвращался. Profile39247539295900 показал stopped1, verified breakpoint5,
+session1/thread17584/frame1001 и stdout42, а окон не было. Pinned nvim-dap
+Session:event_stopped запускает coroutine и ждёт threads reply до заполнения
+stopped_thread_id; after.event_stopped вызывается раньше завершения coroutine.
+Наш scheduled callback проверял ещё не заполненное поле и отказывал. Убрана
+эта преждевременная проверка; guard той же активной session и vim.schedule
+сохранены. Реальный stopped event — сигнал для показа, backend сам обновляет
+данные. Новых polling/timer/state не понадобилось.
+
+**Положительная проверка.** Финальный тот же test39743782951600: hide переживает
+deadline, затем новый actual breakpoint открывает sidebar/PTY и Locals value42,
+прежние buffer/channel13 сохранены. F5 заканчивает ту же программу и добавляет
+STARTUP_AFTER42 в тот же PTY; STARTUP_BEFORE42 не потерян. Никаких timer mocks
+или вызова private UI functions. Публичные DAP listeners лишь записывают часы
+и число actual stopped events. Пропущенное pending-window условие явно FAIL,
+а не ложный зелёный результат на слишком медленном host.
+
+**Регресс Windows.** Startup1 + output-policy3 + dap-output4 + debug-panels4 +
+debug-toggle2 + test-runner5 + Python/Node/Rust default/project debug по1 =22 PASS,
+16 captured UI profiles. Native exit/signal0, APIerrors[], helper signals нет,
+scope after0; полные runtime Lua/pins/backports snapshots сверены. Аудит:
+.tests/audit-startup-visibility.py / ide090-startup-evidence.json. Quick353/13files,
+strict79/79. Source intermediate failure не скрыт: сохранён отдельно от финального
+source RED и PASS. SDK/pins не менялись. Каждый heavy suite последовательно.
+
+**Вывод.** Явное hide сохраняется; новый настоящий stop открывает актуальные
+панели. Убрана лишняя страховка и corrected event readiness, без нового слоя.
+Ubuntu/Mac native не запускались, gates открыты; change не архивирован.
+Docker/WSL не опрашивались и не управлялись. Следом IDE-093 terminal padding
+в test helper, затем доступные gates/матрица; весь roadmap не объявлен завершённым.
+
+**Файлы:** nvim_forge/lua/plugins/dap.lua, tests/e2e/debug-startup-visibility.test.lua,
+registry, OpenSpec change, nvim_forge README, E2E README,
+PROBLEMS/IDE_ROADMAP/HISTORY/AGENT_COMMANDS.

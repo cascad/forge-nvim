@@ -1383,19 +1383,8 @@ return {
             -- session" между сессиями dap-ui сам разрулит, если console
             -- сделан через layout с element=console.
 
-            -- Видна ли уже какая-нибудь нижняя debug-секция (repl/console/term)?
-            local function bottom_debug_visible()
-                for _, win in ipairs(vim.api.nvim_tabpage_list_wins(0)) do
-                    if vim.api.nvim_win_is_valid(win) then
-                        local ft = vim.bo[vim.api.nvim_win_get_buf(win)].filetype
-                        if ft == "dap-repl" or ft == "dapui_console" or ft == "dap-terminal" then
-                            return true
-                        end
-                    end
-                end
-                return false
-            end
-
+            -- spec: IDE-PANEL-14. Auto-open follows initialized/stopped and
+            -- runInTerminal. Explicit hide lasts until a new real DAP event.
             local function open_debug_view()
                 local session = dap.session()
                 local cfg = session and session.config
@@ -1404,21 +1393,6 @@ return {
                 else
                     ide_dap.open()
                 end
-
-                -- Watchdog: если через 800мс нижняя панель так и не появилась,
-                -- а сессия жива — пробуем ещё раз. Страховка от edgy-гонки,
-                -- из-за которой иногда «нижняя панель просто не открывалась».
-                -- Привязываемся к КОНКРЕТНОЙ сессии: если её уже нет или
-                -- стартовала другая — не дёргаем (без лишних перерисовок).
-                local watched = session
-                vim.defer_fn(function()
-                    local s = dap.session()
-                    if not s or s ~= watched then return end
-                    local c = s.config
-                    if c and c.type and not bottom_debug_visible() then
-                        pcall(ide_dap.show_section, section_for_config(c), false)
-                    end
-                end, 800)
             end
 
             -- Debug mode stays visible after the program exits. Output remains
@@ -1482,7 +1456,9 @@ return {
             -- "Debug adapter didn't respond" (см. коммент у before.launch).
             dap.listeners.after.event_stopped.forge_ensure_sidebar = function(stopped_session)
                 vim.schedule(function()
-                    if require("dap").session() ~= stopped_session or not stopped_session.stopped_thread_id then return end
+                    -- nvim-dap fills stopped_thread_id after an asynchronous
+                    -- threads response. The real stopped event is authoritative.
+                    if require("dap").session() ~= stopped_session then return end
                     local ok, ide = pcall(require, "ide")
                     if ok then pcall(ide.show, "dap.sidebar") end
                     local section = section_for_config(stopped_session.config)

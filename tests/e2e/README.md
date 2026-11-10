@@ -37,6 +37,11 @@ Debug toggle с настоящим Rust/CodeLLDB: Windows —
 Ubuntu с уже работающим Linux engine и подготовленным image —
 `docker compose -f tests/containers/compose.yaml run --rm --entrypoint nvim ubuntu -l tests/e2e/debug-toggle.test.lua`;
 Mac с подготовленными editor/Rust deps — `nvim -l tests/e2e/debug-toggle.test.lua`.
+Startup hide/новый breakpoint — тот же запуск с файлом
+`tests/e2e/debug-startup-visibility.test.lua`. Fixture измеряет реальный
+initialized→hide интервал: если pending800ms окно пропущено, это явный отказ
+предусловия, а не PASS неисполненного race regression. Она также проверяет
+возврат настоящих Locals42 и прежнего PTY на следующей остановке.
 Эти команды не запускают Desktop/WSL и не готовят инструменты скрытно.
 
 Для Ubuntu на Windows с запущенным Docker Desktop в режиме Linux containers:

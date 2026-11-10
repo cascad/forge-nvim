@@ -34,20 +34,20 @@ IDE-001 параллельно ждёт диагностических данн�
 | Windows готов, Ubuntu gate открыт | IDE-088: focus-only выбор окна кода | По state predicate и прежнему tool filter; 3 source RED, 22 Windows checks и 16 clean profiles (§156). Ubuntu ждёт доступный engine и проверку IDE-087; Mac открыт |
 | Native proof готов | IDE-087/089: process ancestry | Read-only live age inversion + exact pinned C fragment: valid PASS/stale RED; guard prototype 4 native PASS, own Jobs clean (§158). Тогда SDK не менялся; следующий шаг выполнен в §159, Docker caller открыт |
 | Готово Windows | IDE-089: Windows SDK creation-time guard | Два закреплённых patch, Schema 2, staging/rollback; actual source guard 4 PASS + 3 expected upstream RED, Windows 49 PASS/24 captured editor profiles. SDK выбран; после продвижения quick 353, SDK CLI 11, lifecycle 2 PASS; strict 75 (§159). Linux/macOS backend прежний |
-| Диагностика после SDK | IDE-090: единичный Rust Debug toggle | Первый IDE-PANEL-11 regression оставил sidebar после Output q + Space du; полный повтор без UI/source изменений прошёл. Native exit 0, причина открыта; existing regression и первый log сохранены |
+| Готово Windows; Ubuntu/Mac gates открыты | IDE-090: delayed Debug reopen | Source startup-hide RED → PASS, obsolete watchdog удалён; async stopped guard исправлен. Hidden→реальный breakpoint/Locals42→same PTY проверены;22 checks/16 profiles, quick353/strict79 (§164). Единственность caller исторического одиночного failure не утверждается |
 | Готово Windows; Ubuntu/Mac gates открыты | IDE-091: PTY в общем Debug toggle | Две строки в существующих visibility/close routes; 2 native source RED → PASS, всего32 Windows checks/26 profiles, quick353, strict76 (§160). Toggle сохраняет channel/буфер/паузу, F5 дописывает в тот же PTY |
 | Готово Windows CLI | IDE-092: staged SDK source | Проверка путей/patch diff относительно HEAD; CLI staged RED → оба staged/unstaged PASS до source mutation, SDK CLI12/quick353/strict76 (§161). Binary прежний, SDK не пересобирался |
-| Capture готов, механизм воспроизведён | IDE-090: delayed startup reopen | §162: trace/failed attempts, native watchdog caller1419 после hide. Следом убрать obsolete800ms recovery с permanent running→hide→new breakpoint E2E; пока runtime не изменён |
+| Capture готов, механизм воспроизведён | IDE-090: delayed startup reopen | §162: trace/failed attempts, native watchdog caller1419 после hide. Runtime исправлен и permanent regression добавлен в §164 |
 | Подтверждённый test-only RED | IDE-093: viewport padding в history assertion | Raw before/after сохраняют stdout/buffer/channel, меняются пустые строки после реального resize; исправить сравнение с native resize regression |
 | Готово Windows test harness | IDE-094: dangling Windows junction | Source malformed RED →3 native link PASS, ещё10 lifecycle/descendants PASS и1 POSIX-only SKIP. Четыре owned остатка удалены; negative debug cleanup теперь проходит (§163), quick353/strict78. Ubuntu/Mac не запускались |
 | Отложено до готового backend | Остаток SQL workflow, IDE-062 | SQLS references provider отсутствует. Собственный binder/index/LSP fork отменён (§143); не подменять references grep и не объявлять полную SQL поддержку |
 | Затем | Остальная [матрица языков](LANGUAGE_MATRIX.md) | SQL references IDE-062, Bash DAP IDE-057; Mac/native и оставшиеся сценарии матрицы |
 | После функциональной матрицы | Упрощение архитектуры | Общее ядро, явные системные границы и setup; сокращение дублирования с сохранением E2E |
 
-После IDE-089 следующий локальный шаг — targeted диагностика IDE-090
-(видимость Debug при Output q + toggle). Первый bounded probe: 6 циклов/12
-toggle calls без исходного отказа; отдельно найденный IDE-091 исправлен (§160),
-его нельзя подставлять как объяснение IDE-090. IDE-088/091 Ubuntu gates открыты:
+После IDE-090/094 следующий локальный шаг — IDE-093: убрать ложный history
+failure на viewport padding с сохранением обнаружения потери реального stdout.
+IDE-091 исправлен отдельно (§160); источник исторического одиночного failure
+без trace не объявляется единственным. IDE-088/090/091 Ubuntu gates открыты:
 последняя read-only проверка Linux engine не нашла pipe. Desktop/WSL агент
 не запускает/перезапускает; доступность Docker не подменяется Windows PASS.
 

@@ -7,6 +7,8 @@ Debug Output: `Space w c` / `Space D c` возвращают последний 
 открытие PTY сохраняет буфер. Подробности — [QUICKSTART](QUICKSTART.md).
 `Space du` скрывает/возвращает всю группу Debug, включая PTY; normal `q`
 скрывает текущий компонент. Оба действия сохраняют сессию и полученный вывод.
+Скрытый Debug остаётся скрытым до ручного открытия или нового breakpoint;
+новая настоящая остановка возвращает панели с актуальными Locals и тем же PTY.
 
 This is one of several configs living in this repository. See the root
 `README.md` for the full layout and how the launchers isolate state.
