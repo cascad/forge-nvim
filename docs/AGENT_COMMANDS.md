@@ -4669,3 +4669,66 @@ Python ast.parse без pycache, PS parser и настоящий WinPS5 CLI, git
 History before bytes/SHA в ide089-before.json; raw append §159/§71 с проверкой
 prefix, HISTORY link. Коммит только source/tests/docs, .tools/.tests ignored,
 lazy-lock не изменён, push не выполнялся.
+
+
+## 72. IDE-090/091: native Debug toggle timeline и PTY regression, 2026-11-10
+
+Продолжение после commit5d07d2b, без нового подтверждения исполнения.
+Чтение rg/Get-Content: ide.dap/activities/init/controls, output_policy,
+Rust fixture, sidebar/PTY visibility и close, действующие OpenSpec deltas.
+TEMP/TMP/TMPDIR/NVIM_LOG_FILE на F: checkout .tests/tmp, Go2/-p=2.
+
+Ignored .tests/probe-ide090.lua запускает настоящий Rust case существующего
+dap-output-policy; observer пишет Win events и границы настоящего toggle
+без подмены DAP. Первый pilot33829927736000 отказал на старой истории assertion,
+не на исходном sidebar case. Он не засчитан ни PASS, ни доказательством потери
+stdout. Более лёгкий .tests/probe-ide090-bounded.lua пишет только toggle
+boundaries и фактические Output state при существующих чтениях. Profile
+33904027358500:6 hide/reopen cycles,12 actual toggle calls, native0/APIerrors[].
+Это observer run; не объявлять гонку исправленной на основании6 повторов.
+
+Отдельный .tests/probe-ide091.lua использует тот же настоящий Rust/CodeLLDB
+setup, затем нажимает Space du без предварительного q. Profile34018783081000:
+sidebar скрыт, PTY виден, native pause жива — RED. Source показал отсутствие
+dap-terminal в общей таблице и close. До runtime изменения создан change
+fix-debug-toggle-terminal, apply ready, прочитаны proposal/design/specs/tasks.
+
+```powershell
+& .tools/neovim/windows-x64/bin/nvim.exe -l tests/e2e/debug-toggle.test.lua
+powershell -NoProfile -File .tests/run-ide091-regression.ps1
+python -B .tests/audit-ide091.py
+powershell -NoProfile -File scripts/test.ps1 quick
+npx.cmd --yes @fission-ai/openspec@1.13.2 validate --all --strict --no-interactive
+```
+
+Первый запуск новых permanent tests:2 expected RED на неизменённом source
+5d07d2b, artifacts34156241548500/34168886075300. После2 runtime строк:2 PASS,
+34210035605800/34219270920400. Keys через nvim_input, реальный breakpoint,
+тот же buffer/channel/pause, реальный итоговый stdout после F5. Ни mock,
+ни увеличение timeout. Сначала завершён new suite, затем последовательно
+buffers, code-focus, dap-output-policy, dap-output, debug-panels, test-runner,
+Python default/project, Node default F5, Rust default F5. Всего32 PASS/26 UI
+profiles. SDK/Windows CLI заново не пересобирались: изменился только общий UI.
+
+Audit извлекает source5d07d2b через git show и сравнивает все runtime Lua/pins/
+backports snapshots для двух RED; PASS snapshots сверяются с текущим source.
+Также native exit/signal0, APIerrors[], отсутствие helper signals и scope
+active_after0; новые debug-toggle.json сохраняют before/after/final channel,
+buffer и markers. SDK binary SHA прежний. Logs PS5 > читаются с UTF-16 BOM,
+pwsh7 UTF-8; JSON read_bytes. Audit summary ide091-evidence.json.
+Quick353cases/13files, strict76/76. Prefix hash history-before сохранён перед
+новой записью, raw append§160/§72 и additions-only проверены перед коммитом.
+
+Read-only docker version --format '{{json .Server.Version}}' → pipe отсутствует,
+exit1, .tests/ide091-docker-engine.txt. Ни compose create/run, ни Desktop/WSL
+управления в этом шаге не было. Неисполненная команда Ubuntu после появления
+уже работающего engine (и подготовленного image):
+
+```powershell
+docker compose -f tests/containers/compose.yaml run --rm --entrypoint nvim ubuntu -l tests/e2e/debug-toggle.test.lua
+```
+
+Mac: nvim -l tests/e2e/debug-toggle.test.lua после явной editor/Rust подготовки.
+Обе среды остаются непроверенными, OpenSpec1.4 не отмечена выполненной. В Git
+только2 runtime строки, permanent E2E/registry/specs/docs; .tests ignored,
+lazy-lock/SDK не менялись, push нет.

@@ -52,6 +52,7 @@ local explorer_modes = {
 
 local debug_filetypes = {
     ["dap-repl"] = true,
+    ["dap-terminal"] = true,
     ["dapui_scopes"] = true,
     ["dapui_watches"] = true,
     ["dapui_stacks"] = true,
@@ -233,6 +234,7 @@ function M.close_debug()
         ide.hide("dap.sidebar")
         ide.hide("dap.console")
         ide.hide("dap.repl")
+        ide.hide("dap.terminal")
     else
         local ok, dapui = pcall(require, "dapui")
         if ok then

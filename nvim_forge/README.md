@@ -5,6 +5,8 @@ Portable Neovim IDE config for Rust, Go and Python.
 Debug Output: `Space w c` / `Space D c` возвращают последний канал с историей;
 `Space m d` открывает Debug View. F5 использует канал конфигурации, повторное
 открытие PTY сохраняет буфер. Подробности — [QUICKSTART](QUICKSTART.md).
+`Space du` скрывает/возвращает всю группу Debug, включая PTY; normal `q`
+скрывает текущий компонент. Оба действия сохраняют сессию и полученный вывод.
 
 This is one of several configs living in this repository. See the root
 `README.md` for the full layout and how the launchers isolate state.

@@ -8079,3 +8079,67 @@ scripts/{prepare-windows-sdk.ps1,lib/nvim-sdk.ps1}, native diagnostics,
 tests/e2e/process-lifecycle.test.lua/process_lifecycle_worker.py,
 tests/windows_sdk_test.py, tests/lib/process_scope_windows.lua, registry,
 OpenSpec change, README/диагностика/E2E/PROBLEMS/ROADMAP/HISTORY/AGENT_COMMANDS.
+
+
+## 160. Debug toggle: PTY в общей группе
+
+Дата: 2026-11-10. IDE-091, найдено при продолжении после SDK commit5d07d2b.
+Спека: IDE-PANEL-13 (ADDED), дополняет IDE-PANEL-2/11.
+
+**Проблема.** Space du закрывал sidebar, но оставлял настоящий CodeLLDB PTY.
+При одном видимом PTY он открывал sidebar вместо скрытия. Native probe34018783081000
+подтвердил первый случай, постоянные два E2E на source5d07d2b дали RED:
+34156241548500 /34168886075300. Native exit/signal0, API errors пусты;
+полные runtime snapshots соответствуют baseline5d07d2b, тест тот же, SDK тот же.
+
+**Причина.** Существующий dap-terminal компонент уже управлял сохранением
+буфера/канала, но его не было в activities.debug_filetypes и close_debug.
+Общий toggle проверял неполный набор и закрывал неполную группу. Это
+самостоятельный подтверждённый пробел UI, не доказанная причина IDE-090/Docker.
+
+**Изменение.** Ровно две строки runtime: dap-terminal в общей таблице debug
+filetypes, ide.hide('dap.terminal') в close_debug. Та же таблица обслуживает
+fallback close по filetype. Не добавлены FSM/таймеры/адаптеры; terminal component
+по-прежнему закрывает окно, сохраняет buffer/channel и запоминает Output.
+Normal q скрывает только текущий компонент, общий Space du — всю Debug группу.
+Общее Lua поведение одинаковое на ОС; Windows SDK, LSP и lazy-lock не менялись.
+
+**Новые E2E.** Два настоящих Rust/CodeLLDB проекта со stdout и breakpoint:
+sidebar+PTY и только PTY после q в Locals. Space du обязан скрыть все семь
+ожидаемых Debug filetypes и вернуть фокус в Rust, повторный Space du — вернуть
+тот же buffer/channel/session/thread/frame. F5 заканчивает ту же программу,
+TOGGLE_AFTER42 приходит в тот же PTY. Никакого mock DAP/terminal или private
+UI substitute. Source RED2 → patched PASS2, profiles34210035605800/34219270920400.
+Тесты в registry, source test copy и полные config snapshots в artifacts.
+
+**Итоговый Windows regression.** 32 PASS: new toggle2, buffers8, code-focus3,
+output-policy3, dap-output4, debug-panels4, test-runner5, Python/Node/Rust debug
+по1. 26 captured UI profiles: native exit/signal0, APIerrors[], без helper
+SIGTERM/SIGKILL, scopes после собственной cleanup пусты. Не утверждаем, что
+каждый член Job естественно вышел до scope.close. Полные Lua/pins/backports
+snapshots сверены с baseline для RED и текущим source для PASS. Аудит:
+.tests/audit-ide091.py / ide091-evidence.json. Quick353cases/13files PASS,
+strict OpenSpec76/76. Binary SHA74AFF15B3B6BC288753B721365B088AB44C9B2BFFF152F8D27F5885B4B1C6AD9
+прежний, SDK не пересобирался.
+
+**Границы.** Targeted IDE-090 bounded probe33904027358500 дал6 циклов/12
+toggle calls без исходного sidebar failure, native0/APIerrors[]. Насыщенный
+Win-event pilot33829927736000 раньше остановился на старой assertion
+Reopen потерял историю. Реальную потерю stdout он не доказал: before/after
+в том пилоте не захвачены. Более лёгкий probe пишет состояния и границы
+toggle; отсутствие сбоя под observer не доказывает отсутствия гонки.
+Старый P.reopen assertion/timeout не ослаблены, IDE-090 остаётся открытой.
+
+Read-only docker version снова не нашёл Linux engine pipe. Контейнер не
+создавался, Desktop/WSL не запускались/не перезапускались. Ubuntu и Mac native
+не выполнены и записаны открытыми gates; команды есть в E2E README. IDE-087
+caller не установлен. Новый change не архивирован при открытых native gates.
+
+**Вывод.** Дополнен существующий общий маршрут двухстрочным исправлением с
+детерминированным native regression. Не нужна ещё одна система управления
+панелями. Следующий локальный diagnostic — точное окно q→toggle IDE-090 с
+before/after stdout и событиями, без приписывания ему уже исправленного IDE-091.
+
+**Файлы:** nvim_forge/lua/ide/activities.lua, tests/e2e/debug-toggle.test.lua,
+registry, OpenSpec change, nvim_forge README/HOTKEYS, tests/e2e/README,
+PROBLEMS/IDE_ROADMAP/HISTORY/AGENT_COMMANDS.

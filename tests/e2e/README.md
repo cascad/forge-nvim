@@ -32,6 +32,13 @@ Native stale-PPID regression компилирует фактический SDK s
 командой `build-process-ancestry.ps1 -SdkCandidate` (нужен MSVC).
 Windows lifecycle guard на POSIX явно SKIP; там остаётся официальный SDK.
 
+Debug toggle с настоящим Rust/CodeLLDB: Windows —
+`& .tools/neovim/windows-x64/bin/nvim.exe -l tests/e2e/debug-toggle.test.lua`;
+Ubuntu с уже работающим Linux engine и подготовленным image —
+`docker compose -f tests/containers/compose.yaml run --rm --entrypoint nvim ubuntu -l tests/e2e/debug-toggle.test.lua`;
+Mac с подготовленными editor/Rust deps — `nvim -l tests/e2e/debug-toggle.test.lua`.
+Эти команды не запускают Desktop/WSL и не готовят инструменты скрытно.
+
 Для Ubuntu на Windows с запущенным Docker Desktop в режиме Linux containers:
 
 ```sh

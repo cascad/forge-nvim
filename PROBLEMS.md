@@ -10,7 +10,20 @@
 
 Маршрут и приоритеты: [рабочий план nvim_forge](docs/IDE_ROADMAP.md).
 Для новых пунктов используем следующий свободный ID `IDE-xxx`; исходный
-симптом хранится здесь, этап и состояние — в плане. Следующий ID: `IDE-091`.
+симптом хранится здесь, этап и состояние — в плане. Следующий ID: `IDE-092`.
+
+## IDE-091 — общий Debug toggle оставляет PTY или открывает sidebar вместо скрытия
+
+2026-11-10, source 5d07d2b: native Rust/CodeLLDB probe после Space du
+закрыл sidebar, но оставил dap-terminal (34018783081000). Два постоянных
+E2E дали source RED: sidebar+PTY и только PTY (34156241548500/34168886075300).
+В activities.debug_filetypes и close_debug отсутствовал существующий terminal
+компонент. Добавлены две записи в общие visibility/close; новые Windows E2E
+2 PASS с прежними buffer/channel/pause и последующим stdout в том же PTY.
+§160: итоговый Windows regression32 PASS/26 captured profiles, quick353,
+strict76/76. Change fix-debug-toggle-terminal, IDE-PANEL-13;
+Ubuntu/Mac gates открыты. Это отдельный подтверждённый дефект, не доказательство
+причины IDE-090 или Docker IDE-087.
 
 ## IDE-090 — Rust Debug toggle: единичный отказ скрыть sidebar после Output q
 
@@ -24,6 +37,12 @@ API errors пусты. Тот же полный трёхсценарный на�
 tests/lib/output_policy.lua. Первый log сохранён отдельно:
 .tests/ide089-windows-dap-output-policy-first.txt. Нужен targeted timeline
 видимости Debug и обработки q/toggle; не увеличивать timeout ради зелёного отчёта.
+Targeted bounded probe 33904027358500: 6 циклов hide/reopen на той же паузе,
+12 toggle calls, исходный отказ sidebar не повторился; native exit/signal0,
+API errors пусты. Насыщенный Win-event trace 33829927736000 остановился раньше
+на assertion Reopen потерял историю; before/after loss не установлен, этот
+пилот не принимается за доказательство потери stdout. Новых runtime таймеров
+или ослабления старого assertion нет.
 
 ## IDE-089 — Windows Neovim: PPID-only обход принимает более старый процесс за потомка
 

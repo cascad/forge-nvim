@@ -35,12 +35,15 @@ IDE-001 параллельно ждёт диагностических данн�
 | Native proof готов | IDE-087/089: process ancestry | Read-only live age inversion + exact pinned C fragment: valid PASS/stale RED; guard prototype 4 native PASS, own Jobs clean (§158). Тогда SDK не менялся; следующий шаг выполнен в §159, Docker caller открыт |
 | Готово Windows | IDE-089: Windows SDK creation-time guard | Два закреплённых patch, Schema 2, staging/rollback; actual source guard 4 PASS + 3 expected upstream RED, Windows 49 PASS/24 captured editor profiles. SDK выбран; после продвижения quick 353, SDK CLI 11, lifecycle 2 PASS; strict 75 (§159). Linux/macOS backend прежний |
 | Диагностика после SDK | IDE-090: единичный Rust Debug toggle | Первый IDE-PANEL-11 regression оставил sidebar после Output q + Space du; полный повтор без UI/source изменений прошёл. Native exit 0, причина открыта; existing regression и первый log сохранены |
+| Готово Windows; Ubuntu/Mac gates открыты | IDE-091: PTY в общем Debug toggle | Две строки в существующих visibility/close routes; 2 native source RED → PASS, всего32 Windows checks/26 profiles, quick353, strict76 (§160). Toggle сохраняет channel/буфер/паузу, F5 дописывает в тот же PTY |
 | Отложено до готового backend | Остаток SQL workflow, IDE-062 | SQLS references provider отсутствует. Собственный binder/index/LSP fork отменён (§143); не подменять references grep и не объявлять полную SQL поддержку |
 | Затем | Остальная [матрица языков](LANGUAGE_MATRIX.md) | SQL references IDE-062, Bash DAP IDE-057; Mac/native и оставшиеся сценарии матрицы |
 | После функциональной матрицы | Упрощение архитектуры | Общее ядро, явные системные границы и setup; сокращение дублирования с сохранением E2E |
 
 После IDE-089 следующий локальный шаг — targeted диагностика IDE-090
-(видимость Debug при Output q + toggle). IDE-088 Ubuntu gate остаётся открытым:
+(видимость Debug при Output q + toggle). Первый bounded probe: 6 циклов/12
+toggle calls без исходного отказа; отдельно найденный IDE-091 исправлен (§160),
+его нельзя подставлять как объяснение IDE-090. IDE-088/091 Ubuntu gates открыты:
 последняя read-only проверка Linux engine не нашла pipe. Desktop/WSL агент
 не запускает/перезапускает; доступность Docker не подменяется Windows PASS.
 

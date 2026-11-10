@@ -75,7 +75,7 @@
 |---|---|
 | `F5` | старт / continue (панели поднимаются авто) |
 | `<leader>md` | раскладка Debug |
-| `<leader>dD` / `<leader>du` / `Ctrl+Shift+d` | toggle debug-вида _(Win+WezTerm: через подмену (WT-KEYS-10; без неё не доходит — WT-KBD-6))_ |
+| `<leader>dD` / `<leader>du` / `Ctrl+Shift+d` | скрыть/вернуть всю Debug-группу, включая PTY, сохраняя сессию/вывод _(Win+WezTerm: через подмену (WT-KEYS-10; без неё не доходит — WT-KBD-6))_ |
 | `<leader>dR` | REPL |
 | `F9` breakpoint · `F10` over · `F11` into · `Shift+F11` out |
 

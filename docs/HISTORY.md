@@ -284,6 +284,7 @@ Python реализован и проверен 2026-11-03; после возо�
 | §157 | [Docker: повтор и гипотеза native ancestry](../nvim_forge/FIXLOG.md#157-docker-повтор-и-гипотеза-native-ancestry) |
 | §158 | [Windows ancestry: read-only audit и native source proof](../nvim_forge/FIXLOG.md#158-windows-ancestry-read-only-audit-и-native-source-proof) |
 | §159 | [Windows SDK: guard ancestry и проверенное продвижение](../nvim_forge/FIXLOG.md#159-windows-sdk-guard-ancestry-и-проверенное-продвижение) |
+| §160 | [Debug toggle: PTY в общей группе](../nvim_forge/FIXLOG.md#160-debug-toggle-pty-в-общей-группе) |
 
 ## Как читать и дополнять
 
