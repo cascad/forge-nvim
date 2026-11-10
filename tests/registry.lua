@@ -33,6 +33,7 @@ return {
   { file = 'tests/e2e/native-probe.test.lua', suite = 'e2e' },
   { file = 'tests/e2e/windows-sdk.test.lua', suite = 'e2e', timeout = 60 },
   { file = 'tests/e2e/editor-process.test.lua', suite = 'e2e', timeout = 60 },
+  { file = 'tests/e2e/quit-trace.test.lua', suite = 'e2e', timeout = 60 },
   { file = 'tests/e2e/editor-descendants.test.lua', suite = 'e2e', timeout = 180 },
   { file = 'tests/e2e/editor.test.lua', suite = 'e2e', timeout = 180 },
   { file = 'tests/e2e/search-sorter.test.lua', suite = 'e2e', timeout = 240 },

@@ -9,7 +9,9 @@ IDE-084: late Neo-tree cleanup сохраняет фокус, по 3 новых 
 PASS и по 3 cold trace samples Windows/Ubuntu (§150); Mac gate открыт.
 IDE-081: optional native fzf/fallback и health, по 30 checks Windows/Ubuntu,
 настоящий C scoring без CMake (§151). Единичный qa! → SIGTERM — IDE-085,
-причина не установлена, runtime exit fix не заявляется.
+причина не установлена, runtime exit fix не заявляется. §152 добавил test-only
+quit/native/API-error capture и повторно поймал uninstrumented RED; новые
+bounded followup и positive/controlled fixtures не объявляются его исправлением.
 [Новая Go metadata/команды](GO_TOOLS.md). Основа обзора —
 runtime 7463915 после отмены собственного SQL prototype. Требования не сокращаются
 до того, что сейчас легче проверить.
@@ -333,7 +335,7 @@ Ubuntu 9265858326624/9281597222561/9295146798511. В каждом source diagnos
 | Временные patches/Windows SDK | Проверенные исправления и portability | Снимать только после native equivalent regression на готовом upstream |
 
 IDE-081/082/083/084 реализованы и проверены Windows/Ubuntu (§148–151).
-Следующий — bounded IDE-085 shutdown capture, затем общий выбор Output.
+Bounded IDE-085 capture выполнен (§152), причина открыта; далее общий выбор Output.
 После каждого свой RED,
 permanent E2E, Windows/Ubuntu regression, история и commit. Mac gates явно
 остаются открытыми. Выбранные UI-удаления и общий refactor не смешивать с этим
@@ -366,7 +368,8 @@ language/test roots, interpreter/tools и save/format разобраны в
   удаляемая ответственность, регресс и проверяемая польза. Только затем рефакторинг.
   DAP-кандидаты: единый выбор Output, затем одинаковые части поиска окна кода;
   process/PTY lifecycle не объединять с видимостью. Это пока план, не runtime fix.
-  IDE-081/082/083/084 уже выполнены; далее IDE-085, Output policy и выбранные удаления optional UI.
+  IDE-081/082/083/084 уже выполнены; capture IDE-085 готов, причина открыта.
+  Далее Output policy и выбранные удаления optional UI.
   Project/session restart и uniform interpreter/root policies требуют отдельных
   сценариев; существующие Git результаты не заменяют их полной проверки.
 

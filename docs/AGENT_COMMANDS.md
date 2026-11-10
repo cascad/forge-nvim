@@ -4209,3 +4209,115 @@ OpenSpec/Mac gate: 6/7 tasks после commit; native Mac/ARM64/GUI не про
 git add только перечисленных code/tests/change/docs, commit
 'fix(search): load native fzf without runtime build tools', затем metadata
 task 2.2 через git commit --amend --no-edit; push не выполняется.
+
+## 66. IDE-085: bounded quit capture и API errors, 2026-11-10
+
+Рабочий каталог F:/repo/forge-nvim, PowerShell -NoProfile/login=false.
+Чтение git status/log, Get-Content -LiteralPath/rg по original shutdown/state,
+editor_rpc/editor_process/editor_scope, native SDK _core/system.lua,
+существующим lifecycle tests и OpenSpec test-only changes. SystemObj.write
+не предоставляет delivery ack, is_closing и completion/EOF различаются.
+Не делался вывод о причинах по одному signal/code или пустым UI messages.
+
+Windows prefix: F: TEMP/TMP/TMPDIR, NVIM_LOG_FILE; selected patched SDK через
+. ./scripts/lib/nvim-sdk.ps1 и Get-ForgeNvim; npm_config_cache=F:/forge-nvim-tmp/npm-cache.
+Python JSON через read_bytes(), UTF-8/ensure_ascii для stdout. Baseline:
+```powershell
+$env:FORGE_SEARCH_CASE='missing с CMake'
+foreach ($forgeSample in 1..3) {
+    & $forgeNvim -l tests/e2e/search-sorter.test.lua > ".tests/ide085-baseline-windows-$forgeSample.txt" 2>&1
+    if ($LASTEXITCODE -ne 0) { break }
+}
+```
+Первый sample RED, серия сразу остановлена: 21014452051400,
+exit_code=1/signal=15, hard_kill=false, empty scope. Git b679227 original
+editor_rpc/editor_process/search test сохранены в .tests/ide085-baseline-source/
+через git show и SHA manifest. Это исходный контроль до изменений recorder.
+
+OpenSpec (1.13.2 npx на F:):
+list --json; new change trace-editor-quit-lifecycle;
+instructions proposal/design/tasks/apply --change trace-editor-quit-lifecycle --json;
+validate --all --strict --no-interactive. .tests/ide085-*.json сохраняют root/
+instructions; root F:/repo/forge-nvim, schema spec-driven, skip_specs=true,
+только test infrastructure. Пользовательские main specs/поведение не менялись.
+
+Bounded detailed trace (после начального recorder):
+```powershell
+$env:FORGE_SEARCH_CASE='missing с CMake'
+$env:FORGE_E2E_RPC_TRACE='1'
+foreach ($forgeSample in 1..3) {
+    & $forgeNvim -l tests/e2e/search-sorter.test.lua > ".tests/ide085-traced-windows-$forgeSample.txt" 2>&1
+    if ($LASTEXITCODE -ne 0) { break }
+}
+```
+Три samples PASS с настоящим QuitPre/VimLeavePre/VimLeave/code=0.
+Затем проверка source показала discarded nvim_error_event; добавлен capture.
+Это не доказательство, что такой error был у исходного RED.
+
+Оставшиеся два unhooked controls:
+```powershell
+$env:FORGE_E2E_QUIT_TRACE='0'
+$env:FORGE_SEARCH_CASE='missing с CMake'
+foreach ($forgeSample in 2..3) {
+    & $forgeNvim -l tests/e2e/search-sorter.test.lua > ".tests/ide085-unhooked-windows-$forgeSample.txt" 2>&1
+    if ($LASTEXITCODE -ne 0) { break }
+}
+```
+Их helper copies/SHA .tests/ide085-unhooked-source/, unhooked-sources.json.
+Native observer выключен, in-memory API errors сохранены; оба PASS/empty
+api_errors. Каждый exec — отдельный shell; flags не переносились в final tests.
+Итого исходный baseline+controls не больше 3, detailed серия ровно 3.
+
+Final native Windows:
+```powershell
+foreach ($forgeSuite in @('quit-trace','editor-process','editor-descendants','editor-runtime','search-sorter')) {
+    & $forgeNvim -l "tests/e2e/$forgeSuite.test.lua" > ".tests/ide085-windows-$forgeSuite.txt" 2>&1
+    if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+}
+```
+19 PASS/2 POSIX SKIP. Новый trace smoke сначала 2 PASS, final 3 проверяет
+ещё native invalid API notification и cap после 140 roundtrips.
+Критичные записи сохраняются после 256 detail events. Normal search также
+проверяет shutdown.api_errors, код и signal=0.
+
+Ubuntu после завершения Windows:
+```powershell
+docker info --format '{{.ServerVersion}}'
+docker compose -f tests/containers/compose.yaml run --rm --entrypoint bash ubuntu .tests/ide085-run.sh > .tests/ide085-ubuntu-run.txt 2>&1
+```
+Host script .tests/ubuntu/ide085-run.sh (guest .tests/ide085-run.sh): set -euo
+pipefail; те же 5 nvim -l suites, каждый в .tests/ide085-ubuntu-<suite>.txt.
+20 PASS/1 Windows attach-only SKIP. Этот этап не пересобирал image, не запускал/
+не останавливал Desktop/WSL. Engine работал (28.5.1). Heavier native suites
+Windows/Ubuntu последовательно, дополнительные third-party процессы не трогались.
+
+Получаемые artifacts:
+quit-controller/native.jsonl (фактически отдельные quit-controller.jsonl и
+quit-native.jsonl), quit-observer.lua, driver-source.json/driver-source/ с 6
+helpers, shutdown.trace/api_errors/code/signal/scope и обычные UI snapshots.
+Native observer зарегистрирован после ownership barrier до init. JSONL имеет
+общие monotonic ms; write-returned и событие QuitPre — разные доказательства.
+RPC payloads/код не логируются, details содержат только method/id/chunk size.
+Неполный bare health из search suite остаётся отдельным native процессом.
+
+Audit / журнал / commit:
+```powershell
+& $forgeNvim -l tests/run.lua unit trace > .tests/ide085-unit-trace.txt 2>&1
+Copy-Item .tests/report.json .tests/ide085-unit-report.json
+python -B .tests/audit-ide085.py > .tests/ide085-audit.txt 2>&1
+git diff --check
+git diff --name-only -- nvim_forge/lua nvim_forge/init.lua nvim_forge/lazy-lock.json
+git diff --numstat -- nvim_forge/FIXLOG.md docs/AGENT_COMMANDS.md
+git status --short
+```
+365 unit/trace cases/15 files, strict 70/70. Evidence .tests/ide085-evidence.json
+проверяет 30 RPC children с final helper sources: 24 normal + 6 controlled
+delay/failure, ещё 2 health и 1 guarded attach failure; own scopes пусты.
+Не выдаёт ожидаемый SIGTERM/SIGKILL fixture за штатный exit и не скрывает
+исходный source RED. Source product Lua/pins diff пуст. Journal prefix
+length/SHA .tests/ide085-history-before.json, raw append §152/§66.
+
+Stage только перечисленных test/change/docs файлов, commit
+'test(e2e): capture native quit events and RPC errors', затем task metadata
+через git commit --amend --no-edit. Push отсутствует. Причина IDE-085 остаётся
+открытой; Native Mac gate отдельно, основной следующий пункт — Output policy.

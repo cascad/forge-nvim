@@ -316,3 +316,38 @@ RU, следующие reader primary HKL EN, те же четыре отлич�
 false/error 16385. Эти отрицательные результаты не доказывают actual input HKL.
 Следующий шаг — изолировать/проверять раскладку переводящего потока, явно
 различать нестабильную среду и регресс и проверить устойчивые RU/EN прогоны.
+
+## IDE-085: quit и API error timeline
+
+Из корня checkout, с выбранным Windows SDK/F: temp либо native nvim на Ubuntu/Mac:
+
+```sh
+nvim -l tests/e2e/quit-trace.test.lua
+FORGE_E2E_RPC_TRACE=1 FORGE_SEARCH_CASE='missing с CMake' nvim -l tests/e2e/search-sorter.test.lua
+```
+
+PowerShell: `$env:FORGE_E2E_RPC_TRACE='1'; $env:FORGE_SEARCH_CASE='missing с CMake'`,
+затем `& $forgeNvim -l tests/e2e/search-sorter.test.lua`. Нужен подготовленный
+editor/native SDK, как в e2e README. Одна серия — максимум 3 samples; на отказе
+сохранить artifact и разбирать trace, не повышать timeout. Нет автоматического
+запуска/ремонта Docker/WSL. Mac результат требует фактического native запуска.
+
+| Artifact | Наблюдение |
+|---|---|
+| `quit-controller.jsonl` | Quit write-returned, handle closing, EOF/completion; optional method/id/chunk metadata |
+| `quit-native.jsonl` | Observer готов до init, начаты QuitPre/VimLeavePre/VimLeave; mode/dying/exiting и общая monotonic ms шкала |
+| `shutdown.json` | Реальный code/signal, stages, primary error, API notification errors, scope и trace errors |
+| `driver-source/`, `driver-source.json`, `quit-observer.lua` | Копия 6 helpers/byte length/SHA и точный native observer |
+
+Write-returned не является ack доставки. Native QuitPre показывает начало
+обработки quit, VimLeave — начало соответствующего события; сам по себе он не
+доказывает завершение OS process. Completion callback vim.system ждёт EOF,
+поэтому он и is_closing handle записываются отдельно. API nvim_error_event
+не равен stderr или сообщению UI. Critical records сохраняются после лимита
+256 detail entries, payload RPC не пишется.
+
+Три native fixtures доказывают наблюдаемость: normal exit=0, намеренная задержка
+QuitPre до штатного SIGTERM и native invalid-command notification с сохранённым
+ошибочным event/успешным выходом. Это не воспроизведение причины старого IDE-085.
+Bounded source RED и followup — FIXLOG §152. Unhooked control flag отключает
+observer только для сравнения; обычные regressions оставляют capture включённым.

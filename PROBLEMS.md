@@ -26,7 +26,16 @@ artifact/log сохранён отдельно. Ограниченный зел�
 расследование. Нужен bounded capture доставки quit, состояния child и exit
 без увеличения timeout и без глобального завершения чужих nvim/процессов.
 Не объединять автоматически с startup ui_attach IDE-073 или DAP IDE-074.
-Факты/границы — FIXLOG §151; product fix для IDE-085 пока отсутствует.
+Факты/границы — FIXLOG §151/152; product fix для IDE-085 пока отсутствует.
+
+Повтор на source b679227 снова RED (21014452051400, code=1/signal=15).
+Test-only capture до init теперь пишет quit-controller/native JSONL и exact
+helper source/SHA; API nvim_error_event больше не теряется. Он проверен на
+настоящих normal/delayed QuitPre и invalid API notification fixtures, включая
+detail cap. Три подробных и два unhooked followup завершились code=0; это
+ограниченные наблюдения, а не установленная причина/фикс. Capture остаётся
+включённым в следующих обычных E2E; при повторе смотреть QuitPre/exit/error
+timeline. Новый намеренно задержанный fixture не доказывает механизм старого RED.
 
 ## IDE-080 — большой обзор фич и наслоений перед рефакторингом
 

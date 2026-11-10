@@ -98,6 +98,7 @@ local function check(name,variant,cmake,fn)
       if ok then
         T.eq(e.rpc.shutdown_result.exit_code,0,'редактор не завершился штатно; см. shutdown.json')
         T.eq(e.rpc.shutdown_result.exit_signal,0,'cleanup потребовал сигнал; см. shutdown.json')
+        T.eq(#e.rpc.shutdown_result.api_errors,0,'получена ошибка API notification; см. shutdown.json')
       end
     end
     assert(ok,err)

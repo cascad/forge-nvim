@@ -7560,3 +7560,79 @@ change не архивируется, main specs прежние. IDE-001 zsh/Go 
 **Файлы:** plugins/telescope.lua, forge/health.lua, prepare_fzf/search-sorter/
 registry, поздний Docker слой, SEARCH/tests README/root README,
 IDE_ROADMAP/FEATURE_REVIEW/PROBLEMS/HISTORY/AGENT_COMMANDS и OpenSpec change.
+
+## 152. IDE-085: native quit и ошибки RPC без скрытого verdict
+
+Дата: 2026-11-10. Спека: без изменений (test-only, skip_specs: true).
+Change trace-editor-quit-lifecycle. Это диагностический этап, product fix IDE-085
+не заявляется. Product Lua/pins/SDK и пределы ожидания прежние.
+
+**Проблема.** §151 сохранил Windows child 19482373991200: UI assertions PASS,
+после qa! потребовался SIGTERM. Первый bounded baseline на source b679227
+воспроизвёл это снова: 21014452051400, code=1/signal=15 около 2067 ms, own
+scope пуст. Strict search E2E теперь честно FAIL, не маскирует мягкий stop.
+У прежних artifacts нет native receipt/quit events, поэтому механизм неизвестен.
+
+**Причина диагностического пробела.** Успешный SystemObj.write не даёт ack
+native обработки; completion vim.system ждёт EOF. Helper сохранял только
+общие стадии. RPC client вообще отбрасывал nvim_error_event, который может
+содержать ошибку API notification без обычного UI message. Это установленный
+пробел наблюдения, не доказательство причины исходного qa! отказа.
+
+**Изменение.** Test-only editor_trace устанавливает native observer через
+--cmd после scope barrier, до init: observer_ready/QuitPre/VimLeavePre/VimLeave,
+mode/dying/exiting, общая monotonic шкала. Controller пишет write-returned,
+public is_closing handle, EOF/completion и signal stages. Шесть helpers
+архивируются до child startup с length/SHA, generated observer остаётся рядом.
+
+Minimal capture постоянен для RPC children с artifacts. FORGE_E2E_RPC_TRACE=1
+включает method/id/chunk metadata, максимум 256 detail records; critical
+quit/error/EOF сохраняются после лимита. Payload не логируется. Контроллер
+сохраняет API errors в shutdown.api_errors независимо от trace flag; normal
+search требует их отсутствия. Trace failures отражаются отдельно и не
+переписывают primary error/cleanup verdict. Никаких новых exit retries,
+deadline increases, пользовательских hook wrappers или SDK patches.
+
+**Проверка/e2e.** Новый quit-trace.test.lua — 3 native fixtures:
+normal qa/receipt/exit=0; настоящий QuitPre с wait(5000), которому штатный
+helper посылает SIGTERM через 2 s; реальная invalid-command notification
+после 140 RPC roundtrips, проверяющая error capture и detail cap. Ответы не
+синтезируются. Последний fixture ожидает ровно один ForgeMissingQuitTraceCommand
+API error и успешный выход; это не ошибка пользовательского конфига.
+
+Bounded исходный сценарий: после source RED три detailed samples
+21428349770900/21433227002300/21438229774800 прошли, native QuitPre получен,
+затем VimLeavePre/VimLeave и code=0. После выявления dropped API errors два
+оставшихся low-overhead control samples без native observer тоже прошли
+21604571436500/21609341413500, api_errors пусты. Unhooked flag служит только
+сравнению; источник helpers этой серии сохранён отдельно. Три подробных
+снимка относятся к более ранней версии recorder, их не смешивали с final
+source проверки. Ни один зелёный повтор не считается исправлением IDE-085.
+
+Final Windows: quit-trace 3 + process 1/1 SKIP + descendants 6 +
+runtime 4/1 SKIP + search 5 = 19 PASS/2 SKIP.
+Final Ubuntu: 3 + 2 + 5/1 SKIP + 5 + 5 = 20 PASS/1 SKIP.
+Это 30 RPC children: 24 normal exit=0 и 6 expected failure/delay fixtures;
+плюс 2 native health processes и 1 guarded Windows attach failure до init.
+Все 33 собственных scope очищены. Native receipt, controlled задержка,
+SIGSTOP без обработки quit, API error после detail cap и exact helper
+sources/SHA проверены .tests/audit-ide085.py / .tests/ide085-evidence.json.
+Unit/trace 365 cases/15 files PASS, strict OpenSpec 70/70.
+
+**Наблюдения разработки.** Первый native normal/delay smoke 2 PASS, затем
+добавлены проверки API error и detail cap. Исправлено только metadata:
+Lua and/or терял boolean false у is_closing, теперь он сохраняется явно.
+Native timing/code/command path не подменяли. Исходный SDK b679227/повторный
+RED и unhooked sources архивированы, первичный SIGTERM artifact не переписан.
+
+**Вывод/границы.** Capture доказан, первопричина IDE-085 пока не установлена;
+не доказана ни потеря quit, ни зависший hook, ни ошибка SDK. Native events
+показывают начало стадии, не сами по себе OS exit. Intentional fixtures
+доказывают наблюдаемость, не механизм старого отказа. Запись продолжается в
+обычных регрессах; при новом отказе есть timeline и API errors. Mac/GUI не
+запускались; change/Mac gate открыт. IDE-073/074/039 и общая отзывчивость ПК
+этим не закрываются. Независимая следующая работа — единая политика Output.
+
+**Файлы:** tests/lib/editor_trace/editor_rpc/editor_process, quit-trace E2E,
+search E2E/registry, diagnostics/e2e README, roadmap/review/PROBLEMS,
+HISTORY/AGENT_COMMANDS и OpenSpec change.

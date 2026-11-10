@@ -4,7 +4,8 @@ function M.stop(rpc,dir,primary_error)
   if rpc and rpc.shutdown_result then return rpc.shutdown_result end
   local start=vim.uv.hrtime()
   local data={pid=rpc and rpc.process.pid,stages={},hard_kill=false,
-    rpc_failure=rpc and rpc.failure,primary_error=primary_error or (rpc and rpc.failure and rpc.failure.message)}
+    rpc_failure=rpc and rpc.failure,primary_error=primary_error or (rpc and rpc.failure and rpc.failure.message),
+    api_errors=rpc and rpc.api_errors}
   local function save()
     if not dir then return end
     local ok,err=pcall(vim.fn.writefile,{vim.json.encode(data)},dir..'/shutdown.json')
@@ -13,6 +14,12 @@ function M.stop(rpc,dir,primary_error)
   local function stage(name,err)
     data.stages[#data.stages+1]={stage=name,elapsed_ms=(vim.uv.hrtime()-start)/1e6,error=err}
     save()
+    if rpc and rpc.trace then
+      local closing_ok,closing=pcall(function() return rpc.process:is_closing() end)
+      local observed={exited=rpc.exited}
+      if closing_ok then observed.handle_closing=closing else observed.handle_error=tostring(closing) end
+      rpc.trace:emit(name,observed)
+    end
   end
   local function exited() return not rpc or rpc.exited end
   local function signal(name)
@@ -24,6 +31,7 @@ function M.stop(rpc,dir,primary_error)
   if not exited() then
     stage('quit')
     local ok,err=pcall(function() rpc.process:write(vim.mpack.encode({2,'nvim_command',{'qa!'}})) end)
+    if rpc.trace then rpc.trace:emit('quit_write_returned',{ok=ok,error=not ok and tostring(err) or nil}) end
     if not ok then data.stages[#data.stages].error=tostring(err);save() end
     if not vim.wait(2000,exited,10) and not signal('sigterm') then
       data.hard_kill=true
@@ -37,6 +45,7 @@ function M.stop(rpc,dir,primary_error)
   data.exited=not not exited();data.exit_code=rpc and rpc.exit_code;data.exit_signal=rpc and rpc.exit_signal
   stage(data.exited and 'exited' or 'still_running')
   data.ok=data.exited and not data.hard_kill and not data.artifact_error and (not data.scope or data.scope.ok)
+  if rpc and rpc.trace then data.trace=rpc.trace:summary() end
   if not data.ok then
     data.error=not data.exited and 'Дочерний Neovim не завершился после SIGKILL'
       or data.hard_kill and 'Дочерний Neovim потребовал SIGKILL; cleanup остаётся FAIL'

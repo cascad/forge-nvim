@@ -3,9 +3,17 @@
 local M = {}
 
 function M.start(argv, options)
-  local self = { replies = {}, serial = 0, redraw = 0, screen = {}, stderr = {}, notifications = {}, exited = false }
+  local self = { replies = {}, serial = 0, redraw = 0, screen = {}, stderr = {}, notifications = {}, api_errors = {}, exited = false }
+  self.trace=require('editor_trace').new(options)
+  local function trace(kind,fields,detail) if self.trace then self.trace:emit(kind,fields,detail) end end
   local unpacker = vim.mpack.Unpacker()
   local function notification(message)
+    if message[2] == 'nvim_error_event' then
+      local observed={type=message[3][1],message=tostring(message[3][2])}
+      self.api_errors[#self.api_errors+1]=observed
+      trace('nvim_error_event',observed)
+      return
+    end
     if message[2] == 'forge_e2e_notify' then
       self.notifications[#self.notifications + 1] = { message = message[3][1], level = message[3][2] }
       return
@@ -29,28 +37,38 @@ function M.start(argv, options)
   end
   self.scope=require('process_scope').new()
   local spawned,failure=pcall(function()
-    local command=self.scope:command(argv,options)
+    local command=self.scope:command(self.trace and self.trace:prepare(argv) or argv,options)
     self.process = vim.system(command, vim.tbl_extend('force',self.scope.spawn_options,{
       cwd = options.cwd, env = options.env, clear_env = true, stdin = true, timeout = options.timeout or 60000,
       stdout = function(err, chunk)
         if err then self.error = err end
-        if not chunk then return end
+        if not chunk then trace('stdout_eof',{error=err});return end
+        trace('stdout_chunk',{bytes=#chunk},true)
         local ok, failure = pcall(function()
           local pos = 1
           while pos <= #chunk do
             local message
             message, pos = unpacker(chunk, pos)
             if message then
-              if message[1] == 1 then self.replies[message[2]] = message
+              if message[1] == 1 then
+                trace('reply',{id=message[2],error=message[3]~=vim.NIL},true)
+                self.replies[message[2]] = message
               elseif message[1] == 2 then notification(message) end
             end
           end
         end)
         if not ok then self.error = tostring(failure) end
       end,
-      stderr = function(_, chunk) if chunk then self.stderr[#self.stderr + 1] = chunk end end,
-    }), function(result) self.exited = true; self.exit_code = result.code; self.exit_signal=result.signal end)
+      stderr = function(err, chunk)
+        if chunk then self.stderr[#self.stderr + 1] = chunk
+        else trace('stderr_eof',{error=err}) end
+      end,
+    }), function(result)
+      trace('process_complete',{code=result.code,signal=result.signal})
+      self.exited = true; self.exit_code = result.code; self.exit_signal=result.signal
+    end)
     self.scope:attach(self.process.pid)
+    trace('process_started',{pid=self.process.pid})
   end)
   if not spawned then
     if self.process then
@@ -70,6 +88,7 @@ function M.start(argv, options)
     assert(not self.error and not self.exited, self.error or 'Дочерний редактор завершился')
     self.serial = self.serial + 1
     local id = self.serial
+    trace('request',{id=id,method=method},true)
     self.process:write(vim.mpack.encode({ 0, id, method, args or {} }))
     local ready = vim.wait(10000, function() return self.replies[id] or self.exited or self.error end, 5)
     if not ready then

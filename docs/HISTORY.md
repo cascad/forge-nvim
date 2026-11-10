@@ -276,6 +276,7 @@ Python реализован и проверен 2026-11-03; после возо�
 | §149 | [Peek: штатные клавиши вместо строковых действий](../nvim_forge/FIXLOG.md#149-peek-штатные-клавиши-вместо-строковых-действий) |
 | §150 | [Outline: фокус при закрытии позднего дерева](../nvim_forge/FIXLOG.md#150-outline-фокус-при-закрытии-позднего-дерева) |
 | §151 | [Поиск: native fzf без runtime компилятора и явный fallback](../nvim_forge/FIXLOG.md#151-поиск-native-fzf-без-runtime-компилятора-и-явный-fallback) |
+| §152 | [IDE-085: native quit и ошибки RPC без скрытого verdict](../nvim_forge/FIXLOG.md#152-ide-085-native-quit-и-ошибки-rpc-без-скрытого-verdict) |
 
 ## Как читать и дополнять
 

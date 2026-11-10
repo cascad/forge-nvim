@@ -1181,3 +1181,17 @@ health сохраняет фактическое состояние до/пос�
 Тест требует native artifact даже для missing/corrupt matrix и не заменяет
 отсутствующий native SDK молчаливым SKIP. `FORGE_SEARCH_CASE` выбирает UI случай;
 полный suite без фильтра запускает также health check. Mac/ARM64/GUI отдельно.
+
+## Quit/RPC capture — IDE-085
+
+Все RPC test children с artifacts получают controller/native JSONL и
+driver-source/SHA до init. `quit-trace.test.lua` проверяет normal quit,
+реальный delayed QuitPre и native API notification error после detail cap.
+`nvim_error_event` сохраняется отдельно в shutdown.api_errors; normal search
+считает такой неожиданный event ошибкой, controlled fixture ожидает его явно.
+
+`nvim -l tests/e2e/quit-trace.test.lua` не требует plugin SDK. Подробный сбор
+`FORGE_E2E_RPC_TRACE=1` ограничен 256 detail records, critical quit/error/EOF
+не отбрасываются. Только для unhooked сравнения исходного сценария можно
+задать `FORGE_E2E_QUIT_TRACE=0`; обычный регресс/CI использует capture.
+Протокол, команды и границы выводов — [diagnostics](../diagnostics/README.md#ide-085-quit-и-api-error-timeline).
