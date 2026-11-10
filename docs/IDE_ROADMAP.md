@@ -46,6 +46,10 @@ IDE-001 параллельно ждёт диагностических данн�
 
 IDE-090/093/094 закрыты на Windows в §164/165/163. Следующий шаг — доступные
 Ubuntu gates и оставшаяся языковая матрица, без собственного SQL binder/LSP.
+Read-only engine check после31d154f снова не нашёл dockerDesktopLinuxEngine;
+Desktop/WSL не запускались. Независимый Windows шаг — native project/session
+restart baseline из FEATURE_REVIEW: save/quit/load, корень проекта и панели,
+без изменения production root/session glue до воспроизводимого evidence.
 IDE-091 исправлен отдельно (§160); источник исторического одиночного failure
 без trace не объявляется единственным. IDE-088/090/091 Ubuntu gates открыты:
 последняя read-only проверка Linux engine не нашла pipe. Desktop/WSL агент

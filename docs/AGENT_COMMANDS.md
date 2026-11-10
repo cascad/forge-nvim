@@ -4938,3 +4938,19 @@ Native stdout and root/runtime/helper source hashes audit in ide093-evidence.jso
 History prefix bytes/SHA captured before append§165/§77, additions-only checked.
 Production Lua/SDK/locks не менялись. Ubuntu/Mac не выполнялись; Docker/WSL
 в этом шаге не опрашивались и не управлялись. Commit only helper/tests/spec/docs.
+
+
+## 78. Readiness после серии IDE-090/093/094, 2026-11-10
+
+После31d154f рабочее дерево было clean. Единственная Docker команда следующего
+шага — docker version --format '{{json .Server.Version}}', read-only:
+exit1, dockerDesktopLinuxEngine pipe отсутствует. Лог
+.tests/ide090-ubuntu-engine-check.txt. Desktop/WSL/container не запускались и
+не перезапускались; Ubuntu gates остаются открыты. Это отдельная проверка
+после завершённых fixes, не изменение записанных в§162–165 команд.
+Read-only Get-Content/rg по LANGUAGE_MATRIX/BASH_WORKFLOW/PROBLEMS/roadmap и
+WORKSPACE_TOOL_REVIEW подтвердили: IDE-057 уже ждёт ранее заданного выбора
+Linux backend для Windows, SQL references не имеют готового provider.
+Повторное разрешение/повторный выбор не запрашивались. Следующий независимый
+пункт — native project/session restart baseline из общего review. Broad
+перепись и удаление optional UI не начаты. Goal active, Mac не проверен.
