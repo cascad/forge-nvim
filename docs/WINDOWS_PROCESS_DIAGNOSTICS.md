@@ -54,6 +54,84 @@ Security/Sysmon чтение не дало пригодного caller trace; о
 4. После проверки границы teardown вернуться к Ubuntu gate IDE-088 на engine,
    который включил владелец. Desktop/WSL агент автоматически не управляет.
 
+## Native доказательство механизма — §158
+
+Добавлены два независимых инструмента:
+
+```powershell
+python -B tests/diagnostics/windows-process-parents.py --output .tests/ancestry-read-only.json
+powershell -NoProfile -File tests/diagnostics/build-process-ancestry.ps1
+```
+
+Первый читает Toolhelp snapshot, открывает query-only handles, держит их до
+окончания классификации и получает native GetProcessTimes. В нём нет API
+завершения процессов. `unknown`, `parent_missing` и `kernel_special`
+выделены отдельно. Creation order — необходимая проверка, не полное
+доказательство владения. [Microsoft GetProcessTimes](https://learn.microsoft.com/en-us/windows/win32/api/processthreadsapi/nf-processthreadsapi-getprocesstimes).
+
+Первый native snapshot (18:14:50 MSK) обнаружил не-kernel инверсию: vctip.exe
+PID 22640, parent 21796, creation 134387968496450016; под PID 21796 уже
+python.exe с creation 134387972906175591. Разница около 441 s. Это реальная
+несогласованная parent edge, а не контролируемый fixture. Self PID/source SHA
+добавлены в audit после первого снимка; followup уже не нашёл живого parent
+этой записи. Первый JSON не переписывался. Для Docker это не caller evidence.
+
+Второй инструмент требует MSVC C++ Build Tools и существующий pinned SDK source.
+Он извлекает точные две функции proc.c, сверяет revision/full source SHA и
+компилирует native harness. SDK/исходный proc.c не меняется. Guard prototype
+добавляется только в частный fragment: query должен быть успешен, child creation
+не раньше parent. Неполные timestamps не разрешают обход потомка.
+
+Каждый запуск создаёт три настоящих процесса под собственным Job Object:
+older sibling, root и child, реально созданный root. Родство child проверяется
+через настоящий Toolhelp, membership всех трёх — IsProcessInJob. Snapshot
+для исследуемой функции контролируемый: в stale case меняется одна edge,
+older sibling получает PPID root. Clock/PID системы не меняются; PID reuse не
+провоцируется. Open/termination wrappers допускают только эти три held PID.
+
+| Сценарий | Pinned upstream fragment | Guard prototype |
+|---|---|---|
+| Настоящий child, unrelated older sibling | PASS: root/child завершены, older жив | PASS с тем же полезным поведением |
+| Older process с stale PPID root в snapshot | RED: older тоже получает exit 15 | PASS: older остаётся жив |
+| Не удалось прочитать время child | RED относительно новой fail-closed политики | PASS: root завершён, child сохранён |
+| Не удалось прочитать время root | RED относительно новой fail-closed политики | PASS: root завершён, child сохранён |
+
+Два query-failure case — проверка новой политики при инъекции API failure,
+не два отдельных установленных пользовательских бага. Stale edge демонстрирует
+дефект traversal — IDE-089. Это native integration с реальными процессами/
+timestamps/завершением, но контролируемым snapshot. Это не полный Neovim E2E
+и не доказательство естественного PID collision в двух событиях Docker.
+
+Финальные ASCII и Unicode/space build paths: по 8 executions (1 upstream PASS,
+3 expected RED, 4 prototype PASS), по 24 собственных worker processes;
+outside_attempts=0, scope_clean=true. SDK binary SHA до/после совпадает с
+установленным manifest. Negative проверки отклоняют изменённый proc.c и build
+вне .tests до создания output. Артефакты: `.tests/ancestry-native/final-ascii/`,
+`.tests/ancestry-native/проверка с пробелами/`, evidence.json/source/binary hashes,
+build logs и отчёты каждого case. Ранние пилоты без scope-clean assertion либо
+SDK before/after hash сохранены отдельно и не подменяют финальные результаты.
+
+## Альтернативный caller: приложение выполнения команд
+
+Read-only осмотр установленного OpenAI.Codex 26.1103.4239.0 нашёл в двух bundle
+функции вызова `taskkill.exe /pid <PID> /t /f`, timeout 2000 ms. В worker путь
+условный: killProcessTree или processOwner. Это статический факт установленного
+app.asar; он не доказывает использование данного пути нашим exec_command,
+вызов в 17:06/17:45 или конкретный target PID. Пакет/настройки не менялись;
+в artifacts сохранены только filenames/offsets/hashes/call shape, не bundle.
+
+Официальные [Windows sandbox docs](https://learn.chatgpt.com/docs/windows/windows-sandbox)
+и [troubleshooting](https://learn.chatgpt.com/docs/reference/troubleshooting)
+не устанавливают caller этих событий. Bounded CIM ProcessStartTrace observer
+не запустился (HRESULT 0x80041032); это не отрицательный trace taskkill.
+Публичные похожие reports не используются как доказательство нашей машины.
+Нельзя обещать, что одна поправка Neovim устранит все возможные caller пути.
+
+Следующий конкретный change — узкий Windows SDK guard для IDE-089 с отдельными
+patch/hash/build и настоящими Neovim lifecycle E2E. IDE-087 остаётся открытым,
+пока нет caller/target trace или отдельного воспроизведения Docker. Linux/macOS
+не используют этот Windows SDK; их process backend не меняется.
+
 Артефакты: `.tests/ide088-docker-evidence.json`, `ide088-docker-processes-*.json`,
 `ide087-process-parent-audit.json`, `ide088-ubuntu-run.txt`; первый event —
 `.tests/ide086-docker-interruption.txt`. В persisted выжимке нет auth/settings

@@ -32,7 +32,8 @@ IDE-001 параллельно ждёт диагностических данн�
 | Приоритетное расследование | IDE-087: остановка Docker backend | Второй event 17:45:10 совпал с native qa! Windows, root/scope завершились штатно. [Native PPID гипотеза и границы](WINDOWS_PROCESS_DIAGNOSTICS.md), §154/157; caller неизвестен, Desktop/WSL агент не управляет |
 | Обзор готов Windows/Ubuntu | Поиск окна кода | [Сравнение и native evidence](CODE_WINDOW_REVIEW.md): по 5 profiles, роли find/create/relocate различаются; полный merge не нужен (§155) |
 | Windows готов, Ubuntu gate открыт | IDE-088: focus-only выбор окна кода | По state predicate и прежнему tool filter; 3 source RED, 22 Windows checks и 16 clean profiles (§156). Ubuntu ждёт доступный engine и проверку IDE-087; Mac открыт |
-| Следующий конкретный срез | IDE-087: native process ancestry | Read-only/dry-run timestamps/caller evidence, затем bounded собственные fixtures; без массового Windows churn или перезапуска Desktop ради повтора |
+| Native proof готов | IDE-087/089: process ancestry | Read-only live age inversion + exact pinned C fragment: valid PASS/stale RED; guard prototype 4 native PASS, own Jobs clean (§158). SDK не менялся, Docker caller открыт |
+| Следующий конкретный change | IDE-089: Windows SDK creation-time guard | Узкий backport, patch/hash/build, native source regression и реальные Neovim lifecycle E2E; Linux/macOS backend прежний. После него вернуться к IDE-088 Ubuntu gate при доступном engine |
 | Отложено до готового backend | Остаток SQL workflow, IDE-062 | SQLS references provider отсутствует. Собственный binder/index/LSP fork отменён (§143); не подменять references grep и не объявлять полную SQL поддержку |
 | Затем | Остальная [матрица языков](LANGUAGE_MATRIX.md) | SQL references IDE-062, Bash DAP IDE-057; Mac/native и оставшиеся сценарии матрицы |
 | После функциональной матрицы | Упрощение архитектуры | Общее ядро, явные системные границы и setup; сокращение дублирования с сохранением E2E |

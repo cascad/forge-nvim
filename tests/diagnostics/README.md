@@ -1,5 +1,15 @@
 # Диагностика native terminal и CLI
 
+## IDE-087/089: Windows process ancestry
+
+Read-only: `python -B tests/diagnostics/windows-process-parents.py --output .tests/ancestry-read-only.json`.
+Native source proof: `powershell -NoProfile -File tests/diagnostics/build-process-ancestry.ps1`.
+Нужны уже подготовленный pinned Neovim source и MSVC Build Tools. SDK/система
+не изменяются. Фрагмент upstream сравнивается с guard prototype на собственных
+workers; одна snapshot edge контролируемая, timestamps/termination настоящие.
+Это диагностический native integration, не полный IDE E2E и не Docker caller proof.
+Артефакты, matrix и ограничения — [WINDOWS_PROCESS_DIAGNOSTICS](../../docs/WINDOWS_PROCESS_DIAGNOSTICS.md).
+
 ## IDE-080/088: поиск окна кода и restore
 
 `nvim -l tests/diagnostics/code-window.lua` — пять private native profiles:

@@ -7903,3 +7903,83 @@ bounded собственные fixtures и отдельный SDK change, есл
 
 **Файлы:** docs/WINDOWS_PROCESS_DIAGNOSTICS.md с primary links и планом,
 PROBLEMS/ROADMAP/HISTORY/AGENT_COMMANDS. Никаких runtime Docker/WSL изменений.
+
+
+## 158. Windows ancestry: read-only audit и native source proof
+
+2026-11-10. IDE-087 расследуется; подтверждён conditional defect IDE-089.
+Change probe-windows-process-ancestry, skip_specs=true. Это диагностика/
+prototype, не установленный SDK fix. Production Lua/SDK/pins не менялись.
+
+**Вопрос.** Может ли pinned Windows proc.c принять более старый посторонний
+процесс за потомка из-за stale PPID? Timeline двух Docker stop не давал
+caller/target и не позволял назвать причину. Нужны физические native данные.
+
+**Read-only проверка.** windows-process-parents.py читает Toolhelp, открывает
+только QUERY_LIMITED_INFORMATION handles и держит identity до классификации;
+GetProcessTimes, отдельные unknown/parent_missing/kernel_special.
+Termination/signal APIs отсутствуют. Первый native снимок в 18:14:50 MSK:
+vctip.exe PID22640/PPID21796, creation134387968496450016, а PID21796 уже
+python.exe с creation134387972906175591 (новее примерно на441s).
+Это не kernel inversion и не синтетическая запись. Исходный JSON не
+переписывался; observer_pid/source SHA добавлены только в followup, где
+этой живой parent записи уже не было. Current metadata non-atomic; creation
+order не является полным ownership proof и не устанавливает Docker caller.
+
+**Native эксперимент.** Точный fragment двух Windows функций извлекается
+из proc.c revision4b35336f6f850ce68a230716401cdaa21bdb6a25, сверяется с Git,
+компилируется MSVC. Root создаёт настоящего child; older sibling запущен раньше.
+Три held собственных PID проверены IsProcessInJob в anonymous private Job.
+Controlled snapshot меняет только одну edge: older sibling получает PPID root.
+Clock/system PPID не меняется, reuse не провоцируется. Open/terminate wrappers
+допускают только эти три собственных PID, outside_attempts=0.
+Полезный positive case с настоящим child обязателен: иначе prototype,
+который просто никого не завершает, ошибочно выглядел бы правильным.
+
+**Результат.** Upstream valid PASS: root/child exit15, older жив259.
+Stale snapshot source RED: upstream реально завершает и older sibling exit15.
+Guard prototype в частном fragment проверяет успешный GetProcessTimes и
+child creation>=parent creation: stale PASS, older жив259, root/child exit15.
+Child/root time query failure инъектированы внутри fixture; prototype
+сохраняет непроверенного child, завершает root. Их source RED — относительно
+новой fail-closed политики, не два отдельных установленных product бага.
+После измерения fixture закрывает outer Job, убирает оставшихся собственных
+workers и проверяет signaled handles; scope_clean=true. Чужие процессы не
+завершались, C snapshot не обходит реальные чужие PID для termination.
+
+**Финальные проверки.** Два run: .tests/ancestry-native/final-ascii и
+.tests/ancestry-native/проверка с пробелами. По8 executions/24 workers:
+1 upstream valid PASS,3 expected source RED,4 prototype PASS, все scopes clean.
+Native source/harness/generator/generated source/binary SHA, SDK hash before/
+after сверены. Аудит .tests/audit-ancestry-proof.py / ancestry-evidence-audit.json.
+Source input tamper и output вне .tests отклонены до build/output mkdir.
+Ранний ASCII report от версии generator до SDK hash fields не прошёл
+provenance audit; его не засчитали, финальный ASCII повторён текущим source.
+Пилот без scope-clean assertion также не подменяет финальные результаты.
+После добавления русского OS guard обнаружен UTF-8-without-BOM parse error
+в Windows PowerShell5.1; helper приведён к принятому UTF-8 BOM и проверен
+настоящим powershell -NoProfile -File, не только parser PowerShell7.
+Python syntax проверен без pycache; Windows ABI не приписывается Linux/macOS.
+
+**Дополнительный caller пока не установлен. Проверено вручную (Windows).**
+Get-AppxPackage и read-only mmap установленного OpenAI.Codex26.1103.4239.0:
+в early-bootstrap/worker bundle есть условный taskkill.exe /pid <PID> /t /f,
+timeout2000ms; worker условие killProcessTree/processOwner. Это статический
+путь, не доказательство его выполнения нашим exec_command или target PID
+в 17:06/17:45. Сохранены только filenames/offsets/hashes/call shape,
+не proprietary bundle; пакет/настройки не изменялись.
+Bounded CIM ProcessStartTrace observer не запустился (Call cancelled,
+HRESULT0x80041032); это не отрицательная трасса taskkill. Официальные OpenAI
+Docs прочитаны для контекста Windows execution, они не атрибутируют эти события.
+Primary ссылки Microsoft/Neovim/OpenAI и точные ограничения в
+WINDOWS_PROCESS_DIAGNOSTICS. Похожий внешний report не объявляется доказательством.
+
+**Вывод.** PPID-only traversal дефектен на documented stale edge, native
+conditional proof готов: IDE-089 нужен узкий SDK backport с native regression
+и полными Neovim lifecycle E2E. Текущий SDK не изменён; это ещё не full Neovim
+E2E и не доказанный root cause Docker IDE-087. Один Neovim guard нельзя
+обещать как устранение всех возможных caller путей. Ubuntu gate IDE-088 открыт.
+
+**Файлы:** tests/diagnostics/windows-process-parents.py, ancestry-harness.c,
+process-ancestry.py, build-process-ancestry.ps1, README; OpenSpec change,
+WINDOWS_PROCESS_DIAGNOSTICS, PROBLEMS/ROADMAP/HISTORY/AGENT_COMMANDS.

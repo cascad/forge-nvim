@@ -10,7 +10,19 @@
 
 Маршрут и приоритеты: [рабочий план nvim_forge](docs/IDE_ROADMAP.md).
 Для новых пунктов используем следующий свободный ID `IDE-xxx`; исходный
-симптом хранится здесь, этап и состояние — в плане. Следующий ID: `IDE-089`.
+симптом хранится здесь, этап и состояние — в плане. Следующий ID: `IDE-090`.
+
+## IDE-089 — Windows Neovim: PPID-only обход принимает более старый процесс за потомка
+
+2026-11-10: exact pinned proc.c fragment в native harness получает controlled
+stale snapshot edge и завершает older sibling (реальный процесс, exit 15).
+Child действительно создан root; older создан раньше root, все три под own Job.
+Creation-time guard prototype сохраняет older и штатно завершает root/child;
+4 cases PASS, SDK пока прежний. Read-only host snapshot также обнаружил live
+vctip/python age inversion, без завершения этих процессов. FIXLOG §158.
+Далее отдельный Windows SDK backport с source/patch/hash, native regression
+и настоящими Neovim E2E. Это подтверждённый conditional defect; причинность
+Docker IDE-087 ещё не установлена. [Доказательства/границы](docs/WINDOWS_PROCESS_DIAGNOSTICS.md).
 
 ## IDE-088 — Debug View возвращает фокус в terminal вместо кода
 

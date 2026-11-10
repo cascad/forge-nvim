@@ -4516,3 +4516,71 @@ Raw append §156/157, diary §69: before size/SHA .tests/ide088-history-before.j
 старые bytes и additions-only diff проверяются. Коммит явно по связанным файлам,
 без SDK/temp/lock/секретов и без push. Новые массовые Windows повторы отложены
 до проверки native process ancestry, Ubuntu не объявлен PASS.
+
+
+## 70. IDE-087/089: native ancestry source proof, 2026-11-10
+
+F:/repo/forge-nvim; PowerShell login=false. TEMP/TMP/TMPDIR=F:/repo/forge-nvim/.tests/tmp,
+PYTHONIOENCODING=utf-8, npm_config_cache=F:/forge-nvim-tmp/npm-cache.
+Чтение через rg/Get-Content narrow slices: proc.c/event-proc, SDK scripts/manifest,
+process_scope_windows, существующие fixture и диагностические команды.
+
+OpenSpec1.13.2: context --json; new change probe-windows-process-ancestry;
+status/instructions proposal/design/tasks/apply --change ... --json.
+Repo-local root, skip_specs=true: SDK/runtime не меняется. Native Windows ABI
+не создаёт фиктивные Mac/Linux gates; полный Neovim/Docker attribution вне scope.
+
+Read-only API probe:
+```powershell
+python -B tests/diagnostics/windows-process-parents.py --output .tests/ancestry-read-only.json
+python -B tests/diagnostics/windows-process-parents.py --output .tests/ancestry-read-only-followup.json
+```
+Первый snapshot дал non-kernel vctip/python older edge; source hash/self PID
+добавлены позже, первый JSON не менялся. Followup version source SHA проверен.
+GetProcessTimes/Toolhelp с held query-only handles; никаких terminate API.
+
+Native build/run:
+```powershell
+powershell -NoProfile -File tests/diagnostics/build-process-ancestry.ps1
+powershell -NoProfile -File tests/diagnostics/build-process-ancestry.ps1 -Output 'F:/repo/forge-nvim/.tests/ancestry-native/проверка с пробелами'
+powershell -NoProfile -File tests/diagnostics/build-process-ancestry.ps1 -Output F:/repo/forge-nvim/.tests/ancestry-native/final-ascii
+python -B .tests/audit-ancestry-proof.py
+```
+Helper загружает MSVC DevShell x64 без смены cwd; Python извлекает pinned
+fragment, cl /std:c11 /W4 /WX /O2 /utf-8 /DUNICODE /D_UNICODE; C/obj/exe/logs
+только в fresh .tests output. Каждый variant: valid/stale/child-query-failure/
+root-query-failure. Controlled snapshot, реальные workers/creation/termination,
+allowlist 3 PID, private Job. Source RED ожидаемы, pilot не считается final.
+Финальные ASCII/Unicode reports совпадают с текущими generator/harness SHA,
+SDK before/after неизменен, 8 executions и24 cleaned workers каждый.
+
+Negative commands:
+```powershell
+powershell -NoProfile -File tests/diagnostics/build-process-ancestry.ps1 -Output F:/repo/forge-nvim/.ancestry-build-rejected
+powershell -NoProfile -File tests/diagnostics/build-process-ancestry.ps1 -Source F:/repo/forge-nvim/.tests/ancestry-tampered-src -Output F:/repo/forge-nvim/.tests/ancestry-tampered-output
+```
+Оба exit1 ожидаемы, output не создан. Private tampered src содержит только
+proc.c с добавленным комментарием и .git pointer для read-only Git show;
+actual source не менялся. Логи ancestry-outside/source-rejection.txt.
+Actual SDK git status по-прежнему только прежний ConPTY pty_proc_win.c patch.
+WinPS5.1 parse failure после нового русского guard сохранён в
+ancestry-winps-encoding-error.txt; UTF-8 BOM соответствует существующему
+prepare-windows-sdk.ps1. Повтор actual powershell helper прошёл.
+Ранний ASCII metadata mismatch также сохранён: не принимать report от иной
+версии generator после добавления SDK hash capture.
+
+Проверено вручную: Get-AppxPackage Name/Version/InstallLocation; mmap app.asar,
+4xuint32 header, JSON file offsets, только поиск taskkill и SHA двух bundles.
+Installed package26.1103.4239.0; в .tests/codex-cleanup-static.json только
+filename/hash/offset/call shape. Статическое наличие не значит executed caller.
+CIM ProcessStartTrace20s observer не стартовал, Call cancelled0x80041032;
+script/output только ignored .tests, permanent WMI subscription не создавалась.
+Приложение/Windows audit policy/Desktop/WSL не изменялись.
+OpenAI Docs skill: official-domain search, fetched Windows sandbox/troubleshooting;
+primary Microsoft GetProcessTimes/Win32_Process docs. Не выдавать external
+report или static taskkill за причину двух Docker events.
+
+Проверка Python compile() без pycache и PowerShell AST; native helper проверен
+реальным WinPS5.1. JSON через read_bytes. Prefix before size/SHA
+.tests/ancestry-history-before.json; raw append §158/§70, HISTORY link.
+Strict OpenSpec и diff check; production Lua/SDK/lock не stage, push нет.
