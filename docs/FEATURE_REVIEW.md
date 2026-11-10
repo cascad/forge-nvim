@@ -1,8 +1,8 @@
 # IDE-080 — обзор фич и стоимости поддержки перед рефакторингом
 
-Дата: 2026-11-10. Статус: первичная инвентаризация; решения об удалении фич и
-рефакторинг ещё не выполнены. Основа — код 341aba2 после удаления собственного
-неподключённого SQL references prototype. Требования владельца не сокращаются
+Дата: 2026-11-10. Статус: инвентаризация, upstream source review и частное UI
+сравнение; решения об удалении фич и рефакторинг ещё не выполнены. Основа —
+runtime 7463915 после отмены собственного SQL prototype. Требования не сокращаются
 до того, что сейчас легче проверить.
 
 ## Цель и правило остановки усложнения
@@ -95,8 +95,9 @@ backend не умеет references, это ограничение, а не по�
 | SQLLogicTest SDK/glue | Отдельный SQLite assertion runner и Tests UI | Нужен ли этот workflow в работе; можно ли штатно использовать готовый CLI |
 
 Реестр plugin patches: `nvim_forge/patches/plugins.json` — 5 dependencies,
-11 изменяемых файлов. Upstream status на 10 ноября ещё **не перепроверен**;
-поэтому ни один patch здесь не объявляется готовым к удалению.
+11 изменяемых файлов. Source review выполнен ниже по exact SHA; native
+compatibility regression новых версий ещё нужен. Ни один patch здесь
+не объявляется готовым к удалению.
 
 ## Конкретные кандидаты для следующего прохода
 
@@ -112,6 +113,115 @@ backend не умеет references, это ограничение, а не по�
 5. SQLLogicTest и прочие расширения сверх повседневной работы — оценить пользу
    против SDK/адаптеров/подготовки. Сами SQL query/format/schema не удалять вместе с ними.
 
+## Проверка upstream — 2026-11-10
+
+Default HEAD разрешены через read-only `git ls-remote`; исходники прочитаны
+через GitHub connector по конкретным SHA. Сохранены 16 source files и их
+hash в `.tests/upstream-review-20261110/manifest.json`. Работающие pins,
+SDK и patches не обновлялись. Проверка source не означает, что новые версии
+прошли native compatibility regression.
+
+| Компонент | Проверенный upstream | Наблюдение и решение |
+|---|---|---|
+| Gitsigns | [cmd/repo, ef707fb93301](https://github.com/lewis6991/gitsigns.nvim/blob/ef707fb93301a9b856f36eae4c8f56f5b988a794/lua/gitsigns/git/repo.lua) | Оригинальный context обеих доработок ещё присутствует: cwd зависит от toplevel; stable common-dir варианта нет в этих местах. Снимать patch по одному обновлению нельзя |
+| Neogit worktree | [ba2f33b64b99](https://github.com/NeogitOrg/neogit/blob/ba2f33b64b996ff5530c4c45a3c432fb63aaa95b/lua/neogit/popups/worktree/actions.lua) | Файл совпал с исходным unpatched hash; после смены cwd по-прежнему сразу удаляется worktree. Native проверка scheduling нужна до снятия patch |
+| Neogit output | [util.lua, ba2f33b64b99](https://github.com/NeogitOrg/neogit/blob/ba2f33b64b996ff5530c4c45a3c432fb63aaa95b/lua/neogit/lib/util.lua) | **Частичное исправление upstream:** continuation byte больше не используется как ANSI prefix. Прямой probe точной pure function сохраняет UTF-8/CSI, но не убирает OSC title/hyperlink. Весь наш output patch снимать рано |
+| Neotest | [27bf92149804](https://github.com/nvim-neotest/neotest/blob/27bf921498043f7ecd821d6db68d05de244bbd02/lua/neotest/lib/file/init.lua) | HEAD совпал с pin; все 4 unpatched file SHA совпали с before_sha256. Нового эквивалента наших path fixes в этом срезе нет |
+| nvim-dap | [cfa2d58f4537](https://github.com/mfussenegger/nvim-dap/blob/cfa2d58f4537aca6ca83e2de1a0d9f1491121264/lua/dap/session.lua) | Original callback context остаётся: ненулевой adapter exit рассматривается без нашей client-initiated close проверки. Без stop/unexpected-exit E2E patch не снимать |
+| neotest-rust | [2c9941d4a358](https://github.com/rouge8/neotest-rust/blob/2c9941d4a358839918fac21d20fc8fef0e1ad05f/lua/neotest-rust/dap.lua) | HEAD совпал с pin; оба unpatched file SHA совпали. Shell/regex обработка Cargo output в этом срезе осталась; native-path/debug тесты нужны при замене адаптера |
+| SQLS | [920fde7867c1](https://github.com/sqls-server/sqls/blob/920fde7867c1348f95a55cab3cd63c85b6599840/internal/handler/execute_command.go) | Caller и [classifier](https://github.com/sqls-server/sqls/blob/920fde7867c1348f95a55cab3cd63c85b6599840/internal/database/query_type.go) сохраняют прежнюю работу с leading prefix. Удаление comments patch не подтверждено |
+| Neovim Windows | [v0.12.6, 779c36969e31](https://github.com/neovim/neovim/blob/779c36969e31080503be2dfccbcc3f999e289606/src/nvim/os/pty_proc_win.c), [master 0c4b90023dac](https://github.com/neovim/neovim/blob/0c4b90023dac24f42ef24278b22fa357b39d38c6/src/nvim/os/pty_proc_win.c) | В закрытии/resize остаётся исходная последовательность; [ConPTY wrapper](https://github.com/neovim/neovim/blob/779c36969e31080503be2dfccbcc3f999e289606/src/nvim/os/pty_conpty_win.c) обращается к объекту напрямую. Source не подтверждает снятие нашего lifecycle patch; официальный binary v0.12.6 здесь не запускался |
+
+Это не утверждение, что каждая новая версия обязательно воспроизводит старый
+баг. Проверенные исходники не дают основания снять все backports разом.
+Neogit probe исполнял только точную pure function из закреплённого source,
+не весь новый plugin: это ручная source диагностика, а не plugin E2E PASS.
+
+## Проверенный частный вариант UI
+
+Для сравнения создана копия 78 tracked файлов конфигурации на базе 7463915,
+добавлен только `lua/plugins/zz_review_optional.lua`: disabled barbecue,
+navic, satellite, Glance. Manifest/SHA — `.tests/review-ui-config-20261110.json`.
+Рабочая конфигурация и lock не менялись; default 67 pins сохранились.
+Windows declarations: 67 → 63, Ubuntu: 66 → 62. Разница в единицу вызвана
+условием cmake для native fzf, а не отдельным Linux/Windows конфигом (IDE-081).
+
+| Сценарии без изменения tests | Windows | Ubuntu |
+|---|---:|---:|
+| Go language: настоящий LSP/format/navigation | 6 PASS | 6 PASS |
+| Общие Tests/Search/Tasks panels | 6 PASS | 6 PASS |
+| Core editor smoke | 10 PASS | 10 PASS |
+| Outline/Aerial и его управление | 6 PASS | 6 PASS |
+| Всего | **28 PASS** | **28 PASS** |
+
+Это выбранные core сценарии частного варианта, не полный регресс всех языков,
+Git/DAP/GUI и не проверка Mac. Доставку физических клавиш/WezTerm эти RPC
+прогоны не заменяют. Docker использовал уже работающий engine; Windows и
+Ubuntu выполнялись последовательно, с GOMAXPROCS=2.
+
+### Наблюдения времени/памяти
+
+Три чередующиеся пары Windows на одном SDK/host, отдельные private profiles.
+В idle берётся Lazy UIEnter metric (`real_cputime=false`), а при открытии
+plain-text fixture — время от RPC input до подтверждённого buffer/filetype.
+Это **не пользовательский startup benchmark**: есть driver/UI-attach overhead,
+cache effects, всего 3 samples; Go/Rust project load и системные зависания
+так не измерены. RSS — один снимок основного процесса, не вся память IDE.
+
+| Наблюдение, медиана | Default | Частный вариант |
+|---|---:|---:|
+| Idle Lazy UIEnter metric | 856,9 ms | 875,6 ms |
+| Idle main-process RSS | 28,32 MiB | 29,18 MiB |
+| Loaded plugins idle | 28 | 28 |
+| Открытие plain-text fixture, RPC wait | 592,9 ms | 527,2 ms |
+| Main-process RSS после открытия | 37,84 MiB | 36,68 MiB |
+| Loaded plugins после открытия | 45 | 42 |
+
+При открытом файле baseline действительно загрузил barbecue/navic/satellite,
+Glance остался lazy/unloaded. Во всех 12 снимках startup installs=0 и собственные
+editor scopes штатно завершились. Idle ускорение не подтверждено; в малом
+text fixture различие ограниченное и не объясняет прежние тормоза системы.
+Сокращать UI стоит ради понятности и уменьшения hooks/ответственности, без
+обещания заметного ускорения работы на всех проектах.
+
+### Варианты для решения по фичам
+
+| Вариант | Что теряется | Что сохраняется |
+|---|---|---|
+| Оставить Peek, убрать breadcrumbs/ruler | Путь символа над кодом и overview ruler; минус 3 plugins | Outline/Problems, gd/gr, Peek по gpd/gpr, остальное ядро |
+| Минимальная вторичная навигация | То же плюс peek-окна gpd/gpr/gpt/gpi; минус 4 plugins | Outline/Problems и обычные LSP переходы/quickfix; этот точный private вариант проверен выше |
+| Сохранить весь UI | Фичи не удаляются | Можно сокращать внутренние overrides/дубли после отдельного плана |
+
+Предварительно разумно оставить Peek по запросу и оценить удаление breadcrumbs/
+ruler: Glance не создавал фоновой нагрузки в этих снимках, а первые три
+активируются при открытии файла и имеют отдельные hooks/ограничения. Это
+предложение для выбора UX, не уже выполненное удаление. Вариант из трёх
+удалений требует собственного regression перед применением; он не выдаётся
+за проверенный по одному сходству с четырьмя. Остальные DAP/Git/tool/root слои
+пересматриваются отдельно от этих дополнительных UI.
+
+## Найденный gap: native sorter Telescope — IDE-081
+
+`plugins/telescope.lua` включает fzf-native при наличии cmake и подавляет ошибку
+load_extension через pcall. В Windows test-deps готовой libfzf.dll нет, хотя
+plugin отображается загруженным в Lazy. В Ubuntu image cmake нет и plugin
+вообще исключён условием. Повторяемая ручная проверка настоящего Forge явно
+попыталась загрузить extension: на обеих ОС extension_loaded=false, installs=0.
+Обычный picker остаётся работоспособным через Lua fallback.
+
+Это конкретная граница доказанного покрытия: 67 pins/loaded-флаг и успешный
+picker не доказывают native acceleration. Про обычный пользовательский профиль
+по тестовому SDK вывод не делается. До изменения следует выбрать mandatory/
+optional policy, отделить явную подготовку artifact от runtime условия, показывать
+fallback в health и проверять native/fallback ветки отдельно. Исправление и
+новая native сборка в рамках review не делались.
+
+Результаты: `.tests/review-fzf-windows.json`,
+`.tests/ubuntu/review-fzf-ubuntu.json`; artifact 5713543445200 (Windows),
+4994315945805 (Ubuntu). Это ручная диагностика capability, не полный native
+sorter E2E. При исправлении нужен постоянный regression, а не изменение
+ожидаемого loaded-флага ради зелёного теста.
+
 ## Что должно быть готово до рефакторинга
 
 - [x] Зафиксировать пользовательскую цель и запрет собственного language ядра.
@@ -119,9 +229,11 @@ backend не умеет references, это ограничение, а не по�
 - [x] Составить карту фич, слоёв и предварительных кандидатов; сохранить ограничения.
 - [ ] Проверить использование вторичных UI/хоткеев в повседневных сценариях,
   представить короткий конкретный набор оставить/убрать/заменить с потерями.
-- [ ] Перепроверить upstream status и возможность удаления каждого временного patch.
+- [x] Проверить upstream source для 5 plugin backports, SQLS и Windows Neovim;
+  exact SHA/contexts записаны выше. Native regression новых versions не выполнялся.
 - [ ] Измерить startup/открытие проекта/файла/фокус/idle нагрузку на одинаковых
   fixture проектах. Не приписывать системные зависания терминалу по гипотезе.
+  Первые idle/text-buffer samples выше; project load/focus/остальные ОС ещё открыты.
 - [ ] Сопоставить feature coverage с реальными editor E2E и явными Mac/GUI gaps.
 - [ ] Предложить порядок небольших изменений; у каждого — сохраняемый UX,
   удаляемая ответственность, регресс и проверяемая польза. Только затем рефакторинг.

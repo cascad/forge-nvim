@@ -10,7 +10,25 @@
 
 Маршрут и приоритеты: [рабочий план nvim_forge](docs/IDE_ROADMAP.md).
 Для новых пунктов используем следующий свободный ID `IDE-xxx`; исходный
-симптом хранится здесь, этап и состояние — в плане. Следующий ID: `IDE-081`.
+симптом хранится здесь, этап и состояние — в плане. Следующий ID: `IDE-082`.
+
+## IDE-081 — Telescope fzf-native: readiness и незаметный fallback
+
+2026-11-10, найдено при IDE-080 review. В plugins/telescope.lua native extension
+включается по наличию cmake; load_extension завёрнут в pcall. Это проверка build
+tool на runtime пути, а не готового libfzf. Обычный picker при этом может работать.
+
+Ручной probe настоящего isolated Forge: Windows test SDK объявляет plugin,
+cmake есть, libfzf.dll отсутствует, загрузка extension неуспешна; Ubuntu test
+image без cmake исключает plugin, загрузка тоже неуспешна. Startup installs=0,
+поиск в прежних UI E2E работает на fallback. Состояние повседневного профиля
+пользователя этими test SDK не доказывается.
+
+Нужно решить, нужен ли native sorter как обязательная или optional возможность;
+затем проверить explicit preparation/реальный artifact, видимость fallback и
+общую политику включения на Windows/macOS/Ubuntu. Отдельный regression на native
+readiness требуется, если интеграция будет меняться. Пока это gap, не исправление.
+Source/artifacts/границы — FEATURE_REVIEW.md и FIXLOG §144.
 
 ## IDE-080 — большой обзор фич и наслоений перед рефакторингом
 

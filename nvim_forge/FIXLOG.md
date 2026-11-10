@@ -7002,3 +7002,57 @@ Ubuntu в этом withdrawal-шаге не перезапускался; соо
 **Файлы:** CLAUDE/PROBLEMS, change, FEATURE_REVIEW/PLUGIN_INVENTORY/roadmap/
 architecture/SQL/E2E docs, удалённый prototype/tooling, helper/registry,
 inspect-plugins.lua, HISTORY/AGENT_COMMANDS.
+
+## 144. Review: upstream patches, частный UI и native fzf gap
+
+**Дата:** 2026-11-10. **Область:** IDE-080; новый finding IDE-081.
+Product behavior/spec не менялись, рабочие plugins/pins/SDK не обновлялись.
+
+**Что было/причина.** После §143 были инвентарь и кандидаты, но ещё не были
+проверены upstream equivalents, фактические потери UI и цена сокращения.
+Число плагинов/строк и loaded-флаг сами по себе не доказывают пользу/готовность.
+
+**Проверка upstream.** Read-only git ls-remote зафиксировал HEAD семи repos и
+stable tag Neovim v0.12.6. По exact SHA прочитаны 16 файлов, сохранены source SHA
+и сравнение 11 patch files. Neotest/Rust HEAD равны pins; у семи файлов полный
+hash равен исходному before. Neogit upstream уже сохраняет UTF-8, но exact
+pure function всё ещё не убирает OSC title/hyperlink. Windows Neovim/SQLS/DAP/
+Gitsigns inspected paths не дают подтверждения безопасного снятия наших patches.
+Это source review, не native regression новых plugin/SDK versions.
+
+**Частный вариант.** В .tests/ubuntu/review-ui-config-20261110 скопированы
+78 tracked config files, добавлен только disabled override barbecue/navic/
+satellite/Glance. E2E source не менялся: Go 6, work-panels 6, editor 10,
+Outline 6 — по 28 PASS Windows/Ubuntu, 28 editor artifacts. Проверены scope
+cleanup, exact Lua config/override, отсутствие изменения product и source lock.
+Default UI сохранился; частный вариант не стал новым пользовательским профилем.
+Docker использовался только как уже работающий engine, тяжёлые ОС-прогоны шли
+последовательно. Mac/GUI, Git/DAP и полный language regression этим не покрыты.
+
+**Наблюдения.** 3 чередующиеся пары Windows idle и 3 пары с plain-text file.
+Idle ускорение не показано: loaded 28/28, Lazy UIEnter median 856,9/875,6 ms,
+RSS 28,32/29,18 MiB. После файла loaded 45/42, median RPC wait 592,9/527,2 ms,
+RSS 37,84/36,68 MiB. Это малый controlled fixture с driver/cache effects,
+не пользовательский startup benchmark и не объяснение системных зависаний.
+Glance не загружался до запроса; barbecue/navic/satellite активировались на file.
+Дополнительные Windows idle и Ubuntu buffer snapshots проверили переносимость
+расширенной diagnostic command. Всего 15 inventory profiles, installs=0/own
+scope empty. Пользователю предложены варианты UX, удаления рабочих фич пока нет.
+
+**IDE-081. Проверено вручную (capability probe).** Native fzf gate зависит от
+cmake; ошибки extension load подавляются pcall. В Windows test SDK plugin
+объявлен, cmake есть, DLL отсутствует; Ubuntu без cmake исключает его. Попытка
+настоящей загрузки на обеих ОС даёт extension_loaded=false, installs=0.
+Отсюда Windows declarations 67/63 и Ubuntu 66/62 при одинаковом source lock.
+Picker E2E показывает fallback, не native sorter. Состояние обычного профиля
+пользователя не проверялось. Finding записан отдельно, исправления не было.
+
+**Изменение/проверка.** FEATURE_REVIEW дополнен exact sources, вариантами с
+потерями и ограничениями, метриками и gap; PLUGIN_INVENTORY/roadmap/PROBLEMS
+согласованы. inspect-plugins.lua умеет отдельный output и controlled text buffer,
+пишет Lazy stats/RSS. Unit/trace 365 PASS, strict 65/65, evidence audit проверяет
+sources/config/SDK boundary/shutdown и raw history prefix.
+**Вывод:** сначала конкретная пользовательская ценность и фактическая capability,
+затем сокращение слоёв. Review и выбор runtime изменений ещё не завершены.
+**Файлы:** FEATURE_REVIEW/PLUGIN_INVENTORY/IDE_ROADMAP/PROBLEMS,
+inspect-plugins.lua, HISTORY/AGENT_COMMANDS; ignored feature-review-followup-evidence.

@@ -4,6 +4,11 @@
 
 Источник: .tests/feature-review-runtime.json, editor artifact 3322136536400. Команда: `<nvim> -l tests/diagnostics/inspect-plugins.lua`. Цена фич, доказательства и открытые вопросы — [FEATURE_REVIEW.md](FEATURE_REVIEW.md).
 
+Уточнение review: `loaded`/pin не доказывают готовность native-компонента.
+В проверенном Windows SDK fzf-native есть в Lazy, но DLL отсутствует; Ubuntu
+исключает его условием cmake. Picker работает на fallback, ускорение не
+подтверждено. Детали — IDE-081 в FEATURE_REVIEW; pins остаются прежними.
+
 | Plugin | Роль | Оценка | Прямые dependencies | Pin |
 |---|---|---|---|---|
 | [Comment.nvim](https://github.com/numToStr/Comment.nvim.git) | Editor helpers | оценить штатные альтернативы без потери ввода | — | e30b7f2008e5 |

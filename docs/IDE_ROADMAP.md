@@ -38,6 +38,12 @@ gate завершены (§136). [Process lifecycle](../openspec/changes/fix-edi
 IDE-073/074 остаются отдельно. Доступные Ubuntu проверки используют уже
 запущенный engine без управления Desktop/WSL.
 
+IDE-080, следующий срез: upstream source/backports проверены по exact SHA,
+частный вариант без четырёх secondary UI plugins прошёл по 28 core UI E2E
+Windows/Ubuntu. Idle/text-buffer snapshots не являются общим startup benchmark;
+рабочие фичи пока не удалены, выбор UI ещё обсуждается. Native fzf readiness
+выделен в IDE-081: loaded-флаг и рабочий picker не доказывают native sorter.
+
 SQL references — [отдельный change](../openspec/changes/add-sql-semantic-references/tasks.md):
 §142 сохраняет исходный RED и исследование собственного resolver. Этот подход
 отменён (§143): не строить своё language ядро ради полноты матрицы. SDK forge.1

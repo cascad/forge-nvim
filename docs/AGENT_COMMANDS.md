@@ -3558,3 +3558,71 @@ Planning текст записывался UTF-8; при доставке чер
 Evidence: python -B .tests/audit-sql-prototype-withdrawal.py.
 FIXLOG §143 — raw append; старые §142 и команды сохранены как история.
 Следующий этап IDE-080; рабочие функции/плагины не вырезаны, refs по-прежнему нет.
+
+## 58. Review upstream и частный UI, 2026-11-10
+
+Read-only git status/log, patches/plugins.json (только нужные contexts),
+runtime/SDK sources; 16 official source files получены GitHub connector fetch
+по commit URLs из FEATURE_REVIEW. Plugin fetch сохраняет body; точный HEAD
+зафиксирован отдельно, без credential prompts:
+```powershell
+$env:GIT_TERMINAL_PROMPT='0'
+$env:GCM_INTERACTIVE='Never'
+git -c credential.helper= -c core.askPass= ls-remote --symref https://github.com/<repo>.git HEAD
+git -c credential.helper= -c core.askPass= ls-remote --tags https://github.com/neovim/neovim.git 'refs/tags/v*'
+```
+Исходники/manifest/patch-context-audit: .tests/upstream-review-20261110.
+Neovim tag/heads: upstream-review-neovim-tags.json/upstream-review-heads.json.
+Ручной pure-function probe: nvim -l .tests/upstream-review-20261110/probe-ansi.lua,
+neogit-ansi-probe.json: UTF-8/CSI совпали, OSC title/link не совпали. Это не E2E
+нового plugin; обновление pins/скачивание нового SDK не выполнялось.
+
+Частная config копия подготовлена из git ls-files -z -- nvim_forge (78 файлов);
+в каждый destination проверялся workspace prefix. Добавлен только
+lua/plugins/zz_review_optional.lua с enabled=false для barbecue/navic/satellite/
+Glance. Полный исходный lock остался тем же. Manifest: review-ui-config-20261110.json.
+```powershell
+$env:TEMP='F:/repo/forge-nvim/.tests/tmp'
+$env:TMP=$env:TEMP; $env:TMPDIR=$env:TEMP
+$env:NVIM_LOG_FILE="$env:TEMP/review-ui-windows.log"
+$env:PYTHONIOENCODING='utf-8'
+$env:GOMAXPROCS='2'; $env:GOFLAGS='-p=2'
+. ./scripts/lib/nvim-sdk.ps1
+$forgeNvim=Get-ForgeNvim (Get-Location).Path
+$env:FORGE_E2E_CONFIG_SOURCE='F:/repo/forge-nvim/.tests/ubuntu/review-ui-config-20261110'
+& $forgeNvim -l tests/e2e/go-language.test.lua
+& $forgeNvim -l tests/e2e/work-panels.test.lua
+& $forgeNvim -l tests/e2e/editor.test.lua
+& $forgeNvim -l tests/e2e/outline.test.lua
+docker compose -f tests/containers/compose.yaml run --rm --entrypoint bash ubuntu .tests/review-ui-run-20261110.sh
+```
+Windows завершён до Ubuntu. Логи review-ui-windows-<suite>.txt и
+.tests/ubuntu/review-ui-ubuntu-<suite>.txt: по 28 PASS. Engine 28.5.1 уже работал,
+новых Desktop/WSL lifecycle/settings действий нет.
+
+Диагностика 3 pairs idle + 3 pairs file, alternating baseline/candidate:
+```powershell
+$env:FORGE_PLUGIN_INVENTORY_OUTPUT='F:/repo/forge-nvim/.tests/<unique-report>.json'
+$env:FORGE_PLUGIN_INVENTORY_BUFFER='1'
+& $forgeNvim -l tests/diagnostics/inspect-plugins.lua
+```
+Для idle BUFFER=0, для baseline CONFIG_SOURCE=F:/repo/forge-nvim/nvim_forge.
+Каждый запуск имеет отдельный JSON/log/artifact; Windows Lazy real_cputime=false,
+цифры UIEnter/RPC wait не равны user startup latency. Буферный probe добавлен
+после того, как idle показал одинаковые 28 loaded plugins. Примеры/агрегаты:
+review-ui-windows-metrics.json, review-ui-windows-text-metrics.json.
+Отдельный idle current-script и два Ubuntu buffer snapshots проверили обе
+ветки diagnostic command; cross-OS ms не сравнивались.
+
+Ручной capability probe fzf: .tests/probe-telescope-native.lua использует
+настоящий editor/Lazy/Telescope и pcall штатной load_extension('fzf').
+Windows review-fzf-windows.json, Ubuntu .tests/ubuntu/review-fzf-ubuntu.json:
+нет native extension, installs=0, штатные shutdown. Это gap IDE-081, не fix
+и не sorter E2E; ordinary пользовательский профиль не исследовался.
+
+Evidence: python -B .tests/audit-feature-review-followup.py. Проверяет все
+native artifacts, private overrides/sources, source hashes/contexts, metrics
+и history prefix. Последние стандартные checks:
+nvim -l tests/run.lua unit trace (365 PASS),
+npx.cmd --yes @fission-ai/openspec@1.13.2 validate --all --strict (65/65),
+git diff --check; FIXLOG §144 raw append, staged paths только явные.
