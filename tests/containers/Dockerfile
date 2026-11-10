@@ -97,3 +97,11 @@ RUN useradd --create-home --uid 10001 forge
 ENV HOME=/home/forge
 USER forge
 WORKDIR /workspace
+
+# Optional native sorter: поздний слой сохраняет cache SDK остальных языков.
+USER root
+COPY tests/e2e/prepare_fzf.py /opt/forge/tests/e2e/
+RUN apt-get update && apt-get install -y --no-install-recommends cmake make \
+    && rm -rf /var/lib/apt/lists/* \
+    && python3 /opt/forge/tests/e2e/prepare_fzf.py --editor-deps /opt/forge/editor-deps --build-root /tmp/forge-fzf
+USER forge

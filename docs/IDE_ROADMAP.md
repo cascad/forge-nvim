@@ -26,7 +26,9 @@ IDE-001 параллельно ждёт диагностических данн�
 | Готово Windows/Ubuntu | IDE-082: пассивная Go metadata / late Delve | По 27 native E2E, real gopls restart и late override F5, по 2 diagnostic profiles; §148, Mac gate открыт |
 | Готово Windows/Ubuntu | IDE-083: Peek с клавиатуры | Готовые Glance defaults, по 7 новых + 22 прежних native checks и по 1 повтору исходной диагностики; §149, Mac gate открыт |
 | Готово Windows/Ubuntu | IDE-084: фокус при позднем дереве | Neo-tree cleanup сохраняет выбранное окно; по 3 новых + 23 прежних E2E и по 3 cold samples, §150; Mac gate открыт |
-| Следующий конкретный change | IDE-081 | Readiness native fzf по готовому artifact; сохранить рабочий fallback и проверить native поиск |
+| Готово Windows/Ubuntu | IDE-081: native fzf / fallback | По 5 новых checks (4 editor + health) и 25 прежних; настоящий C scoring без CMake, health, F5 picker; §151, Mac gate открыт |
+| Следующее расследование | IDE-085 | Единственный qa! → SIGTERM в Windows test child; сохранить первичный trace и получить bounded воспроизведение, не увеличивать timeout |
+| Затем | Общая политика Output | Разобрать различия ручного выбора/первого открытия; сохранить stdout/PTY/history и готовые DAP компоненты, см. PANEL_OWNERSHIP_REVIEW |
 | Отложено до готового backend | Остаток SQL workflow, IDE-062 | SQLS references provider отсутствует. Собственный binder/index/LSP fork отменён (§143); не подменять references grep и не объявлять полную SQL поддержку |
 | Затем | Остальная [матрица языков](LANGUAGE_MATRIX.md) | SQL references IDE-062, Bash DAP IDE-057; Mac/native и оставшиеся сценарии матрицы |
 | После функциональной матрицы | Упрощение архитектуры | Общее ядро, явные системные границы и setup; сокращение дублирования с сохранением E2E |
@@ -46,7 +48,13 @@ Native Mac/GUI не запускались. IDE-084 также исправле�
 preserve-focus-during-tree-cleanup, по 26 E2E Windows/Ubuntu + по 3 cold traces.
 Поздний Neo-tree открывался после Outline, а Edgy on_hide переводил фокус
 в код; guard теперь сохраняет действительное выбранное окно через public API.
-Следующий небольшой шаг — IDE-081, затем остальной порядок FEATURE_REVIEW.
+IDE-081 также готов: optional native sorter выбирается реальной загрузкой,
+без проверки compiler PATH. [Поиск и подготовка](SEARCH.md); по 30 checks,
+20 editor profiles + один native health process Windows/Ubuntu, 78 config
+sources/exit/scopes проверены. Ubuntu SDK слои взяты из cache, native добавлен
+поздним слоем; runtime ничего не собирает. Единичный старый qa! → SIGTERM
+сохранён как IDE-085, зелёный повтор не объявлен его исправлением.
+Далее bounded IDE-085, затем Output policy и остальной порядок FEATURE_REVIEW.
 
 **Mac параллельно:** IDE-001 (zsh/Go до запуска nvim) и IDE-002 (Cmd+C)
 ждут измерений/GUI на Mac. Сборщик startup готов; после trace исправляется
@@ -82,8 +90,8 @@ Git/workspace/tools/save разобраны в [WORKSPACE_TOOL_REVIEW](WORKSPACE
 всего ядра/явные gaps, 3 project/focus/idle samples на Windows и Ubuntu.
 Исходный Peek q был RED 6/6 (IDE-083); fix §149 вернул готовые Glance defaults
 и прошёл постоянный regression. Решение об удалении breadcrumbs/ruler/Peek
-остаётся открытым. IDE-082/083/084 завершены на Windows/Ubuntu; далее
-native fzf readiness и остальной согласованный порядок.
+остаётся открытым. IDE-081/082/083/084 завершены на Windows/Ubuntu; далее
+IDE-085 и остальной согласованный порядок. Mac/GUI gates открыты.
 
 SQL references — [отдельный change](../openspec/changes/add-sql-semantic-references/tasks.md):
 §142 сохраняет исходный RED и исследование собственного resolver. Этот подход

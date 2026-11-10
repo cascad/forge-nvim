@@ -10,25 +10,23 @@
 
 Маршрут и приоритеты: [рабочий план nvim_forge](docs/IDE_ROADMAP.md).
 Для новых пунктов используем следующий свободный ID `IDE-xxx`; исходный
-симптом хранится здесь, этап и состояние — в плане. Следующий ID: `IDE-085`.
+симптом хранится здесь, этап и состояние — в плане. Следующий ID: `IDE-086`.
 
-## IDE-081 — Telescope fzf-native: readiness и незаметный fallback
+## IDE-085 — Windows E2E: единичный SIGTERM после обычного qa!
 
-2026-11-10, найдено при IDE-080 review. В plugins/telescope.lua native extension
-включается по наличию cmake; load_extension завёрнут в pcall. Это проверка build
-tool на runtime пути, а не готового libfzf. Обычный picker при этом может работать.
+2026-11-10, аудит IDE-081: Windows artifact 19482373991200 (missing library,
+CMake есть) прошёл все search/health assertions, mode=n/blocking=false,
+messages пусты. Native qa! не завершился за штатные 2 s; cleanup отправил
+SIGTERM около 2068 ms, exit_code=1/signal=15, hard_kill=false, own scope пуст.
+Остальные profiles этого прогона завершились штатно. Нет доказательства,
+что RPC quit был обработан или причина связана с fzf/health/самим SDK.
 
-Ручной probe настоящего isolated Forge: Windows test SDK объявляет plugin,
-cmake есть, libfzf.dll отсутствует, загрузка extension неуспешна; Ubuntu test
-image без cmake исключает plugin, загрузка тоже неуспешна. Startup installs=0,
-поиск в прежних UI E2E работает на fallback. Состояние повседневного профиля
-пользователя этими test SDK не доказывается.
-
-Нужно решить, нужен ли native sorter как обязательная или optional возможность;
-затем проверить explicit preparation/реальный artifact, видимость fallback и
-общую политику включения на Windows/macOS/Ubuntu. Отдельный regression на native
-readiness требуется, если интеграция будет меняться. Пока это gap, не исправление.
-Source/artifacts/границы — FEATURE_REVIEW.md и FIXLOG §144.
+Новый search E2E теперь проверяет exit_code/signal=0 после stop; первичный
+artifact/log сохранён отдельно. Ограниченный зелёный повтор не закрывает
+расследование. Нужен bounded capture доставки quit, состояния child и exit
+без увеличения timeout и без глобального завершения чужих nvim/процессов.
+Не объединять автоматически с startup ui_attach IDE-073 или DAP IDE-074.
+Факты/границы — FIXLOG §151; product fix для IDE-085 пока отсутствует.
 
 ## IDE-080 — большой обзор фич и наслоений перед рефакторингом
 
@@ -610,6 +608,13 @@ Guard сохраняет действительное выбранное окн�
 явный переход в code split также сохраняется. Source RED постоянного E2E,
 по 3 новых + 23 прежних E2E и по 3 cold samples Windows/Ubuntu.
 Change preserve-focus-during-tree-cleanup; Mac/GUI gate открыт.
+
+IDE-081 → [FIXLOG §151](nvim_forge/FIXLOG.md#151-поиск-native-fzf-без-runtime-компилятора-и-явный-fallback):
+готовая DLL/SO используется без CMake; missing/corrupt сохраняют рабочий Lua
+sorter. Режим/причина видны в health. [Подготовка и клавиши](docs/SEARCH.md).
+По 5 новых checks (4 UI + native health) и 25 прежних Windows/Ubuntu,
+реальные C scores/rg/Enter/F5 проверены; Mac/ARM64/GUI отдельно. Единичная
+аномалия qa! осталась IDE-085, не скрыта новым PASS.
 
 IDE-078 → [FIXLOG §138](nvim_forge/FIXLOG.md#138-sql-e2e-перенос-terminal-не-скрывает-pass):
 terminal переносил `8 SQL checks` между rows, observer ошибочно ждал цельную

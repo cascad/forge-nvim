@@ -7482,3 +7482,81 @@ cleanup, не весь session/restore и не общий Output policy. Пер�
 **Файлы:** forge/neo_tree_lifecycle.lua, outline-focus E2E/diagnostic/registry,
 tests/e2e/README, PANEL_OWNERSHIP_REVIEW/FEATURE_REVIEW/IDE_ROADMAP,
 PROBLEMS/HISTORY/AGENT_COMMANDS и OpenSpec change.
+
+## 151. Поиск: native fzf без runtime компилятора и явный fallback
+
+Дата: 2026-11-10. IDE-081. Спека: IDE-BOOT-5 (FIX);
+change fix-telescope-native-readiness, capability search-sorter.
+
+**Проблема/причина.** §144 установил: cond по executable(cmake) проверяет
+build tool, не готовую библиотеку. Windows test SDK не содержал DLL, Ubuntu
+исключал plugin без CMake; pcall скрывал причину. Успешный picker/loaded-флаг
+не доказывал native scoring. Это ограничивало перенос готовой сборки на
+устройства без compiler PATH; обычный поиск уже имел Lua fallback.
+
+**Изменение.** Native plugin — lazy dependency Telescope без cmake cond.
+Результат настоящего load_extension сохраняется для read-only forge health:
+native fzf, Lua fallback с исходной причиной или Telescope not loaded.
+Startup notify/build/download не добавлен. Native остаётся optional; для
+обычного редактора компилятор не нужен, pins/алгоритмы прежние.
+
+prepare_fzf.py явно собирает закреплённый C upstream через CMake/MSVC либо
+штатный Unix toolchain, в isolated build temp checkout с parallel=2. В SDK
+копируется только DLL/SO; общий manifest хранит commit/source/artifact SHA и
+platform. Build temp Windows на F:, compiler child TEMP/TMP/TMPDIR изолированы.
+Поздний Docker слой добавляет CMake/make и artifact; существующие SDK слои
+остальных языков взяты из cache, Desktop/WSL lifecycle не менялся.
+
+**Проверка/e2e.** Постоянный search-sorter.test.lua: четыре настоящих editor
+UI matrix (ready без CMake, missing с/без CMake, corrupt с CMake). Keyboard
+file/content/rg/Enter, выбранный sorter callback, исходные C scores, health,
+неизменность файла, отсутствие startup builders/downloaders проверяются реально.
+Score observer вызывает исходный C-backed get_score и сохраняет результат;
+ответы не подменяются. Missing/corrupt меняют только private runtime library.
+Пятый native health check запускает :checkhealth forge без init; он проверяет
+unknown branch и собственный Job/PGID, не имитирует пятый полный editor UI.
+
+Source RED Windows 18536713233900: DLL уже подготовлена, CMake в PATH=0,
+native library не загружена, runtime config содержит старый cond.
+После fix final Windows/Ubuntu: search-sorter 5 + editor 10 + buffers 8 +
+work-panels 6 + реальный go-passive late Delve/F5 picker 1 = по 30 PASS.
+20 editor profiles + 1 native health process на каждой ОС: все 42 exit=0,
+scopes пусты, 78 config-source files совпадают. Native C calls 24/6, положительные
+scores сохранены; counts зависят от coalescing ввода, это не benchmark.
+DLL SHA начинается 1eca7158, SO dc99e95c; полный SHA/pin/inputs в manifests.
+.tests/audit-ide081.py и .tests/ide081-evidence.json проверяют source RED,
+реальные scores, native/fallback, F5 breakpoint/output и все exit/scopes.
+Unit/trace 365 cases/15 files PASS, strict OpenSpec 69/69.
+
+**Промежуточные попытки.** Первый Windows suite дал 1 PASS/3 FAIL из-за
+наблюдателя: failed require оставляет LuaJIT sentinel в package.loaded, поэтому
+~=nil не означает загруженный module. Проверяется type==table вместе с
+фактическим sorter/scoring. Health до первого picker тоже не обязан быть
+unknown: Lazy reason показал nvim-dap → require(telescope) ещё при старте.
+Эту существующую DAP-интеграцию сохранили; spec/docs уточняют фактическое
+состояние, unknown дополнительно проверен native без init. Неполный health
+профиль может сообщать об отсутствии Conform в других секциях, не выдан за
+полностью настроенный editor. Raw Windows FAIL сохранены.
+
+Первый Ubuntu: четыре UI PASS, native health FAIL — новый controller забыл
+scope.spawn_options (detach=true) и проверял Windows zero вместо POSIX false.
+Исправлен только запуск/observer, затем повторены актуальные tests обеих ОС.
+Raw .tests/ubuntu/ide081-ubuntu-search-initial.txt сохранён; это ошибка теста,
+product readiness на Linux уже работал.
+
+Аудит отдельного Windows missing profile 19482373991200 обнаружил qa! → SIGTERM:
+2 s штатного ожидания, signal=15/code=1, hard_kill=false, scope empty, хотя UI
+assertions прошли. Новый E2E проверяет штатный exit_code/signal=0 после stop.
+Исходные artifact/log сохранены; ограниченный повтор обеих ОС GREEN.
+Причина qa! неизвестна и не исправлена: IDE-085 отдельно, без увеличения
+deadline/скрытия сигнала и без автоматического объединения с IDE-073/074.
+
+**Вывод/границы.** Runtime capability определяется загрузкой, build tools
+относятся к явной подготовке. Native/Fallback и DAP selector проверены на
+Windows/Ubuntu; Mac/ARM64/GUI и скорость не измерялись. Mac gate открыт,
+change не архивируется, main specs прежние. IDE-001 zsh/Go до nvim и выбор
+удаления optional UI этим не закрываются. Далее bounded IDE-085, затем Output.
+
+**Файлы:** plugins/telescope.lua, forge/health.lua, prepare_fzf/search-sorter/
+registry, поздний Docker слой, SEARCH/tests README/root README,
+IDE_ROADMAP/FEATURE_REVIEW/PROBLEMS/HISTORY/AGENT_COMMANDS и OpenSpec change.

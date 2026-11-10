@@ -82,6 +82,7 @@ SDK остаётся без изменений. Прямой `nvim -l ...` на 
 
 ```powershell
 python -B tests/e2e/prepare_editor.py --download
+python -B tests/e2e/prepare_fzf.py
 ```
 
 На Mac/Ubuntu использовать `python3`. Подготовка сначала читает git-объекты
@@ -92,6 +93,12 @@ python -B tests/e2e/prepare_editor.py --download
 отсутствие/расхождение зависимостей даёт FAIL, а не SKIP. Можно задать
 `--cache <lazy-directory>` и `--output <directory>`; тест читает альтернативный
 output через `FORGE_E2E_DEPS`. Docker выполняет подготовку при build.
+
+Вторая команда явно собирает pinned fzf-native через upstream CMake и C
+toolchain; native E2E требует этот artifact. Сборка идёт в `.tests/tmp`,
+в SDK копируется только DLL/SO, SHA256/commit записываются в общий manifest.
+Для другого SDK: `--editor-deps <directory>`. Обычному редактору компилятор
+не нужен: [native/fallback поиск](../../docs/SEARCH.md).
 
 Подготовка также вызывает общий локальный Lua applier временного Neogit
 backport IDE-034/043; требуется Neovim (`--nvim <absolute-path>` выбирает binary).
@@ -1153,3 +1160,24 @@ gopls/Neo-tree/Edgy: первое открытие Outline, позднее де�
 `FORGE_OUTLINE_SAMPLES=1..5`, `FORGE_OUTLINE_OUTPUT=<json>` задают объём/отчёт.
 Диагностика не равна acceptance: cold race может не проявиться в данном запуске.
 macOS/GUI требуют собственного прогона; Docker проверяет только Ubuntu.
+
+## Native sorter и fallback — IDE-BOOT-5
+
+`nvim -l tests/e2e/search-sorter.test.lua` — четыре настоящих editor UI случая:
+готовая DLL/SO без CMake в PATH; missing с CMake; corrupt с CMake; missing без
+CMake. Проверяются исходный sorter callback, настоящие C scores, file/content
+поиск через клавиатуру/rg, переход Enter, неизменность файла, health и отсутствие
+startup build/download. Наблюдатель C score вызывает исходную функцию и только
+сохраняет её результат. Ошибочный artifact меняется исключительно в private copy.
+
+Пятый native check вызывает реальный `:checkhealth forge` без пользовательского
+init и проверяет `Telescope not loaded`; остальные health-секции могут сообщить
+об отсутствии настроенного Conform в этом намеренно неполном профиле. Процесс
+ограничен собственным Job/PGID. Это отдельный headless health check, не пятый UI
+workflow. В обычной сборке Telescope может заранее загрузиться через DAP;
+health сохраняет фактическое состояние до/после picker.
+
+Подготовка — `python[3] -B tests/e2e/prepare_fzf.py` после prepare_editor.
+Тест требует native artifact даже для missing/corrupt matrix и не заменяет
+отсутствующий native SDK молчаливым SKIP. `FORGE_SEARCH_CASE` выбирает UI случай;
+полный suite без фильтра запускает также health check. Mac/ARM64/GUI отдельно.

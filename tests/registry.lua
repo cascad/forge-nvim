@@ -35,6 +35,7 @@ return {
   { file = 'tests/e2e/editor-process.test.lua', suite = 'e2e', timeout = 60 },
   { file = 'tests/e2e/editor-descendants.test.lua', suite = 'e2e', timeout = 180 },
   { file = 'tests/e2e/editor.test.lua', suite = 'e2e', timeout = 180 },
+  { file = 'tests/e2e/search-sorter.test.lua', suite = 'e2e', timeout = 240 },
   { file = 'tests/e2e/dap-output.test.lua', suite = 'e2e', timeout = 300 },
   { file = 'tests/e2e/test-runner.test.lua', suite = 'e2e', timeout = 360 },
   { file = 'tests/e2e/snippet-input.test.lua', suite = 'e2e', timeout = 180 },

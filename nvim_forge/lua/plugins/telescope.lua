@@ -1,6 +1,5 @@
--- Telescope — основной picker. fzf-native собираем через cmake (clang
--- уже стоит в C:\Program Files\LLVM). Если cmake не найден — Telescope
--- продолжит работать на Lua-сортировщике, просто медленнее.
+-- Telescope — основной picker. Native fzf собирается явно; при загрузке
+-- используем готовую библиотеку или штатный Lua fallback без build tools.
 
 local function open_buffer_picker()
     local files=require('ide.buffers')
@@ -26,9 +25,7 @@ return {
         build = "cmake -S. -Bbuild -DCMAKE_BUILD_TYPE=Release && "
             .. "cmake --build build --config Release && "
             .. "cmake --install build --prefix build",
-        cond = function()
-            return vim.fn.executable("cmake") == 1
-        end,
+        lazy = true, -- spec: IDE-BOOT-5. Готовность проверяет настоящая загрузка.
     },
 
     {
@@ -152,7 +149,8 @@ return {
         config = function(_, opts)
             local telescope = require("telescope")
             telescope.setup(opts)
-            pcall(telescope.load_extension, "fzf")
+            local available, reason = pcall(telescope.load_extension, "fzf")
+            vim.g.forge_telescope_fzf = { available = available, error = available and "" or tostring(reason) }
             pcall(telescope.load_extension, "ui-select")
         end,
     },

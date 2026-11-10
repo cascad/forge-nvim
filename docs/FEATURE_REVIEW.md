@@ -7,6 +7,9 @@ IDE-083 также исправлен отдельным небольшим chan
 по 7 новых + 22 прежних native PASS и по одному project diagnostic (§149).
 IDE-084: late Neo-tree cleanup сохраняет фокус, по 3 новых + 23 прежних native
 PASS и по 3 cold trace samples Windows/Ubuntu (§150); Mac gate открыт.
+IDE-081: optional native fzf/fallback и health, по 30 checks Windows/Ubuntu,
+настоящий C scoring без CMake (§151). Единичный qa! → SIGTERM — IDE-085,
+причина не установлена, runtime exit fix не заявляется.
 [Новая Go metadata/команды](GO_TOOLS.md). Основа обзора —
 runtime 7463915 после отмены собственного SQL prototype. Требования не сокращаются
 до того, что сейчас легче проверить.
@@ -210,21 +213,22 @@ ruler: Glance не создавал фоновой нагрузки в этих 
 за проверенный по одному сходству с четырьмя. Остальные DAP/Git/tool/root слои
 пересматриваются отдельно от этих дополнительных UI.
 
-## Найденный gap: native sorter Telescope — IDE-081
+## Исходный gap: native sorter Telescope — IDE-081
 
-`plugins/telescope.lua` включает fzf-native при наличии cmake и подавляет ошибку
+В исходном срезе §144 `plugins/telescope.lua` включает fzf-native при наличии cmake и подавляет ошибку
 load_extension через pcall. В Windows test-deps готовой libfzf.dll нет, хотя
 plugin отображается загруженным в Lazy. В Ubuntu image cmake нет и plugin
 вообще исключён условием. Повторяемая ручная проверка настоящего Forge явно
 попыталась загрузить extension: на обеих ОС extension_loaded=false, installs=0.
 Обычный picker остаётся работоспособным через Lua fallback.
 
-Это конкретная граница доказанного покрытия: 67 pins/loaded-флаг и успешный
-picker не доказывают native acceleration. Про обычный пользовательский профиль
-по тестовому SDK вывод не делается. До изменения следует выбрать mandatory/
-optional policy, отделить явную подготовку artifact от runtime условия, показывать
-fallback в health и проверять native/fallback ветки отдельно. Исправление и
-новая native сборка в рамках review не делались.
+Это исходная граница покрытия: 67 pins/loaded-флаг и успешный picker сами по
+себе не доказывают native acceleration. Исправление §151 сохраняет optional
+политику существующего fallback, использует реальную загрузку DLL/SO без
+runtime build tools и показывает режим/причину в health. Новый SDK готовится
+явно upstream CMake; по 4 editor matrix + 1 native health и 25 integration
+checks Windows/Ubuntu, реальные C scores/keyboard/rg/Enter и F5 picker проверены.
+Это не benchmark ускорения и не проверка повседневного профиля владельца/Mac.
 
 Результаты: `.tests/review-fzf-windows.json`,
 `.tests/ubuntu/review-fzf-ubuntu.json`; artifact 5713543445200 (Windows),
@@ -242,7 +246,7 @@ sorter E2E. При исправлении нужен постоянный regres
 |---|---|---|
 | Файлы/дерево, create/rename/move/cut/paste | file-explorer, editor, deleted-files | Разные filesystem/permissions и Mac; неизвестные редкие ошибки отдельно |
 | Вкладки/закрытие/reopen, удалённый файл | buffers, deleted-files, native ConPTY/buffer gates | Tabpage/session restore не равен файловым вкладкам |
-| Поиск имени/контента/replace panel | editor (Telescope + настоящий rg), work-panels (grug-far/query/zoom/result) | Native fzf отсутствует в test SDK (IDE-081); полный replace workflow не считать доказанным одной панелью |
+| Поиск имени/контента/replace panel | search-sorter: native/fallback + health; editor/rg, buffers, work-panels и F5 picker Windows/Ubuntu (§151) | Mac/GUI и полный replace workflow отдельно; native скорость не измерялась |
 | Git/hunks/status/diff/history/worktree/commit/local push | git-workflow, git-errors/conflicts, diffview-close, active-worktree, gitsigns/worktree-refresh | Credentials/sequence editor, первый неизвестный IDE-038 handle и GUI |
 | Общие panel keys/focus/zoom/help | debug-panels, outline, file-explorer, work-panels, git-workflow | Первый async Go Outline focus — IDE-084; произвольный tool-only/restore layout ещё нужен |
 | Debug/output/panic/nearest/eval | dap-output, test-runner, language suites, dap-discovery | Не каждый adapter/exception/reopen путь; Bash DAP открыт IDE-057 |
@@ -320,7 +324,7 @@ Ubuntu 9265858326624/9281597222561/9295146798511. В каждом source diagnos
 | IDE-082: отложить Delve discovery и сделать Go label пассивным | Настоящий project SDK для language/build/debug и явный toolchain picker | Ненужные subprocess при edit; не запрещать GOTOOLCHAIN глобально |
 | IDE-083: вернуть готовые Glance defaults | Peek и его штатные keys | Удалить семь ошибочных overrides; q/Esc/Enter/navigation/splits через native regression |
 | IDE-084 выполнен; Output policy далее | Первое открытие/focus, output history и PTY lifetime | Late tree cleanup не меняет окно (§150); общий выбор Output ещё отдельный шаг |
-| IDE-081: явная fzf capability | Рабочий быстрый поиск и честный fallback | Gate по готовому artifact вместо наличия build tool; optional/must policy и regression |
+| IDE-081 выполнен | Рабочий поиск и optional native/fallback | Реальный load result, explicit artifact preparation, health и regression (§151) |
 | Breadcrumbs/ruler | Outline, Problems, gd/gr; Peek по запросу | Рекомендуется убрать barbecue/navic/satellite после выбора UX; вариант без 4 UI уже проверен частно, удаления по 3 требуют своего regression |
 | Git/DAP/panel ядро | Gitsigns + Neogit + Diffview, state/registry + DAP UI + Edgy, guard | Сокращать только дублирующие правила, не разные рабочие роли |
 | Alpha/project/persistence | Folder/recents/session workflows | Сначала native restart/restore coverage, затем оценка цены удаления/упрощения |
@@ -328,7 +332,8 @@ Ubuntu 9265858326624/9281597222561/9295146798511. В каждом source diagnos
 | SQLLogicTest | SQL queries/schema/format и Tests остальных языков | Отдельно решить нужность SQL assertion runner/SDK; не удалять рабочий SQL вместе с ним |
 | Временные patches/Windows SDK | Проверенные исправления и portability | Снимать только после native equivalent regression на готовом upstream |
 
-IDE-082/083/084 реализованы и проверены Windows/Ubuntu (§148–150), следующий — IDE-081.
+IDE-081/082/083/084 реализованы и проверены Windows/Ubuntu (§148–151).
+Следующий — bounded IDE-085 shutdown capture, затем общий выбор Output.
 После каждого свой RED,
 permanent E2E, Windows/Ubuntu regression, история и commit. Mac gates явно
 остаются открытыми. Выбранные UI-удаления и общий refactor не смешивать с этим
@@ -361,7 +366,7 @@ language/test roots, interpreter/tools и save/format разобраны в
   удаляемая ответственность, регресс и проверяемая польза. Только затем рефакторинг.
   DAP-кандидаты: единый выбор Output, затем одинаковые части поиска окна кода;
   process/PTY lifecycle не объединять с видимостью. Это пока план, не runtime fix.
-  IDE-082/083/084 уже выполнены; далее IDE-081 readiness и выбранные удаления optional UI.
+  IDE-081/082/083/084 уже выполнены; далее IDE-085, Output policy и выбранные удаления optional UI.
   Project/session restart и uniform interpreter/root policies требуют отдельных
   сценариев; существующие Git результаты не заменяют их полной проверки.
 

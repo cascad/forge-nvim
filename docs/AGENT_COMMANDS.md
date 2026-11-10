@@ -4096,3 +4096,116 @@ Path.resolve/is_relative_to ограничивал цели .tests/editor-e2e. M
 Staging только перечисленных product/test/change/docs файлов; commit
 'fix(outline): preserve focus while closing stale tree windows', затем metadata
 task 2.2 через git commit --amend --no-edit. Push не выполняется.
+
+## 65. IDE-081: native fzf readiness, сборка и поиск, 2026-11-10
+
+Рабочий каталог F:/repo/forge-nvim, PowerShell -NoProfile/login=false.
+git status/log; rg -n и Get-Content -LiteralPath по Telescope/health/DAP,
+prepare_editor/containers/registry, pinned fzf CMake/Makefile/FFI/extension и
+review/roadmap/inbox. Для rg использовались directory + -g, JSON через
+json.loads(Path(...).read_bytes()); UTF-8/ensure_ascii для Unicode stdout.
+Read-only vswhere обнаружил штатный MSVC BuildTools; pin fzf b25b749b9db6.
+Навык OpenSpec explore → propose → apply/verify в ранее разрешённом автономном
+scope; повторного разрешения на команды/реализацию не запрашивалось.
+
+Общий Windows prefix:
+```powershell
+$env:TEMP='F:/repo/forge-nvim/.tests/tmp'
+$env:TMP=$env:TEMP; $env:TMPDIR=$env:TEMP
+$env:NVIM_LOG_FILE="$env:TEMP/ide081-windows.log"
+$env:npm_config_cache='F:/forge-nvim-tmp/npm-cache'
+$env:PYTHONIOENCODING='utf-8'
+. ./scripts/lib/nvim-sdk.ps1
+$forgeNvim=Get-ForgeNvim (Get-Location).Path
+```
+OpenSpec 1.13.2: list --json, context --json, new change
+fix-telescope-native-readiness, instructions proposal/specs/design/tasks/apply
+--change fix-telescope-native-readiness --json. JSON сохранены в
+.tests/ide081-{list,context,proposal,specs,design,tasks,apply}.json; root F:,
+schema spec-driven, IDE-BOOT-5. validate --all --strict --no-interactive:
+.tests/ide081-openspec.txt, 69/69. Main specs не менялись.
+
+Явная подготовка:
+```powershell
+python -B tests/e2e/prepare_fzf.py > .tests/ide081-prepare-windows.txt 2>&1
+docker info --format '{{.ServerVersion}}'
+docker compose --progress plain -f tests/containers/compose.yaml build ubuntu > .tests/ide081-ubuntu-build.txt 2>&1
+```
+Python читает существующий pinned editor SDK, вызывает upstream cmake -S/-B,
+--build --config Release --parallel 2, --install --config Release, копирует одну
+DLL/SO и пишет native.fzf в общий manifest. Стандартные upstream MSVC warnings
+об unused C arguments сохранены, исходники не исправлялись. Windows build
+temp на F: удалён TemporaryDirectory после проверки resolved parent.
+Docker CMake/make/prepare_fzf добавлены поздним слоем; прежние editor/Go/Node/
+Python/Rust/Bash/SQL SDK cache сохранены. Engine уже работал (28.5.1), никаких
+Desktop/WSL start/stop/reset/configure команд.
+
+Windows RED / final:
+```powershell
+$env:FORGE_SEARCH_CASE='native без CMake'
+& $forgeNvim -l tests/e2e/search-sorter.test.lua > .tests/ide081-windows-red.txt 2>&1
+Remove-Item Env:FORGE_SEARCH_CASE
+foreach ($forgeSuite in @('search-sorter','editor','buffers','work-panels')) {
+    & $forgeNvim -l "tests/e2e/$forgeSuite.test.lua" > ".tests/ide081-windows-$forgeSuite.txt" 2>&1
+    if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+}
+```
+Фактически разные exec shells; env filter не наследовался. Source RED
+18536713233900, DLL была готова, runtime CMake=0. Первый Windows matrix log
+.tests/ide081-windows-search.txt (sentinel observer/health assumption FAIL),
+отдельный health probe .tests/ide081-idle-health.txt. Наблюдатель исправлен
+type==table; DAP preload подтверждён health-load-state.json. Product DAP не менялся.
+
+Final full suite повторён после исправления POSIX запуска native health и
+после добавления exit_code/signal assertions: актуальный log
+.tests/ide081-windows-search-sorter.txt. До последнего повтора прежний log
+скопирован в .tests/ide081-windows-search-before-exit-audit.txt:
+его child 19482373991200 потребовал SIGTERM; primary artifact сохранён,
+расследование IDE-085 открыто. Новый PASS не заменяет этот факт.
+
+Ubuntu:
+```powershell
+docker compose -f tests/containers/compose.yaml run --rm --entrypoint bash ubuntu .tests/ide081-run.sh > .tests/ide081-ubuntu-run.txt 2>&1
+```
+Ignored script host .tests/ubuntu/ide081-run.sh запускает те же четыре suites,
+каждый в .tests/ide081-ubuntu-<suite>.txt внутри гостя (host .tests/ubuntu).
+Native case PATH содержит только symlinks git/rg/sh; CMake не виден. Missing/
+corrupt с CMake имеют отдельный symlink cmake; compiler не запускается.
+Четыре UI PASS с первого запуска; health helper потребовал передавать
+scope.spawn_options и учитывать POSIX false. Raw fail
+.tests/ubuntu/ide081-ubuntu-search-initial.txt сохранён. Актуальный suite
+повторён отдельным container nvim -l tests/e2e/search-sorter.test.lua;
+старый .tests/ubuntu/ide081-ubuntu-search-before-exit-check.txt сохранён.
+
+Дополнительный реальный F5 selector (последовательно Windows → Ubuntu):
+```powershell
+$env:GOMAXPROCS='2'; $env:GOFLAGS='-p=2'
+$env:FORGE_GO_PASSIVE_CASE='Delve override'
+& $forgeNvim -l tests/e2e/go-passive.test.lua > .tests/ide081-windows-ui-select.txt 2>&1
+docker compose -f tests/containers/compose.yaml run --rm --entrypoint bash ubuntu -c 'GOMAXPROCS=2 GOFLAGS=-p=2 FORGE_GO_PASSIVE_CASE="Delve override" nvim -l tests/e2e/go-passive.test.lua > .tests/ide081-ubuntu-ui-select.txt 2>&1'
+```
+Launch.json picker/Enter, настоящий late dlv, breakpoint, PANEL_BEFORE/AFTER.
+По 1 PASS, основной поиск 5 + editor 10 + buffers 8 + work-panels 6 = 29 PASS;
+вместе по 30. Тяжёлые Windows/Ubuntu задачи выполнялись поочерёдно.
+
+Верификация/история/commit:
+```powershell
+& $forgeNvim -l tests/run.lua unit trace > .tests/ide081-unit-trace.txt 2>&1
+Copy-Item -LiteralPath .tests/report.json -Destination .tests/ide081-unit-report.json
+python -B .tests/audit-ide081.py > .tests/ide081-audit.txt 2>&1
+git diff --check
+git diff --numstat -- nvim_forge/FIXLOG.md docs/AGENT_COMMANDS.md
+git diff --stat
+git status --short
+```
+.tests/ide081-history-before.json — length/SHA перед raw append; audit сверяет
+старые prefixes. Evidence .tests/ide081-evidence.json: 20 editor profiles +
+1 native health process на ОС, все 42 exit=0/scope empty, 78 config files,
+native C scores, library/source SHA, fallback и F5 output. Native C calls
+24 Windows/6 Ubuntu — наблюдение, не performance comparison. Native health
+без init проверяет только unknown sorter, остальные health warnings ожидаемы.
+Unit/trace 365 cases/15 files, main IDs MANUAL/UNCOVERED не скрыты.
+OpenSpec/Mac gate: 6/7 tasks после commit; native Mac/ARM64/GUI не проверены.
+git add только перечисленных code/tests/change/docs, commit
+'fix(search): load native fzf without runtime build tools', затем metadata
+task 2.2 через git commit --amend --no-edit; push не выполняется.

@@ -252,11 +252,27 @@ local function check_actions()
     info("Install missing tools — см. секцию `external tools` выше")
 end
 
+-- spec: IDE-BOOT-5. Health читает фактический load result, не грузит picker.
+local function check_search_sorter()
+    vim.health.start("forge: search sorter")
+    local status = vim.g.forge_telescope_fzf
+    if not status then
+        info("Telescope not loaded — открой Ctrl+P, затем повтори health")
+    elseif status.available then
+        ok("Search sorter: native fzf")
+    else
+        info("Search sorter: Lua fallback (native fzf optional)")
+        info("Явная сборка: :Lazy build telescope-fzf-native.nvim (CMake + C toolchain)")
+        info("После сборки перезапусти редактор; причина fallback: " .. status.error)
+    end
+end
+
 function M.check()
     check_format_on_save()
     check_formatters()
     check_external_tools()
     check_lsp()
+    check_search_sorter()
     check_actions()
 end
 
