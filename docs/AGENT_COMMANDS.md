@@ -3691,3 +3691,71 @@ Runtime review не закрывает Mac/GUI/restore или все language ca
 Коммит: git add только перечисленных review/diagnostic/history paths,
 git diff --cached --check, git diff --cached --numstat, git commit,
 git status --short; без push. Никакие рабочие фичи этим не удаляются.
+
+## 60. Git/root/tools review и offline Go probes, 2026-11-10
+
+Назначение: до runtime refactor проверить разные root/tool policies и понять,
+кто запускает Go при простом edit. Итог — WORKSPACE_TOOL_REVIEW, IDE-082,
+FIXLOG §146. Не установка нового LSP и не выполненный runtime fix.
+
+Чтения: git status --short/log; rg --files по Lua; rg -n по root/cwd/chdir/
+DirChanged/executable/Mason/session/save; Get-Content с Skip/First по config.start,
+plugins/editor/git/tasks/terminal/lsp/format/ui/tests, forge/go/node/python/
+bash/bash_host/sql/sql_tests, ide/diffview/buffers. Pinned project.nvim и
+nvim-lspconfig/gopls/neotest-golang source читался из .tests/editor-deps/lazy.
+Прежние Git results взяты из roadmap/FIXLOG, не приписаны новому прогону.
+
+Windows запуск (TEMP/TMP/TMPDIR и NVIM_LOG_FILE в F:/repo/forge-nvim/.tests/tmp,
+CPU GOMAXPROCS=2, GOFLAGS=-p=2):
+```powershell
+. ./scripts/lib/nvim-sdk.ps1
+$forgeNvim=Get-ForgeNvim (Get-Location).Path
+$env:FORGE_E2E_CONFIG_SOURCE='F:/repo/forge-nvim/nvim_forge'
+$env:FORGE_GO_STATUSLINE_OUTPUT='F:/repo/forge-nvim/.tests/review-go-statusline-windows-isolated.json'
+& $forgeNvim -l tests/diagnostics/go-statusline.lua > .tests/review-go-statusline-windows-isolated.txt 2>&1
+```
+Предыдущие логи -windows.txt (первый RPC failure) и -windows-observed.txt
+(два завершённых profiles до исправления cache isolation) сохранены.
+Последний diagnostic source задаёт private GOPATH/GOMODCACHE/GOCACHE в prepare,
+GOENV/GOPROXY/GOSUMDB=off и auto/local по отдельному native editor. Никакой
+реальный SDK go1.99.0 не загружался; code=1/download message — наблюдаемый RED.
+
+Ubuntu после завершения Windows, engine readiness через Python subprocess
+docker info --format {{.ServerVersion}} с timeout 7s: code=0, 28.5.1.
+Desktop/WSL lifecycle не менялся.
+```powershell
+docker compose -f tests/containers/compose.yaml run --rm --entrypoint bash ubuntu -c 'GOMAXPROCS=2 GOFLAGS=-p=2 FORGE_GO_STATUSLINE_OUTPUT=/workspace/.tests/review-go-statusline-ubuntu.json nvim -l tests/diagnostics/go-statusline.lua' > .tests/ubuntu/review-go-statusline-ubuntu.txt 2>&1
+```
+
+Что видно: Go commands/API/stacks/results в go-statusline.json, pre-call
+go-spawns.jsonl, prompt screens, source diagnostic/config и обычные editor
+artifacts. Return values/данные CLI не подменяются; fast nvim_get_mode и Enter
+позволяют исследовать оставшиеся callers при hit-enter. Наличие завершённого
+сбора не означает отсутствия дефекта, prompts не скрываются из отчёта.
+Windows 7 calls/режим, Ubuntu 3; отсутствующий Ubuntu gopls учитывается отдельно.
+
+Контроль артефактов:
+```powershell
+python -B .tests/audit-workspace-review.py
+git diff --check
+git diff --stat
+git status --short
+```
+Python читает 4 final native profiles, exact diagnostic source и 78 config
+files, CLI results/происхождение/version caller, offline/private cache,
+shutdown/scopes, прежний raw prefix истории и links. Отдельно проверяет
+сохранённый первый timeout и cleanup rejection metadata. Сводка:
+.tests/workspace-review-evidence.json. Unit/trace/strict повторно не запускались:
+production/spec/assertions не изменены; результаты §145 не переименованы в новые.
+
+Cleanup: Get-Item exact go1.99.0 lock в C GOPATH, size=0, CreationTimeUtc
+сопоставлен с первым artifact (delta 5.51s). Попытка PowerShell Remove-Item
+-LiteralPath exact owned lock с проверками отклонена automatic approval review,
+blocked by policy. Не выполнена, другим инструментом не повторялась.
+Последующий read-only Get-Item и запись metadata на F:
+.tests/review-go-owned-cache-cleanup.json; removed=false. Файл остался.
+Ни shared directories, ни Docker data не удалялись.
+
+История raw append с SHA256 prefix guard. Коммит только явных review/
+diagnostic/history paths: git add, diff --cached --check/numstat, commit,
+status --short; без push и изменения pins/SDK.

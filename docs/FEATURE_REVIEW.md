@@ -35,6 +35,8 @@ backend не умеет references, это ограничение, а не по�
   самостоятельные фичи: есть библиотеки, bridges и dependency-only plugins.
 - DAP/panels: [карта ответственности и следующий порядок](PANEL_OWNERSHIP_REVIEW.md),
   source review и по 9 настоящих E2E Windows/Ubuntu с диагностической трассой.
+- Git/workspace/tools/save: [границы ответственности](WORKSPACE_TOOL_REVIEW.md).
+  Реальный offline Go probe выявил IDE-082; runtime ещё не менялся.
 - [LANGUAGE_MATRIX.md](LANGUAGE_MATRIX.md), [E2E README](../tests/e2e/README.md),
   FIXLOG и source artifacts — фактические проверки. Windows/Ubuntu native UI
   не доказывают Mac/GUI, а unit/trace не заменяют editor E2E.
@@ -226,6 +228,13 @@ sorter E2E. При исправлении нужен постоянный regres
 
 ## Что должно быть готово до рефакторинга
 
+Вторая часть ownership review завершена: Git-интерфейсы, выбранный workspace,
+language/test roots, interpreter/tools и save/format разобраны в
+[WORKSPACE_TOOL_REVIEW](WORKSPACE_TOOL_REVIEW.md). Нельзя объединять эти root
+по одинаковому имени. Конкретный новый приоритет — IDE-082: поиск Delve
+синхронно запускает Go при edit, Go label тоже может инициировать toolchain work.
+Это подтверждено offline native probes, а не гипотезой по числу плагинов.
+
 - [x] Зафиксировать пользовательскую цель и запрет собственного language ядра.
 - [x] Снять live inventory и сверить все 67 pins; разделить plugin/dependency/glue.
 - [x] Составить карту фич, слоёв и предварительных кандидатов; сохранить ограничения.
@@ -243,6 +252,9 @@ sorter E2E. При исправлении нужен постоянный regres
   удаляемая ответственность, регресс и проверяемая польза. Только затем рефакторинг.
   DAP-кандидаты: единый выбор Output, затем одинаковые части поиска окна кода;
   process/PTY lifecycle не объединять с видимостью. Это пока план, не runtime fix.
+  До них стоит IDE-082; дальше IDE-081 readiness и выбранные удаления optional UI.
+  Project/session restart и uniform interpreter/root policies требуют отдельных
+  сценариев; существующие Git результаты не заменяют их полной проверки.
 
 Принятых удалений рабочих фич пока нет. Termide frames (IDE-076) остаются
 отдельным будущим прототипом; оформление не должно добавлять ещё один lifecycle.

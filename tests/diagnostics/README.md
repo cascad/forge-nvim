@@ -1,5 +1,37 @@
 # Диагностика native terminal и CLI
 
+## IDE-082: Go-команды при открытии файла
+
+После явной подготовки editor SDK и Go 1.26.0, из корня checkout:
+
+```powershell
+$env:TEMP='F:/repo/forge-nvim/.tests/tmp'
+$env:TMP=$env:TEMP; $env:TMPDIR=$env:TEMP
+$env:NVIM_LOG_FILE="$env:TEMP/go-statusline-review.log"
+. ./scripts/lib/nvim-sdk.ps1
+$forgeNvim=Get-ForgeNvim (Get-Location).Path
+& $forgeNvim -l tests/diagnostics/go-statusline.lua
+```
+
+Ubuntu/macOS: `nvim -l tests/diagnostics/go-statusline.lua`.
+Диагностика создаёт два isolated editor profiles с module go 1.99.0 и
+GOTOOLCHAIN=auto/local. GOENV/GOPROXY/GOSUMDB=off; GOPATH/GOMODCACHE/GOCACHE
+в private runtime (Windows — F:). Сам SDK не скачивается: наблюдается
+неуспешная offline попытка. Глобальный Go/shell config не меняется.
+
+Наблюдатель записывает реальные Go vim.system/system/systemlist calls,
+call stacks/results и не подменяет API results. При hit-enter сохраняет экран
+и нажимает Enter через fast API, чтобы исследовать оставшиеся инициаторы;
+это диагностический сбор, не утверждение отсутствия UI-blocking дефекта.
+На каждой ОС берёт доступный PATH: gopls может отсутствовать и дать отдельный
+prompt; это не download screen. Ранние вызовы до editor.start не наблюдаются.
+
+Сводка `.tests/go-statusline-review.json`, override
+FORGE_GO_STATUSLINE_OUTPUT. Каждый editor artifact содержит go-statusline.json,
+go-spawns.jsonl, source diagnostic, prompt screens и обычные snapshots/shutdown.
+Два завершённых profiles означают успешный сбор, не две исправленные фичи.
+Разбор владельцев и границ — [WORKSPACE_TOOL_REVIEW](../../docs/WORKSPACE_TOOL_REVIEW.md).
+
 ## IDE-080: трасса DAP/panel ownership
 
 После явной подготовки editor/DAP SDK можно запустить существующий E2E

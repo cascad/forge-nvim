@@ -270,6 +270,7 @@ Python реализован и проверен 2026-11-03; после возо�
 | §143 | [SQL prototype отменён; обзор фич до рефакторинга](../nvim_forge/FIXLOG.md#143-sql-prototype-отменён-обзор-фич-до-рефакторинга) |
 | §144 | [Review: upstream patches, частный UI и native fzf gap](../nvim_forge/FIXLOG.md#144-review-upstream-patches-частный-ui-и-native-fzf-gap) |
 | §145 | [DAP и панели: карта ответственности перед рефакторингом](../nvim_forge/FIXLOG.md#145-dap-и-панели-карта-ответственности-перед-рефакторингом) |
+| §146 | [Git/root review и пассивные Go процессы](../nvim_forge/FIXLOG.md#146-gitroot-review-и-пассивные-go-процессы) |
 
 ## Как читать и дополнять
 

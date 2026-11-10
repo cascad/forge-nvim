@@ -91,6 +91,10 @@ API, не подменяет данные сессии. Listener `forge_e2e` —
 
 ## Конкретные кандидаты на упрощение
 
+Следующий срез выявил более раннюю ненужную работу при edit Go: IDE-082,
+[WORKSPACE_TOOL_REVIEW](WORKSPACE_TOOL_REVIEW.md). Он стоит перед перечисленными
+UI-кандидатами; запуск debug/реальный project toolchain при этом сохраняются.
+
 1. **Политика канала Output.** При запуске `section_for_config` учитывает
    codelldb, console=integratedTerminal и Go outputMode=remote. Legacy `Dv`
    через `ide.dap.open` выбирает Go/Delve REPL, для остальных — console.

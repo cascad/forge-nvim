@@ -10,7 +10,28 @@
 
 Маршрут и приоритеты: [рабочий план nvim_forge](docs/IDE_ROADMAP.md).
 Для новых пунктов используем следующий свободный ID `IDE-xxx`; исходный
-симптом хранится здесь, этап и состояние — в плане. Следующий ID: `IDE-082`.
+симптом хранится здесь, этап и состояние — в плане. Следующий ID: `IDE-083`.
+
+## IDE-082 — Go/Delve discovery и statusline запускают toolchain work на edit
+
+2026-11-10, воспроизведено при IDE-080 review на Windows/Ubuntu. Открыт только
+main.go в контролируемом модуле с go 1.99.0, без F5/test/health. nvim-dap-go
+opts синхронно вызывает go env GOBIN/GOPATH для поиска Delve; Go label вызывает
+go version асинхронно. На Windows доступный gopls root resolver дополнительно
+запускает go env GOMODCACHE/GOROOT.
+
+При GOTOOLCHAIN=auto каждый наблюдаемый Go command пытается выбрать отсутствующий
+SDK; offline GOPROXY=off даёт code=1/downloading, при local — code=0 без download.
+Mason install counter=0 этого не отражает. Windows auto дал 4 hit-enter,
+local 0; Ubuntu prompt отсутствующего gopls был в обоих режимах и не относится
+к загрузке SDK. Это не замер исходных 5s и не причина IDE-001 (Mac/zsh до nvim).
+
+Нужно отложить Delve discovery до debug/явного запроса и определить пассивную
+политику Go label. Не менять глобально GOTOOLCHAIN и не подменять готовый
+gopls своим server/fork. Перед фиксом — постоянный native regression и прежние
+Go language/debug/tests Windows/Ubuntu; Mac отдельно. Runtime пока не менялся.
+Доказательства/границы: docs/WORKSPACE_TOOL_REVIEW.md, go-statusline diagnostic,
+FIXLOG §146. Сам диагностический запуск не является feature PASS.
 
 ## IDE-081 — Telescope fzf-native: readiness и незаметный fallback
 

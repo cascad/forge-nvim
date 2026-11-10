@@ -7108,3 +7108,81 @@ Python/Node/Rust regression этим срезом не проверены.
 
 **Файлы:** PANEL_OWNERSHIP_REVIEW, FEATURE_REVIEW, IDE_ROADMAP, PROBLEMS,
 tests/diagnostics/trace-panels.lua и README, HISTORY/AGENT_COMMANDS.
+
+## 146. Git/root review и пассивные Go процессы
+
+**Дата:** 2026-11-10. **Область:** IDE-080/082; диагностика, runtime не менялся.
+
+**Проблема.** В review нужно различить выбранную рабочую папку, Git/worktree
+и language/test roots, а также найти работу, не нужную для открытия файла.
+Mason install counter=0 сам по себе не доказывает пассивность всех tools.
+
+**Причина/устройство.** project.nvim работает в manual_mode и ведёт history
+через DirChanged; фокус старого буфера не должен менять выбранный cwd.
+Open folder использует restart/session путь, Neogit worktree visit сохраняет
+буферы и меняет cwd. Языковые roots и task cwd имеют другие правила.
+Gitsigns/Neogit/Diffview обслуживают разные сценарии, не три одинаковых UI.
+Python venv, Node JS entrypoint, Bash native/MSYS и SQL profile не заменяются
+одним универсальным exepath helper. Autosave и async explicit-save format тоже
+имеют разные роли; удаление флага autosave меняет проверенный UX.
+
+**Найден IDE-082.** Только открытие main.go, без F5/tests/health, запускает
+nvim-dap-go opts → resolve_dlv_path → unique_dlv_candidates → синхронные
+go env GOBIN/GOPATH. Go label отдельно вызывает async go version (15s timeout).
+При доступном gopls Windows также наблюдались async go env GOMODCACHE/GOROOT
+из готового nvim-lspconfig root resolver. Не делаем из этого свой LSP/fork.
+
+**Проверено вручную, повторяемая native диагностика.** go-statusline.lua
+открывает настоящий Forge с module go 1.99.0 и двумя режимами auto/local.
+GOENV/GOPROXY/GOSUMDB=off; SDK не загружался, auto получает offline failure.
+Последний source явно изолирует GOPATH/GOMODCACHE/GOCACHE в private runtime.
+Он наблюдает реальные vim.system/system/systemlist, пишет stacks/results,
+сохраняет prompts и через fast API нажимает Enter для дальнейшего сбора.
+Это не feature PASS и не постоянный regression будущего исправления.
+
+На каждой ОС два профиля. В auto наблюдаемые Go commands code=1/downloading,
+в local code=0 без download; Mason installs=0. Windows по 7 Go calls,
+prompts auto/local 4/0. Ubuntu по 3 calls, 1/1 prompt отсутствующего gopls:
+lsp-deps/bin в PATH там не добавлен, это не Go download prompt. Числа не эталон
+и не latency benchmark. Windows artifacts 8812352762400/8817131557500,
+Ubuntu 7873624467787/7876689063212. Все четыре exit=0, own scope ok/empty,
+source diagnostic совпал, 78 config files сверены. Сводки/проверка:
+.tests/review-go-statusline-windows-isolated.json,
+.tests/ubuntu/review-go-statusline-ubuntu.json,
+.tests/audit-workspace-review.py, .tests/workspace-review-evidence.json.
+
+**Диагностические попытки и cleanup.** Первый controller вызвал обычный RPC
+во время hit-enter: driver timeout завершил его child, exit=1/signal=15,
+own scope empty. Artifact 8521247451800/raw log сохранён. Это не native crash
+и не исправление Go. В observer добавлены durable pre-call log и fast mode/
+prompt handling, deadline не увеличивался. Затем Windows auto/local сбор
+8707973121900/8713378594100 завершился, но наследовал системный GOPATH.
+Первая попытка создала в C GOPATH один нулевой
+v0.0.1-go1.99.0.windows-amd64.lock: creation через 5.51s после начала первого
+fixture подтверждает происхождение. Последние четыре профиля уже изолированы
+на F:/native guest temp. Общие cache directories не удалялись.
+
+Удаление только этого owned пустого файла автоматическая проверка отклонила:
+blocked by policy, подробного объяснения не вернула. Файл не удалён, повтор
+другим способом не предпринимался. Точный путь/размер/timestamps/отказ:
+.tests/review-go-owned-cache-cleanup.json. Не выдаём намерение cleanup за успех.
+
+**Изменение.** WORKSPACE_TOOL_REVIEW содержит карту, source links, стоимость,
+IDE-082 и порядок небольших изменений. PROBLEMS/roadmap согласованы; следующий
+ID IDE-083. Постоянная diagnostic command/README сохранены в tests. История
+дописана raw append, прежние bytes проверены. Git/user runtime/pins/SDK/
+language assertions не менялись, Git и полные language suites не повторялись.
+Последний unit/trace 365 и strict 65/65 относится к §145; здесь выполнен
+native evidence/source/history/link audit и git diff check.
+
+**Вывод.** Первый runtime-кандидат после общего review — Delve discovery только
+при debug/явном запросе и пассивная Go label policy, с новым native RED и
+прежним Go language/debug/tests regression. Глобальный запрет GOTOOLCHAIN=auto
+не нужен; выбор project SDK для реальной работы сохранить. Затем Output
+policy/окна, native fzf readiness, выбранные удаления optional UI и лишь
+одинаковые части root/tool glue. Mac/GUI не запускались. Исходная задержка
+zsh до nvim (IDE-001) этим редакторным stack не объяснена.
+
+**Файлы:** WORKSPACE_TOOL_REVIEW, FEATURE_REVIEW, PANEL_OWNERSHIP_REVIEW,
+IDE_ROADMAP, PROBLEMS, tests/diagnostics/go-statusline.lua и README,
+HISTORY/AGENT_COMMANDS.

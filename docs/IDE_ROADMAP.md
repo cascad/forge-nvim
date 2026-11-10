@@ -50,6 +50,13 @@ recreate. Кандидаты — единая политика Output и сов�
 кода. PTY/session cleanup остаётся отдельной ответственностью. Runtime не
 переписывался; выбор вторичных UI и оставшаяся часть общего review открыты.
 
+Git/workspace/tools/save разобраны в [WORKSPACE_TOOL_REVIEW](WORKSPACE_TOOL_REVIEW.md).
+Выявлен IDE-082: до debug запускаются синхронные Go env для Delve, а статуслайн
+запрашивает go version; auto toolchain work подтверждён offline Windows/Ubuntu.
+После review это приоритетный небольшой fix с RED и Go language/debug/tests.
+Глобально запрещать GOTOOLCHAIN=auto или переписывать готовый LSP не планируется;
+исходная задержка zsh до nvim на Mac этим не объяснена.
+
 SQL references — [отдельный change](../openspec/changes/add-sql-semantic-references/tasks.md):
 §142 сохраняет исходный RED и исследование собственного resolver. Этот подход
 отменён (§143): не строить своё language ядро ради полноты матрицы. SDK forge.1
