@@ -10,7 +10,27 @@
 
 Маршрут и приоритеты: [рабочий план nvim_forge](docs/IDE_ROADMAP.md).
 Для новых пунктов используем следующий свободный ID `IDE-xxx`; исходный
-симптом хранится здесь, этап и состояние — в плане. Следующий ID: `IDE-093`.
+симптом хранится здесь, этап и состояние — в плане. Следующий ID: `IDE-095`.
+
+## IDE-094 — очистка E2E профиля оставляет dangling Windows junction
+
+2026-11-10: негативные Rust probes завершили editor exit/signal0, own Job пуст,
+но R.remove не удалил private home INetCache/Content.IE5. Read-only inspection:
+directory junction указывает на отсутствующий IE внутри того же профиля на F:,
+target содержит F:/ после extended prefix; uv.lstat/readlink возвращают nil,
+scandir видит kind=link. Ручной uv.fs_rmdir одного проверенного собственного
+link удалил только junction. Требуется постоянный native link regression и
+удаление link без обхода target; увеличивать cleanup timeout бессмысленно.
+Примеры .tests/tmp/22992-36072741147700-forge-editor и capture profiles §162.
+
+## IDE-093 — history assertion принимает terminal padding за потерю stdout
+
+2026-11-10: настоящий Rust/CodeLLDB + resize UI140×45→140×35 между before и q
+даёт history assertion RED. Raw capture: те же POLICY_BEFORE42/POLICY_STDERR,
+тот же buffer/channel/session, отличаются только пустые строки внизу терминала.
+Воспроизведение: tests/diagnostics/output-toggle.lua --trace --resize.
+Нужно сравнивать смысловую историю без viewport padding и сохранить проверку
+реальной потери текста. Production stdout этим опытом не признан потерянным.
 
 ## IDE-092 — SDK source gate пропускает staged изменения
 
@@ -53,6 +73,14 @@ API errors пусты. Насыщенный Win-event trace 33829927736000 ос�
 на assertion Reopen потерял историю; before/after loss не установлен, этот
 пилот не принимается за доказательство потери stdout. Новых runtime таймеров
 или ослабления старого assertion нет.
+§162: bounded in-memory trace и failure-preserving attempt сохраняют raw data.
+Контроль6 и trace6 циклов прошли без исходного события. Отдельный настоящий
+running Rust probe скрыл Debug до pending800ms watchdog; тот снова открыл
+sidebar через plugins/dap.lua:1419. Profile37343177404900: hide89.6ms после
+initialized, reopen716.4ms после hide, без нового stopped event. Механизм
+воспроизводится; нужен постоянный startup-hide E2E и устранение watchdog,
+с сохранением auto-open при initialized/новом breakpoint. Исходное разовое
+событие не имело этой трассы, единственность его причины не утверждается.
 
 ## IDE-089 — Windows Neovim: PPID-only обход принимает более старый процесс за потомка
 

@@ -286,6 +286,7 @@ Python реализован и проверен 2026-11-03; после возо�
 | §159 | [Windows SDK: guard ancestry и проверенное продвижение](../nvim_forge/FIXLOG.md#159-windows-sdk-guard-ancestry-и-проверенное-продвижение) |
 | §160 | [Debug toggle: PTY в общей группе](../nvim_forge/FIXLOG.md#160-debug-toggle-pty-в-общей-группе) |
 | §161 | [Windows SDK: проверка staged исходников](../nvim_forge/FIXLOG.md#161-windows-sdk-проверка-staged-исходников) |
+| §162 | [Output capture: raw failure и delayed reopen](../nvim_forge/FIXLOG.md#162-output-capture-raw-failure-и-delayed-reopen) |
 
 ## Как читать и дополнять
 

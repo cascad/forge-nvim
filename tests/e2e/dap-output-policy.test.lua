@@ -7,11 +7,13 @@ local function check(name,fn)
   if vim.env.FORGE_OUTPUT_CASE and not name:find(vim.env.FORGE_OUTPUT_CASE,1,true) then return end
   T.check('IDE-PANEL-11 '..name,function()
     local e
-    local ok,err=pcall(function() fn(function(child) e=child end)
+    local ok,err=pcall(function() fn(function(child) e=child;require('output_capture').start(e,root) end)
       for _,n in ipairs(e.rpc.notifications) do assert(n.level<vim.log.levels.ERROR,n.message) end
       assert(e:lua('return vim.g.forge_e2e_installs')==0)
     end)
     if e then
+      local captured,capture_error=pcall(require('output_capture').finish,e)
+      if ok and not captured then ok=false;err=capture_error end
       e:snapshot(name);io.stdout:write('  artifacts: '..e.dir..'\n')
       e:stop(not ok and tostring(err) or nil)
       assert(e.rpc.shutdown_result.ok,vim.inspect(e.rpc.shutdown_result));T.eq(e.rpc.exit_code,0);T.eq(e.rpc.exit_signal,0)

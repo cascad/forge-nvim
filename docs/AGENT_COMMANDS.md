@@ -4766,3 +4766,57 @@ subcases PASS: targets0, unrelated edit/staging сохраняется, stage di
 Git journals additions-only. Windows PowerShell5 CLI настоящий, JSON read_bytes.
 Docker/Desktop/WSL в этом follow-up не трогались, native Ubuntu/Mac gates открыты.
 Commit только preparer/test/specs/docs; .tools/.tests ignored, push нет.
+
+
+## 74. IDE-090: failure capture и native delayed reopen, 2026-11-10
+
+Продолжение goal после81f6918, repository clean проверен. Read-only rg/Get-Content:
+roadmap/inbox, output helper, ide.dap/state/activities/controls, DAP listeners,
+закреплённые dap-ui/lazy sources и runtime lua.txt on_key docs. Source показал
+800ms open_debug_view watchdog; state.current observer не использует, он mutates.
+OpenSpec list/new/instructions apply capture-output-toggle-transitions,
+skip_specs:true, ready3tasks; context/proposal/design/tasks прочитаны.
+
+```powershell
+& .tools/neovim/windows-x64/bin/nvim.exe -l tests/diagnostics/output-toggle.lua --cycles 6
+& .tools/neovim/windows-x64/bin/nvim.exe -l tests/diagnostics/output-toggle.lua --cycles 6 --trace
+& .tools/neovim/windows-x64/bin/nvim.exe -l tests/diagnostics/output-toggle.lua --cycles 2 --trace
+& .tools/neovim/windows-x64/bin/nvim.exe -l tests/diagnostics/output-toggle.lua --resize --trace
+```
+
+TEMP/TMP/TMPDIR/log на F: .tests/tmp, Go2/-p=2. Optional trace only in private
+child: ring2048, no per-event disk I/O, no early require plugins, real public
+functions called with original args/returns. Exact key bytes hex; initial
+keytrans F9 raw0xfd pilot JSON was invalid, final format validated with Python
+read_bytes/json.loads. First syntax pilot did not start editor. Neither
+invalid pilot is counted as capture PASS. Native code/source copies в profile.
+
+Final CLI current trace2cycles1 PASS, control6cycles1 PASS; default output-policy3,
+Python debug default/project1, Node default F51 PASS. Positive7 checks/7 UI
+profiles, all native0/APIerrors[]/scope after0. Quick353, strict77. Logs
+ide090-{trace-current,control-final,capture-output-policy,capture-python,
+capture-node,capture-quick,capture-strict}.txt; JSON attempts persist on failure.
+One watchdog pilot overlapped the finite regression pipeline; no engine/WSL
+management and no resource-heavy parallel suite plan added.
+
+Permanent resize diagnostic RED37486692626700 preserves before/after/session,
+same buffer/channel13; only trailing blank padding differs. Native0, scopes
+empty. Expected failure not promoted to PASS, original assertions/timeouts kept.
+Standalone ignored .tests/ide090-watchdog.lua prototype starts real running
+Rust with4s sleep before breakpoint, hides PTY/sidebar before800ms, waits1.2s.
+Profiles37128302794700/37343177404900 reproduce reopened sidebar,0 stopped
+events before assertion; final hide89.6ms after initialized, actual Lua caller
+plugins/dap.lua:1419 at+716.4ms. Public dap.terminate is cleanup only, primary
+failure retained. These prototypes are source evidence for the next permanent
+startup-hide E2E; not a runtime fix or exact caller trace of historical32921392974800.
+
+Negative cleanup left dangling Content.IE5 junctions inside owned F: runtimes.
+Read-only Python scandir/lstat/readlink (no recursive follow) and native UV
+scandir showed link despite uv.lstat nil. Read-only CIM forge_app query empty.
+One native uv.fs_rmdir on link under verified owner/root/canonical prefix
+removed only own link. Rest remain with owner marker pending safe cleanup fix;
+no name-based/global process termination, no C: temp, Docker not queried.
+ide090-capture-evidence.json audits UTF8 JSON, native exits/scopes and SDK hash.
+History prefixes captured before raw append§162/§74; verify additions-only.
+No production Lua, SDK/pins changes, no push. IDE-093 padding and IDE-094
+junction recorded separately; goal remains active for actual fixes/gates.

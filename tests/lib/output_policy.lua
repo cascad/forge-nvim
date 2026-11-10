@@ -11,27 +11,45 @@ function M.state(e,ft)
     end end;return out]],{ft})
 end
 function M.reopen(e,ft,keys)
-  local before=M.state(e,ft)
+  e.output_attempt=(e.output_attempt or 0)+1
+  local attempt={ft=ft,keys=keys or ' md',timeline={}}
+  local function stage(name) attempt.stage=name;attempt.timeline[#attempt.timeline+1]={stage=name,ns=vim.uv.hrtime()} end
+  local ok,err=xpcall(function()
+  stage('before')
+  local before=M.state(e,ft);attempt.before=before
   assert(#before==1,'Ожидается один Output buffer: '..vim.inspect(before))
   local session=e:lua([[local s=require('dap').session();return s and {id=s.id,thread=s.stopped_thread_id,frame=s.current_frame and s.current_frame.id} or false]])
+  attempt.session=session;stage('code-focus')
   M.code(e)
   e:input(' wc')
   e:wait('Output focus перед hide',function() return e:current_ft()==ft end)
+  stage('hide-output')
   e:input('q')
   e:wait('Output скрыт',function() return not e:has_window(ft) end)
   if keys==' du' then
     -- Toggle закрывает всю видимую Debug-группу, включая оставшийся sidebar.
+    stage('toggle-close')
     e:input(' du')
     e:wait('Debug-группа скрыта',function() return not e:has_window('dapui_scopes') end)
   end
+  stage('reopen')
   e:input(keys or ' md')
   e:wait('Тот же канал после manual reopen',function() return e:has_window(ft) end)
-  local after=M.state(e,ft)
+  local after=M.state(e,ft);attempt.after=after;stage('history-check')
   assert(#after==1 and before[1].buf==after[1].buf and before[1].channel==after[1].channel,'Reopen заменил Output/PTY')
   assert(after[1].text:find(before[1].text,1,true),'Reopen потерял историю')
   local now=e:lua([[local s=require('dap').session();return s and {id=s.id,thread=s.stopped_thread_id,frame=s.current_frame and s.current_frame.id} or false]])
+  attempt.now=now;stage('session-check')
   assert(vim.deep_equal(session,now),'UI изменил сессию/паузу')
   local file=e.dir..'/output-policy.jsonl'
   vim.fn.writefile({vim.json.encode({keys=keys or ' md',session=session,before=before,after=after})},file,'a')
+  end,debug.traceback)
+  attempt.ok=ok;attempt.error=not ok and tostring(err) or nil
+  attempt.capture=require('output_capture').snapshot(e)
+  local saved,save_error=pcall(function()
+    assert(vim.fn.writefile({vim.json.encode(attempt)},e.dir..('/output-attempt-%02d.json'):format(e.output_attempt))==0,'Output capture write failed')
+  end)
+  if not ok then error(tostring(err)..(not saved and ('\nCapture: '..tostring(save_error)) or ''),0) end
+  assert(saved,tostring(save_error))
 end
 return M

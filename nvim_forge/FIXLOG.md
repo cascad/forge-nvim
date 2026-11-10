@@ -8187,3 +8187,85 @@ ide092-source-green.txt, ide092-sdk.txt, ide092-evidence.json, quick/strict logs
 **Файлы:** scripts/prepare-windows-sdk.ps1, tests/windows_sdk_test.py,
 active SDK OpenSpec delta/design/tasks, diagnostics README, PROBLEMS/roadmap/
 HISTORY/AGENT_COMMANDS.
+
+
+## 162. Output capture: raw failure и delayed reopen
+
+Дата: 2026-11-10. IDE-090; обнаружены отдельные IDE-093/094.
+Test-only change capture-output-toggle-transitions, skip_specs:true;
+IDE-PANEL-11/13 и production Lua/SDK/pins не меняются.
+
+**Проблема.** При одиночном sidebar failure §159 не было последовательности
+keys/actions. P.reopen сохранял before/after лишь после всех assertions,
+поэтому failure терял самые нужные raw data. Насыщенная файловая трасса
+меняла тайминги и сама однажды остановилась на history assertion.
+
+**Изменение.** Каждая попытка получает output-attempt-NN.json: last stage,
+timeline, raw before/after, session и первичная ошибка. Assertions/timeouts
+прежние, ошибка после записи повторно выбрасывается. Opt-in FORGE_OUTPUT_TRACE=1:
+native ring2048 в памяти, real on_key и typed в hex, Win events, уже загруженные
+public Debug functions и callers; отдельный controller record nvim_input
+accepted bytes. Lazy plugins не грузятся раньше срока ради observer,
+ide.state.current не вызывается, на каждом событии файловой записи нет.
+Stop восстанавливает functions/on_key/autocmd и пишет output-capture.json.
+CLI output-toggle.lua:1..10 cycles, --trace, --resize140×45→140×35 перед q.
+
+**Исправления пилота.** Первый запуск остановился до editor на синтаксисе:
+stage('toggle-close') попал после return; перенесён в тело. Первый memory
+trace успешно выполнил Rust case, но raw keytrans F9 содержал0xfd и сделал
+JSON невалидным UTF-8. Теперь keys имеют точные hex и ASCII display, finish
+проверяет формат, Python json.loads(read_bytes) подтверждает финальные файлы.
+Пилот35865673446300 не засчитан как валидный capture. Caller stack пропускает
+C pcall frame, чтобы показать Lua source реального отложенного callback.
+
+**Финальная проверка capture.** Existing output-policy3, Python default/project1
+и Node default F51 PASS. Current trace CLI2 cycles1 PASS, unhooked control6
+cycles1 PASS. Итого7 positive checks/7 captured UI profiles, native exit/signal0,
+APIerrors[], own scope after0. Trace-current37478364718200 содержит5 attempts,
+control36417411383700 —9 attempts; earlier trace6 также прошёл и сохранён
+как отдельный run от предыдущего observer metadata. Quick353/13files,
+strict77/77. SDK binary SHA74AFF15B...1C6AD9 прежний. Проверены все JSON,
+source snapshots/trace sources и native verdicts; evidence ide090-capture-evidence.json.
+
+**IDE-093 — доказанный ложный history RED.** Permanent diagnostic --resize
+--trace, profile37486692626700: before содержит POLICY_BEFORE42/POLICY_STDERR
+и11 trailing newlines, after — те же данные и7 trailing newlines. Buffer,
+channel13, session1/thread20156/frame1001 сохранены. Старый substring assertion
+принимает viewport padding за историю. Failure сохранён на history-check
+в attempt01; native exit/signal0, Job after0/APIerrors[]. Production потеря
+stdout не доказана. Сравнение пока не ослаблено; нужен native resize regression
+и отдельный test-only fix, сохраняющий обнаружение реальной потери текста.
+
+**IDE-090 — воспроизводимый механизм.** Running Rust prototype37128302794700,
+затем подтверждение37343177404900: программа спит4s до реального breakpoint.
+После появления настоящего PTY пользовательские wc/q/du скрывают Debug.
+Во втором run hide случился через89.6ms после initialized, через716.4ms после
+hide trace записал debug.show_section из plugins/dap.lua:1419. Существующий
+800ms startup watchdog увидел отсутствующий bottom и заново открыл sidebar,
+оставив PTY скрытым. Новых stopped events до failure0, программа ещё работала.
+Это тот же наблюдаемый класс sidebar-after-hide, подтверждённый caller;
+у исторического32921392974800 такой трассы нет, единственность причины того
+разового события не утверждается. Нужен permanent startup-hide→new breakpoint
+E2E и устранение obsolete recovery без поломки auto-open на initialized/stopped.
+
+**IDE-094 — cleanup отдельно от editor exit.** Часть negative probes при
+native0/own Job empty не смогла удалить private runtime. Scandir показал
+Content.IE5 kind=link в home/INetCache, Python lstat/readlink — directory
+junction на отсутствующий IE внутри того же F: профиля (target содержит
+F:/ после extended prefix). UV lstat/readlink для него nil; recursive delete
+отказывает. Проверенный uv.fs_rmdir одного собственного junction удалил
+только link, не target. Живой forge_app.exe не найден read-only CIM query.
+Сохранённые runtime имеют ownership markers; это не причина Docker/утечки CPU.
+Нужны native link safety tests и удаление links без traversal, не новый timeout.
+
+**Границы и следующий шаг.** Capture диагностический, observer влияет на
+тайминги. Windows только; Ubuntu/Mac не запускались, Docker/WSL не опрашивались
+и не управлялись в этом шаге. Один watchdog pilot кратко пересёкся с regression
+pipeline; hide/initialized precondition измерен, финальные артефакты и native
+verdict проверены, дополнительных массовых loops нет. Исправления далее:
+сначала безопасная cleanup junction, затем startup watchdog и history padding.
+До них IDE-090/093/094 не объявлены исправленными.
+
+**Файлы:** tests/lib/output_policy.lua, output_capture.lua,
+output_capture_native.lua; tests/diagnostics/output-toggle.lua/README,
+dap-output-policy.test.lua; OpenSpec change, PROBLEMS/ROADMAP/HISTORY/AGENT_COMMANDS.

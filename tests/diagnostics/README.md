@@ -1,5 +1,26 @@
 # Диагностика native terminal и CLI
 
+## IDE-090: Output q и Debug toggle
+
+После явной editor/Rust подготовки, Windows из корня checkout:
+
+```powershell
+& .tools/neovim/windows-x64/bin/nvim.exe -l tests/diagnostics/output-toggle.lua --cycles 6
+& .tools/neovim/windows-x64/bin/nvim.exe -l tests/diagnostics/output-toggle.lua --cycles 6 --trace
+& .tools/neovim/windows-x64/bin/nvim.exe -l tests/diagnostics/output-toggle.lua --resize --trace
+```
+
+Ubuntu/Mac используют официальный `nvim` с теми же аргументами. `--cycles`1..10
+повторяет q/toggle на настоящем paused CodeLLDB; `--resize` один раз меняет
+подключённый UI со140×45 на140×35 перед q. Это диагностическое возмущение,
+не повтор исходного случайного события. На старом helper resize даёт history RED.
+`output-attempt-NN.json` содержит last stage, raw before/after и исходную ошибку,
+даже если assertion не прошёл. Без --trace дополнительных native hooks нет.
+С --trace записывается `output-capture.json`: bounded2048 native events в памяти,
+реальные keys/typed в hex, принятые nvim_input bytes и Debug public calls/callers.
+В trace нет slot refresh и пособытийной записи на диск. Observer может менять
+тайминги; отсутствие сбоя под ним не доказывает исправление.
+
 ## IDE-087/089: Windows process ancestry
 
 Read-only: `python -B tests/diagnostics/windows-process-parents.py --output .tests/ancestry-read-only.json`.
