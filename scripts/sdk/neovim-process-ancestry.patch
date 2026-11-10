@@ -1,0 +1,28 @@
+diff --git a/src/nvim/os/proc.c b/src/nvim/os/proc.c
+index 5e87f09..4b1311d 100644
+--- a/src/nvim/os/proc.c
++++ b/src/nvim/os/proc.c
+@@ -53,6 +53,8 @@ static bool os_proc_tree_kill_rec(void *proc, int sig)
+   }
+   PROCESSENTRY32 pe;
+   DWORD pid = GetProcessId(proc);
++  FILETIME parent_start, exit_time, kernel_time, user_time;
++  bool have_parent_start = GetProcessTimes(proc, &parent_start, &exit_time, &kernel_time, &user_time);
+ 
+   if (pid != 0) {
+     HANDLE h = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
+@@ -65,7 +67,13 @@ static bool os_proc_tree_kill_rec(void *proc, int sig)
+         if (pe.th32ParentProcessID == pid) {
+           HANDLE ph = OpenProcess(PROCESS_ALL_ACCESS, false, pe.th32ProcessID);
+           if (ph != NULL) {
+-            os_proc_tree_kill_rec(ph, sig);
++            FILETIME child_start;
++            // A reused parent PID must not claim an older process as its child.
++            if (have_parent_start
++                && GetProcessTimes(ph, &child_start, &exit_time, &kernel_time, &user_time)
++                && CompareFileTime(&parent_start, &child_start) <= 0) {
++              os_proc_tree_kill_rec(ph, sig);
++            }
+             CloseHandle(ph);
+           }
+         }

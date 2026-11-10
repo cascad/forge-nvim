@@ -10,7 +10,20 @@
 
 Маршрут и приоритеты: [рабочий план nvim_forge](docs/IDE_ROADMAP.md).
 Для новых пунктов используем следующий свободный ID `IDE-xxx`; исходный
-симптом хранится здесь, этап и состояние — в плане. Следующий ID: `IDE-090`.
+симптом хранится здесь, этап и состояние — в плане. Следующий ID: `IDE-091`.
+
+## IDE-090 — Rust Debug toggle: единичный отказ скрыть sidebar после Output q
+
+2026-11-10: при Windows SDK regression тест IDE-PANEL-11 Rust PTY прошёл
+первое manual reopen, затем после Output q + Space du sidebar остался виден
+(`Debug-группа скрыта`, profile 32921392974800). Native exit/signal 0,
+API errors пусты. Тот же полный трёхсценарный набор без изменения UI/source
+на том же кандидате SDK прошёл повторно (Rust profile 33029843865800).
+Причина неизвестна; связь с SDK guard не доказана и не исключена одним повтором.
+Постоянный regression уже есть: tests/e2e/dap-output-policy.test.lua,
+tests/lib/output_policy.lua. Первый log сохранён отдельно:
+.tests/ide089-windows-dap-output-policy-first.txt. Нужен targeted timeline
+видимости Debug и обработки q/toggle; не увеличивать timeout ради зелёного отчёта.
 
 ## IDE-089 — Windows Neovim: PPID-only обход принимает более старый процесс за потомка
 
@@ -18,10 +31,13 @@
 stale snapshot edge и завершает older sibling (реальный процесс, exit 15).
 Child действительно создан root; older создан раньше root, все три под own Job.
 Creation-time guard prototype сохраняет older и штатно завершает root/child;
-4 cases PASS, SDK пока прежний. Read-only host snapshot также обнаружил live
+4 cases PASS; на этапе §158 SDK оставался прежним. Read-only host snapshot также обнаружил live
 vctip/python age inversion, без завершения этих процессов. FIXLOG §158.
-Далее отдельный Windows SDK backport с source/patch/hash, native regression
-и настоящими Neovim E2E. Это подтверждённый conditional defect; причинность
+§159: backport выбран в Windows SDK с отдельными patch/hash, Schema 2,
+staging и откатом. Native regression компилирует actual patched source:
+4 guard PASS, 3 expected upstream RED. Итоговый Windows набор 49 PASS;
+после продвижения quick 353, SDK CLI 11 и lifecycle 2 PASS. Linux/macOS
+backend прежний. Это подтверждённый conditional defect; причинность
 Docker IDE-087 ещё не установлена. [Доказательства/границы](docs/WINDOWS_PROCESS_DIAGNOSTICS.md).
 
 ## IDE-088 — Debug View возвращает фокус в terminal вместо кода

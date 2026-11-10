@@ -61,24 +61,24 @@ function M.new()
     assert(vim.fn.writefile({'ready'},self.gate)==0,'Не освобождён startup barrier')
     self.released=true
   end
+  function self:active_count()
+    local accounting=ffi.new('forge_job_accounting')
+    assert(kernel.QueryInformationJobObject(handle,1,accounting,ffi.sizeof(accounting),nil)~=0,
+      failure('QueryInformationJobObject'))
+    return tonumber(accounting.ActiveProcesses)
+  end
   function self:close()
     if self.result then return self.result end
     local start=vim.uv.hrtime()
     local data={backend=self.kind,pid=self.pid,gate_released=self.released or false}
     local ok,err=xpcall(function()
-      local function active()
-        local accounting=ffi.new('forge_job_accounting')
-        assert(kernel.QueryInformationJobObject(handle,1,accounting,ffi.sizeof(accounting),nil)~=0,
-          failure('QueryInformationJobObject'))
-        return tonumber(accounting.ActiveProcesses)
-      end
-      data.active_before=active()
+      data.active_before=self:active_count()
       data.terminated=data.active_before>0
       if data.terminated then
         assert(kernel.TerminateJobObject(handle,1)~=0,failure('TerminateJobObject'))
-        assert(vim.wait(2000,function() return active()==0 end,10),'Job Object всё ещё содержит процессы')
+        assert(vim.wait(2000,function() return self:active_count()==0 end,10),'Job Object всё ещё содержит процессы')
       end
-      data.active_after=active()
+      data.active_after=self:active_count()
     end,debug.traceback)
     ffi.gc(handle,nil)
     local closed=kernel.CloseHandle(handle)~=0

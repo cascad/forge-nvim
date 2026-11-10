@@ -7983,3 +7983,99 @@ E2E и не доказанный root cause Docker IDE-087. Один Neovim guar
 **Файлы:** tests/diagnostics/windows-process-parents.py, ancestry-harness.c,
 process-ancestry.py, build-process-ancestry.ps1, README; OpenSpec change,
 WINDOWS_PROCESS_DIAGNOSTICS, PROBLEMS/ROADMAP/HISTORY/AGENT_COMMANDS.
+
+
+## 159. Windows SDK: guard ancestry и проверенное продвижение
+
+Дата: 2026-11-10. IDE-089; IDE-087 остаётся открытой. Продолжение §157–158.
+Спека: IDE-BOOT-6 (ADDED), дополнение временного SDK IDE-BOOT-3.
+
+**Проблема и причина.** Закреплённый Windows Neovim при рекурсивном jobstop
+принимал PPID за доказательство потомка. §158 воспроизвёл stale edge:
+более старый собственный worker завершался как child нового root. Это
+подтверждённый conditional defect; конкретный caller остановок Docker не
+установлен. Нельзя обещать, что backport устраняет все возможные caller пути.
+
+**Изменение.** Отдельный neovim-process-ancestry.patch проверяет FILETIME
+через held handles parent/child и разрешает рекурсию только при успешном
+GetProcessTimes и child creation>=parent creation. При API failure связь
+пропускается; явно выбранный root завершается как прежде. ConPTY patch
+не изменён, source revision тот же v0.12.2/4b35336f6f850ce68a230716401cdaa21bdb6a25.
+Нет production test hooks, Docker/WSL команд управления или POSIX backend fix.
+
+Lock/manifest Schema 2: оба patch SHA, нормализованный process source SHA,
+binary SHA и обязательные process/lifecycle/ConPTY probes. Launcher пассивен;
+старый manifest без process checks отклоняется с командой явной подготовки.
+Preparer больше не пишет Ready=false в выбранный SDK до сборки: уникальный
+stage на диске checkout, parallel=2, обязательные native probes до promotion.
+StageOnly оставляет проверенного кандидата отдельно. Promotion проверяет
+границы/reparse ancestors, использует Directory.Move и сохраняет прежний SDK;
+при отказе перемещения stage возвращает прежний каталог. Редакторы пользователя
+не завершаются. Системный Neovim/PATH и Linux/macOS runtime не меняются.
+
+**Native proof production source.** process-ancestry.py --sdk-candidate
+компилирует фактический patched proc.c; отдельно upstream baseline из Git show.
+Valid upstream PASS, stale/query-failure cases — 3 expected RED относительно
+нового контракта. Guard 4 PASS, 24 собственных worker processes, outside_attempts=0,
+scope_clean=true. Stale snapshot edge контролируемая; timestamps/processes/
+termination настоящие. Это не естественный PID collision и не Docker RCA.
+SDK binary до/после source probe оставался прежним; metadata содержит source,
+harness, generator, generated C и binary hashes.
+
+**Настоящий Neovim.** Два новых process-lifecycle E2E: jobstop с повторным
+stop уже завершённого job и обычный qa!; root реально создаёт child, отдельный
+worker живёт в другом собственном editor scope. Root/child должны исчезнуть
+до fixture cleanup, независимый worker — сохраниться и штатно освободиться.
+Native exit/signal0, API errors пусты, scopes после ожидания native accounting
+пусты и не требуют TerminateJobObject. Windows-only граница; POSIX явно SKIP.
+
+**Первые отказы не скрыты.** Первый stage успешно собрался, но новый test
+немедленно после native exit callback увидел Job ActiveProcesses=1 и отказал.
+Выбранный SDK не менялся. Read-only active_count в test scope позволил ждать
+опустошения Job до cleanup; оба native test прошли без принудительной очистки.
+Final result.ok учитывает все assertions, ранние pilot JSON не являются PASS.
+CLI promotion test сначала неправильно декодировал Cyrillic stdout WinPS5.1;
+transport JSON переведён явно в UTF-8. Первый directory-lock fixture открывал
+лишь READ_ATTRIBUTES и не запрещал rename: он не доказал rollback. С GENERIC_READ
+и отсутствием FILE_SHARE_DELETE rename действительно отказал; E2E подтвердил
+восстановление старого SDK и сохранение кандидата. Не выдаём ошибку fixture за
+доказанный дефект Move-Item. Production promotion использует прямой Directory.Move.
+
+**Итоговый Windows regression кандидата.** 49 PASS: lifecycle2, descendants6,
+buffers8, code-focus3, output-policy3, dap-output4, debug-panels4, test-runner5,
+Python/Node/Rust debug по1, SDK CLI11. Захвачены 24 UI editor profiles: native
+exit/signal0, без API errors/helper SIGTERM/SIGKILL, own scopes active_after=0.
+В 19 scope close счётчик ещё был >0 и применялась очистка только собственного
+Job; это не утверждение естественного завершения всех его членов. Новые два
+lifecycle теста отдельно требуют пустого Job перед close. У всех 24 полные
+runtime Lua/pins/backports snapshots совпали с текущим source. Аудит:
+.tests/audit-ide089.py / ide089-evidence.json.
+
+Первый output-policy run:2 PASS/1 FAIL, Rust sidebar не скрылся после Output q
++ Space du (profile32921392974800). Полный повтор того же набора на том же SDK
+без UI/source изменений3 PASS (Rust33029843865800). Это IDE-090 с сохранённым
+первым log; причина неизвестна, связь с guard не доказана и не исключена повтором.
+Тест/timeout не ослаблены. Ранние два отказа новых SDK CLI tests также сохранены.
+
+**Продвижение.** Кандидат stage-1618cc145fbf469b9f05a6247bb94b58 выбран только
+после source/probe/regression audit. Binary SHA256:
+74AFF15B3B6BC288753B721365B088AB44C9B2BFFF152F8D27F5885B4B1C6AD9.
+Прежний binary F78F0414E0816D7CE858FB9763B3D4FC6D17F9DD65AF635FE5A5DB8615E9A01A
+и manifest сохранены побайтно в .tools/neovim/windows-x64.previous-384e01fdf64344baa127f442e024a7aa.
+После перемещения: настоящий scripts/test.ps1 quick —353 cases/13 files PASS,
+SDK CLI11 и lifecycle2 PASS уже из выбранного каталога. Strict OpenSpec75/75.
+Python syntax/PS parser/diff checks пройдены. Linux engine снова не имел pipe
+при read-only docker version; Desktop/WSL не запускались и не перезапускались.
+IDE-088 Ubuntu gate открыт, Mac native не запускался. Старый backup не удалён;
+неудачный первый stage добавлен в ignored .tests/F_CLEANUP_PATHS.txt.
+
+**Вывод.** IDE-089 исправлена и проверена как узкая Windows граница; не нужно
+переписывать общее IDE ядро или добавлять LSP ради неё. IDE-087 остаётся
+расследованием. Следующий локальный шаг — targeted timeline IDE-090; Ubuntu
+возвращается в работу при доступном engine, без циклических просьб перезапуска.
+
+**Файлы:** scripts/sdk/{windows.json,neovim-process-ancestry.patch},
+scripts/{prepare-windows-sdk.ps1,lib/nvim-sdk.ps1}, native diagnostics,
+tests/e2e/process-lifecycle.test.lua/process_lifecycle_worker.py,
+tests/windows_sdk_test.py, tests/lib/process_scope_windows.lua, registry,
+OpenSpec change, README/диагностика/E2E/PROBLEMS/ROADMAP/HISTORY/AGENT_COMMANDS.

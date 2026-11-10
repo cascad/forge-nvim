@@ -49,6 +49,9 @@ powershell -NoProfile -File scripts/prepare-windows-sdk.ps1 -Download
 
 На builder нужны Git, CMake/Ninja и MSVC C++ Build Tools. Source/build/temp
 остаются на диске checkout; runtime — `.tools/neovim/windows-x64`.
+Подготовка проверяет отдельного кандидата (ancestry, Neovim jobs, ConPTY)
+до замены; прежний SDK сохраняется рядом как `windows-x64.previous-<id>`.
+`-StageOnly` оставляет проверенного кандидата отдельно без замены.
 Launcher/test entrypoint проверяют manifest и SHA256, ничего не собирают
 при старте. Системный `nvim` не заменяется. Причина, A/B и команды:
 [tests/diagnostics/README.md](tests/diagnostics/README.md).

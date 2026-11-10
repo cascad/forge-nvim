@@ -3,11 +3,13 @@
 ## IDE-087/089: Windows process ancestry
 
 Read-only: `python -B tests/diagnostics/windows-process-parents.py --output .tests/ancestry-read-only.json`.
-Native source proof: `powershell -NoProfile -File tests/diagnostics/build-process-ancestry.ps1`.
+Native source proof после подготовки SDK: `powershell -NoProfile -File tests/diagnostics/build-process-ancestry.ps1 -SdkCandidate`.
 Нужны уже подготовленный pinned Neovim source и MSVC Build Tools. SDK/система
-не изменяются. Фрагмент upstream сравнивается с guard prototype на собственных
+не изменяются. Фрагмент upstream сравнивается с фактическим patched proc.c на собственных
 workers; одна snapshot edge контролируемая, timestamps/termination настоящие.
 Это диагностический native integration, не полный IDE E2E и не Docker caller proof.
+Без `-SdkCandidate` нужен неизменённый upstream proc.c: это прежний prototype probe.
+Реальные SDK jobs: `& .tools/neovim/windows-x64/bin/nvim.exe -l tests/e2e/process-lifecycle.test.lua`.
 Артефакты, matrix и ограничения — [WINDOWS_PROCESS_DIAGNOSTICS](../../docs/WINDOWS_PROCESS_DIAGNOSTICS.md).
 
 ## IDE-080/088: поиск окна кода и restore
@@ -175,16 +177,25 @@ powershell -NoProfile -File scripts/test.ps1 full
 Исходники: `.tests/neovim-native/v0.12.2-src`, runtime:
 `.tools/neovim/windows-x64`; оба каталога игнорируются Git. TEMP/TMP/TMPDIR
 и NVIM_LOG_FILE ограничены процессом builder и диском checkout.
-Параллельный builder не меняет тот же source; manifest не готов до успешных
-build/install и 50 циклов core probe. Launcher читает lock/manifest,
-проверяет source/patch/binary SHA256; missing/stale/corrupt SDK даёт ошибку
+Параллельный builder не меняет тот же source. Новый runtime сначала создаётся
+в уникальном `.tests/neovim-native/stage-*/sdk`, build использует parallel=2.
+До продвижения обязательны native ancestry fixtures, настоящие Neovim
+jobstop/quit E2E и 50 циклов ConPTY probe. Старый SDK сохраняется как
+`.tools/neovim/windows-x64.previous-<id>`; ошибка подготовки его не перезаписывает.
+`-StageOnly` выполняет те же probes и оставляет кандидата отдельно.
+Launcher читает Schema 2 lock/manifest,
+проверяет оба patch/source/binary SHA256 и признаки завершённых probes; missing/stale/corrupt SDK даёт ошибку
 с командой подготовки. Системный Neovim/PATH/установленный конфиг не меняются.
 Прямой `nvim` использует прежнюю системную программу.
 
-Lock и единственный patch: `scripts/sdk/windows.json`,
-`scripts/sdk/neovim-conpty-lifecycle.patch`. Патч убирает опубликованный
+Lock и два узких patch: `scripts/sdk/windows.json`,
+`scripts/sdk/neovim-conpty-lifecycle.patch`, `scripts/sdk/neovim-process-ancestry.patch`.
+ConPTY patch убирает опубликованный
 указатель до запуска background free/nested uv_run и игнорирует поздний
 resize закрытого ConPTY. В общем Lua UI нет платформенного обхода.
+Process patch пропускает связи PPID с более старым child либо неизвестным временем
+создания; явно выбранный root по-прежнему завершается. Это исправление IDE-089,
+не доказательство причины остановок Docker IDE-087. Linux/macOS используют официальный SDK.
 LF патча зафиксирован .gitattributes, чтобы SHA256 не зависел от autocrlf.
 Metadata описывает происхождение локальной сборки, не цифровую подпись.
 ConPTY набор общего runner тоже получает выбранный SDK и частный профиль
@@ -195,9 +206,9 @@ source lock проверяются; пользовательский катал�
 A/B из одного builder, upstream сохраняется отдельно от рабочего SDK:
 
 ```powershell
+# Upstream diagnostic больше не записывается по фиксированному пути:
 powershell -NoProfile -File tests/diagnostics/build-conpty-sdk.ps1 -Variant upstream -Download
-$forgeUpstream=(Resolve-Path .tests/neovim-native/upstream/bin/nvim.exe).Path
-nvim -l tests/diagnostics/terminal-resize.lua --nvim $forgeUpstream
+# Подставить binary из строки "SDK staged:"; запуск upstream crash repro — отдельная диагностика.
 powershell -NoProfile -File scripts/prepare-windows-sdk.ps1
 $forgeSdk=(Resolve-Path .tools/neovim/windows-x64/bin/nvim.exe).Path
 & $forgeSdk -l tests/e2e/buffers.test.lua

@@ -32,11 +32,17 @@ IDE-001 параллельно ждёт диагностических данн�
 | Приоритетное расследование | IDE-087: остановка Docker backend | Второй event 17:45:10 совпал с native qa! Windows, root/scope завершились штатно. [Native PPID гипотеза и границы](WINDOWS_PROCESS_DIAGNOSTICS.md), §154/157; caller неизвестен, Desktop/WSL агент не управляет |
 | Обзор готов Windows/Ubuntu | Поиск окна кода | [Сравнение и native evidence](CODE_WINDOW_REVIEW.md): по 5 profiles, роли find/create/relocate различаются; полный merge не нужен (§155) |
 | Windows готов, Ubuntu gate открыт | IDE-088: focus-only выбор окна кода | По state predicate и прежнему tool filter; 3 source RED, 22 Windows checks и 16 clean profiles (§156). Ubuntu ждёт доступный engine и проверку IDE-087; Mac открыт |
-| Native proof готов | IDE-087/089: process ancestry | Read-only live age inversion + exact pinned C fragment: valid PASS/stale RED; guard prototype 4 native PASS, own Jobs clean (§158). SDK не менялся, Docker caller открыт |
-| Следующий конкретный change | IDE-089: Windows SDK creation-time guard | Узкий backport, patch/hash/build, native source regression и реальные Neovim lifecycle E2E; Linux/macOS backend прежний. После него вернуться к IDE-088 Ubuntu gate при доступном engine |
+| Native proof готов | IDE-087/089: process ancestry | Read-only live age inversion + exact pinned C fragment: valid PASS/stale RED; guard prototype 4 native PASS, own Jobs clean (§158). Тогда SDK не менялся; следующий шаг выполнен в §159, Docker caller открыт |
+| Готово Windows | IDE-089: Windows SDK creation-time guard | Два закреплённых patch, Schema 2, staging/rollback; actual source guard 4 PASS + 3 expected upstream RED, Windows 49 PASS/24 captured editor profiles. SDK выбран; после продвижения quick 353, SDK CLI 11, lifecycle 2 PASS; strict 75 (§159). Linux/macOS backend прежний |
+| Диагностика после SDK | IDE-090: единичный Rust Debug toggle | Первый IDE-PANEL-11 regression оставил sidebar после Output q + Space du; полный повтор без UI/source изменений прошёл. Native exit 0, причина открыта; existing regression и первый log сохранены |
 | Отложено до готового backend | Остаток SQL workflow, IDE-062 | SQLS references provider отсутствует. Собственный binder/index/LSP fork отменён (§143); не подменять references grep и не объявлять полную SQL поддержку |
 | Затем | Остальная [матрица языков](LANGUAGE_MATRIX.md) | SQL references IDE-062, Bash DAP IDE-057; Mac/native и оставшиеся сценарии матрицы |
 | После функциональной матрицы | Упрощение архитектуры | Общее ядро, явные системные границы и setup; сокращение дублирования с сохранением E2E |
+
+После IDE-089 следующий локальный шаг — targeted диагностика IDE-090
+(видимость Debug при Output q + toggle). IDE-088 Ubuntu gate остаётся открытым:
+последняя read-only проверка Linux engine не нашла pipe. Desktop/WSL агент
+не запускает/перезапускает; доступность Docker не подменяется Windows PASS.
 
 IDE-082 / fix-passive-go-discovery: runtime исправлен, [Go команды](GO_TOOLS.md).
 Windows/Ubuntu по 27 PASS с реальным gopls restart, 42 native profiles/source/

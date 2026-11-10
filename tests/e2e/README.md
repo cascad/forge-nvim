@@ -24,6 +24,14 @@
 Текущая схема: **Windows native + Ubuntu Docker на Windows + отдельный Mac**.
 Mint временно отложен. VM остаётся вариантом для нативных Linux GUI-проверок.
 
+Windows SDK имеет отдельную границу регресса: `process-lifecycle.test.lua`
+проверяет настоящие jobstop/quit с root/child и независимым worker;
+`windows-sdk.test.lua` — launcher, hashes, отказ продвижения и откат.
+Они дополняют `editor-descendants.test.lua` и buffer/ConPTY проверки.
+Native stale-PPID regression компилирует фактический SDK source отдельной
+командой `build-process-ancestry.ps1 -SdkCandidate` (нужен MSVC).
+Windows lifecycle guard на POSIX явно SKIP; там остаётся официальный SDK.
+
 Для Ubuntu на Windows с запущенным Docker Desktop в режиме Linux containers:
 
 ```sh

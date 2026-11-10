@@ -4584,3 +4584,88 @@ report или static taskkill за причину двух Docker events.
 реальным WinPS5.1. JSON через read_bytes. Prefix before size/SHA
 .tests/ancestry-history-before.json; raw append §158/§70, HISTORY link.
 Strict OpenSpec и diff check; production Lua/SDK/lock не stage, push нет.
+
+
+## 71. IDE-089: production SDK guard, staging и native E2E, 2026-11-10
+
+Чтение: git status/diff, Get-Content, rg по scripts SDK, proc.c/pty source,
+OpenSpec config/change, editor_rpc/process/scope, registry и permanent E2E.
+Все команды из F:/repo/forge-nvim, exec login=false, без escalation. Windows
+TEMP/TMP/TMPDIR и NVIM_LOG_FILE в checkout .tests/tmp, npm cache F:/forge-nvim-tmp/npm-cache.
+GOMAXPROCS=2, GOFLAGS=-p=2; build --parallel2, тяжёлые suites последовательно.
+
+```powershell
+npx.cmd --yes @fission-ai/openspec@1.13.2 list --json
+npx.cmd --yes @fission-ai/openspec@1.13.2 instructions apply --change guard-windows-sdk-process-ancestry --json
+powershell -NoProfile -File scripts/prepare-windows-sdk.ps1 -StageOnly
+```
+
+Scaffold уже существовал после прерывания. Proposal/design/specs/tasks прочитаны;
+apply state ready. Узкий guard перенесён в actual cached proc.c, patch получен
+git diff --no-ext-diff --no-color --abbrev=7, raw LF SHA закреплён в windows.json.
+ConPTY patch SHA прежний. Preparer самостоятельно проверяет оба точных diff,
+source revision, блокировку builder и границы путей; не скачивает без -Download.
+Внутри подготовки:
+
+```powershell
+python -X utf8 -B tests/diagnostics/process-ancestry.py --source .tests/neovim-native/v0.12.2-src --output .tests/neovim-native/<stage>/ancestry --sdk-candidate
+& <stage>/sdk/bin/nvim.exe -l tests/e2e/process-lifecycle.test.lua
+& <stage>/sdk/bin/nvim.exe -l tests/diagnostics/terminal-resize.lua --nvim <stage>/sdk/bin/nvim.exe
+```
+
+Первые StageOnly build и native fixtures прошли; новая lifecycle assertion
+отказала на Job accounting после native exit, поэтому Ready manifest не создан
+и старый SDK сохранён. С read-only active_count и native-drain wait второй
+StageOnly прошёл все probes. Finalstage1618cc145fbf469b9f05a6247bb94b58,
+first stage34c295740472462e96b46303f380ee3c. Логи ide089-sdk-build[-final].txt.
+Native fixtures: upstream1 PASS/3 expected RED, actual SDK source guard4 PASS,
+24 owned workers, scopes clean. Fixture snapshot edge синтетическая, процессы
+и FILETIME/termination реальные; Docker caller этим не доказан.
+
+Windows regression прямым проверенным staged binary (test editor.start тоже
+использует vim.v.progpath): process-lifecycle, editor-descendants, buffers,
+code-focus, dap-output-policy, dap-output, debug-panels, test-runner,
+python-language (FORGE_PYTHON_CASE='debug default/project'), node-language
+(FORGE_NODE_CASE='default F5'), rust-language (FORGE_RUST_CASE='Rust F5 default'),
+windows-sdk. Последнему FORGE_SDK_CLI_SOURCE указывает stage для копирования
+в private checkout с Unicode/spaces; production launcher override не добавлен.
+Всего49 PASS, 24 captured UI profiles. Все native exit/signal0, APIerrors[],
+scope active_after0. 19 scopes нуждались в own Job close при ещё непустом
+счётчике; не заявлено естественное завершение каждого их члена.
+
+Первый Rust output-policy2 PASS/1 FAIL сохранён как
+ide089-windows-dap-output-policy-first.txt. Полный повтор3 PASS без source/UI
+правки, причина не объявлена. IDE-090. SDK CLI первые9 PASS/2 FAIL: stdout
+encoding и слишком слабый READ_ATTRIBUTES lock fixture; следующий10/1, затем
+GENERIC_READ без FILE_SHARE_DELETE дал настоящий rollback failure stimulus.
+Final SDK CLI11 PASS, включая missing/stale/schema/process hashes/probes,
+Unicode argv/exit7, env restore, отказ source/patch до build, outside/junction,
+promotion с backup и rollback. Частные dirs/handles fixture убраны.
+PS5 native > внутри .tests/run-ide089-*.ps1 пишет UTF-16 BOM logs; audit
+проверяет BOM. Внешний pwsh redirect UTF-8; JSON через read_bytes, не CP1251.
+
+```powershell
+python -B .tests/audit-ide089.py
+. ./scripts/lib/nvim-sdk.ps1
+Publish-ForgeNvimSDK (Get-Location).Path (Get-Content -Raw .tests/ide089-stage.txt)
+powershell -NoProfile -File scripts/test.ps1 quick
+& .tools/neovim/windows-x64/bin/nvim.exe -l tests/e2e/windows-sdk.test.lua
+& .tools/neovim/windows-x64/bin/nvim.exe -l tests/e2e/process-lifecycle.test.lua
+npx.cmd --yes @fission-ai/openspec@1.13.2 validate --all --strict --no-interactive
+```
+
+Audit до promotion: selected SDK/manifest bytes прежние, actual source/patch/
+binary SHA совпадают, все final suite logs, runtime snapshots, teardown verdicts
+проверены. Publish сохраняет старую директорию вместо удаления, Directory.Move
+только после absolute-bound/reparse проверок. Результат ide089-promotion.json.
+После promotion quick353/13files, SDK11, lifecycle2 PASS; strict75/75.
+Backup windows-x64.previous-384e01fdf64344baa127f442e024a7aa остаётся рядом.
+В cleanup paths добавлен только неудачный первый stage; он не выбранный SDK.
+
+Единственная Docker команда — docker version --format '{{json .Server.Version}}':
+engine pipe отсутствовал, до container create не доходили. Desktop/WSL не
+запускались/не перезапускались; Ubuntu и Mac не приписываются Windows результатам.
+Python ast.parse без pycache, PS parser и настоящий WinPS5 CLI, git diff --check.
+History before bytes/SHA в ide089-before.json; raw append §159/§71 с проверкой
+prefix, HISTORY link. Коммит только source/tests/docs, .tools/.tests ignored,
+lazy-lock не изменён, push не выполнялся.

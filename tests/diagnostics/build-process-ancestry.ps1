@@ -1,5 +1,5 @@
 ﻿# Compile/run только private native fixture; установленный Neovim не меняется.
-param([string]$Source,[string]$Output)
+param([string]$Source,[string]$Output,[switch]$SdkCandidate)
 $ErrorActionPreference='Stop'
 if($env:OS -ne 'Windows_NT'){throw 'Native ancestry fixture запускается только на Windows.'}
 $forgeAncestryRoot=Split-Path -Parent (Split-Path -Parent $PSScriptRoot)
@@ -14,5 +14,6 @@ Enter-VsDevShell -VsInstallPath $forgeAncestryVs -SkipAutomaticLocation -DevCmdA
 $forgeAncestryArgs=@('-B',(Join-Path $PSScriptRoot 'process-ancestry.py'))
 if($Source){$forgeAncestryArgs+=@('--source',$Source)}
 if($Output){$forgeAncestryArgs+=@('--output',$Output)}
+if($SdkCandidate){$forgeAncestryArgs+='--sdk-candidate'}
 & python @forgeAncestryArgs
 exit $LASTEXITCODE

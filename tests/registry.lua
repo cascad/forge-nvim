@@ -32,6 +32,7 @@ return {
   { file = 'tests/e2e/entrypoint-diagnostics.test.lua', suite = 'e2e' },
   { file = 'tests/e2e/native-probe.test.lua', suite = 'e2e' },
   { file = 'tests/e2e/windows-sdk.test.lua', suite = 'e2e', timeout = 60 },
+  { file = 'tests/e2e/process-lifecycle.test.lua', suite = 'e2e', timeout = 60 },
   { file = 'tests/e2e/editor-process.test.lua', suite = 'e2e', timeout = 60 },
   { file = 'tests/e2e/quit-trace.test.lua', suite = 'e2e', timeout = 60 },
   { file = 'tests/e2e/editor-descendants.test.lua', suite = 'e2e', timeout = 180 },

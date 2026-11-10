@@ -24,7 +24,7 @@ def guard(fragment):
     fragment = fragment.replace(before, after, 1)
     before = '            os_proc_tree_kill_rec(ph, sig);'
     after = '''            FILETIME child_start;
-            // Не считать более старый процесс потомком переиспользованного PID.
+            // A reused parent PID must not claim an older process as its child.
             if (have_parent_start
                 && GetProcessTimes(ph, &child_start, &exit_time, &kernel_time, &user_time)
                 && CompareFileTime(&parent_start, &child_start) <= 0) {
@@ -34,22 +34,34 @@ def guard(fragment):
     return fragment.replace(before, after, 1)
 
 
-def run(source, out):
+def run(source, out, sdk_candidate=False):
     assert os.name == 'nt', 'Windows-only native ABI probe'
     assert shutil.which('cl'), 'Запусти build-process-ancestry.ps1 с MSVC Build Tools'
     lock = json.loads((ROOT / 'scripts/sdk/windows.json').read_bytes())
     sdk_path = ROOT / '.tools/neovim/windows-x64'
-    sdk_manifest = json.loads((sdk_path / 'forge-sdk.json').read_bytes())
-    sdk_before = sha((sdk_path / 'bin/nvim.exe').read_bytes())
-    assert sdk_before.upper() == sdk_manifest['BinarySHA256'].upper(), 'Установленный SDK уже не соответствует manifest'
+    sdk_binary = sdk_path / 'bin/nvim.exe'
+    sdk_before = sha(sdk_binary.read_bytes()) if sdk_binary.exists() else None
+    if not sdk_candidate:
+        sdk_manifest = json.loads((sdk_path / 'forge-sdk.json').read_bytes())
+        assert sdk_before.upper() == sdk_manifest['BinarySHA256'].upper(), 'Установленный SDK уже не соответствует manifest'
     revision = subprocess.check_output(['git', '-C', str(source), 'rev-parse', 'HEAD'], text=True).strip()
     assert revision == lock['SourceRevision'], 'Изменён pinned Neovim revision'
     original = subprocess.check_output(['git', '-C', str(source), 'show', revision + ':src/nvim/os/proc.c'])
     raw = (source / 'src/nvim/os/proc.c').read_bytes()
     text = raw.decode('utf-8').replace('\r\n', '\n')
-    assert text == original.decode('utf-8').replace('\r\n', '\n'), 'proc.c уже изменён; source proof недействителен'
-    start = text.index('static bool os_proc_tree_kill_rec(')
-    fragment = text[start:text.index('\n#else', start)]
+    original_text = original.decode('utf-8').replace('\r\n', '\n')
+    start = original_text.index('static bool os_proc_tree_kill_rec(')
+    end = original_text.index('\n#else', start)
+    fragment = original_text[start:end]
+    if sdk_candidate:
+        expected = original_text[:start] + guard(fragment) + original_text[end:]
+        assert text == expected, 'Patched proc.c не соответствует узкому guard'
+        assert sha(text.encode()).upper() == lock['ProcessSourceSHA256'], 'Process source hash mismatch'
+        assert sha((ROOT / 'scripts/sdk/neovim-process-ancestry.patch').read_bytes()).upper() == lock['ProcessPatchSHA256']
+        guarded = text[start:text.index('\n#else', start)]
+    else:
+        assert text == original_text, 'proc.c уже изменён; используй --sdk-candidate для patched source'
+        guarded = guard(fragment)
     template = (ROOT / 'tests/diagnostics/ancestry-harness.c').read_text('utf-8')
     assert template.count('/* FORGE_PROC_FRAGMENT */') == 1
     assert out.resolve().is_relative_to((ROOT / '.tests').resolve()), 'Build только внутри checkout .tests'
@@ -57,9 +69,10 @@ def run(source, out):
     metadata = {'source_revision': revision, 'source_sha256': sha(raw),
                 'fragment_sha256': sha(fragment.encode()), 'harness_sha256': sha(template.encode()),
                 'prototype_generator_sha256': sha(Path(__file__).read_bytes()),
+                'guard_source': 'working SDK proc.c' if sdk_candidate else 'generated prototype',
                 'mode': 'controlled-snapshot-real-workers', 'sdk_changed': False,
                 'cases': [], 'limits': 'One stale snapshot edge is synthetic; native processes/times/signals are real. Docker caller unproven.'}
-    for variant, body in [('upstream', fragment), ('guard', guard(fragment))]:
+    for variant, body in [('upstream', fragment), ('guard', guarded)]:
         generated = out / (variant + '.c')
         generated.write_text(template.replace('/* FORGE_PROC_FRAGMENT */', body), 'utf-8', newline='\n')
         executable = out / (variant + '.exe')
@@ -88,7 +101,7 @@ def run(source, out):
             print(variant, case, 'expected RED' if expected_red else 'PASS', flush=True)
         metadata[variant + '_binary_sha256'] = sha(executable.read_bytes())
     assert sha((source / 'src/nvim/os/proc.c').read_bytes()) == metadata['source_sha256']
-    sdk_after = sha((sdk_path / 'bin/nvim.exe').read_bytes())
+    sdk_after = sha(sdk_binary.read_bytes()) if sdk_binary.exists() else None
     assert sdk_before == sdk_after, 'SDK изменился во время diagnostic run'
     metadata['installed_sdk_before_sha256'] = sdk_before
     metadata['installed_sdk_after_sha256'] = sdk_after
@@ -101,5 +114,6 @@ if __name__ == '__main__':
     parser.add_argument('--source', type=Path, default=ROOT / '.tests/neovim-native/v0.12.2-src')
     parser.add_argument('--output', type=Path, default=ROOT / '.tests/ancestry-native' /
                         datetime.datetime.now().strftime('%Y%m%d-%H%M%S'))
+    parser.add_argument('--sdk-candidate', action='store_true', help='Compile actual pinned patched SDK source')
     args = parser.parse_args()
-    run(args.source.resolve(), args.output.resolve())
+    run(args.source.resolve(), args.output.resolve(), args.sdk_candidate)

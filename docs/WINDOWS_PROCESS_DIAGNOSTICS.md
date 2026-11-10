@@ -127,10 +127,36 @@ app.asar; он не доказывает использование данног
 Публичные похожие reports не используются как доказательство нашей машины.
 Нельзя обещать, что одна поправка Neovim устранит все возможные caller пути.
 
-Следующий конкретный change — узкий Windows SDK guard для IDE-089 с отдельными
-patch/hash/build и настоящими Neovim lifecycle E2E. IDE-087 остаётся открытым,
-пока нет caller/target trace или отдельного воспроизведения Docker. Linux/macOS
-не используют этот Windows SDK; их process backend не меняется.
+IDE-089 исправлена в §159: отдельный Windows SDK process patch проверяет
+GetProcessTimes обоих handles и child creation>=parent creation. Неизвестное
+время пропускает связь; явно выбранный root завершается. Manifest Schema 2
+связывает оба patch SHA, нормализованный proc.c SHA, binary SHA и probes.
+Старый manifest больше не считается подготовленным SDK.
+
+Явная подготовка собирает отдельный stage (parallel=2), выполняет native source
+fixtures, реальные Neovim jobstop/quit и 50 ConPTY циклов перед продвижением.
+`-StageOnly` оставляет кандидата отдельно. Продвижение использует rename внутри
+checkout, отвергает reparse ancestors, сохраняет прежний SDK и откатывается,
+если stage нельзя переместить. Существующий редактор не завершается ради замены.
+
+Финальный Windows regression: 49 PASS (24 captured editor profiles, native
+exit/signal 0, без API errors, own scopes после cleanup пусты). Actual patched
+source guard: 4 PASS и 3 expected upstream RED. После выбора SDK: quick 353,
+SDK CLI 11 и native lifecycle 2 PASS; strict OpenSpec 75/75. Два lifecycle
+сценария проверяют гибель root/child до cleanup и выживание отдельного worker;
+учёт Job Object может запаздывать после native exit callback, поэтому тест ждёт
+опустошения Job до проверки отсутствия принудительного scope cleanup.
+
+Первый Rust toggle regression один раз оставил sidebar; полный повтор на том
+же SDK без UI/source изменений прошёл. Это IDE-090, причина открыта; первый
+log сохранён, не объявлен исправленным. Артефакты §159:
+`.tests/ide089-evidence.json`, `ide089-promotion.json`, `ide089-windows-*.txt`,
+`ide089-selected-*.txt`, `.tests/neovim-native/stage-1618cc145fbf469b9f05a6247bb94b58/ancestry/`.
+
+IDE-087 остаётся открытым, пока нет caller/target trace или отдельного
+воспроизведения Docker. Linux/macOS не используют этот Windows SDK;
+их process backend не меняется. Ubuntu engine отсутствовал при read-only
+проверке; Desktop/WSL не запускались. Mac native не запускался.
 
 Артефакты: `.tests/ide088-docker-evidence.json`, `ide088-docker-processes-*.json`,
 `ide087-process-parent-audit.json`, `ide088-ubuntu-run.txt`; первый event —
