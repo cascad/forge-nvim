@@ -3924,3 +3924,88 @@ append с SHA256 guard. Docs/PROBLEMS map обновлены. Явный git add
 change/runtime/test/docs/history, staged diff/numstat и самостоятельный commit
 без push. Отметка task 3.3 после успешного commit может войти в его metadata
 amend; Mac checkbox остаётся незавершённым.
+
+## 63. IDE-083: Glance defaults и настоящий keyboard regression, 2026-11-10
+
+Рабочий каталог только F:/repo/forge-nvim, PowerShell -NoProfile (login=false).
+Чтение: git status --short; git log -1 --format='%h %s'; Get-Content -LiteralPath
+для proposal/spec/design/tasks, CLAUDE, editor driver, закреплённых Glance
+config/list/init/preview, go-language и project diagnostic, docs/журналов.
+rg --files tests, rg -n по конкретным файлам/каталогам и -g '*.lua'/'*.md'.
+Большие stdout не являются доказательством: JSON читается через read_bytes(),
+Unicode печатается в UTF-8/ensure_ascii. Get-ForgeNvim выбирает patched SDK.
+
+OpenSpec (npm cache на F:/forge-nvim-tmp/npm-cache):
+```powershell
+npx.cmd --yes @fission-ai/openspec@1.13.2 status --change fix-peek-keyboard-mappings --json
+npx.cmd --yes @fission-ai/openspec@1.13.2 instructions specs --change fix-peek-keyboard-mappings --json
+npx.cmd --yes @fission-ai/openspec@1.13.2 instructions design --change fix-peek-keyboard-mappings --json
+npx.cmd --yes @fission-ai/openspec@1.13.2 instructions tasks --change fix-peek-keyboard-mappings --json
+npx.cmd --yes @fission-ai/openspec@1.13.2 instructions apply --change fix-peek-keyboard-mappings --json
+npx.cmd --yes @fission-ai/openspec@1.13.2 validate --all --strict --no-interactive
+```
+JSON saved .tests/ide083-{status,spec,design,tasks,apply}.json; validation:
+.tests/ide083-openspec.txt, 67/67. Требование IDE-PANEL-9, specs/ не менялись.
+
+Windows (каждый запуск получает F: temp; env внутри текущего shell):
+```powershell
+$env:TEMP='F:/repo/forge-nvim/.tests/tmp'
+$env:TMP=$env:TEMP; $env:TMPDIR=$env:TEMP
+$env:NVIM_LOG_FILE="$env:TEMP/ide083-windows.log"
+. ./scripts/lib/nvim-sdk.ps1
+$forgeNvim=Get-ForgeNvim (Get-Location).Path
+$env:FORGE_PEEK_CASE='q закрывает'
+& $forgeNvim -l tests/e2e/peek-navigation.test.lua > .tests/ide083-windows-red.txt 2>&1
+Remove-Item Env:FORGE_PEEK_CASE
+foreach ($forgeSuite in @('peek-navigation','go-language','editor','outline')) {
+    & $forgeNvim -l "tests/e2e/$forgeSuite.test.lua" > ".tests/ide083-windows-$forgeSuite.txt" 2>&1
+    if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+}
+$env:FORGE_PROJECT_REVIEW_SAMPLES='1'
+$env:FORGE_PROJECT_REVIEW_OUTPUT='F:/repo/forge-nvim/.tests/ide083-project-windows.json'
+& $forgeNvim -l tests/diagnostics/profile-project.lua > .tests/ide083-project-windows.txt 2>&1
+& $forgeNvim -l tests/run.lua unit trace > .tests/ide083-unit-trace.txt 2>&1
+```
+RED запуск только ДО runtime fix; после patch initial full suite дал 7 PASS,
+затем добавлен h/l и повторён весь final Windows набор. Фактически процессы
+запускались в отдельных exec shells; env фильтр не переносился между ними.
+Артефакты содержат точную копию теста/config, реальные LSP log/requests,
+snapshot и shutdown/scope. Exit=0 контроллера означает успешные assertions;
+ошибка даёт exit=1. Final Windows 29 PASS + 1 diagnostic; unit/trace report:
+365 cases/15 files PASS, 38 MANUAL/30 UNCOVERED main spec IDs не скрыты.
+
+Ubuntu:
+```powershell
+docker info --format '{{.ServerVersion}}'
+Copy-Item -LiteralPath .tests/ide083-run.sh -Destination .tests/ubuntu/ide083-run.sh
+docker compose -f tests/containers/compose.yaml run --rm --entrypoint bash ubuntu .tests/ide083-run.sh > .tests/ide083-ubuntu-run.txt 2>&1
+```
+Содержимое ignored script: set -euo pipefail; GOMAXPROCS=2 GOFLAGS=-p=2;
+последовательно nvim -l tests/e2e/{peek-navigation,go-language,editor,outline}.test.lua
+с отдельными .tests/ide083-ubuntu-<suite>.txt; затем тот же project diagnostic
+с SAMPLES=1 и OUTPUT=/workspace/.tests/ide083-project-ubuntu.json.
+Host результаты лежат в .tests/ubuntu. Первый вызов до Copy-Item дал exit=127:
+внешняя .tests скрыта guest mount; тесты тогда не стартовали. Повтор 29 PASS
++ 1 diagnostic. Готовый engine 28.5.1 использован без lifecycle-команд.
+
+Аудит/история/commit:
+```powershell
+python -B .tests/audit-ide083.py > .tests/ide083-audit.txt 2>&1
+git diff --check
+git diff --stat
+git diff --numstat -- nvim_forge/FIXLOG.md docs/AGENT_COMMANDS.md
+git status --short
+```
+.tests/ide083-history-before.json хранит byte length/SHA256 журналов; raw append
+через open('ab'), audit сравнивает старые prefixes. .tests/ide083-evidence.json:
+по 15 native profiles + 1 diagnostic, все exit=0/no hard kill/empty own scope,
+78 config-source files, исходный q/E21 RED и реальные LSP methods. Описание:
+FIXLOG §149. Mac gate открыт. Только перечисленные файлы staged/committed,
+push не выполняется. Список файлов/результаты проверены перед commit.
+
+Commit metadata (после фактического успешного commit):
+git diff --cached --quiet — перед stage; git add -- <20 перечисленных файлов>;
+git commit -m 'fix(peek): restore native Glance keyboard actions' — e0a0eba.
+Затем отмечена выполненная task 2.2, git add -- <tasks.md> docs/AGENT_COMMANDS.md;
+git commit --amend --no-edit — только metadata завершённого шага.
+git status --short и git log -1 --format='%h %s' проверяют итог; push отсутствует.

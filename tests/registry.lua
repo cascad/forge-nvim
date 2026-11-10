@@ -41,6 +41,7 @@ return {
   { file = 'tests/e2e/reference-highlighting.test.lua', suite = 'e2e', timeout = 180 },
   { file = 'tests/e2e/work-panels.test.lua', suite = 'e2e', timeout = 240 },
   { file = 'tests/e2e/go-language.test.lua', suite = 'e2e', timeout = 300 },
+  { file = 'tests/e2e/peek-navigation.test.lua', suite = 'e2e', timeout = 300 },
   { file = 'tests/e2e/go-passive.test.lua', suite = 'e2e', timeout = 360 },
   { file = 'tests/e2e/node-language.test.lua', suite = 'e2e', timeout = 900 },
   { file = 'tests/e2e/python-language.test.lua', suite = 'e2e', timeout = 900 },

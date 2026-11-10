@@ -273,6 +273,7 @@ Python реализован и проверен 2026-11-03; после возо�
 | §146 | [Git/root review и пассивные Go процессы](../nvim_forge/FIXLOG.md#146-gitroot-review-и-пассивные-go-процессы) |
 | §147 | [Feature review: baseline проекта и Peek RED](../nvim_forge/FIXLOG.md#147-feature-review-baseline-проекта-и-peek-red) |
 | §148 | [Go metadata без фоновой работы и поздний Delve](../nvim_forge/FIXLOG.md#148-go-metadata-без-фоновой-работы-и-поздний-delve) |
+| §149 | [Peek: штатные клавиши вместо строковых действий](../nvim_forge/FIXLOG.md#149-peek-штатные-клавиши-вместо-строковых-действий) |
 
 ## Как читать и дополнять
 

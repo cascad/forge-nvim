@@ -27,21 +27,6 @@ native regression первого асинхронного открытия: го
 Alpha/несколько main windows и поздние callbacks. Сейчас это не исправление.
 Источники/профили — FEATURE_REVIEW.md и FIXLOG §147.
 
-## IDE-083 — Glance Peek: строки вместо функций в mappings
-
-2026-11-10, настоящий gpd показывает definition в library.go, но q оставляет
-Peek и вызывает E21 (modifiable off). Воспроизведено в 3 Windows + 3 Ubuntu
-profiles. Штатный непереопределённый Q закрывает окно и возвращает исходный код.
-
-plugins/ide.lua заменяет семь штатных list mappings (j/k/Enter/v/s/Esc/q)
-строками next/previous/jump/close. Pinned Glance передаёт значения напрямую
-в vim.keymap.set и ожидает функции; строки становятся буквальными клавишами
-Vim. Причина q установлена; остальные keys требуют собственного regression.
-Удаление лишнего mappings override возвращает уже существующие upstream
-действия без нового glue. Сначала change и постоянный native keyboard E2E;
-до исправления диагностический project profile честно выходит с code=1.
-Runtime пока не менялся. Source/RED/ограничения — FEATURE_REVIEW.md, §147.
-
 ## IDE-081 — Telescope fzf-native: readiness и незаметный fallback
 
 2026-11-10, найдено при IDE-080 review. В plugins/telescope.lua native extension
@@ -626,6 +611,13 @@ label/version только читают подтверждённый cache/ре�
 по 2 diagnostic profiles, 365 unit/trace и strict 66/66. Старый RED — §146/148.
 [Команды](docs/GO_TOOLS.md), change fix-passive-go-discovery; native Mac gate
 остаётся открытым. Исходная IDE-001 (zsh до nvim) этим не закрывается.
+
+IDE-083 → [FIXLOG §149](nvim_forge/FIXLOG.md#149-peek-штатные-клавиши-вместо-строковых-действий):
+семь строковых Glance mappings удалены, используются готовые callbacks.
+Настоящий gopls/клавиатура: по 7 новых + 22 прежних E2E Windows/Ubuntu,
+по одному повтору исходной диагностики без E21, исходники неизменны.
+Управление — [QUICKSTART](nvim_forge/QUICKSTART.md#peek-как-ctrlclick-в-ide).
+Change fix-peek-keyboard-mappings; native Mac/GUI отдельно.
 
 IDE-078 → [FIXLOG §138](nvim_forge/FIXLOG.md#138-sql-e2e-перенос-terminal-не-скрывает-pass):
 terminal переносил `8 SQL checks` между rows, observer ошибочно ждал цельную

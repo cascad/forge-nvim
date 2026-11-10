@@ -47,17 +47,7 @@ return {
         opts = {
             border = { enable = true, top_char = "─", bottom_char = "─" },
             theme = { enable = true, mode = "darken" },
-            mappings = {
-                list = {
-                    ["j"] = "next",
-                    ["k"] = "previous",
-                    ["<CR>"] = "jump",
-                    ["v"] = "jump_vsplit",
-                    ["s"] = "jump_split",
-                    ["<Esc>"] = "close",
-                    ["q"] = "close",
-                },
-            },
+            -- spec: IDE-PANEL-9. Штатные mappings Glance — готовые callbacks.
         },
         keys = {
             { "gpd", "<cmd>Glance definitions<CR>",      desc = "Peek: definitions" },

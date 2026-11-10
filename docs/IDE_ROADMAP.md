@@ -24,7 +24,8 @@ IDE-001 параллельно ждёт диагностических данн�
 | Готово Windows/Ubuntu | IDE-077/078/079: process lifecycle и observers | Ubuntu 119 PASS/1 Windows-only SKIP, 365 unit/trace; Windows 27 текущих checks PASS (§137–139). Product Lua/67 pins прежние; Mac/GUI открыты |
 | Обзор готов, выбор удалений открыт | IDE-080: фичи, слои, цена и coverage | [Общий обзор/рекомендации](FEATURE_REVIEW.md), [все 67 plugins](PLUGIN_INVENTORY.md), DAP/root/tool ownership и bounded native baseline. Большой переписи нет; UX-удаления ещё не выбраны |
 | Готово Windows/Ubuntu | IDE-082: пассивная Go metadata / late Delve | По 27 native E2E, real gopls restart и late override F5, по 2 diagnostic profiles; §148, Mac gate открыт |
-| Следующий конкретный change | IDE-083 | Удалить неправильный Glance mappings override и проверить native keyboard workflow; IDE-084 — отдельная проверка первого Outline focus |
+| Готово Windows/Ubuntu | IDE-083: Peek с клавиатуры | Готовые Glance defaults, по 7 новых + 22 прежних native checks и по 1 повтору исходной диагностики; §149, Mac gate открыт |
+| Следующее расследование | IDE-084 | Первое асинхронное открытие Outline: воспроизвести потерю фокуса, отделить готовность данных от выбора окна |
 | Отложено до готового backend | Остаток SQL workflow, IDE-062 | SQLS references provider отсутствует. Собственный binder/index/LSP fork отменён (§143); не подменять references grep и не объявлять полную SQL поддержку |
 | Затем | Остальная [матрица языков](LANGUAGE_MATRIX.md) | SQL references IDE-062, Bash DAP IDE-057; Mac/native и оставшиеся сценарии матрицы |
 | После функциональной матрицы | Упрощение архитектуры | Общее ядро, явные системные границы и setup; сокращение дублирования с сохранением E2E |
@@ -34,6 +35,13 @@ Windows/Ubuntu по 27 PASS с реальным gopls restart, 42 native profile
 exit/scopes проверены, плюс по 2 diagnostic profiles. Временный недоступный
 engine после включения Desktop владельцем доступен, расширенный suite прошёл.
 Mac gate остаётся открытым, change не архивируется до native проверки.
+
+IDE-083 / fix-peek-keyboard-mappings: ошибочный mappings override удалён.
+`gpd/gpr/gpt/gpi`, закрытие, references, splits и фокус проверены через настоящий
+gopls на Windows/Ubuntu: по 29 checks, по 15 native profiles + 1 diagnostic,
+exit/scope/source проверены. Управление — [QUICKSTART](../nvim_forge/QUICKSTART.md#peek-как-ctrlclick-в-ide).
+Исходный E21 сохранён в §147/149; повтор диагностики теперь GREEN.
+Native Mac/GUI не запускались; следующий ограниченный шаг — IDE-084.
 
 **Mac параллельно:** IDE-001 (zsh/Go до запуска nvim) и IDE-002 (Cmd+C)
 ждут измерений/GUI на Mac. Сборщик startup готов; после trace исправляется
@@ -67,10 +75,10 @@ Git/workspace/tools/save разобраны в [WORKSPACE_TOOL_REVIEW](WORKSPACE
 
 Фактическая часть большого review сведена в FEATURE_REVIEW (§147): coverage
 всего ядра/явные gaps, 3 project/focus/idle samples на Windows и Ubuntu.
-Peek q остаётся RED 6/6 (IDE-083); default Q завершает cleanup, native scopes
-пусты. Решение о breadcrumbs/ruler/Peek не подменяется тишиной; defaults пока
-прежние. Следующая работа — небольшие отдельные bug changes IDE-082/083,
-после них проверка первого Outline focus и остальной согласованный порядок.
+Исходный Peek q был RED 6/6 (IDE-083); fix §149 вернул готовые Glance defaults
+и прошёл постоянный regression. Решение об удалении breadcrumbs/ruler/Peek
+остаётся открытым. IDE-082/083 завершены на Windows/Ubuntu; далее проверка
+первого Outline focus и остальной согласованный порядок.
 
 SQL references — [отдельный change](../openspec/changes/add-sql-semantic-references/tasks.md):
 §142 сохраняет исходный RED и исследование собственного resolver. Этот подход

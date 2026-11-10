@@ -3,6 +3,8 @@
 Дата: 2026-11-10. Статус: фактический обзор, coverage/ownership и bounded native
 baseline готовы; выбор удаления фич открыт, IDE-082 реализован отдельным change.
 Windows/Ubuntu по 27 PASS с реальным gopls restart; Mac gate открыт (§148).
+IDE-083 также исправлен отдельным небольшим change: Glance defaults,
+по 7 новых + 22 прежних native PASS и по одному project diagnostic (§149).
 [Новая Go metadata/команды](GO_TOOLS.md). Основа обзора —
 runtime 7463915 после отмены собственного SQL prototype. Требования не сокращаются
 до того, что сейчас легче проверить.
@@ -247,7 +249,7 @@ sorter E2E. При исправлении нужен постоянный regres
 | Autosave и explicit async format | language suites, deleted-files, прежний IDE-050 regression | Сложные simultaneous save/edit/cancel не закрывать одним successful format |
 | Terminal buffers/jobs/tasks | buffers (настоящий terminal), work-panels (Overseer/tasks/output) | Это не полный ToggleTerm/shell/multiple-terminal regression |
 | Recent projects/Alpha/persistence | Git root/history E2E и runtime source review | Полный native :restart/open-folder и session restore отдельными сценариями ещё не покрыты |
-| Peek/breadcrumbs/overview ruler | Новый native Go diagnostic: gpd preview и navic Use; source/старый private UI вариант | q RED IDE-083; gpr/gpt/gpi, ruler markers и визуальный GUI отдельно |
+| Peek/breadcrumbs/overview ruler | peek-navigation: 7 real gopls keyboard E2E Windows/Ubuntu; diagnostic gpd/navic Use; source/старый private UI вариант | q RED исправлен IDE-083 (§149); ruler markers, Mac и визуальный GUI отдельно |
 | WezTerm/shell startup/clipboard | Собственные wezterm/install/ConPTY наборы, manual checklists | Они дополняют Nvim E2E; исходные Mac/zsh/Cmd+C не проверены |
 
 Все названные editor suites присутствуют в tests/registry.lua; diagnostics не
@@ -324,7 +326,7 @@ Ubuntu 9265858326624/9281597222561/9295146798511. В каждом source diagnos
 | SQLLogicTest | SQL queries/schema/format и Tests остальных языков | Отдельно решить нужность SQL assertion runner/SDK; не удалять рабочий SQL вместе с ним |
 | Временные patches/Windows SDK | Проверенные исправления и portability | Снимать только после native equivalent regression на готовом upstream |
 
-IDE-082 реализован и проверен Windows/Ubuntu (§148), следующий — IDE-083.
+IDE-082/083 реализованы и проверены Windows/Ubuntu (§148/149), следующий — IDE-084.
 После каждого свой RED,
 permanent E2E, Windows/Ubuntu regression, история и commit. Mac gates явно
 остаются открытыми. Выбранные UI-удаления и общий refactor не смешивать с этим
@@ -357,7 +359,7 @@ language/test roots, interpreter/tools и save/format разобраны в
   удаляемая ответственность, регресс и проверяемая польза. Только затем рефакторинг.
   DAP-кандидаты: единый выбор Output, затем одинаковые части поиска окна кода;
   process/PTY lifecycle не объединять с видимостью. Это пока план, не runtime fix.
-  До них стоит IDE-082; дальше IDE-081 readiness и выбранные удаления optional UI.
+  IDE-082/083 уже выполнены; далее IDE-084, IDE-081 readiness и выбранные удаления optional UI.
   Project/session restart и uniform interpreter/root policies требуют отдельных
   сценариев; существующие Git результаты не заменяют их полной проверки.
 

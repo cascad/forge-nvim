@@ -7358,3 +7358,59 @@ strict OpenSpec 66/66. Native Mac/GUI не запускались, change ост
 **Файлы:** forge/go.lua, plugins/lsp.lua и dap.lua; go-passive E2E/registry,
 go-statusline diagnostic, GO_TOOLS/LANGUAGE_MATRIX/README/roadmap/review,
 PROBLEMS/HISTORY/AGENT_COMMANDS и OpenSpec change.
+
+## 149. Peek: штатные клавиши вместо строковых действий
+
+Дата: 2026-11-10. IDE-083. Спека: IDE-PANEL-9 (FIX);
+change fix-peek-keyboard-mappings, новая capability peek-navigation.
+
+**Проблема.** gpd показывает настоящее определение, но q оставляет Peek и
+вызывает E21 (modifiable off). Исходные 3 Windows + 3 Ubuntu profiles — §147.
+Другие переопределённые клавиши тоже не имели корректного callback.
+
+**Причина.** plugins/ide.lua передавал семь строк next/previous/jump/close
+в list mappings. Закреплённый Glance напрямую передаёт значения в keymap.set:
+строки становятся последовательностями normal-команд. Это ошибка нашего
+config, готовые callbacks уже есть в defaults плагина.
+
+**Изменение.** Удалён весь лишний mappings override. Сохранены entrypoints
+gpd/gpr/gpt/gpi, pin и оформление. Новых плагинов, semantic glue и panel layers
+не добавлено. QUICKSTART описывает list keys, Space l и Q из preview.
+
+**Проверка/e2e.** Новый постоянный peek-navigation.test.lua содержит 7 native
+сценариев с настоящим gopls v0.23.0 и Go fixture без внешних modules:
+q/Esc с возвратом исходного cursor/window, references h/l и j/k с обновлением
+preview/Enter, вертикальный v и горизонтальный s, реальные gpt/gpi, фокус
+Space l и Q из list/preview. Проверяются файлы/позиции/геометрия, неизменность
+исходников, отсутствие ошибок и startup installs. LSP ответы не подменяются.
+
+До runtime fix новый q case RED: Windows artifact 16142229750100,
+E21/Glance остаётся, exit контроллера=1; собственный scope пуст.
+После удаления override initial suite 7 PASS; затем добавлен h/l regression.
+Финальный source прошёл Windows/Ubuntu: peek-navigation 7 + go-language 6 +
+editor 10 + outline 6 = по 29 PASS. По 15 native editor profiles и одному
+повтору исходного profile-project.lua на каждой ОС; q закрывает Peek, E21
+нет, Q fallback не использован. Windows diagnostic 16325010690800,
+Ubuntu 1301717250468. Все 32 profiles завершились exit=0 без hard kill,
+собственные process scopes пусты; 78 config-source files совпадают.
+
+Аудит: .tests/audit-ide083.py, .tests/ide083-evidence.json; final suites:
+.tests/ide083-windows-*.txt, .tests/ubuntu/ide083-ubuntu-*.txt. Unit/trace:
+365 cases, 15 files PASS; strict OpenSpec 67/67. Registry включает новый suite.
+
+**Промежуточная попытка.** Первый Ubuntu command exit=127 до старта тестов:
+ignored script находился в host .tests, скрытом compose mount .tests/ubuntu.
+Скрипт скопирован в соответствующий host каталог, исходный fail не назван
+product regression. Docker server уже работал (28.5.1); Desktop/WSL агент
+не запускал/не перезапускал/не перенастраивал. Тяжёлые suites последовательны,
+Go CPU=2, Windows temp/build/cache на F:.
+
+**Границы/вывод.** Native Mac/GUI не запускались, gate открыт, change не
+архивируется и main specs не синхронизируются. Исходный Mac zsh/Go (IDE-001),
+первый Outline focus (IDE-084) и выбор optional UI этим не закрыты. Готовые
+действия плагина устраняют ошибку и уменьшают наш config; собственная обёртка
+для этого не нужна.
+
+**Файлы:** plugins/ide.lua, peek-navigation E2E/fixtures/registry,
+QUICKSTART, tests/e2e/README, IDE_ROADMAP/FEATURE_REVIEW/PROBLEMS,
+HISTORY/AGENT_COMMANDS и OpenSpec change.
