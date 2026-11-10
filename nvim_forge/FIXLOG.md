@@ -8428,3 +8428,81 @@ product modules, timers или timeout. Следующий шаг — native gat
 **Файлы:** tests/lib/output_policy.lua/output_policy.test.lua,
 tests/e2e/output-resize.test.lua, registry, OpenSpec change, diagnostics README,
 PROBLEMS/IDE_ROADMAP/HISTORY/AGENT_COMMANDS.
+
+
+## 166. Project sessions: native TUI restart baseline
+
+Дата: 2026-11-10. IDE-080; test-only cover-native-project-session-restart,
+skip_specs:true. Production поведение не менялось.
+
+**Проблема и причина.** До этого Persistence проверялся save/load в одном
+процессе; Git/root E2E не доказывали новый backend, сохранение tabpages/cursors
+и несохранённого текста при config.start.open_project. Native :restart требует,
+чтобы UI переподключился к новому server; embedded test UI этого не реализует.
+Просто отправить restart прежнему RPC helper означало бы риск dangling server.
+
+**Изменение.** Новый private fixture запускает настоящий TUI того же SDK через
+terminal job внутри уже owned editor/process scope. TUI сам обрабатывает restart,
+контроллер не имитирует его и не подменяет Persistence. Observer записывает
+VimEnter/VeryLazy readiness/Persistence events/VimLeave с PID/socket; команды и
+Space qs идут через PTY, public RPC читает actual state. Host persistence
+остановлен, чтобы fixture не перезаписывал child session на собственном quit.
+Два Git проекта с пробелами/Unicode, три файла/два tabpages; language tools не
+требуются, установка инструментов не вызывается. Shared editor/process helpers,
+production Lua, SDK и все67 pins прежние.
+
+**Проверка.** Permanent project-session E2E зарегистрирован. Final через общий
+runner с private registry, извлекающим запись из настоящего tests/registry.lua:
+profile42535630141600, backend PID18848→1596→20876→13384. Проверены обычный quit,
+чистый relaunch и Space qs, затем A→B→A через config.start: реальные новые PID,
+cwd,3 files/2 tabs и cursors23:7/37:5/47:3. Modified third.txt перед switch
+действительно dirty, строка записана при входе в B и загружена после возврата.
+Буферы прошлого проекта не попадают в новый. Quickfix из второго tabpage
+не восстановился; Explorer открыт, code windows без panel marker/winfix.
+Session Vimscript, raw state/screen/lifecycle и exact helper/config copies
+сохранены до удаления owned runtime. У всех4 backend есть SavePost/VimLeave,
+у двух restore — LoadPost; actual UI присутствует, install0/no ERROR notices.
+
+Final native TUI job exit0; host native exit/signal0, APIerrors[], scope
+active_before/after0, terminated:false, без helper signals. Windows accounting
+может обновиться после process callback: fixture теперь наблюдает drain до
+scope close, как существующий process-lifecycle E2E. Это не изменение общей
+политики cleanup и не объяснение Docker. 12 соседних framework checks PASS
+(runtime4/links3/lifecycle2/quit-trace3),1 POSIX-only SKIP. Итого13 native checks
+PASS, quick358/14files, strict81/81. Audit сверил63 Lua/JSON/patch config files,
+67 pins, exact test/helper copies и прежний SDK binary SHA74AFF15B…C6AD9.
+Артефакты: .tests/session-evidence.json, session-registry-windows-final.txt,
+session-regression-*.txt, session-quick.txt, session-strict.txt.
+
+**Не выдавать пилоты за product RED.** В initial fixture missing Lua exit field
+ошибочно сравнивался с vim.NIL; Escape+следующие keys в одном PTY burst давали
+Alt вместо выхода из Insert. Были syntax failure до editor start и naive
+source assertion, увидевший Quickfix marker в сохранённом local statusline,
+хотя actual Quickfix не восстановился. Исправлены test semantics: явный false
+sentinel, отдельный Escape с native mode readiness, actual window assertions.
+Один финальный strict cleanup assertion застал accounting active1 после native0;
+новая наблюдаемая drain проверка описана выше. Raw evidence не переписаны,
+остатки закрыты только через owned scope/runtime; product fix не заявлен.
+
+**Наблюдения и границы.** IDE-095: direct Space qs оставляет code focus, а
+config.start A→B→A — Explorer. Это расходится с комментарием LoadPost о возврате
+фокуса в editor; в config.start виден дополнительный project:open. Причинность
+пока не проверена source RED. Вынесено отдельно, нынешний focus не объявлен
+контрактом. Branch sessions/last/select/stop, write failure, active DAP при switch,
+GUI/физические клавиши WezTerm и Ubuntu/Mac здесь не проверены.
+
+Перед native тестами read-only Docker check21:51MSK: engine pipe и Desktop/
+backend processes отсутствуют; последние logs17:45:10 — прежнее событие, нового
+startup не видно. Docker/WSL/container не запускались и не перезапускались.
+Ubuntu gate открыт; отсутствие engine не выдаётся за новый crash этих тестов.
+
+**Вывод.** Native restart/restore теперь защищён реальным E2E; общий root/session
+controller не нужен для покрытия. Следующий небольшой кандидат — IDE-095,
+проверка и сокращение дублирующего project:open при подтверждённом source RED.
+
+**Файлы.** tests/lib/session_tui{,_native}.lua, tests/diagnostics/project-session.lua,
+tests/e2e/project-session.test.lua, registry/README, PROJECT_SESSION_REVIEW,
+FEATURE_REVIEW/IDE_ROADMAP/PROBLEMS/HISTORY и OpenSpec change.
+
+Дополнительный integration gate: tests/run.lua trace —2 файла PASS. Проверено
+соответствие registry/spec paths после добавления E2E; production/pins прежние.

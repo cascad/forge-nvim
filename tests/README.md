@@ -77,6 +77,14 @@ Go E2E используют общий compiler cache одного прогон�
 Для повторения старого конфига можно явно задать `FORGE_E2E_CONFIG_SOURCE`:
 его lock обязан совпасть с подготовленным, источник пишется в config-origin.txt.
 
+Project/session restart: `nvim -l tests/e2e/project-session.test.lua`;
+он также входит в общий `nvim -l tests/run.lua e2e`. Нужны общие pinned
+plugins и Git, дополнительные language tools не нужны. Реальный TUI работает
+в частном terminal job и сам обрабатывает native `:restart`; RPC читает state,
+ввод проходит через PTY. Проверяются quit/relaunch/Space qs, A→B→A, три файла,
+два tabpages, cursor positions, запись unsaved edit, cleanup Quickfix/возврат
+Explorer и отсутствие чужих buffers. Подробнее: [baseline](../docs/PROJECT_SESSION_REVIEW.md).
+
 Код возврата: 0 — FAIL нет; 1 — есть FAIL (или UNCOVERED под `--strict`,
 или под `--id` не выполнилось ни одной проверки); 2 — ошибка аргументов.
 

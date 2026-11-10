@@ -10,7 +10,19 @@
 
 Маршрут и приоритеты: [рабочий план nvim_forge](docs/IDE_ROADMAP.md).
 Для новых пунктов используем следующий свободный ID `IDE-xxx`; исходный
-симптом хранится здесь, этап и состояние — в плане. Следующий ID: `IDE-095`.
+симптом хранится здесь, этап и состояние — в плане. Следующий ID: `IDE-096`.
+
+## IDE-095 — фокус после project/session restart возвращается в Explorer
+
+2026-11-10: native TUI baseline §166 восстанавливает три файла, два tabpages
+и позиции курсора, но после config.start A→B→A фокус находится в neo-tree.
+Прямой Space qs оставляет фокус в файле. Plugins/editor.lua явно обещает фокус
+обратно в editor после PersistenceLoadPost; config.start дополнительно вызывает
+project:open после cleanup. Повторный trigger — кандидат, причинность ещё
+не проверена source RED. Baseline сохраняет actual current window и не выдаёт
+Explorer focus за желаемый контракт. Следующий шаг — отдельный воспроизводимый
+регресс и устранение дублирующего маршрута, если подтвердится; без нового
+panel/root controller. Ubuntu/Mac не проверены.
 
 ## IDE-094 — очистка E2E профиля оставляет dangling Windows junction
 

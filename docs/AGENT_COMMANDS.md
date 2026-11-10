@@ -4954,3 +4954,81 @@ Linux backend для Windows, SQL references не имеют готового pr
 Повторное разрешение/повторный выбор не запрашивались. Следующий независимый
 пункт — native project/session restart baseline из общего review. Broad
 перепись и удаление optional UI не начаты. Goal active, Mac не проверен.
+
+
+## 79. Native project/session baseline и Docker readiness, 2026-11-10
+
+Рабочая папка F:/repo/forge-nvim, login:false, Windows temp/log F:; network prep
+не выполнялся. OpenSpec context/list подтвердили nearest root; создан test-only
+cover-native-project-session-restart (skip_specs:true), proposal/design/tasks,
+apply ready. Полученные contextFiles прочитаны; явная прежняя авторизация
+позволяет продолжить implementation/commit без повторного вопроса.
+
+```powershell
+docker version --format '{{json .Server.Version}}'
+docker context ls
+docker compose -f tests/containers/compose.yaml config --services
+Get-Process -Name 'Docker Desktop','com.docker.backend','com.docker.build' -ErrorAction SilentlyContinue
+Get-Service -Name com.docker.service
+Get-ChildItem -LiteralPath '\\.\pipe\' | Where-Object Name -Match 'docker'
+Get-ChildItem -LiteralPath "$env:LOCALAPPDATA/Docker/log/host" -File
+```
+
+Get-Content tail и Select-String читали backend/build/monitor/electron logs;
+auth/settings payload не сохранялся. В21:51MSK pipe/processes отсутствовали,
+service Stopped, context desktop-linux; latest log17:45:10, startup после него
+не видно. Compose config читает YAML без обращения к engine. Никаких start/
+stop/restart, WSL управления, container запуска или изменения Docker settings.
+Ubuntu gate не выполнен. Это старое событие IDE-087, caller по-прежнему неизвестен.
+
+```powershell
+rg -n 'persistence|session|restart' nvim_forge/lua tests/diagnostics
+Get-Content nvim_forge/lua/plugins/editor.lua
+Get-Content nvim_forge/lua/config/start.lua
+Get-Content .tests/editor-deps/lazy/persistence.nvim/lua/persistence/init.lua
+Get-Content .tools/neovim/windows-x64/share/nvim/runtime/doc/gui.txt
+Get-Content .tools/neovim/windows-x64/share/nvim/runtime/doc/api-ui-events.txt
+& .tools/neovim/windows-x64/bin/nvim.exe -l tests/diagnostics/project-session.lua
+& .tools/neovim/windows-x64/bin/nvim.exe -l tests/e2e/project-session.test.lua
+```
+
+Fixture reuse editor.start/private config/plugins + owned scope. Native TUI в
+terminal job получает тот же private profile; сам reconnect при restart. Inputs
+идут через chansend/PTY, socket/pipe RPC читает state; observer только пишет
+lifecycle/readiness и notices/install count. Host persistence.stop касается
+только fixture. Missing nil/false, Escape Alt burst, syntax до start, source
+statusline assertion и Job accounting пилоты исправлены в тесте; raw logs
+session-baseline-*/session-e2e-* сохранены. Никаких product RED из них не заявлено.
+
+Для cleanup fixture отправляет host native qa!, наблюдает exit и Windows Job
+accounting drain, затем вызывает штатный e.stop. В native-host-exit.json видны
+actual count/drain; scope без helper signals. Final normal file layout проверяется
+по native windows/cursors/tabs/buffers, а не словам Quickfix в Session.vim.
+
+```powershell
+& .tools/neovim/windows-x64/bin/nvim.exe -l tests/e2e/editor-runtime.test.lua
+& .tools/neovim/windows-x64/bin/nvim.exe -l tests/e2e/runtime-links.test.lua
+& .tools/neovim/windows-x64/bin/nvim.exe -l tests/e2e/process-lifecycle.test.lua
+& .tools/neovim/windows-x64/bin/nvim.exe -l tests/e2e/quit-trace.test.lua
+powershell -NoProfile -File scripts/test.ps1 quick
+npx.cmd --yes @fission-ai/openspec@1.13.2 validate --all --strict --no-interactive
+& .tools/neovim/windows-x64/bin/nvim.exe -l tests/run.lua e2e --registry .tests/session-only-registry.lua
+python -B .tests/audit-project-session.py
+```
+
+Все native suites последовательно. Probe --id 'SELF: PROJECT-SESSION' был
+отвергнут CLI до запуска файлов: --id принимает requirement ID. Docs исправлены:
+один файл — direct command, обычный e2e/full включает registered scenario.
+Для проверки runner без всего language regression private registry извлекает
+единственную actual entry из tests/registry.lua. Final1 PASS,12 соседних checks
+PASS/1 POSIX-only SKIP, quick358/14files, strict81. Full e2e не запускался.
+Final profile42535630141600,4 native backend PID; exact source/config63 files/
+pins67/SDK SHA и removed runtime audit в .tests/session-evidence.json.
+History prefix bytes/SHA зафиксированы до append§166/§79; проверены исходные
+prefix и additions-only Git diff. IDE-095 focus записан отдельно; повторный
+project:open пока кандидат, production не исправлялся. Ubuntu/Mac/GUI открыты.
+
+Дополнительно: nvim -l tests/run.lua trace > .tests/session-trace.txt 2>&1 —
+2 файла PASS. Перед этим registry report/log скопированы в session-registry-
+report.json/session-registry-case.log: audit не зависит от перезаписи общих
+.tests/report.json и logs следующим suite. Повторный source/prefix audit PASS.

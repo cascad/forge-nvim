@@ -1,5 +1,14 @@
 # Диагностика native terminal и CLI
 
+## Project/session: настоящий TUI и restart
+
+`nvim -l tests/diagnostics/project-session.lua` после общей plugin подготовки.
+Пишет raw state/lifecycle, sessions и terminal snapshots в отдельный
+`.tests/editor-e2e/<id>`. Настоящий TUI обрабатывает restart; observer только
+записывает события. Permanent assertion wrapper:
+`nvim -l tests/e2e/project-session.test.lua`.
+[Что проверено и что остаётся](../../docs/PROJECT_SESSION_REVIEW.md).
+
 ## IDE-090: Output q и Debug toggle
 
 После явной editor/Rust подготовки, Windows из корня checkout:

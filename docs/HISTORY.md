@@ -290,6 +290,7 @@ Python реализован и проверен 2026-11-03; после возо�
 | §163 | [E2E runtime: directory links без обхода target](../nvim_forge/FIXLOG.md#163-e2e-runtime-directory-links-без-обхода-target) |
 | §164 | [Debug hide: без startup watchdog, с actual stopped](../nvim_forge/FIXLOG.md#164-debug-hide-без-startup-watchdog-с-actual-stopped) |
 | §165 | [History assertion: terminal padding и реальные потери](../nvim_forge/FIXLOG.md#165-history-assertion-terminal-padding-и-реальные-потери) |
+| §166 | [Project sessions: native TUI restart baseline](../nvim_forge/FIXLOG.md#166-project-sessions-native-tui-restart-baseline) |
 
 ## Как читать и дополнять
 

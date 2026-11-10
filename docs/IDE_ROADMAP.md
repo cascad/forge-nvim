@@ -40,6 +40,8 @@ IDE-001 параллельно ждёт диагностических данн�
 | Capture готов, механизм воспроизведён | IDE-090: delayed startup reopen | §162: trace/failed attempts, native watchdog caller1419 после hide. Runtime исправлен и permanent regression добавлен в §164 |
 | Готово Windows test harness | IDE-093: viewport padding в history assertion | Native CodeLLDB resize source RED → PASS; terminal-only semantic compare,5 loss/padding vectors и6 native checks PASS, raw data прежние. Quick358/14files/strict80 (§165), Ubuntu/Mac не запускались |
 | Готово Windows test harness | IDE-094: dangling Windows junction | Source malformed RED →3 native link PASS, ещё10 lifecycle/descendants PASS и1 POSIX-only SKIP. Четыре owned остатка удалены; negative debug cleanup теперь проходит (§163), quick353/strict78. Ubuntu/Mac не запускались |
+| Готово Windows | Project/session native baseline, IDE-080 | Настоящий TUI: quit/relaunch/Space qs и A→B→A,4 backend PID,3 files/2 tabpages/cursors/unsaved edit/panels; permanent E2E +12 framework checks PASS, quick358/strict81 (§166). [Границы](PROJECT_SESSION_REVIEW.md), Ubuntu/Mac открыты |
+| Следующий независимый шаг | IDE-095: фокус после project restore | Direct Space qs возвращает код, config.start — Explorer. Проверить повторный project:open отдельным native source RED; при подтверждении убрать дублирующий маршрут |
 | Отложено до готового backend | Остаток SQL workflow, IDE-062 | SQLS references provider отсутствует. Собственный binder/index/LSP fork отменён (§143); не подменять references grep и не объявлять полную SQL поддержку |
 | Затем | Остальная [матрица языков](LANGUAGE_MATRIX.md) | SQL references IDE-062, Bash DAP IDE-057; Mac/native и оставшиеся сценарии матрицы |
 | После функциональной матрицы | Упрощение архитектуры | Общее ядро, явные системные границы и setup; сокращение дублирования с сохранением E2E |
@@ -47,9 +49,13 @@ IDE-001 параллельно ждёт диагностических данн�
 IDE-090/093/094 закрыты на Windows в §164/165/163. Следующий шаг — доступные
 Ubuntu gates и оставшаяся языковая матрица, без собственного SQL binder/LSP.
 Read-only engine check после31d154f снова не нашёл dockerDesktopLinuxEngine;
-Desktop/WSL не запускались. Независимый Windows шаг — native project/session
-restart baseline из FEATURE_REVIEW: save/quit/load, корень проекта и панели,
-без изменения production root/session glue до воспроизводимого evidence.
+Desktop/WSL не запускались. Native project/session baseline завершён на Windows
+в §166: реальные разные backend, files/cursors/tabs/cwd и панели сохранены;
+production root/session glue прежний. Следующий независимый шаг — IDE-095,
+проверка дублирующего project:open и фокуса на том же native fixture.
+Read-only проверка 21:51 MSK: Desktop/backend процессов и engine pipe нет,
+логи заканчиваются старым событием17:45, нового startup не видно. Container
+не запускался; отсутствие engine не выдаётся за новый crash от этих тестов.
 IDE-091 исправлен отдельно (§160); источник исторического одиночного failure
 без trace не объявляется единственным. IDE-088/090/091 Ubuntu gates открыты:
 последняя read-only проверка Linux engine не нашла pipe. Desktop/WSL агент
