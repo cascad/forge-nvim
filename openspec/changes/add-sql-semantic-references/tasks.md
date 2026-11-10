@@ -1,17 +1,20 @@
 # Tasks
 
-## 1. Постоянное исходное воспроизведение
+Решение 2026-11-10: своё language ядро отменено. References не готовы;
+change не архивируется как выполненный и не применяется к main specs.
 
-- [x] 1.1 Добавить SQL references fixtures и настоящий editor E2E `gr` → quickfix → Enter для двух таблиц с id, разных aliases и закрытого SQL-файла. На Windows текущий forge.1 обязан дать целевой RED; сохранить exact SDK manifest/config/test, native provider/error и screen/shutdown. Обновить E2E README/реестр, FIXLOG/HISTORY/команды и текущую точку плана как воспроизведение, не готовую фичу.
+## 1. Историческое воспроизведение и отмена прототипа
 
-## 2. Семантический backend
+- [x] 1.1 Исходный editor RED forge.1 сохранён в Git 341aba2/FIXLOG §142: raw -32601/provider=false, gr без quickfix, SDK/test/config/screen и штатный shutdown. Это историческое доказательство отсутствующей фичи, не готовый runtime suite.
+- [x] 1.2 Сохранить SHA snapshot собственного незакоммиченного prototype на F:, убрать resolver/handler/index и только их tooling/fixtures/registry entry, вернуть SQL test helper. Проверить прежние SQL UI/SDK, unit/trace/strict и неизменные product Lua/pins/SDK; дописать FIXLOG/HISTORY/команды/план.
 
-- [ ] 2.1 Добавить изолированный native resolver поверх существующего SQLS AST/cache: schema/table/column identity, FROM/JOIN, alias declaration/usage, nested/correlated scopes, shadowing/ambiguity и Unicode ranges. Проверить native tests с независимыми expected locations и реальный editor case из 1.1; постоянные проверки и описание границ в том же шаге.
-- [ ] 2.2 Расширить resolver CTE/derived output identities, projection aliases и обычным INSERT/UPDATE/DELETE; добавить native и editor положительные/отрицательные E2E, включая одноимённые символы, includeDeclaration и неоднозначный target. Не закрывать IDE-062 по одному простому SELECT. Дописать историю/описание текущих поддержанных сценариев.
-- [ ] 2.3 Подключить настоящий references handler/provider и workspace index: closed files, unsaved overlays, didClose/повторные requests, Git ignored/generated paths, canonical boundary/symlink, смена connection, cancellation и понятные ошибки. Native tests и editor E2E на актуальный текст, отсутствие SQL execution/изменения диска, другой workspace и quoting; docs/FIXLOG со Спека: IDE-SQL-9 (ADDED).
+## 2. Выбор готового backend
 
-## 3. Явный SDK и платформенная интеграция
+- [ ] 2.1 В IDE-080 review сравнить готовые SQL backend по IDE-SQL-9, диалектам/ОС/установке/сопровождению и primary sources. Доставить таблицу capabilities/evidence/ограничений; отсутствие кандидата не закрывает references и не разрешает свой binder/LSP.
+- [ ] 2.2 При подтверждённом кандидате сделать изолированную штатную интеграцию и editor E2E gr/quickfix/Enter, names/scopes/CTE/DML, unsaved/closed files, Unicode/workspace boundary. До выбора кандидата задачу не выполнять.
 
-- [ ] 3.1 Зафиксировать overlay/patch, новую SDK version и source/before/after SHA; готовить candidate отдельно от исходного SDK. Native upstream query/resolver tests, неизменные Go locks, SDK readiness/immutable variant checks и отсутствие startup install. Обновить prepare/container recipe и SQL docs/команды; Windows native build/readiness и process tests PASS.
-- [ ] 3.2 Последовательно Windows и уже доступный Ubuntu: полный references E2E через общие gr/Space l r/quickfix, query 20, SQL Tests 12, common panels, применимые SDK, unit/trace и strict. Проверить shutdown/process scope/source artifacts и отсутствие лишнего SQLS process. Дописать FIXLOG/HISTORY/PROBLEMS/матрицу/план и самостоятельно закоммитить проверенный шаг; недоступный engine не запускать.
-- [ ] 3.3 На macOS владельца выполнить native SDK и editor references/query/Tests сценарии через документированные команды, внести реальные результаты. До запуска Mac/ARM64/GUI/внешние DB остаются явно непроверенными и task открытой.
+## 3. Интеграция подтверждённого готового решения
+
+- [ ] 3.1 Зафиксировать explicit setup/version/source policy готового backend без private engine, проверить readiness и отсутствие startup install/лишней SQL session; SQL docs/FIXLOG со Спека: IDE-SQL-9 (ADDED).
+- [ ] 3.2 Последовательно Windows/доступный Ubuntu: references и прежние query/Tests/panels E2E, cleanup, unit/trace/strict, история/PROBLEMS/матрица/план и commit. Provider flag/unit не закрывают feature.
+- [ ] 3.3 На Mac владельца выполнить применимые native/editor/GUI сценарии, сохранить реальные результаты; до запуска Mac/ARM64/GUI/внешние DB непроверены.

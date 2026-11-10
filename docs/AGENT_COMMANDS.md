@@ -3508,3 +3508,53 @@ python -B .tests/audit-sql-reference-foundation.py; raw history prefix и staged
 additions-only проверены. SDK metadata/plugin pins/production Lua без diff.
 Дальше task 2.1/2.2/2.3: закончить resolver и настоящий provider; не считать
 acceptance RED готовой фичей. Mac/GUI/внешние DB остаются открытыми.
+
+## 57. Отмена private SQL prototype и feature review, 2026-11-10
+
+Уточнение владельца: не изобретать LSP/обходы ради полной SQL поддержки; перед
+рефакторингом большой обзор фич и слоёв. openspec-update-change использован
+для planning artifacts add-sql-semantic-references: прежний подход отменён,
+будущее IDE-SQL-9 требует готового backend, feature не объявлена выполненной.
+Решение владельца и прежнее разрешение на необходимые правки позволяли
+применить уточнение без дополнительных вопросов по каждому файлу.
+
+Перед удалением прочитаны git status/diff и protected paths. Собственные
+файлы сохранены с SHA в .tests/sql-references-withdrawn-20261110; tracked
+prototype также доступен в 341aba2. apply_patch удалил только перечисленные
+файлы prototype/tooling/fixtures; общие helper/registry возвращены к 0e5888e.
+Никаких recursive cleanup других каталогов или изменений Desktop/WSL.
+
+Проверки выполнялись последовательно:
+```powershell
+$env:TEMP='F:/repo/forge-nvim/.tests/tmp'
+$env:TMP=$env:TEMP; $env:TMPDIR=$env:TEMP
+$env:NVIM_LOG_FILE="$env:TEMP/sql-prototype-withdrawal-checks.log"
+$env:PYTHONIOENCODING='utf-8'
+$env:npm_config_cache='F:/forge-nvim-tmp/npm-cache'
+. ./scripts/lib/nvim-sdk.ps1
+$forgeNvim=Get-ForgeNvim (Get-Location).Path
+& $forgeNvim -l tests/e2e/sql-language.test.lua
+& $forgeNvim -l tests/e2e/sql-sdk.test.lua
+& $forgeNvim -l tests/run.lua unit trace
+& $forgeNvim -l tests/diagnostics/inspect-plugins.lua
+npx.cmd --yes @fission-ai/openspec@1.13.2 validate --all --strict
+git diff 0e5888e -- nvim_forge/lua nvim_forge/lazy-lock.json nvim_forge/patches scripts/sdk/sqls.json tests/lib/sql_project.lua tests/registry.lua
+```
+
+Логи: windows-sql-after-prototype-withdrawal.txt (20 UI PASS),
+windows-sdk-after-prototype-withdrawal.txt (2 PASS),
+windows-unit-after-prototype-withdrawal.txt (365),
+openspec-after-sql-prototype-withdrawal.txt (65/65).
+feature-review-runtime-final.txt/feature-review-runtime.json: 67 plugins,
+idle loaded 28, 0 installs, artifact 3322136536400; shutdown/scope проверены.
+Это runtime inventory, не benchmark и не полный feature E2E.
+
+Инвентаризация: rg/Get-Content source plugins/ide/forge/config, JSON lock,
+patches/plugins.json; считались файлы/строки для навигации по коду. Таблица
+67 плагинов собрана из live Lazy config с проверкой равенства lock, ролями/
+dependencies/pins. Полные before/after patch bodies в обзор не копировались.
+Planning текст записывался UTF-8; при доставке через PowerShell pipeline JSON
+экранируется в ASCII, чтобы локальная console codepage не повреждала кириллицу.
+Evidence: python -B .tests/audit-sql-prototype-withdrawal.py.
+FIXLOG §143 — raw append; старые §142 и команды сохранены как история.
+Следующий этап IDE-080; рабочие функции/плагины не вырезаны, refs по-прежнему нет.

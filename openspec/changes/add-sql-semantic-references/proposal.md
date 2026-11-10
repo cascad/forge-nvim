@@ -2,47 +2,39 @@
 
 ## Why
 
-IDE-062: SQLLogicTest уже работает, но `gr`/Space l r не находят semantic references:
-SQLS 0.2.48+forge.1 не объявляет provider и не обрабатывает textDocument/references.
-Совпадение текста `id` смешивает разные таблицы и области видимости и не выполняет
-требование владельца к SQL в общей IDE.
+IDE-062: SQLLogicTest работает, но SQLS 0.2.48+forge.1 не предоставляет semantic
+references. Source RED сохранён в 341aba2/FIXLOG §142. Собственный resolver/index
+означал бы сопровождение существенного fork сервера.
+
+Решение владельца 2026-11-10: использовать готовые LSP/backend, не строить своё
+language ядро ради полноты. Потребность остаётся открытой; собственный подход
+отменён. Перед рефакторингом провести большой обзор фич и наслоений (IDE-080).
 
 ## What Changes
 
-- Семантические references таблиц, колонок и локальных SQL symbols через обычные
-  LSP mappings, quickfix и переход обратно в код, без отдельного UI/набора клавиш.
-- SQL scopes: FROM/JOIN, aliases, вложенные/correlated SELECT, CTE и derived tables,
-  projection aliases, обычные INSERT/UPDATE/DELETE. Одинаковые имена разрешаются
-  по области видимости и схеме выбранного подключения.
-- Поиск в SQL-файлах текущего workspace, включая закрытые файлы; didOpen/didChange
-  перекрывают текст на диске. Чужие workspace, comments/literals, неоднозначные
-  или неразрешённые имена не превращаются в совпадения по строке.
-- Расширение существующего закреплённого native SQLS SDK: уже имеющиеся AST,
-  schema cache и один LSP process на workspace. Установка остаётся явной.
-- Постоянные native SDK и настоящие editor E2E, source baseline без provider,
-  Windows/Ubuntu проверки, история и честные ограничения macOS/диалектов.
+- Убрать неподключённые собственные resolver/handler/index и только их tooling.
+  Историю и source evidence сохранить.
+- Убрать незавершённый acceptance case из рабочего набора; references остаются
+  ограничением, фича не объявляется PASS.
+- Сравнивать готовые backend по binding/scopes/CTE/DML, unsaved/workspace
+  references, диалектам, платформам и стоимости сопровождения.
+- При отсутствии подходящего готового решения оставить явное ограничение,
+  без grep fallback и самостоятельного language ядра.
 
 ## Capabilities
 
 ### New Capabilities
 
-- `sql-workflow`: ADDED IDE-SQL-9 semantic references. Capability уже описана
-  открытыми add-sql-edit-query-workflow/add-sql-test-workflow, но main baseline
-  ещё не содержит её. Новый ID дополняет их без переписывания IDE-SQL-1–8.
+- `sql-workflow`: будущее ADDED IDE-SQL-9 через готовый backend. Требование
+  невыполнено; IDE-SQL-1–8 и main baseline не переписываются.
 
 ### Modified Capabilities
 
-Нет. Main specs содержат только WezTerm/macOS installer; существующие SQL
-query/tests и их lifecycle не меняются.
+Нет. Текущие query/tests/LSP mappings сохраняются. Отменён подход реализации,
+а не потребность в references.
 
 ## Impact
 
-`scripts/sdk/sqls*`, `tests/e2e/sql_sdk.py`, explicit SQL preparation/container
-recipe и fixtures, LSP protocol boundary при необходимости, постоянные SQL
-references E2E/реестр, docs/PROBLEMS/FIXLOG/HISTORY/команды. Нового сервера,
-глобального Python runtime или фоновой установки SDK не требуется.
-
-Не заявляется универсальная поддержка произвольных vendor extensions или
-procedural SQL: неизвестная конструкция должна давать явное ограничение,
-а не правдоподобные неверные references. Это не снимает обычные SQL scopes/DML
-с критериев завершения этого change.
+Собственный неподключённый prototype/test tooling, planning/docs/history и
+registry. Product Lua, 67 pins и SQLS forge.1 не меняются. Будущая интеграция
+требует подтверждённого готового кандидата и обычных native/editor E2E.

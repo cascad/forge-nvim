@@ -11,9 +11,12 @@
 SQL symbol в текущем workspace через `gr`, Space l r и общую quickfix-навигацию.
 Результат MUST учитывать schema binding, области видимости и актуальный текст
 буферов; текстовые совпадения не являются semantic references.
+Поддержка MUST опираться на готовый поддерживаемый backend; отсутствие такой
+возможности документируется как ограничение, без собственного LSP/SQL-ядра.
 
 Платформы: все
-Проверка: tests/e2e/sql-references.test.lua (IDE-SQL-9), native SQLS SDK tests.
+Проверка: будущий editor E2E выбранного готового backend; исходный RED —
+Git 341aba2, FIXLOG §142. Текущая реализация требования отсутствует.
 
 #### Scenario: одноимённые колонки разных таблиц
 - **GIVEN** схема с users.id и accounts.id, несколько SQL-файлов и JOIN aliases

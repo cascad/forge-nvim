@@ -10,7 +10,18 @@
 
 Маршрут и приоритеты: [рабочий план nvim_forge](docs/IDE_ROADMAP.md).
 Для новых пунктов используем следующий свободный ID `IDE-xxx`; исходный
-симптом хранится здесь, этап и состояние — в плане. Следующий ID: `IDE-080`.
+симптом хранится здесь, этап и состояние — в плане. Следующий ID: `IDE-081`.
+
+## IDE-080 — большой обзор фич и наслоений перед рефакторингом
+
+2026-11-10, уточнение владельца: не изобретать LSP и костыли ради полной
+матрицы языков; перед рефакторингом повторить обзор возможностей, возможно
+убрать лишнее. Готовые инструменты предпочтительны, ограничения остаются явными.
+
+Нужны карта фич/плагинов/собственного glue/backports, пользовательская ценность,
+пересечения, цена и условия удаления. Сначала конкретные решения, затем
+изменения с E2E. Первичная инвентаризация — docs/FEATURE_REVIEW.md и полный
+docs/PLUGIN_INVENTORY.md; живые плагины и рабочие фичи пока не удаляются.
 
 ## IDE-076 — оформление рамок и заголовков панелей по примеру Termide
 
@@ -66,14 +77,15 @@ RainLib/lsp_sqls 5a3c530 имеет provider/SQLite, но columns references с�
 token names без schema binding, а project index не содержит column kind.
 Это не закрывает semantic references при одинаковых именах разных таблиц.
 Postgres Language Server текущего среза также не объявляет references.
-Нужен resolver с настоящей binding/scope моделью; подсветка/grep не заменяют
-требование. Исходники исследования сохранены в `.tests/sql-references-sources`.
+Нужен готовый backend с настоящей binding/scope моделью; подсветка/grep не
+заменяют требование. Исходники исследования — `.tests/sql-references-sources`.
 
-2026-11-10: change `add-sql-semantic-references`, IDE-SQL-9. Постоянный UI case
-на forge.1 дал целевой Windows RED: provider=false, raw backend error -32601,
-gr без quickfix. Начальный resolver поверх закреплённого AST имеет 4 native
-unit PASS Windows/Ubuntu; он ещё не подключён к SDK. CTE/DML/index/handler и
-положительный UI остаются обязательными. История §142; IDE-062 не закрыт.
+2026-11-10: source RED forge.1 подтверждён в 341aba2/§142: provider=false,
+raw -32601, gr без quickfix. Собственный resolver/index prototype отменён
+после уточнения владельца: это существенный private fork LSP. Код/tooling
+убраны из текущего дерева, рабочий SQLS forge.1 не меняется (§143). Change
+`add-sql-semantic-references` сохраняет IDE-SQL-9 для будущего готового backend;
+пока references остаются ограничением. IDE-062 не закрыт, текущий этап IDE-080.
 
 ## IDE-057 — Bash debug: выбор отдельного Linux backend для Windows
 

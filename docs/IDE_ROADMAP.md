@@ -22,7 +22,8 @@ IDE-001 параллельно ждёт диагностических данн�
 | Готово на Windows | IDE-062: SQLLogicTest в Tests | 12 native SDK checks и 12 editor UI PASS (§129–132): nearest/file/all, expected/fix/rerun, stop/output/panels; общий All и native paths исправлены. [Команды](SQL_TESTS.md). Ubuntu 12 SDK/12 UI PASS; Mac открыт |
 | Готово на Windows | IDE-075: lifecycle и Windows integration gate | Собственный process scope, 5 новых native E2E и 4 source RED; 111 checks PASS/2 POSIX SKIP, 365 unit/trace, 64 strict valid (§136). Ubuntu/Mac и причины IDE-073/074 открыты |
 | Готово Windows/Ubuntu | IDE-077/078/079: process lifecycle и observers | Ubuntu 119 PASS/1 Windows-only SKIP, 365 unit/trace; Windows 27 текущих checks PASS (§137–139). Product Lua/67 pins прежние; Mac/GUI открыты |
-| Текущий этап | Остаток SQL workflow, IDE-062 | Semantic references с реальными E2E; SQLS references provider отсутствует. Не подменять references текстовым поиском. Вложенный SLT error показывает точную location в Output; cross-file quickfix остаётся ограничением Neotest |
+| Текущий этап | IDE-080: обзор фич и наслоений | [Карта возможностей/слоёв](FEATURE_REVIEW.md), [все 67 plugins/dependencies](PLUGIN_INVENTORY.md). Оценить оставить/убрать/заменить, backports и цену; до этого runtime не рефакторить |
+| Отложено до готового backend | Остаток SQL workflow, IDE-062 | SQLS references provider отсутствует. Собственный binder/index/LSP fork отменён (§143); не подменять references grep и не объявлять полную SQL поддержку |
 | Затем | Остальная [матрица языков](LANGUAGE_MATRIX.md) | SQL references IDE-062, Bash DAP IDE-057; Mac/native и оставшиеся сценарии матрицы |
 | После функциональной матрицы | Упрощение архитектуры | Общее ядро, явные системные границы и setup; сокращение дублирования с сохранением E2E |
 
@@ -33,16 +34,15 @@ IDE-001 параллельно ждёт диагностических данн�
 SQL Tests Windows шаг сохранён в `eeae06c`; IDE-075 и его Windows regression
 gate завершены (§136). [Process lifecycle](../openspec/changes/fix-editor-descendant-lifetime/tasks.md)
 имеет 5/7 задач: Ubuntu часть проверена, Mac/native platform verification остаётся открытой.
-Работа возобновлена: SQL semantic references IDE-062; IDE-073/074 остаются
-отдельно. Владелец запустил Docker — доступные Ubuntu проверки выполняются
-через существующий engine без управления Desktop/WSL.
+Работа возобновлена; текущее уточнение владельца — IDE-080 review до рефакторинга.
+IDE-073/074 остаются отдельно. Доступные Ubuntu проверки используют уже
+запущенный engine без управления Desktop/WSL.
 
 SQL references — [отдельный change](../openspec/changes/add-sql-semantic-references/tasks.md):
-исходный Windows UI RED (-32601/provider=false), 4 native resolver unit PASS
-на Windows/Ubuntu (§142). Рабочий SQLS SDK остаётся forge.1, публичного provider
-ещё нет. Следующий шаг — завершить scopes/CTE/DML, workspace index и настоящий
-handler, затем UI GREEN и платформенная интеграция. Начальный resolver и его
-unit не заменяют этот результат; IDE-062 остаётся открытым.
+§142 сохраняет исходный RED и исследование собственного resolver. Этот подход
+отменён (§143): не строить своё language ядро ради полноты матрицы. SDK forge.1
+и прежний workflow сохранены. Возвращаться к интеграции только после выбора
+готового поддерживаемого backend; IDE-062/IDE-SQL-9 остаются открытыми.
 
 **Ограничение текущего шага:** полный Ubuntu IDE-047 — 43 PASS/1 FAIL/3 SKIP,
 653 checks. Cleanup/процессные проверки прошли; новый FAIL ожидания Git-read
@@ -358,6 +358,14 @@ Normal mode, прежние aliases сохранены:
 
 ## Этап 6. Упрощение и переносимость
 
+- [ ] IDE-080 — обязательный review до рефакторинга: карта всех фич/плагинов,
+  собственного glue/SDK/backports, полезность, пересечения, source/E2E evidence,
+  platform gaps и цена. Сначала конкретный список оставить/убрать/заменить,
+  затем небольшие изменения. Первичный срез — [FEATURE_REVIEW.md](FEATURE_REVIEW.md).
+- [ ] При расширении language workflow использовать готовые LSP/backend;
+  не делать собственный binder/index/server или существенный private fork.
+  Ограничения готовых tools явно сохранять в матрице.
+
 - [ ] IDE-010: выполнять переносимость на протяжении всех этапов;
   выделять системные границы по `PORTABLE_ARCHITECTURE.md` с e2e на активных ОС.
 - [ ] По исправленным сценариям разделить ответственность `ide`, Edgy,
@@ -418,8 +426,8 @@ normal-привязки. IDE-005/008 проверены на Windows/Ubuntu; Mac
 
 ## Текущая точка продолжения
 
-2026-11-09: работа возобновлена после Windows IDE-075 (§136), Docker доступен.
-Актуальный следующий пункт — SQL semantic references IDE-062 в таблице
+2026-11-10: после §142 владелец уточнил подход; собственный SQL prototype
+отменён (§143). Актуальный следующий пункт — IDE-080 feature/cost review в таблице
 ближайшего маршрута выше. Следующие абзацы сохраняют контекст прежних этапов;
 их исторические результаты не заменяют текущую platform matrix.
 

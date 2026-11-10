@@ -6956,3 +6956,49 @@ IDE-062 и задачи 2/3 не закрыты. Mac/ARM64/GUI/внешние DB
 **Файлы:** change/spec, scripts/sdk/sqls-references, sql-references.test.lua и
 fixtures, check_sql_references.py, sql_project.lua/registry, E2E/SQL docs,
 PROBLEMS/IDE_ROADMAP/HISTORY/AGENT_COMMANDS.
+
+## 143. SQL prototype отменён; обзор фич до рефакторинга
+
+**Дата:** 2026-11-10. **Основание:** уточнение владельца, IDE-062/IDE-080.
+Спека: IDE-SQL-9 (ADDED, пока не реализовано). Main specs не менялись.
+
+**Что было/причина.** После §142 развивался собственный semantic resolver,
+scopes и workspace index внутри SQLS. Даже при одном существующем процессе
+это означало бы сопровождение существенного private fork language backend.
+Владелец уточнил приоритет: готовые LSP/tools, без своего language ядра ради
+полноты; перед рефакторингом повторить большой обзор возможностей и наслоений.
+
+**Изменение.** Собственный неподключённый prototype и только его tooling/
+fixtures/незавершённый registry case убраны из текущего дерева. Рабочий SDK
+forge.1 не пересобирался; product Lua и 67 pins не изменялись. Общий SQL helper
+и registry возвращены к 0e5888e. Source 341aba2/артефакты §142 сохранены,
+три незакоммиченных Go файла сохранены вместе с остальным prototype в ignored
+SHA snapshot .tests/sql-references-withdrawn-20261110. Те новые handler/index
+файлы не были проверены или подключены в SDK. Change пересогласован под готовый
+backend, references остаются отсутствующей фичей, IDE-062 не закрыт.
+
+**Обзор.** IDE-080 включён перед рефакторингом. FEATURE_REVIEW содержит карту
+фич/слоёв/кандидатов и 5 plugin backports (11 patch files); PLUGIN_INVENTORY —
+все 67 plugins/dependencies с ролью, прямыми dependencies и pins. Реальный
+isolated Forge snapshot 3322136536400: 67 имён совпали с lock, idle loaded 28,
+startup installs 0; это инвентарь, не benchmark. Повторяемая диагностическая
+команда находится в tests/diagnostics/inspect-plugins.lua. Рабочие плагины/
+пользовательские фичи не удалены, upstream status/performance/окончательные
+решения ещё требуют следующего прохода.
+
+**Проверка/e2e.** Windows прежний SQL query UI 20 PASS, SDK readiness/variant
+2 PASS, unit/trace 365 PASS, strict 65/65. Live inventory завершился штатно,
+scope active_after=0. Audit sql-prototype-withdrawal-evidence.json сверяет
+снимок, все текущие SDK payload SHA и неизменные product Lua/pins/patch metadata,
+точное равенство helper/registry 0e5888e и raw append-only history prefix.
+Ubuntu в этом withdrawal-шаге не перезапускался; соответствующий runtime/helper
+равен ранее проверенному 0e5888e. Mac/GUI не проверены. Docker/WSL lifecycle
+и внешние настройки не менялись.
+
+**Вывод.** Готовность language фичи не оправдывает собственную реализацию
+подсистемы за пределами назначения IDE-конфига. Явный пробел готового backend
+остаётся в матрице; следующий шаг — большой feature/cost review и конкретные
+решения до runtime изменений.
+**Файлы:** CLAUDE/PROBLEMS, change, FEATURE_REVIEW/PLUGIN_INVENTORY/roadmap/
+architecture/SQL/E2E docs, удалённый prototype/tooling, helper/registry,
+inspect-plugins.lua, HISTORY/AGENT_COMMANDS.

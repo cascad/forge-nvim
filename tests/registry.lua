@@ -46,7 +46,6 @@ return {
   { file = 'tests/e2e/rust-language.test.lua', suite = 'e2e', timeout = 900 },
   { file = 'tests/e2e/bash-language.test.lua', suite = 'e2e', timeout = 420 },
   { file = 'tests/e2e/sql-language.test.lua', suite = 'e2e', timeout = 900 },
-  { file = 'tests/e2e/sql-references.test.lua', suite = 'e2e', timeout = 420 },
   { file = 'tests/e2e/sql-sdk.test.lua', suite = 'e2e', timeout = 90 },
   { file = 'tests/e2e/sql-test-sdk.test.lua', suite = 'e2e', timeout = 90 },
   { file = 'tests/e2e/sql-tests.test.lua', suite = 'e2e', timeout = 420 },
