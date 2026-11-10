@@ -4447,3 +4447,72 @@ before raw prefix SHA/size .tests/code-window-history-before.json. FIXLOG §155
 и diary §68 дописаны без изменения прежних байтов; HISTORY ссылка добавлена.
 Production/regression suites не повторялись без изменения runtime.
 Mac/GUI непроверен; IDE-088 зарегистрирован и ожидает отдельный assertion RED/fix.
+
+
+## 69. IDE-088 Windows fix и IDE-087 repeat, 2026-11-10
+
+F:/repo/forge-nvim, PowerShell login=false. OpenSpec 1.13.2 с F: npm cache:
+context --json; new change fix-code-focus-window-classification;
+status / instructions proposal/specs/design/tasks/apply --change ... --json.
+IDE-PANEL-12 (ADDED), main specs не синхронизируются, Mac/Ubuntu gates открыты.
+
+После first-pass ошибки F7 прочитаны keymaps.lua и ide/buffers.lua.
+Полный original source без изменения worktree получен Python subprocess
+git archive fc68403:nvim_forge, tarfile.extractall(filter='data') в проверенный
+F:/repo/forge-nvim/.tests/ide088-baseline-config; SHA manifest
+.tests/ide088-baseline-source.json. Corrected RED:
+```powershell
+$env:FORGE_E2E_CONFIG_SOURCE='F:/repo/forge-nvim/.tests/ide088-baseline-config'
+& $forgeNvim -l tests/e2e/code-focus.test.lua > .tests/ide088-windows-red.txt 2>&1
+```
+Override задан только в том exec; в следующем процессе его нет.
+Три ожидаемых assertion RED. Первый red-harness и first-pass сохранены отдельно:
+они содержат неверное ожидание создания main от F7 и не являются product RED.
+
+Общий prefix: TEMP/TMP/TMPDIR=F:/repo/forge-nvim/.tests/tmp,
+NVIM_LOG_FILE=$env:TEMP/ide088-windows.log, GOMAXPROCS=2, GOFLAGS=-p=2;
+. ./scripts/lib/nvim-sdk.ps1; $forgeNvim=Get-ForgeNvim (Get-Location).Path.
+Финальный Windows запуск:
+```powershell
+foreach ($forgeSuite in @('code-focus','dap-output-policy','dap-output','debug-panels','test-runner','python-language','node-language','rust-language')) {
+    $env:FORGE_PYTHON_CASE='debug default/project'
+    $env:FORGE_NODE_CASE='default F5'
+    $env:FORGE_RUST_CASE='F5 default'
+    & $forgeNvim -l "tests/e2e/$forgeSuite.test.lua" > ".tests/ide088-windows-$forgeSuite.txt" 2>&1
+    if ($LASTEXITCODE -ne 0) { break }
+}
+powershell -NoProfile -File scripts/test.ps1 quick > .tests/ide088-windows-quick.txt 2>&1
+python -B .tests/audit-ide088.py
+```
+22 PASS, 16 native profiles/scopes empty/API errors none, 63 sources/profile.
+Quick 353 checks/13 files. Runtime diff только activities predicate;
+test fixtures: реальный собственный nvim PTY worker/float, без fake DAP state.
+
+Следующий Ubuntu вызов (до container create не дошёл):
+```powershell
+docker compose -f tests/containers/compose.yaml run --rm --no-deps --entrypoint bash -e GOMAXPROCS=2 -e GOFLAGS=-p=2 ubuntu -lc 'set -eu; for suite in code-focus dap-output-policy dap-output debug-panels test-runner python-language node-language rust-language; do FORGE_PYTHON_CASE="debug default/project" FORGE_NODE_CASE="default F5" FORGE_RUST_CASE="F5 default" nvim -l "tests/e2e/$suite.test.lua" > ".tests/ide088-ubuntu-$suite.txt" 2>&1 || { tail -n 18 ".tests/ide088-ubuntu-$suite.txt"; exit 1; }; tail -n 3 ".tests/ide088-ubuntu-$suite.txt"; done' > .tests/ide088-ubuntu-run.txt 2>&1
+```
+Read-only Docker version тоже не подключился; Desktop/WSL не запускались.
+Read-only Get-CimInstance Win32_Process фильтр com.docker.% / Docker Desktop.exe,
+поля Name/ProcessId/ParentProcessId/CreationDate, mid/after Windows snapshots на F:.
+Host Docker logs через Python pathlib, bounded timestamp filter без auth/settings.
+Get-WinEvent Security ID4688 и Sysmon metadata не дал пригодного caller evidence.
+Дополнительный полный CIM audit 314 процессов не подтвердил пользовательских
+stale edges; kernel inversions не признаны доказательством повторного PID.
+
+Прочитан pinned .tests/neovim-native/v0.12.2-src/src/nvim/os/proc.c и event/proc.c;
+git -C source status показывает только прежний ConPTY patch. Web primary:
+Microsoft Win32_Process и Process Handles/Identifiers; upstream raw
+neovim/master/src/nvim/os/proc.c также без creation-time check. Primary links
+в WINDOWS_PROCESS_DIAGNOSTICS, гипотеза отделена от подтверждённой причины.
+Чужие процессы не завершались для эксперимента, PID reuse не провоцировался.
+
+Strict validation:
+```powershell
+npx.cmd --yes @fission-ai/openspec@1.13.2 validate --all --strict --no-interactive > .tests/ide088-openspec.txt 2>&1
+git diff --check
+```
+Raw append §156/157, diary §69: before size/SHA .tests/ide088-history-before.json;
+старые bytes и additions-only diff проверяются. Коммит явно по связанным файлам,
+без SDK/temp/lock/секретов и без push. Новые массовые Windows повторы отложены
+до проверки native process ancestry, Ubuntu не объявлен PASS.

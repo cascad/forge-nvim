@@ -180,3 +180,18 @@ focus-only predicate требует отдельного fix и постоянн
 Activities tool list участвует в session cleanup; менять его целиком ради
 focus нельзя. Guard marker/Edgy/winfix и создание split сохраняются раздельно.
 Runtime/pins/SDK в диагностическом change не менялись. Границы — FIXLOG §155.
+
+
+## IDE-088 — focus-only Windows fix и четвёртый путь F7
+
+Activities ordinary predicate теперь делегирует state.is_main_window и
+сохраняет прежний SQL/legacy tool filter. Только Windows: 3 постоянных
+source RED → PASS + 19 прежних checks, 16 clean profiles (§156).
+Ubuntu повтор не стартовал из-за второго IDE-087 (§157), Mac открыт.
+Find/create/guard/cleanup остаются раздельными.
+
+Дополнение обзора: F7 использует ide.buffers.is_editor_window и свою
+Diffview-aware политику, не создаёт окна. Space w 0 использует state.
+Нельзя распространять совпадение двух predicates на все focus paths.
+Первоначальная ошибка нового теста о создании через F7 исправлена и записана
+в §156; исходный диагностический F7/md сценарий уже имел созданный main.

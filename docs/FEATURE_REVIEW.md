@@ -371,7 +371,8 @@ language/test roots, interpreter/tools и save/format разобраны в
   IDE-081/082/083/084 уже выполнены; capture IDE-085 готов, причина открыта.
   IDE-086 Output policy проверен на Windows/Ubuntu (§153).
   Поиск окна кода разобран: [CODE_WINDOW_REVIEW](CODE_WINDOW_REVIEW.md),
-  по 5 native profiles Windows/Ubuntu. Следующий fix — IDE-088 focus в PTY;
+  по 5 native profiles Windows/Ubuntu. IDE-088 исправлен на Windows: 22 checks;
+  Ubuntu повтор остановлен отсутствием engine (IDE-087), Mac открыт.
   широкое объединение find/create/relocate отклонено по разным обязанностям.
   Удаления optional UI по-прежнему требуют выбора.
   Project/session restart и uniform interpreter/root policies требуют отдельных

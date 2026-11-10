@@ -280,6 +280,8 @@ Python реализован и проверен 2026-11-03; после возо�
 | §153 | [Debug Output: общий выбор канала и сохранение PTY](../nvim_forge/FIXLOG.md#153-debug-output-общий-выбор-канала-и-сохранение-pty) |
 | §154 | [Docker: остановка backend до container run](../nvim_forge/FIXLOG.md#154-docker-остановка-backend-до-container-run) |
 | §155 | [Поиск окна кода: native обзор и разные обязанности](../nvim_forge/FIXLOG.md#155-поиск-окна-кода-native-обзор-и-разные-обязанности) |
+| §156 | [Focus-only: terminal и float не являются кодом](../nvim_forge/FIXLOG.md#156-focus-only-terminal-и-float-не-являются-кодом) |
+| §157 | [Docker: повтор и гипотеза native ancestry](../nvim_forge/FIXLOG.md#157-docker-повтор-и-гипотеза-native-ancestry) |
 
 ## Как читать и дополнять
 

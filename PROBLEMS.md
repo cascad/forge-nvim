@@ -20,10 +20,12 @@
 activities.find_code_window отвергает лишь nofile/prompt и часть tool filetypes,
 поэтому принимает terminal (и отдельный floating file fixture). State terminal
 отвергает. Artifacts Windows 25722298083800 / Ubuntu 963889831727.
-Probe — tests/diagnostics/code-window.lua; это наблюдение, не product fix.
-Далее постоянный regression RED и согласованная focus-only классификация;
-создание split, guard relocation и session cleanup сохраняются отдельно.
-[Обзор](docs/CODE_WINDOW_REVIEW.md), FIXLOG §155.
+Probe — tests/diagnostics/code-window.lua, обзор §155. Fix §156: ordinary
+predicate state + прежний tool filter, постоянные 3 source RED → Windows PASS;
+22 Windows checks и 16 clean profiles. Ubuntu gate открыт: engine исчез во
+время Windows (§157); Mac непроверен. F7 только фокусирует существующее окно,
+Space w 0 может создать main. Создание/guard/session cleanup не объединены.
+Change fix-code-focus-window-classification; [обзор](docs/CODE_WINDOW_REVIEW.md).
 
 ## IDE-087 — Docker backend исчез во время Windows E2E
 
@@ -33,6 +35,15 @@ Probe — tests/diagnostics/code-window.lua; это наблюдение, не p
 не дошёл. Команд управления Desktop/WSL в этом шаге не было; инициатор и
 первопричина не установлены. После включения владельцем 19 Ubuntu checks
 прошли, что не является исправлением остановки. Факты/границы — FIXLOG §154.
+
+Повтор 17:45:10 во время Windows IDE-088: тот же build exit status 15 и
+исчезновение всех Docker processes, следующий compose не подключился.
+Совпало с cold UI qa! (root 700); signal=0, scope terminated=false. В native
+Neovim proc.c ancestry основана на PPID без creation-time check; возможен
+ложный потомок после PID reuse, но точный caller/target не записан.
+[Расследование и ограничения](docs/WINDOWS_PROCESS_DIAGNOSTICS.md), §157.
+До проверки механизма агент не провоцирует повтор массовыми запусками и не
+просит бесконечно перезапускать Desktop. Причина пока не объявлена установленной.
 
 ## IDE-085 — Windows E2E: единичный SIGTERM после обычного qa!
 

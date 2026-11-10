@@ -7798,3 +7798,108 @@ macOS/GUI, полное autosave, multi-tab/unsaved restore, настоящий 
 **Файлы:** tests/diagnostics/code-window.lua / README, CODE_WINDOW_REVIEW,
 PANEL_OWNERSHIP_REVIEW, FEATURE_REVIEW, IDE_ROADMAP, PROBLEMS/HISTORY,
 AGENT_COMMANDS и test-only OpenSpec change.
+
+
+## 156. Focus-only: terminal и float не являются кодом
+
+2026-11-10, IDE-088, change fix-code-focus-window-classification.
+Спека: IDE-PANEL-12 (ADDED). Windows проверен; Ubuntu/macOS gates открыты.
+
+**Проблема.** Настоящий PTY стоит первым, normal code main уже существует.
+F7 переводит в main; Space m d открывает Debug и возвращает фокус в PTY.
+При отсутствии main focus-only поиск выбирает terminal или floating файл.
+
+**Причина.** Activities принимал любые buftype кроме nofile/prompt и не
+проверял floating. State уже имел ordinary main predicate. При этом find_main
+может создать split, поэтому его нельзя использовать для пассивного focus.
+
+**Изменение.** Только is_code_window в activities делегирует проверку
+state.is_main_window, сохраняя прежний tool_filetypes filter. Таблицы cleanup,
+guard/markers/winfix, создание split, retry timers, F7 и SDK не меняются.
+Нового resolver/менеджера/плагина нет: runtime diff 4 additions/4 deletions.
+
+**Уточнение теста/обзора.** Первоначальный новый E2E ошибочно ожидал создание
+main от F7, поэтому его первый RED/зелёный пилот падал на неверной предпосылке.
+Это не product причина. Source показал четвёртый путь: F7 использует
+ide.buffers.is_editor_window и отдельную Diffview-aware политику, только
+существующие окна. Space w 0 использует state.focus_main и может создать main.
+План/spec/test исправлены, runtime F7 не менялся. CODE_WINDOW_REVIEW дополнен
+без переписывания §155. Исходная диагностика F7/md уже имела созданный main.
+
+**Проверка/RED.** Corrected test replay на полной Git config fc68403 в
+.tests/ide088-baseline-config, без отката рабочей сборки: 26656426190700 —
+именно Debug View focus, 26666259427800 — terminal-only, 26670961816600 —
+float-only. Все три ожидаемых assertion RED, native exit/signal=0.
+По 63 runtime/pin/patch source сравнивались с Git archive baseline;
+test source совпадает с финальным. Ошибочные harness логи сохранены отдельно
+в ide088-windows-red-harness / first-pass, не считаются доказательством фикса.
+
+**Проверка/итог Windows.** code-focus 3 PASS, dap-output-policy 3,
+dap-output 4, debug-panels 4, test-runner 5, Python default/project 1,
+Node default/project 1, Rust default F5 1: всего 22 checks.
+16 native editor profiles: exit/signal=0, api_errors=[], native quit chain,
+own scopes empty, 63 runtime/pin/patch sources совпадают. PTY process/job/window
+identity сохраняется; focus-only без кандидата ничего не создаёт, Space w 0
+создаёт main и сохраняет terminal/preview. Существующие реальные адаптеры/
+stdout/history/tests проверены прежними targeted suites. Windows quick:
+353 checks/13 files. Сводка .tests/ide088-evidence.json, audit-ide088.py.
+
+**Ограничение Ubuntu.** Engine исчез во время Windows, следующий compose не
+подключился, до container create не дошёл (§157). Эти 22 checks на Ubuntu не
+запускались; старый review PASS не подменяет этот gate. Mac/GUI непроверен.
+Change не архивируется; причина IDE-087 приоритетна до нового массового повтора.
+
+**Вывод.** Общее правило классификации используется без объединения find,
+create и relocate. Дополнительные SQL/legacy исключения сохранены; вся SQL
+матрица повторно не объявляется проверенной. Scope результата — Windows.
+
+**Файлы:** ide/activities.lua, tests/e2e/code-focus.test.lua / registry,
+change, QUICKSTART, CODE_WINDOW_REVIEW, FEATURE_REVIEW, ROADMAP,
+PROBLEMS/HISTORY/AGENT_COMMANDS.
+
+## 157. Docker: повтор и гипотеза native ancestry
+
+2026-11-10. IDE-087, диагностика; причина ещё не установлена, SDK/Docker fix нет.
+
+**Проблема.** Повторная остановка Docker в 17:45:10 MSK во время Windows
+suite, до следующего обращения compose в 17:47:41. Backend снова записал
+com.docker.build exit status 15 и закрыл API. Desktop/WSL команды агентом
+не выполнялись. После mid-Windows CIM snapshot Docker processes исчезли.
+
+**Факты.** В 17:42:01 native CIM показал backend 21656/parent 22420,
+backend 24840/parent 21656, build 20664/parent 24840 (создание около 17:12).
+Исходный parent 22420 не исследовался в этом снимке: нельзя утверждать,
+что он уже завершился или был переиспользован.
+Событие совпало по wall time с cold UI profile 26725438645000, root PID 700.
+QuitPre/VimLeavePre/VimLeave и exit/signal=0; cleanup не отправлял сигнал,
+scope active_before=0, terminated=false. Это исключает прямое завершение
+Job Object данным helper в этот момент, но не native teardown jobs в Neovim.
+Spawn observer пока сохраняет argv без PID CLI, точный native kill target неизвестен.
+
+**Проверяемая гипотеза.** В pinned Windows Neovim os/proc.c рекурсивный
+tree kill сопоставляет только ParentProcessId, без creation-time check.
+Microsoft документирует stale ParentProcessId при PID reuse. Возможен
+ложный потомок: новый CLI получает номер старого родителя долгоживущего
+процесса. Проверена primary документация и текущий upstream source.
+Это источник конкретной гипотезы, не доказательство механизма двух сбоев.
+ConPTY patch этот файл не менял: source status только pty_proc_win.c.
+
+**Действия/ограничения.** Сохранены .tests/ide088-docker-evidence.json,
+mid/after process snapshots, host timestamps, родство/creation dates,
+native source SHA и shutdown. Read-only audit 314 текущих процессов не нашёл
+подтверждённых пользовательских stale edges. Две kernel inversions
+Secure System/Registry относительно System не выдаются за PID reuse.
+Security/Sysmon чтение не дало пригодного caller trace, отсутствие результата
+не доказывает полноту или включённость аудита.
+Не выполнять массовый PID churn и не просить бесконечный restart Desktop.
+Следующий шаг — read-only/dry-run ancestry/creation-time evidence, затем
+bounded собственные fixtures и отдельный SDK change, если механизм доказан.
+Текущий SDK не менялся по одной гипотезе, Linux/macOS процессный backend прежний.
+
+**Вывод.** Оба отказа реальны; временная корреляция с тестами требует
+расследования, а не заявления «агент не трогает Docker, значит не связан».
+Команд Desktop stop не было; косвенная связь через native job teardown
+пока не исключена и не доказана. Ubuntu gate IDE-088 остаётся открытым.
+
+**Файлы:** docs/WINDOWS_PROCESS_DIAGNOSTICS.md с primary links и планом,
+PROBLEMS/ROADMAP/HISTORY/AGENT_COMMANDS. Никаких runtime Docker/WSL изменений.

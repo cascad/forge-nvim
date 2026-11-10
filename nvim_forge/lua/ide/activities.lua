@@ -152,11 +152,11 @@ function M.focus_window(ft, predicate)
 end
 
 local function is_code_window(win)
-    if not vim.api.nvim_win_is_valid(win) then return false end
+    -- spec: IDE-PANEL-12. Общая классификация, без создания main split.
+    if not require('ide.state').is_main_window(win) then return false end
     local buf = vim.api.nvim_win_get_buf(win)
-    local ft = vim.bo[buf].filetype
-    local bt = vim.bo[buf].buftype
-    return not tool_filetypes[ft] and bt ~= "nofile" and bt ~= "prompt"
+    -- SQL/legacy исключения также нужны session cleanup: сохраняем таблицу.
+    return not tool_filetypes[vim.bo[buf].filetype]
 end
 
 local function find_code_window()
