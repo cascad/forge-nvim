@@ -1,5 +1,36 @@
 # Диагностика native terminal и CLI
 
+## IDE-080: трасса DAP/panel ownership
+
+После явной подготовки editor/DAP SDK можно запустить существующий E2E
+с observer, сохранив настоящие API, assertions и return values:
+
+```powershell
+$env:TEMP='F:/repo/forge-nvim/.tests/tmp'
+$env:TMP=$env:TEMP; $env:TMPDIR=$env:TEMP
+$env:NVIM_LOG_FILE="$env:TEMP/panel-review.log"
+$env:GOMAXPROCS='2'; $env:GOFLAGS='-p=2'
+. ./scripts/lib/nvim-sdk.ps1
+$forgeNvim=Get-ForgeNvim (Get-Location).Path
+& $forgeNvim -l tests/diagnostics/trace-panels.lua tests/e2e/debug-panels.test.lua
+```
+
+Из корня checkout Ubuntu/macOS: `nvim -l tests/diagnostics/trace-panels.lua
+tests/e2e/debug-panels.test.lua` (одна команда). Вместо debug-panels можно
+передать dap-output или другой repo `tests/e2e/*.test.lua`. Для одного Rust
+case задать `FORGE_RUST_CASE='Rust F5 default Cargo preLaunch build'`; без
+фильтра выполнится весь соответствующий language suite. Это не подготовка
+зависимостей и не загрузка tools на старте. Docker/Windows тяжёлые наборы
+на одном хосте запускать последовательно.
+
+В обычном editor artifact дополнительно сохраняются panel-trace.json и
+trace-panels.lua. Event limit=4096, dropped/capture_error проверять явно.
+Подключение после editor.start и LazyLoad не гарантирует захват всех ранних
+или сохранённых ранее function references. Fixture listeners forge_e2e
+отделять от production. Observer не заменяет E2E и не измеряет CPU/скорость.
+Результаты текущего review и границы —
+[PANEL_OWNERSHIP_REVIEW](../../docs/PANEL_OWNERSHIP_REVIEW.md).
+
 IDE-027: Neovim Windows 0.12.2 падает в pty_proc_resize при resize
 завершающегося ConPTY. Чистый probe не загружает Forge и плагины; запускает
 настоящий terminal echo, ждёт job exit, возвращается в код и закрывает буфер.

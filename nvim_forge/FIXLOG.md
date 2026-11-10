@@ -7056,3 +7056,55 @@ sources/config/SDK boundary/shutdown и raw history prefix.
 затем сокращение слоёв. Review и выбор runtime изменений ещё не завершены.
 **Файлы:** FEATURE_REVIEW/PLUGIN_INVENTORY/IDE_ROADMAP/PROBLEMS,
 inspect-plugins.lua, HISTORY/AGENT_COMMANDS; ignored feature-review-followup-evidence.
+
+## 145. DAP и панели: карта ответственности перед рефакторингом
+
+**Дата:** 2026-11-10. **Область:** IDE-080, review без изменения runtime.
+
+**Проблема.** Перед упрощением нужно отличить пересекающиеся правила от
+разных владельцев окон, размещения, вывода и процессов. Большой dap.lua и
+повторные запросы show сами по себе не доказывают лишний lifecycle.
+
+**Причина сложности.** state/registry выбирают активный компонент слота;
+DAP UI создаёт окна, Edgy размещает их, native runInTerminal создаёт PTY.
+activities закрывает UI отдельно от stop, panel_guard восстанавливает окна
+файлов/session state. Эти обязанности различны. Найдены неодинаковые пути
+выбора Output (launch/legacy Dv/Space w c) и критерии поиска code window.
+Это кандидаты для согласования, не доказанная причина пользовательского сбоя.
+
+**Изменение.** Добавлен PANEL_OWNERSHIP_REVIEW с картой ролей, source links,
+наблюдениями, покрытием и порядком малых изменений. Диагностический
+trace-panels.lua запускает существующий E2E и наблюдает public calls/events
+без подмены данных/return values. Он не форсирует загрузку модулей; ранние
+вызовы/прежние references могут не наблюдаться. Fixture listeners forge_e2e
+не считаются production managers. Runtime, pins, SDK и assertions не менялись.
+
+**Проверка/e2e.** Неизменённые debug-panels 4, dap-output 4 и только Rust
+default F5 1: по 9 PASS Windows/Ubuntu, без SKIP. Windows artifacts
+6913054473300/7211555508800/7233218115600; Ubuntu
+6930111478448/6958233808195/6981442645497. Все шесть editor exit=0,
+scope ok/empty, trace dropped=0; source observer сохранён в каждом artifact.
+Проверены все 78 tracked config sources, включая исторический FIXLOG snapshot.
+Первый Windows observer source предшествует idempotent save guard; наблюдаемый
+Lua chunk одинаков во всех шести, сохранённые исходники не переписывались.
+
+В Go output-наборе по пять запусков/очисток REPL на ОС, а show 43/45 и
+реальных dapui.open 6/7. В panel-наборе show 14, dapui.open 6 на каждой ОС;
+28 вызовов controls.restore не означают 28 перестроений, при отсутствии zoom
+это ранний return. В Rust первый PTY приходит через terminal callback,
+а не component.open. Эти counts не эталоны и не performance benchmark.
+
+Windows unit/trace: 15 файлов, 365 checks PASS; strict OpenSpec 65/65.
+Evidence audit: .tests/audit-panel-review.py, .tests/panel-review-evidence.json;
+проверены config/observer/runtime boundary, shutdown и raw prefix истории.
+Docker использовался только как уже запущенный engine; тяжёлые ОС-прогоны
+шли последовательно. Mac/GUI/физические клавиши, session restore и полный
+Python/Node/Rust regression этим срезом не проверены.
+
+**Вывод.** Сначала единая проверяемая политика Output, затем только совпадающие
+части поиска code window. PTY/process/output history не объединять с видимостью
+панели; новый manager/backend не нужен. Это план до runtime change, а не
+выполненный рефакторинг. IDE-080 и выбор дополнительного UI остаются открыты.
+
+**Файлы:** PANEL_OWNERSHIP_REVIEW, FEATURE_REVIEW, IDE_ROADMAP, PROBLEMS,
+tests/diagnostics/trace-panels.lua и README, HISTORY/AGENT_COMMANDS.

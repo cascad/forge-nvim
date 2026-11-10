@@ -3626,3 +3626,68 @@ native artifacts, private overrides/sources, source hashes/contexts, metrics
 nvim -l tests/run.lua unit trace (365 PASS),
 npx.cmd --yes @fission-ai/openspec@1.13.2 validate --all --strict (65/65),
 git diff --check; FIXLOG §144 raw append, staged paths только явные.
+
+## 59. DAP/panel ownership review, 2026-11-10
+
+Назначение: source review и неизменённые real editor E2E с ограниченным
+observer; runtime/pins/SDK не менялись. Полный разбор — PANEL_OWNERSHIP_REVIEW.
+
+Чтения: rg --files; rg -n для DAP/panel/restore/listeners; Get-Content с
+Skip/First для ide/state, dap, controls, activities, plugins/dap/dap-ui/edgy,
+forge/panel_guard/dap_output и существующих E2E. Исторические журналы читались
+частями, затем дописаны raw bytes; старый prefix проверен SHA256.
+
+Windows: TEMP/TMP/TMPDIR=.tests/tmp на F:, NVIM_LOG_FILE там же.
+Выбранный SDK получен через scripts/lib/nvim-sdk.ps1, GOMAXPROCS=2,
+GOFLAGS=-p=2, CARGO_BUILD_JOBS=2, RAYON_NUM_THREADS=2.
+FORGE_E2E_CONFIG_SOURCE указывает на настоящий repo nvim_forge.
+
+```powershell
+& $forgeNvim -l tests/diagnostics/trace-panels.lua tests/e2e/debug-panels.test.lua
+& $forgeNvim -l tests/diagnostics/trace-panels.lua tests/e2e/dap-output.test.lua
+$env:FORGE_RUST_CASE='Rust F5 default Cargo preLaunch build'
+& $forgeNvim -l tests/diagnostics/trace-panels.lua tests/e2e/rust-language.test.lua
+```
+
+Логи: .tests/review-dap-windows-panels.txt, -output.txt, -rust.txt.
+Результат: 4+4+1 PASS. Фильтр Rust означает один case, не весь набор.
+
+Engine readiness: Python subprocess docker info --format {{.ServerVersion}},
+deadline 7s; code=0, server=28.5.1. Это чтение, Desktop/WSL lifecycle не менялся.
+Ubuntu — один sequential run с теми же suite/фильтром и CPU limits:
+```powershell
+docker compose -f tests/containers/compose.yaml run --rm --entrypoint bash ubuntu .tests/review-dap-run-20261110.sh
+```
+Ignored shell script вызывает nvim -l tests/diagnostics/trace-panels.lua для
+debug-panels, dap-output и filtered rust-language; логи
+.tests/ubuntu/review-dap-ubuntu-debug-panels.txt, -dap-output.txt,
+-rust-language.txt. Результат 4+4+1 PASS. Чужие процессы/engine не останавливали.
+
+Что получено: обычные editor snapshots/config/logs/shutdown, дополнительно
+panel-trace.json и точный source observer. Trace enter/return/calls и window
+events ограничен 4096; dropped=0. Это не полная call graph/CPU profiler.
+Реальные process/session/output данные не подменялись. Повторный show отличается
+от component.open, а controls.restore без zoom сразу возвращается.
+
+Проверки и артефакты:
+```powershell
+python -B .tests/audit-panel-review.py
+& $forgeNvim -l tests/run.lua unit trace
+npx.cmd --yes @fission-ai/openspec@1.13.2 list --json
+npx.cmd --yes @fission-ai/openspec@1.13.2 validate --all --strict
+git diff --check
+git diff --stat
+git status --short
+```
+Python audit сопоставляет 6 traces/исходники и 78 config files, native exit и
+scope cleanup, runtime boundary и прежний prefix FIXLOG/этого diary. Первая
+попытка сравнения raw checkout CRLF с git-show LF дала audit assertion на
+COOKBOOK, без изменения config. Сравнение исправлено на raw config-source и
+неизменённый checkout; Git отдельно подтверждает отсутствие product diff.
+Это ошибка проверки, не редактора. Evidence: .tests/panel-review-evidence.json.
+Unit/trace 365 PASS, OpenSpec 65/65; npm cache и temp на F:.
+Runtime review не закрывает Mac/GUI/restore или все language cases.
+
+Коммит: git add только перечисленных review/diagnostic/history paths,
+git diff --cached --check, git diff --cached --numstat, git commit,
+git status --short; без push. Никакие рабочие фичи этим не удаляются.

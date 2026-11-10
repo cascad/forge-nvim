@@ -44,6 +44,12 @@ Windows/Ubuntu. Idle/text-buffer snapshots не являются общим star
 рабочие фичи пока не удалены, выбор UI ещё обсуждается. Native fzf readiness
 выделен в IDE-081: loaded-флаг и рабочий picker не доказывают native sorter.
 
+DAP/panels разобраны в [карте ответственности](PANEL_OWNERSHIP_REVIEW.md):
+по 9 неизменённых native E2E Windows/Ubuntu с trace; repeated show не равен
+recreate. Кандидаты — единая политика Output и совпадающие части поиска окна
+кода. PTY/session cleanup остаётся отдельной ответственностью. Runtime не
+переписывался; выбор вторичных UI и оставшаяся часть общего review открыты.
+
 SQL references — [отдельный change](../openspec/changes/add-sql-semantic-references/tasks.md):
 §142 сохраняет исходный RED и исследование собственного resolver. Этот подход
 отменён (§143): не строить своё language ядро ради полноты матрицы. SDK forge.1

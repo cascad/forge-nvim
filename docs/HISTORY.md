@@ -269,6 +269,7 @@ Python реализован и проверен 2026-11-03; после возо�
 | §142 | [SQL references: исходный RED и начальный resolver](../nvim_forge/FIXLOG.md#142-sql-references-исходный-red-и-начальный-resolver) |
 | §143 | [SQL prototype отменён; обзор фич до рефакторинга](../nvim_forge/FIXLOG.md#143-sql-prototype-отменён-обзор-фич-до-рефакторинга) |
 | §144 | [Review: upstream patches, частный UI и native fzf gap](../nvim_forge/FIXLOG.md#144-review-upstream-patches-частный-ui-и-native-fzf-gap) |
+| §145 | [DAP и панели: карта ответственности перед рефакторингом](../nvim_forge/FIXLOG.md#145-dap-и-панели-карта-ответственности-перед-рефакторингом) |
 
 ## Как читать и дополнять
 

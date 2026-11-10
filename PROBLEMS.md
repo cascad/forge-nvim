@@ -40,6 +40,9 @@ Source/artifacts/границы — FEATURE_REVIEW.md и FIXLOG §144.
 пересечения, цена и условия удаления. Сначала конкретные решения, затем
 изменения с E2E. Первичная инвентаризация — docs/FEATURE_REVIEW.md и полный
 docs/PLUGIN_INVENTORY.md; живые плагины и рабочие фичи пока не удаляются.
+Карта DAP/panel ownership и границы regression — docs/PANEL_OWNERSHIP_REVIEW.md;
+по 9 native E2E Windows/Ubuntu с trace. Выбор Output и поиск code window —
+кандидаты на отдельные небольшие изменения, не объявленные исправления.
 
 ## IDE-076 — оформление рамок и заголовков панелей по примеру Termide
 

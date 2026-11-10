@@ -33,6 +33,8 @@ backend не умеет references, это ограничение, а не по�
   после явной подготовки editor-deps; Windows temp variables — как в E2E README.
 - Полный список: [PLUGIN_INVENTORY.md](PLUGIN_INVENTORY.md). Не все 67 записей
   самостоятельные фичи: есть библиотеки, bridges и dependency-only plugins.
+- DAP/panels: [карта ответственности и следующий порядок](PANEL_OWNERSHIP_REVIEW.md),
+  source review и по 9 настоящих E2E Windows/Ubuntu с диагностической трассой.
 - [LANGUAGE_MATRIX.md](LANGUAGE_MATRIX.md), [E2E README](../tests/e2e/README.md),
   FIXLOG и source artifacts — фактические проверки. Windows/Ubuntu native UI
   не доказывают Mac/GUI, а unit/trace не заменяют editor E2E.
@@ -235,8 +237,12 @@ sorter E2E. При исправлении нужен постоянный regres
   fixture проектах. Не приписывать системные зависания терминалу по гипотезе.
   Первые idle/text-buffer samples выше; project load/focus/остальные ОС ещё открыты.
 - [ ] Сопоставить feature coverage с реальными editor E2E и явными Mac/GUI gaps.
+  Для DAP/panels карта готова: PANEL_OWNERSHIP_REVIEW; Go focus/output и первый
+  Rust PTY проверены, остальные adapters/restore/физические клавиши разграничены.
 - [ ] Предложить порядок небольших изменений; у каждого — сохраняемый UX,
   удаляемая ответственность, регресс и проверяемая польза. Только затем рефакторинг.
+  DAP-кандидаты: единый выбор Output, затем одинаковые части поиска окна кода;
+  process/PTY lifecycle не объединять с видимостью. Это пока план, не runtime fix.
 
 Принятых удалений рабочих фич пока нет. Termide frames (IDE-076) остаются
 отдельным будущим прототипом; оформление не должно добавлять ещё один lifecycle.
