@@ -69,6 +69,12 @@ Postgres Language Server текущего среза также не объяв�
 Нужен resolver с настоящей binding/scope моделью; подсветка/grep не заменяют
 требование. Исходники исследования сохранены в `.tests/sql-references-sources`.
 
+2026-11-10: change `add-sql-semantic-references`, IDE-SQL-9. Постоянный UI case
+на forge.1 дал целевой Windows RED: provider=false, raw backend error -32601,
+gr без quickfix. Начальный resolver поверх закреплённого AST имеет 4 native
+unit PASS Windows/Ubuntu; он ещё не подключён к SDK. CTE/DML/index/handler и
+положительный UI остаются обязательными. История §142; IDE-062 не закрыт.
+
 ## IDE-057 — Bash debug: выбор отдельного Linux backend для Windows
 
 2026-11-09, аудит следующего языкового этапа. Официальный bash-debug 0.3.9

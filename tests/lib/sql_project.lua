@@ -9,7 +9,8 @@ local function copy(from,to)
     else error('Неожиданный тип SQL fixture '..name) end
   end
 end
-function M.start(root,on_create,missing)
+function M.start(root,on_create,missing,options)
+  options=options or {}
   local deps=vim.env.FORGE_E2E_SQL_DEPS or root..'/.tests/sql-deps'
   local manifest=read(deps..'/manifest.json')
   for path,hash in pairs(manifest.files) do
@@ -28,7 +29,7 @@ function M.start(root,on_create,missing)
   local e=require('editor').start(root,{timeout=45000,site=deps..'/site',env={PATH=table.concat(path,sep),
     FORGE_SQLS_EXECUTABLE=deps..'/bin/sqls'..suffix,FORGE_SQRUFF_EXECUTABLE=deps..'/bin/sqruff'..suffix},
     prepare=function(project,env,runtime)
-      local dir=project..'/SQL workspace ü';copy(root..'/tests/e2e/fixtures/sql-language',dir)
+      local dir=project..'/SQL workspace ü';copy(root..(options.fixture or '/tests/e2e/fixtures/sql-language'),dir)
       local script=[[
 import json,sqlite3,sys
 from pathlib import Path

@@ -5,7 +5,7 @@
 фоновые установки инструментов редактора перенесены в явный setup.
 IDE-001 параллельно ждёт диагностических данных с Mac.
 
-## Ближайший маршрут — 2026-11-09
+## Ближайший маршрут — 2026-11-10
 
 | Порядок | Работа | Результат и граница |
 |---|---|---|
@@ -36,6 +36,13 @@ gate завершены (§136). [Process lifecycle](../openspec/changes/fix-edi
 Работа возобновлена: SQL semantic references IDE-062; IDE-073/074 остаются
 отдельно. Владелец запустил Docker — доступные Ubuntu проверки выполняются
 через существующий engine без управления Desktop/WSL.
+
+SQL references — [отдельный change](../openspec/changes/add-sql-semantic-references/tasks.md):
+исходный Windows UI RED (-32601/provider=false), 4 native resolver unit PASS
+на Windows/Ubuntu (§142). Рабочий SQLS SDK остаётся forge.1, публичного provider
+ещё нет. Следующий шаг — завершить scopes/CTE/DML, workspace index и настоящий
+handler, затем UI GREEN и платформенная интеграция. Начальный resolver и его
+unit не заменяют этот результат; IDE-062 остаётся открытым.
 
 **Ограничение текущего шага:** полный Ubuntu IDE-047 — 43 PASS/1 FAIL/3 SKIP,
 653 checks. Cleanup/процессные проверки прошли; новый FAIL ожидания Git-read

@@ -110,6 +110,8 @@ batch нет: выполненные backend statements могут уже изм
 SQLS 0.2.48 использует codepoint координаты и ошибается на первом символе rename.
 Версионный adapter исправляет эту границу; другие версии не патчатся вслепую.
 SQLS не предоставляет semantic references; поиск текста их не заменяет.
+Реализация IDE-SQL-9 ведётся в `add-sql-semantic-references`: исходный editor
+RED и начальная native библиотека есть, но рабочий SDK/поведение gr пока прежние.
 SQL tests описаны отдельно ниже; IDE-062 сохраняет semantic references,
 procedural debug требует backend.
 

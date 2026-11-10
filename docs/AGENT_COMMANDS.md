@@ -3461,3 +3461,50 @@ git diff --check
 только 22 изменённых tracked paths, diff --cached --check и local commit.
 Новые тесты после изменений только документации не запускались; .tests/.tools
 и lazy-lock не входят в commit. Следующий функциональный пункт — SQL references.
+
+## 56. SQL references: source RED и native foundation, 2026-11-10
+
+Change add-sql-semantic-references создан штатными context/new/status/instructions
+proposal/specs/design/tasks, затем strict и instructions apply; root локальный.
+План не сокращает CTE/DML/index до простого совпадения имени. Исходный forge.1
+и рабочий профиль не менялись. Source/read команды: rg/Get-Content pinned SQLS
+handler/parser/AST/database cache, prepare_sql.py/sql_sdk.py, существующие SQL
+changes и общий gr. Одноразовый AST probe — .tests/sql-references-ast-probe.go.
+
+```powershell
+$env:TEMP='F:/repo/forge-nvim/.tests/tmp'
+$env:TMP=$env:TEMP; $env:TMPDIR=$env:TEMP
+$env:NVIM_LOG_FILE="$env:TEMP/sql-references-validation.log"
+$env:PYTHONIOENCODING='utf-8'
+$env:npm_config_cache='F:/forge-nvim-tmp/npm-cache'
+. ./scripts/lib/nvim-sdk.ps1
+$forgeNvim=Get-ForgeNvim (Get-Location).Path
+& $forgeNvim -l tests/e2e/sql-references.test.lua
+python -B tests/e2e/check_sql_references.py --go .tests/dap-tools/go/bin/go.exe
+```
+
+Первая UI команда ожидаемо RED на текущем SDK: windows-sql-references-source-red.txt,
+artifact 927194342200. raw reply -32601/provider=false, gr без quickfix, own
+shutdown 0 active. Go overlay не подключён к SDK, четыре unit не делают UI GREEN.
+
+```powershell
+docker info --format '{{.ServerVersion}}'
+docker compose -f tests/containers/compose.yaml run --rm --entrypoint python3 ubuntu tests/e2e/check_sql_references.py --deps /opt/forge/sql-deps
+$env:FORGE_SQL_CASE='schema definition hover и alias rename'
+& $forgeNvim -l tests/e2e/sql-language.test.lua
+Remove-Item Env:FORGE_SQL_CASE
+& $forgeNvim -l tests/run.lua unit trace
+npx.cmd --yes @fission-ai/openspec@1.13.2 validate --all --strict
+```
+
+Docker engine уже работал (28.5.1), lifecycle/настройки не менялись. Native
+Windows и Ubuntu выполнялись последовательно. Финальные unit logs:
+windows-sql-references-native-final.txt и ubuntu-sql-references-native-archive.txt
+(по 4 PASS, checker извлекает проверенный archive, не mutable build scratch).
+Ранние native/AST probes сохранены отдельно; Go sources и locks не обновлялись.
+Старый SQL helper UI 1 PASS: windows-sql-references-helper-regression.txt.
+Unit/trace 365 PASS: windows-sql-references-unit-trace.txt. Evidence audit:
+python -B .tests/audit-sql-reference-foundation.py; raw history prefix и staged
+additions-only проверены. SDK metadata/plugin pins/production Lua без diff.
+Дальше task 2.1/2.2/2.3: закончить resolver и настоящий provider; не считать
+acceptance RED готовой фичей. Mac/GUI/внешние DB остаются открытыми.

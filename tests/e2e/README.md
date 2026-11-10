@@ -1084,3 +1084,32 @@ process/DB/status проверки. Unexpected SQLS exit записываетс�
 native JSONL: parent читает raw code/signal без blocking RPC на hit-enter.
 Нужные crash notices определяются по этому tuple и поведению Neovim 0.12.2,
 а не фиксированным числом сообщений. Production LSP/query код не менялся.
+
+## SQL references — IDE-SQL-9, реализация начата
+
+`<nvim> -l tests/e2e/sql-references.test.lua` — постоянный acceptance case:
+schema binding двух разных id, aliases, закрытый файл, Unicode, точный список
+quickfix и Enter обратно в код. На текущем SQLS `0.2.48+forge.1` это **известный
+RED**, не готовая фича: настоящий backend возвращает -32601 для references,
+provider отсутствует, gr не открывает quickfix. Новый suite зарегистрирован;
+его FAIL нельзя выдавать за зелёный полный e2e. Snapshot/SDK/test/config и
+shutdown сохраняются обычным editor driver.
+
+Начальный native resolver пока не включён в SDK. Его unit проверки:
+
+```powershell
+python -B tests/e2e/check_sql_references.py --go .tests/dap-tools/go/bin/go.exe
+```
+
+```sh
+docker compose -f tests/containers/compose.yaml run --rm --entrypoint python3 ubuntu tests/e2e/check_sql_references.py --deps /opt/forge/sql-deps
+```
+
+По 4 native unit PASS Windows/Ubuntu: физическая identity/ambiguity, nested
+shadowing/correlation, includeDeclaration, Unicode и отказ от частичного
+индекса. Это проверки библиотеки на настоящем закреплённом AST, **не editor
+E2E и не доказательство готового provider**. Скрипт читает проверенный source
+archive, работает без сети и сохраняет source/overlay SHA/Go locks/result.
+CTE/derived/projection usages, DML/index/handler/SDK и их UI E2E остаются в
+[tasks](../../openspec/changes/add-sql-semantic-references/tasks.md).
+Обычный SDK, plugin pins и пользовательский профиль не меняются. Mac не проверен.

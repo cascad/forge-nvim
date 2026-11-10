@@ -6917,3 +6917,42 @@ strict OpenSpec 64/64 PASS. Это повторная проверка evidence,
 остаются прежними. Наличие внешнего backup не является критерием E2E PASS.
 **Файлы:** DOCKER_WINDOWS_SETUP, HISTORY, IDE_ROADMAP, AGENT_COMMANDS;
 ignored audit-posix-validation.py/posix-validation-evidence.json.
+
+## 142. SQL references: исходный RED и начальный resolver
+
+**Дата:** 2026-11-10. **Проблема:** IDE-062. Спека: IDE-SQL-9 (ADDED).
+Change add-sql-semantic-references открыт; public provider ещё не реализован.
+
+**Что было/причина.** Текущий SQLS 0.2.48+forge.1 имеет definition/rename/query,
+но references нет в capabilities/handler. Новый постоянный editor case использует
+настоящие SQLite users/accounts с разными id, aliases и закрытый SQL-файл.
+Сначала native reply, затем обычный gr: backend вернул -32601 method not supported,
+provider=false, quickfix не появился. На gr Neovim показал собственный hit-enter.
+Это целевой RED отсутствующей фичи, не результат тестового mock или ошибка setup.
+
+**Изменение.** Созданы proposal/spec/design/tasks с полным scope: schema identity,
+local/nested/correlated scopes, CTE/derived/projection aliases, DML, unsaved/closed
+files и workspace boundary. В тестовом helper параметризован только fixture path;
+прежний default сохранён. Acceptance suite зарегистрирован, его известный FAIL
+не скрывается. В scripts/sdk/sqls-references добавлена начальная native библиотека
+поверх существующего AST: physical table/column identity, aliases, ambiguity,
+shadowing/correlation и codepoint ranges. Она **не включена в рабочий SDK**.
+
+**Проверка/e2e.** Windows UI 0 PASS/1 целевой FAIL, artifact 927194342200:
+exact test/helper/SDK/config, raw -32601, screen, штатный exit 0 и own scope
+active_after=0. Прежний SQL schema/definition/hover/rename case 1 PASS после
+параметризации helper. Начальный resolver: по 4 native unit PASS Windows/Ubuntu,
+не E2E/provider PASS. Checker берёт AST из SHA-checked pinned source archive,
+с сетью off, сохраняет runner/source/overlay hashes и неизменные Go locks.
+Windows unit/trace 365 PASS, strict OpenSpec 65/65. Production Lua, 67 pins,
+SDK metadata/binary остались прежними; новый SDK не ставился. Audit сохраняется
+в .tests/sql-references-foundation-evidence.json с точными platform artifacts.
+
+**Вывод/границы.** Найти имя identifier недостаточно; начальная binding модель
+различает реальные объекты в проверенных unit случаях. Это только основа:
+CTE/derived/projection usages, DML/index/handler/SDK и положительный UI ещё нужны.
+IDE-062 и задачи 2/3 не закрыты. Mac/ARM64/GUI/внешние DB не проверены. Docker
+использовался только как уже работающий engine, Desktop/WSL не переключались.
+**Файлы:** change/spec, scripts/sdk/sqls-references, sql-references.test.lua и
+fixtures, check_sql_references.py, sql_project.lua/registry, E2E/SQL docs,
+PROBLEMS/IDE_ROADMAP/HISTORY/AGENT_COMMANDS.
