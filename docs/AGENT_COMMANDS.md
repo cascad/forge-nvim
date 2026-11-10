@@ -4732,3 +4732,37 @@ Mac: nvim -l tests/e2e/debug-toggle.test.lua после явной editor/Rust �
 Обе среды остаются непроверенными, OpenSpec1.4 не отмечена выполненной. В Git
 только2 runtime строки, permanent E2E/registry/specs/docs; .tests ignored,
 lazy-lock/SDK не менялись, push нет.
+
+
+## 73. IDE-092: staged SDK source gate, 2026-11-10
+
+После commit2fd07cc проверен source gate prepare-windows-sdk.ps1. diff без HEAD
+сравнивал с index и не учитывал staged edits. До runtime правки добавлен
+TestWindowsSDKCLI.test_preparer_rejects_staged_and_unstaged_edits_before_applying_patches.
+Настоящие Git/PowerShell/preparer, private checkout в F: TEMP, Unicode/spaces,
+два собственных применимых C patch и lock с их revision/SHA; unrelated.c вне patch.
+Никаких изменений настоящего SDK/source cache ради RED и никаких downloads.
+
+```powershell
+python -X utf8 -B tests/windows_sdk_test.py TestWindowsSDKCLI.test_preparer_rejects_staged_and_unstaged_edits_before_applying_patches
+& .tools/neovim/windows-x64/bin/nvim.exe -l tests/e2e/windows-sdk.test.lua
+powershell -NoProfile -File scripts/test.ps1 quick
+npx.cmd --yes @fission-ai/openspec@1.13.2 validate --all --strict --no-interactive
+```
+
+Source RED: unstaged subcase PASS, staged subcase реально изменил target C
+с0 на1 применением patch, затем preparer отказал на downstream dependencies.
+Тест сначала проверяет side effects, затем сообщение ошибки. Это не полный
+SDK build и не claim о запущенном неправильном binary. После diff HEAD оба
+subcases PASS: targets0, unrelated edit/staging сохраняется, stage dir отсутствует,
+старый private SDK byte-for-byte прежний. Fixture сама очищает свой tempfile.
+
+Полный SDK E2E12 PASS, quick353/13files, strict76/76; tests/e2e/windows-sdk
+обнаруживает CLI cases автоматически, registry/timeout не менялись. SDK не
+пересобирался. Read-only actual cache: git diff HEAD --name-only → ровно2
+закреплённых source files; git diff --no-ext-diff --no-color --abbrev=7 HEAD
+по каждому совпал с patch bytes. Binary hash прежний74AFF15B...1C6AD9.
+Логи/evidence .tests/ide092-*, history prefix SHA captured до append §161/§73,
+Git journals additions-only. Windows PowerShell5 CLI настоящий, JSON read_bytes.
+Docker/Desktop/WSL в этом follow-up не трогались, native Ubuntu/Mac gates открыты.
+Commit только preparer/test/specs/docs; .tools/.tests ignored, push нет.

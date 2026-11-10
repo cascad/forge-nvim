@@ -10,7 +10,17 @@
 
 Маршрут и приоритеты: [рабочий план nvim_forge](docs/IDE_ROADMAP.md).
 Для новых пунктов используем следующий свободный ID `IDE-xxx`; исходный
-симптом хранится здесь, этап и состояние — в плане. Следующий ID: `IDE-092`.
+симптом хранится здесь, этап и состояние — в плане. Следующий ID: `IDE-093`.
+
+## IDE-092 — SDK source gate пропускает staged изменения
+
+2026-11-10: diff worktree/index не видел постороннюю staged правку. Настоящий
+preparer в частном checkout с применимыми закреплёнными patch успевал изменить
+оба target source до downstream отказа на dependencies. CLI E2E дал source RED;
+unstaged вариант уже отвергался. Оба diff теперь относительно HEAD, включая index:
+2 subcases PASS без изменения source/выбранного SDK. SDK CLI12, quick353,
+strict76 PASS (§161). SDK не пересобирался; actual cached source соответствует
+двум patch. Это follow-up IDE-BOOT-6/guard-windows-sdk-process-ancestry.
 
 ## IDE-091 — общий Debug toggle оставляет PTY или открывает sidebar вместо скрытия
 

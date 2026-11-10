@@ -181,6 +181,52 @@ class TestWindowsSDKCLI(LauncherFixture):
         self.assertFalse(stage.exists())
         self.assertEqual(self.launch().returncode, 7)
 
+    def test_preparer_rejects_staged_and_unstaged_edits_before_applying_patches(self):
+        source = self.root / '.tests/neovim-native/v0.12.2-src'
+        folder = source / 'src/nvim/os'
+        folder.mkdir(parents=True)
+        def git(*args):
+            result = self.call(['git', '-C', str(source), *args])
+            self.assertEqual(result.returncode, 0, result.stderr)
+            return result.stdout
+        git('init')
+        targets = [('pty_proc_win.c', 'neovim-conpty-lifecycle.patch', 'PatchSHA256'),
+                   ('proc.c', 'neovim-process-ancestry.patch', 'ProcessPatchSHA256')]
+        for name, _, _ in targets:
+            (folder / name).write_text('int fixture_value = 0;\n', 'ascii')
+        extra = source / 'unrelated.c'
+        extra.write_text('int unrelated = 0;\n', 'ascii')
+        git('add', '.')
+        git('-c', 'user.name=Fixture', '-c', 'user.email=fixture@example.invalid',
+            'commit', '-m', 'private source gate fixture')
+        lock_path = self.root / 'scripts/sdk/windows.json'
+        lock = json.loads(lock_path.read_bytes()); lock['SourceRevision'] = git('rev-parse', 'HEAD').strip()
+        # Known patches are valid and applicable, so an earlier rejection matters:
+        # the old preparer applies them before noticing downstream missing deps.
+        for name, patch_name, field in targets:
+            target = folder / name
+            target.write_text('int fixture_value = 1;\n', 'ascii')
+            raw = git('diff', '--no-ext-diff', '--no-color', '--abbrev=7', '--', 'src/nvim/os/' + name).replace('\r\n', '\n').encode()
+            (self.root / 'scripts/sdk' / patch_name).write_bytes(raw)
+            lock[field] = hashlib.sha256(raw).hexdigest().upper()
+            target.write_text('int fixture_value = 0;\n', 'ascii')
+        lock_path.write_text(json.dumps(lock), 'utf-8')
+        extra.write_text('int unrelated = 1;\n', 'ascii')
+        before = self.nvim.read_bytes()
+        for staged in (False, True):
+            with self.subTest(staged=staged):
+                if staged: git('add', 'unrelated.c')
+                result = self.call([self.shell, '-NoProfile', '-File', str(self.root / 'scripts/prepare-windows-sdk.ps1')])
+                self.assertNotEqual(result.returncode, 0)
+                # Check side effects before the diagnostic message.
+                for name, _, _ in targets:
+                    self.assertEqual((folder / name).read_text('ascii'), 'int fixture_value = 0;\n', 'preparer changed source before rejecting unknown edits')
+                self.assertIn('Unrecognized SDK source edits', result.stderr)
+                self.assertEqual(extra.read_text('ascii'), 'int unrelated = 1;\n')
+                self.assertEqual(self.nvim.read_bytes(), before)
+                self.assertEqual(list(source.parent.glob('stage-*')), [])
+                if staged: self.assertIn('unrelated.c', git('diff', '--cached', '--name-only'))
+
     def test_promotion_rejects_outside_and_junction_paths(self):
         script = self.root / 'guard-path.ps1'
         script.write_text("param([string]$Candidate)\n$ErrorActionPreference='Stop'\n. (Join-Path $PSScriptRoot 'scripts/lib/nvim-sdk.ps1')\nPublish-ForgeNvimSDK $PSScriptRoot $Candidate\n", 'ascii')

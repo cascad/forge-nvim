@@ -23,3 +23,7 @@
 ## Open Questions
 
 Точный caller двух остановок Docker; данные не блокируют независимое исправление IDE-089. Снятие обоих backport после подтверждённого upstream fix — отдельная проверка.
+
+## Source validation follow-up
+
+IDE-092: сравнение только worktree/index пропускало staged изменения. Проверка изменённых путей и точных patch diff обязана сравнивать worktree с HEAD, включая index. Native CLI fixture использует собственные revision/два применимых patch и чужую для них правку: staged вариант раньше изменял target source до отказа на dependencies, новый gate отказывает до обоих patch. Реальные SDK/dependencies не пересобираются.

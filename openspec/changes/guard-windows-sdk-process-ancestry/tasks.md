@@ -9,3 +9,8 @@
 - [x] 2.1 Собрать StageOnly SDK и прогнать Windows process/editor-descendants, buffer/terminal и текущий panel/output regression выбранным binary; проверить отсутствие API errors и чистые scopes.
 - [x] 2.2 Продвинуть проверенный SDK; Windows quick, SDK CLI E2E и строгая OpenSpec validation проходят. Linux/macOS runtime не меняется; native Mac не запускался.
 - [x] 2.3 Записать FIXLOG §159 с IDE-BOOT-6 (ADDED), HISTORY, roadmap/PROBLEMS/руководства/команды, границы доказанного и каталог прежнего SDK; проверить append-only и закоммитить.
+
+## 3. Source validation follow-up (IDE-092)
+
+- [x] 3.1 Добавить Windows CLI regression неизвестных staged/unstaged изменений до patch application; staged source RED → PASS после diff относительно HEAD.
+- [x] 3.2 Прогнать полный Windows SDK CLI/quick/strict, проверить неизменность binary и добавить FIXLOG §161/HISTORY/команды/roadmap с границами native платформ.

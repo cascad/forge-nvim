@@ -38,7 +38,7 @@ try {
     }
     $forgeRevision=(& git -C $forgeSource rev-parse HEAD).Trim()
     if($forgeRevision -ne $forgeLock.SourceRevision){throw 'SDK source revision mismatch'}
-    $forgeChanged=@(& git -C $forgeSource diff --name-only)
+    $forgeChanged=@(& git -C $forgeSource diff HEAD --name-only)
     if(@($forgeChanged|Where-Object {$_ -notin $forgePatches.Source}).Count){throw 'Unrecognized SDK source edits'}
     # Validate both files before applying either patch. Do not discard local edits.
     foreach($forgePatch in $forgePatches) {
@@ -51,7 +51,7 @@ try {
             $forgePatch.Candidate=$LASTEXITCODE -eq 0
         } finally {$ErrorActionPreference=$forgePreviousAction}
         if(-not $forgePatch.Upstream -and -not $forgePatch.Candidate){throw 'SDK source is neither expected upstream nor exact candidate'}
-        $forgeDiff=(& git -C $forgeSource diff --no-ext-diff --no-color --abbrev=7 -- $forgePatch.Source) -join "`n"
+        $forgeDiff=(& git -C $forgeSource diff --no-ext-diff --no-color --abbrev=7 HEAD -- $forgePatch.Source) -join "`n"
         $forgeExpected=([IO.File]::ReadAllText($forgePatch.Path) -replace "`r`n","`n").TrimEnd()
         if(($forgePatch.Upstream -and $forgeDiff) -or ($forgePatch.Candidate -and $forgeDiff.TrimEnd() -ne $forgeExpected)){throw 'Unrecognized edits in SDK patched source'}
     }

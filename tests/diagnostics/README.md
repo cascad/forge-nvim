@@ -177,8 +177,10 @@ powershell -NoProfile -File scripts/test.ps1 full
 Исходники: `.tests/neovim-native/v0.12.2-src`, runtime:
 `.tools/neovim/windows-x64`; оба каталога игнорируются Git. TEMP/TMP/TMPDIR
 и NVIM_LOG_FILE ограничены процессом builder и диском checkout.
-Параллельный builder не меняет тот же source. Новый runtime сначала создаётся
-в уникальном `.tests/neovim-native/stage-*/sdk`, build использует parallel=2.
+Параллельный builder не меняет тот же source. Проверка source относительно HEAD
+включает staged и unstaged правки; неизвестные изменения отклоняются до применения
+обоих patch и запуска builder. Новый runtime сначала создаётся в уникальном
+`.tests/neovim-native/stage-*/sdk`, build использует parallel=2.
 До продвижения обязательны native ancestry fixtures, настоящие Neovim
 jobstop/quit E2E и 50 циклов ConPTY probe. Старый SDK сохраняется как
 `.tools/neovim/windows-x64.previous-<id>`; ошибка подготовки его не перезаписывает.

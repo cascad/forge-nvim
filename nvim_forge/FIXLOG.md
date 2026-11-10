@@ -8143,3 +8143,47 @@ before/after stdout и событиями, без приписывания ем�
 **Файлы:** nvim_forge/lua/ide/activities.lua, tests/e2e/debug-toggle.test.lua,
 registry, OpenSpec change, nvim_forge README/HOTKEYS, tests/e2e/README,
 PROBLEMS/IDE_ROADMAP/HISTORY/AGENT_COMMANDS.
+
+
+## 161. Windows SDK: проверка staged исходников
+
+Дата: 2026-11-10. IDE-092, follow-up §159.
+Спека: IDE-BOOT-6 (FIX). В active ADDED delta добавлен source gate scenario.
+
+**Проблема и причина.** Preparer проверял git diff относительно index:
+посторонние staged изменения не попадали в список изменённых файлов. Exact
+patch diff также сравнивался с index. Это позволяло пройти source gate с
+изменением, не входящим в закреплённые patch; одного HEAD revision недостаточно.
+
+**Регресс до исправления.** Новый public CLI E2E создаёт private Git checkout,
+собственные ожидаемые revision/два применимых C patch и unrelated.c. Unstaged
+вариант корректно отклонялся. После git add unrelated.c прежний preparer
+пропустил gate и реально применил оба patch, изменив target C files с0 на1;
+затем отказал из-за отсутствия dependencies. Assertion сохранности source
+дала RED. Это подтверждает mutation до reject, не выдаётся за полный build
+неправильного Neovim. Реальный SDK/source cache не использовались как fixture.
+
+**Изменение.** Два diff в prepare-windows-sdk.ps1 сравнивают worktree с HEAD,
+включая index: список изменённых путей и точный diff каждого patch target.
+Неизвестные staged/unstaged правки отклоняются до apply/builder, локальные
+исходники сохраняются. Source revision/patch hashes, build и launcher прежние.
+
+**Проверка.** Новый native Windows CLI test: оба subcases PASS, C targets
+остались0, unrelated.c и его staging сохранены, stage output не создан,
+SDK binary не изменён. Полный windows-sdk E2E12 PASS (обнаружение+10 CLI
+methods+50-cycle native resize), quick353/13files, strict76/76. Read-only
+проверка настоящего cached source: относительно HEAD ровно proc.c и
+pty_proc_win.c, оба diff побайтно совпадают с закреплёнными LF patch.
+Actual SDK binary SHA74AFF15B3B6BC288753B721365B088AB44C9B2BFFF152F8D27F5885B4B1C6AD9
+прежний; SDK не пересобирался. Linux/macOS не используют Windows preparer,
+их поведение не менялось. Desktop/WSL не управлялись, Docker в этом follow-up
+вообще не опрашивался; IDE-087/090 и native gates прежние.
+
+**Вывод.** Граница pinned source должна учитывать index, а не только незаписанный
+worktree diff. Исправлены две существующие проверки с CLI source RED → PASS,
+без дополнительного build manager. Артефакты: .tests/ide092-source-red.txt,
+ide092-source-green.txt, ide092-sdk.txt, ide092-evidence.json, quick/strict logs.
+
+**Файлы:** scripts/prepare-windows-sdk.ps1, tests/windows_sdk_test.py,
+active SDK OpenSpec delta/design/tasks, diagnostics README, PROBLEMS/roadmap/
+HISTORY/AGENT_COMMANDS.
