@@ -78,12 +78,16 @@ Go E2E используют общий compiler cache одного прогон�
 его lock обязан совпасть с подготовленным, источник пишется в config-origin.txt.
 
 Project/session restart: `nvim -l tests/e2e/project-session.test.lua`;
-он также входит в общий `nvim -l tests/run.lua e2e`. Нужны общие pinned
+вместе с legacy cases — `nvim -l tests/run.lua e2e --id IDE-PANEL-15`.
+Он также входит в общий `nvim -l tests/run.lua e2e`. Нужны общие pinned
 plugins и Git, дополнительные language tools не нужны. Реальный TUI работает
 в частном terminal job и сам обрабатывает native `:restart`; RPC читает state,
 ввод проходит через PTY. Проверяются quit/relaunch/Space qs, A→B→A, три файла,
 два tabpages, cursor positions, запись unsaved edit, cleanup Quickfix/возврат
-Explorer и отсутствие чужих buffers. Подробнее: [baseline](../docs/PROJECT_SESSION_REVIEW.md).
+Explorer и отсутствие чужих buffers. IDE-095 дополнительно проверяет actual
+code focus; `tests/e2e/session-legacy.test.lua` — native winfix и Help-only
+listed file через restart/Space qs, правильный Explorer root и clean exit.
+Подробнее: [baseline и restore fix](../docs/PROJECT_SESSION_REVIEW.md).
 
 Код возврата: 0 — FAIL нет; 1 — есть FAIL (или UNCOVERED под `--strict`,
 или под `--id` не выполнилось ни одной проверки); 2 — ошибка аргументов.

@@ -2,7 +2,7 @@
 local root=vim.fn.fnamemodify(debug.getinfo(1,'S').source:sub(2),':p:h:h:h'):gsub('\\','/')
 package.path=root..'/tests/lib/?.lua;'..package.path
 local T=require('check')
-T.check('SELF: PROJECT-SESSION native quit/restore and project restart retain files, cursors and tabs',function()
+T.check('IDE-PANEL-15 native session restore returns code focus and preserves project state',function()
   local dir=root..'/.tests/project-session/'..tostring(vim.uv.hrtime());vim.fn.mkdir(dir,'p')
   assert(vim.uv.fs_copyfile(root..'/tests/e2e/project-session.test.lua',dir..'/project-session.test.lua'))
   local result=vim.system({vim.v.progpath,'-l',root..'/tests/diagnostics/project-session.lua'},
@@ -99,5 +99,14 @@ T.check('SELF: PROJECT-SESSION native quit/restore and project restart retain fi
   assert(shutdown.scope.ok and (shutdown.scope.active_after==0 or shutdown.scope.active_after==false) and not shutdown.scope.terminated)
   T.eq(shutdown.scope.stages or {},{},'Scope cleanup must not need signals')
   for _,stage in ipairs(shutdown.stages) do assert(stage.stage~='sigterm' and stage.stage~='sigkill') end
+  for _,label in ipairs({'restored','project-a-returned'}) do
+    local s=states[label];local focused
+    for _,tab in ipairs(s.tabs) do for _,w in ipairs(tab.windows) do if w.win==s.current then focused=w end end end
+    assert(focused and focused.bt=='' and focused.ft=='text' and not focused.floating and not focused.marker,
+      'Restore focus '..label..': '..vim.inspect(focused))
+  end
+  local fresh=states['project-b'];local fresh_ft
+  for _,tab in ipairs(fresh.tabs) do for _,w in ipairs(tab.windows) do if w.win==fresh.current then fresh_ft=w.ft end end end
+  T.eq(fresh_ft,'neo-tree','A fresh project without a session keeps Explorer focus')
 end)
 T.finish()

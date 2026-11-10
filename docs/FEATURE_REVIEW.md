@@ -256,7 +256,7 @@ sorter E2E. При исправлении нужен постоянный regres
 | Bash и SQL | bash/sql-language, sql-tests, sql-sdk/sql-test-sdk | SQL references IDE-062 не поддержан готовым backend; внешние DB/Mac, Bash DAP открыты |
 | Autosave и explicit async format | language suites, deleted-files, прежний IDE-050 regression | Сложные simultaneous save/edit/cancel не закрывать одним successful format |
 | Terminal buffers/jobs/tasks | buffers (настоящий terminal), work-panels (Overseer/tasks/output) | Это не полный ToggleTerm/shell/multiple-terminal regression |
-| Recent projects/Alpha/persistence | Git root/history плюс native TUI quit/restore/A→B→A,3 files/2 tabpages/cursors/modified write/Quickfix cleanup Windows (§166) | [Project/session review](PROJECT_SESSION_REVIEW.md): Ubuntu/Mac, branch sessions/select/last/stop/DAP и failure paths ещё открыты; focus IDE-095 отдельно |
+| Recent projects/Alpha/persistence | Native TUI quit/restore/A→B→A,3 files/2 tabs/cursors/write/Quickfix (§166); общий focus и legacy winfix/hidden file direct/restart (§167) Windows | [Project/session review](PROJECT_SESSION_REVIEW.md): Ubuntu/Mac, branch sessions/select/last/stop/DAP и failure paths ещё открыты |
 | Peek/breadcrumbs/overview ruler | peek-navigation: 7 real gopls keyboard E2E Windows/Ubuntu; diagnostic gpd/navic Use; source/старый private UI вариант | q RED исправлен IDE-083 (§149); ruler markers, Mac и визуальный GUI отдельно |
 | WezTerm/shell startup/clipboard | Собственные wezterm/install/ConPTY наборы, manual checklists | Они дополняют Nvim E2E; исходные Mac/zsh/Cmd+C не проверены |
 
@@ -376,7 +376,8 @@ language/test roots, interpreter/tools и save/format разобраны в
   широкое объединение find/create/relocate отклонено по разным обязанностям.
   Удаления optional UI по-прежнему требуют выбора.
   Project/session restart получил отдельный Windows native baseline §166;
-  [границы](PROJECT_SESSION_REVIEW.md), фокус IDE-095 следующим source RED.
+  [границы](PROJECT_SESSION_REVIEW.md). IDE-095 source RED→Windows PASS (§167):
+  общий LoadPost вместо второго cleanup/open, необходимый file fallback сохранён.
   Uniform interpreter/root policies ещё требуют отдельных сценариев;
   существующие Git результаты не заменяют их полной проверки.
 

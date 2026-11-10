@@ -177,24 +177,16 @@ close_file_buffers = function(match)
     return true
 end
 
-local function cleanup_restored_session()
-    local ok_ide, ide = pcall(require, "ide")
-    if ok_ide and type(ide.cleanup_for_session) == "function" then
-        ide.cleanup_for_session()
+-- PersistenceLoadPost owns restore for every entry point. Select a file before
+-- Explorer reveal so a saved Help/tool window cannot reveal an unrelated path.
+function M.focus_restored_session()
+    local win = require("ide").find_main_window()
+    if vim.api.nvim_buf_get_name(vim.api.nvim_win_get_buf(win)) == "" then
+        local buf = first_listed_file_buffer()
+        if buf then vim.api.nvim_win_set_buf(win, buf) end
     end
-
-    local win = visible_normal_file_window()
-    if win then
-        vim.api.nvim_set_current_win(win)
-        return
-    end
-
-    local buf = first_listed_file_buffer()
-    if buf then
-        pcall(vim.cmd, "buffer " .. buf)
-    elseif open_files_layout then
-        open_files_layout()
-    end
+    vim.api.nvim_set_current_win(win)
+    return win
 end
 
 local function ensure_explorer_open()
@@ -217,14 +209,8 @@ local function load_session_if_present()
         return false
     end
 
+    -- Common LoadPost and panel_guard own Explorer/focus and legacy winfix.
     persistence.load()
-    vim.schedule(function()
-        cleanup_restored_session()
-        -- При входе в проект (recent/dir/session restore) explorer должен
-        -- всегда быть открыт слева — пользователь явно так попросил. Если
-        -- сессия восстановила другую раскладку, всё равно ставим explorer.
-        ensure_explorer_open()
-    end)
     return true
 end
 

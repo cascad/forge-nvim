@@ -5032,3 +5032,82 @@ project:open пока кандидат, production не исправлялся. 
 2 файла PASS. Перед этим registry report/log скопированы в session-registry-
 report.json/session-registry-case.log: audit не зависит от перезаписи общих
 .tests/report.json и logs следующим suite. Повторный source/prefix audit PASS.
+
+
+## 80. IDE-095: общий restore focus и legacy sessions, 2026-11-10
+
+OpenSpec nearest root подтверждён list/context; main inventory пока WezTerm.
+Новый fix-project-session-restore-focus добавляет IDE-PANEL-15, phase1 baseline
+не переписывался. Proposal/spec/design/tasks/apply context прочитаны; прежняя
+авторизация позволяет implementation/commit без повторного вопроса.
+Git c1beaaa экспортирован через subprocess git archive --format=zip только для
+nvim_forge: каждый ZIP path проверен внутри .tests/ide095-source, существующий
+target отвергается. Там неизменённый config для source replay, SDK не копировался.
+
+```powershell
+$env:TEMP='F:/repo/forge-nvim/.tests/tmp'
+$env:TMP=$env:TEMP; $env:TMPDIR=$env:TEMP
+$env:NVIM_LOG_FILE="$env:TEMP/ide095-red.log"
+$env:PYTHONIOENCODING='utf-8'
+$env:FORGE_E2E_CONFIG_SOURCE='F:/repo/forge-nvim/.tests/ide095-source/nvim_forge'
+& .tools/neovim/windows-x64/bin/nvim.exe -l tests/e2e/project-session.test.lua
+& .tools/neovim/windows-x64/bin/nvim.exe -l tests/e2e/session-legacy.test.lua
+```
+
+Source main RED на actual current neo-tree; legacy source1PASS/3FAIL: winfix
+project tree-focus, hidden project NUI invalid-window/hit-enter, hidden direct
+root prompt без Explorer; winfix-direct уже проходил. Все final test/observer
+bytes совпадают. Trial только без второго callback дал ordinary/winfix PASS,
+но потерял hidden file fallback. Поэтому он сохранён в общем hook перед reveal,
+а повторный scheduled cleanup/open удалён. Две production Lua files, net -8.
+
+Fixture использует настоящий native mksession. Help-only строится атомарно
+через noautocmd only только при создании старого layout; restore normal callbacks
+не отключает. Listed file/visible-files0 и winfix опции проверены до сохранения.
+Raw session после autosave A→B копируется только в проверенный private state
+path; direct variants используют Space qs. Public API читает window/buffer/
+cwd/tree root, event-loop barrier подтверждает scheduled LoadPost без sleep.
+Первый ordinary only pilot дал E445 из-за нынешнего window management; он не
+product RED. Failure snapshots сохраняют первичную ошибку; source NUI failure
+мог требовать own Job cleanup, его не называют clean native PASS.
+
+```powershell
+$env:FORGE_E2E_CONFIG_SOURCE='F:/repo/forge-nvim/nvim_forge'
+$env:GOMAXPROCS='2'; $env:GOFLAGS='-p=2'
+& .tools/neovim/windows-x64/bin/nvim.exe -l tests/run.lua e2e --id IDE-PANEL-15
+& .tools/neovim/windows-x64/bin/nvim.exe -l tests/e2e/code-focus.test.lua
+& .tools/neovim/windows-x64/bin/nvim.exe -l tests/e2e/outline-focus.test.lua
+& .tools/neovim/windows-x64/bin/nvim.exe -l tests/e2e/file-explorer.test.lua
+& .tools/neovim/windows-x64/bin/nvim.exe -l tests/e2e/buffers.test.lua
+powershell -NoProfile -File scripts/test.ps1 quick
+& .tools/neovim/windows-x64/bin/nvim.exe -l tests/run.lua trace
+npx.cmd --yes @fission-ai/openspec@1.13.2 validate --all --strict --no-interactive
+python -B .tests/audit-ide095.py
+```
+
+Все native suites последовательно. Final5 session cases +21 соседних =26
+editor checks/20 profiles; новых backend12. В новых5 TUI/host exit0, accounting
+drained до scope close, не нужны helper signals/Job termination. Общие helpers
+в соседних cases могут закрывать scope после native callback до accounting
+update: для них утверждается native0/APIerrors[]/scope after0, не natural exit
+всех descendants. Quick358/14files, trace11/2files, strict82. Final registry
+report/case logs скопированы в ide095-registry-report.json/project-case.log/
+legacy-case.log до следующего runner. Source/config63 files/67 pins/SDK SHA
+и removed positive runtimes проверены audit, .tests/ide095-evidence.json.
+
+```powershell
+docker version --format '{{json .Server.Version}}'
+```
+
+Read-only22:43MSK exit1, pipe dockerDesktopLinuxEngine отсутствует; результат
+с observed timestamp в .tests/ide095-engine-check.json. Docker Desktop/WSL/
+containers в этом шаге не запускались и не перезапускались; Ubuntu не выполнен.
+Mac/GUI не проверены, OpenSpec task1.4 остаётся открытым.
+
+Read-only rg/Get-Content охватили config.start/Persistence/panel_guard/state,
+native windows.txt и pinned window.c для E445; trial screen подтвердил вопрос
+Neo-tree о смене cwd на SDK Help. Три Python SELF wrappers отработали даже под
+--id IDE-PANEL-15: python_case.lua не проверяет filter. Это отдельный IDE-096,
+пока без fix. History prefix bytes/SHA сняты до append§167/§80; после append
+проверены исходные prefix и Git additions-only. Production только2 Lua files,
+lazy-lock/SDK прежние, source artifacts и .tests не включаются в commit.

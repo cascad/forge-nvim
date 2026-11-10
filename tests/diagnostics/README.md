@@ -9,6 +9,13 @@
 `nvim -l tests/e2e/project-session.test.lua`.
 [Что проверено и что остаётся](../../docs/PROJECT_SESSION_REVIEW.md).
 
+IDE-095 legacy fixture: `nvim -l tests/diagnostics/session-legacy.lua hidden`
+или `winfix`; `hidden-direct`/`winfix-direct` используют Space qs. Только
+создание старой Help-only раскладки использует native noautocmd only;
+восстановление и callbacks реальные. Сохраняются raw Session.vim и state.
+Assertions: `nvim -l tests/e2e/session-legacy.test.lua` или общая команда
+`nvim -l tests/run.lua e2e --id IDE-PANEL-15`.
+
 ## IDE-090: Output q и Debug toggle
 
 После явной editor/Rust подготовки, Windows из корня checkout:

@@ -8506,3 +8506,94 @@ FEATURE_REVIEW/IDE_ROADMAP/PROBLEMS/HISTORY и OpenSpec change.
 
 Дополнительный integration gate: tests/run.lua trace —2 файла PASS. Проверено
 соответствие registry/spec paths после добавления E2E; production/pins прежние.
+
+
+## 167. Session focus: один restore route и listed file
+
+Дата: 2026-11-10. IDE-095, fix-project-session-restore-focus.
+Спека: IDE-PANEL-15 (ADDED).
+
+**Проблема.** Baseline §166 сохранял3 файла/2 tabpages/cursors и modified edit,
+но после config.start A→B→A фокус оставался в Explorer. Space qs возвращал код.
+Общий PersistenceLoadPost обещал code focus; требовался source RED и проверка
+ролей старого cleanup перед его удалением.
+
+**Причина.** PersistenceLoadPost открывает Explorer/focus, panel_guard уже
+выполняет winfix sweep. Config.start после persistence.load дополнительно
+schedule-ил cleanup_restored_session, закрывал панели и повторно project:open.
+Второе открытие возвращало фокус в дерево. Source c1beaaa main RED44124490629300
+получен после всех прежних layout/content/exit assertions: current neo-tree.
+Настоящая legacy winfix session RED44135676470900 показывает то же, при этом
+общий guard сохраняет оба file buffers и снимает fixed/marker.
+
+**Необходимая роль fallback.** Help-only native mksession хранит именованный
+listed first.txt, но видимое окно Help находится в SDK вне cwd. Общий reveal
+сначала пытался раскрыть Help и создавал neo-tree-popup с вопросом о смене cwd
+на SDK docs. Второй cleanup мог удалить ещё scheduled NUI window: в source
+hidden restart44145728103400 получен Invalid 'win'/hit-enter, основной failure
+new-backend readiness сохранён, cleanup завершил только owned Job. Это валидный
+legacy product RED, не доказательство естественного Docker caller.
+
+Trial только без второго callback: обычный43758449819800 и winfix43769768359900
+PASS, hidden43779988949400 сохранил root prompt без Explorer/file fallback.
+Полное удаление fallback отклонено по native evidence. Source hidden-direct
+44197222635800 также терял Explorer; winfix-direct44185184896600 уже PASS до fix.
+Исходный source/config архив закреплён Git c1beaaa, финальные test/observer bytes
+одинаковы при replay и PASS; SDK/pins не менялись.
+
+**Изменение.** Из config.start убран второй scheduled cleanup/open. Прежняя
+функция сокращена до выбора normal main и listed-file fallback через готовый
+ide.find_main_window; она возвращает window ID. Общий PersistenceLoadPost
+выбирает файл перед reveal и возвращает фокус в сохранённое окно после него.
+Таким образом Help вне root не создаёт root prompt. Destructive cleanup не
+переносился в manual restore. SavePre, panel_guard, restart/cwd/history и
+остальные владельцы прежние. Новых controllers/flags/timers нет, production
+net -8 строк (две Lua files); все67 plugin pins и SDK прежние.
+
+**Постоянный регресс.** Главный E2E получил IDE-PANEL-15 и actual current-window
+assertions: Space qs и A→B→A дают code focus, новый B без session по-прежнему
+Explorer focus. Прежние files/tabs/cursors/modified-write/Quickfix/buffer/scopes
+сохраняются. Четыре native legacy cases: winfix/hidden через project restart и
+winfix-direct/hidden-direct через Space qs. Raw session создаётся native
+mksession; только атомарное создание старого Help-only fixture использует
+noautocmd only, чтобы нынешний Edgy не перестроил layout до сохранения. Restore
+не отключает callbacks. Проверяются listed/visible preconditions, file windows
+без fixed/marker, current text file, Explorer cwd/root, ошибки и clean exits.
+Direct сохраняет PID, restart создаёт новые backend.
+
+**Проверка.** Общий tests/run.lua e2e --id IDE-PANEL-15 выполнил5 новых cases:
+profiles44316932329200/44327931931200/44337971079500/44348524054200/44361364884500,
+12 настоящих backend instances; TUI jobs exit0, host native exit/signal0,
+APIerrors[], own scope before/after0 без helper signals/TerminateJobObject.
+Соседние code-focus3/outline-focus3/file-explorer7/buffers8 также PASS: всего26
+editor checks,20 captured profiles. У всех20 native exit/signal0/APIerrors[],
+нет helper SIGTERM/SIGKILL, own scopes после cleanup пусты; естественный выход
+всех потомков до scope close утверждается только для новых5 fixtures.
+Quick358/14files, trace11/2files, strict82/82. Audit сравнил63 Lua/JSON/patch files
+каждой captured config,67 pins, exact current test/observer copies при source
+и final, прежний SDK SHA74AFF15B…C6AD9 и удаление всех positive runtimes.
+Negative fixtures сохранены с первичной ошибкой; это не green lifecycle cases.
+Ранний help-only setup через обычный only не смог обойти нынешний Edgy и дал
+E445/несоблюдённое precondition; эти пилоты не считаются product RED. Raw
+snapshots и ошибки не переписаны. Разовый audit syntax исправлен до запуска.
+
+**Границы.** Read-only engine check22:43MSK: dockerDesktopLinuxEngine pipe
+отсутствует, exit1. Desktop/WSL/container не запускались/не перезапускались.
+Ubuntu/Mac/GUI не проверены; task1.4 открыт, change не архивируется. Active DAP
+при restore, branch/last/select/stop sessions и write failure остаются отдельными
+сценариями. Никакой SQL/LSP backend не добавлялся.
+
+Общий targeted run дополнительно выполнил3 SELF Python wrappers: helper
+python_case не учитывает FORGE_TEST_ID. Они прошли, но это независимый IDE-096;
+следующий шаг — общий filter contract с native CLI no-spawn regression.
+
+**Вывод.** Вторая restore фаза была лишней, listed-file fallback — необходимым.
+Они разделены по реальным legacy probes; общее восстановление работает через
+один LoadPost, без компенсационного timer или нового root/session ядра.
+
+**Файлы.** nvim_forge/lua/config/start.lua, plugins/editor.lua;
+tests/e2e/project-session.test.lua, session-legacy.test.lua, diagnostics/session-legacy.lua,
+registry/README, PROJECT_SESSION_REVIEW/FEATURE_REVIEW/IDE_ROADMAP/PROBLEMS,
+HISTORY/AGENT_COMMANDS и OpenSpec delta. Evidence .tests/ide095-evidence.json,
+ide095-final-red-*.txt, ide095-registry-{windows.txt,report.json},
+ide095-regression-*.txt, quick/trace/strict/engine-check.json.

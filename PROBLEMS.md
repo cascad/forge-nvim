@@ -10,7 +10,17 @@
 
 Маршрут и приоритеты: [рабочий план nvim_forge](docs/IDE_ROADMAP.md).
 Для новых пунктов используем следующий свободный ID `IDE-xxx`; исходный
-симптом хранится здесь, этап и состояние — в плане. Следующий ID: `IDE-096`.
+симптом хранится здесь, этап и состояние — в плане. Следующий ID: `IDE-097`.
+
+## IDE-096 — targeted E2E запускает посторонние Python SELF suites
+
+2026-11-10: общий `tests/run.lua e2e --id IDE-PANEL-15` выполнил нужные пять
+editor cases и дополнительно три SELF wrapper: shell-diagnostics, entrypoints,
+entrypoint-diagnostics. В tests/lib/python_case.lua нет проверки FORGE_TEST_ID
+до поиска интерпретатора/запуска Python; остальные Lua checks используют общий
+фильтр. Нужен общий contract фильтра и native CLI regression: чужой ID не должен
+запускать Python, совпадающий SELF/unfiltered должны сохранить exit/output.
+Наблюдение из report/log §167, fix пока не выполнялся; product Lua не затронут.
 
 ## IDE-095 — фокус после project/session restart возвращается в Explorer
 
@@ -22,7 +32,13 @@ project:open после cleanup. Повторный trigger — кандидат
 не проверена source RED. Baseline сохраняет actual current window и не выдаёт
 Explorer focus за желаемый контракт. Следующий шаг — отдельный воспроизводимый
 регресс и устранение дублирующего маршрута, если подтвердится; без нового
-panel/root controller. Ubuntu/Mac не проверены.
+panel/root controller.
+§167: source c1beaaa RED, повторный scheduled cleanup/open удалён. Оставшийся
+listed-file fallback выбирает main/file до общего reveal; Help-only restore
+не уводит дерево к SDK Help и не получает stale NUI window. Native основной
+и4 legacy restart/direct cases Windows PASS; файлы/cursors/tabs/запись и новый
+проект без session сохранены. Production net -8 строк, pins/SDK прежние.
+Ubuntu/Mac gates открыты; остальные session клавиши/active DAP отдельно.
 
 ## IDE-094 — очистка E2E профиля оставляет dangling Windows junction
 

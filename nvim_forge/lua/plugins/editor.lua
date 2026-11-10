@@ -246,12 +246,18 @@ return {
                     vim.schedule(function()
                         local ok, ide = pcall(require, "ide")
                         if ok then
+                            -- spec: IDE-PANEL-15. Restore a listed file first;
+                            -- revealing a saved Help/tool path can prompt for
+                            -- a different root instead of opening this project.
+                            local win = require("config.start").focus_restored_session()
                             -- Вход в проект (restore) → дерево файлов
                             -- (ide/triggers.lua: project:open).
                             pcall(function() ide.triggers.fire("project:open") end)
                             -- Фокус обратно в editor: explorer открывается, но
                             -- курсор остаётся на редактируемом файле.
-                            if type(ide.focus_main) == "function" then
+                            if vim.api.nvim_win_is_valid(win) then
+                                vim.api.nvim_set_current_win(win)
+                            elseif type(ide.focus_main) == "function" then
                                 pcall(ide.focus_main)
                             end
                         end
