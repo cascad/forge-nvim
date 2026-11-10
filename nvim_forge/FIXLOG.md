@@ -7636,3 +7636,106 @@ RED и unhooked sources архивированы, первичный SIGTERM art
 **Файлы:** tests/lib/editor_trace/editor_rpc/editor_process, quit-trace E2E,
 search E2E/registry, diagnostics/e2e README, roadmap/review/PROBLEMS,
 HISTORY/AGENT_COMMANDS и OpenSpec change.
+
+
+## 153. Debug Output: общий выбор канала и сохранение PTY
+
+2026-11-10. IDE-086; change `unify-debug-output-policy`.
+Спека: IDE-PANEL-11 (ADDED). Windows/Ubuntu проверены; macOS/GUI открыт.
+
+**Проблема.** F5 и ручной Debug View выбирали разные каналы. Холодный
+Space m d открывал Console; после выхода Go вместо REPL появлялась Console,
+Rust после hide также получал Console вместо PTY. Legacy Space D c при
+отсутствующем Output мог сфокусировать Tasks. Продолжение F5 для PTY скрывало
+уже существующее окно, ожидая нового runInTerminal, которого при continue нет.
+
+**Причина.** В plugins/dap.lua section_for_config учитывал CodeLLDB, remote
+Delve и integratedTerminal; ide.dap.open имел отдельную ветку Go/остальные.
+focus_output помнил только show_section, пропуская прямые component open/close.
+Ручное открытие, новый launch и continue использовали один terminal path,
+который только скрывал bottom. Явные show_repl/show_console при enter искали
+любое Debug-окно, поэтому могли переводить фокус в sidebar.
+Уточнение прежнего PANEL_OWNERSHIP_REVIEW: Dv — Variables, реальный opener
+Space m d / dD / du. Старые FIXLOG не переписаны.
+
+**Изменение.** Один resolver ide.dap.output_section: конфигурация для запуска;
+видимый/последний канал для manual reopen. Существующие компоненты помнят
+действительный выбранный канал, закрытие невидимого компонента его не меняет.
+После переключения итоговый выбор записывается после закрытия прежнего.
+При manual/continue используется пассивный dap.terminal.open с прежним
+buffer/channel; новый launch по-прежнему создаёт свежий PTY в runInTerminal.
+Stopped listener может вернуть скрытый PTY без termopen. Space D c делегирует
+общему controls.output; явные REPL/Console фокусируют именно выбранный канал.
+Нового panel manager, адаптера, backend или private fork нет. Pins/SDK прежние.
+
+**Проверка/RED.** На exact runtime source 7c1d41e: cold 24266127484000,
+Go after exit 24275496086600, Rust hide/reopen 24287196322200 — три ожидаемых
+native RED; у Go первый reopen на паузе прошёл, второй после exit сломался.
+Config-source четырёх затронутых runtime файлов сверен с Git по normalized SHA.
+Исходные окна/текст, quit trace и clean native shutdown сохранены.
+Ранние ошибки самого harness не названы product RED: пустой новый Lua-файл
+не получал filetype, editor.stop не возвращает result, пакет F7+focus
+перебивался отложенным возвратом в код; toggle после hide одного Output
+сначала закрывает ещё видимый sidebar. Эти предпосылки исправлены.
+Первый зелёный пилот также выявил ошибочную ссылку ide.controls вместо
+require('ide.controls'); исправлена до финальных прогонов.
+
+**Проверка/итог.** На каждой ОС 19 PASS: dap-output-policy 3, dap-output 4,
+debug-panels 4, test-runner 5, Python default/project 1, Node default/project 1,
+Rust default F5 1. Новые проверки используют реальные Delve/CodeLLDB/debugpy/
+js-debug и native UI, без fake session/output. Проверены stdout/stderr,
+buffer/channel identity, session/frame, hide/reopen после exit, явные каналы,
+legacy Output поверх Tasks, сохранение Variables, fresh PTY без старого stdout.
+Финальные 13 profiles Windows + 13 Ubuntu: native exit_code/signal=0,
+api_errors=[], QuitPre/VimLeave chain сохранён, own scope active_after=0;
+исходники конфигурации совпадают. Аудит .tests/audit-ide086.py /
+ide086-evidence.json; логи .tests/ide086-windows-*.txt и
+.tests/ubuntu/ide086-ubuntu-*.txt. Windows quick: 353 checks, 13 файлов PASS;
+strict OpenSpec: 71/71. Ubuntu запускался на готовом image, без build/download.
+Исчезновение engine до первого compose и повтор после включения владельцем
+описаны отдельно в §154. macOS/физические клавиши/WezTerm не проверены.
+
+**Вывод.** Выбор канала отделён от создания PTY: ручное возвращение показывает
+историю, новый запуск сохраняет существующий freshness lifecycle. IDE-085 в
+этих финальных profiles не повторился; его причина этим не установлена.
+Следующий срез — read-only сравнение поиска окна кода перед отдельным change.
+
+**Файлы:** ide/dap.lua, ide/init.lua, plugins/dap.lua, config/keymaps.lua;
+tests/e2e/dap-output-policy.test.lua, tests/lib/output_policy.lua, Python/Node
+language regressions, tests/registry.lua; change, QUICKSTART/README,
+PANEL_OWNERSHIP_REVIEW, FEATURE_REVIEW, IDE_ROADMAP, PROBLEMS/HISTORY.
+
+## 154. Docker: остановка backend до container run
+
+2026-11-10. IDE-087. Статус: диагностика, инициатор и причина открыты.
+Поведение/настройки Docker и WSL не менялись, product fix не заявлен.
+
+**Проблема.** После доступного version 28.5.1 оба named pipe исчезли.
+Compose не смог подключиться к dockerDesktopLinuxEngine и не создал контейнер.
+
+**Факты/границы причины.** Host com.docker.backend/monitor журналы в
+17:06:41 MSK (14:06:41Z) записали context cancellation, com.docker.build
+exit status 15 и остановку backend/API proxies. Это не доказывает, кто
+послал завершение и почему; код 15 не объявлен доказательством OOM/краша/
+пользовательского Quit или связи с конкретным тестом.
+Первый compose агента — 17:08:59; до него в этом шаге был read-only version.
+Windows E2E шли последовательно, Go CPU ограничен двумя. Команд Desktop/WSL
+start/stop/restart/configure агент в этом шаге не выполнял. Это не исключает
+неустановленного влияния нагрузки; причинная связь не доказана.
+Application 1000/1001/1002 за 17:04–17:09:30 не вернул Docker/WSL matches;
+это ограниченный отрицательный результат, не полная системная трассировка.
+
+**Действие/проверка.** Сохранены .tests/ide086-ubuntu-engine-unavailable.txt
+и отфильтрованный .tests/ide086-docker-interruption.txt, проверены существующие
+contexts без переключения. Владелец включил Desktop; один offline compose run
+в готовом image выполнил 19 checks Ubuntu PASS. Build/repair/update не делались.
+Windows cleanup использует собственный Job Object, root PID и startup barrier;
+его код не ищет Docker по имени. Это граница механизма, а не доказательство
+отсутствия любой связи с остановкой Desktop.
+
+**Вывод.** Повтор после включения успешен, IDE-087 остаётся открытым.
+Не запускать/перезапускать Desktop/WSL автоматически; новый отказ сохранять
+с timestamp и caller/process evidence, не выдавать повтор за устранение причины.
+
+**Файлы:** PROBLEMS.md, docs/IDE_ROADMAP.md, docs/HISTORY.md,
+docs/AGENT_COMMANDS.md; runtime Docker/WSL не изменён.

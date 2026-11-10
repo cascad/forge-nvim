@@ -10,7 +10,16 @@
 
 Маршрут и приоритеты: [рабочий план nvim_forge](docs/IDE_ROADMAP.md).
 Для новых пунктов используем следующий свободный ID `IDE-xxx`; исходный
-симптом хранится здесь, этап и состояние — в плане. Следующий ID: `IDE-086`.
+симптом хранится здесь, этап и состояние — в плане. Следующий ID: `IDE-088`.
+
+## IDE-087 — Docker backend исчез во время Windows E2E
+
+2026-11-10: version 28.5.1 отвечал, затем Linux/default pipe исчезли. По host
+журналу backend остановился в 17:06:41 MSK: com.docker.build exit status 15,
+закрытие API. Первый compose run агента — 17:08:59, до создания контейнера
+не дошёл. Команд управления Desktop/WSL в этом шаге не было; инициатор и
+первопричина не установлены. После включения владельцем 19 Ubuntu checks
+прошли, что не является исправлением остановки. Факты/границы — FIXLOG §154.
 
 ## IDE-085 — Windows E2E: единичный SIGTERM после обычного qa!
 
@@ -617,6 +626,14 @@ Guard сохраняет действительное выбранное окн�
 явный переход в code split также сохраняется. Source RED постоянного E2E,
 по 3 новых + 23 прежних E2E и по 3 cold samples Windows/Ubuntu.
 Change preserve-focus-during-tree-cleanup; Mac/GUI gate открыт.
+
+IDE-086 → [FIXLOG §153](nvim_forge/FIXLOG.md#153-debug-output-общий-выбор-канала-и-сохранение-pty):
+ручной Debug View терял REPL после Go exit и PTY после Rust hide, cold view
+открывал Console; разные правила выбора сведены в resolver, passive reuse
+сохраняет buffer/channel/history, новый запуск создаёт свежий PTY.
+По 19 native checks Windows/Ubuntu, по 13 clean editor exits/scopes.
+Change unify-debug-output-policy, IDE-PANEL-11; Mac/GUI открыт.
+Dv остаётся Variables, opener — Space m d / dD / du.
 
 IDE-081 → [FIXLOG §151](nvim_forge/FIXLOG.md#151-поиск-native-fzf-без-runtime-компилятора-и-явный-fallback):
 готовая DLL/SO используется без CMake; missing/corrupt сохраняют рабочий Lua

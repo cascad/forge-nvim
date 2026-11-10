@@ -1,9 +1,6 @@
 -- ide/dap.lua — DAP UI-оркестрация поверх ide.state (slot-контроллер).
--- Перенос «debug-мозга» из старого config/panels.lua БЕЗ изменения логики:
--- только убран mode-контроллер (current_mode) и пути на ide/activities.
---
--- Конвенция секций (см. plugins/dap.lua → section_for_config):
---   "console"  → ide.show("dap.console") (layout 2 — bottom, codelldb/PTY)
+-- Конвенция секций:
+--   "console"  → ide.show("dap.console") (layout 2 — явная Debug Console)
 --   "repl"     → ide.show("dap.repl")    (layout 3 — bottom, Go/Python)
 --   "terminal" → bottom не открываем сами: окно создаст dap_terminal_win_cmd
 --                при runInTerminal (см. plugins/dap.lua)
@@ -14,6 +11,34 @@ local activities = require("ide.activities")
 
 local M = {}
 local last_output = 'repl'
+local OUTPUT_FT = { repl = 'dap-repl', console = 'dapui_console', terminal = 'dap-terminal' }
+
+function M.remember_output(section)
+    if OUTPUT_FT[section] then last_output = section end
+end
+
+-- spec: IDE-PANEL-11. Конфигурация выбирает канал нового запуска;
+-- ручное открытие возвращает видимый либо последний выбранный Output.
+function M.output_section(cfg)
+    if cfg ~= nil then
+        local type_ = type(cfg) == 'table' and cfg.type or cfg
+        if type_ == 'codelldb' then return 'terminal' end
+        -- spec: IDE-DAP-1 remote Delve использует output events даже
+        -- при сохранённом console=integratedTerminal в launch.json.
+        if (type_ == 'go' or type_ == 'delve') and type(cfg) == 'table' and cfg.outputMode == 'remote' then return 'repl' end
+        if type(cfg) == 'table' and cfg.console == 'integratedTerminal' then return 'terminal' end
+        return 'repl'
+    end
+    for _, win in ipairs(vim.api.nvim_tabpage_list_wins(0)) do
+        if vim.api.nvim_win_get_config(win).relative == '' then
+            local ft = vim.bo[vim.api.nvim_win_get_buf(win)].filetype
+            for section, output_ft in pairs(OUTPUT_FT) do
+                if ft == output_ft then return section, win end
+            end
+        end
+    end
+    return last_output
+end
 
 -- ide требуем лениво внутри функций — иначе цикл (ide/init → ide.dap → ide).
 local function ide()
@@ -46,8 +71,7 @@ end
 -- @param section nil | "console" | "repl" | "terminal" | "scopes" | "watches"
 --                | "stacks" | "threads" | "breakpoints"
 -- @param enter   boolean — ставить ли фокус в debug-окно (иначе фокус в код)
-function M.show_section(section, enter)
-    if section == 'repl' or section == 'console' or section == 'terminal' then last_output = section end
+function M.show_section(section, enter, reuse_terminal)
     activities.close_activity("debug")
 
     local mod = ide()
@@ -64,11 +88,16 @@ function M.show_section(section, enter)
     elseif section == "console" then
         mod.show("dap.console")
     elseif section == "terminal" then
-        -- НЕ открываем сами dap.terminal — окно создаётся
-        -- dap_terminal_win_cmd когда codelldb пришлёт runInTerminal.
-        -- Закрываем предыдущий bottom (вдруг там repl от прошлой сессии).
-        mod.hide_slot("bottom")
+        if reuse_terminal then
+            -- Пассивный компонент показывает сохранённый buffer, без termopen.
+            mod.show('dap.terminal')
+        else
+            -- Новый запуск: свежий PTY создаст только runInTerminal.
+            mod.hide_slot('bottom')
+        end
     end
+    -- Закрытие прежнего компонента не должно перезаписать новый выбор.
+    M.remember_output(section)
     -- nil или sidebar_section_ft: bottom не трогаем — он откроется позже
     -- (event_initialized listener в plugins/dap.lua), когда тип адаптера ясен.
 
@@ -76,26 +105,15 @@ function M.show_section(section, enter)
         if sidebar_section_ft and dapui_focus_ft(sidebar_section_ft) then
             return
         end
-        activities.focus_later(nil, activities.is_debug_buffer)
+        activities.focus_later(OUTPUT_FT[section], activities.is_debug_buffer)
     else
         activities.focus_code_later()
     end
 end
 
--- Открыть debug-view (sidebar + bottom по типу активной сессии).
--- По умолчанию Console; для Go/delve — REPL (delve в mode=debug шлёт stdout
--- через DAP output events в REPL, а не в integratedTerminal).
+-- Ручной Debug View сохраняет пользовательский выбор и историю после exit.
 function M.open()
-    local section = "console"
-    local ok, dap = pcall(require, "dap")
-    if ok then
-        local session = dap.session()
-        local type_ = session and session.config and session.config.type
-        if type_ == "go" or type_ == "delve" then
-            section = "repl"
-        end
-    end
-    M.show_section(section, false)
+    M.show_section(M.output_section(), false, true)
 end
 
 function M.toggle()
@@ -111,7 +129,7 @@ function M.close()
     activities.close_debug()
 end
 
--- Bottom = Console (PTY дебагги-процесса), с фокусом.
+-- Явная Debug Console, с фокусом.
 function M.show_console()
     M.show_section("console", true)
 end
@@ -123,20 +141,18 @@ end
 
 -- Сохраняем канал вывода: скрытый PTY не заменяется пустым REPL.
 function M.focus_output()
-    local outputs = { ['dap-repl'] = true, dapui_console = true, ['dap-terminal'] = true }
-    for _, win in ipairs(vim.api.nvim_tabpage_list_wins(0)) do
-        if outputs[vim.bo[vim.api.nvim_win_get_buf(win)].filetype]
-            and vim.api.nvim_win_get_config(win).relative == '' then
-            vim.api.nvim_set_current_win(win)
-            return
-        end
+    local section, win = M.output_section()
+    if win then
+        M.remember_output(section)
+        vim.api.nvim_set_current_win(win)
+        return
     end
     local mod = ide()
     if not mod then return end
-    mod.show('dap.' .. last_output)
+    mod.show('dap.' .. section)
+    M.remember_output(section)
     vim.schedule(function()
-        local target = ({ repl = 'dap-repl', console = 'dapui_console', terminal = 'dap-terminal' })[last_output]
-        dapui_focus_ft(target)
+        dapui_focus_ft(OUTPUT_FT[section])
     end)
 end
 

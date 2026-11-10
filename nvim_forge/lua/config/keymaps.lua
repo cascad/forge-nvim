@@ -675,13 +675,8 @@ nm("<leader>Db", function()
 end, "Debug: focus Breakpoints")
 
 -- Bottom: REPL / Debug Console / DAP Terminal — что бы там сейчас ни было.
--- focus_slot("bottom") уже умеет находить активное окно слота.
 nm("<leader>Dc", function()
-    -- Сначала пытаемся прыгнуть в любой known DAP-bottom ft напрямую
-    -- (REPL/console/terminal). Если ничего нет — focus_slot подберёт
-    -- что есть (мог оказаться terminal / search / overseer).
-    if focus_window_by_ft({ "dap-repl", "dapui_console", "dap-terminal" }) then return end
-    ide.focus_slot("bottom")
+    require('ide.controls').output()
 end, "Debug: focus REPL/Console/Terminal (bottom)")
 
 nm("<leader>D0", function() ide.focus_main() end, "Debug: focus main editor (code)")

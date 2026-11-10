@@ -201,6 +201,7 @@ local function observe_dap(e)
 end
 local function paused(e)
   e:wait('настоящий Node breakpoint',function() return e:lua([[local s=require('dap').session();return s and s.stopped_thread_id~=nil and s.current_frame~=nil]]) end,40000)
+  require('output_policy').reopen(e,'dap-repl',' md')
   e:input('<F7>');seek(e,'answer');e:input(' de')
   e:wait('eval answer=42',function() return text(e,'dap-float'):find('42',1,true)~=nil end,10000)
   e:input('q<F7><F5>');e:wait('Node сессия завершилась',function() return e:lua([[return require('dap').session()==nil]]) end,30000)
@@ -208,6 +209,7 @@ end
 check('IDE-NODE-3 default F5 и project launch.json',function(e)
   language(e,'app.js');e:input('7G<F9>');observe_dap(e);e:input('<F5>');paused(e)
   assert(text(e,'dap-repl'):find('NODE_BEFORE default',1,true));assert(text(e,'dap-repl'):find('NODE_STDERR',1,true))
+  require('output_policy').reopen(e,'dap-repl',' du')
   local cfg={name='Project Node',type='node',request='launch',program='${workspaceFolder}/app.js',cwd=e.node_project,args={'from-launch'},console='internalConsole'}
   vim.fn.writefile({vim.json.encode({version='0.2.0',configurations={cfg}})},e.node_project..'/.vscode/launch.json')
   e:input('<F7><F5>');e:wait('project config picker',function() return e:current_ft()=='TelescopePrompt' end)

@@ -325,7 +325,7 @@ Ubuntu 9265858326624/9281597222561/9295146798511. В каждом source diagnos
 |---|---|---|
 | IDE-082: отложить Delve discovery и сделать Go label пассивным | Настоящий project SDK для language/build/debug и явный toolchain picker | Ненужные subprocess при edit; не запрещать GOTOOLCHAIN глобально |
 | IDE-083: вернуть готовые Glance defaults | Peek и его штатные keys | Удалить семь ошибочных overrides; q/Esc/Enter/navigation/splits через native regression |
-| IDE-084 выполнен; Output policy далее | Первое открытие/focus, output history и PTY lifetime | Late tree cleanup не меняет окно (§150); общий выбор Output ещё отдельный шаг |
+| IDE-084/086 выполнены Windows/Ubuntu | Первое открытие/focus, output history и PTY lifetime | Late tree cleanup не меняет окно (§150); Output resolver и passive reuse проверены на Windows/Ubuntu (§153), Mac открыт |
 | IDE-081 выполнен | Рабочий поиск и optional native/fallback | Реальный load result, explicit artifact preparation, health и regression (§151) |
 | Breadcrumbs/ruler | Outline, Problems, gd/gr; Peek по запросу | Рекомендуется убрать barbecue/navic/satellite после выбора UX; вариант без 4 UI уже проверен частно, удаления по 3 требуют своего regression |
 | Git/DAP/panel ядро | Gitsigns + Neogit + Diffview, state/registry + DAP UI + Edgy, guard | Сокращать только дублирующие правила, не разные рабочие роли |
@@ -369,7 +369,8 @@ language/test roots, interpreter/tools и save/format разобраны в
   DAP-кандидаты: единый выбор Output, затем одинаковые части поиска окна кода;
   process/PTY lifecycle не объединять с видимостью. Это пока план, не runtime fix.
   IDE-081/082/083/084 уже выполнены; capture IDE-085 готов, причина открыта.
-  Далее Output policy и выбранные удаления optional UI.
+  IDE-086 Output policy проверен на Windows/Ubuntu (§153).
+  Далее поиск окна кода. Удаления optional UI по-прежнему требуют выбора.
   Project/session restart и uniform interpreter/root policies требуют отдельных
   сценариев; существующие Git результаты не заменяют их полной проверки.
 

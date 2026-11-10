@@ -222,10 +222,12 @@ local default_components = {
         id = "dap.console", slot = "bottom", title = "Debug Console",
         filetypes = { "dapui_console" },
         open = function()
+            M.dap.remember_output('console')
             local ok, dapui = pcall(require, "dapui")
             if ok then pcall(dapui.open, { layout = 2, reset = true }) end
         end,
         close = function()
+            if any_window_with_ft('dapui_console') then M.dap.remember_output('console') end
             local ok, dapui = pcall(require, "dapui")
             if ok then pcall(dapui.close, { layout = 2 }) end
         end,
@@ -235,7 +237,7 @@ local default_components = {
         -- Свежий PTY-буфер codelldb (см. plugins/dap.lua →
         -- dap_terminal_win_cmd). Окно создаётся самим terminal_win_cmd
         -- при runInTerminal-запросе адаптера, поэтому open/close здесь
-        -- "пассивные" — мы не открываем сами, только закрываем/находим.
+        -- "пассивные" — показывают/скрывают buffer, не создают PTY/job.
         id = "dap.terminal", slot = "bottom", title = "DAP Terminal",
         filetypes = { "dap-terminal" },
         open = function()
@@ -247,6 +249,7 @@ local default_components = {
                 if vim.api.nvim_win_is_valid(win) then
                     local b = vim.api.nvim_win_get_buf(win)
                     if vim.bo[b].filetype == "dap-terminal" then
+                        M.dap.remember_output('terminal')
                         return
                     end
                 end
@@ -259,6 +262,7 @@ local default_components = {
                 end
             end
             if last_buf then
+                M.dap.remember_output('terminal')
                 pcall(vim.api.nvim_open_win, last_buf, false, {
                     split = "below", win = -1,
                     height = math.max(10, math.floor(vim.o.lines * 0.3)),
@@ -266,6 +270,7 @@ local default_components = {
             end
         end,
         close = function()
+            if any_window_with_ft('dap-terminal') then M.dap.remember_output('terminal') end
             for _, win in ipairs(vim.api.nvim_list_wins()) do
                 if vim.api.nvim_win_is_valid(win) then
                     local b = vim.api.nvim_win_get_buf(win)
@@ -281,10 +286,12 @@ local default_components = {
         id = "dap.repl", slot = "bottom", title = "DAP REPL",
         filetypes = { "dap-repl" },
         open = function()
+            M.dap.remember_output('repl')
             local ok, dapui = pcall(require, "dapui")
             if ok then pcall(dapui.open, { layout = 3, reset = true }) end
         end,
         close = function()
+            if any_window_with_ft('dap-repl') then M.dap.remember_output('repl') end
             local ok, dapui = pcall(require, "dapui")
             if ok then pcall(dapui.close, { layout = 3 }) end
         end,

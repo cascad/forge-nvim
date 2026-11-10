@@ -28,7 +28,9 @@ IDE-001 параллельно ждёт диагностических данн�
 | Готово Windows/Ubuntu | IDE-084: фокус при позднем дереве | Neo-tree cleanup сохраняет выбранное окно; по 3 новых + 23 прежних E2E и по 3 cold samples, §150; Mac gate открыт |
 | Готово Windows/Ubuntu | IDE-081: native fzf / fallback | По 5 новых checks (4 editor + health) и 25 прежних; настоящий C scoring без CMake, health, F5 picker; §151, Mac gate открыт |
 | Capture готов, причина открыта | IDE-085 | Повторный source RED, 3 native trace E2E и helper source/quit/error capture; Windows 19 PASS/2 SKIP, Ubuntu 20 PASS/1 SKIP (§152). При следующих регрессах собирать новый timeline; product fix не заявлен |
-| Следующий конкретный change | Общая политика Output | Разобрать различия ручного выбора/первого открытия; сохранить stdout/PTY/history и готовые DAP компоненты, см. PANEL_OWNERSHIP_REVIEW |
+| Готово Windows/Ubuntu | IDE-086: общая политика Output | Один resolver, сохранение REPL/PTY/history; по 19 native checks и 13 clean exits/scopes; §153. Mac открыт |
+| Диагностика открыта | IDE-087: остановка Docker backend | В 17:06:41 backend закрыл API после com.docker.build exit status 15; инициатор неизвестен (§154). Desktop/WSL агент не управляет, повтор после включения владельцем прошёл |
+| Следующий read-only срез | Поиск окна кода | Сопоставить state/activities/panel_guard, определить одинаковые predicates и native restore/tool-only/float/terminal scenarios; затем отдельный небольшой change |
 | Отложено до готового backend | Остаток SQL workflow, IDE-062 | SQLS references provider отсутствует. Собственный binder/index/LSP fork отменён (§143); не подменять references grep и не объявлять полную SQL поддержку |
 | Затем | Остальная [матрица языков](LANGUAGE_MATRIX.md) | SQL references IDE-062, Bash DAP IDE-057; Mac/native и оставшиеся сценарии матрицы |
 | После функциональной матрицы | Упрощение архитектуры | Общее ядро, явные системные границы и setup; сокращение дублирования с сохранением E2E |
@@ -56,7 +58,9 @@ sources/exit/scopes проверены. Ubuntu SDK слои взяты из cach
 сохранён как IDE-085, зелёный повтор не объявлен его исправлением.
 Bounded IDE-085 дал повторный исходный RED и проверенный capture (§152),
 первопричина остаётся открытой. Наблюдение продолжается в следующих E2E,
-пределы cleanup не увеличены. Далее Output policy и порядок FEATURE_REVIEW.
+пределы cleanup не увеличены. Output policy реализован на Windows (IDE-086,
+§153), повтор Ubuntu после включения engine также прошёл. Далее поиск окна кода по
+PANEL_OWNERSHIP_REVIEW; большие lifecycle переписи не начаты.
 
 **Mac параллельно:** IDE-001 (zsh/Go до запуска nvim) и IDE-002 (Cmd+C)
 ждут измерений/GUI на Mac. Сборщик startup готов; после trace исправляется
@@ -93,7 +97,8 @@ Git/workspace/tools/save разобраны в [WORKSPACE_TOOL_REVIEW](WORKSPACE
 Исходный Peek q был RED 6/6 (IDE-083); fix §149 вернул готовые Glance defaults
 и прошёл постоянный regression. Решение об удалении breadcrumbs/ruler/Peek
 остаётся открытым. IDE-081/082/083/084 завершены на Windows/Ubuntu; далее
-Output policy; IDE-085 остаётся наблюдаемым открытым расследованием.
+IDE-086 Output policy проверен на Windows/Ubuntu;
+IDE-085 остаётся наблюдаемым открытым расследованием.
 Mac/GUI gates открыты.
 
 SQL references — [отдельный change](../openspec/changes/add-sql-semantic-references/tasks.md):

@@ -460,21 +460,7 @@ end
 --     уже подменён, и любой runInTerminal попадёт в dap-terminal.
 --   * delve (Go) и debugpy (Python) с internalConsole — output events
 --     идут в dap-repl. Соответственно "repl".
-local function section_for_config(cfg)
-    local type_ = type(cfg) == "table" and cfg.type or cfg
-    if type_ == "codelldb" then
-        return "terminal"
-    end
-    -- spec: IDE-DAP-1 Delve outputMode=remote доставляет DAP output events,
-    -- даже если launch.json сохранил console=integratedTerminal.
-    if (type_ == "go" or type_ == "delve") and type(cfg) == "table" and cfg.outputMode == "remote" then
-        return "repl"
-    end
-    if type(cfg) == "table" and cfg.console == "integratedTerminal" then
-        return "terminal"
-    end
-    return "repl"
-end
+local section_for_config = ide_dap.output_section
 
 local function open_debug_for_config(cfg)
     -- Канонический момент «старт дебага» — через декларативный триггер
@@ -525,6 +511,7 @@ local function reset_dap_terminal_buf()
 end
 
 local function dap_terminal_win_cmd(_config)
+    ide_dap.remember_output('terminal')
     -- Инвалидируем pool-entry в nvim-dap (старый buf уже невалиден если
     -- мы reset'нули его в run_debug_choice; на всякий случай ещё раз).
     if vim.api.nvim_buf_is_valid(_last_dap_terminal_buf) then
@@ -957,7 +944,7 @@ local function dap_continue()
         local session = dap_mod.session()
         local cfg = session and session.config
         if cfg and cfg.type then
-            ide_dap.show_section(section_for_config(cfg), false)
+            ide_dap.show_section(section_for_config(cfg), false, true)
         else
             ide_dap.show_section(nil, false)
         end
@@ -1011,7 +998,7 @@ local function dap_pick_any()
         local session = dap_mod.session()
         local cfg = session and session.config
         if cfg and cfg.type then
-            ide_dap.show_section(section_for_config(cfg), false)
+            ide_dap.show_section(section_for_config(cfg), false, true)
         else
             ide_dap.show_section(nil, false)
         end
@@ -1501,7 +1488,7 @@ return {
                     local section = section_for_config(stopped_session.config)
                     -- PTY принадлежит runInTerminal; сами не создаём
                     -- новый терминал и не закрываем уже полученный вывод.
-                    if ok and section ~= "terminal" then pcall(ide.show, "dap." .. section) end
+                    if ok then pcall(ide.show, "dap." .. section) end
                 end)
             end
 

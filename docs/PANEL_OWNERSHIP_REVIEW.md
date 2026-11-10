@@ -96,7 +96,7 @@ API, не подменяет данные сессии. Listener `forge_e2e` —
 UI-кандидатами; запуск debug/реальный project toolchain при этом сохраняются.
 
 1. **Политика канала Output.** При запуске `section_for_config` учитывает
-   codelldb, console=integratedTerminal и Go outputMode=remote. Legacy `Dv`
+   codelldb, console=integratedTerminal и Go outputMode=remote. Legacy `Space m d`
    через `ide.dap.open` выбирает Go/Delve REPL, для остальных — console.
    `Space w c` использует видимый или последний источник. Эти пути не одинаковы.
    Сначала зафиксировать ожидаемый reopen после hide/exit для Go, Rust,
@@ -122,7 +122,7 @@ runtime change остаются общий review/выбор фич, сцена�
 | Контракт | Уже существующее покрытие | Что ещё нужно перед изменением |
 |---|---|---|
 | Keyboard focus/Locals/REPL/zoom/help/hide без потери паузы | debug-panels: 4 реальных Go/Delve E2E Windows/Ubuntu в этом срезе | Аналогичные reopen/source cases остальных adapters |
-| stdout/stderr, повторный старт, скрытая панель, panic | dap-output: 4 реальных Go E2E Windows/Ubuntu в этом срезе | Manual Dv после hide/exit для каждого канала |
+| stdout/stderr, повторный старт, скрытая панель, panic | dap-output: 4 реальных Go E2E Windows/Ubuntu в этом срезе | Manual Debug View после hide/exit для каждого канала; IDE-086 ниже |
 | Первый настоящий PTY | Rust default F5: build, breakpoint/output, обе ОС в этом срезе | Reopen после hide и новый PTY после restart; полный Rust набор при изменении lifecycle |
 | Python/Node launch/debug/tests | Существующие language suites и их прежние результаты в LANGUAGE_MATRIX | Здесь повторно не запускались; нужна targeted проверка затронутых путей |
 | Восстановление сессии и отсутствие main/code window | Есть runtime guard; editor/buffer E2E не дают отдельного полного restore-сценария | Постоянный native E2E restore, tool-only, floating и terminal cases перед объединением finders |
@@ -146,3 +146,24 @@ Native trace выявил цепочку late Neo-tree navigate → наше з�
 public producer поверх Outline/кода. Windows/Ubuntu по 3 новых + 23 прежних
 native PASS, по 3 дополнительных cold traces (§150). Это не полный session
 restore/Output policy regression; Mac/GUI отдельно. Pins/backports прежние.
+
+
+## IDE-086 — общий выбор Output
+
+Native RED на исходном 7c1d41e подтвердил холодную Console, Go после exit и
+Rust после hide. Resolver перенесён в ide.dap; config выбирает primary для
+запуска, manual open/focus возвращает видимый/последний источник. Компоненты
+помнят явный выбор. PTY manual/continue/paused reuse пассивен: прежний
+buffer/channel, история; новый launch сохраняет свежий runInTerminal buffer.
+Space D c использует controls.output; Dv по-прежнему Variables. Явные Console/
+REPL фокусируют свой канал, а не первое окно Debug.
+
+Исправлена фактическая ошибка прежнего обзора: opener был назван Dv, но
+реальный key — Space m d / Space dD / Space du. FIXLOG уточнён новой §153.
+На Windows/Ubuntu по 19 новых и targeted native checks: 3 policy, 4 output,
+4 panels, 5 test runner и по default/project Python/Node, default Rust.
+По 13 native profiles, exit/signal=0, api_errors=[], own scopes empty.
+Native Mac/GUI открыт; новый manager/backend/pins/backports не добавлены.
+Следующий read-only срез — сравнение find_main_window/is_main_window с
+activities/panel_guard, сценарии restore/tool-only/float/terminal до runtime
+объединения. Завершённый Output срез не доказывает, что эти finders эквивалентны.

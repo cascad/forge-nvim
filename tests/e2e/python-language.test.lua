@@ -133,6 +133,7 @@ local function choose(e,name)
 end
 local function paused(e)
   e:wait('реальный Python breakpoint',function() return e:lua([[local s=require('dap').session();return s and s.stopped_thread_id~=nil and s.current_frame~=nil or false]]) end,30000)
+  require('output_policy').reopen(e,'dap-repl',' md')
   e:input('<F7>');seek(e,'answer');e:input(' de')
   e:wait('Python eval 42',function() return text(e,'dap-float'):find('42',1,true)~=nil end)
   e:input('q<F7><F5>');e:wait('Python session завершилась',function() return e:lua([[return require('dap').session()==nil]]) end,30000)
@@ -141,6 +142,7 @@ check('IDE-PY-1 Python debug default/project и реальный interpreter/out
   open(e,'app.py');e:input('gg/E2E_BREAKPOINT<CR><F9><F5>');choose(e,'Current Python file');paused(e)
   local out=text(e,'dap-repl');assert(out:find('PY_VALUE',1,true) and out:find('PY_STDERR',1,true) and out:find('PROJECT_VENV_ONLY',1,true))
   assert(out:find('PY_PROJECT_VENV True',1,true),'debug использует project .venv')
+  require('output_policy').reopen(e,'dap-repl',' du')
   local cfg={name='Project Python',type='debugpy',request='launch',program='${workspaceFolder}/app.py',cwd=e.python_project,args={'from-launch'},console='internalConsole',redirectOutput=true}
   vim.fn.writefile({vim.json.encode({version='0.2.0',configurations={cfg}})},e.python_project..'/.vscode/launch.json')
   e:input('<F7><F5>');choose(e,'Project Python');paused(e);assert(text(e,'dap-repl'):find('PY_BEFORE from-launch',1,true))

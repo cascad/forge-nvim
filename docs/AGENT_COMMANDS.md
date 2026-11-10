@@ -4321,3 +4321,78 @@ Stage только перечисленных test/change/docs файлов, com
 'test(e2e): capture native quit events and RPC errors', затем task metadata
 через git commit --amend --no-edit. Push отсутствует. Причина IDE-085 остаётся
 открытой; Native Mac gate отдельно, основной следующий пункт — Output policy.
+
+
+## 67. IDE-086 Output policy и остановка Docker IDE-087, 2026-11-10
+
+Рабочий каталог F:/repo/forge-nvim, PowerShell login=false/-NoProfile.
+Чтение через rg по directories с -g '*.lua', Get-Content с узкими slices,
+git status/diff/show; старые FIXLOG и diary не переписаны.
+
+Общий prefix Windows:
+```powershell
+$env:TEMP='F:/repo/forge-nvim/.tests/tmp'
+$env:TMP=$env:TEMP; $env:TMPDIR=$env:TEMP
+$env:NVIM_LOG_FILE="$env:TEMP/ide086-green.log"
+$env:GOMAXPROCS='2'; $env:GOFLAGS='-p=2'
+$env:PYTHONIOENCODING='utf-8'
+$env:npm_config_cache='F:/forge-nvim-tmp/npm-cache'
+. ./scripts/lib/nvim-sdk.ps1
+$forgeNvim=Get-ForgeNvim (Get-Location).Path
+```
+OpenSpec 1.13.2: context --json; list --specs; new change
+unify-debug-output-policy; status / instructions proposal/specs/design/tasks/apply
+--change unify-debug-output-policy --json. Apply state ready, schema spec-driven,
+repo-local root. Основные specs не синхронизировались, Mac gate открыт.
+Инструкции с повторным ожиданием согласия уступают явному поручению владельца
+продолжать/реализовывать/коммитить. Других разрешений не спрашивалось.
+
+Исходный RED и финальный новый набор:
+```powershell
+$env:FORGE_OUTPUT_CASE='cold'
+& $forgeNvim -l tests/e2e/dap-output-policy.test.lua > .tests/ide086-windows-red.txt 2>&1
+Remove-Item Env:FORGE_OUTPUT_CASE -ErrorAction SilentlyContinue
+& $forgeNvim -l tests/e2e/dap-output-policy.test.lua > .tests/ide086-windows-red-native.txt 2>&1
+& $forgeNvim -l tests/e2e/dap-output-policy.test.lua > .tests/ide086-windows-policy.txt 2>&1
+foreach ($forgeSuite in @('dap-output','debug-panels','test-runner','python-language','node-language','rust-language')) {
+    $env:FORGE_PYTHON_CASE='debug default/project'
+    $env:FORGE_NODE_CASE='default F5'
+    $env:FORGE_RUST_CASE='F5 default'
+    & $forgeNvim -l "tests/e2e/$forgeSuite.test.lua" > ".tests/ide086-windows-$forgeSuite.txt" 2>&1
+    if ($LASTEXITCODE -ne 0) { break }
+}
+```
+Пилотные логи red-dap / первый policy содержат ошибки harness/первого runtime
+прохода, объяснённые в §153; не смешивать их с финальным 19 PASS.
+Native tests сами пишут экран/snapshot, output-policy.jsonl, config-source,
+quit-native/controller, shutdown и own scopes. Тесты не подменяют backend.
+
+Ubuntu (один последовательный offline контейнер, без build):
+```powershell
+docker compose -f tests/containers/compose.yaml run --rm --no-deps --entrypoint bash -e GOMAXPROCS=2 -e GOFLAGS=-p=2 ubuntu -lc 'set -eu; for suite in dap-output-policy dap-output debug-panels test-runner python-language node-language rust-language; do FORGE_PYTHON_CASE="debug default/project" FORGE_NODE_CASE="default F5" FORGE_RUST_CASE="F5 default" nvim -l "tests/e2e/$suite.test.lua" > ".tests/ide086-ubuntu-$suite.txt" 2>&1 || { tail -n 18 ".tests/ide086-ubuntu-$suite.txt"; exit 1; }; tail -n 3 ".tests/ide086-ubuntu-$suite.txt"; done' > .tests/ide086-ubuntu-run.txt 2>&1
+```
+Первый вызов не подключился к pipe, до container create не дошёл;
+его лог скопирован в .tests/ide086-ubuntu-engine-unavailable.txt.
+Read-only docker version / context ls и --context default version/info
+подтвердили отсутствие обоих endpoints. Docker Desktop/WSL не запускались
+агентом. После сообщения владельца о включении повтор команды дал 19 PASS.
+Чтение host logs: Get-ChildItem "$env:LOCALAPPDATA/Docker/log/host" (только files),
+Python pathlib.read_text с timestamp filter 14:04–14:09Z, без auth/settings
+payload в сохранённой выжимке. Get-WinEvent Application IDs 1000/1001/1002,
+17:04–17:09:30 local, matches Docker/WSL не вернулись. §154 хранит ограничения.
+
+Итоговые проверки:
+```powershell
+powershell -NoProfile -File scripts/test.ps1 quick > .tests/ide086-windows-quick.txt 2>&1
+python -B .tests/audit-ide086.py
+npx.cmd --yes @fission-ai/openspec@1.13.2 validate --all --strict --no-interactive > .tests/ide086-openspec.txt 2>&1
+git diff --check
+```
+Quick: 353 checks/13 files; strict: 71/71. Audit: исходные три RED exact SHA
+7c1d41e, по 19 финальных checks и по 13 native profiles/OS, exit/signal=0,
+api_errors=[], VimLeave, own scopes empty, финальный config-source равен runtime.
+JSON читается через read_bytes, stdout UTF-8/ensure_ascii. Сводка
+.tests/ide086-evidence.json. Prefix SHA/size до append:
+.tests/ide086-history-before.json; после append проверены прежние байты
+FIXLOG/AGENT_COMMANDS и additions-only diff. Коммит выполняется явно по списку
+связанных файлов; секреты/tmp/SDK/lock не stage, push не выполняется.
