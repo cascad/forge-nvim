@@ -7414,3 +7414,71 @@ Go CPU=2, Windows temp/build/cache на F:.
 **Файлы:** plugins/ide.lua, peek-navigation E2E/fixtures/registry,
 QUICKSTART, tests/e2e/README, IDE_ROADMAP/FEATURE_REVIEW/PROBLEMS,
 HISTORY/AGENT_COMMANDS и OpenSpec change.
+
+## 150. Outline: фокус при закрытии позднего дерева
+
+Дата: 2026-11-10. IDE-084. Спека: IDE-PANEL-10 (FIX), связана с IDE-PANEL-3.
+Change preserve-focus-during-tree-cleanup.
+
+**Проблема.** После первого Go Outline символы уже видны, но фокус иногда
+остаётся в коде. Первые данные §147 доказывали лишь различие snapshots.
+Новый native trace отделяет готовность LSP от устойчивого выбора окна.
+
+**Причина.** Поздний filesystem navigate Neo-tree создаёт окно после смены
+left-слота на Outline. Наш neo_tree_lifecycle.rendered штатно закрывает лишнее
+дерево. Neo-tree возвращает prior window (Aerial), но Edgy on_hide при уже
+уничтоженном окне вызывает goto_main. В trace Windows 16992776662700:
+late acquire около 125 ms, close/prior около 135 ms, Edgy goto_main около
+138 ms. При готовых символах и во всех 24 следующих наблюдениях остаётся go.
+Из 3 чистых source Windows samples один RED, Ubuntu 3/3 aerial: гонка зависит
+от таймингов, зелёный cold sample сам по себе её не опровергает.
+
+**Изменение.** Существующий guard сохраняет текущее окно перед close; если
+фокус у самого позднего дерева, цель берётся через public Neo-tree
+get_prior_window(). После close возвращается только valid window той же
+вкладки. Безусловного comp.focus(), нового таймера, менеджера или backport нет.
+Явный выбор другого окна кода также сохраняется; pins/upstream прежние.
+
+**Проверка/e2e.** Постоянный outline-focus.test.lua, 3 native сценария:
+cold Go/LSP Outline, настоящий поздний public Neo-tree producer поверх Outline
+и после явного выбора второго code split. Backend/LSP ответы не подменяются;
+проверяются окно/файл/курсор, left slot, неизменные исходники и отсутствие
+ERROR/install/prompt. Controlled producer устраняет случайность порядка,
+а отдельный trace сохраняет реальную исходную цепочку.
+
+До guard fix case поверх Outline RED на Windows, artifact 17370224115000:
+ожидался aerial/1004, получен go/1003; controller exit=1, editor exit=0,
+own scope empty. После fix Windows/Ubuntu: outline-focus 3 + outline 6 +
+file-explorer 7 + editor 10 = по 26 PASS, по 6 native editor profiles.
+По 3 дополнительных cold diagnostic profiles с project/Alpha/Explorer:
+ready/settled aerial, все 24 followup aerial, явный Space w 0 остаётся go.
+Все 18 post-fix profiles exit=0/no hard kill/empty own scopes, 78 config-source
+files проверены. .tests/audit-ide084.py и .tests/ide084-evidence.json.
+Unit/trace 365 cases/15 files PASS; strict OpenSpec 68/68.
+
+**Неудачный диагностический pilot.** Первый контроллер вызывал RPC из predicate
+vim.wait(600). Вложенные wait раздули опрос до 877778 вместо ожидаемых десятков.
+Это ошибка нового diagnostic, не product: controller 22284 остановлен после
+проверки exact exe/command line, только собственный процесс. Его Windows Job
+закрывает принадлежащих ему потомков при закрытии handle. Два samples имели
+нормальный shutdown/scope=0, третий остался без shutdown.json и исключён из
+acceptance. После остановки matching runtime nvim/gopls в CIM не найден.
+Копия diagnostic первого pilot могла читаться уже после правки файла, поэтому
+этот pilot не используется как exact-source доказательство причины/фикса.
+
+Диагностика исправлена: обычный цикл из 24 RPC с отдельным wait(25), затем
+выполнены чистые 3 source Windows/Ubuntu и 3 post-fix на каждой ОС. Два раздутых
+JSON pilot архивированы streaming gzip с проверкой полного SHA256 перед
+удалением только этих двух исходных файлов на F:; 161932041 → 596426 bytes.
+Архивы остаются рядом с raw artifacts, manifest .tests/ide084-pilot-archive.json.
+Deadline runtime не увеличивался, глобальные nvim/Docker/WSL не завершались.
+
+**Границы/вывод.** Native Mac/GUI не запускались, gate открыт; change не
+архивируется, main specs прежние. Исправлена конкретная цепочка фонового
+cleanup, не весь session/restore и не общий Output policy. Перед рефакторингом
+важно отделять ownership окна от фокуса: удаление устаревшей панели не должно
+отменять выбор пользователя. Следующий небольшой пункт — IDE-081 readiness.
+
+**Файлы:** forge/neo_tree_lifecycle.lua, outline-focus E2E/diagnostic/registry,
+tests/e2e/README, PANEL_OWNERSHIP_REVIEW/FEATURE_REVIEW/IDE_ROADMAP,
+PROBLEMS/HISTORY/AGENT_COMMANDS и OpenSpec change.

@@ -4009,3 +4009,90 @@ git commit -m 'fix(peek): restore native Glance keyboard actions' — e0a0eba.
 Затем отмечена выполненная task 2.2, git add -- <tasks.md> docs/AGENT_COMMANDS.md;
 git commit --amend --no-edit — только metadata завершённого шага.
 git status --short и git log -1 --format='%h %s' проверяют итог; push отсутствует.
+
+## 64. IDE-084: trace late tree и сохранение фокуса, 2026-11-10
+
+Только F:/repo/forge-nvim. git status/log, Get-Content -LiteralPath и rg -n/-g
+по ide/{controls,state,registry,init}, forge/neo_tree_lifecycle, plugin configs,
+закреплённым aerial/window, Neo-tree renderer/filesystem/get_prior_window и
+Edgy edgebar/editor. Native source trace показывает call site, не гипотезу
+«LSP украл фокус». Python JSON читается через read_bytes(), печать UTF-8 или
+json.dumps(ensure_ascii=True). Некоторые read-only prints в CP1251 завершались
+UnicodeEncodeError; повтор с UTF-8 прочитал сохранённые байты.
+
+Повторяется F: temp/SDK prefix из §63. Команды:
+```powershell
+$env:FORGE_OUTLINE_OUTPUT='F:/repo/forge-nvim/.tests/ide084-focus-windows.json'
+& $forgeNvim -l tests/diagnostics/outline-focus.lua > .tests/ide084-focus-windows.txt 2>&1
+docker compose -f tests/containers/compose.yaml run --rm --entrypoint bash ubuntu -c 'FORGE_OUTLINE_OUTPUT=/workspace/.tests/ide084-focus-ubuntu.json nvim -l tests/diagnostics/outline-focus.lua' > .tests/ide084-focus-ubuntu.txt 2>&1
+```
+У исправленного diagnostic три samples по умолчанию, каждый с 24 bounded polls.
+Source Windows 1/3 потерял фокус, Ubuntu 0/3; причину показывает Windows stack.
+Первый pilot (ранняя версия, до этих exact-source отчётов) раздувал nested
+vim.wait polling; собственный controller 22284 остановлен через Stop-Process
+только после CIM проверки exe=F:/repo/forge-nvim/.tools/neovim/windows-x64/bin/nvim.exe
+и command line '*-l tests/diagnostics/outline-focus.lua*'. Job ownership:
+process_scope_windows.lua, KILL_ON_JOB_CLOSE. Pilot не acceptance; §150.
+
+OpenSpec с F: TEMP/npm cache:
+```powershell
+npx.cmd --yes @fission-ai/openspec@1.13.2 new change preserve-focus-during-tree-cleanup
+npx.cmd --yes @fission-ai/openspec@1.13.2 instructions proposal --change preserve-focus-during-tree-cleanup --json
+npx.cmd --yes @fission-ai/openspec@1.13.2 instructions specs --change preserve-focus-during-tree-cleanup --json
+npx.cmd --yes @fission-ai/openspec@1.13.2 instructions design --change preserve-focus-during-tree-cleanup --json
+npx.cmd --yes @fission-ai/openspec@1.13.2 instructions tasks --change preserve-focus-during-tree-cleanup --json
+npx.cmd --yes @fission-ai/openspec@1.13.2 instructions apply --change preserve-focus-during-tree-cleanup --json
+npx.cmd --yes @fission-ai/openspec@1.13.2 validate --all --strict --no-interactive
+```
+JSON .tests/ide084-{proposal,specs,design,tasks,apply}.json; root F:/repo/forge-nvim,
+schema spec-driven, IDE-PANEL-10/new panel-focus-lifecycle. Strict 68/68;
+main specs не синхронизировались, native Mac task остаётся открытой.
+
+RED и final Windows:
+```powershell
+$env:FORGE_OUTLINE_CASE='позднее дерево не отбирает'
+& $forgeNvim -l tests/e2e/outline-focus.test.lua > .tests/ide084-windows-red.txt 2>&1
+Remove-Item Env:FORGE_OUTLINE_CASE
+foreach ($forgeSuite in @('outline-focus','outline','file-explorer','editor')) {
+    & $forgeNvim -l "tests/e2e/$forgeSuite.test.lua" > ".tests/ide084-windows-$forgeSuite.txt" 2>&1
+    if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+}
+$env:FORGE_OUTLINE_OUTPUT='F:/repo/forge-nvim/.tests/ide084-focus-windows-fixed.json'
+& $forgeNvim -l tests/diagnostics/outline-focus.lua > .tests/ide084-focus-windows-fixed.txt 2>&1
+& $forgeNvim -l tests/run.lua unit trace > .tests/ide084-unit-trace.txt 2>&1
+Copy-Item -LiteralPath .tests/report.json -Destination .tests/ide084-unit-report.json
+```
+Фактически exec shells раздельные, filter после RED не наследуется. Source
+RED 17370224115000: expected aerial/1004, got go/1003. Final 26 PASS/3 diagnostic.
+Unit/trace report 365 cases/15 files, main IDs MANUAL/UNCOVERED сохраняются.
+
+Ubuntu final:
+```powershell
+docker compose -f tests/containers/compose.yaml run --rm --entrypoint bash ubuntu .tests/ide084-run.sh > .tests/ide084-ubuntu-run.txt 2>&1
+```
+Ignored script host .tests/ubuntu/ide084-run.sh (guest .tests/ide084-run.sh):
+set -euo pipefail; GOMAXPROCS=2 GOFLAGS=-p=2; те же четыре suites с отдельными
+.logs, затем diagnostic OUTPUT=/workspace/.tests/ide084-focus-ubuntu-fixed.json.
+Final 26 PASS/3 diagnostic; тяжёлые Windows/Ubuntu запуски последовательны.
+Engine уже работал, lifecycle-команд Desktop/WSL нет.
+
+Audit/архивирование/commit:
+```powershell
+python -B .tests/audit-ide084.py > .tests/ide084-audit.txt 2>&1
+git diff --check
+git diff --numstat -- nvim_forge/FIXLOG.md docs/AGENT_COMMANDS.md
+git diff --stat
+git status --short
+```
+.tests/ide084-history-before.json — byte length/SHA журналов до raw append;
+audit проверяет prefix, все 18 final profiles/78 config files, exit/scopes,
+late producer и cold observations. Evidence .tests/ide084-evidence.json.
+Pilot JSON только 16756460671500/16860306629600 были сжаты Python gzip streaming
+по 1 MiB, decompressed SHA256 сверён с оригиналом до unlink конкретных файлов.
+Path.resolve/is_relative_to ограничивал цели .tests/editor-e2e. Manifest:
+.tests/ide084-pilot-archive.json; сохранены все исходные байты в .json.gz,
+161932041 → 596426 bytes. Неполный pilot 16941516830200 не выдан за clean PASS.
+
+Staging только перечисленных product/test/change/docs файлов; commit
+'fix(outline): preserve focus while closing stale tree windows', затем metadata
+task 2.2 через git commit --amend --no-edit. Push не выполняется.

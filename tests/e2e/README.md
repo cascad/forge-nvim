@@ -1136,3 +1136,20 @@ Windows использует выбранный patched SDK, temp/cache на F:.
 в общий e2e registry. Один случай: `FORGE_PEEK_CASE` — подстрока имени.
 Обычный полный прогон выполняется без этого фильтра.
 macOS требует отдельного native прогона; GUI/физическая клавиатура не эмулируются.
+
+## Позднее окно дерева и фокус — IDE-PANEL-10
+
+`nvim -l tests/e2e/outline-focus.test.lua` — три native сценария с настоящим
+gopls/Neo-tree/Edgy: первое открытие Outline, позднее дерево поверх Outline и
+позднее дерево после явного выбора split с кодом. Public команда Neo-tree
+в отложенном producer задаёт порядок реальных UI операций; backend/LSP ответы
+не подменяются. Проверяются итоговое окно/файл/курсор, единственный left slot,
+неизменные исходники, отсутствие ERROR/install/prompt. Suite включён в registry.
+Зависимости и Windows SDK те же, что у Go/Peek E2E.
+
+`nvim -l tests/diagnostics/outline-focus.lua` — отдельный trace трёх холодных
+профилей с project/Alpha/Explorer и LSP Outline. Записывает WinEnter/call stacks,
+первую готовность символов и 24 последующих опроса, затем явный возврат в код.
+`FORGE_OUTLINE_SAMPLES=1..5`, `FORGE_OUTLINE_OUTPUT=<json>` задают объём/отчёт.
+Диагностика не равна acceptance: cold race может не проявиться в данном запуске.
+macOS/GUI требуют собственного прогона; Docker проверяет только Ubuntu.

@@ -12,21 +12,6 @@
 Для новых пунктов используем следующий свободный ID `IDE-xxx`; исходный
 симптом хранится здесь, этап и состояние — в плане. Следующий ID: `IDE-085`.
 
-## IDE-084 — первое открытие Go Outline: готовность данных и фокус
-
-2026-11-10, investigation/coverage gap из IDE-080. В одинаковом native Go
-fixture после появления Use/OtherUse первый фокус был aerial в 3/3 Windows
-и 2/3 Ubuntu profiles; один Ubuntu snapshot сохранил go. Последующие прямые
-Space w a / Space w 0 прошли во всех шести profiles. Это не доказательство
-постоянной потери фокуса или установленной причины гонки.
-
-Ранний Windows pilot ждал одновременно aerial focus и Use, получил timeout;
-финальный snapshot содержит символы, но не текущий window ID. Нельзя задним
-числом отличить задержку символов от фокуса по этому артефакту. Нужен отдельный
-native regression первого асинхронного открытия: готовность, устойчивый фокус,
-Alpha/несколько main windows и поздние callbacks. Сейчас это не исправление.
-Источники/профили — FEATURE_REVIEW.md и FIXLOG §147.
-
 ## IDE-081 — Telescope fzf-native: readiness и незаметный fallback
 
 2026-11-10, найдено при IDE-080 review. В plugins/telescope.lua native extension
@@ -618,6 +603,13 @@ IDE-083 → [FIXLOG §149](nvim_forge/FIXLOG.md#149-peek-штатные-клав
 по одному повтору исходной диагностики без E21, исходники неизменны.
 Управление — [QUICKSTART](nvim_forge/QUICKSTART.md#peek-как-ctrlclick-в-ide).
 Change fix-peek-keyboard-mappings; native Mac/GUI отдельно.
+
+IDE-084 → [FIXLOG §150](nvim_forge/FIXLOG.md#150-outline-фокус-при-закрытии-позднего-дерева):
+trace установил цепочку late Neo-tree → наш close → Edgy on_hide/goto_main.
+Guard сохраняет действительное выбранное окно через public Neo-tree API;
+явный переход в code split также сохраняется. Source RED постоянного E2E,
+по 3 новых + 23 прежних E2E и по 3 cold samples Windows/Ubuntu.
+Change preserve-focus-during-tree-cleanup; Mac/GUI gate открыт.
 
 IDE-078 → [FIXLOG §138](nvim_forge/FIXLOG.md#138-sql-e2e-перенос-terminal-не-скрывает-pass):
 terminal переносил `8 SQL checks` между rows, observer ошибочно ждал цельную

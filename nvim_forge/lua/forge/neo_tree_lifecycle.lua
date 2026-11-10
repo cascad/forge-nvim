@@ -37,7 +37,15 @@ function M.rendered(state)
         local id = ide.current().slots.left
         local comp = id and ide.registry.get(id)
         if comp and not vim.tbl_contains(comp.filetypes, 'neo-tree') then
+            -- spec: IDE-PANEL-10. Edgy on_hide может выбрать код уже после
+            -- возврата Neo-tree в прежнее окно. Cleanup сохраняет этот выбор.
+            local focus = vim.api.nvim_get_current_win()
+            if focus == state.winid then focus = require('neo-tree').get_prior_window() end
             require('neo-tree.command').execute({ action = 'close', source = state.name, position = state.current_position })
+            if focus > 0 and vim.api.nvim_win_is_valid(focus)
+                and vim.api.nvim_win_get_tabpage(focus) == vim.api.nvim_get_current_tabpage() then
+                vim.api.nvim_set_current_win(focus)
+            end
         end
         controls.refresh() -- selector backend уже отрисован; добавить общий фокус
     end)

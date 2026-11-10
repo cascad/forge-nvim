@@ -54,6 +54,7 @@ return {
   { file = 'tests/e2e/dap-discovery.test.lua', suite = 'e2e', timeout = 120 },
   { file = 'tests/e2e/debug-panels.test.lua', suite = 'e2e', timeout = 300 },
   { file = 'tests/e2e/outline.test.lua', suite = 'e2e', timeout = 180 },
+  { file = 'tests/e2e/outline-focus.test.lua', suite = 'e2e', timeout = 240 },
   { file = 'tests/e2e/file-explorer.test.lua', suite = 'e2e', timeout = 180 },
   { file = 'tests/e2e/buffers.test.lua', suite = 'e2e', timeout = 240 },
   { file = 'tests/e2e/deleted-files.test.lua', suite = 'e2e', timeout = 180 },

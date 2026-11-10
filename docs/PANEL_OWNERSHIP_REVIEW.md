@@ -131,3 +131,18 @@ runtime change остаются общий review/выбор фич, сцена�
 Полная [языковая матрица](LANGUAGE_MATRIX.md) сохраняет прежние факты, а не
 получает новый PASS от этого среза. macOS/GUI здесь не запускались.
 Выбор breadcrumbs/ruler/Peek остаётся открытым; рабочие UI не удалены.
+
+## IDE-084 — подтверждённая граница cleanup и focus
+
+Native trace выявил цепочку late Neo-tree navigate → наше закрытие лишнего
+окна → Edgy on_hide с уже уничтоженным window → goto_main. Это отменяло
+выбор Outline даже после появления LSP symbols. Guard в neo_tree_lifecycle
+теперь сохраняет действительное текущее окно; для временно сфокусированного
+позднего дерева использует public Neo-tree get_prior_window(). Возврат выполняется
+сразу после close только для valid window той же вкладки. Новых focus timers
+или общего менеджера нет; явный выбор code split сохраняется.
+
+Постоянный outline-focus E2E: холодный Go/LSP Outline и поздний настоящий
+public producer поверх Outline/кода. Windows/Ubuntu по 3 новых + 23 прежних
+native PASS, по 3 дополнительных cold traces (§150). Это не полный session
+restore/Output policy regression; Mac/GUI отдельно. Pins/backports прежние.

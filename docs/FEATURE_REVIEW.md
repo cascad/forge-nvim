@@ -5,6 +5,8 @@ baseline готовы; выбор удаления фич открыт, IDE-082 
 Windows/Ubuntu по 27 PASS с реальным gopls restart; Mac gate открыт (§148).
 IDE-083 также исправлен отдельным небольшим change: Glance defaults,
 по 7 новых + 22 прежних native PASS и по одному project diagnostic (§149).
+IDE-084: late Neo-tree cleanup сохраняет фокус, по 3 новых + 23 прежних native
+PASS и по 3 cold trace samples Windows/Ubuntu (§150); Mac gate открыт.
 [Новая Go metadata/команды](GO_TOOLS.md). Основа обзора —
 runtime 7463915 после отмены собственного SQL prototype. Требования не сокращаются
 до того, что сейчас легче проверить.
@@ -317,7 +319,7 @@ Ubuntu 9265858326624/9281597222561/9295146798511. В каждом source diagnos
 |---|---|---|
 | IDE-082: отложить Delve discovery и сделать Go label пассивным | Настоящий project SDK для language/build/debug и явный toolchain picker | Ненужные subprocess при edit; не запрещать GOTOOLCHAIN глобально |
 | IDE-083: вернуть готовые Glance defaults | Peek и его штатные keys | Удалить семь ошибочных overrides; q/Esc/Enter/navigation/splits через native regression |
-| IDE-084 + Output policy | Первое открытие/focus, output history и PTY lifetime | Проверить async readiness и общий выбор канала; не новый panel manager |
+| IDE-084 выполнен; Output policy далее | Первое открытие/focus, output history и PTY lifetime | Late tree cleanup не меняет окно (§150); общий выбор Output ещё отдельный шаг |
 | IDE-081: явная fzf capability | Рабочий быстрый поиск и честный fallback | Gate по готовому artifact вместо наличия build tool; optional/must policy и regression |
 | Breadcrumbs/ruler | Outline, Problems, gd/gr; Peek по запросу | Рекомендуется убрать barbecue/navic/satellite после выбора UX; вариант без 4 UI уже проверен частно, удаления по 3 требуют своего regression |
 | Git/DAP/panel ядро | Gitsigns + Neogit + Diffview, state/registry + DAP UI + Edgy, guard | Сокращать только дублирующие правила, не разные рабочие роли |
@@ -326,7 +328,7 @@ Ubuntu 9265858326624/9281597222561/9295146798511. В каждом source diagnos
 | SQLLogicTest | SQL queries/schema/format и Tests остальных языков | Отдельно решить нужность SQL assertion runner/SDK; не удалять рабочий SQL вместе с ним |
 | Временные patches/Windows SDK | Проверенные исправления и portability | Снимать только после native equivalent regression на готовом upstream |
 
-IDE-082/083 реализованы и проверены Windows/Ubuntu (§148/149), следующий — IDE-084.
+IDE-082/083/084 реализованы и проверены Windows/Ubuntu (§148–150), следующий — IDE-081.
 После каждого свой RED,
 permanent E2E, Windows/Ubuntu regression, история и commit. Mac gates явно
 остаются открытыми. Выбранные UI-удаления и общий refactor не смешивать с этим
@@ -359,7 +361,7 @@ language/test roots, interpreter/tools и save/format разобраны в
   удаляемая ответственность, регресс и проверяемая польза. Только затем рефакторинг.
   DAP-кандидаты: единый выбор Output, затем одинаковые части поиска окна кода;
   process/PTY lifecycle не объединять с видимостью. Это пока план, не runtime fix.
-  IDE-082/083 уже выполнены; далее IDE-084, IDE-081 readiness и выбранные удаления optional UI.
+  IDE-082/083/084 уже выполнены; далее IDE-081 readiness и выбранные удаления optional UI.
   Project/session restart и uniform interpreter/root policies требуют отдельных
   сценариев; существующие Git результаты не заменяют их полной проверки.
 
