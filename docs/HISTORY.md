@@ -289,6 +289,7 @@ Python реализован и проверен 2026-11-03; после возо�
 | §162 | [Output capture: raw failure и delayed reopen](../nvim_forge/FIXLOG.md#162-output-capture-raw-failure-и-delayed-reopen) |
 | §163 | [E2E runtime: directory links без обхода target](../nvim_forge/FIXLOG.md#163-e2e-runtime-directory-links-без-обхода-target) |
 | §164 | [Debug hide: без startup watchdog, с actual stopped](../nvim_forge/FIXLOG.md#164-debug-hide-без-startup-watchdog-с-actual-stopped) |
+| §165 | [History assertion: terminal padding и реальные потери](../nvim_forge/FIXLOG.md#165-history-assertion-terminal-padding-и-реальные-потери) |
 
 ## Как читать и дополнять
 

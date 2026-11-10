@@ -38,14 +38,14 @@ IDE-001 параллельно ждёт диагностических данн�
 | Готово Windows; Ubuntu/Mac gates открыты | IDE-091: PTY в общем Debug toggle | Две строки в существующих visibility/close routes; 2 native source RED → PASS, всего32 Windows checks/26 profiles, quick353, strict76 (§160). Toggle сохраняет channel/буфер/паузу, F5 дописывает в тот же PTY |
 | Готово Windows CLI | IDE-092: staged SDK source | Проверка путей/patch diff относительно HEAD; CLI staged RED → оба staged/unstaged PASS до source mutation, SDK CLI12/quick353/strict76 (§161). Binary прежний, SDK не пересобирался |
 | Capture готов, механизм воспроизведён | IDE-090: delayed startup reopen | §162: trace/failed attempts, native watchdog caller1419 после hide. Runtime исправлен и permanent regression добавлен в §164 |
-| Подтверждённый test-only RED | IDE-093: viewport padding в history assertion | Raw before/after сохраняют stdout/buffer/channel, меняются пустые строки после реального resize; исправить сравнение с native resize regression |
+| Готово Windows test harness | IDE-093: viewport padding в history assertion | Native CodeLLDB resize source RED → PASS; terminal-only semantic compare,5 loss/padding vectors и6 native checks PASS, raw data прежние. Quick358/14files/strict80 (§165), Ubuntu/Mac не запускались |
 | Готово Windows test harness | IDE-094: dangling Windows junction | Source malformed RED →3 native link PASS, ещё10 lifecycle/descendants PASS и1 POSIX-only SKIP. Четыре owned остатка удалены; negative debug cleanup теперь проходит (§163), quick353/strict78. Ubuntu/Mac не запускались |
 | Отложено до готового backend | Остаток SQL workflow, IDE-062 | SQLS references provider отсутствует. Собственный binder/index/LSP fork отменён (§143); не подменять references grep и не объявлять полную SQL поддержку |
 | Затем | Остальная [матрица языков](LANGUAGE_MATRIX.md) | SQL references IDE-062, Bash DAP IDE-057; Mac/native и оставшиеся сценарии матрицы |
 | После функциональной матрицы | Упрощение архитектуры | Общее ядро, явные системные границы и setup; сокращение дублирования с сохранением E2E |
 
-После IDE-090/094 следующий локальный шаг — IDE-093: убрать ложный history
-failure на viewport padding с сохранением обнаружения потери реального stdout.
+IDE-090/093/094 закрыты на Windows в §164/165/163. Следующий шаг — доступные
+Ubuntu gates и оставшаяся языковая матрица, без собственного SQL binder/LSP.
 IDE-091 исправлен отдельно (§160); источник исторического одиночного failure
 без trace не объявляется единственным. IDE-088/090/091 Ubuntu gates открыты:
 последняя read-only проверка Linux engine не нашла pipe. Desktop/WSL агент

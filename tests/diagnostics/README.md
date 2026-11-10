@@ -14,6 +14,8 @@ Ubuntu/Mac используют официальный `nvim` с теми же �
 повторяет q/toggle на настоящем paused CodeLLDB; `--resize` один раз меняет
 подключённый UI со140×45 на140×35 перед q. Это диагностическое возмущение,
 не повтор исходного случайного события. На старом helper resize даёт history RED.
+С §165 terminal-only comparison сохраняет semantic history при resize; пустые
+строки внутри текста и REPL остаются точными. Raw snapshots не нормализуются.
 `output-attempt-NN.json` содержит last stage, raw before/after и исходную ошибку,
 даже если assertion не прошёл. Без --trace дополнительных native hooks нет.
 С --trace записывается `output-capture.json`: bounded2048 native events в памяти,

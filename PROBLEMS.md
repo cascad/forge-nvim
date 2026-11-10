@@ -36,6 +36,10 @@ Production/SDK прежние, Ubuntu/Mac не запускались.
 Воспроизведение: tests/diagnostics/output-toggle.lua --trace --resize.
 Нужно сравнивать смысловую историю без viewport padding и сохранить проверку
 реальной потери текста. Production stdout этим опытом не признан потерянным.
+§165: terminal-only comparison по настоящему buftype; raw snapshots сохранены.
+Permanent nested CodeLLDB resize E2E source4c9eb22 RED → PASS,5 unit loss/padding
+vectors PASS,6 native targeted checks PASS. REPL и внутренние blank lines не
+trim-ятся. Quick358/14files, strict80; production/SDK прежние, Ubuntu/Mac не запускались.
 
 ## IDE-092 — SDK source gate пропускает staged изменения
 

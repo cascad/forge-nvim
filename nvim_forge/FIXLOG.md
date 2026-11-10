@@ -8384,3 +8384,47 @@ Docker/WSL не опрашивались и не управлялись. Сле�
 **Файлы:** nvim_forge/lua/plugins/dap.lua, tests/e2e/debug-startup-visibility.test.lua,
 registry, OpenSpec change, nvim_forge README, E2E README,
 PROBLEMS/IDE_ROADMAP/HISTORY/AGENT_COMMANDS.
+
+
+## 165. History assertion: terminal padding и реальные потери
+
+Дата: 2026-11-10. IDE-093, test-only fix-terminal-history-padding, skip_specs:true.
+
+**Проблема и причина.** Старый P.reopen искал весь before terminal text в
+after, включая пустые строки сетки терминала. Native resize140×45→140×35
+сокращает trailing blank rows без потери stdout. Поэтому helper сообщал
+Reopen потерял историю при том же buffer/channel/session/frame (§162/163).
+
+**Постоянный source RED.** Новый output-resize E2E запускает существующий
+реальный CodeLLDB diagnostic --trace --resize через тот же выбранный SDK.
+Source4c9eb22 helper дал RED40591340829400. Raw before/after различаются,
+старый substring действительно не находит before; POLICY_BEFORE42/POLICY_STDERR
+и buffer/channel сохранены. Negative editor завершился native0/APIerrors[],
+scope after0 и runtime удалён. Native helper source copy совпал с Git4c9eb22.
+
+**Изменение.** State дополнен настоящим buftype. Shared history_preserved
+убирает только trailing newline padding, только если оба buffers terminal.
+Для REPL/других buffers остаётся точный прежний substring; внутренние пустые
+строки и непустой текст сохраняются в сравнении. Raw capture не trim-ится,
+буферы/вывод редактора не меняются. Production Lua/SDK/pins прежние.
+
+**Проверка.** Тот же native resize PASS40628339838600: raw mismatch всё ещё
+обязателен как предусловие regression, channel/buf те же, оба stdout markers
+есть в before/after, inner helper/session assertions проходят. Trace JSON
+валиден, native events есть, dropped0; штатные native0/APIerrors[]/scope cleanup.
+Теперь optional in-memory capture также выполняется registered E2E при обычном
+общем regression. Пять unit vectors отличают viewport shrink от потери nonempty
+prefix, internal blank line, exact REPL и проверяют append; это не игнорирование
+всего whitespace. Existing output-policy3/Python1/Node1 также PASS: всего6 native
+checks +5 unit. Full runtime Lua/pins snapshots и helper before/after SHA
+проверены; evidence .tests/ide093-evidence.json. Quick358cases/14files,
+strict80/80. Native Mac/Ubuntu не запускались, portable scenario готов.
+
+**Вывод.** Ошибка была в test oracle для terminal grid, не в доказанной потере
+stdout. Сохранены raw evidence и обнаружение настоящих потерь. Никаких новых
+product modules, timers или timeout. Следующий шаг — native gates и оставшаяся
+матрица; Docker/WSL в этом fix не опрашивались/не управлялись, goal остаётся active.
+
+**Файлы:** tests/lib/output_policy.lua/output_policy.test.lua,
+tests/e2e/output-resize.test.lua, registry, OpenSpec change, diagnostics README,
+PROBLEMS/IDE_ROADMAP/HISTORY/AGENT_COMMANDS.

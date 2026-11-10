@@ -7,8 +7,16 @@ end
 function M.state(e,ft)
   return e:lua([[local ft=...;local out={};for _,b in ipairs(vim.api.nvim_list_bufs()) do
     if vim.api.nvim_buf_is_loaded(b) and vim.bo[b].filetype==ft then
-      out[#out+1]={buf=b,channel=vim.bo[b].channel,text=table.concat(vim.api.nvim_buf_get_lines(b,0,-1,false),'\n')}
+      out[#out+1]={buf=b,channel=vim.bo[b].channel,buftype=vim.bo[b].buftype,text=table.concat(vim.api.nvim_buf_get_lines(b,0,-1,false),'\n')}
     end end;return out]],{ft})
+end
+function M.history_preserved(before,after)
+  local previous,current=before.text,after.text
+  if before.buftype=='terminal' and after.buftype=='terminal' then
+    -- Empty terminal rows reflect the viewport height, including after resize.
+    previous=previous:gsub('\n+$','');current=current:gsub('\n+$','')
+  end
+  return current:find(previous,1,true)~=nil
 end
 function M.reopen(e,ft,keys)
   e.output_attempt=(e.output_attempt or 0)+1
@@ -37,7 +45,7 @@ function M.reopen(e,ft,keys)
   e:wait('Тот же канал после manual reopen',function() return e:has_window(ft) end)
   local after=M.state(e,ft);attempt.after=after;stage('history-check')
   assert(#after==1 and before[1].buf==after[1].buf and before[1].channel==after[1].channel,'Reopen заменил Output/PTY')
-  assert(after[1].text:find(before[1].text,1,true),'Reopen потерял историю')
+  assert(M.history_preserved(before[1],after[1]),'Reopen потерял историю')
   local now=e:lua([[local s=require('dap').session();return s and {id=s.id,thread=s.stopped_thread_id,frame=s.current_frame and s.current_frame.id} or false]])
   attempt.now=now;stage('session-check')
   assert(vim.deep_equal(session,now),'UI изменил сессию/паузу')

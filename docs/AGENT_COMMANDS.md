@@ -4899,3 +4899,42 @@ History prefix bytes/SHA перед append§164/§76 сохранены, additio
 Ubuntu/Mac не запускались, Docker/WSL не опрашивались и не управлялись;
 gates открыты, OpenSpec1.4 pending. Source runtime стал короче, UI timers
 не добавлены. Следующий шаг — отдельный IDE-093 helper padding fix.
+
+
+## 77. IDE-093: native resize и semantic history, 2026-11-10
+
+OpenSpec fix-terminal-history-padding, skip_specs:true, apply ready. До helper
+изменения создан permanent output-resize.test.lua: nested real controller
+того же vim.v.progpath, actual Rust/CodeLLDB, UI140×45→140×35 перед q.
+Он сохраняет child log, before/after/shutdown и требует raw substring mismatch,
+same channel/buf, markers и успешный semantic check после исправления.
+
+```powershell
+& .tools/neovim/windows-x64/bin/nvim.exe -l tests/e2e/output-resize.test.lua
+& .tools/neovim/windows-x64/bin/nvim.exe -l tests/lib/output_policy.test.lua
+& .tools/neovim/windows-x64/bin/nvim.exe -l tests/e2e/dap-output-policy.test.lua
+```
+
+Source RED40591340829400, final PASS40628339838600. Inner native0/APIerrors[],
+scope after0, current helper raw source copy vs Git4c9eb22/working tree SHA
+сверены. JSON read_bytes valid; before/after raw text различается лишь padding,
+ничего не переписано ради audit. Новый buftype читается реальным API, comparison
+trim только trailing newlines у двух terminal buffers. Unit5 покрывает реальные
+loss cases и REPL exactness; native scenario даёт дополнительную trace-on CI
+проверку capture. Fixtures не mock-ают DAP/PTY/UI и не увеличивают deadline.
+
+```powershell
+$env:FORGE_PYTHON_CASE='debug default/project'
+& .tools/neovim/windows-x64/bin/nvim.exe -l tests/e2e/python-language.test.lua
+$env:FORGE_NODE_CASE='default F5'
+& .tools/neovim/windows-x64/bin/nvim.exe -l tests/e2e/node-language.test.lua
+powershell -NoProfile -File scripts/test.ps1 quick
+npx.cmd --yes @fission-ai/openspec@1.13.2 validate --all --strict --no-interactive
+```
+
+Все native suites последовательно, Go2/-p=2, TEMP/log F:. Output-policy3,
+Python1/Node1 + resize1 =6 native PASS,5 unit; quick358/14files, strict80.
+Native stdout and root/runtime/helper source hashes audit in ide093-evidence.json.
+History prefix bytes/SHA captured before append§165/§77, additions-only checked.
+Production Lua/SDK/locks не менялись. Ubuntu/Mac не выполнялись; Docker/WSL
+в этом шаге не опрашивались и не управлялись. Commit only helper/tests/spec/docs.
