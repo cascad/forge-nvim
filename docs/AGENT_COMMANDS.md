@@ -4820,3 +4820,39 @@ ide090-capture-evidence.json audits UTF8 JSON, native exits/scopes and SDK hash.
 History prefixes captured before raw append§162/§74; verify additions-only.
 No production Lua, SDK/pins changes, no push. IDE-093 padding and IDE-094
 junction recorded separately; goal remains active for actual fixes/gates.
+
+
+## 75. IDE-094: native directory links и owned cleanup, 2026-11-10
+
+OpenSpec new/instructions apply fix-runtime-junction-cleanup, ready; artifacts
+описали test-only source RED и no-target-traversal. Native fixture Python uses
+documented REPARSE_DATA_BUFFER mount-point tag/DeviceIoControl on own new dir;
+root/link/target boundaries проверены, handle закрывается finally. POSIX os.symlink.
+
+```powershell
+& .tools/neovim/windows-x64/bin/nvim.exe -l tests/e2e/runtime-links.test.lua
+& .tools/neovim/windows-x64/bin/nvim.exe -l tests/e2e/editor-runtime.test.lua
+& .tools/neovim/windows-x64/bin/nvim.exe -l tests/e2e/editor-descendants.test.lua
+& .tools/neovim/windows-x64/bin/nvim.exe -l .tests/ide094-clean-owned.lua
+& .tools/neovim/windows-x64/bin/nvim.exe -l tests/diagnostics/output-toggle.lua --trace --resize
+powershell -NoProfile -File scripts/test.ps1 quick
+npx.cmd --yes @fission-ai/openspec@1.13.2 validate --all --strict --no-interactive
+```
+
+До helper fix:2 link PASS/1 malformed RED, source ff909c4. После:3 link PASS,
+runtime4 PASS/1 POSIX SKIP, descendants6 PASS; каждый suite последовательно.
+clear_directory читает scandir kind, не stat target, links unlink/Windows rmdir.
+Ownership/canonical/token, marker-last и retry прежние. Real temporary file
+lock release150ms и orphan process cleanup проходят. Timeout не увеличивался.
+
+Owned cleanup script читает basename PID-token из4 конкретных сохранённых
+negative logs, не перечисляет все TEMP для удаления. Перед R.remove проверяет
+resolved base внутри repo, parent равен .tests/tmp, marker.root/path/token и
+basename.4 профиля удалены, результат ide094-owned-cleanup.json. C:/чужие dirs
+не тронуты. Negative resize integration остался history RED, но profile gone,
+native exit/signal0, APIerrors[], scope after0; primary error не скрыт.
+Quick353/13files, strict78. JSON read_bytes; history before bytes/SHA в
+ide094-history-before.json, raw append§163/§75 и Git additions-only.
+Microsoft primary docs прочитаны для layout и junction removal, только ссылки
+в README; не объявлялось установленным, кто создал исходный Content.IE5.
+Native Mac/Ubuntu не запускались; Docker/WSL не трогались, SDK unchanged.

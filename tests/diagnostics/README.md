@@ -23,6 +23,15 @@ Ubuntu/Mac используют официальный `nvim` с теми же �
 
 ## IDE-087/089: Windows process ancestry
 
+Очистка private profiles также покрыта native links:
+`nvim -l tests/e2e/runtime-links.test.lua` (Windows — выбранный SDK).
+Live/dangling links сохраняют target sentinel; Windows malformed NT target
+воссоздаётся только внутри owned TEMP без изменения permissions. Fixture ABI —
+[REPARSE_DATA_BUFFER](https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ntifs/ns-ntifs-_reparse_data_buffer).
+Directory junction удаляется как link без удаления target, как описано в
+[RemoveDirectoryW](https://learn.microsoft.com/en-us/windows/win32/api/fileapi/nf-fileapi-removedirectoryw).
+Timeout/ownership проверки прежние; production filesystem code не меняется.
+
 Read-only: `python -B tests/diagnostics/windows-process-parents.py --output .tests/ancestry-read-only.json`.
 Native source proof после подготовки SDK: `powershell -NoProfile -File tests/diagnostics/build-process-ancestry.ps1 -SdkCandidate`.
 Нужны уже подготовленный pinned Neovim source и MSVC Build Tools. SDK/система

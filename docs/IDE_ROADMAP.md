@@ -39,7 +39,7 @@ IDE-001 параллельно ждёт диагностических данн�
 | Готово Windows CLI | IDE-092: staged SDK source | Проверка путей/patch diff относительно HEAD; CLI staged RED → оба staged/unstaged PASS до source mutation, SDK CLI12/quick353/strict76 (§161). Binary прежний, SDK не пересобирался |
 | Capture готов, механизм воспроизведён | IDE-090: delayed startup reopen | §162: trace/failed attempts, native watchdog caller1419 после hide. Следом убрать obsolete800ms recovery с permanent running→hide→new breakpoint E2E; пока runtime не изменён |
 | Подтверждённый test-only RED | IDE-093: viewport padding в history assertion | Raw before/after сохраняют stdout/buffer/channel, меняются пустые строки после реального resize; исправить сравнение с native resize regression |
-| Подтверждённая cleanup проблема | IDE-094: dangling Windows junction | Native exit/Job чисты, остался один private Content.IE5 link на F:. Нужны native link tests и unlink/rmdir link без traversal target |
+| Готово Windows test harness | IDE-094: dangling Windows junction | Source malformed RED →3 native link PASS, ещё10 lifecycle/descendants PASS и1 POSIX-only SKIP. Четыре owned остатка удалены; negative debug cleanup теперь проходит (§163), quick353/strict78. Ubuntu/Mac не запускались |
 | Отложено до готового backend | Остаток SQL workflow, IDE-062 | SQLS references provider отсутствует. Собственный binder/index/LSP fork отменён (§143); не подменять references grep и не объявлять полную SQL поддержку |
 | Затем | Остальная [матрица языков](LANGUAGE_MATRIX.md) | SQL references IDE-062, Bash DAP IDE-057; Mac/native и оставшиеся сценарии матрицы |
 | После функциональной матрицы | Упрощение архитектуры | Общее ядро, явные системные границы и setup; сокращение дублирования с сохранением E2E |

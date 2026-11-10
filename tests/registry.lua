@@ -74,6 +74,7 @@ return {
   { file = 'tests/e2e/worktree-refresh.test.lua', suite = 'e2e', timeout = 300 },
   { file = 'tests/e2e/diffview-close.test.lua', suite = 'e2e', timeout = 420 },
   { file = 'tests/e2e/editor-runtime.test.lua', suite = 'e2e', timeout = 180 },
+  { file = 'tests/e2e/runtime-links.test.lua', suite = 'e2e', timeout = 30 },
   { file = 'tests/wezterm/config-loading.test.lua', suite = 'wezterm' },
   { file = 'tests/wezterm/snapshot.test.lua', suite = 'wezterm' },
   { file = 'tests/install-macos.scenarios.sh', suite = 'install', kind = 'sh', shell = 'posix', timeout = 180 },

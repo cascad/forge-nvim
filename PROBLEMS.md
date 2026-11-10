@@ -21,7 +21,12 @@ target содержит F:/ после extended prefix; uv.lstat/readlink воз
 scandir видит kind=link. Ручной uv.fs_rmdir одного проверенного собственного
 link удалил только junction. Требуется постоянный native link regression и
 удаление link без обхода target; увеличивать cleanup timeout бессмысленно.
-Примеры .tests/tmp/22992-36072741147700-forge-editor и capture profiles §162.
+§163: native malformed-junction source RED →3 link cases PASS; recursive
+cleanup обходит только directory entries, links удаляет через unlink/Windows
+nonrecursive rmdir. 13 Windows PASS/1 POSIX-only SKIP, quick353, strict78.
+Четыре подтверждённых owned остатка §162 удалены. Новый negative debug probe
+сохранён как history RED, но runtime уже удалён; target sentinel не затронут.
+Production/SDK прежние, Ubuntu/Mac не запускались.
 
 ## IDE-093 — history assertion принимает terminal padding за потерю stdout
 

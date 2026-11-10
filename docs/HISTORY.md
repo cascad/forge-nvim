@@ -287,6 +287,7 @@ Python реализован и проверен 2026-11-03; после возо�
 | §160 | [Debug toggle: PTY в общей группе](../nvim_forge/FIXLOG.md#160-debug-toggle-pty-в-общей-группе) |
 | §161 | [Windows SDK: проверка staged исходников](../nvim_forge/FIXLOG.md#161-windows-sdk-проверка-staged-исходников) |
 | §162 | [Output capture: raw failure и delayed reopen](../nvim_forge/FIXLOG.md#162-output-capture-raw-failure-и-delayed-reopen) |
+| §163 | [E2E runtime: directory links без обхода target](../nvim_forge/FIXLOG.md#163-e2e-runtime-directory-links-без-обхода-target) |
 
 ## Как читать и дополнять
 

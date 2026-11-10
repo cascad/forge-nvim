@@ -8269,3 +8269,56 @@ verdict проверены, дополнительных массовых loops 
 **Файлы:** tests/lib/output_policy.lua, output_capture.lua,
 output_capture_native.lua; tests/diagnostics/output-toggle.lua/README,
 dap-output-policy.test.lua; OpenSpec change, PROBLEMS/ROADMAP/HISTORY/AGENT_COMMANDS.
+
+
+## 163. E2E runtime: directory links без обхода target
+
+Дата: 2026-11-10. IDE-094, test-only fix-runtime-junction-cleanup, skip_specs:true.
+
+**Проблема и причина.** Negative debug profiles §162 уже завершили editor и
+own Job, но recursive delete оставлял Content.IE5 junction. Target отсутствует
+и содержит forward slashes после NT prefix: UV lstat/readlink возвращают nil,
+а scandir надёжно сообщает kind=link. Старый recursive delete отказывал на
+таком entry; продление5000ms не решает постоянное состояние. Конкретный Windows
+компонент, создавший junction, не установлен; USERPROFILE имеет F:/ notation,
+но его causal attribution не подменяет проверку удаления link.
+
+**Native RED.** Новый runtime-links.test.lua создаёт live/dangling directory
+links с target вне удаляемого профиля, но внутри другого собственного TEMP
+профиля. На Windows отдельный fixture создаёт malformed NT mount-point target
+с теми же raw slashes. Source ff909c4:2 PASS/1 malformed RED после прежнего
+5000ms. Cleanup fixture удаляет только созданный link, затем оба owned профиля;
+внешний sentinel/marker сохраняется. Нет mock filesystem и нет admin prompt.
+
+**Изменение.** clear_directory в editor_runtime обходит только kind=directory.
+Прочие entries удаляются unlink; для Windows directory link при отказе
+используется nonrecursive uv.fs_rmdir. Target не stat-ится и не обходится,
+поэтому malformed/dangling targets допустимы. Root canonical/owner/token
+guards, marker-last,5000ms retry и file-lock handling сохранены. Production
+Lua/SDK/pins не менялись; Windows ABI только в test fixture, POSIX uses symlink.
+
+**Проверка.**3 links PASS, existing editor-runtime4 PASS/1 POSIX-only SKIP,
+editor-descendants6 PASS. Native lifecycle/ownership/temporarily held file и
+сохранность targets проверены;13 PASS/1 SKIP Windows. Quick353/13files,
+strict78/78. Malformed test source RED сохранён в ide094-links-red.txt,
+текущие logs ide094-{runtime-links,editor-runtime,editor-descendants}.txt.
+Microsoft REPARSE_DATA_BUFFER/RemoveDirectoryW docs прочитаны для ABI/link
+semantics; ссылки в diagnostics README. Не приписываем docs личное событие.
+
+**Собственные остатки.** Только имена из четырёх конкретных negative logs §162,
+canonical parent внутри repo/.tests/tmp, root/token/path marker проверены до
+удаления. Удалены4:6660-35987045815900,22992-36072741147700,
+4504-37128303466300,3876-37343178176100 (-forge-editor). Никакой чистки по
+широкой маске, чужих target или C:. Результаты ide094-owned-cleanup.json.
+Permanent --trace --resize снова дал ожидаемый history RED (38469869768000),
+но native0/APIerrors[]/scope after0 и runtime20612-38469870430800 удалён;
+cleanup не маскирует primary failure. Это интеграционный контроль actual debug.
+
+**Вывод.** Корректно выбираем remove-link API, а не добавляем задержки/SDK fork.
+Ubuntu/Mac не запускались; Windows malformed case там явно SKIP, остальные
+два portable cases готовы. IDE-090 watchdog и IDE-093 padding остаются далее.
+Docker/WSL не опрашивались и не управлялись в этом шаге.
+
+**Файлы:** tests/lib/editor_runtime.lua, tests/e2e/runtime-links.test.lua,
+create_directory_link.py, registry, OpenSpec change, diagnostics README,
+PROBLEMS/IDE_ROADMAP/HISTORY/AGENT_COMMANDS.
