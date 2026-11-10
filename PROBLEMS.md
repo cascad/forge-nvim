@@ -42,27 +42,6 @@ Vim. Причина q установлена; остальные keys требу
 до исправления диагностический project profile честно выходит с code=1.
 Runtime пока не менялся. Source/RED/ограничения — FEATURE_REVIEW.md, §147.
 
-## IDE-082 — Go/Delve discovery и statusline запускают toolchain work на edit
-
-2026-11-10, воспроизведено при IDE-080 review на Windows/Ubuntu. Открыт только
-main.go в контролируемом модуле с go 1.99.0, без F5/test/health. nvim-dap-go
-opts синхронно вызывает go env GOBIN/GOPATH для поиска Delve; Go label вызывает
-go version асинхронно. На Windows доступный gopls root resolver дополнительно
-запускает go env GOMODCACHE/GOROOT.
-
-При GOTOOLCHAIN=auto каждый наблюдаемый Go command пытается выбрать отсутствующий
-SDK; offline GOPROXY=off даёт code=1/downloading, при local — code=0 без download.
-Mason install counter=0 этого не отражает. Windows auto дал 4 hit-enter,
-local 0; Ubuntu prompt отсутствующего gopls был в обоих режимах и не относится
-к загрузке SDK. Это не замер исходных 5s и не причина IDE-001 (Mac/zsh до nvim).
-
-Нужно отложить Delve discovery до debug/явного запроса и определить пассивную
-политику Go label. Не менять глобально GOTOOLCHAIN и не подменять готовый
-gopls своим server/fork. Перед фиксом — постоянный native regression и прежние
-Go language/debug/tests Windows/Ubuntu; Mac отдельно. Runtime пока не менялся.
-Доказательства/границы: docs/WORKSPACE_TOOL_REVIEW.md, go-statusline diagnostic,
-FIXLOG §146. Сам диагностический запуск не является feature PASS.
-
 ## IDE-081 — Telescope fzf-native: readiness и незаметный fallback
 
 2026-11-10, найдено при IDE-080 review. В plugins/telescope.lua native extension
@@ -639,6 +618,14 @@ native jobstart создавал другую group, orphan переживал r
 регистрирует реальные собственные группы, cleanup завершает их до удаления
 runtime. Exact scope 054ee05 RED; Windows 6 PASS, Ubuntu 5 PASS/1 SKIP и
 весь Ubuntu 119 PASS/1 SKIP. Mac/daemon sessions вне spawn API остаются отдельно.
+
+IDE-082 → [FIXLOG §148](nvim_forge/FIXLOG.md#148-go-metadata-без-фоновой-работы-и-поздний-delve):
+label/version только читают подтверждённый cache/режим, GoVersion/GoToolchain
+явные async, Delve выбирается на public DAP launch callback. Исходные SDK
+правила и готовый gopls сохранены. По 27 E2E Windows/Ubuntu, 42 native profiles,
+по 2 diagnostic profiles, 365 unit/trace и strict 66/66. Старый RED — §146/148.
+[Команды](docs/GO_TOOLS.md), change fix-passive-go-discovery; native Mac gate
+остаётся открытым. Исходная IDE-001 (zsh до nvim) этим не закрывается.
 
 IDE-078 → [FIXLOG §138](nvim_forge/FIXLOG.md#138-sql-e2e-перенос-terminal-не-скрывает-pass):
 terminal переносил `8 SQL checks` между rows, observer ошибочно ждал цельную

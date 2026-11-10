@@ -4,6 +4,10 @@
 Продолжение [общего обзора](FEATURE_REVIEW.md) и
 [карты DAP/panels](PANEL_OWNERSHIP_REVIEW.md).
 
+IDE-082 после этого исходного review реализован отдельным change
+fix-passive-go-discovery; актуальная семантика и команды — [GO_TOOLS](GO_TOOLS.md),
+результаты/gates — PROBLEMS/roadmap. Исходные observations ниже сохраняют контекст.
+
 ## Что оставлять раздельным
 
 | Понятие | Текущий владелец/правило | Почему это отдельная задача |

@@ -1,7 +1,9 @@
 # IDE-080 — обзор фич и стоимости поддержки перед рефакторингом
 
 Дата: 2026-11-10. Статус: фактический обзор, coverage/ownership и bounded native
-baseline готовы; выбор удаления фич и runtime изменения ещё впереди. Основа —
+baseline готовы; выбор удаления фич открыт, IDE-082 реализован отдельным change.
+Windows/Ubuntu по 27 PASS с реальным gopls restart; Mac gate открыт (§148).
+[Новая Go metadata/команды](GO_TOOLS.md). Основа обзора —
 runtime 7463915 после отмены собственного SQL prototype. Требования не сокращаются
 до того, что сейчас легче проверить.
 
@@ -322,7 +324,8 @@ Ubuntu 9265858326624/9281597222561/9295146798511. В каждом source diagnos
 | SQLLogicTest | SQL queries/schema/format и Tests остальных языков | Отдельно решить нужность SQL assertion runner/SDK; не удалять рабочий SQL вместе с ним |
 | Временные patches/Windows SDK | Проверенные исправления и portability | Снимать только после native equivalent regression на готовом upstream |
 
-Первый небольшой change — IDE-082, затем IDE-083. После каждого свой RED,
+IDE-082 реализован и проверен Windows/Ubuntu (§148), следующий — IDE-083.
+После каждого свой RED,
 permanent E2E, Windows/Ubuntu regression, история и commit. Mac gates явно
 остаются открытыми. Выбранные UI-удаления и общий refactor не смешивать с этим
 bugfix. Нужного нового LSP/framework из обзора не следует.

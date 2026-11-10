@@ -62,26 +62,36 @@ for _,toolchain in ipairs({'auto','local'}) do
         end
       end
     ]],{e.dir..'/go-spawns.jsonl'})
+    -- Изолируем собственную metadata от асинхронных Go env готового gopls.
+    -- Реальный language workflow проверяет отдельный go-language E2E.
+    e:lua([[require('lazy').load({plugins={'nvim-lspconfig'}});vim.lsp.enable('gopls',false)]])
     e:input(':edit main.go<CR>')
     local prompts=0
-    e:wait('real Go statusline process completed',function()
+    local quiet_since=vim.uv.hrtime()
+    local notices=#e.rpc.notifications
+    e:wait('Go file rendered and metadata callbacks settled',function()
       if e.rpc:request('nvim_get_mode',{}).blocking then
         prompts=prompts+1
         vim.fn.writefile(e.rpc:screen_lines(),e.dir..'/prompt-'..prompts..'.txt')
         e:input('<CR>')
+        quiet_since=vim.uv.hrtime()
         return false
       end
-      return e:lua([[for _,row in ipairs(_G.forge_go_statusline_probe) do
-        if row.done and type(row.command)=='table' and row.command[2]=='version'
-          and row.caller and row.caller:gsub('\\','/'):find('/lua/forge/go.lua',1,true) then return true end
-        end;return false]])
+      if notices~=#e.rpc.notifications then notices=#e.rpc.notifications;quiet_since=vim.uv.hrtime() end
+      local screen=table.concat(e.rpc:screen_lines(),'\n')
+      return screen:find('package main',1,true)~=nil and vim.uv.hrtime()-quiet_since>400e6
     end,20000)
     local records=e:lua('return _G.forge_go_statusline_probe')
     for _,record in ipairs(records) do
       assert(record.proxy=='off' and record.goenv=='off','Probe must remain offline')
+      local source=(record.caller or '')..(record.stack or '')
+      source=source:gsub('\\','/')
+      assert(not source:find('/lua/forge/go.lua',1,true) and not source:find('/lua/plugins/dap.lua',1,true),
+        'IDE-BOOT-4: own metadata must remain passive')
     end
     local report={toolchain=toolchain,artifacts=e.dir,records=records,
-      installs=e:lua('return vim.g.forge_e2e_installs'),file=e:current_file(),prompts=prompts}
+      installs=e:lua('return vim.g.forge_e2e_installs'),file=e:current_file(),prompts=prompts,
+      label=e:lua([[return require('forge.go').label()]])}
     vim.fn.writefile({vim.json.encode(report)},e.dir..'/go-statusline.json')
     assert(vim.uv.fs_copyfile(root..'/tests/diagnostics/go-statusline.lua',e.dir..'/go-statusline.lua'))
     results[#results+1]=report
@@ -93,4 +103,4 @@ for _,toolchain in ipairs({'auto','local'}) do
 end
 local output=vim.env.FORGE_GO_STATUSLINE_OUTPUT or root..'/.tests/go-statusline-review.json'
 vim.fn.writefile({vim.json.encode(results)},output)
-io.stdout:write('Observed 2 real Go statusline modes; all toolchain requests offline\n')
+io.stdout:write('Observed 2 passive Go labels; backend Go requests recorded separately/offline\n')

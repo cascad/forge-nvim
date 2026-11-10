@@ -748,16 +748,16 @@ return {
             -- аргумента — picker. Логика в forge/go.lua, статуслайн — ui.lua.
             vim.api.nvim_create_user_command("GoVersion", function()
                 local go = require("forge.go")
-                go.refresh()
-                vim.defer_fn(function()
-                    local v = go.version()
+                go.refresh(function(v, context, result)
                     vim.notify(
                         "Go: " .. (v == "" and "<неизвестно>" or v)
-                        .. "\nGOTOOLCHAIN: " .. go.current_toolchain()
+                        .. "\nCWD: " .. context.cwd
+                        .. "\nGOTOOLCHAIN: " .. context.toolchain
+                        .. (result.code ~= 0 and ("\n" .. vim.trim(result.stderr or "")) or "")
                         .. "\nПереключить: :GoToolchain [go1.25.0 | auto | local]",
                         vim.log.levels.INFO, { title = "Go" }
                     )
-                end, 300)
+                end)
             end, { desc = "Show active Go version and GOTOOLCHAIN" })
 
             vim.api.nvim_create_user_command("GoToolchain", function(a)

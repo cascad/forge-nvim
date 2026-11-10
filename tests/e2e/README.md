@@ -1101,3 +1101,23 @@ provider/quickfix. Исторические 4 native unit Windows/Ubuntu отн�
 bindings/scopes/CTE/DML, unsaved/closed files, Unicode и переход quickfix→код.
 Один provider flag и grep не закрывают requirement. До этого —
 [feature/cost review](../../docs/FEATURE_REVIEW.md), §143.
+
+## Пассивная Go metadata — IDE-BOOT-4
+
+`nvim -l tests/e2e/go-passive.test.lua` с заранее подготовленными editor/Go/
+Delve/gopls SDK проверяет пять native сценариев: edit будущего module без SDK
+download от helper, один явный GoVersion, поздний реальный ответ после смены
+контекста, GoToolchain с настоящим перезапуском gopls и late Delve override
+с F5/breakpoint/stdout.
+На Windows использовать выбранный SDK и F: temp, как в [GO_TOOLS](../../docs/GO_TOOLS.md).
+
+Metadata-only profiles намеренно исключают gopls/dlv из PATH. Отсутствующий
+gopls имеет прежнее контекстное предупреждение; собственные Go CLI calls
+наблюдаются без подмены. Явные info prompts GoVersion/GoToolchain сохраняются
+и подтверждаются Enter после проверки push notification. Обычное редактирование
+не получает такого исключения: неожиданный SDK download остаётся FAIL.
+В сценарии запрошенного GoToolchain restart на Windows отдельно записывается
+известный native force-stop tuple gopls code=1/signal=15; другой warning/error
+этим разрешением не скрывается. Проверяются разные initialized client IDs.
+Late response case удерживает доставку настоящего завершённого CLI result,
+не фабрикует версию/ответ. Go build cache Windows остаётся на F:.

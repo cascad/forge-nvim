@@ -15,6 +15,11 @@
 | Bash | bashls через native Node/JS, guarded tools | shfmt, .editorconfig, async save | BashRunFile → Tasks; Bats public adapter; DAP открыт IDE-057 | 8 real UI E2E Windows/Ubuntu PASS: sourced LSP/rename/completion/diagnostics, format, args/cwd/output/status, nearest/file/оба Bats syntax/regex Unicode, missing tools. Mac/Bash 3.2/GUI не проверены |
 | SQL | sqls, guarded tool/config/DB; schema/alias actions | Sqruff CLI diagnostics/format, project dialect/style, async explicit save | SQLRun/Connect/Results/Stop; SQLLogicTest/SQLite в Neotest; semantic references открыты IDE-062 | Windows/Ubuntu 20 query UI + 12 test UI, 2 SQL SDK CLI + 12 test SDK process checks PASS. Native SQLS comments/readiness/cache fixes (IDE-066–068), multi-adapter All и path identity (IDE-069/070). Mac/ARM64/внешние DB не проверены |
 
+Go metadata/Delve (IDE-082): label читает режим/последнюю явно полученную
+версию; GoVersion/GoToolchain действуют явно, Delve выбирается при запуске.
+Готовый gopls и SDK для реальной работы сохраняют обычное окружение.
+[Команды и границы](GO_TOOLS.md), regression — go-passive.test.lua.
+
 Общий cmp уже подключает LSP, snippets, buffer и path. Buffer completion
 не доказывает семантический completion языка. Conform имеет общий trim
 whitespace/newlines; это не языковой formatter. Наличие Prettier для JSON/YAML/

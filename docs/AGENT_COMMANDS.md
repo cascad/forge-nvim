@@ -3827,3 +3827,100 @@ Review/PROBLEMS/roadmap согласованы, IDE-083/084 зарегистри
 и этот diary только raw append, HISTORY обновлён. Перед commit — повторный
 evidence/prefix audit, git add только явных review/diagnostic/history paths,
 git diff --cached --check/numstat, git commit, git status --short; без push.
+
+## 62. IDE-082: passive Go и late Delve, 2026-11-10
+
+Change fix-passive-go-discovery, IDE-BOOT-4; итог FIXLOG §148/GO_TOOLS.
+Чтения: git status/log/diff, rg/Get-Content по forge/go, plugins/dap/lsp,
+pinned dap-go/session adapter API и существующим DAP/Go E2E, startup specs.
+Нативный executable.command ожидает строку, выбран public adapter callback,
+готовый backend не заменялся. Старые docs/history читались, не переписывались.
+
+OpenSpec через pinned npx.cmd --yes @fission-ai/openspec@1.13.2:
+list --json; context --json; list --specs; new change fix-passive-go-discovery;
+status --change ... --json; instructions proposal/specs/design/tasks/apply
+--change ... --json; validate fix-passive-go-discovery --type change --strict
+--no-interactive; validate --all --strict. Root подтверждён F:/repo/forge-nvim.
+Все Windows TEMP/TMP/TMPDIR/NVIM_LOG_FILE в .tests/tmp на F:,
+npm_config_cache=F:/forge-nvim-tmp/npm-cache; PS -NoProfile.
+Артефакты planning/apply прочитаны; skill boundaries не стали новым approval:
+владелец ранее явно поручил планировать/делать/коммитить автономно.
+
+Новый permanent E2E/registry. До runtime два focused RED:
+```powershell
+$env:FORGE_GO_PASSIVE_CASE='edit/label'
+& $forgeNvim -l tests/e2e/go-passive.test.lua > .tests/ide082-windows-red.txt 2>&1
+$env:FORGE_GO_PASSIVE_CASE='поздний Delve'
+& $forgeNvim -l tests/e2e/go-passive.test.lua > .tests/ide082-windows-red-late-dlv.txt 2>&1
+```
+SDK выбран . ./scripts/lib/nvim-sdk.ps1; $forgeNvim=Get-ForgeNvim (Get-Location).Path.
+Artifacts 12050962699200/12106754310700, source/runtime до фикса сохранён.
+Metadata observer вызывает настоящий vim.system/system и только наблюдает.
+Late-response gate удерживает доставку настоящего результата, не версию/данные.
+
+После fix и обработки ожидаемых explicit info/Windows force-stop prompts:
+```powershell
+Remove-Item Env:FORGE_GO_PASSIVE_CASE -ErrorAction SilentlyContinue
+& $forgeNvim -l tests/e2e/go-passive.test.lua > .tests/ide082-windows-verified.txt 2>&1
+```
+5 PASS с реальным gopls 1→2 и late Delve/breakpoint/stdout. Старые focused,
+focused2, final, gopls-restart логи сохранены как отдельные попытки. Первый
+full 2/3 связан с ожидаемым Enter INFO, расширенный 4/1 — native planned
+gopls force-stop. Обработчик разрешает только точный известный code/signal
+запрошенного restart Windows, product warning не подавляется.
+GOMAXPROCS=2, GOFLAGS=-p=2; SDK caches/temp private/F:, без startup install.
+
+Последовательный Windows loop, suite logs .tests/ide082-windows-<suite>.txt:
+```powershell
+foreach ($suite in @('go-language','dap-output','dap-discovery','test-runner','debug-panels')) {
+  & $forgeNvim -l "tests/e2e/$suite.test.lua"
+}
+```
+Реальный запуск redirect в suite log, после каждого проверен LASTEXITCODE.
+6+4+3+5+4=22 PASS; Windows вместе с новым suite 27.
+
+Readiness: Python subprocess docker info --format {{.ServerVersion}},
+timeout 7s; только чтение. Сначала 28.5.1, Ubuntu script без lifecycle action:
+```powershell
+docker compose -f tests/containers/compose.yaml run --rm --entrypoint bash ubuntu .tests/ide082-run.sh
+```
+Ignored script запускает последовательно go-passive/go-language/dap-output/
+dap-discovery/test-runner/debug-panels и go-statusline diagnostic; Go CPU=2.
+Первоначальные Ubuntu 27 PASS и diagnostic 2. После расширения testcase engine
+pipe исчез; отказ старта/metadata в .tests/ide082-engine-readiness.json, это не
+неудача исполнившегося E2E. Владелец включил Desktop, readiness снова 28.5.1.
+```powershell
+docker compose -f tests/containers/compose.yaml run --rm --entrypoint bash ubuntu -c 'GOMAXPROCS=2 GOFLAGS=-p=2 nvim -l tests/e2e/go-passive.test.lua' > .tests/ubuntu/ide082-ubuntu-verified.txt 2>&1
+```
+Актуальные 5 PASS с real gopls restart/default label; с прежними 22 = 27.
+Desktop/WSL агент не запускал/останавливал/перенастраивал.
+
+Diagnostic обновлён для passive label, больше не ждёт фонового version.
+Первый root probe попал на late native gopls warning; private profile теперь
+публично загружает config и выключает gopls до edit. Это изоляция helper,
+не product настройка; real Go language E2E сохранён. На обеих ОС по 2 profiles.
+Windows output override .tests/ide082-diagnostic-windows-isolated.json,
+Ubuntu .tests/ubuntu/ide082-diagnostic-ubuntu.json.
+
+```powershell
+& $forgeNvim -l tests/run.lua unit trace
+npx.cmd --yes @fission-ai/openspec@1.13.2 validate --all --strict
+python -B .tests/audit-ide082.py --os windows
+python -B .tests/audit-ide082.py --os ubuntu-baseline
+python -B .tests/audit-ide082.py --os all
+git diff --check
+git diff --stat
+git status --short
+```
+365 unit/trace, strict 66/66. Evidence all: 42 exact native profiles/78 config
+files, source tests/CLI data/held cache/real client ids/breakpoint/stdout,
+4 diagnostic profiles, native exit/scopes, старый RED, неизменные pins/scripts,
+raw prefix истории. Изначальный Ubuntu variant не подменён расширенным:
+отдельный baseline evidence сохранён. Go helper API-only, новых forks нет.
+
+OpenSpec Verify: requirement/scenarios/code/design сопоставлены, Windows/Ubuntu
+native proof достаточен; Mac not verified, archive_ready=false. История raw
+append с SHA256 guard. Docs/PROBLEMS map обновлены. Явный git add только этого
+change/runtime/test/docs/history, staged diff/numstat и самостоятельный commit
+без push. Отметка task 3.3 после успешного commit может войти в его metadata
+amend; Mac checkbox остаётся незавершённым.

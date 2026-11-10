@@ -1614,16 +1614,28 @@ return {
                 desc = "Show Delve candidates and selected dlv path",
             })
 
-            local dlv = resolve_dlv_path()
             return {
                 dap_configurations = {
                     { type = "go", name = "Attach remote", mode = "remote", request = "attach" },
                 },
                 delve = {
-                    path = dlv,
                     build_flags = "",
                 },
             }
+        end,
+        config = function(_, opts)
+            require("dap-go").setup(opts)
+            local dap = require("dap")
+            local original = dap.adapters.go
+            -- spec: IDE-BOOT-4. Публичная adapter-граница вызывается при запуске,
+            -- не на FileType; upstream template и его port/options не мутируем.
+            dap.adapters.go = function(callback, launch)
+                original(function(adapter)
+                    local resolved = vim.deepcopy(adapter)
+                    if resolved.executable then resolved.executable.command = resolve_dlv_path() end
+                    callback(resolved)
+                end, launch)
+            end
         end,
         keys = {
             { "<leader>dt", function() require("dap-go").debug_test() end, desc = "Debug: Go test under cursor", ft = "go" },

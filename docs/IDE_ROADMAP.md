@@ -23,10 +23,17 @@ IDE-001 параллельно ждёт диагностических данн�
 | Готово на Windows | IDE-075: lifecycle и Windows integration gate | Собственный process scope, 5 новых native E2E и 4 source RED; 111 checks PASS/2 POSIX SKIP, 365 unit/trace, 64 strict valid (§136). Ubuntu/Mac и причины IDE-073/074 открыты |
 | Готово Windows/Ubuntu | IDE-077/078/079: process lifecycle и observers | Ubuntu 119 PASS/1 Windows-only SKIP, 365 unit/trace; Windows 27 текущих checks PASS (§137–139). Product Lua/67 pins прежние; Mac/GUI открыты |
 | Обзор готов, выбор удалений открыт | IDE-080: фичи, слои, цена и coverage | [Общий обзор/рекомендации](FEATURE_REVIEW.md), [все 67 plugins](PLUGIN_INVENTORY.md), DAP/root/tool ownership и bounded native baseline. Большой переписи нет; UX-удаления ещё не выбраны |
-| Следующий конкретный change | IDE-082, затем IDE-083 | Убрать ненужную Go/Delve work при edit и неправильный Glance mappings override. Постоянный native RED/regression, сохранённые language/debug/tests; IDE-084 — отдельная проверка первого Outline focus |
+| Готово Windows/Ubuntu | IDE-082: пассивная Go metadata / late Delve | По 27 native E2E, real gopls restart и late override F5, по 2 diagnostic profiles; §148, Mac gate открыт |
+| Следующий конкретный change | IDE-083 | Удалить неправильный Glance mappings override и проверить native keyboard workflow; IDE-084 — отдельная проверка первого Outline focus |
 | Отложено до готового backend | Остаток SQL workflow, IDE-062 | SQLS references provider отсутствует. Собственный binder/index/LSP fork отменён (§143); не подменять references grep и не объявлять полную SQL поддержку |
 | Затем | Остальная [матрица языков](LANGUAGE_MATRIX.md) | SQL references IDE-062, Bash DAP IDE-057; Mac/native и оставшиеся сценарии матрицы |
 | После функциональной матрицы | Упрощение архитектуры | Общее ядро, явные системные границы и setup; сокращение дублирования с сохранением E2E |
+
+IDE-082 / fix-passive-go-discovery: runtime исправлен, [Go команды](GO_TOOLS.md).
+Windows/Ubuntu по 27 PASS с реальным gopls restart, 42 native profiles/source/
+exit/scopes проверены, плюс по 2 diagnostic profiles. Временный недоступный
+engine после включения Desktop владельцем доступен, расширенный suite прошёл.
+Mac gate остаётся открытым, change не архивируется до native проверки.
 
 **Mac параллельно:** IDE-001 (zsh/Go до запуска nvim) и IDE-002 (Cmd+C)
 ждут измерений/GUI на Mac. Сборщик startup готов; после trace исправляется

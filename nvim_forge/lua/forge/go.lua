@@ -1,9 +1,7 @@
 -- forge/go.lua — показ и переключение версии Go (toolchain).
 --
--- Зачем: в статуслайне снизу видно только filetype «go», а КАКАЯ версия Go
--- реально используется — было непонятно. Плюс бывает, что пакет требует
--- go>=1.25, а в PATH стоит go1.23 — нужен способ переключать версию прямо
--- из редактора, как в VS Code.
+-- Статуслайн читает выбранный режим/последнюю явно запрошенную версию.
+-- Запуск Go возможен только по GoVersion/GoToolchain, не от перерисовки.
 --
 -- Механизм переключения — GOTOOLCHAIN (Go 1.21+):
 --   * GOTOOLCHAIN=auto       — авто-выбор по директиве `toolchain`/`go` в
@@ -16,60 +14,58 @@
 
 local M = {}
 
--- nil = ещё не запрашивали; "" = запросили, но не определилось.
-local version_cache = nil
+local version_cache, cache_context = "", nil
+local query_id = 0
 
--- Узнаём версию АСИНХРОННО (vim.system не блокирует ввод): `go version`
--- уважает GOTOOLCHAIN и печатает реально используемую версию. Кэшируем,
--- статуслайн читает кэш; при готовности дёргаем redrawstatus.
-local function refresh_async()
+local function context_key()
+    return table.concat({ vim.fn.getcwd(), vim.env.GOTOOLCHAIN or "",
+        vim.env.PATH or "", vim.env.GOENV or "" }, "\0")
+end
+
+---Последняя явно подтверждённая версия в текущем контексте, без subprocess.
+function M.version()
+    return cache_context == context_key() and version_cache or ""
+end
+
+---Явно запросить версию; callback получает исходный context и реальный result.
+function M.refresh(callback)
+    query_id = query_id + 1
+    local id, key = query_id, context_key()
+    local context = { cwd = vim.fn.getcwd(), toolchain = M.current_toolchain() }
+    version_cache, cache_context = "", key
+    local function finish(out)
+        vim.schedule(function()
+            local version = out.code == 0 and (out.stdout or ""):match("go(%d+%.%d+%.?%d*)") or ""
+            version = version or ""
+            if id == query_id and key == context_key() then
+                version_cache = version
+                pcall(vim.cmd, "redrawstatus")
+            end
+            if callback then callback(version, context, out) end
+        end)
+    end
     if vim.fn.executable("go") ~= 1 then
-        version_cache = ""
+        finish({ code = -1, stderr = "go не найден в PATH" })
         return
     end
-    local ok = pcall(function()
-        -- timeout: если GOTOOLCHAIN указывает на неустановленную версию,
-        -- `go version` начнёт её СКАЧИВАТЬ; не держим процесс вечно.
-        vim.system({ "go", "version" }, { text = true, timeout = 15000 }, function(out)
-            local v = ""
-            if out.code == 0 and out.stdout then
-                v = out.stdout:match("go(%d+%.%d+%.?%d*)") or ""
-            end
-            version_cache = v
-            vim.schedule(function() pcall(vim.cmd, "redrawstatus") end)
-        end)
-    end)
-    if not ok then version_cache = "" end
+    -- Явное действие сохраняет обычные Go/GOTOOLCHAIN правила, включая выбор SDK.
+    local ok, err = pcall(vim.system, { "go", "version" }, { text = true, timeout = 15000 }, finish)
+    if not ok then finish({ code = -1, stderr = tostring(err) }) end
 end
 
----Версия Go (например "1.23.3"), либо "" пока не подтянулась.
-function M.version()
-    if version_cache == nil then
-        version_cache = ""
-        refresh_async()
-    end
-    return version_cache
-end
-
----Сбросить кэш и перезапросить версию.
-function M.refresh()
-    version_cache = nil
-    refresh_async()
-end
-
----Текущий GOTOOLCHAIN (или "auto (default)", если не задан).
+---Выбранный env GOTOOLCHAIN; при отсутствии режим определяет сам Go/GOENV.
 function M.current_toolchain()
     local tc = vim.env.GOTOOLCHAIN
     if tc and tc ~= "" then return tc end
-    return "auto (default)"
+    return "default (Go environment)"
 end
 
 ---Метка для статуслайна: «Go 1.23.3» либо «Go 1.25.0*» (звёздочка =
 ---задан явный GOTOOLCHAIN-оверрайд, т.е. версия принудительная).
 function M.label()
     local v = M.version()
-    if v == "" then return "" end
     local tc = vim.env.GOTOOLCHAIN
+    if v == "" then return "Go " .. (tc and tc ~= "" and tc or "default") end
     local overridden = tc and tc ~= "" and tc ~= "auto" and tc ~= "local"
     return "Go " .. v .. (overridden and "*" or "")
 end

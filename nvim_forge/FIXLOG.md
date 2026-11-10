@@ -7268,3 +7268,93 @@ LSP/server/sorter/новый panel framework. Дополнительные UI/SQ
 
 **Файлы:** FEATURE_REVIEW, IDE_ROADMAP, PROBLEMS,
 tests/diagnostics/profile-project.lua и README, HISTORY/AGENT_COMMANDS.
+
+## 148. Go metadata без фоновой работы и поздний Delve
+
+**Дата:** 2026-11-10. **Проблема:** IDE-082.
+**Спека:** IDE-BOOT-4 (ADDED), change fix-passive-go-discovery.
+
+**Что было.** Открытие main.go в модуле с отсутствующим Go SDK запускало
+синхронные go env GOBIN/GOPATH при setup nvim-dap-go и async go version от
+Lualine. Auto toolchain начинал download даже без debug. Delve выбирался
+один раз при FileType, поэтому установка/override после открытия не работали.
+GoVersion ждал 300ms и мог через version() запустить второй CLI, пока первый
+ответ ещё не доставлен. Cache не различал контексты/старые ответы.
+
+**Причина.** Получение данных находилось в UI getter и eager plugin opts;
+строка delve.path сохранялась в upstream setup closure. Нативный DAP command
+ожидает строку, поэтому function-in-path не является поддерживаемым решением.
+
+**Что сделали.** label/version стали чистым чтением. До явного запроса label
+показывает выбранный режим либо default (GOENV может задавать реальные defaults).
+GoVersion/GoToolchain явно запускают один async запрос; ответ показывает исходные
+CWD/toolchain, обновляет cache только при актуальных cwd/GOTOOLCHAIN/PATH/GOENV
+и query generation. Фиксированный таймер уведомления убран. GOTOOLCHAIN/GOENV
+глобально не меняли, готовый gopls оставлен с обычным окружением.
+
+Штатный nvim-dap-go setup сохранён. Его public adapter callback при launch
+копирует результат и выбирает свежий command через прежний resolver.
+Port/args/options/upstream template и приоритеты Delve не менялись.
+DapGoDlvInfo остаётся явным диагностическим действием. Новых LSP/backend/
+private patches/pins не добавляли; Windows SDK прежний.
+
+**Исходные native RED до runtime.** Постоянный go-passive E2E получил 3
+нежелательных Go metadata calls (artifact 12050962699200), code=1 с offline
+downloading go1.99.0. Второй RED 12106754310700: настоящий поздний override
+есть, но F5 использует старый dlv и получает ENOENT. Оба isolated config/source,
+raw FAIL/log/scopes сохранены; прежний runtime сверен с 1d24aae.
+
+**Постоянный regression.** Пять native сценариев, без fake CLI/LSP output:
+edit/redraw и default label без SDK work; один явный GoVersion; задержанная
+доставка реально завершённого Go ответа после смены cwd/toolchain; GoToolchain
+с настоящим gopls restart; поздний реальный Delve вне PATH с F5/breakpoint/
+stdout/continue. Metadata-only PATH исключает gopls; для restart case готовый
+сервер действительно добавляется и активируется. На обеих ОС client id 1→2.
+Полученные versions/breakpoint/output проверяются фактически, не provider flags.
+
+**Проверка Windows/Ubuntu.** На каждой ОС go-passive 5 + go-language 6 +
+dap-output 4 + dap-discovery 3 + test-runner 5 + debug-panels 4 = 27 PASS.
+Всего 42 native editor profiles, каждый exit=0/scope ok/empty; 78 config-source
+files соответствуют исправлению. Новые final Windows profiles:
+14047847595900/14053864492800/14059798839300/14065151971400/14071433519500;
+Ubuntu 51659126404/55902755330/58506731956/60587109447/63452144109.
+Реальный late Delve/PANEL_BEFORE/PANEL_AFTER и SDK 1.26.0 из CLI проверены.
+Pins/scripts/backports прежние, старые §146/147 наблюдения остаются историей.
+
+Дополнительно текущий go-statusline diagnostic: по 2 profiles Windows/Ubuntu,
+labels auto/local и 0 собственных metadata CLI, installs=0, native scopes empty.
+Он теперь изолирует gopls через публичный API private profile, потому что
+проверяет наш helper; настоящий language workflow остаётся отдельным E2E.
+Исходный диагностический отказ на позднем gopls prompt сохранён, не назван
+product regression. Полную пассивность готового gopls этот fix не обещает.
+
+**Промежуточные попытки.** Первый новый suite после runtime дал 2 PASS/3 FAIL:
+controller не подтверждал Enter у явных GoVersion/GoToolchain info messages.
+Native source/results сохранились; handler проверяет push INFO и записывает
+screen до Enter. Никаких SDK download prompts при обычном edit не разрешено.
+Расширенный gopls case выявил прежний Windows native force-stop notice
+code=1/signal=15 после нашего stop(true). Только этот известный tuple в
+запрошенном restart учитывается, остальные warnings/errors не скрываются.
+Сам product stop/notification не меняли; новый initialized client подтверждён.
+Raw first/expanded FAIL и их scope cleanup сохранены, дедлайны не увеличивали.
+
+Первый Ubuntu 27 был до расширения restart/default-label assertions. Поздний
+повтор не стартовал: dockerDesktopLinuxEngine pipe отсутствовал. Агент только
+читал readiness, владелец включил Desktop; после server 28.5.1 актуальный
+suite 5 прошёл. Тяжёлые Windows/Ubuntu suites шли последовательно, Go CPU=2,
+Windows temp/build/cache на F:. Desktop/WSL агент не запускал/перестраивал.
+
+**Аудит/границы.** .tests/audit-ide082.py --os all,
+.tests/ide082-evidence-all.json: exact sources/реальные CLI/results/gopls restart/
+DAP output/исходный RED/exit/groups/history prefix. Windows unit/trace 365 PASS,
+strict OpenSpec 66/66. Native Mac/GUI не запускались, change остаётся открытым
+до Mac gate; specs/ не синхронизировались. IDE-001 zsh до nvim, IDE-083/084
+и пользовательский выбор optional UI этим не закрываются.
+
+**Вывод.** Пассивное отображение не является действием подготовки/диагностики.
+Явный запрос версии и debug выбирают данные в актуальном контексте, используя
+готовые API. Следующий небольшой change — Glance defaults (IDE-083).
+
+**Файлы:** forge/go.lua, plugins/lsp.lua и dap.lua; go-passive E2E/registry,
+go-statusline diagnostic, GO_TOOLS/LANGUAGE_MATRIX/README/roadmap/review,
+PROBLEMS/HISTORY/AGENT_COMMANDS и OpenSpec change.
