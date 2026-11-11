@@ -30,6 +30,10 @@ bounded native event trace; ожидания/deadline/поведение locator
 Historical failures без scan trace не приписываются ему как единственной
 причине. Change reject-stale-filesystem-scans/IDE-FILE-5 готовит regression и
 узкое исправление; runtime пока прежний, общая стабильность Files открыта.
+§179: permanent5 cases source3PASS/2RED Windows/Ubuntu. Current upstream
+также не исправил controlled failures. Generation-only19-line guard
+отклонён (current2PASS/3FAIL в controls) и полностью снят. Дальше — pending
+open intent и watcher ownership; не скрывать RED через xfail/ослабление ожиданий.
 
 ## IDE-103 — Files delete может стирать несохранённый buffer
 

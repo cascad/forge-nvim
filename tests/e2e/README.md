@@ -21,6 +21,15 @@
 
 ## Запуск на целевых машинах и внутри VM
 
+IDE-FILE-5: `nvim -l tests/e2e/file-scan-order.test.lua`,5 native cases.
+Известный незакрытый IDE-104: source Windows/Ubuntu по3PASS/2RED. Это не
+готовый regression PASS: fixed run ещё отсутствует. Два controlled native
+IO порядка (old root и old partial после смены root), обычный A/a/Enter/write,
+независимые folders и initial-file/reveal control. Test-only helper задерживает
+настоящий callback внутри owned project; actual scanner source/rows/disk/
+native shutdown сохраняются. Прототип19-line guard отклонён controls (§179),
+runtime/pins прежние. Full e2e пока честно FAIL на известных случаях, без xfail.
+
 Files copy/delete (IDE-FILE-3/4): `nvim -l tests/e2e/file-copy-delete.test.lua`,
 Windows — выбранный SDK.9 fresh profiles: реальные clipboard/typed copy,
 Unicode/dir/conflict/cancel, normal delete/zoom/recursive/root refusal,

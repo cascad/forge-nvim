@@ -66,6 +66,30 @@
 
 ## Migration Plan
 
+### Отклонённый вариант (§179)
+
+19-line root-generation-only guard проверен через штатный applier и полностью
+снят: два controlled RED стали PASS, но current Windows control-набор дал
+2PASS/3FAIL. Независимые partial loads и pending initial reveal теряли child;
+ordinary create один раз также потерял видимость. Source initial5 —3PASS/2RED
+на обеих ОС. Нельзя убирать control/initial-file вариант или ослаблять locator
+ради guard. В tests/diagnostics/fixtures сохранён неиспользуемый prototype diff.
+
+Следующее уточнение реализации: поколение корня недостаточно описывает
+пользовательский intent. Проверить, как незавершённый native toggle_directory
+и show_new_children передают раскрытие в новое full-root snapshot; сохранить
+запрошенные открытия при таком overlap. Нужен контроль watcher ownership:
+устаревший context не должен оставлять references на уже сменённый root.
+Исторические callers для каждого untraced control failure ещё не сняты;
+объяснение отменой pending partial совместимо с кодом, но не считается
+единственным установленным caller каждого отказа. Нового private scanner/
+queue/периодического refresh это решение не разрешает.
+
+Current upstream v3.x1a140830/main760d970: scanner SHA b0bf0f36…68c1,
+оба controlled failures воспроизвелись на actual v3.x archive в private
+Windows runtime (2PASS/3FAIL всего). Поэтому обновление pin не принято;
+эта проверка не означает оценку всех будущих upstream изменений.
+
 Сначала permanent regression и source RED с final exact test bytes. Затем
 минимальный guard, явная dependency preparation Windows/Ubuntu и те же tests,
 old Files/copy/delete/buffers/deleted-files/backport CLI/quick/trace/strict.

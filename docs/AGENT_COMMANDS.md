@@ -5985,3 +5985,81 @@ runtime/pin/patch files,11 roots/shutdown/scopes, driver/final source copies,
 SDK74AFF15B…C6AD9 и byte prefixes. Пять controlled stale observations, ordinary
 4+7+7=18 PASS; source mechanism не называется regression PASS. Последние full
 Files green не исправляют два §177 failures. Mac/GUI/full suite не запускались.
+
+
+## 91. IDE-104: permanent RED и отклонение generation-only guard
+
+2026-11-11, FIXLOG §179; cwd F:/repo/forge-nvim, PowerShell без profile.
+TEMP/TMP/TMPDIR/NVIM_LOG_FILE — F:/.tests/tmp, npm_config_cache — F:,
+PYTHONIOENCODING=utf-8, GOMAXPROCS2/GOFLAGS-p=2/GOTOOLCHAINlocal/Cargo jobs2.
+Read-only rg/Get-Content: fs_scan, filesystem init/commands, renderer/NUI,
+fs_watch references, editor driver/preparation/applier и current change artifacts.
+
+```powershell
+npx.cmd --yes @fission-ai/openspec@1.13.2 status --change reject-stale-filesystem-scans --json
+npx.cmd --yes @fission-ai/openspec@1.13.2 instructions apply --change reject-stale-filesystem-scans --json
+& ./.tools/neovim/windows-x64/bin/nvim.exe -l tests/e2e/file-scan-order.test.lua > .tests/scan-order-source-windows.txt 2>&1
+docker compose -f tests/containers/compose.yaml -f tests/containers/limits.yaml run --rm --no-deps --pull never --name forge-nvim-scan-order-source-final --entrypoint nvim ubuntu -l tests/e2e/file-scan-order.test.lua > .tests/scan-order-source-ubuntu.txt 2>&1
+git ls-remote https://github.com/nvim-neo-tree/neo-tree.nvim.git refs/heads/main refs/heads/v3.x
+python -B .tests/scan-order-upstream.py
+python -B .tests/scan-order-upstream-probe.py
+& ./.tools/neovim/windows-x64/bin/nvim.exe -l .tests/scan-order-upstream-driver.lua > .tests/scan-order-upstream-probe.txt 2>&1
+python -B .tests/scan-order-candidate.py
+git diff --no-index -- .tests/scan-order-original.lua .tests/scan-order-candidate.lua
+```
+
+Final pinned5 source cases3PASS/2RED на ОС; ранние4-case и helper mistakes
+сохранены в first/with-initial-edit/four logs, не выдаются за этот baseline.
+Первый read-only inspector ошибся, приняв UTF8 shell output за UTF16;
+исправлено BOM detection, продукт не менялся. Native actual scanner bytes
+копируются из исполняемого runtime, source assertions/IO не подменяются.
+
+Official raw sources main/v3.x сохранены с URL/revision/SHA. Upstream probe
+выгружает actual archive в private owned runtime после проверки canonical
+target, использует отдельный изменённый driver и сохраняет именно его bytes.
+Результат2PASS/3FAIL подтверждает два controlled failures текущего upstream,
+не общую оценку всех future branches. Подготовленный pinned SDK не обновлялся.
+
+```powershell
+python -B .tests/scan-order-integrate.py
+python -B .tests/scan-order-prepare.py windows
+& ./.tools/neovim/windows-x64/bin/nvim.exe -l tests/e2e/file-scan-order.test.lua > .tests/scan-order-windows-first-current.txt 2>&1
+& ./.tools/neovim/windows-x64/bin/nvim.exe -l nvim_forge/scripts/prepare-plugins.lua --plugin-root F:/repo/forge-nvim/.tests/editor-deps/lazy --plugin neo-tree.nvim --revert > .tests/scan-order-rejected-revert.txt 2>&1
+python -B .tests/scan-order-reject.py
+& ./.tools/neovim/windows-x64/bin/nvim.exe -l nvim_forge/scripts/prepare-plugins.lua --plugin-root F:/repo/forge-nvim/.tests/editor-deps/lazy --check > .tests/scan-order-restored-check.txt 2>&1
+python -B .tests/scan-order-save-rejected.py
+& ./.tests/scan-order-checks.ps1 > .tests/scan-order-checks.txt 2>&1
+python -B .tests/scan-order-audit.py > .tests/scan-order-audit.txt 2>&1
+```
+
+Это ignored одноразовые scripts. Integrate сохранял prefix hashes и catalog
+payload ровно19 native added lines; preparation вызывала existing explicit
+CLI и сверяла прежние backports перед manifest update, без67 downloads.
+Guard2PASS/3FAIL отклонён. Revert вернул known original source, reject удалил
+собственные config/catalog/неисполненные CLI tests; final63 runtime sources
+равны0a82b04. Неактивный fixture — сохранённый diff, loader отсутствует.
+Ubuntu prototype не применялся: у ready image deps в /opt/forge/editor-deps,
+host .tests/ubuntu/editor-deps отсутствует. Неверная audit ссылка на такой
+путь дала wrapper exit1; исправлен только inspector, individual checks PASS.
+
+Checks по очереди запускает Windows quick/trace, Ubuntu quick/trace, strict92
+и audit. Quick360/trace11(+manual-linkSKIP) на ОС, full E2E не объявляется
+зелёным: known source RED честно FAIL, без skip/xfail.20 final captured native
+profiles root0/APIerrors[]/own scopes empty; early harness trials отдельно.
+SDK/pins/прежние manifest.backports не менялись. Child callback errors/prompts
+source old-partial case сохранены как FAIL, подтверждение нужно только для
+возможности завершить capture и cleanup, не для принятия ошибки.
+
+```powershell
+git diff --exit-code -- nvim_forge/lua/plugins/neo-tree.lua nvim_forge/patches/plugins.json tests/e2e/plugin-backports.test.lua
+git diff --check
+git diff --numstat -- nvim_forge/FIXLOG.md docs/AGENT_COMMANDS.md
+git diff --cached --check
+git commit -m "test(files): lock native scan ordering regressions"
+git status --short
+```
+
+Sessions сохранялись до terminal exit; observation timeout не запускал копию
+процесса. Desktop/WSL не управлялись, existing engine/image без build/pull/
+сети, limits2CPU/3GiB/256pids. Mac/physical GUI не запускались. Change2/5
+tasks, fix pending; user не должен применять rejected fixture как решение.

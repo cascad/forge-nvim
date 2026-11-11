@@ -48,6 +48,25 @@ tasks1.2/2.1–2.3 открыты. Raw11 profiles/first failures/audit в ignore
 
 ## Источники и следующий шаг
 
+Обновление §179: постоянный file-scan-order.test.lua зарегистрирован,5 native
+cases; исходный source Windows/Ubuntu —3PASS/2RED (stale root и stale partial
+после смены root). Обычный A/a/open/write и independent folders — controls;
+вариант с initial :edit/pending reveal сохранён отдельным пятым case.
+Проверки source native scanner bytes копируются из actual runtime.
+
+Current upstream v3.x1a14083046d96e88e361d1da00761c40d45012f3 (main
+760d9701953ad2b0277fe9776ba99bb011ecac2b имеет тот же scanner SHA
+b0bf0f368fe95d7485f1830a8a653a74db606facee83916f357e658717e682c1)
+не исправил оба controlled failures. В отдельном Windows archive probe
+получено2PASS/3FAIL, включая один ordinary child visibility timeout.
+
+Прототип19-line generation-only guard: controlled root/partial стали PASS,
+но ordinary/independent/pending controls FAIL, всего2PASS/3FAIL. Он полностью
+снят штатным --revert; runtime/catalog/предыдущие backports возвращены к source.
+Неактивный patch fixture сохраняет проверенный вариант для review, не является
+готовым исправлением. Правки на диске новых плагинов и изменения lock отсутствуют.
+Постоянный E2E сейчас намеренно показывает известные RED; xfail/skip нет.
+
 Pinned [fs_scan.lua](https://github.com/nvim-neo-tree/neo-tree.nvim/blob/84c75e7a7e443586f60508d12fc50f90d9aee14e/lua/neo-tree/sources/filesystem/lib/fs_scan.lua)
 и [renderer.lua](https://github.com/nvim-neo-tree/neo-tree.nvim/blob/84c75e7a7e443586f60508d12fc50f90d9aee14e/lua/neo-tree/ui/renderer.lua)
 сопоставлены с реально подготовленным source. Поиск официального upstream и

@@ -46,6 +46,14 @@ disk file; это совместимый механизм двух прежни�
 доказательство их единственной причины. [План исправления](../../openspec/changes/reject-stale-filesystem-scans/tasks.md),
 FIXLOG §178. Production/SDK/pins прежние, native Mac/physical GUI не запускались.
 
+§179: [постоянный E2E](../e2e/file-scan-order.test.lua) —5 cases, исходные
+Windows/Ubuntu3PASS/2RED. Fixture `fixtures/neo-tree-generation-only.patch`
+сохраняет отклонённый19-line prototype: два controlled failures исчезли,
+три positive controls отказали. Product loader его не читает; применять как
+готовое исправление нельзя. Guard/dependency manifest полностью сняты
+штатным revert/check, pin/SDK остались прежними. Требуется уточнить intent
+незавершённого раскрытия и ownership watchers; [design](../../openspec/changes/reject-stale-filesystem-scans/design.md).
+
 ## Цельная рамка Locals и RGB UI capture
 
 IDE-076: [сравнение/цена/границы](../../docs/PANEL_FRAME_REVIEW.md).

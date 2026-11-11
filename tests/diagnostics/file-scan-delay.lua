@@ -1,15 +1,18 @@
 -- IDE-104: test-only задержка ОДНОГО настоящего async readdir private root.
 -- Данные/ошибки native IO не заменяются; продукт этот модуль не загружает.
 local M={}
-function M.arm(project)
+function M.arm(project, relative)
   local uv=vim.uv
   local root=assert(uv.fs_realpath(project))
   assert(root==assert(uv.fs_realpath(vim.fn.getcwd())),'Private project must be current cwd')
+  local target=relative and assert(uv.fs_realpath(project..'/'..relative)) or root
+  local function normalized(path) return vim.fn.has('win32')==1 and path:lower():gsub('\\','/') or path end
+  assert(target==root or normalized(target):sub(1,#normalized(root)+1)==normalized(root)..'/','Delayed directory outside owned project')
   local opendir,readdir=uv.fs_opendir,uv.fs_readdir
   local target_dir
   local held
-  local report={root=root,held=false,released=false,drained=false,entries={},batches=0}
-  local function same(path) return uv.fs_realpath(path)==root end
+  local report={root=root,target=target,held=false,released=false,drained=false,entries={},batches=0}
+  local function same(path) return uv.fs_realpath(path)==target end
   uv.fs_opendir=function(path,callback,entries)
     if type(callback)~='function' or not same(path) then return opendir(path,callback,entries) end
     return opendir(path,function(err,dir)

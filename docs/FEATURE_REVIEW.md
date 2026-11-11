@@ -85,6 +85,8 @@ Windows/Ubuntu плюс copy baseline. Отдельный legacy отказ со
 IDE-104 не закрыт поздними PASS; bounded event capture и first failures — §177.
 §178 воспроизвёл native full-root completion race Windows/Ubuntu с настоящим
 IO; план source-locked исправления отдельно, product scan пока прежний.
+§179:5 native regressions с source3/2 на ОС; generation-only prototype
+отклонён по control failures и снят. Не добавлен новый runtime layer/backport.
 
 ## Где наслоения заслуживают проверки
 

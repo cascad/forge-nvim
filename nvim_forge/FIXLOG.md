@@ -9494,3 +9494,106 @@ failure capture, diagnostics README, новый OpenSpec proposal/design/spec/ta
 reproduction, FEATURE_REVIEW/IDE_ROADMAP/PROBLEMS/HISTORY/AGENT_COMMANDS.
 Raw logs/profiles и audit — ignored .tests. Journals raw append с byte-prefix
 guard .tests/tree-create-prefix.json, старые записи не переписаны.
+
+
+## 179. Files: постоянный регресс и отклонённый guard
+
+2026-11-11. IDE-104. Спека: IDE-FILE-5 (ADDED intent), change
+reject-stale-filesystem-scans. Постоянный source RED и отклонение неполного
+решения; product fix не заявлен. Runtime/SDK/pins возвращены к исходному состоянию.
+
+**Проблема.** §178 доказал stale full-root механизм. Нужен постоянный тест,
+который кроме самого RED проверяет native создание/открытие/сохранение,
+дальнейшее обновление и независимые загрузки каталогов.
+
+**Изменение тестов.** file-scan-order.test.lua/registry,5 fresh profiles:
+обычный Unicode A/a/Enter/write; controlled old-root после нового child с
+дальнейшим Enter/write/second create/real watcher; две independent partial
+folders в одном дереве; old partial после смены root; independent folders
+при initial :edit/pending reveal. Native IO helper принимает только root или
+realpath descendant собственного project. Async always включается публичной
+state option только в partial controls, product policy не меняется. Native
+scanner bytes копируются из реально исполняемого runtime, SHA/rows/nodes/
+disk paths и quit/scope сохраняются. Prompts/ERROR не разрешаются: unexpected
+blocking error можно подтвердить только для завершения capture, case остаётся FAIL.
+
+**Ошибки harness и расширение контроля.** Первый4-case trial0/4 включал
+неверный basename в проверке записи вложенного файла и vim.NIL вместо optional
+Lua argument; оба исправлены до final baseline. Затем nil-safe selected node
+предотвратил лишнюю RPC ошибку самого observer после native tree corruption.
+Ранний ordinary initial :edit перед Files добавлял ещё один full/partial
+overlap и дал1/3. Вместо удаления такого пользовательского варианта он
+сохранён пятым case, базовый independent control стартует из dashboard без
+ненужного :edit. Это разные valid scenarios, а не увеличение deadline/
+повторное l для зелёного теста. Поздний PASS пятого не объявляется объяснением
+каждого раннего untraced control failure; старые логи сохранены.
+
+**Source RED.** Final exact5 cases Windows/Ubuntu — по3PASS/2RED, runtime
+0a82b04, actual scanner SHA b6c91752…c321. Root case: newer child действительно
+виден, затем old completion стирает node/строку при существующем disk file.
+Partial после next-root на Windows показывает native ERROR/prompts; на Ubuntu
+портит новый tree. Оба отказа происходят после actual held IO, не из-за fake
+backend. Ordinary файл записан как ORDINARY_WRITE, independent folders реально
+показывают alpha/beta. Post-fix steps controlled case после source RED ещё
+не выполнялись на исправленном коде; task2.1 остаётся открытым.
+
+**Upstream проверка.** Read-only git ls-remote и official raw/codeload:
+v3.x1a14083046d96e88e361d1da00761c40d45012f3, main760d9701953ad2b0277fe9776ba99bb011ecac2b.
+Оба scanner source имеют SHA b0bf0f36…68c1. Actual v3.x archive подставлен
+только в private Windows runtime отдельным явно изменённым probe driver:
+2PASS/3FAIL, оба controlled failures остаются, ordinary child тоже один раз
+не появился. Copies/metadata явно отличают candidate archive от pinned SDK;
+manifest не выдаётся за доказательство другой версии. Pin update не принят.
+Это не оценка всех будущих upstream fixes.
+
+**Отклонённое решение.** Native19-line generation-only guard: full get_items
+создаёт token, partial contexts его наследуют; old context не обновляет
+watchers/job_complete/render. Штатный existing applier применил его к private
+подготовленным Windows deps, existing backports/pins не менялись. Два
+controlled RED стали PASS, включая настоящий ORDER_WRITE/second/watched.
+Но ordinary/independent/pending-reveal controls дали3FAIL, всего2PASS/3FAIL.
+Нельзя принимать этот результат как исправление и выбрасывать controls.
+
+Объяснение отменой незавершённого открытия совместимо с generation code и
+native snapshot поведения, но конкретные callers каждого untraced control
+failure ещё не сняты. Следующее исследование — intent из toggle_directory/
+show_new_children при новом полном snapshot и watcher reference ownership.
+Нужен контроль уже зарегистрированных watches при замене root/отбрасывании
+context; здесь утечка конкретного watcher ещё не измерена и не объявляется фактом.
+
+**Откат.** --revert вернул actual scanner SHA b6c91752…c321; --check прежних
+деклараций PASS. Временные config/build/commit additions, catalog entry и
+неисполненные prototype CLI test additions сняты.63 runtime/pin/patch sources
+совпадают с0a82b04, manifest.backports прежний, SDK74AFF15B…C6AD9. Неактивный
+19-line fixture сохранён в tests/diagnostics/fixtures для review; loader его
+не читает. LF/CRLF/unknown-source tests нового backport не объявляются
+выполненными: принятого backport сейчас нет.
+
+**Проверка.** Audit20 final profiles:10 pinned source,5 actual upstream и5
+отклонённого guard. У всех root exit/signal0, APIerrors[], QuitPre/VimLeavePre/
+VimLeave, own scopes empty, root hard-kill нет. Exact driver/helper/test copies,
+actual scanner bytes и config source origins проверены; rejected profiles
+имеют ровно два тогдашних runtime diffs (neo-tree.lua/plugins.json), остальные
+соответствуют source0a82b04. Ранние harness-error trials в эти20 не включены.
+
+Quick360/trace11(+manual-link SKIP) на ОС, strict92 прошли. Первый checks
+wrapper завершился1 из-за неверного audit предположения о host пути Ubuntu
+deps; фактический image использует FORGE_E2E_DEPS=/opt/forge/editor-deps.
+Audit теперь сверяет captured dependency-manifest actual Ubuntu runtime,
+повторно проверен; individual checks не перезапускались без code изменений.
+Source/positive E2E full suite сейчас намеренно FAIL на известных IDE-104
+cases, xfail/skip/ослабления assertions нет. Task1.2 выполнен, apply2/5;
+production fix, общий post-fix regression и Mac/physical GUI остаются открытыми.
+Windows/Ubuntu heavy runs последовательны, Docker existing image/engine без
+build/pull/сети/lifecycle, все Windows temp/cache на F:.
+
+**Вывод.** Источник RED теперь постоянный, а controls предотвратили
+принятие неполного исправления. Возраст root context сам по себе недостаточен:
+должны сохраниться незавершённые пользовательские открытия и корректный native
+lifecycle. Готовый runtime fix пока отсутствует; требования не сокращены.
+
+**Файлы.** file-scan-order E2E/registry, расширенный test-only IO helper,
+неактивный rejected patch fixture, OpenSpec design/tasks/reproduction,
+diagnostics/e2e README, PROBLEMS/IDE_ROADMAP/FEATURE_REVIEW/HISTORY/AGENT_COMMANDS.
+Raw logs/candidate/upstream archive/audit — ignored .tests, journals raw
+append с guard .tests/scan-order-prefix.json. Старые записи не переписаны.

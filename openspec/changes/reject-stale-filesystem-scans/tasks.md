@@ -7,10 +7,12 @@
   completion. Проверка file-create-order.json: disk=true, newer child виден,
   затем stale expanded/loaded=false/children=[]; native exit/API/scope, source
   copies, FIXLOG §178/HISTORY/commands и bounded untraced controls.
-- [ ] 1.2 Превратить воспроизведение в permanent file-scan-order E2E/registry:
+- [x] 1.2 Превратить воспроизведение в permanent file-scan-order E2E/registry:
   source RED с final exact test bytes, ordinary A/a/open/edit/save, controlled
   stale root, independent folders/old partial after new root и subsequent
   watcher/create. Проверить реальные файлы/rows/буферы, не только настройки.
+  §179:5 cases, source Windows/Ubuntu по3PASS/2RED. Post-fix open/edit/save/
+  subsequent watcher в controlled case пока не пройдены: это остаётся в2.1.
 
 ## 2. Минимальное исправление и регресс
 
