@@ -297,4 +297,50 @@ T.check('IDE-TEST-6 unknown Neotest companion preserves all source files',functi
     for i=1,#files-1 do T.eq(bytes(files[i].path),files[i].raw) end
   end)
 end)
+for _,eol in ipairs({'\n','\r\n'}) do
+  T.check('IDE-FILE-5 Neo-tree CLI primary companion apply check repeat revert '..(eol=='\n' and 'LF' or 'CRLF'),function()
+    runtime(function(base)
+      local spec=vim.json.decode(bytes(root..'/nvim_forge/patches/plugins.json'))['neo-tree.nvim']
+      local specs={spec};vim.list_extend(specs,spec.extra);local files={}
+      for _,item in ipairs(specs) do
+        local source=bytes(deps..'/lazy/neo-tree.nvim/'..item.file):gsub('\r\n','\n')
+        if vim.fn.sha256(source)==item.after_sha256 then
+          local a,b=assert(source:find(item.after,1,true));source=source:sub(1,a-1)..item.before..source:sub(b+1)
+        end
+        T.eq(vim.fn.sha256(source),item.before_sha256)
+        local path=base..'/neo-tree.nvim/'..item.file;local raw=source:gsub('\n',eol);write(path,raw)
+        files[#files+1]={path=path,raw=raw,spec=item}
+      end
+      assert(cli(base,'--check','neo-tree.nvim').code~=0)
+      for _,item in ipairs(files) do T.eq(bytes(item.path),item.raw) end
+      local result=cli(base,nil,'neo-tree.nvim');T.eq(result.code,0,result.stderr)
+      local actual=vim.json.decode(result.stdout)['neo-tree.nvim'];T.eq(actual.sha256,spec.after_sha256)
+      for _,item in ipairs(files) do
+        T.eq(actual.files[item.spec.file],item.spec.after_sha256)
+        T.eq(vim.fn.sha256((bytes(item.path):gsub('\r\n','\n'))),item.spec.after_sha256)
+        if eol=='\r\n' then assert(not bytes(item.path):gsub('\r\n',''):find('\n',1,true)) end
+        item.stat=vim.uv.fs_stat(item.path)
+      end
+      T.eq(cli(base,nil,'neo-tree.nvim').code,0);T.eq(cli(base,'--check','neo-tree.nvim').code,0)
+      for _,item in ipairs(files) do T.eq(vim.uv.fs_stat(item.path).mtime,item.stat.mtime) end
+      T.eq(cli(base,'--revert','neo-tree.nvim').code,0)
+      for _,item in ipairs(files) do T.eq(bytes(item.path),item.raw) end
+    end)
+  end)
+end
+T.check('IDE-FILE-5 unknown Neo-tree companion preserves primary',function()
+  runtime(function(base)
+    local spec=vim.json.decode(bytes(root..'/nvim_forge/patches/plugins.json'))['neo-tree.nvim']
+    local specs={spec};vim.list_extend(specs,spec.extra);local files={}
+    for _,item in ipairs(specs) do
+      local source=bytes(deps..'/lazy/neo-tree.nvim/'..item.file):gsub('\r\n','\n')
+      local a,b=assert(source:find(item.after,1,true));source=source:sub(1,a-1)..item.before..source:sub(b+1)
+      T.eq(vim.fn.sha256(source),item.before_sha256)
+      local path=base..'/neo-tree.nvim/'..item.file;write(path,source);files[#files+1]={path=path,raw=source}
+    end
+    local last=files[#files];last.raw=last.raw..'\n-- unknown companion\n';write(last.path,last.raw)
+    local result=cli(base,nil,'neo-tree.nvim');assert(result.code~=0 and result.stderr:find('неизвестное содержимое',1,true),result.stderr)
+    for _,item in ipairs(files) do T.eq(bytes(item.path),item.raw) end
+  end)
+end)
 T.finish()

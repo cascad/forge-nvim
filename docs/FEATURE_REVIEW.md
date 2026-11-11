@@ -87,8 +87,24 @@ IDE-104 не закрыт поздними PASS; bounded event capture и first 
 IO; план source-locked исправления отдельно, product scan пока прежний.
 §179:5 native regressions с source3/2 на ОС; generation-only prototype
 отклонён по control failures и снят. Не добавлен новый runtime layer/backport.
+§180 принял следующий вариант:2 native файла, +41 строка net — generation,
+pending open intent/coherent snapshot и watchers только accepted result.
+Предварительные7 новых/42 editor+15 CLI PASS на ОС сохранены как §180.
+§181: до commit найден IDE-105 — coherence retry смешивал normal/query/explicit
+restore views и зацикливал native filter. Два source RED на каждой ОС;
+search_pattern/force_open_folders исключены из normal retry. Финальный набор:
+9 новых/44 editor+15 CLI на ОС; цена по-прежнему +41 native строка net/2 файла.
+SDK binaries/pins прежние, Mac/GUI открыт.
+Свой scanner/queue/controller не добавлен. Условие удаления — upstream с тем
+же regression. [Подготовка/границы](../nvim_forge/patches/README.md#neo-tree-согласованный-snapshot-и-ожидающие-раскрытия-ide-104).
 
 ## Где наслоения заслуживают проверки
+
+IDE-106 (требование владельца 2026-11-11) — общая консоль логов и состояния
+IDE. До реализации снять карту native logs/notifications/health/missing tools
+и готовых UI. Пользовательский результат — одна точка диагностики с причиной
+и действием; источник подробностей остаётся у соответствующей подсистемы.
+Обязательная фича стоит перед frame pilot; [план](IDE_ROADMAP.md#ide-106-общая-консоль-состояния-и-логов-ide--обязательная).
 
 | Участок | Наблюдение | Что проверить до изменения |
 |---|---|---|

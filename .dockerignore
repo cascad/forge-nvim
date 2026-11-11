@@ -1,5 +1,6 @@
 .git
 .claude
 .tests
+.tools
 **/__pycache__
 **/*.log

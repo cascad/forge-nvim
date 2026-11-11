@@ -9597,3 +9597,199 @@ lifecycle. Готовый runtime fix пока отсутствует; треб�
 diagnostics/e2e README, PROBLEMS/IDE_ROADMAP/FEATURE_REVIEW/HISTORY/AGENT_COMMANDS.
 Raw logs/candidate/upstream archive/audit — ignored .tests, journals raw
 append с guard .tests/scan-order-prefix.json. Старые записи не переписаны.
+
+
+## 180. Files: согласованный snapshot и наблюдатели
+
+2026-11-11. IDE-104. Спека: IDE-FILE-5 (FIX), change
+reject-stale-filesystem-scans. Windows/Ubuntu verified; Mac/physical GUI открыт.
+Source и отклонённый prototype §178–179 сохранены, история не переписана.
+
+**Проблема.** Full/partial filesystem scans могли закончиться не по порядку:
+созданный child исчезал из раскрытого дерева, obsolete partial портил новый
+root.19-line generation-only guard исправлял два RED, но терял ожидающие
+открытия/ordinary create. Нужен coherent snapshot с сохранением intent,
+правильным ownership watchers и неизменным native backend.
+
+**Причина.** Незавершённое l не помечало node expanded до IO; show_new_children
+передавал intent лишь в path_to_reveal. Watcher refresh без него мог создать
+новый root snapshot без запрошенной папки и отменить её older partial.
+Даже актуальный root-generation snapshot мог быть начат до более нового
+partial и затем стереть его nodes. Native watcher refs менялись при старте/
+IO completion до принятия дерева: source obsolete partial оставил active
+folder-A watcher после next-root. Это измерено, не гипотеза об утечке из §179.
+Единственность причин всех старых untraced failures задним числом не доказана.
+
+**Уточнённый постоянный RED.** file-scan-order.test.lua расширен5→7 cases.
+Добавлены actual newer full watcher refresh при held partial и newer partial
+при held full snapshot; второй использует две вложенные native IO задержки,
+cleanup в обратном порядке. Existing5/assertions/дедлайны сохранены. Read-only
+native watcher table проверяет nonnegative refs и отсутствие active obsolete
+folder-A. Scanner и init source bytes берутся из actual исполняемого runtime.
+
+До product edit final source0b16d23 с тем же exact test/helper: Windows2PASS/
+5RED, Ubuntu4PASS/3RED. Обе ОС воспроизвели3 controlled нарушения; дополнительные
+Windows ordinary/independent visibility failures сохранены. Более ранние
+7-case4/3 на обеих ОС до добавления init source capture сохранены отдельно;
+не выдаются за final exact bytes или fixed run.5-case baseline §179 тоже сохранён.
+
+**Изменение.** Два source-locked native файла Neo-tree84c75e7a, +41 строка
+net (scanner38/init3), existing backport applier/preflight/check/revert:
+root generation отбрасывает obsolete completion; native node:expand сохраняет
+pending intent в toggle_directory/show_new_children до IO. Full snapshot
+проверяет live expanded folders: если их ещё не загрузил, сохраняет live tree
+и вызывает штатный async get_items. fs_stat исключает повтор для удалённой
+папки. Это обработка конкретного overlap без таймера/private queue/manual R.
+
+IO completion меняет local folder.loaded. Watchers снимаются/добавляются один
+раз при принятии coherent full result; accepted partial регистрирует свои
+папки, obsolete context refs не получает. Native IO/filters/renderer/follow/
+async сохранены. Forge config добавляет7 строк commit/build/check по прежнему
+паттерну Gitsigns/Neogit/Neotest. Primary SHA ce85bdd8…4618, companion
+b388ad0a…4839.67 pins/SDK binaries и прежние3 backports не менялись; новый
+LSP/backend/controller не добавлен. Generation-only fixture §179 не загружается.
+
+**Пробы и последовательность.** Private candidate7PASS менял только два SDK
+файла в own runtime отдельным явно изменённым driver; SDK/default cache тогда
+не менялся. По ошибке эта Windows-проба началась до terminal exit Ubuntu
+source: source и probe частично пересеклись. Оба handles доведены до terminal
+exit, факт сохранён, timing/performance выводов нет. Final prepared Windows/
+Ubuntu new tests и весь selected regression выполнены последовательно.
+
+**Проверка.** Current7/7 на ОС: ordinary A/a/Enter/write; old full after newer
+child с реальными ORDER_WRITE/second create/следующим watcher; independent
+folders; old partial после new root и watchers; initial-file/pending reveal;
+pending folder/full refresh; newer partial/pending full. Прежние Files7,
+copy-delete9, buffers8, deleted-files5, Outline focus3/worktree refresh3 —
+ещё35 editor checks на ОС. Всего42 editor +15 CLI на ОС. CLI включает3 новых
+LF/CRLF companion apply/check/repeat/revert/mtime и unknown companion preflight:
+неизвестный последний файл отклонён до записи primary. Старые12 CLI тоже PASS.
+
+Audit .tests/scan-v2-audit.py:93 final editor profiles —14 source,7 private,
+72 prepared positive. Все root exit/signal0/APIerrors[], native QuitPre/
+VimLeavePre/VimLeave, own scopes после cleanup пусты, root hard-kill нет.
+17 Windows owned Jobs потребовали TerminateJobObject для своих оставшихся
+потомков (3 source/2 private/12 current);3 Ubuntu worktree groups44/145/244
+получили graceful SIGTERM. Естественный выход всех потомков не утверждается,
+глобального поиска/остановки чужих процессов не было. SDK74AFF15B…C6AD9 прежний.
+Сверены63 runtime/pin/patch origins, exact driver/helper/test и оба native
+source files, реальные disk outputs/rows/refs. Ранние trials вне этих93.
+Quick360/16files, trace11/2files +1manual-link SKIP на ОС, strict92.
+
+**Ubuntu SDK.** Явный offline refresh-editor.Dockerfile наследует готовый
+local base8a6b73261d91, проверяет совпадение67 pins/lock bytes и применяет
+existing CLI, обновляя manifest. Все base layers сохранены; добавлено34214
+bytes. Stage c833b84e914c…5990 проверен E2E/CLI до продвижения в прежний основной
+tag; identity и default --check совпали. Neovim/языковые SDK не скачивались и
+не менялись. Первый build отказал: base USER forge не мог писать root-owned
+deps. Добавлен USER root только на подготовку и USER forge в конце, logger
+в build /tmp с удалением; UID/config user восстановлен и проверен.
+.tools исключён из Docker context, передано104.81KB; host SDK не копировался.
+Desktop/WSL lifecycle/settings не менялись, image prune не выполнялся,
+old base сохранён отдельным own tag. Windows temp/cache на F:.
+
+**Границы/вывод.** Доказанный stale snapshot/pending intent/watchers workflow
+исправлен Windows/Ubuntu. Полный E2E всех языков, performance всех проектов и
+native Mac/physical GUI этим selected набором не доказаны. Apply4/5, task2.3
+открыт, archive не выполнен. Existing install: явно :Lazy build neo-tree.nvim,
+затем restart; обычный startup только проверяет готовность. Backport снять
+при upstream версии, проходящей тот же native regression на целевых ОС.
+
+**Файлы.** plugins/neo-tree.lua, patches/plugins.json/README, file-scan-order/
+plugin-backports E2E, refresh-editor.Dockerfile/.dockerignore; OpenSpec artifacts/
+verification, Files workflow/FEATURE_REVIEW/IDE_ROADMAP/PROBLEMS/HISTORY/
+diagnostics/e2e README/AGENT_COMMANDS. Raw source/probe/current/image/audit
+reports в ignored .tests. Journals raw append с guard .tests/scan-v2-prefix.json.
+
+Дополнение к составу §180: licenses/neo-tree.nvim.txt сохраняет точный MIT
+notice pinned source для больших before/after фрагментов; README содержит
+атрибуцию. Runtime payload и проверенные SDK от этого не менялись.
+
+
+## 181. Files: normal snapshot отдельно от фильтра
+
+2026-11-11. IDE-104/105. Спека: IDE-FILE-5 (FIX), change
+reject-stale-filesystem-scans. Уточнение предварительного §180 до общего commit.
+Старый payload/hash/42-check результат остаётся историей, не финальной сборкой.
+
+**Проблема.** При заключительном review найдено, что accepted snapshot guard
+§180 зацикливает native f/filter_on_submit и Ctrl-X/clear_filter. С раскрытой
+alpha и запросом beta первое Windows наблюдение:71 fd за5 секунд, ready=false,
+старое дерево остаётся. При clear мог сохраняться query view вместо прежнего.
+
+**Причина.** Проверка полноты normal full snapshot сравнивала его с live
+expanded folders. Query намеренно исключает несовпадающие каталоги, explicit
+force_open_folders намеренно восстанавливает другой набор раскрытий. Они
+не должны снова включать раскрытия предыдущего view: это создаёт rescan loop.
+
+**Исходный regression.** Новый permanent file-filter.test.lua содержит два
+native keyboard сценария: раскрытая alpha → f/beta/Enter → Ctrl-X и тот же
+query из исходно свёрнутого дерева. Предварительный ce85bdd8…4618 даёт0PASS/
+2RED на Windows и Ubuntu с exact final tests. Actual scanner/init, snapshots,
+spawns, disk files и shutdown сохранены. Первая однослучайная проба отдельно;
+после добавления второго case RED обеих ОС выполнен до final product edit.
+
+**Изменение.** Normal coherence retry исключает root.search_pattern и
+state.force_open_folders. Native filter/clear возвращают собственный snapshot;
+обычные pending intent/full-partial/watchers guards §180 сохранены. Всего
+по-прежнему +41 native строка net/2 source-locked файла, +7 строк Forge config.
+Final primary353a15d77f780ad8b3bd8cdc15fc2258cd611e32a239625c3bf795ee010f0320,
+companion b388ad0a0ca987bcbf77723541651ae4a9e5e36673f4df3ddb345789257c4839.
+Declaration IDE-104-105-neo-tree-coherent-scans. Новый scanner/controller/LSP,
+таймер, очередь или OS branch не добавлены. Before обновлением unpublished
+Windows payload выполнен штатный revert старым catalog, затем apply новым;
+previous migration для unpublished preliminary payload не сохраняется.
+
+**Проверка/E2E.** Windows и Ubuntu: scan-order7/filter2 PASS и15 CLI PASS
+(12 прежних,3 companion/preflight). Затем последовательно Windows→Ubuntu:
+Files7/copy-delete9/buffers8/deleted-files5/Outline focus3/worktree refresh3.
+Итого44 editor checks на ОС,38 positive native profiles на ОС. Quick360/
+16files, trace11/2files на ОС, strict92. Source0b16d23 scan7 остаётся W2PASS/
+5RED и U4PASS/3RED; source filter2 — preliminary §180, не исходный upstream.
+Rejected19-line prototype §179 не загружается. Тесты/дедлайны не ослаблены.
+
+Audit101 profiles:14 source/7 private/4 filterRED/76 final positive. Root
+exit/signal0/APIerrors[], native QuitPre/VimLeavePre/VimLeave, own scopes empty,
+root hard-kill нет.13 Windows owned Jobs завершили собственных оставшихся
+потомков (3 source/2 private/8 final); Ubuntu worktree groups44/148/250 получили
+graceful SIGTERM. Не утверждается natural exit каждого descendant. Проверены
+63 config/pin/patch origins, exact driver/helper/tests/native file bytes,
+настоящие disk outputs/rows/watchers. Другие3 backports/67 pins/Windows binary
+74AFF15B…C6AD9 прежние. Journals raw prefix guards сохранены.
+
+**Test SDK.** Final offline слой построен от сохранённого original8a6b…d309,
+а не поверх ce85 payload; все base layers сохранены, USER forge восстановлен.
+Final stage f63a05ca328aa03d4229f1da0330511e18266107280c5771330db98a62f933d0
+добавляет34252bytes. После final gates default c833…5990 (§180) заменён этим
+exact tested stage, с preflight обоих tag IDs и default CLI --check/manifest.
+SDK binaries/языковые tools не скачивались/не заменялись. Desktop/WSL lifecycle/
+settings не менялись, prune нет. Windows temp/cache на F:. Теги предварительных
+images сохранены, посторонние ресурсы не удалялись.
+
+**Вывод/границы.** Доказанные normal scan и native filter/clear исправлены
+Windows/Ubuntu. Полный suite, performance всех проектов, native Mac/physical
+GUI не проверены этим selected набором. Apply4/5, task2.3 открыт, archive нет.
+Existing install: :Lazy build neo-tree.nvim и restart; startup только check.
+Если установлен unpublished preview, сначала штатный restore оригинального
+pin, затем build. Backport снимается upstream версией с тем же regression.
+
+Начало IDE_ROADMAP теперь содержит короткую актуальную очередь вместо чтения
+всей истории. Termide: важны рамка/цвет/аккуратность, заголовки не отдельное
+требование. Следом рабочий frame pilot; перед refactor — конкретные сокращения
+по FEATURE_REVIEW. Редкие assert/Docker caller/старые timeout остаются очередью
+диагностики, без новых evidence не объявляются причиной/фиксом.
+
+**Файлы.** patches/plugins.json/README/licenses, plugins/neo-tree.lua,
+file-scan-order/file-filter/plugin-backports E2E/registry, explicit Docker
+refresh/.dockerignore; OpenSpec artifacts/verification, Files/feature review/
+roadmap/problems/history/diagnostics/e2e docs. Raw v2/v3 evidence в ignored
+.tests. §180/команды92 описывают preliminary этап; указанный там commit не
+выполнялся отдельно, общий final commit следует после §181.
+
+
+Уточнение очереди по новому прямому требованию владельца после §181:
+IDE-106 — обязательная общая консоль логов/состояния IDE. Записаны одна
+клавиатурная точка входа, native sources, chronology/level/subsystem, причины/
+missing tools/следующее действие, поиск/детали/границы хранения и E2E gate.
+Она идёт сразу после Files, перед frame pilot. Реализация ещё не начата;
+в PROBLEMS следующий свободный ID107. Это изменение плана, не новый runtime fix.

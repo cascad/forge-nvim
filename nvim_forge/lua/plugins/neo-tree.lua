@@ -231,6 +231,9 @@ return {
     {
         "nvim-neo-tree/neo-tree.nvim",
         branch = "v3.x",
+        -- spec: IDE-FILE-5. Native scan snapshot/intent guard, см. patches/README.md.
+        commit = require('ide.backports').revision('neo-tree.nvim'),
+        build = function(plugin) require('ide.backports').run('neo-tree.nvim', plugin.dir, 'apply') end,
         cmd = "Neotree",
         dependencies = {
             "nvim-lua/plenary.nvim",
@@ -462,5 +465,9 @@ return {
                 commands = guarded_open_commands("git_status"),
             },
         },
+        config = function(plugin, opts)
+            require('ide.backports').run('neo-tree.nvim', plugin.dir, 'check')
+            require('neo-tree').setup(opts)
+        end,
     },
 }

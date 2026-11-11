@@ -6063,3 +6063,179 @@ Sessions сохранялись до terminal exit; observation timeout не з�
 процесса. Desktop/WSL не управлялись, existing engine/image без build/pull/
 сети, limits2CPU/3GiB/256pids. Mac/physical GUI не запускались. Change2/5
 tasks, fix pending; user не должен применять rejected fixture как решение.
+
+
+## 92. IDE-104: coherent snapshot, intent и watcher ownership
+
+2026-11-11, FIXLOG §180. cwd F:/repo/forge-nvim, PowerShell без profile.
+TEMP/TMP/TMPDIR/NVIM_LOG_FILE — .tests/tmp на F:, npm_config_cache — F:,
+PYTHONIOENCODING=utf-8, GOMAXPROCS2/GOFLAGS-p=2/GOTOOLCHAINlocal/Cargo jobs2.
+Read-only git status/log, rg/Get-Content: native fs_scan/init/fs_watch,
+backport applier/preparation/config, current OpenSpec и previous failures.
+
+```powershell
+npx.cmd --yes @fission-ai/openspec@1.13.2 instructions apply --change reject-stale-filesystem-scans --json
+& ./.tools/neovim/windows-x64/bin/nvim.exe -l tests/e2e/file-scan-order.test.lua > .tests/scan-v2-source-windows.txt 2>&1
+docker compose -f tests/containers/compose.yaml -f tests/containers/limits.yaml run --rm --no-deps --pull never --name forge-nvim-scan-v2-source-final --entrypoint nvim ubuntu -l tests/e2e/file-scan-order.test.lua > .tests/scan-v2-source-ubuntu.txt 2>&1
+python -B .tests/scan-v2-candidate.py
+git diff --no-index -- .tests/scan-v2-before.lua .tests/scan-v2-after.lua
+python -B .tests/scan-v2-probe.py
+& ./.tools/neovim/windows-x64/bin/nvim.exe -l .tests/scan-v2-probe-driver.lua > .tests/scan-v2-private-probe.txt 2>&1
+python -B .tests/scan-v2-install.py
+python -B .tests/scan-order-prepare.py windows
+& ./.tools/neovim/windows-x64/bin/nvim.exe -l tests/e2e/file-scan-order.test.lua > .tests/scan-v2-windows-file-scan-order.txt 2>&1
+& ./.tools/neovim/windows-x64/bin/nvim.exe -l tests/e2e/plugin-backports.test.lua > .tests/scan-v2-windows-plugin-backports.txt 2>&1
+```
+
+До implementation final source7: W2PASS/5RED, U4PASS/3RED;3 controlled RED
+на обеих ОС. Earlier7-case4/3 до init capture и old5 baseline сохранены
+отдельно. Actual scanner/init source bytes копируются из native runtime,
+не из предполагаемого manifest. Watches читаются через upvalue pinned native
+show_watched, backend не подменяется. В nested test два held IO освобождаются
+в обратном порядке. Дедлайны/assertions не ослаблены, xfail/extra toggle нет.
+
+Probe явно сохраняет изменённый driver и два candidate SDK файла в private
+runtime; parent SDK не изменялся. По ошибке probe начат при ещё live Ubuntu
+source handle: recorded overlap, оба session_id дополлены до terminal exit,
+без новых concurrent регрессов и без performance выводов. Финальный prepared
+gate Windows→Ubuntu последовательный. Install script сохраняет prefix hashes,
+добавляет source-locked primary/companion, прежние declarations не переписывает.
+Preparation — existing CLI, не67 повторных скачиваний. Source before/after
+payload hashes относятся ко всему файлу с normalized LF.
+
+```powershell
+docker image inspect forge-nvim-tests:ubuntu24.04-nvim0.12.2 --format '{{.Id}}'
+docker image tag sha256:8a6b73261d91d7e194c9c31a128c9047741bad930da70b518e4b010d0882d309 forge-nvim-tests:scan-v2-base-8a6b73261d91
+docker build --network=none --pull=false --build-arg BASE_IMAGE=forge-nvim-tests:scan-v2-base-8a6b73261d91 -f tests/containers/refresh-editor.Dockerfile -t forge-nvim-tests:scan-v2-stage . > .tests/scan-v2-image-build.txt 2>&1
+docker image inspect forge-nvim-tests:scan-v2-stage > .tests/scan-v2-stage-image.json
+docker compose -f tests/containers/compose.yaml -f tests/containers/limits.yaml -f .tests/scan-v2-stage.yaml run --rm --no-deps --pull never --name forge-nvim-scan-v2-check --entrypoint nvim ubuntu -l nvim_forge/scripts/prepare-plugins.lua --plugin-root /opt/forge/editor-deps/lazy --check
+docker compose -f tests/containers/compose.yaml -f tests/containers/limits.yaml -f .tests/scan-v2-stage.yaml run --rm --no-deps --pull never --name forge-nvim-scan-v2-e2e --entrypoint nvim ubuntu -l tests/e2e/file-scan-order.test.lua
+docker compose -f tests/containers/compose.yaml -f tests/containers/limits.yaml -f .tests/scan-v2-stage.yaml run --rm --no-deps --pull never --name forge-nvim-scan-v2-cli --entrypoint nvim ubuntu -l tests/e2e/plugin-backports.test.lua
+& ./.tests/scan-v2-regression.ps1 > .tests/scan-v2-regression.txt 2>&1
+python -B .tests/scan-v2-audit.py > .tests/scan-v2-audit.txt 2>&1
+```
+
+Stage override — только services.ubuntu.image, --network none/limits прежние.
+Первый build получил Permission denied от USER forge; лог сохранён как
+scan-v2-image-build-first.txt, код поправлен на USER root при setup→USER forge.
+Полные base layers сохранились, new layer34214bytes, context104.81KB; .tools
+исключён. Language SDK/Neovim не скачивались и не менялись, Docker engine
+28.5.1 существовал, Desktop/WSL lifecycle/settings не вызывались.
+
+Regression script проходит Files7/copy9/buffers8/deleted5/Outline focus3/
+worktree refresh3 сначала Windows, затем Ubuntu, после этого quick360/trace11
+на ОС и strict92. Вместе с new7 —42 editor +15 CLI на ОС. Audit93 profiles
+(source14/private7/positive72), root0/APIerrors[]/native quit/own scopes empty;
+17 Windows Jobs принудительно очищены от собственных потомков,3 Ubuntu groups
+SIGTERM. Root hard-kill нет, natural exit всех descendants не утверждается.
+
+```powershell
+docker image tag forge-nvim-tests:scan-v2-stage forge-nvim-tests:ubuntu24.04-nvim0.12.2
+docker image inspect forge-nvim-tests:ubuntu24.04-nvim0.12.2 > .tests/scan-v2-default-image.json
+docker compose -f tests/containers/compose.yaml -f tests/containers/limits.yaml run --rm --no-deps --pull never --name forge-nvim-scan-v2-default-check --entrypoint nvim ubuntu -l nvim_forge/scripts/prepare-plugins.lua --plugin-root /opt/forge/editor-deps/lazy --check
+npx.cmd --yes @fission-ai/openspec@1.13.2 status --change reject-stale-filesystem-scans --json
+npx.cmd --yes @fission-ai/openspec@1.13.2 instructions apply --change reject-stale-filesystem-scans --json
+npx.cmd --yes @fission-ai/openspec@1.13.2 validate --all --strict --no-interactive
+git diff --check
+git diff --numstat -- nvim_forge/FIXLOG.md docs/AGENT_COMMANDS.md
+git diff --cached --check
+git commit -m "fix(files): preserve coherent scans and pending folder opens"
+git status --short
+```
+
+Promotion выполнен только после validation: preflight default всё ещё8a6,
+stage всё ещё exact tested ID c833b84e914c…5990. Default identity/--check
+совпали с tested stage. Old base own tag сохранён, prune/удалений чужих images
+нет. Reversible local tags не меняют Desktop/WSL. Журналы raw append, старые
+byte prefixes сохранены. OpenSpec verify4/5, task2.3 Mac/physical GUI открыт;
+archive/full suite не выполнялись. Existing install явно :Lazy build
+neo-tree.nvim и restart; ordinary startup только check, без install.
+
+После review скопирован exact pinned LICENSE: New-Item -ItemType Directory
+-Force -Path nvim_forge/patches/licenses; Copy-Item -LiteralPath
+.tests/editor-deps/lazy/neo-tree.nvim/LICENSE -Destination
+nvim_forge/patches/licenses/neo-tree.nvim.txt. Notice сверён по bytes,
+README ссылается на него; runtime/schema не менялись.
+
+
+## 93. IDE-105: native filter regression и final Files gate
+
+2026-11-11, FIXLOG §181, cwd F:/repo/forge-nvim. PowerShell -NoProfile,
+TEMP/TMP/TMPDIR/NVIM_LOG_FILE на F:/.tests/tmp; npm cache F:, UTF8,
+GOMAXPROCS2/GOFLAGS-p=2/GOTOOLCHAINlocal/Cargo jobs2, как в §92.
+rg/Get-Content/git diff/status: native filter/clear/force_open_folders,
+catalog, current tests/registry/OpenSpec, plan и capture sources.
+
+```powershell
+& ./.tools/neovim/windows-x64/bin/nvim.exe -l tests/e2e/file-filter.test.lua > .tests/scan-v3-filter-red-windows.txt 2>&1
+docker compose -f tests/containers/compose.yaml -f tests/containers/limits.yaml run --rm --no-deps --pull never --name forge-nvim-scan-v3-filter-red --entrypoint nvim ubuntu -l tests/e2e/file-filter.test.lua > .tests/scan-v3-filter-red-ubuntu.txt 2>&1
+```
+
+Эти source runs используют preliminary §180 ce85 payload: по0PASS/2RED,
+actual native files и exact final tests captured. Более ранние one-case probes
+сохранены отдельно, первая Windows наблюдала71fd/5s. source scan-order7
+§92 относится к0b16d23 без backport; источники не смешиваются.
+
+```powershell
+& ./.tools/neovim/windows-x64/bin/nvim.exe -l nvim_forge/scripts/prepare-plugins.lua --plugin-root .tests/editor-deps/lazy --plugin neo-tree.nvim --revert
+python -B .tests/scan-v3-install.py
+& ./.tools/neovim/windows-x64/bin/nvim.exe -l tests/e2e/file-filter.test.lua > .tests/scan-v3-windows-file-filter.txt 2>&1
+& ./.tools/neovim/windows-x64/bin/nvim.exe -l tests/e2e/file-scan-order.test.lua > .tests/scan-v3-windows-file-scan-order.txt 2>&1
+& ./.tools/neovim/windows-x64/bin/nvim.exe -l tests/e2e/plugin-backports.test.lua > .tests/scan-v3-windows-plugin-backports.txt 2>&1
+docker build --network=none --pull=false --build-arg BASE_IMAGE=forge-nvim-tests:scan-v2-base-8a6b73261d91 -f tests/containers/refresh-editor.Dockerfile -t forge-nvim-tests:scan-v3-stage . > .tests/scan-v3-image-build.txt 2>&1
+docker image inspect forge-nvim-tests:scan-v3-stage > .tests/scan-v3-stage-image.json
+```
+
+Revert выполнен ещё старым catalog до его изменения. Install script — разовая
+правка predicate/hash/id и существующий CLI apply/manifest; новый installer
+не вводился. Final primary353a15d7…0320, initb388ad0a…4839. Ubuntu stage override
+.tests/scan-v3-stage.yaml меняет только image; те же file-filter/scan-order/
+plugin-backports команды с stage проходят2/7/15. Не build/pull при runtime.
+
+```powershell
+docker compose -f tests/containers/compose.yaml -f tests/containers/limits.yaml -f .tests/scan-v3-stage.yaml run --rm --no-deps --pull never --name forge-nvim-scan-v3-filter --entrypoint nvim ubuntu -l tests/e2e/file-filter.test.lua
+& ./.tests/scan-v3-regression.ps1 > .tests/scan-v3-regression.txt 2>&1
+python -B .tests/scan-v3-audit.py > .tests/scan-v3-audit.txt 2>&1
+python -B .tests/scan-v3-promote.py
+python -B .tests/scan-v3-audit.py > .tests/scan-v3-promoted-audit.txt 2>&1
+```
+
+Regression script — последовательные Windows→Ubuntu Files7/copy9/buffers8/
+deleted5/Outline3/worktree3, затем scripts/test.ps1 quick, tests/run.lua trace,
+Ubuntu quick/trace и pinned OpenSpec validate --all --strict --no-interactive.
+Final на ОС44 editor+15CLI, quick360/trace11, strict92. Audit101 captured
+native roots: source14/private7/filterRED4/positive76; root0/APIerrors[]/
+native quit/own scopes empty.13 Windows own Jobs cleaned descendants,
+3 Ubuntu own groups graceful SIGTERM; root hard-kill нет.63 origins/exact
+driver/helper/tests/native source bytes/SDK/pins/old backports/prefixes сверены.
+
+Promote script использует subprocess argv: docker image inspect/tag, preflight
+default всё ещёc833…5990 и stage exactf63a05ca…33d0; затем compose default
+prepare-plugins --check. Identity/manifest совпали. Added layer34252bytes,
+base layers/forge user сохранены. Desktop/WSL lifecycle/settings/prune нет.
+§92 commit command был запланирован, не выполнялся; final общий commit ниже.
+
+```powershell
+python -B .tests/scan-v3-append.py
+git diff --check
+git diff --numstat -- nvim_forge/FIXLOG.md docs/AGENT_COMMANDS.md
+npx.cmd --yes @fission-ai/openspec@1.13.2 validate --all --strict --no-interactive
+git diff --cached --check
+git commit -m "fix(files): preserve coherent scans and native filters"
+git status --short
+```
+
+Journals дописаны raw bytes после проверки full prefix из scan-v3-prefix.json;
+старые § не перезаписаны. Verification4/5, native Mac/physical GUI открыт,
+archive/full suite не выполнялись. Existing install: :Lazy build neo-tree.nvim,
+restart. Краткая актуальная очередь записана в начале IDE_ROADMAP.
+
+
+После нового требования владельца apply_patch добавил IDE-106 в PROBLEMS,
+IDE_ROADMAP и FEATURE_REVIEW: обязательная общая консоль логов/состояния перед
+frame pilot; реализация не начата. History добавлена строка §181.
+python -B .tests/scan-v3-plan-note.py дописывает это уточнение raw bytes.
+& ./.tests/scan-v3-final.ps1: после final docs последовательно Windows trace,
+Ubuntu trace на promoted default, strict validation, evidence audit и diff check.
+Логи .tests/scan-v3-final-*.txt. Нового тяжёлого editor regression нет:
+runtime/test bytes после44+15 на ОС не менялись.

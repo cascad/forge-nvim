@@ -114,3 +114,43 @@ path с `/` на Windows смешивался с discovery tree `\`: positions.m
 настоящие file-switch/stop/workspace E2E — sql-tests.test.lua.
 Source RED использует точные before-файлы в private runtime, prepared SDK
 не откатывается. Штатный GREEN идёт без diagnostic watchdog.
+
+## Neo-tree: согласованный snapshot и ожидающие раскрытия (IDE-104)
+
+Pin `84c75e7a7e443586f60508d12fc50f90d9aee14e`, native filesystem scanner и
+init companion. Исходные фрагменты Neo-tree — [MIT](licenses/neo-tree.nvim.txt),
+copyright/notice сохранены из pinned source. Кеширует поколение полного запроса, сохраняет intent раскрытия
+перед IO и принимает snapshot с уже раскрытыми каталогами. Если каталог
+раскрылся после начала snapshot, штатный async scan включает его до замены
+live tree. Watchers меняются при принятии результата; obsolete IO не добавляет refs.
+Native IO/filters/renderer и async/follow остаются, отдельного scanner/queue нет.
+IDE-105: coherence retry применяется только к обычному full snapshot;
+native search_pattern и explicit force_open_folders сохраняют собственный вид.
+Иначе фильтр/его очистка могут бесконечно пересканировать исключённые папки.
+
+На существующей установке явно `:Lazy build neo-tree.nvim`, затем restart.
+При несовпадении установленной ревизии сначала `:Lazy restore neo-tree.nvim`.
+Обычный startup только проверяет готовность. CLI тот же:
+
+```sh
+nvim -l nvim_forge/scripts/prepare-plugins.lua --plugin-root /absolute/lazy --plugin neo-tree.nvim
+nvim -l nvim_forge/scripts/prepare-plugins.lua --plugin-root /absolute/lazy --plugin neo-tree.nvim --check
+nvim -l nvim_forge/scripts/prepare-plugins.lua --plugin-root /absolute/lazy --plugin neo-tree.nvim --revert
+```
+
+Primary/companion проходят общий preflight до записи; LF/CRLF сохраняются,
+repeat/check не переписывают файлы. Pins не обновлены. Условие удаления —
+upstream версия, которая проходит `file-scan-order.test.lua` и `file-filter.test.lua` вместе с обычным
+Files workflow и проверками watchers на Windows/Ubuntu/macOS. Отклонённый
+generation-only prototype из §179 к принятому payload не относится.
+
+Для уже готового Ubuntu image с теми же67 pins доступен маленький offline
+слой явной подготовки; Neovim/tools берутся из локального base image:
+
+```sh
+docker build --network=none --pull=false --build-arg BASE_IMAGE=forge-nvim-tests:ubuntu24.04-nvim0.12.2 -f tests/containers/refresh-editor.Dockerfile -t forge-nvim-tests:editor-refresh .
+```
+
+Обычный full build основного Dockerfile также поддержан. Новый image проверяется
+E2E до смены основного тега; refresh не запускает Desktop/WSL и не делает сетевой
+setup. При других pins/байтах lock refresh завершается ошибкой и требует full build.

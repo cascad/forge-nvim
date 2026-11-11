@@ -23,6 +23,12 @@ local function checkpoint(label)
   vim.fn.writefile({vim.json.encode(report)},e.dir..'/file-scan-order.json')
   return value
 end
+local function watches()
+  return e:lua([[local fn=require('neo-tree.sources.filesystem.lib.fs_watch').show_watched
+    for i=1,20 do local name,value=debug.getupvalue(fn,i);if name=='watchers' then
+      local out={};for path,w in pairs(value) do out[#out+1]={path=path,references=w.references,active=w.active} end;return out
+    end end;error('Pinned native watcher table not found')]])
+end
 local function choose(name)
   e:wait('actual selected node '..name,function()
     local s=state();if s.selected==name then return true end
@@ -88,6 +94,10 @@ local function check(name,fn,initial_file)
         local f=assert(io.open(p,'rb'));local text=f:read('*a');f:close();return text]])
       local saved=assert(io.open(e.dir..'/neo-tree-fs_scan.lua','wb'));assert(saved:write(scanner));assert(saved:close())
       report.scanner_sha256=vim.fn.sha256((scanner:gsub('\r\n','\n')))
+      local source=e:lua([[local p=debug.getinfo(require('neo-tree.sources.filesystem').show_new_children,'S').source:sub(2)
+        local f=assert(io.open(p,'rb'));local text=f:read('*a');f:close();return text]])
+      local init=assert(io.open(e.dir..'/neo-tree-filesystem-init.lua','wb'));assert(init:write(source));assert(init:close())
+      report.filesystem_init_sha256=vim.fn.sha256((source:gsub('\r\n','\n')))
       checkpoint('initial');fn();checkpoint('final')
       T.eq(report.prompts,{},'unexpected blocking native error')
       for _,n in ipairs(e.rpc.notifications) do assert(n.level<vim.log.levels.ERROR,n.message) end
@@ -95,7 +105,7 @@ local function check(name,fn,initial_file)
       T.eq(e:lua('return require("dap").session()~=nil'),false)
     end,debug.traceback)
     if e then
-      pcall(function() e:lua('if _G.forge_scan_delay then _G.forge_scan_delay.release() end') end)
+      pcall(function() e:lua('if _G.forge_scan_delay then _G.forge_scan_delay.release() end; if _G.forge_first_delay then _G.forge_first_delay.release() end') end)
       report=report or {case=name};report.ok=ok;report.error=not ok and tostring(err) or nil
       vim.fn.writefile({vim.json.encode(report)},e.dir..'/file-scan-order.json');e:snapshot(name)
       io.stdout:write('  artifacts: '..e.dir..'\n')
@@ -144,8 +154,39 @@ check('IDE-FILE-5 old partial cannot overwrite a newer root',function()
   e:input(':Neotree filesystem dir='..e.project..'/next-root<CR>')
   e:wait('new root rendered',function() return visible('inside.txt') and not node('folder-A') end)
   checkpoint('new-root-before-old-partial');release();local after=checkpoint('after-obsolete-partial')
+  report.watches=watches()
   assert(visible('inside.txt',after) and not node('alpha.txt',after),'old partial corrupted new root')
   assert(vim.uv.fs_stat(e.project..'/folder-A/alpha.txt'))
+  for _,w in ipairs(report.watches) do
+    assert(w.references>=0,'negative watcher references')
+    assert(not (w.active and w.path:gsub('\\','/'):find('/folder-A',1,true)),'obsolete partial left an active watcher')
+  end
 end)
 check('IDE-FILE-5 partial folders also survive pending initial reveal',independent_partials,true)
+check('IDE-FILE-5 pending folder survives a newer full watcher refresh',function()
+  e:lua('require("neo-tree.sources.manager").get_state_for_window().async_directory_scan="always"')
+  choose('folder-A');arm('folder-A');e:input('l');held()
+  vim.fn.writefile({'new full snapshot'},e.project..'/refresh-marker.txt')
+  e:wait('actual newer full watcher result',function() return visible('refresh-marker.txt') end)
+  checkpoint('new-full-while-partial-pending');release()
+  local after=checkpoint('pending-folder-after-full')
+  assert(visible('alpha.txt',after),'full refresh lost requested folder opening')
+  report.watches=watches()
+end)
+check('IDE-FILE-5 newer partial survives completion of a pending full snapshot',function()
+  e:lua('require("neo-tree.sources.manager").get_state_for_window().async_directory_scan="always"')
+  choose('folder-A');arm('folder-A');e:input('l');held();report.first_held=report.held
+  e:lua('_G.forge_first_delay=_G.forge_scan_delay')
+  arm();vim.fn.writefile({'held full snapshot'},e.project..'/overlap-marker.txt');held()
+  choose('folder-B');e:input('l')
+  e:wait('newer partial visibly complete',function() return visible('beta.txt') end)
+  checkpoint('partial-after-full-snapshot-start');release()
+  local after=checkpoint('after-full-overlapped-newer-partial')
+  assert(visible('beta.txt',after),'full snapshot erased a newer independent partial')
+  report.root_released=report.released
+  e:lua('_G.forge_scan_delay=_G.forge_first_delay');release()
+  e:wait('both requested folders ready',function() return visible('alpha.txt') and visible('beta.txt') end)
+  checkpoint('after-both-native-delays');report.watches=watches()
+  for _,w in ipairs(report.watches) do assert(w.references>=0,'negative watcher references') end
+end)
 T.finish()

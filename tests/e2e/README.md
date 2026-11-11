@@ -21,14 +21,22 @@
 
 ## Запуск на целевых машинах и внутри VM
 
-IDE-FILE-5: `nvim -l tests/e2e/file-scan-order.test.lua`,5 native cases.
-Известный незакрытый IDE-104: source Windows/Ubuntu по3PASS/2RED. Это не
-готовый regression PASS: fixed run ещё отсутствует. Два controlled native
-IO порядка (old root и old partial после смены root), обычный A/a/Enter/write,
-независимые folders и initial-file/reveal control. Test-only helper задерживает
-настоящий callback внутри owned project; actual scanner source/rows/disk/
-native shutdown сохраняются. Прототип19-line guard отклонён controls (§179),
-runtime/pins прежние. Full e2e пока честно FAIL на известных случаях, без xfail.
+IDE-FILE-5: `nvim -l tests/e2e/file-scan-order.test.lua`,7 native cases.
+§180: Windows/Ubuntu current7/7 после source RED, включая old root, old
+partial/new root, pending folder/full refresh и newer partial/pending full
+snapshot. Ordinary A/a/Enter/write, independent folders и initial-file/reveal
+controls сохранены. Test-only helper удерживает настоящие IO callbacks
+в owned project; actual scanner/init source bytes/rows/disk/native watcher
+refs и shutdown сохранены. Проверки не используют xfail/extra toggle/timeouts
+для зелёного результата. Старые rejected19-line и source5 сохранены как история
+§179; global full suite и native Mac/physical GUI этим selected набором не доказаны.
+
+IDE-105: `nvim -l tests/e2e/file-filter.test.lua`,2 native keyboard cases.
+Из раскрытой alpha: f/beta/Enter исключает alpha, Ctrl-X восстанавливает её;
+из свёрнутого дерева clear возвращает прежние закрытые папки. На preliminary
+payload §180 оба source RED Windows/Ubuntu (rescan loop), финальный §181
+проходит оба. Итого9 feature cases,44 editor+15 CLI checks на каждой ОС,
+включая35 соседних Files/buffers/Outline/worktree checks. Это selected regression.
 
 Files copy/delete (IDE-FILE-3/4): `nvim -l tests/e2e/file-copy-delete.test.lua`,
 Windows — выбранный SDK.9 fresh profiles: реальные clipboard/typed copy,

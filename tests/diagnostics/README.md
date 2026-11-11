@@ -54,6 +54,17 @@ Windows/Ubuntu3PASS/2RED. Fixture `fixtures/neo-tree-generation-only.patch`
 штатным revert/check, pin/SDK остались прежними. Требуется уточнить intent
 незавершённого раскрытия и ownership watchers; [design](../../openspec/changes/reject-stale-filesystem-scans/design.md).
 
+§180:7 cases с дополнительными controlled full/partial interleavings и
+read-only native watcher refs. Windows/Ubuntu current7/7; accepted snapshot/
+intent исправление source-locked двумя файлами проходит42 editor+15 CLI checks
+на ОС. [Подготовка existing install](../../nvim_forge/patches/README.md#neo-tree-согласованный-snapshot-и-ожидающие-раскрытия-ide-104).
+Diagnostic exit0 по-прежнему означает корректно снятое наблюдение: permanent
+E2E содержит assertions против потери файла и watchers, а diagnostic только
+сохраняет before/after. Mac/physical GUI непроверены.
+§181 уточняет предварительный payload §180: native filter/clear не должны
+сравниваться с normal expanded view. IDE-105 имеет2 source RED на ОС и2
+permanent native cases; final9 feature/44 editor+15 CLI checks на ОС.
+
 ## Цельная рамка Locals и RGB UI capture
 
 IDE-076: [сравнение/цена/границы](../../docs/PANEL_FRAME_REVIEW.md).

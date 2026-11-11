@@ -5,7 +5,57 @@
 фоновые установки инструментов редактора перенесены в явный setup.
 IDE-001 параллельно ждёт диагностических данных с Mac.
 
-## Ближайший маршрут — 2026-11-11
+## Короткая актуальная очередь
+
+Основные возможности мини-IDE уже реализованы. Сейчас идёт стабилизация,
+а не создание редактора с нуля. Windows/Ubuntu PASS ниже относится к указанным
+сценариям; Mac и физические клавиши WezTerm остаются отдельной проверкой.
+
+| Порядок | Что получаем | Состояние |
+|---|---|---|
+| Проверено Windows/Ubuntu | Надёжное Files: создание/раскрытие/обновление и native filter | IDE-104/105: по44 editor +15 CLI PASS, история §180–181; Mac/GUI отдельно |
+| Следующая обязательная фича | Общая консоль состояния и логов IDE | IDE-106: открыть из одного места ошибки, missing tools и доступные логи подсистем, понять причину и следующий шаг; требования ниже |
+| Затем | Постоянные аккуратные рамки как в Termide | IDE-076: исследование и визуальный prototype готовы; впереди один рабочий пилот с единственным владельцем layout, затем решение о распространении |
+| Перед рефакторингом | Конкретный список оставить / убрать / заменить | IDE-080: обзор фич, 67 плагинов и собственного glue уже есть; актуализировать после Files, определить сокращения |
+| Затем | Меньше слоёв управления окнами, фокусом и DAP | Маленькие изменения по review с сохранением проверенных пользовательских сценариев; большой переписи нет |
+| Остаток функциональности | Bash debug, сложные проекты/окружения, оставшиеся Git ошибки | Готовые backend; SQL references отложен до подходящего provider, собственный LSP не разрабатываем |
+| Отдельный платформенный gate | Mac startup/zsh/Go, Cmd+C, реальные клавиши, чистый setup Windows/macOS/Ubuntu | Нужны actual запуски на целевых машинах; Mint отложен |
+
+Редкие native assert, Docker caller и отдельные старые timeout остаются
+зарегистрированной диагностикой. Новые данные собираем при воспроизведении;
+без новых evidence не подменяем ими бесконечно ближайший пользовательский шаг.
+Результат каждого шага: поведение, постоянный E2E, история и commit.
+
+## IDE-106. Общая консоль состояния и логов IDE — обязательная
+
+Пожелание владельца 2026-11-11: централизованно открыть логи нашей IDE и
+увидеть, что случилось, чего не хватает, что не найдено или сломалось.
+
+- Одна доступная с клавиатуры точка входа в общей модели Space w и палитре
+  команд; help/focus/hide/zoom работают так же, как у остальных панелей.
+- Общая хронология с временем, уровнем, подсистемой и понятной причиной:
+  startup/setup/config/plugins, LSP/format/completion, DAP, tests, Git/tasks/
+  terminal. Инвентаризировать существующие источники и готовый UI до реализации;
+  использовать native логи и события, сохраняя подробности исходного источника.
+- Показывать missing tool/backend/config, сбой запуска и доступный путь к
+  подробному логу. Для известных проблем — конкретная команда подготовки или
+  действие пользователя. Недоступный источник и отсутствие ошибок различимы.
+- Фильтр по уровню/подсистеме, поиск, переход к подробностям, копирование
+  диагностического отчёта; сообщения сохраняются после закрытия уведомления
+  и панели. Обозначать границы сессии и доступность логов после перезапуска.
+- Пассивное открытие: просмотр диагностики не устанавливает инструменты и
+  не запускает отладку/тесты. История ограничена по размеру; общие записи не
+  копируют пароли, токены или содержимое пользовательских переменных окружения.
+
+Готово, когда из редактора без мыши можно вызвать настоящий missing-tool
+и реальный сбой подсистемы, затем в одной консоли найти причину, подробный
+источник и способ исправления. Восстановление после подготовки, поиск/фильтр,
+закрыть/открыть, пустое состояние и границы хранения получают постоянные E2E.
+Windows/Ubuntu проверяем нативно/в контейнере, Mac и physical GUI отдельно.
+Перед реализацией оформить OpenSpec change и выбрать источники/готовые APIs;
+этот пункт — обязательный план, консоль ещё не реализована.
+
+## Сделанное и границы проверок — 2026-11-11
 
 | Порядок | Работа | Результат и граница |
 |---|---|---|
@@ -29,7 +79,7 @@ IDE-001 параллельно ждёт диагностических данн�
 | Готово Windows/Ubuntu | IDE-081: native fzf / fallback | По 5 новых checks (4 editor + health) и 25 прежних; настоящий C scoring без CMake, health, F5 picker; §151, Mac gate открыт |
 | Capture готов, причина открыта | IDE-085 | Повторный source RED, 3 native trace E2E и helper source/quit/error capture; Windows 19 PASS/2 SKIP, Ubuntu 20 PASS/1 SKIP (§152). При следующих регрессах собирать новый timeline; product fix не заявлен |
 | Готово Windows/Ubuntu | IDE-086: общая политика Output | Один resolver, сохранение REPL/PTY/history; по 19 native checks и 13 clean exits/scopes; §153. Mac открыт |
-| Приоритетное расследование | IDE-087: остановка Docker backend | Второй event 17:45:10 совпал с native qa! Windows, root/scope завершились штатно. [Native PPID гипотеза и границы](WINDOWS_PROCESS_DIAGNOSTICS.md), §154/157; caller неизвестен, Desktop/WSL агент не управляет |
+| Диагностика при новых evidence | IDE-087: остановка Docker backend | Второй event 17:45:10 совпал с native qa! Windows, root/scope завершились штатно. [Native PPID гипотеза и границы](WINDOWS_PROCESS_DIAGNOSTICS.md), §154/157; caller неизвестен, Desktop/WSL агент не управляет |
 | Обзор готов Windows/Ubuntu | Поиск окна кода | [Сравнение и native evidence](CODE_WINDOW_REVIEW.md): по 5 profiles, роли find/create/relocate различаются; полный merge не нужен (§155) |
 | Готово Windows/Ubuntu; Mac открыт | IDE-088: focus-only выбор окна кода | По state predicate и прежнему tool filter;3 source RED и22 Windows checks (§156). Ubuntu22 checks/16 native profiles PASS (§170), root0/APIerrors[]/own scopes empty |
 | Native proof готов | IDE-087/089: process ancestry | Read-only live age inversion + exact pinned C fragment: valid PASS/stale RED; guard prototype 4 native PASS, own Jobs clean (§158). Тогда SDK не менялся; следующий шаг выполнен в §159, Docker caller открыт |
@@ -51,10 +101,10 @@ IDE-001 параллельно ждёт диагностических данн�
 | Готово Windows/Ubuntu; Mac/GUI открыт | IDE-101: docking zoom при помощи | Документированный window-local Edgy opt-out, source RED → native IDE-PANEL-18 PASS; исходный slot/shared buffer сохранены, исчезнувший source возвращает код (§173) |
 | Готово Windows/Ubuntu; Mac/GUI открыт | IDE-102: POSIX shell при optional pwsh | Source Ubuntu RED→2 policy PASS; Windows actual pwsh/fallback2 controls PASS. По29 соседних native E2E на ОС,3-line win32 guard в прежнем opts; SDK/pins/global shell прежние (§175) |
 | Проверено Windows/Ubuntu; Mac/GUI открыт | Files copy/delete, IDE-103 | По3 source RED/6 controls →9 новых E2E PASS на ОС. До/после Yes защищены modified/hidden/late buffers; latest29 PASS на ОС, известный legacy отказ отдельно IDE-104 (§176–177) |
-| Постоянный RED готов; fix открыт | IDE-104: созданный child не виден | 5 native E2E, source3PASS/2RED Windows/Ubuntu. Generation-only guard отклонён по controls2PASS/3FAIL и снят; current upstream тоже не исправил. Дальше pending intent/watchers, runtime/pins прежние (§179) |
+| Проверено Windows/Ubuntu; Mac/GUI открыт | IDE-104/105: coherent Files snapshot и native filter | 9 native E2E после source RED; pending intent/full-partial overlap/watchers/filter/clear. По44 editor +15 CLI PASS на ОС,101 root audit;2 native файла (+41 строка net) через existing backport, SDK binaries/pins прежние (§180–181) |
 | Отложено до готового backend | Остаток SQL workflow, IDE-062 | SQLS references provider отсутствует. Собственный binder/index/LSP fork отменён (§143); не подменять references grep и не объявлять полную SQL поддержку |
 | Затем | Остальная [матрица языков](LANGUAGE_MATRIX.md) | SQL references IDE-062, Bash DAP IDE-057; Mac/native и оставшиеся сценарии матрицы |
-| После функциональной матрицы | Упрощение архитектуры | Общее ядро, явные системные границы и setup; сокращение дублирования с сохранением E2E |
+| После конкретного feature review | Упрощение архитектуры | Общее ядро, явные системные границы и setup; сокращение дублирования с сохранением E2E |
 
 IDE-090/093/094 закрыты на Windows в §164/165/163. Доступные Ubuntu gates
 IDE-088/090/091/093/095/096 выполнены в §170:31 native editor checks/25 profiles
@@ -72,9 +122,10 @@ Python SELF теперь использует общий --id filter. Для IDE
 (§169); caller пока неизвестен, green repeat не считается исправлением.
 Terminal/Trouble завершили общую normal модель Windows/Ubuntu в §172;
 IDE-023 устранён в §171. UI prototype рамок IDE-076 и найденный docking
-zoom IDE-101 выполнены в §173. Следом — выбрать постоянную реализацию рамок
-обычных split по сравнению, затем оставшаяся языковая матрица и упрощения
-по FEATURE_REVIEW. Прототип не включает рамки всех панелей по умолчанию.
+zoom IDE-101 выполнены в §173. После Files ближайший обязательный пункт —
+общая консоль логов IDE-106. Затем рабочий пилот рамок; перед упрощениями —
+конкретный выбор сокращений по FEATURE_REVIEW. Остаток языковой матрицы
+сохраняется отдельной очередью. Прототип не включает рамки всех панелей по умолчанию.
 Mac/GUI gates остаются отдельными.
 §169 добавляет проверенный explicit capture через bundled CodeLLDB/PDB:
 4 control E2E,4 original trials без воспроизведения. Системный LLVM LLDB
@@ -419,7 +470,7 @@ Normal mode, прежние aliases сохранены:
 - [ ] IDE-008 Mac/GUI: тот же сценарий на машине владельца.
 - [x] Files copy/delete Windows/Ubuntu, IDE-103: native copy file/dir, c/conflict/cancel,
   normal d/zoom/recursive/root refusal, modified/hidden/late guard и save retry;
-  [клавиши](FILES_WORKFLOW.md), результаты §176. Mac/GUI и IDE-104 открыты.
+  [клавиши](FILES_WORKFLOW.md), результаты §176. IDE-104/105 проверены Windows/Ubuntu в §181; Mac/GUI открыт.
 - [ ] Дерево: Mac/GUI, modified rename/move, Trash/visual multi-select,
   case-only rename/cross-volume и LSP file operations — расширение матрицы.
 - [x] Windows/Ubuntu, буферы/вкладки: общий цикл/picker/BufferLine, safe-close,
@@ -447,8 +498,9 @@ Normal mode, прежние aliases сохранены:
 - [ ] Bash DAP: IDE-057, выбор Linux backend Windows; Mac Bash UI. Ubuntu edit/run/tests проверены (§137).
 - [ ] Матрица Go/Rust/Python/JS-Node/Bash/SQL: LSP, completion, definition,
   references, rename, diagnostics, format, run, debug и tests где применимо.
-- [ ] Сохранить работающие Go/Rust/Python; добавить отсутствующие JS/Node.js,
-  Bash и SQL. Выбрать инструменты и тестовые адаптеры по реальным проектам.
+- [ ] Проверить оставшиеся сценарии языковой матрицы на реальных проектах:
+  Go/Rust/Python/JS-Node/Bash/SQL уже имеют Windows/Ubuntu workflow выше;
+  Bash DAP/SQL references и native Mac остаются отдельными пробелами.
 - [ ] Проверить venv, Cargo workspace, Go workspace, package scripts,
   локальные зависимости и SQL dialect/подключение при необходимости.
 - [ ] Явный `launch.json` имеет приоритет; без него стартует разумный сценарий
@@ -567,9 +619,12 @@ IDE-005/008 проверены на Windows/Ubuntu; Mac может загруж�
 
 ## Текущая точка продолжения
 
+Актуальная очередь — в начале документа. Абзацы ниже — исторический контекст,
+а не новая команда снова начинать IDE-080 или уже выполненные проверки.
+
 2026-11-10: после §142 владелец уточнил подход; собственный SQL prototype
-отменён (§143). Актуальный следующий пункт — IDE-080 feature/cost review в таблице
-ближайшего маршрута выше. Следующие абзацы сохраняют контекст прежних этапов;
+отменён (§143). Тогда следующим пунктом был IDE-080 feature/cost review;
+первичный обзор уже выполнен. Следующие абзацы сохраняют контекст прежних этапов;
 их исторические результаты не заменяют текущую platform matrix.
 
 IDE-037: владелец выбрал чистый Docker вместо восстановления прежнего диска.

@@ -90,9 +90,42 @@ Current upstream v3.x1a140830/main760d970: scanner SHA b0bf0f36…68c1,
 Windows runtime (2PASS/3FAIL всего). Поэтому обновление pin не принято;
 эта проверка не означает оценку всех будущих upstream изменений.
 
+### Следующий вариант: intent и принятый snapshot
+
+Семь permanent native cases добавляют два управляемых порядка: полный watcher
+refresh пока partial ожидает IO, и завершение полного snapshot после более
+нового partial. Последний даёт отдельный source RED даже без смены root;
+проверка private native watcher table выявила active watch от obsolete partial.
+
+К поколению root добавляется сохранение запроса открытия обычным node:expand
+в native toggle_directory/show_new_children. Новый full scan тогда включает
+запрошенный каталог, даже если path_to_reveal заменён watcher refresh.
+Перед применением full snapshot проверить актуальные раскрытые каталоги:
+если snapshot их ещё не загрузил, оставить live tree и запустить штатный
+async get_items с тем же callback/reveal. Проверка actual fs_stat исключает
+повтор для уже удалённого каталога. Это реакция на измеренный overlap,
+не периодический refresh/таймер/ручной R и не отдельная scan queue.
+
+Это сравнение относится только к обычному full snapshot. Native query view
+намеренно исключает несовпадающие папки, а explicit force_open_folders задаёт
+собственные раскрытия (в частности, при clear filter). Смешение с live view
+даёт rescan loop IDE-105: предварительный candidate вызывал71 fd за5s.
+Поэтому search_pattern/force_open_folders исключены из coherence retry.
+Два дополнительных native keyboard E2E проверяют filter_on_submit и Ctrl-X:
+из раскрытой alpha query beta возвращает beta и восстанавливает alpha;
+из исходно свёрнутого root clear возвращает именно свёрнутый вид.
+
+IO completion только помечает local context folder loaded. Снять прежние
+watchers и зарегистрировать новые — один раз при принятии coherent full
+snapshot; accepted partial добавляет только свои watched directories.
+Устаревший context не получает refs. Native IO, callbacks, фильтры и renderer
+сохраняются. Изменения ограничены двумя pinned filesystem файлами, existing
+backport applier/check/revert; native assertions/watchers и companion preflight
+обязательны до принятия. Mac/GUI и большой regression не заменяются source review.
+
 Сначала permanent regression и source RED с final exact test bytes. Затем
 минимальный guard, явная dependency preparation Windows/Ubuntu и те же tests,
-old Files/copy/delete/buffers/deleted-files/backport CLI/quick/trace/strict.
+native filter/clear, old Files/copy/delete/buffers/deleted-files/backport CLI/quick/trace/strict.
 Journals raw append, самостоятельный commit. Backport revert штатной командой;
 удалить при переходе на upstream source, который проходит тот же regression.
 Mac/GUI task не закрывать и change не архивировать до реального запуска.

@@ -33,8 +33,11 @@ IDE-104 нарушает намерение IDE-FILE-1: после native a со
 
 ## Impact
 
-Neo-tree filesystem scan completion, existing dependency backport/preparation
-если понадобится, native E2E/registry и test-only IO ordering helper. Пока
-runtime/SDK/pins не менялись. Управляемый reproducer в tests/diagnostics;
+Neo-tree filesystem scan completion, existing dependency backport/preparation,
+native E2E/registry и test-only IO ordering helper. §180: два native source
+файла через existing applier, SDK binaries/pins прежние. §181 ограничивает normal
+coherence retry: native query/explicit restore не смешиваются с normal view
+(IDE-105, два дополнительных source RED и permanent filter/clear cases).
+Reproducer в tests/diagnostics;
 FIXLOG §178 содержит evidence и границы. Это не новый filesystem backend,
 не отказ от async и не пересборка всех файловых действий.

@@ -63,5 +63,13 @@ GUI не считаются проверенными без отдельного
 normal `d`, copy и изменённые buffers при delete; Trash, visual multi-select,
 case-only/cross-volume операции, LSP file operations и modified rename/move
 остаются отдельной матрицей. Это не завершение всех Files-возможностей.
-Отдельно открыт IDE-104: в двух Ubuntu legacy прогонах новый child не появился
-в готовом раскрытом дереве. Поздние7/7 PASS не считаются его исправлением.
+IDE-104: controlled stale-scan механизм исправлен Windows/Ubuntu (§180).
+При перекрытии full/partial обновлений сохраняются созданный файл и запрошенные
+раскрытия; наблюдатели соответствуют принятому дереву. Нужна явная подготовка
+existing install: `:Lazy build neo-tree.nvim`, затем restart. [Детали и снятие
+временного backport](../nvim_forge/patches/README.md#neo-tree-согласованный-snapshot-и-ожидающие-раскрытия-ide-104).
+Исторические untraced failures сохранены; Mac/physical GUI остаются открытыми.
+
+Native фильтр дерева: `f`, ввести имя и `Enter`; `Ctrl-X` очищает фильтр.
+Очистка возвращает раскрытия до поиска. IDE-105: исключённые фильтром папки
+больше не вызывают повторный scan; filter/clear проверяются отдельным E2E.

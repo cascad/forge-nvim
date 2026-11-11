@@ -309,6 +309,8 @@ Python реализован и проверен 2026-11-03; после возо�
 | §177 | [Files: раскрытый каталог без созданного child](../nvim_forge/FIXLOG.md#177-files-раскрытый-каталог-без-созданного-child) |
 | §178 | [Files: запоздавший scan стирает новый child](../nvim_forge/FIXLOG.md#178-files-запоздавший-scan-стирает-новый-child) |
 | §179 | [Files: постоянный регресс и отклонённый guard](../nvim_forge/FIXLOG.md#179-files-постоянный-регресс-и-отклонённый-guard) |
+| §180 | [Files: согласованный snapshot и наблюдатели](../nvim_forge/FIXLOG.md#180-files-согласованный-snapshot-и-наблюдатели) |
+| §181 | [Files: normal snapshot отдельно от фильтра](../nvim_forge/FIXLOG.md#181-files-normal-snapshot-отдельно-от-фильтра) |
 
 ## Как читать и дополнять
 

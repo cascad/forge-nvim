@@ -10,7 +10,31 @@
 
 Маршрут и приоритеты: [рабочий план nvim_forge](docs/IDE_ROADMAP.md).
 Для новых пунктов используем следующий свободный ID `IDE-xxx`; исходный
-симптом хранится здесь, этап и состояние — в плане. Следующий ID: `IDE-105`.
+симптом хранится здесь, этап и состояние — в плане. Следующий ID: `IDE-107`.
+
+## IDE-106 — обязательная общая консоль логов IDE
+
+2026-11-11, прямое требование владельца: из одного места открыть логи нашей
+IDE и понять, что произошло, чего не хватает, что не найдено или сломалось.
+Нужны общая клавиатурная точка входа, хронология/подсистема/уровень, поиск,
+подробный источник и понятное действие для missing tools и ошибок. Опираться
+на существующие native источники, сохранять сообщения после скрытия панели,
+ограничить хранение и обозначить его границы. Новые фоновые установки при
+просмотре не нужны. Приоритет — после текущего Files, перед рамками.
+[Требования и критерии E2E](docs/IDE_ROADMAP.md#ide-106-общая-консоль-состояния-и-логов-ide--обязательная).
+План записан; реализация/coverage пока отсутствуют.
+
+## IDE-105 — coherent scan зацикливает native Files filter
+
+2026-11-11, проверка предварительного исправления IDE-104 до commit:
+после раскрытия alpha применение native filter `beta` повторно сканирует
+исключённую папку. Первый Windows capture:71 fd за5 секунд, старое дерево
+остаётся, ready=false. Clear filter также зацикливает восстановление, если
+смешать раскрытия query view с явным force_open_folders. Причина: сравнение
+нормального live tree с намеренно другим snapshot фильтра/восстановления.
+Два постоянных source RED Windows/Ubuntu. Проверка согласованности normal
+snapshot исключает search_pattern и explicit force_open_folders; штатные
+filter/clear и сохранение раскрытий проверяются отдельно. Итог и границы — §181.
 
 ## IDE-104 — Ubuntu Files E2E не видит созданный дочерний файл
 
@@ -34,6 +58,14 @@ Historical failures без scan trace не приписываются ему к�
 также не исправил controlled failures. Generation-only19-line guard
 отклонён (current2PASS/3FAIL в controls) и полностью снят. Дальше — pending
 open intent и watcher ownership; не скрывать RED через xfail/ослабление ожиданий.
+§180: Windows/Ubuntu current7/7 после source W2PASS/5RED/U4PASS/3RED,
+включая два дополнительных controlled overlaps и actual watcher ownership.
+Snapshot/intent исправление двух native файлов прошло42 editor+15 CLI checks
+на ОС; явный build/setup, без runtime installer и смены SDK binaries/pins.
+Mac/GUI открыт; единственность причины всех historical untraced failures
+задним числом не утверждается. Verification — в соответствующем change.
+§181 уточняет предварительный §180: native filter/clear также защищены
+постоянным regression IDE-105; финальный payload и результаты — в verification.
 
 ## IDE-103 — Files delete может стирать несохранённый buffer
 

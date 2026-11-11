@@ -3,6 +3,15 @@
 2026-11-11, source b94fc54, pin Neo-tree84c75e7a7e443586f60508d12fc50f90d9aee14e.
 Это отчёт о механизме, не verification исправления. Runtime/SDK/pins без diff.
 
+Предварительный статус §180:7 current E2E PASS Windows/Ubuntu, после сохранённых
+source RED и отклонённого prototype ниже.41 native строка net/2 файла через
+existing applier,42 editor+15 CLI checks на ОС. [Verification](verification.md)
+отделяет проверенную область от Mac/physical GUI. Описания source/отклонения
+ниже — исторические наблюдения, не текущее отсутствие runtime fix.
+Финальный §181 добавляет IDE-105: query/explicit restore исключены из normal
+coherence retry,2 filter/clear source RED на ОС → PASS. Всего9 feature cases,
+44 editor+15 CLI checks Windows/Ubuntu; actual evidence — в verification.
+
 ## Последовательность
 
 1. Настоящий private Forge: root виден, каталог создано space закрыт,
