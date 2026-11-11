@@ -5641,3 +5641,54 @@ SHA74AFF15B…C6AD9 и pins прежние. Raw append FIXLOG173/commands86 за
 trace/strict/audit повторены. Mac/physical GUI и постоянные split frames
 остаются открытыми, changes не архивируются. Разовые scripts/raw reports
 в .tests игнорируются Git; постоянные доказательные сценарии находятся в tests/.
+
+
+## 87. Постоянная рамка: pinned Neovim, Edgy и Nui
+
+2026-11-11, FIXLOG174; после коммита7ef5d7a без runtime edit.
+Read-only Get-Content/rg прочитали plugins/edgy.lua, lock, neo-tree dependency,
+SDK options.txt и установленные Edgy README/config/layout, Nui split/popup/
+layout. Bash brace expansion в первом rg не подходит PowerShell; команда
+не выполнилась, повтор использовал три явных пути. Поиск/чтение ничего
+не меняли. Пример фактических команд:
+
+```powershell
+rg -n 'snacks|edgy|nui|noice|aerial' nvim_forge/lazy-lock.json
+rg -n 'laststatus|edgy_disable|wo =|winbar|statusline|splitkeep' .tests/editor-deps/lazy/edgy.nvim/README.md .tests/editor-deps/lazy/edgy.nvim/lua/edgy/config.lua .tests/editor-deps/lazy/edgy.nvim/lua/edgy/layout.lua
+rg -n 'border|nvim_open_win|nvim_win_set_config|autocmd|VimResized|WinClosed|split|layout' .tests/editor-deps/lazy/nui.nvim/lua/nui/popup/init.lua .tests/editor-deps/lazy/nui.nvim/lua/nui/split/init.lua .tests/editor-deps/lazy/nui.nvim/lua/nui/layout/init.lua
+git -C .tests/editor-deps/lazy/edgy.nvim rev-parse HEAD
+git -C .tests/editor-deps/lazy/nui.nvim rev-parse HEAD
+```
+
+Последние два вызова нашли .git родительского Forge, а не plugin: deps
+подготовлены archive без .git. Поэтому эти HEAD не использованы как версии.
+Версии взяты из lock/manifest и подтверждены exact GitHub blob SHA. Через
+github_fetch_file прочитаны pinned Edgy8bfd2808 README/config, Nui de740991
+split/popup/layout и Neovim4b35336f runtime/doc/options.txt. API вернул
+content и blob SHA; код не исполнялся и packages не устанавливались.
+Stdlib Python нормализовал CRLF→LF и посчитал SHA1 от
+`b"blob " + str(len(raw)).encode() + b"\0" + raw`; все6 равны API SHA.
+Дополнительно сохранён SHA256 normalized text. Итог metadata/primary URLs
+скопирован в docs/assets/panel-frames/dependency-review.json. Downloads
+runtime/deps/SDK, Docker Desktop/WSL lifecycle и новый e2e здесь отсутствуют.
+
+Документы описывают варианты/пилот, не заявляют implementation или performance
+нового layout. Runtime snapshot остаётся7ef5d7a, его44 E2E/quick360 на ОС
+не перезапускались без изменения кода. После документов:
+
+```powershell
+& ./.tools/neovim/windows-x64/bin/nvim.exe -l tests/run.lua trace
+docker compose -f tests/containers/compose.yaml -f tests/containers/limits.yaml run --rm --no-deps --pull never --name forge-nvim-frames-layout-trace --entrypoint nvim ubuntu -l tests/run.lua trace
+npx.cmd --yes @fission-ai/openspec@1.13.2 validate --all --strict --no-interactive
+git diff --check
+git diff --numstat -- nvim_forge/FIXLOG.md docs/AGENT_COMMANDS.md
+git diff --cached --check
+git commit -m "docs(panels): compare persistent frame layouts"
+git status --short
+```
+
+Windows temp/UTF8/npm cache — среда §86. Trace11 +1manual-link SKIP на ОС,
+strict89; physical GUI/Mac/performance новой раскладки не проверены.
+FIXLOG174/commands87 raw append, prefix sizes/SHA сохранены отдельно в
+.tests/frames-layout-prefix.json. Постоянная реализация IDE-076 не выбрана,
+никакой plugin/feature не удалён и OpenSpec change не архивирован.

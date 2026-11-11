@@ -9109,3 +9109,50 @@ assets/panel-frames (actual SVG/PNG + SHA manifest), PANEL_KEYS/FEATURE_REVIEW/
 ROADMAP/PROBLEMS/HISTORY/AGENT_COMMANDS, два OpenSpec changes. Raw evidence —
 .tests/frames-evidence.json, audit.py, source/current logs; interim FAIL
 сохранены отдельно. FIXLOG/commands только raw append с prefix SHA guard.
+
+
+## 174. Постоянные рамки: границы Edgy и Nui
+
+2026-11-11, продолжение IDE-076 после коммита7ef5d7a. Это архитектурное
+исследование, не внедрение нового runtime/поведения и не закрытие IDE-076.
+
+**Проблема.** Native Locals prototype наглядно показывает нужную цельную
+рамку, но использует zoom overlay. Его нельзя объявить постоянным стилем
+обычных split или масштабировать копией окна на каждую панель без анализа.
+
+**Причина ограничения.** Neovim4b35336f winborder относится к floats;
+winbar/statuscolumn — отдельные области окна. Edgy8bfd2808 требует global
+statusline для полного collapse. Nui de740991 уже в lock как dependency
+Neo-tree: Split размещает обычный split, Popup создаёт native bordered
+float, Layout связывает BufWipeout/QuitPre/WinClosed с hide/unmount. Это
+готовая библиотека владения окнами, не бесплатная border-настройка split.
+
+**Что сделано.** docs/PANEL_FRAME_DESIGN.md сравнивает три варианта:
+подкрасить нынешние headers/separators (не полная рамка), постоянный overlay
+на каждый split (дублирование window identities, не рекомендуется), единый
+floating tool-layout с одним владельцем вместо Edgy для этих панелей
+(кандидат отдельного рабочего пилота). Наличие Nui не означает принятой
+миграции. Пилот должен доказать обновление backend, единый Space w/focus,
+layout/площадь, tabs/session/jobs/output/cleanup и измеренную цену. Новые
+controllers/registry/backports/plugins и режим default не добавлены.
+
+**Проверка.** Read-only source review. Dependency archive не содержит .git;
+первый rev-parse вернул родительский Forge HEAD, это не proof plugin версии.
+Вместо него GitHub connector прочитал exact pinned source и сравнил шесть
+Git blob SHA с локальными файлами после CRLF→LF: Neovim options.txt,
+Edgy README/config и Nui split/popup/layout. Все6 MATCH; ссылки/blob SHA/
+normalized SHA256 сохранены в docs/assets/panel-frames/dependency-review.json.
+Runtime/dependencies/SDK/lock не менялись, предыдущие44 E2E на ОС относятся
+к7ef5d7a, не к ещё не написанному новому layout. Тяжёлый регресс без code
+изменений не повторялся; trace/strict проверены после документов. Native
+Mac/physical GUI, performance нового layout и совместимость всех backend
+остаются непроверенными. Docker lifecycle не вызывался, temp/cache на F:.
+
+**Вывод.** Полная рамка — задача размещения окон, не смена одного highlight.
+Перед переносом в default нужен отдельный один-owner пилот и его реальные
+E2E; второй постоянный manager поверх Edgy не принят. Измеренных данных,
+что новая раскладка быстрее/медленнее, нет. Рабочие функции/плагины не удалены.
+
+**Файлы.** PANEL_FRAME_DESIGN/REVIEW, FEATURE_REVIEW/IDE_ROADMAP/HISTORY,
+OpenSpec prototype design, source-audit manifest, FIXLOG/AGENT_COMMANDS.
+Журналы raw append с prefix guard .tests/frames-layout-prefix.json.

@@ -28,3 +28,12 @@
 - Full border в zoom не решает обычный split → показать исходный split и записать цену/недостающий отдельный дизайн, не закрывать весь IDE-076.
 - Отладчик/асинхронный redraw → ждать actual breakpoint/output и UI flush, не заменять backend ответами fixture.
 - Raw UI может быть большим → явный byte cap, диагностический failure и штатный cleanup; не объявлять неполную запись PASS.
+
+## Следующий дизайн, без внедрения
+
+После коммита прототипа7ef5d7a проверены pinned Edgy8bfd2808 и Nui de740991:
+Split не получает native full border; Popup/Layout владеет окнами и
+hide/unmount callbacks. Три варианта и условия отдельного real-panel пилота —
+docs/PANEL_FRAME_DESIGN.md, FIXLOG174. Наложение постоянного overlay на каждый
+split не рекомендуется. Наличие Nui в lock не является решением о замене
+Edgy; task1.4 и выбор постоянной реализации остаются открытыми.

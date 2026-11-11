@@ -388,3 +388,7 @@ language/test roots, interpreter/tools и save/format разобраны в
 постоянные рамки обычных split ещё не реализованы. Default style прежний,
 новый window manager/lifecycle не добавлен. Найденный IDE-101 исправляет
 штатный zoom отдельным window-local флагом, без новой layout-обёртки.
+Дальнейшие варианты постоянных рамок разобраны по pinned source в
+[PANEL_FRAME_DESIGN](PANEL_FRAME_DESIGN.md), §174. Nui уже установлен, но
+Popup/Layout добавляет владение окнами; это не бесплатная border-настройка.
+Замена Edgy или внедрение shadow panels этим разбором не приняты.

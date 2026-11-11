@@ -1,0 +1,56 @@
+[
+  {
+    "repository": "folke/edgy.nvim",
+    "ref": "8bfd2808994a988c975694122f68624b8a219f5f",
+    "path": "README.md",
+    "sha": "a4096f91579ff7fcd84daf2e290d17b6bbc43373",
+    "url": "https://github.com/folke/edgy.nvim/blob/8bfd2808994a988c975694122f68624b8a219f5f/README.md",
+    "local": ".tests/editor-deps/lazy/edgy.nvim/README.md",
+    "normalized_sha256": "9ac8372f23a967284816a7312e31b980fed86bc3813aa03f64e138332c63dc1c"
+  },
+  {
+    "repository": "folke/edgy.nvim",
+    "ref": "8bfd2808994a988c975694122f68624b8a219f5f",
+    "path": "lua/edgy/config.lua",
+    "sha": "94eaa11152577b445a5a5407e930d13cc8ff440e",
+    "url": "https://github.com/folke/edgy.nvim/blob/8bfd2808994a988c975694122f68624b8a219f5f/lua/edgy/config.lua",
+    "local": ".tests/editor-deps/lazy/edgy.nvim/lua/edgy/config.lua",
+    "normalized_sha256": "a3df25d94421feba8907c24dd89682daeec178fadd698e2641c58885d1f2fd9b"
+  },
+  {
+    "repository": "MunifTanjim/nui.nvim",
+    "ref": "de740991c12411b663994b2860f1a4fd0937c130",
+    "path": "lua/nui/split/init.lua",
+    "sha": "0d0fa4be8270887c4a1ecd626a8493a2adb88eda",
+    "url": "https://github.com/MunifTanjim/nui.nvim/blob/de740991c12411b663994b2860f1a4fd0937c130/lua/nui/split/init.lua",
+    "local": ".tests/editor-deps/lazy/nui.nvim/lua/nui/split/init.lua",
+    "normalized_sha256": "10442da410f32abf819a91ded28e7eef245d5edb9611601d14e9c086d54c8d04"
+  },
+  {
+    "repository": "MunifTanjim/nui.nvim",
+    "ref": "de740991c12411b663994b2860f1a4fd0937c130",
+    "path": "lua/nui/popup/init.lua",
+    "sha": "c2077e318221f9aa3eebc1dc5bf260f2f66e36c0",
+    "url": "https://github.com/MunifTanjim/nui.nvim/blob/de740991c12411b663994b2860f1a4fd0937c130/lua/nui/popup/init.lua",
+    "local": ".tests/editor-deps/lazy/nui.nvim/lua/nui/popup/init.lua",
+    "normalized_sha256": "a8e0d0f47522fccf141fafa6630421cb7631b9578727059854f9d2037c8af989"
+  },
+  {
+    "repository": "MunifTanjim/nui.nvim",
+    "ref": "de740991c12411b663994b2860f1a4fd0937c130",
+    "path": "lua/nui/layout/init.lua",
+    "sha": "94368510a366157f212febdd7c352fb5bca861c3",
+    "url": "https://github.com/MunifTanjim/nui.nvim/blob/de740991c12411b663994b2860f1a4fd0937c130/lua/nui/layout/init.lua",
+    "local": ".tests/editor-deps/lazy/nui.nvim/lua/nui/layout/init.lua",
+    "normalized_sha256": "0214ec8e7c6a051999186497fda123350ef224162b143e04767c6f777ab1b73a"
+  },
+  {
+    "repository": "neovim/neovim",
+    "ref": "4b35336f6f850ce68a230716401cdaa21bdb6a25",
+    "path": "runtime/doc/options.txt",
+    "sha": "140b27d5d92a63c9fdd49447ba9d7d0470f0bdfd",
+    "url": "https://github.com/neovim/neovim/blob/4b35336f6f850ce68a230716401cdaa21bdb6a25/runtime/doc/options.txt",
+    "local": ".tools/neovim/windows-x64/share/nvim/runtime/doc/options.txt",
+    "normalized_sha256": "07ff73b63916d3054d1803025ebb77a0d374965efd708b8b8cb215155741f6e4"
+  }
+]
