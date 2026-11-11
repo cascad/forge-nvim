@@ -9975,3 +9975,54 @@ prefix guard .tests/frame-prefix.json.
 
 Уточнение стоимости по final diff: glue22 добавленные/1 удалённая строка
 (21 net), отдельно164 строки модуля; прежняя оценка23 была округлена.
+
+
+## 184. Обновлённый обзор перед упрощениями
+
+2026-11-11. IDE-080; source e00bcea. Review/documentation, runtime/lock/SDK
+не менялись. Продолжение §183, без заявления нового функционального fix.
+
+**Проблема.** После Files, Logs и рабочих рамок прежняя карта стоимости
+частично устарела. До рефакторинга нужен конкретный список сохранить/убрать/
+упростить с потерями, а не ещё одна большая перепись или удаление по LOC.
+
+**Причина/наблюдение.** У Git UI, task/test, workspace/root, focus/create/guard
+разные полномочия; похожие циклы и окна не доказывают дублирования. Новые
+обязательные Logs421 и opt-in pilot164 строки требуют места в общей карте.
+Подтверждён настоящий небольшой кандидат — пассивные FT window loops в
+component visibility/default focus и существующий activities.find_window.
+Прямая подстановка пока меняет вызовы predicate на buffers другого FT;
+порядок/predicate/tab надо проверить перед отдельным refactor.
+
+**Изменение.** В начале FEATURE_REVIEW — актуальная таблица12 решений:
+ядро сохранить, frame pilot не распространять до физического review;
+первый UI кандидат — navic/barbecue/Satellite, Peek рекомендован к сохранению.
+Точный вариант без3 plugins требует своего E2E: старый private без4 UI его
+не заменяет. SQLLogicTest/Bats, autosave, sessions и comments не удаляются с
+косметикой; language ядро остаётся готовым. Выбор UI отправлен владельцу
+отдельным вопросом о предпочтении, без ответа ничего не отключается.
+
+**Проверка/факты.** Windows45988123947700 и Ubuntu41007571888303 — свежие native
+plain-text inventory:67 live names совпали с lock, loaded45, installs0.
+Это другая фаза, чем исходный idle28; сравнения быстродействия нет.
+Оба редактора root exit0/signal0/APIerrors[], own scope ok. Источник — прежний
+tests/diagnostics/inspect-plugins.lua, raw reports .tests/review-after-pilot-* и
+.tests/ubuntu/review-after-pilot-ubuntu.json. Runtime и подготовленный manifest
+имеют одинаковые6 plugin backports/13 native files; revisions совпали с pins.
+Уточнение §182–183: упоминание4 backports неверно как общее число plugin
+patches; фактически6. Windows SDK и SQLS source patches считаются отдельно.
+Ничего из patches не добавлено/удалено этим review.
+
+Текущий физический LOC с комментариями: config8/2299, plugins19/5920,
+ide14/2738, forge22/2610; сумма13567. DAP config1636, Edgy352. Это карта
+чтения, не показатель CPU/памяти или требование сократить все модули.
+
+**Вывод.** Следующий результат — выбранное UI сокращение либо маленькая
+дедупликация пассивного window lookup с сохранением порядка/FT/predicate.
+Нового framework, общего resolver всех roots и замены рабочего DAP/backend
+не требуется. Mac/physical gates прежние. После e00bcea работаем дальше по
+плану; необязательный UX выбор не превращается в запрос разрешений команд.
+
+**Файлы.** FEATURE_REVIEW, PLUGIN_INVENTORY, roadmap/HISTORY/AGENT_COMMANDS.
+Journals raw append-only, guard .tests/review184-prefix.json; E2E и code этой
+документационной сверкой не переписывались.

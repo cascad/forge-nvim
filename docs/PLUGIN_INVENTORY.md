@@ -1,5 +1,10 @@
 # Инвентарь плагинов — IDE-080, 2026-11-10
 
+Обновление2026-11-11 после e00bcea: состав/pins те же67. Свежий plain text
+profile Windows/Ubuntu загрузил45 plugins, installs0; первоначальный idle28
+ниже — другая фаза. Актуальные решения после Files/Logs/pilot и6 plugin
+backports/13 files — в начале [FEATURE_REVIEW](FEATURE_REVIEW.md).
+
 Живой Lazy config и lock содержат одинаковые 67 имён. В idle тестовом снимке загружены 28, установок при запуске 0. Это инвентарь, а не benchmark старта. Оценки — предложения для review; рабочие плагины не удалялись.
 
 Источник: .tests/feature-review-runtime.json, editor artifact 3322136536400. Команда: `<nvim> -l tests/diagnostics/inspect-plugins.lua`. Цена фич, доказательства и открытые вопросы — [FEATURE_REVIEW.md](FEATURE_REVIEW.md).

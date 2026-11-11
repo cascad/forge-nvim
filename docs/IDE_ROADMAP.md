@@ -16,7 +16,7 @@ IDE-001 параллельно ждёт диагностических данн�
 | Проверено Windows/Ubuntu | Надёжное Files: создание/раскрытие/обновление и native filter | IDE-104/105: по44 editor +15 CLI PASS, история §180–181; Mac/GUI отдельно |
 | Проверено Windows/Ubuntu | Общая консоль состояния и логов IDE | IDE-106/107: Space w i/:ForgeLogs, source/status/history/filters/report, native restart и late focus; по46 различных editor checks, §182; Mac/GUI отдельно |
 | Рабочий opt-in пилот | Аккуратные рамки как в Termide | IDE-076: :ForgeFramePilot, настоящие Code/Locals, шаги/цвет/resize/Space w/session; [команды, цена и ограничения](PANEL_FRAME_PILOT.md), §183. Default/physical gate открыт |
-| Следующий шаг перед рефакторингом | Конкретный список оставить / убрать / заменить | IDE-080: актуализировать обзор после Files/Logs/pilot и определить сокращения; 67 pins без изменений |
+| Обзор актуализирован; следующий выбор | Конкретные сокращения | IDE-080: [решения после Files/Logs/pilot](FEATURE_REVIEW.md), §184;67 pins/6 patched dependencies. Первый UI кандидат — breadcrumbs/ruler, выбор владельца открыт; отдельно пассивный window lookup |
 | Затем | Меньше слоёв управления окнами, фокусом и DAP | Маленькие изменения по review с сохранением проверенных пользовательских сценариев; большой переписи нет |
 | Остаток функциональности | Bash debug, сложные проекты/окружения, оставшиеся Git ошибки | Готовые backend; SQL references отложен до подходящего provider, собственный LSP не разрабатываем |
 | Отдельный платформенный gate | Mac startup/zsh/Go, Cmd+C, реальные клавиши, чистый setup Windows/macOS/Ubuntu | Нужны actual запуски на целевых машинах; Mint отложен |

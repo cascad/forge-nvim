@@ -1,5 +1,54 @@
 # IDE-080 — обзор фич и стоимости поддержки перед рефакторингом
 
+## Актуальный выбор после Files, Logs и frame pilot — 2026-11-11
+
+Source e00bcea. Выполнено: Files §180–181, обязательные Logs §182 и рабочий
+opt-in Code/Locals pilot §183. Ниже прежние исследования сохраняют контекст;
+следующая таблица задаёт текущий порядок, а не открывает новую перепись IDE.
+
+| Что | Решение / предложение | Что будет сохранено и чем проверять изменение |
+|---|---|---|
+| Файлы/поиск/вкладки | Оставить Neo-tree, Telescope/grug-far, Bufferline и guard | Создание/move/copy/delete/filter, unsaved buffers, cwd/worktree; постоянные file/search/buffer E2E |
+| Git | Оставить Gitsigns + Neogit + Diffview | Hunk, commit/branches/worktree и history/diff/merge имеют разные роли; Git errors/native path E2E |
+| Языки/запуск/Tests | Оставить готовые LSP/DAP/Conform/Overseer/Neotest | Go/Rust/Python/Node/Bash/SQL matrix; общая вкладка Tests, nearest/file/all/debug/output. Собственного LSP/SQL binder не добавлять |
+| SQLLogicTest/Bats glue | Не удалять вместе с косметикой; отдельный кандидат по реальной пользе | Есть пользовательские Tests workflows. Удаление отдельной возможности требует решения и своей проверки |
+| Общая консоль логов | Оставить: явно обязательна владельцу | 421 строка store/source/view, early/history/native tail без второго logger backend; IDE Logs E2E/restart |
+| Панели | Сохранить default state/registry + Edgy и Space w | Open/close/focus/zoom/help/output; новый общий window manager не вводить |
+| Рамки | Оставить ForgeFramePilot opt-in до физического review | 164 строки layout +21 net glue; backend data прежние. Перенос всех панелей требует решения по owner, а не отдельных shadow overlay |
+| Peek | Рекомендую оставить готовый Glance | Definition/references в контексте по запросу; gpd/gpr/gpt/gpi, Enter/q/Esc/native splits |
+| Breadcrumbs/ruler | Первый кандидат: убрать navic + barbecue + Satellite после выбора владельца | Теряется верхний путь символа и боковой обзор; сохраняются Outline, Problems, gd/gr и Peek. Это ровно3 plugins, не ранее проверенный вариант без4 UI |
+| Dashboard/project/session | Оставить сейчас | Alpha/recents/open folder/restart/session имеют рабочие сценарии; не объединять выбранный workspace и language/test roots |
+| Autosave/Comment/прочие helpers | Оставить до отдельного доказанного выигрыша | Политика сохранения и line/block/context comments — поведение, не косметика |
+| Временные patches/Windows SDK | Сохранить до подходящего upstream + тех же E2E | У каждого причина/исходный regression/условие удаления; обновление SDK и UI не смешивать |
+
+Выбор владельца по трём UI plugins запрошен отдельно; без ответа они остаются.
+Сравнение всех вариантов и потерь — раздел «Варианты для решения по фичам».
+Прежний private вариант без4 UI не доказывает новый точный вариант без3;
+при выборе понадобится свой clean profile с текущим lock и native E2E.
+
+Первый внутренний кандидат без потери фич — одинаковые пассивные обходы
+окон в component visibility/default focus: `ide.init.any_window_with_ft`,
+`registry.register` и уже существующие `activities.find_window/is_visible`.
+До изменения проверить порядок tab/windows, multiple FT и то, вызывается ли
+predicate только для подходящего FT: сейчас последний helper вычисляет его
+и на остальных buffers. Нельзя выдавать прямую подстановку за чистый refactor.
+Это маленькая отдельная задача; выбор/создание окна кода и перенос guard
+остаются разными операциями. Thin layouts/triggers/empty не удалять только
+ради числа файлов: это маленькие публичные routes, не новое тяжёлое ядро.
+
+Свежие native inventory profiles: Windows45988123947700 / Ubuntu41007571888303,
+по67 plugins,45 loaded в обычном text buffer, installs0. Это не idle28 из
+первого обзора и не benchmark. Оба native exit0/signal0/APIerrors[]/scope ok.
+Raw summaries: .tests/review-after-pilot-{windows,ubuntu}.json (Ubuntu под
+.tests/ubuntu), агрегат .tests/review-after-pilot-summary.json.
+
+Фактический plugin backport manifest и prepared manifest совпадают:
+**6 dependencies /13 files** (5 прежних плюс Neo-tree2 файла). Старое5/11
+ниже обновлено; число4 в §182–183 не является корректным числом plugin
+backports. Windows SDK/SQLS source patch учитываются отдельно. Runtime и pins
+в этом проходе обзора не менялись. Следующий шаг — выбранное UI сокращение
+или отдельная проверенная дедупликация пассивного window lookup.
+
 Дата: 2026-11-10. Статус: фактический обзор, coverage/ownership и bounded native
 baseline готовы; выбор удаления фич открыт, IDE-082 реализован отдельным change.
 Windows/Ubuntu по 27 PASS с реальным gopls restart; Mac gate открыт (§148).
@@ -71,6 +120,8 @@ backend не умеет references, это ограничение, а не по�
 | Терминал | ToggleTerm + Edgy/общие controls | Ядро. Shell selection и terminal exit требуют отдельной проверки |
 | Файловые вкладки/сессии/проекты | Bufferline, persistence, project/start glue | Вкладки — ядро; восстановление/recents оценивать отдельными сценариями |
 | Панели/фокус/zoom/help | `ide` registry/state/controls/activities, Edgy | Ядро. Общий Space w — контракт; сначала выяснить, кто владеет окнами |
+| Общие логи/состояние IDE | `forge.logs/log_store/log_sources`, прежний registry/Edgy | Обязательное ядро. Native источники остаются владельцами подробных логов |
+| Полные рамки Code/Locals | `forge.frame_pilot`, opt-in | Рабочий пилот §183; не default замена всех окон |
 | Outline/Problems | Aerial, Trouble | Outline явно запрошен. Проверить пересечение дополнительных symbol views |
 | Peek/references UI | Glance, Trouble, quickfix/Telescope routes | Кандидат сократить число способов и хоткеев, не language semantics |
 | Breadcrumbs | navic + barbecue | Дополнительная навигация; кандидат на отключение по итогам обзора |
@@ -113,8 +164,8 @@ Ubuntu; Mac/GUI открыт. [Команды/лимиты](IDE_LOGS.md), [оч�
 
 | Участок | Наблюдение | Что проверить до изменения |
 |---|---|---|
-| DAP | `plugins/dap.lua` 1661 строк, плюс `ide.dap`, dap-ui, Output/hover glue | Владение adapter/terminal/output/session, повторные stop/open/focus, launch.json/default/debug tests; готовые plugin APIs против собственных overrides |
-| Панели | `ide` 14 файлов/2624 строки, Edgy config 348, panel_guard 267 | Карта open/close/focus/zoom/autocmd и кто исправляет чужое состояние. Не вводить ещё один panel manager |
+| DAP | `plugins/dap.lua` 1636 строк, плюс `ide.dap`, dap-ui, Output/hover glue | Владение adapter/terminal/output/session, повторные stop/open/focus, launch.json/default/debug tests; готовые plugin APIs против собственных overrides |
+| Панели | `ide` 14 файлов/2738 строк, Edgy config352, panel_guard267; pilot164 отдельно | Карта open/close/focus/zoom/autocmd и кто исправляет чужое состояние. Не вводить ещё один panel manager |
 | LSP | `plugins/lsp.lua` 797 строк + language tool/root/interpreter helpers | Что общее по смыслу, где реальная разница языка/ОС, какие hooks нужны для прежних ошибок |
 | Рабочий root | project/session, Neo-tree, Git/worktree и language roots | Кто меняет cwd; один большой resolver не вводить до доказательства одинаковой политики |
 | Save/format | autosave events, Conform manual/save, language fallback, LSP checks | Разделить user save и autosave; сохранить асинхронность и запись результата на диск |
@@ -123,8 +174,9 @@ Ubuntu; Mac/GUI открыт. [Команды/лимиты](IDE_LOGS.md), [оч�
 | Тестовая инфраструктура | RPC UI/process scope, отдельные SDK/tools/контейнеры | Это стоимость разработки, отличная от runtime пользователя. Не записывать её всю в «тормоза редактора» |
 
 Размеры — навигация для чтения, а не доказательство плохого кода. В source
-срезе config: 8 файлов/2315 строк, plugins: 19/5878, ide: 14/2624, forge: 18/2005;
-сумма 12822 строк включает комментарии. Производительность из LOC не выводится.
+срезе e00bcea config:8 файлов/2299 строк, plugins:19/5920, ide:14/2738,
+forge:22/2610; сумма13567 строк включает комментарии. Производительность
+из LOC не выводится. Из новых forge421 строк — Logs,164 — явный frame pilot.
 
 ## Временные доработки, которые нельзя забыть
 
@@ -136,12 +188,13 @@ Ubuntu; Mac/GUI открыт. [Команды/лимиты](IDE_LOGS.md), [оч�
 | Neotest, 4 | IDE-051/070, native/canonical path identity | Upstream equivalent + Node/Python/Rust/SQL discovery/nearest/all |
 | nvim-dap, 1 | IDE-053, expected adapter close | Upstream equivalent + normal stop и настоящий unexpected exit |
 | neotest-rust, 2 | IDE-054, Cargo workspace/native paths/results | Upstream equivalent + workspace/nearest/integration/debug tests |
+| Neo-tree, 2 | IDE-104/105, coherent scan/pending open/normal filter | Upstream equivalent + file scan/order/filter regression |
 | SQLS comments patch | IDE-066, ведущие comments ошибочно выбирали Exec | Upstream equivalent + реальная query с comments/literals/rows |
 | SQL protocol adapter | IDE-061, pinned backend coordinates/rename | Смена backend/version + Unicode/первый символ/rename E2E |
 | SQLLogicTest SDK/glue | Отдельный SQLite assertion runner и Tests UI | Нужен ли этот workflow в работе; можно ли штатно использовать готовый CLI |
 
-Реестр plugin patches: `nvim_forge/patches/plugins.json` — 5 dependencies,
-11 изменяемых файлов. Source review выполнен ниже по exact SHA; native
+Реестр plugin patches: `nvim_forge/patches/plugins.json` —6 dependencies,
+13 изменяемых файлов. Source review выполнен ниже по exact SHA; native
 compatibility regression новых версий ещё нужен. Ни один patch здесь
 не объявляется готовым к удалению.
 
@@ -423,3 +476,6 @@ language/test roots, interpreter/tools и save/format разобраны в
 [PANEL_FRAME_DESIGN](PANEL_FRAME_DESIGN.md), §174. Nui уже установлен, но
 Popup/Layout добавляет владение окнами; это не бесплатная border-настройка.
 Замена Edgy или внедрение shadow panels этим разбором не приняты.
+После этого source review выполнен рабочий пилот §183:
+[Code/Locals, команды и цена](PANEL_FRAME_PILOT.md). Его явное включение —
+новый ограниченный layout; default всей IDE и прочие панели прежние.

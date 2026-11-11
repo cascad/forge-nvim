@@ -6448,3 +6448,53 @@ f63a05ca…33d0 reused. Все Windows scratch/cache на F:. После restart
 ForgeFramePilot; native q/Space w z/help/step/Output сохранены. Change4/6:
 физический pilot review и решение о распространении открыты, archive нет.
 Следующий roadmap шаг — конкретные сокращения после обновлённого feature review.
+
+
+## 96. IDE-080: свежая сверка после Files/Logs/frame pilot
+
+2026-11-11, source e00bcea, cwd F:/repo/forge-nvim, login=false.
+Windows temp/cache variables как §95. Review-only: изменения runtime/lock нет.
+
+```powershell
+Get-Content docs/FEATURE_REVIEW.md
+Get-Content docs/PANEL_OWNERSHIP_REVIEW.md
+Get-Content docs/CODE_WINDOW_REVIEW.md
+Get-Content docs/WORKSPACE_TOOL_REVIEW.md
+Get-Content nvim_forge/lua/ide/registry.lua
+Get-Content nvim_forge/lua/ide/activities.lua
+Get-Content nvim_forge/lua/ide/triggers.lua
+Get-Content nvim_forge/lua/ide/layouts.lua
+rg -n 'navic|barbecue|satellite|glance' nvim_forge/lua -g '*.lua'
+$env:FORGE_PLUGIN_INVENTORY_BUFFER='1'
+$env:FORGE_PLUGIN_INVENTORY_OUTPUT='F:/repo/forge-nvim/.tests/review-after-pilot-windows.json'
+& .tools/neovim/windows-x64/bin/nvim.exe -l tests/diagnostics/inspect-plugins.lua > .tests/review-after-pilot-windows.txt 2>&1
+docker compose -f tests/containers/compose.yaml -f tests/containers/limits.yaml run --rm --no-deps --pull never --name forge-nvim-review-after-pilot -e FORGE_PLUGIN_INVENTORY_BUFFER=1 -e FORGE_PLUGIN_INVENTORY_OUTPUT=/workspace/.tests/review-after-pilot-ubuntu.json --entrypoint nvim ubuntu -l tests/diagnostics/inspect-plugins.lua > .tests/review-after-pilot-ubuntu.txt 2>&1
+```
+
+Python -B читает JSON/файлы: сравнивает set(live plugin names) с lock,
+patches/plugins.json с prepared manifest.backports, каждый patch.revision с
+lock[name].commit; число native files — sum(1+len(extra)). Physical LOC —
+read_text(encoding='utf-8').splitlines(), не оценка производительности.
+67/45 loaded/installs0 на ОС, native root0/signal0/APIerrors[]/scope ok.
+Reports Windows45988123947700 / Ubuntu41007571888303; агрегат
+.tests/review-after-pilot-summary.json. Plugin backports фактически6/13 files,
+старое число4 в истории уточнено новой §184; SDK/source patches отдельно.
+
+Вопрос владельцу — выбор UX breadcrumbs/ruler/Peek, не разрешение исполнять
+команды. Пока ответа нет, UI остаётся. Общие layers root/focus/create/guard
+не сливаются по сходству имён; первый кандидат только пассивные FT loops.
+
+```powershell
+python -B .tests/review184-append.py
+git diff --check
+git diff --numstat -- nvim_forge/FIXLOG.md docs/AGENT_COMMANDS.md
+git diff --cached --check
+git commit -m "docs(review): refresh simplification decisions after the frame pilot"
+git status --short
+```
+
+Full prefixes проверены до raw append. Никаких новых deps, установки SDK,
+Desktop/WSL lifecycle/settings/prune/build/pull; текущий Linux engine reused.
+Более широкие проверки не повторялись ради текста review. Mac/physical GUI
+не проверены. Предыдущий рабочий commit e00bcea и18 scoped checks на ОС
+сохранены, следующая работа идёт по актуальной таблице FEATURE_REVIEW.
