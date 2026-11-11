@@ -78,6 +78,8 @@ end
 ---@return boolean
 function M.is_main_window(win)
     if not vim.api.nvim_win_is_valid(win) then return false end
+    local pilot=package.loaded['forge.frame_pilot']
+    if pilot and pilot.is_code(win) then return true end
     if vim.api.nvim_win_get_config(win).relative ~= "" then return false end
 
     local buf = vim.api.nvim_win_get_buf(win)

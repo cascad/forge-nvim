@@ -1361,6 +1361,10 @@ health сохраняет фактическое состояние до/пос�
 
 ## Quit/RPC capture — IDE-085
 
+Рабочий opt-in layout Code/Locals: `nvim -l tests/e2e/frame-layout.test.lua`.
+Сценарий использует подготовленные Editor/Go/Delve SDK, реальные F9/F5/F10,
+UI RGB и session save/restore; [команды и границы](../../docs/PANEL_FRAME_PILOT.md).
+
 Все RPC test children с artifacts получают controller/native JSONL и
 driver-source/SHA до init. `quit-trace.test.lua` проверяет normal quit,
 реальный delayed QuitPre и native API notification error после detail cap.

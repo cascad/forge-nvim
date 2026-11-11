@@ -1,0 +1,566 @@
+{
+  "date": "2026-11-11",
+  "scope": "Opt-in Code/Locals pilot; physical WezTerm/Mac unverified",
+  "platforms": {
+    "windows": {
+      "checks": 18,
+      "artifact": "45286115031700",
+      "states": [
+        {
+          "label": "pilot-locals",
+          "current": 1020,
+          "pilot": {
+            "zoom": false,
+            "buf": 3,
+            "locals": 1020,
+            "code": 1019,
+            "root": 1000,
+            "open_ms": 17.6957,
+            "layouts": 2
+          },
+          "windows": [
+            {
+              "win": 1000,
+              "buf": 16,
+              "ft": "forge-frame-root",
+              "position": [
+                1,
+                0
+              ],
+              "width": 140,
+              "height": 28
+            },
+            {
+              "win": 1020,
+              "buf": 3,
+              "ft": "dapui_scopes",
+              "position": [
+                1,
+                0
+              ],
+              "width": 38,
+              "height": 26
+            },
+            {
+              "win": 1019,
+              "buf": 2,
+              "ft": "go",
+              "position": [
+                1,
+                40
+              ],
+              "width": 98,
+              "height": 26
+            }
+          ]
+        },
+        {
+          "label": "pilot-help",
+          "current": 1021,
+          "pilot": {
+            "zoom": false,
+            "buf": 3,
+            "locals": 1020,
+            "code": 1019,
+            "root": 1000,
+            "open_ms": 17.6957,
+            "layouts": 2
+          },
+          "windows": [
+            {
+              "win": 1000,
+              "buf": 16,
+              "ft": "forge-frame-root",
+              "position": [
+                1,
+                0
+              ],
+              "width": 140,
+              "height": 28
+            },
+            {
+              "win": 1020,
+              "buf": 3,
+              "ft": "dapui_scopes",
+              "position": [
+                1,
+                0
+              ],
+              "width": 38,
+              "height": 26
+            },
+            {
+              "win": 1019,
+              "buf": 2,
+              "ft": "go",
+              "position": [
+                1,
+                40
+              ],
+              "width": 98,
+              "height": 26
+            }
+          ]
+        },
+        {
+          "label": "pilot-zoom",
+          "current": 1020,
+          "pilot": {
+            "zoom": true,
+            "buf": 3,
+            "locals": 1020,
+            "code": 1019,
+            "root": 1000,
+            "open_ms": 17.6957,
+            "layouts": 4
+          },
+          "windows": [
+            {
+              "win": 1000,
+              "buf": 16,
+              "ft": "forge-frame-root",
+              "position": [
+                1,
+                0
+              ],
+              "width": 140,
+              "height": 28
+            },
+            {
+              "win": 1020,
+              "buf": 3,
+              "ft": "dapui_scopes",
+              "position": [
+                1,
+                0
+              ],
+              "width": 138,
+              "height": 26
+            },
+            {
+              "win": 1019,
+              "buf": 2,
+              "ft": "go",
+              "position": [
+                1,
+                40
+              ],
+              "width": 98,
+              "height": 26
+            }
+          ]
+        },
+        {
+          "label": "pilot-stepped",
+          "current": 1022,
+          "pilot": {
+            "zoom": false,
+            "buf": 3,
+            "locals": 1022,
+            "code": 1019,
+            "root": 1000,
+            "open_ms": 17.6957,
+            "layouts": 11
+          },
+          "windows": [
+            {
+              "win": 1000,
+              "buf": 16,
+              "ft": "forge-frame-root",
+              "position": [
+                1,
+                0
+              ],
+              "width": 140,
+              "height": 28
+            },
+            {
+              "win": 1022,
+              "buf": 3,
+              "ft": "dapui_scopes",
+              "position": [
+                1,
+                0
+              ],
+              "width": 38,
+              "height": 26
+            },
+            {
+              "win": 1019,
+              "buf": 2,
+              "ft": "go",
+              "position": [
+                1,
+                40
+              ],
+              "width": 98,
+              "height": 26
+            }
+          ]
+        },
+        {
+          "label": "pilot-resized",
+          "current": 1019,
+          "pilot": {
+            "zoom": false,
+            "buf": 3,
+            "locals": 1022,
+            "code": 1019,
+            "root": 1000,
+            "open_ms": 17.6957,
+            "layouts": 16
+          },
+          "windows": [
+            {
+              "win": 1000,
+              "buf": 16,
+              "ft": "forge-frame-root",
+              "position": [
+                1,
+                0
+              ],
+              "width": 100,
+              "height": 21
+            },
+            {
+              "win": 1022,
+              "buf": 3,
+              "ft": "dapui_scopes",
+              "position": [
+                1,
+                0
+              ],
+              "width": 28,
+              "height": 19
+            },
+            {
+              "win": 1019,
+              "buf": 2,
+              "ft": "go",
+              "position": [
+                1,
+                30
+              ],
+              "width": 68,
+              "height": 19
+            }
+          ]
+        }
+      ],
+      "idle_ms": 400,
+      "save_cycles": 8,
+      "stdout": "FRAME_AFTER 50\n\ndap> ",
+      "ui_capture_sha256": "6fcc24e36f8d43c4a7d6f41c5b1e1f36cbfe64bf0598c68a487cf2e6616035ea",
+      "profiles": [
+        "45286115031700",
+        "45300287677700",
+        "45311079198600",
+        "45321098685500",
+        "45329327308200",
+        "45337643084300",
+        "45345696075800",
+        "45353817264200",
+        "45362313167800",
+        "45370433548800",
+        "45378609803200",
+        "45386716276600",
+        "45395105887300",
+        "45403351728900"
+      ],
+      "audit": {
+        "root_exit": 0,
+        "signal": 0,
+        "api_errors": [],
+        "stages": [
+          "quit",
+          "exited"
+        ],
+        "owned_scopes_empty": true
+      }
+    },
+    "ubuntu": {
+      "checks": 18,
+      "artifact": "40467610890276",
+      "states": [
+        {
+          "label": "pilot-locals",
+          "current": 1019,
+          "pilot": {
+            "root": 1000,
+            "locals": 1019,
+            "open_ms": 8.48231,
+            "buf": 3,
+            "zoom": false,
+            "code": 1018,
+            "layouts": 2
+          },
+          "windows": [
+            {
+              "win": 1000,
+              "buf": 15,
+              "ft": "forge-frame-root",
+              "position": [
+                1,
+                0
+              ],
+              "width": 140,
+              "height": 28
+            },
+            {
+              "win": 1019,
+              "buf": 3,
+              "ft": "dapui_scopes",
+              "position": [
+                1,
+                0
+              ],
+              "width": 38,
+              "height": 26
+            },
+            {
+              "win": 1018,
+              "buf": 2,
+              "ft": "go",
+              "position": [
+                1,
+                40
+              ],
+              "width": 98,
+              "height": 26
+            }
+          ]
+        },
+        {
+          "label": "pilot-help",
+          "current": 1020,
+          "pilot": {
+            "root": 1000,
+            "locals": 1019,
+            "open_ms": 8.48231,
+            "buf": 3,
+            "zoom": false,
+            "code": 1018,
+            "layouts": 2
+          },
+          "windows": [
+            {
+              "win": 1000,
+              "buf": 15,
+              "ft": "forge-frame-root",
+              "position": [
+                1,
+                0
+              ],
+              "width": 140,
+              "height": 28
+            },
+            {
+              "win": 1019,
+              "buf": 3,
+              "ft": "dapui_scopes",
+              "position": [
+                1,
+                0
+              ],
+              "width": 38,
+              "height": 26
+            },
+            {
+              "win": 1018,
+              "buf": 2,
+              "ft": "go",
+              "position": [
+                1,
+                40
+              ],
+              "width": 98,
+              "height": 26
+            }
+          ]
+        },
+        {
+          "label": "pilot-zoom",
+          "current": 1019,
+          "pilot": {
+            "root": 1000,
+            "locals": 1019,
+            "open_ms": 8.48231,
+            "buf": 3,
+            "zoom": true,
+            "code": 1018,
+            "layouts": 4
+          },
+          "windows": [
+            {
+              "win": 1000,
+              "buf": 15,
+              "ft": "forge-frame-root",
+              "position": [
+                1,
+                0
+              ],
+              "width": 140,
+              "height": 28
+            },
+            {
+              "win": 1019,
+              "buf": 3,
+              "ft": "dapui_scopes",
+              "position": [
+                1,
+                0
+              ],
+              "width": 138,
+              "height": 26
+            },
+            {
+              "win": 1018,
+              "buf": 2,
+              "ft": "go",
+              "position": [
+                1,
+                40
+              ],
+              "width": 98,
+              "height": 26
+            }
+          ]
+        },
+        {
+          "label": "pilot-stepped",
+          "current": 1021,
+          "pilot": {
+            "root": 1000,
+            "locals": 1021,
+            "open_ms": 8.48231,
+            "buf": 3,
+            "zoom": false,
+            "code": 1018,
+            "layouts": 11
+          },
+          "windows": [
+            {
+              "win": 1000,
+              "buf": 15,
+              "ft": "forge-frame-root",
+              "position": [
+                1,
+                0
+              ],
+              "width": 140,
+              "height": 28
+            },
+            {
+              "win": 1021,
+              "buf": 3,
+              "ft": "dapui_scopes",
+              "position": [
+                1,
+                0
+              ],
+              "width": 38,
+              "height": 26
+            },
+            {
+              "win": 1018,
+              "buf": 2,
+              "ft": "go",
+              "position": [
+                1,
+                40
+              ],
+              "width": 98,
+              "height": 26
+            }
+          ]
+        },
+        {
+          "label": "pilot-resized",
+          "current": 1018,
+          "pilot": {
+            "root": 1000,
+            "locals": 1021,
+            "open_ms": 8.48231,
+            "buf": 3,
+            "zoom": false,
+            "code": 1018,
+            "layouts": 16
+          },
+          "windows": [
+            {
+              "win": 1000,
+              "buf": 15,
+              "ft": "forge-frame-root",
+              "position": [
+                1,
+                0
+              ],
+              "width": 100,
+              "height": 21
+            },
+            {
+              "win": 1021,
+              "buf": 3,
+              "ft": "dapui_scopes",
+              "position": [
+                1,
+                0
+              ],
+              "width": 28,
+              "height": 19
+            },
+            {
+              "win": 1018,
+              "buf": 2,
+              "ft": "go",
+              "position": [
+                1,
+                30
+              ],
+              "width": 68,
+              "height": 19
+            }
+          ]
+        }
+      ],
+      "idle_ms": 400,
+      "save_cycles": 8,
+      "stdout": "FRAME_AFTER 50\n\ndap> ",
+      "ui_capture_sha256": "a2cc44b130585dce510ad6229c8c3dada83ba10f2e3ad4287239f24abfe15161",
+      "profiles": [
+        "40467610890276",
+        "40477392707115",
+        "40483613278084",
+        "40489262132495",
+        "40494072796018",
+        "40499006143634",
+        "40503748523475",
+        "40508526247002",
+        "40513418247438",
+        "40518349920965",
+        "40523239182690",
+        "40528080463798",
+        "40533168544579",
+        "40538025977143"
+      ],
+      "audit": {
+        "root_exit": 0,
+        "signal": 0,
+        "api_errors": [],
+        "stages": [
+          "quit",
+          "exited"
+        ],
+        "owned_scopes_empty": true
+      }
+    }
+  },
+  "sources": {
+    "nvim_forge/lua/forge/frame_pilot.lua": "60c880eec1fba5c3c4681fa8fab24ed03241f4e62f4bac88ebcd12e8c6fccca5",
+    "tests/e2e/frame-layout.test.lua": "d5200dfe78a31bb65134bc08f542e312b08b0a757ac4bae73da22f51a930e77c",
+    "nvim_forge/lazy-lock.json": "c4c20bdacf68b2982b5614d167f3b0b66192f281ad5837ae55231cc2680e35bb",
+    "tests/e2e/fixtures/frame-layout/main.go": "5295bd48fc9e36a8c79735787839bcbb1a60fc952c5b066b49b363489a6b618a",
+    "tests/e2e/fixtures/frame-layout/go.mod": "6683d6b07971b2c6ccd90adb42129e866a711ba26690b450f8cedd7ae7117f7f"
+  },
+  "runtime_lines": 164
+}

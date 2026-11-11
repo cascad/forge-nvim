@@ -69,6 +69,8 @@ end
 -- Подготовка к сохранению сессии: вытащить файлы из панелей, закрыть
 -- tool-окна/буферы (см. ide/activities.lua, forge/panel_guard.lua).
 function M.cleanup_for_session()
+    local pilot=package.loaded['forge.frame_pilot']
+    if pilot then pilot.stop(false) end
     require("ide.activities").cleanup_for_session()
 end
 
@@ -205,10 +207,14 @@ local default_components = {
             "dapui_scopes", "dapui_watches", "dapui_stacks", "dapui_breakpoints",
         },
         open = function()
+            local pilot=package.loaded['forge.frame_pilot']
+            if pilot and pilot.show() then return end
             local ok, dapui = pcall(require, "dapui")
             if ok then pcall(dapui.open, { layout = 1, reset = true }) end
         end,
         close = function()
+            local pilot=package.loaded['forge.frame_pilot']
+            if pilot and pilot.hide() then return end
             local ok, dapui = pcall(require, "dapui")
             if ok then pcall(dapui.close, { layout = 1 }) end
         end,

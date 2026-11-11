@@ -9894,3 +9894,84 @@ controls/activities/dap и Edgy/Fidget;5 permanent E2E и явный rejected di
 registry, OpenSpec artifacts/verification, IDE_LOGS/IDE_LOG_SOURCES/manual,
 README/QUICKSTART/PANEL_KEYS/FEATURE_REVIEW/roadmap/PROBLEMS/HISTORY/commands.
 Raw reports в ignored .tests, append-only prefix guard ide106-prefix.json.
+
+
+## 183. Рабочие рамки Code и Locals
+
+2026-11-11. IDE-076/108. Спека: IDE-PANEL-20 (ADDED), change
+pilot-bordered-locals-layout. Windows/Ubuntu native UI проверены;
+физический WezTerm и Mac, решение о default остаются открытыми.
+
+**Проблема.** Выбранные владельцем полная рамка, цвет и аккуратность пока
+показаны только поверх zoom (§173). Такой образец не отвечает, работают ли
+постоянные рамки с живыми данными, кодом, шагами и общей клавиатурой.
+
+**Причина/решение.** Обычные split не получают winborder, а штатный float
+DAP UI закрывается при уходе фокуса. Вместо копии поверх каждого исходного
+split сделан ограниченный opt-in layout: один пустой обычный root и два
+настоящих рабочих float Code/Locals внутри его области. Public dapui.open/
+close дают настоящий Scopes buffer; его штатный renderer продолжает обновлять
+значения. Второго Scopes окна, своего backend, private API, нового registry,
+плагина и polling нет. Edgy по-прежнему владеет bottom, pilot — своими floats.
+
+**Изменение.** Команда ForgeFramePilot в остановленном Debug включает/выключает
+пилот, default прежний. Code признаётся main; узкие подключения controls
+сохраняют Space w h/j/k/l/0/d/c/q/z/? и помощь. Zoom меняет то же окно Locals.
+Hide отдаёт место коду, reopen возвращает тот же buffer. Root resize задаёт
+геометрию, минимум64×8 возвращает обычные окна. Tab exit, native sidebar open
+и подготовка session save завершают pilot; cleanup идёт до удаления tool
+buffers. Правки/код, DAP session и Output сохраняются.
+
+IDE-108: расширенный E2E44795203006100 показал, что длинное INFO после60×22
+вызывает hit-enter и блокирует API. Сообщение сокращено до одной короткой
+строки. Регресс не глотает prompt Enter: следующий обычный ввод обязан пройти.
+Это единственный заявленный runtime bugfix этого этапа.
+
+**Проверка/e2e.** Source RED: до runtime команды нет (.tests/frame-layout-red.txt).
+Реальный Go/Delve: Enter раскрывает item.Value42, F10 обновляет43, F5 выбирает
+строку второго breakpoint, Output содержит FRAME_AFTER50. Native UI проверяет
+четыре RGB угла, active/dim, resize140×45→100×35→60×22, no shadow, same-window
+zoom, native open, q/reopen, помощь, направления, правки при явном ASToggle,
+tab exit, по8 start/save cycles и настоящее source сохранённой session.
+
+Финальные batches Windows/Ubuntu: по18 checks/5 files PASS;14 isolated editor
+profiles на ОС. В28 shutdown root exit0/signal0, stages quit→exited,
+APIerrors[], hard-kill нет, owned scopes empty. Windows runtime пути из
+snapshot отсутствуют. Native logs/Problems поздний focus и прежние Terminal/
+Trouble/debug/zoom проходят. Unit360+trace11 PASS на каждой ОС, trace1 SKIP;
+OpenSpec strict94 PASS. Это scoped regression, не новый global full или Mac PASS.
+
+Артефакты pilot Windows45286115031700 / Ubuntu40467610890276;
+JSON/log snapshots .tests/frame-regression-*, quick reports .tests/frame-quick-*,
+проверяемая сводка и реальные SVG — docs/assets/panel-frames/pilot-*.
+Первое включение внутри модуля17.70/8.48мс, по одному наблюдению, не benchmark.
+Idle400мс не запускает layout cycle. Root140×28 даёт text Code98×26,
+Locals38×26; root100×21 —68/28×19. Полная рамка стоит2 строки/2 колонки на окно.
+
+Неудачные probes сохранены, но не объявляются дополнительными fixes:
+TelescopePrompt появился раньше selected entry (Nothing currently selected) —
+тест ждёт настоящий выбор; modified=false было обычным autosave — для сценария
+несохранённых правок явно выключен ASToggle; % в session path требует
+fnameescape. Один early broad substring session check не сохранил sessionfile,
+поэтому причина не доказана. Финальный тест проверяет actual buffers/filetypes,
+команды session и реальное восстановление; зелёный повтор не объявлен session
+runtime fix. Cleanup assertion исправлен в тесте, чтобы не затереть primary error.
+
+**Вывод.** Живые рамки без backend fork возможны. Цена —164 строки отдельного
+layout плюс23 добавленные строки подключения в существующий runtime. Floating
+code требует своей навигации и проверки native открывающих код действий.
+Распространение на все backend не делается по одному успешному fixture:
+сначала физическая оценка Windows/Mac и решение о едином владельце layout.
+Native dapui.close(layout1) не закрывает pilot float — для него q/ForgeFramePilot.
+Default,67 pins,4 backports и Windows SDK SHA74aff15b…1c6ad9 прежние.
+Docker image f63a05ca…33d0 использован без build/pull/управления Desktop/WSL;
+Windows scratch/cache на F:. Следующий шаг — конкретные сокращения IDE-080.
+
+**Файлы.** forge/frame_pilot.lua, init/ide state/registry callbacks/controls;
+frame-layout E2E/Go fixture/registry; OpenSpec proposal/spec/design/tasks/
+verification; PANEL_FRAME_PILOT/REVIEW/DESIGN/KEYS, README, roadmap/PROBLEMS/
+HISTORY, SVG/evidence и команды. FIXLOG/AGENT_COMMANDS raw append-only;
+prefix guard .tests/frame-prefix.json.
+
+Уточнение стоимости по final diff: glue22 добавленные/1 удалённая строка
+(21 net), отдельно164 строки модуля; прежняя оценка23 была округлена.

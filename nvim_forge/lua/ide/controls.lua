@@ -42,6 +42,8 @@ local function close_help(enter)
 end
 
 function M.restore(enter)
+    local pilot=package.loaded['forge.frame_pilot']
+    if pilot and pilot.restore() then return true end
     if not zoom then return false end
     local old = zoom
     zoom = nil
@@ -70,6 +72,8 @@ function M.focus_code()
     pending_panel = nil
     close_help(false)
     M.restore(false)
+    local pilot=package.loaded['forge.frame_pilot']
+    if pilot and pilot.focus_code() then return end
     if ft(0) == 'NeogitStatus' and #vim.api.nvim_tabpage_list_wins(0) == 1 and #vim.api.nvim_list_tabpages() > 1 then
         vim.cmd('tabclose')
         return
@@ -81,6 +85,8 @@ function M.direction(direction)
     pending_panel = nil
     close_help(true)
     M.restore(true)
+    local pilot=package.loaded['forge.frame_pilot']
+    if pilot and pilot.direction(direction) then return end
     vim.cmd('wincmd ' .. direction)
 end
 
@@ -255,6 +261,8 @@ function M.zoom()
     pending_panel = nil
     close_help(true)
     if M.restore(true) then return end
+    local pilot=package.loaded['forge.frame_pilot']
+    if pilot and pilot.zoom() then return end
     local source = vim.api.nvim_get_current_win()
     if not titles[ft(source)] then return end
     local buf = vim.api.nvim_win_get_buf(source)
@@ -391,7 +399,10 @@ function M.refresh()
     end
     if help and current ~= help.win then close_help(false) end
     for _, win in ipairs(vim.api.nvim_tabpage_list_wins(0)) do
-        if titles[ft(win)] and (ft(win)~='trouble' or trouble_view(vim.api.nvim_win_get_buf(win))) then
+        local pilot=package.loaded['forge.frame_pilot']
+        if pilot and pilot.owns(win) then
+            pilot.refresh()
+        elseif titles[ft(win)] and (ft(win)~='trouble' or trouble_view(vim.api.nvim_win_get_buf(win))) then
             vim.wo[win].winbar = winbar
         end
         if work[ft(win)] then M.work_maps(vim.api.nvim_win_get_buf(win)) end

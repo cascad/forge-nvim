@@ -6344,3 +6344,107 @@ Journals raw append после проверки full prefix; старые зап
 Mac/physical WezTerm/clipboard не запускались, task3.2 открыт, archive нет.
 После restart сборки Space w i/:ForgeLogs доступны без подготовки новых deps.
 Следующий roadmap результат — frame pilot, затем конкретные сокращения.
+
+
+## 95. IDE-076/108: рабочий Code/Locals frame pilot
+
+2026-11-11, cwd F:/repo/forge-nvim, PowerShell -NoProfile. Все exec login=false.
+Читаю UTF-8 файлы, diff/rg и JSON; UI — настоящий single-grid RGB через RPC,
+SVG восстановлен из redraw, физический WezTerm/Mac этим не просмотрен.
+
+```powershell
+$env:TEMP='F:/repo/forge-nvim/.tests/tmp'
+$env:TMP=$env:TEMP; $env:TMPDIR=$env:TEMP
+$env:NVIM_LOG_FILE="$env:TEMP/ide076-pilot.log"
+$env:npm_config_cache='F:/forge-nvim-tmp/npm-cache'
+$env:PYTHONIOENCODING='utf-8'
+$env:GOTOOLCHAIN='local'; $env:GOMAXPROCS='2'; $env:GOFLAGS='-p=2'
+$env:CARGO_BUILD_JOBS='2'
+git status --short
+Get-Content CLAUDE.md
+Get-Content docs/PANEL_FRAME_DESIGN.md
+Get-Content docs/PANEL_FRAME_REVIEW.md
+rg -n 'jump_to_frame|switchbuf' .tests/editor-deps/lazy/nvim-dap/lua/dap/session.lua
+Get-Content .tests/editor-deps/lazy/nvim-dap-ui/lua/dapui/util.lua
+Get-Content nvim_forge/lua/ide/controls.lua
+Get-Content nvim_forge/lua/ide/state.lua
+npx.cmd --yes @fission-ai/openspec@1.13.2 list --json
+npx.cmd --yes @fission-ai/openspec@1.13.2 context --json
+npx.cmd --yes @fission-ai/openspec@1.13.2 list --specs
+npx.cmd --yes @fission-ai/openspec@1.13.2 new change pilot-bordered-locals-layout
+npx.cmd --yes @fission-ai/openspec@1.13.2 status --change pilot-bordered-locals-layout --json
+npx.cmd --yes @fission-ai/openspec@1.13.2 instructions proposal --change pilot-bordered-locals-layout --json
+npx.cmd --yes @fission-ai/openspec@1.13.2 instructions specs --change pilot-bordered-locals-layout --json
+npx.cmd --yes @fission-ai/openspec@1.13.2 instructions design --change pilot-bordered-locals-layout --json
+npx.cmd --yes @fission-ai/openspec@1.13.2 instructions tasks --change pilot-bordered-locals-layout --json
+npx.cmd --yes @fission-ai/openspec@1.13.2 instructions apply --change pilot-bordered-locals-layout --json
+```
+
+Чтение pinned sources дополнено official GitHub DAP UI windows/init и Neovim
+api-floatwin; реализация использует public dapui.open/close и наблюдаемый native
+buffer, не dapui.elements. New artifacts/root проверены до записи. Согласие на
+продолжение/реализацию уже дано владельцем; повторного approval нет.
+
+```powershell
+& .tools/neovim/windows-x64/bin/nvim.exe -l tests/e2e/frame-layout.test.lua > .tests/frame-layout-red.txt 2>&1
+# После реализации — отдельные probes win, win2..win5; не все были зелёными.
+& .tools/neovim/windows-x64/bin/nvim.exe -l tests/e2e/frame-layout.test.lua > .tests/frame-layout-win5.txt 2>&1
+docker info --format '{{.OSType}}'
+docker image inspect forge-nvim-tests:ubuntu24.04-nvim0.12.2 --format '{{.Id}}'
+docker compose -f tests/containers/compose.yaml -f tests/containers/limits.yaml run --rm --no-deps --pull never --name forge-nvim-frame-pilot --entrypoint nvim ubuntu -l tests/e2e/frame-layout.test.lua > .tests/frame-layout-ubuntu.txt 2>&1
+# Session probes ubuntu2/session-probe/ubuntu-final/ubuntu-restore сохранены.
+```
+
+Source RED — отсутствует команда. Win2 — ранний Enter в picker, backend не
+запускался. Win3 — IDE-108 INFO/hit-enter. Win4 — неверное ожидание modified
+при штатном autosave; текст правки был на месте. Ubuntu early session probe
+не сохранил sessionfile, причина не локализована; итоговая проверка сильнее:
+actual buffer/filetype,8 start/save cycles и настоящее source session.
+Unescaped % в session filename в одном probe исправлен fnameescape в тесте.
+
+Финальный subset runner задан .tests/frame-registry.lua (и копия в
+.tests/ubuntu/frame-registry.lua) как return таблицы5 записей suite='e2e':
+frame-layout.test.lua240s, debug-panels.test.lua300s, panel-frame.test.lua210s,
+tool-panels.test.lua300s, debug-focus-order.test.lua180s; все в tests/e2e.
+
+```powershell
+& .tools/neovim/windows-x64/bin/nvim.exe -l tests/run.lua e2e --registry .tests/frame-registry.lua > .tests/frame-regression-windows.txt 2>&1
+Copy-Item .tests/report.json .tests/frame-regression-windows.json
+Copy-Item .tests/frame-registry.lua .tests/ubuntu/frame-registry.lua
+docker compose -f tests/containers/compose.yaml -f tests/containers/limits.yaml run --rm --no-deps --pull never --name forge-nvim-frame-regression --entrypoint nvim ubuntu -l tests/run.lua e2e --registry .tests/frame-registry.lua > .tests/frame-regression-ubuntu.txt 2>&1
+Copy-Item .tests/ubuntu/report.json .tests/frame-regression-ubuntu.json
+Copy-Item .tests/logs .tests/frame-regression-windows-logs -Recurse
+Copy-Item .tests/ubuntu/logs .tests/frame-regression-ubuntu-logs -Recurse
+& .tools/neovim/windows-x64/bin/nvim.exe -l tests/run.lua unit trace > .tests/frame-quick-windows.txt 2>&1
+Copy-Item .tests/report.json .tests/frame-quick-windows.json
+docker compose -f tests/containers/compose.yaml -f tests/containers/limits.yaml run --rm --no-deps --pull never --name forge-nvim-frame-quick --entrypoint nvim ubuntu -l tests/run.lua unit trace > .tests/frame-quick-ubuntu.txt 2>&1
+Copy-Item .tests/ubuntu/report.json .tests/frame-quick-ubuntu.json
+python -B .tests/frame-audit.py
+python -B tests/diagnostics/render-ui.py .tests/editor-e2e/45286115031700/ui-redraw.jsonl --output .tests/editor-e2e/45286115031700/ui
+Get-FileHash -Algorithm SHA256 nvim_forge/lazy-lock.json,.tools/neovim/windows-x64/bin/nvim.exe
+npx.cmd --yes @fission-ai/openspec@1.13.2 validate --all --strict --no-interactive
+git diff --check
+```
+
+18 checks/5 files на каждой ОС;360 unit+11 trace PASS, trace1 SKIP на каждой.
+14 editor profiles на ОС: root0/signal0/quit→exited/APIerrors[]/scopes empty;
+SDK/pins/backports прежние. Native frame PNG не дорисовывался: SVG получен из
+реальных RGB cells. Module open17.70/8.48ms — single samples, idle400ms без
+layout loop. Audit сохраняет sizes/colors/window identity и source hashes в
+docs/assets/panel-frames/pilot-evidence.json; не global full/Mac/physical PASS.
+
+```powershell
+python -B .tests/frame-append.py
+git diff --check
+git diff --numstat -- nvim_forge/FIXLOG.md docs/AGENT_COMMANDS.md
+git diff --cached --check
+git commit -m "feat(panels): add an opt-in bordered Locals pilot"
+git status --short
+```
+
+Journals raw append после full byte-prefix guard; не rewriting старых записей.
+Docker Desktop/WSL/settings/prune/build/pull не выполнялись; текущий engine и
+f63a05ca…33d0 reused. Все Windows scratch/cache на F:. После restart доступна
+ForgeFramePilot; native q/Space w z/help/step/Output сохранены. Change4/6:
+физический pilot review и решение о распространении открыты, archive нет.
+Следующий roadmap шаг — конкретные сокращения после обновлённого feature review.

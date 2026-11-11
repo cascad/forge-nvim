@@ -312,6 +312,7 @@ Python реализован и проверен 2026-11-03; после возо�
 | §180 | [Files: согласованный snapshot и наблюдатели](../nvim_forge/FIXLOG.md#180-files-согласованный-snapshot-и-наблюдатели) |
 | §181 | [Files: normal snapshot отдельно от фильтра](../nvim_forge/FIXLOG.md#181-files-normal-snapshot-отдельно-от-фильтра) |
 | §182 | [IDE Logs: общая консоль и сохраняемый фокус](../nvim_forge/FIXLOG.md#182-ide-logs-общая-консоль-и-сохраняемый-фокус) |
+| §183 | [Рабочие рамки Code и Locals](../nvim_forge/FIXLOG.md#183-рабочие-рамки-code-и-locals) |
 
 ## Как читать и дополнять
 
