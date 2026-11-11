@@ -6239,3 +6239,108 @@ python -B .tests/scan-v3-plan-note.py дописывает это уточнен
 Ubuntu trace на promoted default, strict validation, evidence audit и diff check.
 Логи .tests/scan-v3-final-*.txt. Нового тяжёлого editor regression нет:
 runtime/test bytes после44+15 на ОС не менялись.
+
+
+## 94. IDE-106/107: консоль логов, native источники и restart
+
+2026-11-11, FIXLOG §182. cwd F:/repo/forge-nvim, PowerShell без profile.
+TEMP/TMP/TMPDIR/NVIM_LOG_FILE — F:/repo/forge-nvim/.tests/tmp,
+npm_config_cache — F:/forge-nvim-tmp/npm-cache, PYTHONIOENCODING=utf-8,
+GOTOOLCHAIN=local/GOMAXPROCS2/GOFLAGS-p=2/Cargo jobs2.
+
+Read-only rg/Get-Content/git status/log/diff: runtime entry, Fidget public API,
+native Neovim ui docs и pinned log modules DAP/Conform/Neotest/Neogit/Overseer/
+Mason/LSP. Получаю text stdout/stderr и exit/session_id, не живую GUI-картинку.
+Editor e2e получает grid/messages/state через RPC настоящего child Neovim;
+restart — настоящий TUI с отдельными PID и observer lifecycle, не эмуляция UI.
+
+```powershell
+npx.cmd --yes @fission-ai/openspec@1.13.2 list --json
+npx.cmd --yes @fission-ai/openspec@1.13.2 context --json
+npx.cmd --yes @fission-ai/openspec@1.13.2 list --specs --json
+npx.cmd --yes @fission-ai/openspec@1.13.2 new change add-ide-log-console
+npx.cmd --yes @fission-ai/openspec@1.13.2 status --change add-ide-log-console --json
+npx.cmd --yes @fission-ai/openspec@1.13.2 instructions proposal --change add-ide-log-console --json
+npx.cmd --yes @fission-ai/openspec@1.13.2 instructions specs --change add-ide-log-console --json
+npx.cmd --yes @fission-ai/openspec@1.13.2 instructions design --change add-ide-log-console --json
+npx.cmd --yes @fission-ai/openspec@1.13.2 instructions tasks --change add-ide-log-console --json
+npx.cmd --yes @fission-ai/openspec@1.13.2 instructions apply --change add-ide-log-console --json
+& ./.tools/neovim/windows-x64/bin/nvim.exe -l tests/diagnostics/ide-log-events.lua
+docker compose -f tests/containers/compose.yaml -f tests/containers/limits.yaml run --rm --no-deps --pull never --name forge-nvim-ide106-native-probe --entrypoint nvim ubuntu -l tests/diagnostics/ide-log-events.lua
+```
+
+Observer probes доказали history/cmdheight, не visual forwarding. Первый UI
+2PASS/1FAIL показал скрытый input из-за implicit ext_cmdline; observer снят.
+Текущий runtime не использует ui_attach. Первый fixture ожидал i вместо
+actual native c input; final test требует видимый prompt и верный режим.
+
+```powershell
+$env:FORGE_LOG_CASE='real missing Node'
+& ./.tools/neovim/windows-x64/bin/nvim.exe -l tests/e2e/ide-logs.test.lua
+Remove-Item Env:FORGE_LOG_CASE
+python -B .tests/ide106-baseline.py
+& ./.tools/neovim/windows-x64/bin/nvim.exe -l tests/e2e/ide-logs.test.lua
+& ./.tools/neovim/windows-x64/bin/nvim.exe -l tests/e2e/ide-log-sources.test.lua
+& ./.tools/neovim/windows-x64/bin/nvim.exe -l tests/e2e/ide-log-history.test.lua
+& ./.tools/neovim/windows-x64/bin/nvim.exe -l tests/e2e/debug-focus-order.test.lua
+```
+
+Baseline script распаковывает git archive84f619c/nvim_forge только внутри
+.tests/ide106-source84 и сохраняет raw journal prefix hashes. Для source replay
+FORGE_E2E_CONFIG_SOURCE указывает на этот archive. Ubuntu .tests — отдельный
+mount, поэтому archive скопирован в .tests/ubuntu/ide106-source84. Первая
+Ubuntu focus попытка не нашла archive (mount path), не считается causal RED;
+corrected ide107-source-ubuntu-mounted.txt доказывает trouble→javascript.
+Source console и focus — по1 реальному RED на ОС, exact tests/source capture.
+
+IDE-107 delay hook держит только native scheduled callbacks из диапазона
+focus_code_later, затем выпускает их без замены действий после нового выбора.
+Fixed2 cases Problems/Logs на ОС. First source suite Format prompt ожидался
+неверно (один failed root SIGTERM сохранён), затем выявлен реальный stale view
+при :ForgeLogs source в видимом component. Source refresh исправлен явно.
+Picker следует реальному Telescope/numbered UI. Debugger-statement trace
+reason=pause/allThreadsStopped=false не равен выбранному breakpoint; acceptance
+использует настоящий F9 и реальный js-debug stdout/continue.
+
+```powershell
+& ./.tests/ide106-final.ps1 > .tests/ide106-final-progress.txt 2>&1
+& ./.tools/neovim/windows-x64/bin/nvim.exe -l tests/e2e/ide-log-tail.test.lua
+Copy-Item -LiteralPath nvim_forge/lua/forge/log_sources.lua -Destination .tests/ide106-log_sources-before-tail.lua
+& ./.tests/ide106-tail-final.ps1 > .tests/ide106-post-tail-progress.txt 2>&1
+python -B .tests/ide106-audit.py > .tests/ide106-audit.txt 2>&1
+docker image inspect forge-nvim-tests:ubuntu24.04-nvim0.12.2 > .tests/ide106-image.json
+Get-FileHash -Algorithm SHA256 -LiteralPath .tools/neovim/windows-x64/bin/nvim.exe
+```
+
+Main script: source84 console1 RED Windows→Ubuntu, затем new14 + old30
+(editor/work-panels/debug-panels/tool-panels) на ОС, quick360/trace11 и strict93.
+Tail2 source RED каждой ОС сохранён отдельно. Silent echomsg fixture не создавала
+history, исключена из causal proof; final red2 использует nvim_echo/history=true.
+После reader fix повторены tail2 и весь source8 на каждой ОС. Main44 и post10
+дают46 различных checks; общий full suite не запускался. Heavy W/U строго
+последовательно. Runtime/manifest/source origins и границы версий сверены.
+
+Audit90 scoped profiles +22 TUI backend: root0/APIerrors[]/native quit/own
+scopes empty, root hard-kill нет. Три owned Windows Job cleanup завершили своих
+потомков. TUI по11 actual launches/restarts на ОС, corruption1/inactive8/active
+writers protected. Conform raw bytes unchanged; current source/driver/test,
+credentials/UTF8/limits/pins/SDK/prefixes проверены. Два auditor исправления:
+read_text нормализовал CRLF, active_after — Windows-only поле native host report.
+Другие SDK/backports/67 pins прежние. Docker без build/pull/управления Desktop/
+WSL/settings/prune; на Windows все scratch/cache на F:.
+
+```powershell
+python -B .tests/ide106-append.py
+git diff --check
+git diff --numstat -- nvim_forge/FIXLOG.md docs/AGENT_COMMANDS.md
+npx.cmd --yes @fission-ai/openspec@1.13.2 validate --all --strict --no-interactive
+python -B .tests/ide106-audit.py
+git diff --cached --check
+git commit -m "feat(logs): add a central IDE diagnostics console"
+git status --short
+```
+
+Journals raw append после проверки full prefix; старые записи не переписаны.
+Mac/physical WezTerm/clipboard не запускались, task3.2 открыт, archive нет.
+После restart сборки Space w i/:ForgeLogs доступны без подготовки новых deps.
+Следующий roadmap результат — frame pilot, затем конкретные сокращения.

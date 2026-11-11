@@ -24,6 +24,7 @@
 --     (раньше GrugFar #1 / #2 выглядели как обычные файлы);
 --   * edgy_disable НЕ ставим — edgy именно их и должен ловить.
 local TOOL_FILETYPES = {
+    'forge-logs',
     "grug-far",
     "dap-repl",
     "dapui_scopes", "dapui_watches", "dapui_stacks", "dapui_breakpoints",
@@ -199,6 +200,7 @@ return {
             --  `<leader>Pb` (вместе с другими bottom-компонентами).
             -- ===========================================================
             bottom = {
+                { title = 'IDE Logs', ft = 'forge-logs', size = { height = 0.30 }, pinned = false },
                 { title = 'SQL Results', ft = 'forge-sql', size = { height = 0.30 }, pinned = false },
                 {
                     title = "Debug Console",

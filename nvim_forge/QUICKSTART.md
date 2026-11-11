@@ -75,6 +75,7 @@ terminal в файловый цикл не входят. Из панели вы�
 | `Space w t` | Открыть/сфокусировать Tests справа |
 | `Space w r` | Открыть/сфокусировать Test Output снизу |
 | `Space w f` | Открыть/сфокусировать Search снизу |
+| `Space w i` | Общая консоль IDE Logs: ошибки, missing tools, native журналы |
 | `Space w b` | Открыть/сфокусировать Tasks снизу |
 | `Space w T` | Открыть/сфокусировать managed Terminal |
 | `Space w x` | Открыть/сфокусировать Problems/Trouble |

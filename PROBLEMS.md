@@ -10,7 +10,18 @@
 
 Маршрут и приоритеты: [рабочий план nvim_forge](docs/IDE_ROADMAP.md).
 Для новых пунктов используем следующий свободный ID `IDE-xxx`; исходный
-симптом хранится здесь, этап и состояние — в плане. Следующий ID: `IDE-107`.
+симптом хранится здесь, этап и состояние — в плане. Следующий ID: `IDE-108`.
+
+## IDE-107 — отложенный focus failed Debug забирает выбранную панель
+
+2026-11-11, E2E IDE-106: после настоящего F5 с отсутствующим Node Logs уже
+виден, но фокус возвращается в код (40430618872900). ide.dap.show_section
+планирует activities.focus_code_later, который не учитывает последующий
+явный выбор другой панели. Source84f619c воспроизвёл controlled late callback
+RED Problems на Windows/Ubuntu; current Problems/Logs по2 PASS на ОС.
+Optional predicate прежнего focus helper сохраняет новый выбор; собственный
+focus manager не добавлен. Change add-ide-log-console/IDE-LOG-1, FIXLOG §182.
+Mac/physical GUI отдельно.
 
 ## IDE-106 — обязательная общая консоль логов IDE
 
@@ -22,7 +33,10 @@ IDE и понять, что произошло, чего не хватает, ч
 ограничить хранение и обозначить его границы. Новые фоновые установки при
 просмотре не нужны. Приоритет — после текущего Files, перед рамками.
 [Требования и критерии E2E](docs/IDE_ROADMAP.md#ide-106-общая-консоль-состояния-и-логов-ide--обязательная).
-План записан; реализация/coverage пока отсутствуют.
+Реализация Windows/Ubuntu — Space w i/:ForgeLogs, native channels/status,
+bounded history/restart/corruption/IO failure, filters/report/health и readonly
+output. Source RED и по46 различных selected editor checks; FIXLOG §182,
+[руководство](docs/IDE_LOGS.md). Mac/physical GUI не проверены; full suite не заявлен.
 
 ## IDE-105 — coherent scan зацикливает native Files filter
 

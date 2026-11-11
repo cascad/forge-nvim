@@ -9793,3 +9793,104 @@ IDE-106 — обязательная общая консоль логов/сос
 missing tools/следующее действие, поиск/детали/границы хранения и E2E gate.
 Она идёт сразу после Files, перед frame pilot. Реализация ещё не начата;
 в PROBLEMS следующий свободный ID107. Это изменение плана, не новый runtime fix.
+
+
+## 182. IDE Logs: общая консоль и сохраняемый фокус
+
+2026-11-11. IDE-106/107. Спека: IDE-LOG-1/2/3/4 (ADDED), change
+add-ide-log-console. Windows/Ubuntu verified; native Mac/physical GUI открыт.
+
+**Проблема.** Владелец обязательно хочет одну консоль, где видно, что произошло,
+что не найдено или сломалось и что делать. Раньше notify/:messages/health и
+журналы плагинов открывались разными командами; lazy Fidget history не содержал
+ранние сообщения и не сохранял их после restart.
+
+**Причина/выбор.** Сначала снята карта pinned sources. Готовые Fidget history/
+Telescope полезны для уведомлений, но не покрывают early/native/persistent
+историю и source readiness. Сохранены существующие native log owners,
+registry/Edgy/controls; новые plugins, backend, SDK и pins не нужны.
+
+Первый ext_messages diagnostic Windows38188300228900/Ubuntu33615563780821
+сохранил history/cmdheight. Это оказалось слабее visual forwarding: первый
+Windows UI2PASS/1FAIL показал невидимое поле ввода. Native API неявно включает
+ext_cmdline. Observer целиком отвергнут и снят; native :messages теперь snapshot
+open/r/VimEnter/VimLeavePre с явно указанным временем получения. Обычный UI
+не перехватывается. Первоначальный PASS diagnostic не выдан за готовую фичу.
+
+**Изменение.** Space w i/:ForgeLogs: readonly bottom console, общая chronology
+времени/уровня/source/text, native file/output channels, status/path/mtime/
+bounded tail, s/f/v/c/r/Enter/y/H и общие q/Esc/help/zoom/focus/code. Явный H
+вызывает прежний :checkhealth forge. Поиск/открытие/refresh не запускают jobs,
+не устанавливают tools и не меняют native logging levels. Native оригиналы
+не переписываются, report берёт выбранный view.
+
+Notify delegate установлен до config/lazy, оригинальные args/result сохранены.
+Direct Fidget update_hook сохраняет set_content_key; progress skip_history
+не копируется. Per-session writer: current/previous128KiB,200 memory/view
+records,8 подтверждённых inactive sessions. Active/unknown PID не удаляется;
+uv.kill(pid,0) только проверяет наличие, не завершает процесс. Собственные
+файлы — единственные cleanup targets. Credentials стандартных форматов скрыты;
+opts.data/env/debug variables не собираются. Raw native logs не импортируются
+на диск recorder. Повреждённая строка/IO failure видны; сообщения остаются в памяти.
+Всего3 module store188/source90/view143 строки и интеграция в прежние границы.
+
+**Найденные ошибки до commit.** :ForgeLogs с новым source при уже видимой
+панели не вызывал component.open: property менялось, view оставался прежним.
+Команда явно обновляет view. Format fixture сначала не подтвердил ожидаемый
+длинный WARN, cleanup получил root SIGTERM; source picker fixture предполагал
+numbered input вместо actual Telescope. Исправлены именно ожидания native UI,
+первые отказы сохранены. Debugger-statement probe получил reason=pause и
+allThreadsStopped=false; pinned nvim-dap намеренно не выбирает frame для этого
+события. Реальный F9 breakpoint используется в acceptance, protocol не менялся.
+
+IDE-107: failed F5 мог запланировать возврат в код, затем отнять фокус у Logs.
+Source84f619c controlled native callback RED Problems подтверждён на Windows
+40782618094600 и Ubuntu36178789040250: trouble→javascript после release.
+Прежний focus_code_later получил optional predicate, ide.dap передаёт requester/
+Debug context. Новый явный выбор сохраняется, default других callers прежний.
+Current Problems/Logs по2 PASS. Новый focus manager/таймер/очередь не добавлены.
+
+Tail2 до final reader дал по2 RED: единственная длинная строка терялась и
+называлась пустой, native :messages начинался с orphan UTF-8 byte. Доступный
+хвост строки теперь сохраняется, начало UTF-8 выровнено, truncation обозначен.
+Первая silent echomsg fixture не добавляла history и исключена из causal proof;
+final source tests используют настоящий native nvim_echo и exact test bytes.
+
+**Проверка/E2E.** Source84: actual F5 без Node→warning с действием→нет ForgeLogs,
+по1 RED на ОС. Main new core3/source8/history1/focus2=14 checks + прежние
+editor10/work-panels6/debug-panels5/tool-panels9=30: по44 на ОС. Затем последняя
+правка только reader, tail2 и полный source8 повторно PASS Windows→Ubuntu.
+46 различных checks на ОС. Остальные runtime bytes прежние; global full suite
+не заявлен. Реальные Node missing→исправление→js-debug pause/continue без restart,
+gofmt error/native log unchanged, direct Fidget, native E492, sources/empty/
+missing, filters/report/details/health/help/zoom/reopen, live terminal без restart/
+stop, Unicode/limits/IO failure проверены.
+
+Audit90 scoped editor profiles (source/current), root exit/signal0/APIerrors[],
+native QuitPre/VimLeavePre/VimLeave, own scopes empty, root hard-kill нет.
+Ещё22 настоящих TUI backend (по11): разные session IDs, VimEnter/ready/
+VimLeavePre/VimLeave и job exit0. After restart прежняя запись сохранена,
+corrupt line обозначена, inactive8, active parent/current files сохранены.
+Три Windows owned Jobs завершили своих оставшихся потомков; natural exit всех
+descendants не утверждается. Terminal fixture останавливает только свой job.
+66 origins/driver/helper/test copies, raw Conform bytes, JSON/credentials/SDK/
+prefixes сверены. Auditor исправлен: CRLF сравниваются bytes, Windows-only
+active_after не требуется на POSIX. Quick360/trace11 на ОС, strict93.
+
+**Границы/вывод.** Консоль готова в проверенной Windows/Ubuntu области,
+Native :messages является snapshot, clipboard/клавиши GUI и Mac отдельно.
+Нет full suite/общих performance выводов/утверждения, что все отказы каждого
+backend покрыты. 67 pins/4 backports и Windows SDK74AFF15B…C6AD9 прежние.
+Docker image f63a05ca…33d0 переиспользован без build/pull, Desktop/WSL/settings/
+prune не управлялись. Windows temp/cache F:. Change не архивируется до Mac/
+physical gate. Сборку достаточно перезапустить, новых deps у консоли нет.
+
+После commit следующий пользовательский результат — ограниченный frame pilot
+IDE-076. Затем конкретный список оставить/убрать/заменить IDE-080 и небольшие
+упрощения. Редкие assert/старые timeout без новых evidence — отдельная очередь.
+
+**Файлы.** forge/log_store/log_sources/logs, init/keymaps, ide registry/
+controls/activities/dap и Edgy/Fidget;5 permanent E2E и явный rejected diagnostic,
+registry, OpenSpec artifacts/verification, IDE_LOGS/IDE_LOG_SOURCES/manual,
+README/QUICKSTART/PANEL_KEYS/FEATURE_REVIEW/roadmap/PROBLEMS/HISTORY/commands.
+Raw reports в ignored .tests, append-only prefix guard ide106-prefix.json.

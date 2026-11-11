@@ -63,7 +63,7 @@ return {
     {
         "j-hui/fidget.nvim",
         event = "LspAttach",
-        opts = {
+        opts = function() return {
             progress = {
                 display = {
                     progress_icon = { pattern = "dots" },
@@ -72,8 +72,21 @@ return {
             },
             notification = {
                 window = { winblend = 0, border = "rounded" },
+                -- spec: IDE-LOG-2. Direct Fidget route сохраняет native dedup.
+                configs = {
+                    default = vim.tbl_extend('force', require('fidget.notification').default_config, {
+                        update_hook = function(item)
+                            require('fidget.notification').set_content_key(item)
+                            if not item.skip_history then
+                                local level = item.style == 'ErrorMsg' and vim.log.levels.ERROR
+                                    or item.style == 'WarningMsg' and vim.log.levels.WARN or vim.log.levels.INFO
+                                require('forge.log_store').record(item.message, level, 'Fidget')
+                            end
+                        end,
+                    }),
+                },
             },
-        },
+        } end,
     },
 
     -- =========================================================

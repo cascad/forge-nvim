@@ -72,11 +72,17 @@ end
 --                | "stacks" | "threads" | "breakpoints"
 -- @param enter   boolean — ставить ли фокус в debug-окно (иначе фокус в код)
 function M.show_section(section, enter, reuse_terminal)
+    -- spec: IDE-LOG-1. Поздний возврат не отменяет новый явный выбор панели.
+    local requester=vim.api.nvim_get_current_win()
+    local function owns_focus()
+        return vim.api.nvim_get_current_win()==requester
+            or activities.is_debug_buffer(vim.api.nvim_get_current_buf())
+    end
     activities.close_activity("debug")
 
     local mod = ide()
     if not mod then
-        activities.focus_code_later()
+        activities.focus_code_later(owns_focus)
         return
     end
 
@@ -107,7 +113,7 @@ function M.show_section(section, enter, reuse_terminal)
         end
         activities.focus_later(OUTPUT_FT[section], activities.is_debug_buffer)
     else
-        activities.focus_code_later()
+        activities.focus_code_later(owns_focus)
     end
 end
 

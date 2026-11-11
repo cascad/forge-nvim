@@ -18,6 +18,8 @@ vim.g.loaded_node_provider = 0
 -- VimScript+Python — таких у нас нет.
 vim.g.loaded_python3_provider = 0
 
+-- spec: IDE-LOG-2/4. Ранние сообщения до config/lazy также доступны в IDE Logs.
+require('forge.logs').setup()
 require("config.ru_keys").setup()
 require("config.options")
 require("config.keymaps")

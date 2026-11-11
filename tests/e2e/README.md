@@ -21,6 +21,16 @@
 
 ## Запуск на целевых машинах и внутри VM
 
+IDE Logs (IDE-106/107): `nvim -l tests/e2e/ide-logs.test.lua`,
+`ide-log-sources.test.lua`, `ide-log-history.test.lua`, `ide-log-tail.test.lua`,
+`debug-focus-order.test.lua`. Настоящие missing Node→исправление→js-debug,
+gofmt error/native log, Fidget, native E492, источники/фильтры/report/help/zoom,
+живой terminal без restart/stop, Unicode/размер/IO failure и native TUI quit/
+relaunch/повреждённая история/8 inactive sessions. Source84 console missing и
+late Problems focus RED сохранены. [Пользовательские команды/лимиты](../../docs/IDE_LOGS.md).
+Выбранные source/tail профили не заменяют full suite или Mac/physical GUI;
+итоговые результаты — verification change add-ide-log-console.
+
 IDE-FILE-5: `nvim -l tests/e2e/file-scan-order.test.lua`,7 native cases.
 §180: Windows/Ubuntu current7/7 после source RED, включая old root, old
 partial/new root, pending folder/full refresh и newer partial/pending full

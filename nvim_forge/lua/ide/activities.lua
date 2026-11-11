@@ -14,6 +14,7 @@ local M = {}
 -- ------------------------------------------------------------------
 
 local tool_filetypes = {
+    ['forge-logs'] = true,
     ['forge-sql'] = true,
     ["neo-tree"] = true,
     ["dap-repl"] = true,
@@ -193,10 +194,14 @@ function M.focus_later(ft, predicate)
     end)
 end
 
-function M.focus_code_later()
+function M.focus_code_later(owns_focus)
+    local function focus()
+        if owns_focus and not owns_focus() then return true end
+        return M.focus_code_window()
+    end
     vim.schedule(function()
-        if M.focus_code_window() then return end
-        vim.defer_fn(M.focus_code_window, 50)
+        if focus() then return end
+        vim.defer_fn(focus, 50)
     end)
 end
 

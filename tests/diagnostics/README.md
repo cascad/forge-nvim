@@ -1,5 +1,19 @@
 # Диагностика native terminal и CLI
 
+## IDE-106: источники общей консоли и отвергнутый observer
+
+`nvim -l tests/diagnostics/ide-log-events.lua` — явная проверка native
+subscription в own Forge child. Первые Windows/Ubuntu profiles сохранили
+:messages и cmdheight, но это не проверка визуального forwarding. ext_messages
+неявно включает ext_cmdline; первый console prototype сделал поле ввода
+невидимым и полностью снят. Эта диагностическая подписка не применяется в runtime.
+
+Текущая консоль использует notify delegate, documented Fidget hook и native
+:messages snapshots. [Карта источников и evidence](../../docs/IDE_LOG_SOURCES.md),
+[пользовательские команды](../../docs/IDE_LOGS.md). Permanent regressions:
+ide-logs/ide-log-sources/ide-log-history/ide-log-tail/debug-focus-order в e2e.
+Mac/physical GUI — отдельный непроверенный gate.
+
 ## IDE-104: созданный child отсутствует в раскрытом Files
 
 Обычный `file-explorer.test.lua` при ошибке locator сохраняет

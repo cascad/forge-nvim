@@ -10,6 +10,7 @@
 [E2E и команды прогонов внутри VM](tests/e2e/README.md).
 [Команды агента и формат получаемых результатов](docs/AGENT_COMMANDS.md).
 [Клавиши рабочих панелей Space w](nvim_forge/QUICKSTART.md#общий-маршрут-рабочих-панелей--space-w).
+[Общая консоль логов IDE](docs/IDE_LOGS.md): `Space w i` / `:ForgeLogs`.
 [Поиск, native fzf и наблюдаемый Lua fallback](docs/SEARCH.md).
 [Фактическая матрица языков и следующие шаги](docs/LANGUAGE_MATRIX.md).
 [Bash: язык, запуск файла и Tests](docs/BASH_WORKFLOW.md).

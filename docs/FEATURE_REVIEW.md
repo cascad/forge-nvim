@@ -101,10 +101,15 @@ SDK binaries/pins прежние, Mac/GUI открыт.
 ## Где наслоения заслуживают проверки
 
 IDE-106 (требование владельца 2026-11-11) — общая консоль логов и состояния
-IDE. До реализации снять карту native logs/notifications/health/missing tools
-и готовых UI. Пользовательский результат — одна точка диагностики с причиной
-и действием; источник подробностей остаётся у соответствующей подсистемы.
-Обязательная фича стоит перед frame pilot; [план](IDE_ROADMAP.md#ide-106-общая-консоль-состояния-и-логов-ide--обязательная).
+IDE. [Карта native источников](IDE_LOG_SOURCES.md) снята до реализации.
+§182: три небольших module (store188/source90/view143 строк) и интеграция в
+прежний registry/Edgy/controls; новые deps/SDK/pins не добавлены. Bounded
+per-session recorder нужен для early/persistent сообщений; native подробности
+остаются у своих backend, читаются явно ограниченным хвостом. Таймер/polling,
+свой layout owner и перехват UI не нужны. Отвергнут ext_messages observer,
+скрывавший native input. IDE-107 исправлен optional predicate прежнего focus
+helper после source84 RED, без второго focus manager. Фича проверена Windows/
+Ubuntu; Mac/GUI открыт. [Команды/лимиты](IDE_LOGS.md), [очередь](IDE_ROADMAP.md).
 
 | Участок | Наблюдение | Что проверить до изменения |
 |---|---|---|

@@ -14,6 +14,7 @@
 | Search / Tasks | `Space w f` / `Space w b` |
 | Terminal | `Space w T` (заглавная T) |
 | Problems / Trouble | `Space w x` |
+| IDE Logs — общая консоль | `Space w i` / `:ForgeLogs` |
 
 | Действие в рабочей панели | Клавиши |
 |---|---|
@@ -53,6 +54,10 @@ Trouble: `Space xx` — diagnostics, `Space xQ` — Quickfix; `zo/zc` — рас
 
 Files `y/p`, `c`, `d` и защита несохранённых правок —
 [краткий workflow](FILES_WORKFLOW.md).
+
+IDE Logs: s — источник, f — текстовый фильтр, v — уровень, c — сброс,
+r — обновить, Enter — детали, y — отчёт, H — :checkhealth forge.
+[Источники, история и ограничения](IDE_LOGS.md).
 
 Windows/Ubuntu: native E2E. Mac и физическая доставка клавиш WezTerm проверяются
 отдельно; наличие одинаковой привязки не является результатом GUI-проверки.

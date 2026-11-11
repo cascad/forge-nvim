@@ -305,6 +305,12 @@ local default_components = {
         is_open = function() return any_window_with_ft("OverseerList") end,
     },
     {
+        id = 'logs', slot = 'bottom', title = 'IDE Logs', filetypes = { 'forge-logs' },
+        open = function() require('forge.logs').open() end,
+        close = function() require('forge.logs').close() end,
+        is_open = function() return require('forge.logs').visible() end,
+    },
+    {
         id = 'sql.results', slot = 'bottom', title = 'SQL Results', filetypes = { 'forge-sql' },
         open = function() require('ide.sql').open() end,
         close = function() require('ide.sql').close() end,

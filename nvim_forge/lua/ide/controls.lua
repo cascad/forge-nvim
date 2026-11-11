@@ -5,7 +5,7 @@ local active_win
 local pending_panel
 local work = { ['neotest-summary']='tests', ['neotest-output-panel']='tests_output',
     ['grug-far']='search', OverseerList='tasks_output', ['forge-sql']='sql.results',
-    toggleterm='terminal', trouble='trouble' }
+    toggleterm='terminal', trouble='trouble', ['forge-logs']='logs' }
 local backend_maps = {}
 local search_actions = { Goto=true, Open=true, ['Open Next']=true, ['Open Prev']=true, Preview=true }
 local titles = {
@@ -13,7 +13,7 @@ local titles = {
     dapui_breakpoints = 'Breakpoints', ['dap-repl'] = 'Output / REPL',
     dapui_console = 'Debug Console', ['dap-terminal'] = 'Debug Terminal',
     aerial = 'Outline', ['neo-tree'] = 'Files', NeogitStatus = 'Git',
-    ['neotest-summary']='Tests', ['neotest-output-panel']='Test Output',
+    ['neotest-summary']='Tests', ['neotest-output-panel']='Test Output', ['forge-logs']='IDE Logs',
     ['grug-far']='Search', OverseerList='Tasks', ['forge-sql']='SQL Results',
     toggleterm='Terminal', trouble='Problems / Trouble',
 }
@@ -146,6 +146,7 @@ function M.tasks() show_work('tasks_output') end
 function M.sql_results() show_work('sql.results') end
 function M.terminal() show_work('terminal') end
 function M.problems() show_work('trouble') end
+function M.logs() show_work('logs') end
 
 -- Перед native действием вернуть выбранный cursor в обычное окно backend.
 -- Grug-far ищет окно через bufwinid; его карты ввода текста не трогаем.
@@ -289,6 +290,7 @@ function M.help()
         't / r           Tests / Test Output',
         'f / b           Search / Tasks',
         'T / x           Terminal / Problems',
+        'i               IDE Logs — сообщения и подробные журналы',
         'q               скрыть текущую панель',
         'z               развернуть / вернуть',
         '?               эта подсказка', '',
@@ -330,6 +332,10 @@ function M.help()
         lines[#lines + 1] = 'Terminal: i — ввод; Ctrl-\\ Ctrl-n / Esc Esc — normal.'
         lines[#lines + 1] = 'q скрывает окно с живым job; Space w T возвращает терминал.'
         lines[#lines + 1] = 'Ctrl-t / Space tt — прежний toggle; F7 — в код.'
+    elseif ft(source) == 'forge-logs' then
+        lines[#lines + 1] = 'IDE Logs: s — источник, f — текст, v — уровень, c — сброс.'
+        lines[#lines + 1] = 'r — обновить, Enter — детали, y — отчёт, H — health.'
+        lines[#lines + 1] = '/ — обычный поиск; Space w i возвращает консоль.'
     elseif ft(source) == 'trouble' then
         lines[#lines + 1] = 'Problems: Enter — перейти, zo/zc — раскрыть/свернуть.'
         lines[#lines + 1] = 'Space xx/xQ — diagnostics/Quickfix; g? — native справка.'
