@@ -4,6 +4,7 @@ package.path=root..'/tests/lib/?.lua;'..package.path
 local T=require('check')
 T.check('SELF: OUTPUT-RESIZE native terminal padding preserves semantic history',function()
   local dir=root..'/.tests/output-resize/'..tostring(vim.uv.hrtime());vim.fn.mkdir(dir,'p')
+  assert(vim.uv.fs_copyfile(root..'/tests/e2e/output-resize.test.lua',dir..'/output-resize.test.lua'))
   local result=vim.system({vim.v.progpath,'-l',root..'/tests/diagnostics/output-toggle.lua','--trace','--resize'},
     {cwd=root,text=true,timeout=180000,env={NVIM_LOG_FILE=dir..'/controller.log'}}):wait()
   vim.fn.writefile(vim.split((result.stdout or '')..(result.stderr or ''),'\n'),dir..'/child.log')
@@ -21,6 +22,11 @@ T.check('SELF: OUTPUT-RESIZE native terminal padding preserves semantic history'
   local before,after=attempt.before[1],attempt.after[1]
   T.eq(before.buf,after.buf);T.eq(before.channel,after.channel)
   assert(not after.text:find(before.text,1,true),'Fixture did not exercise raw padding mismatch')
+  local resize=read('output-resize.json')
+  T.eq(resize.before.buf,before.buf);T.eq(resize.after.buf,after.buf)
+  T.eq(resize.before.win,resize.after.win);T.eq(resize.after.lines,35)
+  assert(resize.ready and resize.after.height<resize.before.height and resize.after.first==1
+    and resize.after.rows==resize.after.view and resize.after.rows<resize.before.rows,'Native viewport/refresh precondition missing')
   for _,marker in ipairs({'POLICY_BEFORE 42','POLICY_STDERR'}) do
     assert(before.text:find(marker,1,true) and after.text:find(marker,1,true),'Meaningful stdout lost')
   end

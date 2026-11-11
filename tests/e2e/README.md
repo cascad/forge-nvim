@@ -56,6 +56,26 @@ initialized→hide интервал: если pending800ms окно пропущ
 
 Для Ubuntu на Windows с запущенным Docker Desktop в режиме Linux containers:
 
+Опциональные ограничения для последовательных fixture-прогонов: добавь
+`-f tests/containers/limits.yaml` после основного compose-файла. Это2 CPU,
+3 GiB RAM,256 PID и2 Go/Cargo build jobs; engine должен уже работать.
+Проверенный prepared image можно использовать без build/download:
+
+```sh
+docker compose -f tests/containers/compose.yaml -f tests/containers/limits.yaml run --rm --no-deps --pull never --entrypoint nvim ubuntu -l tests/e2e/project-session.test.lua
+docker compose -f tests/containers/compose.yaml -f tests/containers/limits.yaml run --rm --no-deps --pull never --entrypoint nvim ubuntu -l tests/e2e/session-legacy.test.lua
+docker compose -f tests/containers/compose.yaml -f tests/containers/limits.yaml run --rm --no-deps --pull never --entrypoint nvim ubuntu -l tests/e2e/output-resize.test.lua
+```
+
+2026-11-11 (§170): под этими лимитами прошли31 native editor checks/25 profiles
+и7 Python CLI contract vectors. Это session/legacy5, focus/DAP/Output/language
+targeted regression22, Debug toggle2, startup visibility1 и resize1; полный
+language/full suite здесь не заявляется. Все editor roots exit/signal0,
+APIerrors[], own scopes empty;4 оставшиеся собственные child groups потребовали
+graceful SIGTERM при scope cleanup, не «все потомки вышли сами». Windows native
+assert observer на Linux даёт отдельный ожидаемый SKIP. Quick358 и trace11
+прошли на обеих ОС. Mac/GUI и исходный Docker caller IDE-087 остаются открытыми.
+
 ```sh
 docker compose -f tests/containers/compose.yaml run --build --rm ubuntu quick
 docker compose -f tests/containers/compose.yaml run --build --rm ubuntu e2e

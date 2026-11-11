@@ -8747,3 +8747,87 @@ tests/lib/native_assert.lua, query-only метод process_scope_windows,
 tests/e2e/native-assert.test.lua и control fixture, registry/README,
 docs/NATIVE_ASSERT_DIAGNOSTICS.md, PROBLEMS/IDE_ROADMAP/HISTORY/AGENT_COMMANDS,
 test-only OpenSpec change.
+
+
+## 170. Ubuntu gates и native resize readiness
+
+Дата: 2026-11-11. Проверка переносимости IDE-088/090/091/093/095/096;
+новый IDE-098, test-only change wait-for-terminal-resize-refresh (skip_specs).
+Проверены прежние IDE-PANEL-12/13/14/15; product delta/SDK/pins не менялись.
+
+**Что было.** После Windows исправлений оставались Ubuntu gates для focus,
+Debug и native project/session. Сегодня read-only проверка обнаружила уже
+работающий Linux engine28.5.1 и prepared image8a6b73261d91. Desktop/WSL агент
+не запускал, не останавливал и не перенастраивал; контейнеры без сети, без
+build/pull, по одному,2CPU/3GiB/256pids, Go/Cargo jobs2. Лимиты live container
+подтверждены inspect:2000000000 NanoCpus/3221225472 bytes/256/network none.
+
+**Найденная проблема IDE-098.** Первый Ubuntu output-resize на source72cb336
+дал FAIL «Fixture did not exercise raw padding mismatch». Реальная программа,
+редактор и вложенный controller завершились0; buffer/channel, markers и пауза
+сохранены. Native trace показал окно13→10, а early after всё ещё13 buffer rows;
+позже тот же buffer имеет9 rows. Наличие окна не означает завершения terminal
+refresh. В pinned terminal.c обновление buffer отложено через refresh_timer;
+resize использует text view height, которая исключает строку winbar.
+
+**Изменение и причина выбора.** Только существующий opt-in diagnostic input
+wrapper после nvim_ui_try_resize и перед q ждёт observable меньшего viewport
+и actual buffer rows через public getwininfo. Fixture содержит2 stdout marker
+lines, нет wraps/scrollback, topline1; это не правило для общего Output.
+Geometry/IDs/ready/error сохраняются в output-resize.json. Strict raw substring
+mismatch остаётся, дополнительно проверены shrink/refresh и тот же buffer.
+Общие state/reopen/history_preserved и product файлы не изменены, OS branch,
+sleep, новый timer или увеличенный timeout не добавлены.
+
+Первый wait-prototype ошибочно требовал rows==nvim_win_get_height. Native
+geometry после5s: UI35, window10, buffer9 — terminal уже обновился; winbar
+занимает оставшуюся строку. Этот prototype и отдельный instrumented failure
+сохранены. Predicate исправлен на actual visible text viewport, без ослабления
+raw history assertion. Не считать эти ошибки фикстуры product stdout loss.
+
+**RED/регресс.** Primary source FAIL/log/result/source SHA сохранены до edit в
+.tests/ubuntu-gates/ide098-first-failure; исходный helper и product byte content
+те же. Final один real CodeLLDB resize E2E PASS Windows и Ubuntu: before13
+rows→after9, actual smaller viewport, те же buffer/channel/session и оба markers;
+raw prefix mismatch обязателен. Пять прежних unit loss/padding vectors PASS,
+внутренние пустые строки/REPL не нормализованы дополнительно. Actual diagnostic
+и E2E source copies в profiles совпадают с финальными файлами.
+
+**Ubuntu gate результата.** Повторены все22 checks IDE-088: code-focus3,
+dap-output-policy3, dap-output4, debug-panels4, test-runner5 и по1 default
+Python/Node/Rust debug. Это16 native profiles. Также Debug toggle2, startup
+visibility1 (actual pending-window/hide→breakpoint/Locals42/same PTY), native
+project/session1 + legacy4, resize1. Итого31 editor checks/25 profiles и7 CLI
+Python filter vectors PASS. Session cases дают5 host profiles/12 настоящих
+backend instances; layout/files/cursors/unsaved write/new-project/focus сохранены.
+
+У всех25 root exit/signal0, APIerrors[], последние QuitPre/VimLeavePre/VimLeave,
+63 runtime/pin/patch source bytes совпадают. Все own scopes пусты. В4 profiles
+(Rust/debug/resize) POSIX scope завершил оставшуюся собственную child group
+через graceful SIGTERM; это не natural exit всех потомков. Root SIGTERM/SIGKILL
+нет. Эти stages сохранены в evidence, не скрыты общим PASS. Windows-only
+native assertion observer на Linux явно SKIP — это не покрытие IDE-097.
+
+Quick358/14files и trace11/2files прошли на Windows и Ubuntu; strict85/85.
+Windows affected resize1 + unit5 PASS. Full language/full suite, Mac и GUI здесь
+не запускались. Старые failure/SDK/Docker причины не объявляются исправленными.
+
+**Воспроизводимость.** Проверенный resource override опубликован как optional
+tests/containers/limits.yaml; resolved Compose JSON полностью совпал с private
+override реальных запусков. Основной compose и default ресурсы не меняются.
+Явные команды без build/pull в tests/e2e/README. Image остаётся
+sha256:8a6b73261d91d7e194c9c31a128c9047741bad930da70b518e4b010d0882d309,
+официальный Linux Neovim0.12.2. Windows SDK SHA74AFF15B…C6AD9 прежний.
+После прогонов engine отвечает28.5.1, own test containers отсутствуют.
+
+**Вывод.** Закрыты доступные Ubuntu gates, готов один общий resize regression
+без платформенных исключений. Mac/GUI gates сохраняются отдельно; SQL references,
+Bash backend choice и IDE-097 caller не закрыты. Primary Docker caller IDE-087
+не установлен. Prefix bytes/SHA FIXLOG/commands сохранены, append-only проверен.
+Evidence/audit: .tests/ubuntu-gates/evidence.json и audit.py; первые отказы и
+неудачные prototypes сохранены отдельно от green reports.
+
+**Файлы.** tests/diagnostics/output-toggle.lua, tests/e2e/output-resize.test.lua,
+optional tests/containers/limits.yaml, tests README, current gate tasks,
+PROBLEMS/IDE_ROADMAP/FEATURE_REVIEW/CODE_WINDOW_REVIEW/PROJECT_SESSION_REVIEW,
+HISTORY/AGENT_COMMANDS и test-only OpenSpec change.

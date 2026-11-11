@@ -31,25 +31,30 @@ IDE-001 параллельно ждёт диагностических данн�
 | Готово Windows/Ubuntu | IDE-086: общая политика Output | Один resolver, сохранение REPL/PTY/history; по 19 native checks и 13 clean exits/scopes; §153. Mac открыт |
 | Приоритетное расследование | IDE-087: остановка Docker backend | Второй event 17:45:10 совпал с native qa! Windows, root/scope завершились штатно. [Native PPID гипотеза и границы](WINDOWS_PROCESS_DIAGNOSTICS.md), §154/157; caller неизвестен, Desktop/WSL агент не управляет |
 | Обзор готов Windows/Ubuntu | Поиск окна кода | [Сравнение и native evidence](CODE_WINDOW_REVIEW.md): по 5 profiles, роли find/create/relocate различаются; полный merge не нужен (§155) |
-| Windows готов, Ubuntu gate открыт | IDE-088: focus-only выбор окна кода | По state predicate и прежнему tool filter; 3 source RED, 22 Windows checks и 16 clean profiles (§156). Ubuntu ждёт доступный engine и проверку IDE-087; Mac открыт |
+| Готово Windows/Ubuntu; Mac открыт | IDE-088: focus-only выбор окна кода | По state predicate и прежнему tool filter;3 source RED и22 Windows checks (§156). Ubuntu22 checks/16 native profiles PASS (§170), root0/APIerrors[]/own scopes empty |
 | Native proof готов | IDE-087/089: process ancestry | Read-only live age inversion + exact pinned C fragment: valid PASS/stale RED; guard prototype 4 native PASS, own Jobs clean (§158). Тогда SDK не менялся; следующий шаг выполнен в §159, Docker caller открыт |
 | Готово Windows | IDE-089: Windows SDK creation-time guard | Два закреплённых patch, Schema 2, staging/rollback; actual source guard 4 PASS + 3 expected upstream RED, Windows 49 PASS/24 captured editor profiles. SDK выбран; после продвижения quick 353, SDK CLI 11, lifecycle 2 PASS; strict 75 (§159). Linux/macOS backend прежний |
-| Готово Windows; Ubuntu/Mac gates открыты | IDE-090: delayed Debug reopen | Source startup-hide RED → PASS, obsolete watchdog удалён; async stopped guard исправлен. Hidden→реальный breakpoint/Locals42→same PTY проверены;22 checks/16 profiles, quick353/strict79 (§164). Единственность caller исторического одиночного failure не утверждается |
-| Готово Windows; Ubuntu/Mac gates открыты | IDE-091: PTY в общем Debug toggle | Две строки в существующих visibility/close routes; 2 native source RED → PASS, всего32 Windows checks/26 profiles, quick353, strict76 (§160). Toggle сохраняет channel/буфер/паузу, F5 дописывает в тот же PTY |
+| Готово Windows/Ubuntu; Mac открыт | IDE-090: delayed Debug reopen | Source startup-hide RED→Windows PASS (§164). Ubuntu running→hide→actual stopped/Locals42→same PTY PASS и22 соседних checks (§170). Единственность caller исторического одиночного failure не утверждается |
+| Готово Windows/Ubuntu; Mac открыт | IDE-091: PTY в общем Debug toggle | Две строки в прежних routes,2 Windows source RED→PASS (§160); Ubuntu оба native CodeLLDB cases PASS (§170). Toggle сохраняет channel/буфер/паузу, F5 дописывает в тот же PTY |
 | Готово Windows CLI | IDE-092: staged SDK source | Проверка путей/patch diff относительно HEAD; CLI staged RED → оба staged/unstaged PASS до source mutation, SDK CLI12/quick353/strict76 (§161). Binary прежний, SDK не пересобирался |
 | Capture готов, механизм воспроизведён | IDE-090: delayed startup reopen | §162: trace/failed attempts, native watchdog caller1419 после hide. Runtime исправлен и permanent regression добавлен в §164 |
-| Готово Windows test harness | IDE-093: viewport padding в history assertion | Native CodeLLDB resize source RED → PASS; terminal-only semantic compare,5 loss/padding vectors и6 native checks PASS, raw data прежние. Quick358/14files/strict80 (§165), Ubuntu/Mac не запускались |
+| Готово Windows/Ubuntu test harness | IDE-093: viewport padding в history assertion | Terminal-only semantic compare,5 loss/padding vectors (§165); Ubuntu native resize PASS после readiness fix IDE-098 (§170), Windows также PASS. Raw data не переписаны, Mac не запускался |
 | Готово Windows test harness | IDE-094: dangling Windows junction | Source malformed RED →3 native link PASS, ещё10 lifecycle/descendants PASS и1 POSIX-only SKIP. Четыре owned остатка удалены; negative debug cleanup теперь проходит (§163), quick353/strict78. Ubuntu/Mac не запускались |
-| Готово Windows | Project/session native baseline, IDE-080 | Настоящий TUI: quit/relaunch/Space qs и A→B→A,4 backend PID,3 files/2 tabpages/cursors/unsaved edit/panels; permanent E2E +12 framework checks PASS, quick358/strict81 (§166). [Границы](PROJECT_SESSION_REVIEW.md), Ubuntu/Mac открыты |
-| Готово Windows; Ubuntu/Mac gates открыты | IDE-095: фокус после project restore | Source RED→5 native focus/legacy PASS +21 соседних editor checks, quick358/trace11/strict82 (§167). Второй restore callback удалён, listed-file fallback сохранён перед reveal; production net -8 строк |
-| Готово Windows test harness | IDE-096: фильтр Python SELF suites | Общий early matcher, native source3RED/4PASS→7PASS;4 реальных wrapper PASS, targeted оставляет2 файла/5 editor cases без SELF. Quick358/trace11/strict83 (§168), Ubuntu/Mac не запускались |
+| Готово Windows/Ubuntu; Mac открыт | Project/session native baseline, IDE-080 | Настоящий TUI: quit/relaunch/Space qs и A→B→A,4 backend PID,3 files/2 tabpages/cursors/unsaved edit/panels. Windows §166, Ubuntu native §170; [границы](PROJECT_SESSION_REVIEW.md) |
+| Готово Windows/Ubuntu; Mac открыт | IDE-095: фокус после project restore | Source RED→5 Windows native cases (§167), те же5 Ubuntu PASS (§170). Второй callback удалён, listed-file fallback сохранён перед reveal; production net -8 строк |
+| Готово Windows/Ubuntu test harness | IDE-096: фильтр Python SELF suites | Общий early matcher, native source3RED/4PASS→7 Windows PASS (§168), Ubuntu7 PASS (§170). Выбранные ошибки/UTF8/no lookup/no spawn сохранены, Mac не запускался |
 | Диагностика открыта | IDE-097: native TUI wstream assert | Raw FAIL сохранён. Подготовлен [явный stack capture](NATIVE_ASSERT_DIAGNOSTICS.md),4 Windows control E2E;4 bounded original trials без assert (§169). Actual caller ещё не снят; product/SDK прежние, нужны minimal repro и native regression |
+| Готово Windows/Ubuntu test harness | IDE-098: native readiness resize fixture | Source Ubuntu FAIL→одинаковый native CodeLLDB PASS Windows/Ubuntu, actual viewport/rows и raw mismatch обязательны (§170). Shared helper/product/SDK прежние, без OS branch/sleep |
 | Отложено до готового backend | Остаток SQL workflow, IDE-062 | SQLS references provider отсутствует. Собственный binder/index/LSP fork отменён (§143); не подменять references grep и не объявлять полную SQL поддержку |
 | Затем | Остальная [матрица языков](LANGUAGE_MATRIX.md) | SQL references IDE-062, Bash DAP IDE-057; Mac/native и оставшиеся сценарии матрицы |
 | После функциональной матрицы | Упрощение архитектуры | Общее ядро, явные системные границы и setup; сокращение дублирования с сохранением E2E |
 
-IDE-090/093/094 закрыты на Windows в §164/165/163. Следующий шаг — доступные
-Ubuntu gates и оставшаяся языковая матрица, без собственного SQL binder/LSP.
+IDE-090/093/094 закрыты на Windows в §164/165/163. Доступные Ubuntu gates
+IDE-088/090/091/093/095/096 выполнены в §170:31 native editor checks/25 profiles
+и7 CLI, quick358/trace11. Найден и исправлен race readiness самого resize E2E
+(IDE-098), raw FAIL сохранён. Уже работающий image использован без build/pull;
+optional tests/containers/limits.yaml закрепляет проверенные2CPU/3GiB/256pids.
+Mac/GUI и оставшаяся языковая матрица открыты, собственного SQL binder/LSP нет.
 Read-only engine check после31d154f снова не нашёл dockerDesktopLinuxEngine;
 Desktop/WSL не запускались. Native project/session baseline завершён на Windows
 в §166: реальные разные backend, files/cursors/tabs/cwd и панели сохранены;
@@ -70,7 +75,7 @@ Ubuntu IDE-095 не запускался; Desktop/WSL агент не запус
 Read-only check23:18MSK также не нашёл pipe (.tests/ide096-engine-check.json).
 Ubuntu IDE-096 не выполнялся; SDK/client Docker не перенастраивались.
 IDE-091 исправлен отдельно (§160); источник исторического одиночного failure
-без trace не объявляется единственным. IDE-088/090/091 Ubuntu gates открыты:
+без trace не объявляется единственным. IDE-088/090/091 Ubuntu gates были открыты:
 последняя read-only проверка Linux engine не нашла pipe. Desktop/WSL агент
 не запускает/перезапускает; доступность Docker не подменяется Windows PASS.
 

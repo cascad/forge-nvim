@@ -5243,3 +5243,81 @@ CRT args, actual reports, сохранённый первичный assert и un
 FIXLOG169/commands82 добавлены raw append после prefix-size/SHA snapshot;
 git additions-only проверены. Разовые скрипты и .tests artifacts не коммитятся.
 IDE-097 открыт, SDK не пересобран; Linux/macOS native coverage не заявляется.
+
+
+## 83. Ubuntu gates, native resize и ограниченные ресурсы, 2026-11-11
+
+Рабочая папка F:/repo/forge-nvim. Windows TEMP/TMP/TMPDIR/NVIM_LOG_FILE на F:,
+PYTHONIOENCODING=utf-8, npm cache F:/forge-nvim-tmp/npm-cache, Go2/-p=2.
+Первый сводный Python pending-task print без UTF8 получил UnicodeEncodeError
+cp1251 на стрелке; повтор с UTF8 записал JSON, это не ошибка запуска Python.
+
+```powershell
+Get-ChildItem -LiteralPath '\\.\pipe\' | Where-Object {$_.Name -eq 'dockerDesktopLinuxEngine'}
+docker version --format '{{json .Server}}'
+docker ps --format '{{.Names}}: {{.Status}}'
+docker image ls --format '{{.Repository}}:{{.Tag}} {{.ID}} {{.Size}}'
+docker image inspect forge-nvim-tests:ubuntu24.04-nvim0.12.2 --format '{{json .Id}} {{json .Os}} {{json .Architecture}}'
+```
+
+Engine28.5.1 уже работал, running containers отсутствовали; image8a6b73261d91
+был готов. Только read-only проверки; Desktop/WSL lifecycle/config не менялись.
+Старые gates выбраны по текущим OpenSpec list/status/instructions apply: session,
+focus-only, Debug toggle и explicit hide. Контекст совпал с ранее прочитанным;
+неоднозначных новых product требований не вводилось.
+
+```powershell
+docker compose -f tests/containers/compose.yaml -f .tests/ubuntu-gates/limits.yaml run --rm --no-deps --pull never --name forge-nvim-ubuntu-session-20261111 --entrypoint nvim ubuntu -l tests/e2e/project-session.test.lua
+docker compose -f tests/containers/compose.yaml -f .tests/ubuntu-gates/limits.yaml run --rm --no-deps --pull never --name forge-nvim-ubuntu-legacy-20261111 --entrypoint nvim ubuntu -l tests/e2e/session-legacy.test.lua
+docker inspect forge-nvim-ubuntu-legacy-20261111 --format '{{json .State.Status}} {{.HostConfig.NanoCpus}} {{.HostConfig.Memory}} {{.HostConfig.PidsLimit}} {{json .HostConfig.NetworkMode}}'
+& ./.tests/ubuntu-gates/run.ps1
+```
+
+Private limits:2CPU/3GiB/256PID/network none, GOMAXPROCS2/GOFLAGS-p=2/
+GOTOOLCHAINlocal/Cargo2. Sequential run.ps1 вызвал code-focus, dap-output-policy,
+dap-output, debug-panels, test-runner; python-language с FORGE_PYTHON_CASE=debug
+default/project, node-language с FORGE_NODE_CASE=default F5, rust-language с
+FORGE_RUST_CASE=Rust F5 default; затем debug-toggle/startup-visibility.
+Эти25 checks PASS. Первый output-resize FAIL остановил batch; следующие файлы
+не запускались до разбора. Все argv/exit/duration сохранены results.json;
+stdout/stderr каждого suite в .tests/ubuntu-gates/<name>.txt.
+
+До edit сохранены source72cb336 и raw first FAIL в ide098-first-failure.
+Прочитан pinned terminal.c (terminal_resize, refresh_timer, refresh_scrollback).
+Window уже10, early buffer ещё13; позже9. Два wait prototypes выявили ошибочное
+равенство window height и text view: winbar занимает строку. Geometry on failure
+показала lines35/height10/rows9; default5s не увеличивался. Финальный predicate
+использует public getwininfo view, buffers/markers/raw predicate не подменяет.
+
+```powershell
+docker compose -f tests/containers/compose.yaml -f .tests/ubuntu-gates/limits.yaml run --rm --no-deps --pull never --name forge-nvim-ubuntu-resize-ready-20261111 --entrypoint nvim ubuntu -l tests/e2e/output-resize.test.lua
+& ./.tests/ubuntu-gates/finish.ps1
+powershell -NoProfile -File scripts/test.ps1 quick
+& ./.tools/neovim/windows-x64/bin/nvim.exe -l tests/run.lua trace
+npx.cmd --yes @fission-ai/openspec@1.13.2 validate --all --strict --no-interactive
+python -B .tests/ubuntu-gates/audit.py
+```
+
+Finish.ps1 сначала выполнил Windows affected resize1/unit5, затем оставшиеся
+Ubuntu python-case7, Windows native-assert observer SKIP, unit/trace. У каждого
+нового test container --rm/--pull never/--no-deps, по одному; уже готовый image
+не перестраивался. Итог Ubuntu31 editor/25 profiles+7 CLI, root0/APIerrors[]/
+own scopes empty.4 scope child groups получили graceful SIGTERM; это не root
+failure и не «все потомки вышли сами». Quick358/trace11 на каждой ОС, strict85.
+
+```powershell
+docker compose -f tests/containers/compose.yaml -f .tests/ubuntu-gates/limits.yaml config --format json
+docker compose -f tests/containers/compose.yaml -f tests/containers/limits.yaml config --format json
+docker version --format '{{json .Server.Version}}'
+docker ps --filter 'name=forge-nvim-ubuntu' --format '{{.Names}} {{.Status}}'
+```
+
+Resolved configs полностью совпали: проверенные ресурсы опубликованы optional
+limits.yaml для простого повторения. Default compose прежний, полный suite под
+этими лимитами здесь не заявляется. После всех запусков engine28.5.1 отвечает,
+own containers нет. SDK/pins/product unchanged, Linux SDK официальный.
+Audit проверяет63 sources каждого positive profile, geometry/source copies,
+source first FAIL, actual native exits/group stages, unit/trace/strict и old
+journal byte prefixes. История170/commands83 добавлены raw append с SHA guard;
+Mac/GUI не проверялись, source IDE-097/Docker failures остаются открытыми.
+Все разовые scripts/reports в .tests игнорируются Git и не коммитятся.

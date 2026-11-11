@@ -20,7 +20,28 @@ P.reopen=function(e,ft,keys)
   local input=e.input
   if resize then
     e.input=function(self,keys)
-      if not resized and keys=='q' then resized=true;self.rpc:request('nvim_ui_try_resize',{140,35}) end
+      if not resized and keys=='q' then
+        resized=true
+        local function geometry()
+          return self:lua([[local w=vim.api.nvim_get_current_win();local b=vim.api.nvim_win_get_buf(w)
+            local view=vim.fn.getwininfo(w)[1]
+            return {win=w,buf=b,ft=vim.bo[b].filetype,buftype=vim.bo[b].buftype,
+              height=vim.api.nvim_win_get_height(w),rows=vim.api.nvim_buf_line_count(b),lines=vim.o.lines,
+              first=view.topline,view=view.botline-view.topline+1,winbar=vim.wo[w].winbar~=''}]])
+        end
+        local before=geometry()
+        assert(before.ft==ft and before.buftype=='terminal' and before.first==1,'Resize requires an unscrolled terminal viewport')
+        self.rpc:request('nvim_ui_try_resize',{140,35})
+        local after
+        local ready,err=pcall(self.wait,self,'Native terminal buffer refreshed after viewport shrink',function()
+          after=geometry()
+          return after.win==before.win and after.buf==before.buf and after.lines==35
+            and after.height<before.height and after.first==1 and after.rows==after.view and after.rows<before.rows
+        end)
+        assert(vim.fn.writefile({vim.json.encode({before=before,after=after,ready=ready,error=not ready and tostring(err) or nil})},self.dir..'/output-resize.json')==0)
+        assert(ready,err)
+        assert(vim.uv.fs_copyfile(root..'/tests/diagnostics/output-toggle.lua',self.dir..'/output-toggle.lua'))
+      end
       return input(self,keys)
     end
   end

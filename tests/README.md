@@ -137,6 +137,13 @@ IDE-097: [Windows native assertion observer](../docs/NATIVE_ASSERT_DIAGNOSTICS.m
 trial: `nvim -l tests/diagnostics/native-assert.lua`, свежие owned PID/phase/stack;
 product/SDK не меняет. Нужен выбранный Windows SDK/PDB; другие ОС — SKIP.
 
+Resize history: `nvim -l tests/e2e/output-resize.test.lua` выполняет настоящий
+Rust/CodeLLDB resize и сохраняет `output-resize.json` с geometry/IDs. Перед q
+diagnostic ждёт обновления native buffer rows до меньшего text viewport;
+winbar не считается строкой терминала. Strict raw padding mismatch, markers,
+buffer/channel/session и semantic history по-прежнему обязательны. Windows
+и Ubuntu PASS (§170, IDE-098); Mac не запускался. Общий helper не менялся.
+
 **Вердикт файла** (раннер, `tests/run.lua`):
 
 | Что случилось | Вердикт |

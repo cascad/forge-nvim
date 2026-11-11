@@ -94,6 +94,8 @@ root/notices/Job cleanup проверяются, а не подменяются.
 
 Windows пять native cases PASS. Последний source replay теми же тестами дал
 main RED, legacy winfix RED, hidden restart invalid-window/hit-enter, hidden
-direct без Explorer; winfix-direct уже проходил до fix. Ubuntu/Mac/GUI gates
-открыты. Это небольшой общий restore fix; унификация всех root/interpreter
+direct без Explorer; winfix-direct уже проходил до fix. Ubuntu выполнен
+2026-11-11 (§170): те же5 cases PASS,5 private profiles/12 backend instances,
+native host0/APIerrors[]/own groups empty. Mac/GUI gates открыты.
+Это небольшой общий restore fix; унификация всех root/interpreter
 политик, active DAP при restore и остальные session клавиши сюда не входят.

@@ -1,0 +1,11 @@
+# Optional limits for sequential fixture regression on a working Linux engine.
+services:
+  ubuntu:
+    cpus: 2.0
+    mem_limit: 3g
+    pids_limit: 256
+    environment:
+      GOMAXPROCS: "2"
+      GOFLAGS: "-p=2"
+      GOTOOLCHAIN: local
+      CARGO_BUILD_JOBS: "2"

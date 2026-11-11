@@ -122,6 +122,12 @@ FORGE_WINDOW_CASE выбирает normal, float-only, terminal-only, live-marke
 session-winfix. Итог — `.tests/code-window-review.json` (Docker: под
 `.tests/ubuntu/` на хосте). Probe не включён в общий regression registry.
 
+2026-11-11: Ubuntu gate IDE-088 выполнен (§170) —3 code-focus +19 прежних
+DAP/Output/Go tests и default Python/Node/Rust debug checks, всего22 PASS,
+16 native profiles. Actual editor exit/signal0/APIerrors[]/own scopes empty,
+63 runtime/pin/patch sources совпадают; широкий merge по-прежнему не нужен.
+Docker engine уже работал, использован готовый image без build/pull/lifecycle.
+
 Native macOS/GUI, физические клавиши, настоящий DAP restart, полный autosave,
 многовкладочный restore, modified/unsaved files и tool-only startup с настоящими
 панелями остаются отдельными gates. Broad merge и изменение session cleanup

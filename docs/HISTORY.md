@@ -299,6 +299,7 @@ Python реализован и проверен 2026-11-03; после возо�
 | Запись | История проблемы и решения |
 |---|---|
 | §169 | [Native assertion: проверенный сборщик стека](../nvim_forge/FIXLOG.md#169-native-assertion-проверенный-сборщик-стека) |
+| §170 | [Ubuntu gates и native resize readiness](../nvim_forge/FIXLOG.md#170-ubuntu-gates-и-native-resize-readiness) |
 
 ## Как читать и дополнять
 

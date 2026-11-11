@@ -10,7 +10,23 @@
 
 Маршрут и приоритеты: [рабочий план nvim_forge](docs/IDE_ROADMAP.md).
 Для новых пунктов используем следующий свободный ID `IDE-xxx`; исходный
-симптом хранится здесь, этап и состояние — в плане. Следующий ID: `IDE-098`.
+симптом хранится здесь, этап и состояние — в плане. Следующий ID: `IDE-099`.
+
+## IDE-098 — resize E2E снимает terminal padding до native refresh
+
+2026-11-11, первый Ubuntu portability run на72cb336: output-resize дал FAIL
+«Fixture did not exercise raw padding mismatch». Child завершился0, markers,
+buffer/channel и пауза сохранены. Native trace: окно13→10, early after ещё13
+buffer rows; позже тот же буфер9 rows. Terminal refresh отложен, одно наличие
+окна не доказывает готовность buffer. Winbar занимает строку окна отдельно
+от text viewport; первый wait-prototype ошибочно ожидал rows==window height.
+
+§170: diagnostic ждёт actual меньшего viewport и обновления native rows через
+public getwininfo, затем выполняет прежний q/reopen. Strict raw mismatch и
+semantic markers/channel/session/cleanup не ослаблены, OS branches/sleep нет.
+Одинаковый CodeLLDB E2E Windows/Ubuntu PASS,5 loss/padding vectors PASS;
+product/helper/SDK/pins прежние. Первичный FAIL и pilot logs сохранены,
+новый change wait-for-terminal-resize-refresh. Mac не запускался.
 
 ## IDE-097 — native TUI: assert wstream после открытия вкладки
 
@@ -47,6 +63,9 @@ native source920e69e3RED/4PASS→7PASS; no lookup/no Python/no output подтв
 Первый integration FAIL (native assert) вынесен в IDE-097, повтор не объявлен
 его исправлением. Production Lua/SDK/pins прежние; Ubuntu/Mac не проверены.
 
+2026-11-11, §170: тот же native Python contract suite прошёл на Ubuntu7/7.
+Windows и Ubuntu подтверждены; Mac остаётся без реального запуска.
+
 ## IDE-095 — фокус после project/session restart возвращается в Explorer
 
 2026-11-10: native TUI baseline §166 восстанавливает три файла, два tabpages
@@ -64,6 +83,10 @@ listed-file fallback выбирает main/file до общего reveal; Help-o
 и4 legacy restart/direct cases Windows PASS; файлы/cursors/tabs/запись и новый
 проект без session сохранены. Production net -8 строк, pins/SDK прежние.
 Ubuntu/Mac gates открыты; остальные session клавиши/active DAP отдельно.
+
+2026-11-11, §170: Ubuntu native session/legacy5 PASS,5 private profiles и12
+backend instances; фокус/layout/content сохранены, host0/own scopes empty.
+Ubuntu gate выполнен; Mac/GUI и остальные session сценарии остаются открытыми.
 
 ## IDE-094 — очистка E2E профиля оставляет dangling Windows junction
 
@@ -94,6 +117,9 @@ Permanent nested CodeLLDB resize E2E source4c9eb22 RED → PASS,5 unit loss/padd
 vectors PASS,6 native targeted checks PASS. REPL и внутренние blank lines не
 trim-ятся. Quick358/14files, strict80; production/SDK прежние, Ubuntu/Mac не запускались.
 
+2026-11-11, §170: тот же native resize прошёл на Ubuntu после исправления
+readiness фикстуры IDE-098; Windows также PASS. Helper прежний, Mac не проверен.
+
 ## IDE-092 — SDK source gate пропускает staged изменения
 
 2026-11-10: diff worktree/index не видел постороннюю staged правку. Настоящий
@@ -116,6 +142,9 @@ E2E дали source RED: sidebar+PTY и только PTY (34156241548500/3416888
 strict76/76. Change fix-debug-toggle-terminal, IDE-PANEL-13;
 Ubuntu/Mac gates открыты. Это отдельный подтверждённый дефект, не доказательство
 причины IDE-090 или Docker IDE-087.
+
+2026-11-11, §170: оба Ubuntu CodeLLDB toggle cases PASS, buffer/channel/pause
+и последующий stdout сохранены. Общий22-check регресс PASS; Mac gate открыт.
 
 ## IDE-090 — Rust Debug toggle: единичный отказ скрыть sidebar после Output q
 
@@ -151,6 +180,10 @@ hidden после deadline → новый breakpoint/реальные Locals42 �
 22 Windows checks/16 profiles, quick353/strict79 PASS. Source/runtime snapshots
 сверены; Ubuntu/Mac gates открыты, historical caller без trace не объявлен единственным.
 
+2026-11-11, §170: Ubuntu startup-hide E2E PASS с фактическим pending-window
+предусловием, настоящими Locals42 и прежним PTY после breakpoint; общий22-check
+регресс также PASS. Mac/GUI и единственность исторического caller не подтверждены.
+
 ## IDE-089 — Windows Neovim: PPID-only обход принимает более старый процесс за потомка
 
 2026-11-10: exact pinned proc.c fragment в native harness получает controlled
@@ -180,6 +213,9 @@ predicate state + прежний tool filter, постоянные 3 source RED 
 время Windows (§157); Mac непроверен. F7 только фокусирует существующее окно,
 Space w 0 может создать main. Создание/guard/session cleanup не объединены.
 Change fix-code-focus-window-classification; [обзор](docs/CODE_WINDOW_REVIEW.md).
+
+2026-11-11, §170: Ubuntu повторил все22 checks,16 native editor profiles,
+root exit/signal0/APIerrors[]/own scopes empty. Ubuntu gate выполнен, Mac открыт.
 
 ## IDE-087 — Docker backend исчез во время Windows E2E
 

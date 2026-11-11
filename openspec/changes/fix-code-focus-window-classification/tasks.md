@@ -9,5 +9,5 @@
 ## 2. Интеграция
 
 - [x] 2.1 Windows quick 353 checks/13 files и strict OpenSpec 73/73, минимальный runtime diff без изменения cleanup/guard/pins/SDK проверены, Windows часть исправления закоммичена.
-- [ ] 2.2 Повторить 22 checks Ubuntu: engine исчез в 17:45:10 во время Windows, compose не подключился. IDE-087 имеет второй event и native PPID гипотезу; Desktop/WSL агент не перезапускает, gate не считается PASS по прежнему review.
+- [x] 2.2 Повторить 22 checks Ubuntu: 2026-11-11 все22 PASS,16 native editor profiles/root exit0/APIerrors[]/own scopes empty (§170). Использован уже работающий image/engine без build/pull/lifecycle; прежний Docker caller IDE-087 не установлен.
 - [ ] 2.3 Native macOS и физические клавиши проверены владельцем; до этого change не архивировать.

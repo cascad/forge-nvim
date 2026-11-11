@@ -371,13 +371,14 @@ language/test roots, interpreter/tools и save/format разобраны в
   IDE-081/082/083/084 уже выполнены; capture IDE-085 готов, причина открыта.
   IDE-086 Output policy проверен на Windows/Ubuntu (§153).
   Поиск окна кода разобран: [CODE_WINDOW_REVIEW](CODE_WINDOW_REVIEW.md),
-  по 5 native profiles Windows/Ubuntu. IDE-088 исправлен на Windows: 22 checks;
-  Ubuntu повтор остановлен отсутствием engine (IDE-087), Mac открыт.
+  по 5 native profiles Windows/Ubuntu. IDE-088:22 Windows checks (§156),
+  Ubuntu22 checks/16 native profiles повторены2026-11-11 (§170); Mac открыт.
   широкое объединение find/create/relocate отклонено по разным обязанностям.
   Удаления optional UI по-прежнему требуют выбора.
   Project/session restart получил отдельный Windows native baseline §166;
   [границы](PROJECT_SESSION_REVIEW.md). IDE-095 source RED→Windows PASS (§167):
   общий LoadPost вместо второго cleanup/open, необходимый file fallback сохранён.
+  Ubuntu native baseline и4 legacy cases также PASS2026-11-11 (§170), Mac открыт.
   Uniform interpreter/root policies ещё требуют отдельных сценариев;
   существующие Git результаты не заменяют их полной проверки.
 
