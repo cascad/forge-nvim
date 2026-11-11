@@ -41,7 +41,9 @@ return {
 
             -- На Windows shell = pwsh (PowerShell 7+), если установлен.
             -- Иначе fallback на дефолтный shell (cmd.exe).
-            shell = (vim.fn.executable("pwsh") == 1) and "pwsh -NoLogo" or vim.o.shell,
+            -- spec: IDE-PANEL-19. На POSIX наличие pwsh не подменяет выбранный shell.
+            shell = (vim.fn.has("win32") == 1 and vim.fn.executable("pwsh") == 1)
+                and "pwsh -NoLogo" or vim.o.shell,
 
             -- Открыть терминал и сразу войти в insert mode (как
             -- юзер ожидает).

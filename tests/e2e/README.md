@@ -21,6 +21,19 @@
 
 ## Запуск на целевых машинах и внутри VM
 
+Managed shell (IDE-PANEL-19): `nvim -l tests/e2e/terminal-shell.test.lua`;
+Windows — выбранный `.tools/neovim/windows-x64/bin/nvim.exe`, TEMP на диске
+checkout как в [diagnostics](../diagnostics/README.md). POSIX cases используют
+настоящие bash/sh и частный executable pwsh shim; он только регистрирует
+ошибочный выбор и запускает sh. Устанавливать PowerShell на Linux не требуется.
+Windows cases используют настоящий доступный pwsh и private PATH без него
+для native fallback. Противоположная ОС явно SKIP. Если `exepath('pwsh')`
+не находит real exe, preference case тоже SKIP; Store alias не доказывает
+отсутствие установки. Для полного Windows прогона добавь actual installation
+directory только в PATH процесса теста (не через setx), затем запусти файл.
+Проверяются реальные command files, PID/channel/buffer/history и q/reopen;
+скрытных установок, host PATH/global shell изменений тест не делает.
+
 UI frame prototype (IDE-076): `ui-capture.test.lua` проверяет opt-in RGB
 record/replay на настоящем редакторе (3 cases); `panel-frame.test.lua` —
 9 состояний одной реальной Go/Delve pause, полную active/dim рамку, compact

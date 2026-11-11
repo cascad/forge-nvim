@@ -1,0 +1,4 @@
+#!/bin/sh
+# Только POSIX fixture: фиксирует ошибочный выбор optional pwsh и запускает sh.
+printf '%s:%s\n' "$$" "$*" >> "$FORGE_TERMINAL_SHELL_LOG"
+exec /bin/sh

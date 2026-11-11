@@ -10,7 +10,19 @@
 
 Маршрут и приоритеты: [рабочий план nvim_forge](docs/IDE_ROADMAP.md).
 Для новых пунктов используем следующий свободный ID `IDE-xxx`; исходный
-симптом хранится здесь, этап и состояние — в плане. Следующий ID: `IDE-102`.
+симптом хранится здесь, этап и состояние — в плане. Следующий ID: `IDE-103`.
+
+## IDE-102 — optional pwsh подменяет shell Terminal на POSIX
+
+2026-11-11, проверка переносимости IDE-009/080. plugins/terminal.lua
+комментирует preference pwsh -NoLogo как Windows-only, но выражение проверяет
+только executable('pwsh'). На POSIX с optional PowerShell оно выбирает pwsh
+вместо vim.o.shell. Требование IDE-PANEL-19 и source/current native E2E —
+change respect-terminal-platform-shell; глобальные shell options и Windows
+preference/fallback менять не требуется. §175: source Ubuntu1RED/1control →
+current2PASS/2opposite-OS SKIP; Windows actual pwsh7.6.9 и cmd fallback оба
+PASS на source/current. На ОС ещё29 соседних native checks PASS, глобальный
+shell/PID/channel/history сохранены. Mac/physical GUI остаются открытыми.
 
 ## IDE-101 — помощь превращает общий zoom в обычный split
 

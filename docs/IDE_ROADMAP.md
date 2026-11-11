@@ -49,6 +49,7 @@ IDE-001 параллельно ждёт диагностических данн�
 | Готово Windows/Ubuntu; Mac/GUI открыт | Terminal/Trouble, IDE-099/100 | Space w T/x, common controls, current-view hide и native Trouble actions;9 новых +30 прежних E2E/source8 RED на ОС (§172). Show больше не скрывает native toggle; штатная help остаётся popup |
 | Прототип готов; общий стиль открыт | IDE-076: цельная цветная рамка | Реальные Locals/Delve, RGB active/dim/resize/restore, компактный образец и [сравнение](PANEL_FRAME_REVIEW.md); default style прежний. Постоянные рамки split и Mac/GUI отдельно (§173) |
 | Готово Windows/Ubuntu; Mac/GUI открыт | IDE-101: docking zoom при помощи | Документированный window-local Edgy opt-out, source RED → native IDE-PANEL-18 PASS; исходный slot/shared buffer сохранены, исчезнувший source возвращает код (§173) |
+| Готово Windows/Ubuntu; Mac/GUI открыт | IDE-102: POSIX shell при optional pwsh | Source Ubuntu RED→2 policy PASS; Windows actual pwsh/fallback2 controls PASS. По29 соседних native E2E на ОС,3-line win32 guard в прежнем opts; SDK/pins/global shell прежние (§175) |
 | Отложено до готового backend | Остаток SQL workflow, IDE-062 | SQLS references provider отсутствует. Собственный binder/index/LSP fork отменён (§143); не подменять references grep и не объявлять полную SQL поддержку |
 | Затем | Остальная [матрица языков](LANGUAGE_MATRIX.md) | SQL references IDE-062, Bash DAP IDE-057; Mac/native и оставшиеся сценарии матрицы |
 | После функциональной матрицы | Упрощение архитектуры | Общее ядро, явные системные границы и setup; сокращение дублирования с сохранением E2E |
@@ -408,6 +409,9 @@ Normal mode, прежние aliases сохранены:
 - [x] Terminal/Trouble Windows/Ubuntu: Space w T/x, common focus/help/hide/zoom,
   literal input/jobs, несколько views и native Trouble выбор из zoom (§172).
 - [ ] Terminal/Trouble: native Mac/GUI и физические клавиши WezTerm.
+- [x] IDE-102 Windows/Ubuntu: shell policy — POSIX с/без optional pwsh, Windows actual pwsh/
+  fallback и сохранение job/history через q/reopen. Native E2E в
+  tests/e2e/terminal-shell.test.lua; результаты в §175. Mac/GUI ещё открыты.
 - [x] IDE-008 Windows/Ubuntu: открыть слева, найти/раскрыть символ, перейти
   в код, скрыть/вернуть фокус; дерево и Outline заменяют друг друга в left-слоте.
 - [ ] IDE-008 Mac/GUI: тот же сценарий на машине владельца.

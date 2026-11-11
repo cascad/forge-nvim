@@ -5692,3 +5692,116 @@ strict89; physical GUI/Mac/performance новой раскладки не про
 FIXLOG174/commands87 raw append, prefix sizes/SHA сохранены отдельно в
 .tests/frames-layout-prefix.json. Постоянная реализация IDE-076 не выбрана,
 никакой plugin/feature не удалён и OpenSpec change не архивирован.
+
+
+## 88. Terminal shell: POSIX optional pwsh и Windows preference/fallback
+
+2026-11-11, FIXLOG175/IDE-102/IDE-PANEL-19. Использованы openspec-propose и
+openspec-apply-change; общий автономный implement/test/commit цикл ранее
+разрешён владельцем, повторного разговорного согласования не требовалось.
+
+Read-only rg/Get-Content изучили plugins/terminal.lua, global shell comment
+config/options.lua, actual pinned ToggleTerm __spawn/config и прежние
+tool-panels/terminal-escape helpers, registry, roadmap/feature review. Поиск
+несуществующих components/terminal.lua/editor_observer.lua не дал файлов;
+правильные источники — ide/init.lua и inline observer tests/lib/editor.lua.
+PowerShell не разворачивает Bash glob path openspec/changes/*/specs/*: повтор
+поиска использовал rg -g spec.md по directories, без правок исходников.
+
+OpenSpec1.13.2 (TEMP/TMP/TMPDIR и npm cache на F:, UTF8 env как §86):
+
+```powershell
+npx.cmd --yes @fission-ai/openspec@1.13.2 list --json
+npx.cmd --yes @fission-ai/openspec@1.13.2 context --json
+npx.cmd --yes @fission-ai/openspec@1.13.2 list --specs --json
+npx.cmd --yes @fission-ai/openspec@1.13.2 new change respect-terminal-platform-shell
+npx.cmd --yes @fission-ai/openspec@1.13.2 status --change respect-terminal-platform-shell --json
+npx.cmd --yes @fission-ai/openspec@1.13.2 instructions proposal --change respect-terminal-platform-shell --json
+npx.cmd --yes @fission-ai/openspec@1.13.2 instructions design --change respect-terminal-platform-shell --json
+npx.cmd --yes @fission-ai/openspec@1.13.2 instructions specs --change respect-terminal-platform-shell --json
+npx.cmd --yes @fission-ai/openspec@1.13.2 instructions tasks --change respect-terminal-platform-shell --json
+npx.cmd --yes @fission-ai/openspec@1.13.2 instructions apply --change respect-terminal-platform-shell --json
+```
+
+Root/context подтвердили F:/repo/forge-nvim. Прочитаны schema instructions,
+local config и все contextFiles; phase1 main nvim specs ещё нет, WezTerm
+shell — другая граница. Delta IDE-PANEL-19 создана до runtime edit.
+
+```powershell
+python -B .tests/terminal-shell-prepare.py
+docker compose -f tests/containers/compose.yaml -f tests/containers/limits.yaml run --rm --no-deps --pull never --name forge-nvim-terminal-shell-source -e FORGE_E2E_CONFIG_SOURCE=/workspace/.tests/terminal-shell-source-config/nvim_forge --entrypoint nvim ubuntu -l tests/e2e/terminal-shell.test.lua
+$env:FORGE_E2E_CONFIG_SOURCE='F:/repo/forge-nvim/.tests/ubuntu/terminal-shell-source-config/nvim_forge'
+& ./.tools/neovim/windows-x64/bin/nvim.exe -l tests/e2e/terminal-shell.test.lua
+Remove-Item Env:FORGE_E2E_CONFIG_SOURCE
+& ./.tests/terminal-shell-finish.ps1 > .tests/terminal-shell-finish.txt 2>&1
+```
+
+Prepare использует subprocess git archive --format=tar 2fb9f8d nvim_forge,
+tarfile filter=data в новый .tests/ubuntu/terminal-shell-source-config;
+archive SHA/revision и raw journal sizes/SHA сохранены отдельно. Working tree
+не откатывается. Первый source trial отказал на F35 normal-only barrier,
+raw сохранён; после n/t barrier первый причинный POSIX RED снят до guard:
+profile17919621017696, selected pwsh -NoLogo при /bin/bash, real shim PID18/
+argv-NoLogo и actual empty BASH_VERSION file. No-pwsh sh control PASS.
+Тесты не подменяют ОС/backend, shim — явно только private POSIX executable.
+
+Windows сначала1PASS/3SKIP: Neovim exepath не разрешил Store alias. Уточнение
+prerequisite — read-only, без установки/host PATH изменений:
+
+```powershell
+Get-Command pwsh,pwsh.exe,powershell.exe -ErrorAction SilentlyContinue
+Get-AppxPackage -Name Microsoft.PowerShell -ErrorAction SilentlyContinue | Select-Object Name,InstallLocation
+Get-Item -LiteralPath 'C:/Program Files/WindowsApps/Microsoft.PowerShell_7.6.9.0_x64__8wekyb3d8bbwe/pwsh.exe'
+& 'C:/Program Files/WindowsApps/Microsoft.PowerShell_7.6.9.0_x64__8wekyb3d8bbwe/pwsh.exe' -NoLogo -NoProfile -NonInteractive -Command '$PSVersionTable.PSVersion.ToString()'
+& ./.tests/terminal-shell-replay.ps1 > .tests/terminal-shell-replay.txt 2>&1
+```
+
+Version probe7.6.9 exit0. Replay добавляет actual package directory в PATH
+только своего процесса, повторяет Windows immutable/current2 cases (real
+PowerShell/Core и cmd fallback), затем Ubuntu immutable source с final exact
+test bytes. Host PATH не сохранён/setx не вызван. Ранние alias-SKIP и первый
+причинный Ubuntu RED отдельно сохранены; source не подменён current.
+Сам replay wrapper завершился1 из-за остаточного LASTEXITCODE ожидаемого
+Ubuntu source RED после его правильной проверки. Это не PASS wrapper:
+добавлен явный exit0 после expected-negative, E2E без code изменений заново
+не запускались. Их индивидуальные результаты/exits проверены audit отдельно.
+
+Finish поочерёдно выполняет Windows→Ubuntu terminal-shell/tool-panels/
+terminal-escape/buffers/work-panels. Source/current повторены только для
+actual prerequisite/final helper text; соседние29 checks без нового code
+не зацикливались. Точные команды для итоговых наборов:
+
+```powershell
+& ./.tools/neovim/windows-x64/bin/nvim.exe -l tests/e2e/terminal-shell.test.lua
+docker compose -f tests/containers/compose.yaml -f tests/containers/limits.yaml run --rm --no-deps --pull never --name forge-nvim-shell-terminal-shell --entrypoint nvim ubuntu -l tests/e2e/terminal-shell.test.lua
+powershell -NoProfile -File scripts/test.ps1 quick
+& ./.tools/neovim/windows-x64/bin/nvim.exe -l tests/run.lua trace
+docker compose -f tests/containers/compose.yaml -f tests/containers/limits.yaml run --rm --no-deps --pull never --name forge-nvim-shell-quick ubuntu quick
+docker compose -f tests/containers/compose.yaml -f tests/containers/limits.yaml run --rm --no-deps --pull never --name forge-nvim-shell-trace --entrypoint nvim ubuntu -l tests/run.lua trace
+npx.cmd --yes @fission-ai/openspec@1.13.2 validate --all --strict --no-interactive
+python -B .tests/terminal-shell-audit.py
+git check-attr text eol -- tests/e2e/fixtures/terminal-shell/pwsh
+git diff --check
+git diff --numstat -- nvim_forge/FIXLOG.md docs/AGENT_COMMANDS.md
+git diff --cached --check
+git commit -m "fix(terminal): preserve the configured shell on POSIX"
+git status --short
+```
+
+Для соседних suites меняются name и путь после -l. Ready engine/image без
+build/pull/сети,2CPU/3GiB/256pids; lifecycle Docker Desktop/WSL не вызывался.
+Нативные Windows temp/cache F:. E2E writes/markers в owned project, PATH/SHELL
+меняются до старта только child; fixtures/logs копируются в его artifacts.
+Git attribute LF нужен extensionless shebang после Windows checkout, source
+fixture и готовый executable различаются только chmod. Без нового shell
+wrapper в продукте и без global shell policy rewrite.
+
+Итог по31 positive native checks/profiles +2 source profiles на ОС,66 final
+roots. Source Ubuntu1RED/1control, Windows2control; current policy2PASS/
+2opposite-OS SKIP на ОС, соседи29PASS. Audit —63 normalized source/pin/patch
+files, exact driver/test/fixture copies, native shutdown/scope/actual files,
+SDK74AFF15B…C6AD9 и byte prefixes. Quick360/trace11 +1manual-link SKIP на ОС,
+strict90; Mac/physical GUI/full suite не запускались. После docs trace/strict
+и audit повторены. История и команды raw append, change task1.4 открыт и
+не архивирован; ignored .tests содержит одноразовые scripts/raw reports,
+permanent regression — tests/e2e/terminal-shell.test.lua и fixture.

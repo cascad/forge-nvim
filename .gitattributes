@@ -3,6 +3,7 @@
 .gitignore text eol=lf
 *.sh text eol=lf
 *.bats text eol=lf
+tests/e2e/fixtures/terminal-shell/pwsh text eol=lf
 *.ps1 text eol=crlf
 *.lua text eol=lf
 *.md text eol=lf

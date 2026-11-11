@@ -65,6 +65,7 @@ return {
   { file = 'tests/e2e/debug-startup-visibility.test.lua', suite = 'e2e', timeout = 180 },
   { file = 'tests/e2e/output-resize.test.lua', suite = 'e2e', timeout = 210 },
   { file = 'tests/e2e/terminal-escape.test.lua', suite = 'e2e', timeout = 300 },
+  { file = 'tests/e2e/terminal-shell.test.lua', suite = 'e2e', timeout = 150 },
   { file = 'tests/e2e/tool-panels.test.lua', suite = 'e2e', timeout = 300 },
   { file = 'tests/e2e/ui-capture.test.lua', suite = 'e2e', timeout = 120 },
   { file = 'tests/e2e/panel-frame.test.lua', suite = 'e2e', timeout = 210 },

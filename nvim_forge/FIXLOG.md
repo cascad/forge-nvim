@@ -9156,3 +9156,92 @@ E2E; второй постоянный manager поверх Edgy не приня
 **Файлы.** PANEL_FRAME_DESIGN/REVIEW, FEATURE_REVIEW/IDE_ROADMAP/HISTORY,
 OpenSpec prototype design, source-audit manifest, FIXLOG/AGENT_COMMANDS.
 Журналы raw append с prefix guard .tests/frames-layout-prefix.json.
+
+
+## 175. Terminal: optional pwsh и POSIX shell
+
+2026-11-11. IDE-102. Спека: IDE-PANEL-19 (FIX), change
+respect-terminal-platform-shell. Продолжение проверки переносимости
+Terminal/IDE-009/080 после source review рамок (§174).
+
+**Проблема.** plugins/terminal.lua обещал выбирать pwsh -NoLogo только
+на Windows, но выражение проверяло лишь executable('pwsh'). На Mac/Linux
+optional PowerShell мог подменить выбранный vim.o.shell. Выбор вычисляется
+при чтении Lazy spec; изменение окружения после VeryLazy не воспроизводит
+этот startup policy bug. Глобальный shell config/options.lua не меняет.
+
+**Причина и source RED.** В native Ubuntu на immutable2fb9f8d настроен
+настоящий /bin/bash, в private PATH добавлен executable pwsh fixture.
+Он регистрирует собственный PID/argv и исполняет sh: это не настоящий
+PowerShell на POSIX, а контролируемое воспроизведение optional executable.
+Первый причинный profile17919621017696 выбрал pwsh -NoLogo при shell=/bin/bash;
+fixture записал18:-NoLogo, job оставался живым, реально созданный kind file
+содержал пустой BASH_VERSION. E2E RED: POSIX shell replaced by optional pwsh.
+Контрольный native sh без pwsh прошёл. Source/current используют настоящий
+ToggleTerm/PTY, не подменяют vim.fn.has, plugin APIs или spawn.
+
+**Изменение.** В прежнее выражение shell добавлен win32 guard. POSIX
+всегда сохраняет выбранный при старте vim.o.shell; Windows preference и
+fallback прежние. Это весь runtime diff: один существующий файл, без нового
+platform module/controller, shell wrapper или global options. SDK,67 pins,
+backports/setup и выбор уже живого job не менялись.
+
+**Постоянный E2E.** terminal-shell.test.lua/registry: четыре platform cases,
+по2 применимых PASS и2 явных opposite-OS SKIP на Windows/Ubuntu. POSIX
+bash+optional pwsh и sh fallback; Windows настоящий PowerShell7.6.9 и cmd
+fallback с private PATH без pwsh. Команды записывают actual kind/again files,
+чтобы PTY echo не считался выполнением. Проверены public config и глобальный
+shell, живые PID/channel/buffer, stdout/history, q→код→Space w T и последующая
+команда в том же job. Installs0, DAP session false. Extensionless shell
+fixture закреплён eol=lf в .gitattributes для Windows checkout/bind mount;
+это предотвращение shebang CRLF риска, не отдельный наблюдавшийся product bug.
+
+**Особенности harness и prerequisites.** Первый source trial2FAIL был
+до проверки выбора shell: F35 barrier привязан только к normal, а открытие
+Terminal переключает в terminal-input. Barrier стал n/t, backend не менялся;
+log terminal-shell-source-harness-first.txt сохранён, за product RED не
+выдаётся. На Windows сначала preference SKIP: exepath не разрешил Store
+aliases. Это не отсутствие установленного PowerShell. Read-only
+Get-AppxPackage нашёл actual package exe; прямой NoProfile version probe
+вернул7.6.9. Его каталог добавлен только в PATH процесса окончательного
+теста, не в host PATH и не через установку/setx. Внутренний fallback case
+снова исключает этот каталог. Source/current Windows теперь оба2PASS/2SKIP;
+ранние alias-SKIP logs сохранены. Исправлен диагностический текст SKIP,
+не политика поиска executable в продукте.
+
+**Итоговые проверки.** Final immutable Ubuntu replay —1 ожидаемый RED/
+1 control PASS/2 opposite-OS SKIP с теми же exact test bytes. Windows
+immutable source —2 control PASS/2 SKIP. Current shell policy —2PASS/2SKIP
+на ОС; соседние tool-panels9, terminal-escape6, buffers8, work-panels6 —
+29PASS на каждой ОС. Итого по31 positive native checks/profiles и2 source
+profiles на ОС,66 final editor profiles. Audit сверяет63 normalized runtime/
+pin/patch sources, exact driver/test/fixture copies, source/current origins,
+actual file markers, native quit/exit и owned scopes. Все66 final roots
+exit/signal0, APIerrors[], QuitPre/VimLeavePre/VimLeave, scopes после cleanup
+пусты, root hard-kill нет. Две Ubuntu owned groups потребовали graceful
+SIGTERM (tool-panels18276724541581/group142 и terminal-escape18326778513012/
+group136), не natural exit всех потомков. Evidence — terminal-shell-evidence.json.
+Replay wrapper после ожидаемого source RED оставил LASTEXITCODE1; исправлен
+явный exit0 в orchestration, не runtime. Его exit1 сохранён как таковой;
+audit проверил индивидуальные source/current native результаты, новые E2E
+из-за одного wrapper exit без code изменений не повторялись.
+
+Quick360/16files, trace11/2files +1manual-link SKIP на ОС, strict90.
+Тяжёлые Windows/Ubuntu наборы последовательны, Ubuntu ready image без
+build/pull/сети,2CPU/3GiB/256pids. Desktop/WSL lifecycle не вызывался,
+Windows temp/cache на F:. Selected SDK SHA74AFF15B…C6AD9 прежний.
+Full suite, native Mac и physical WezTerm GUI не запускались; один OS guard
+и headless checks не объявляются полным Mac/GUI gate.
+
+**Вывод.** POSIX shell selection исправлен и доказан source RED→PASS на
+Ubuntu; native Windows preference/fallback сохранены. Optional shell не
+должен менять default другой ОС только фактом установки. Для одной boundary
+проверки не нужен новый framework. IDE-102 Windows/Ubuntu подтверждён,
+Mac/GUI task остаётся открытым и change не архивируется. Полный multi-terminal
+create/name/reorder UX и IDE-076 этим шагом не закрыты.
+
+**Файлы.** plugins/terminal.lua, terminal-shell E2E/fixture/registry,
+.gitattributes; PANEL_KEYS/e2e README/FEATURE_REVIEW/IDE_ROADMAP/PROBLEMS,
+OpenSpec proposal/design/spec/tasks/verification, HISTORY/AGENT_COMMANDS.
+Старые journal bytes сохранены raw append с guard terminal-shell-prefix.json;
+source archive и полные отчёты остаются в ignored .tests.

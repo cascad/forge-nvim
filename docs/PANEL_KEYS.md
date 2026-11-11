@@ -40,6 +40,11 @@ Terminal: `i` — ввод; normal `Ctrl-t` / `Space tt` — toggle, `Ctrl-\` и
 тот же toggle. В terminal-normal `Ctrl-\` остаётся native prefix; повтор
 `Ctrl-\ Ctrl-n` безопасен. `Space w T` открывает/фокусирует без toggle.
 
+Shell Terminal: на macOS/Linux используется выбранный при старте `vim.o.shell`,
+даже если установлен `pwsh`. На Windows сохраняется `pwsh -NoLogo`, когда
+Neovim видит executable `pwsh`; иначе используется `vim.o.shell`.
+Глобальный shell редактора этот выбор не меняет.
+
 Trouble: `Space xx` — diagnostics, `Space xQ` — Quickfix; `zo/zc` — раскрыть/
 свернуть, `Enter` — перейти, `g?` — штатная справка. В zoom новое выделение
 используется подтверждённым действием backend. Files/Outline/Tests/Tasks/Git
