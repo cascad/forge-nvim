@@ -5321,3 +5321,79 @@ source first FAIL, actual native exits/group stages, unit/trace/strict и old
 journal byte prefixes. История170/commands83 добавлены raw append с SHA guard;
 Mac/GUI не проверялись, source IDE-097/Docker failures остаются открытыми.
 Все разовые scripts/reports в .tests игнорируются Git и не коммитятся.
+
+
+## 84. IDE-023: native terminal escape и paired replay
+
+2026-11-11. Checkout F:/repo/forge-nvim, HEAD6dea7b8 перед исправлением.
+Все команды агента из checkout, PowerShell без профиля. Windows temp на F:;
+Go jobs2/GOTOOLCHAIN=local, без скрытых downloads. Разрешённый уже работающий
+Docker Linux engine использовался только для owned --rm containers, поочерёдно
+с Windows. Desktop/WSL не запускались, не останавливались и не настраивались.
+
+```powershell
+$env:TEMP='F:/repo/forge-nvim/.tests/tmp'
+$env:TMP=$env:TEMP; $env:TMPDIR=$env:TEMP
+$env:NVIM_LOG_FILE="$env:TEMP/ide023-regression.log"
+$env:PYTHONIOENCODING='utf-8'
+$env:npm_config_cache='F:/forge-nvim-tmp/npm-cache'
+$env:GOMAXPROCS='2'; $env:GOFLAGS='-p=2'; $env:GOTOOLCHAIN='local'
+git status --short
+git diff -- nvim_forge/lua/plugins/terminal.lua tests/registry.lua
+rg -n 'IDE-023|IDE-098|Terminal|Trouble' docs/IDE_ROADMAP.md PROBLEMS.md
+Get-Content nvim_forge/lua/plugins/terminal.lua -TotalCount 130
+Get-Content .tests/ide023-apply.json
+```
+
+OpenSpec inspect/instructions сохранены в .tests/ide023-{context,changes,specs,
+status,proposal,design,spec-instructions,tasks,apply}.json. Создан обычный
+spec-driven preserve-native-terminal-escape с IDE-PANEL-16; no skip_specs.
+Source archive6dea7b8 получен Python subprocess git archive, tarSHA/revision
+в .tests/ubuntu/ide023-source-config/archive.json; исходный checkout не менялся.
+Пробы terminal-input и точный completed echo сохранены в ide023-probe.txt /
+ide023-echo.txt, echo profile8990083162500. Они отделяют t от nt и normal map
+от первоначальной неверной гипотезы open_mapping.
+
+```powershell
+$env:FORGE_E2E_CONFIG_SOURCE='F:/repo/forge-nvim/.tests/ubuntu/ide023-source-config/nvim_forge'
+& ./.tools/neovim/windows-x64/bin/nvim.exe -l tests/e2e/terminal-escape.test.lua
+Remove-Item Env:FORGE_E2E_CONFIG_SOURCE
+& ./.tools/neovim/windows-x64/bin/nvim.exe -l tests/e2e/terminal-escape.test.lua
+docker compose -f tests/containers/compose.yaml -f tests/containers/limits.yaml run --rm --no-deps --pull never -e FORGE_E2E_CONFIG_SOURCE=/workspace/.tests/ide023-source-config/nvim_forge --entrypoint nvim ubuntu -l tests/e2e/terminal-escape.test.lua
+docker compose -f tests/containers/compose.yaml -f tests/containers/limits.yaml run --rm --no-deps --pull never --entrypoint nvim ubuntu -l tests/e2e/terminal-escape.test.lua
+& ./.tests/ide023-paired-final.ps1 > .tests/ide023-paired-final.txt 2>&1
+& ./.tests/ide023-regression.ps1 > .tests/ide023-regression.txt 2>&1
+& ./.tests/ide023-gates.ps1 > .tests/ide023-gates.txt 2>&1
+```
+
+Финальный paired script повторил обе версии/ОС после русского комментария в
+новых test/worker; предыдущие логи оставил .before-comment-review. Expected
+source exit1, точно5 buffer mismatch RED/1control; fixed exit0/6PASS. Fixture
+запускает настоящий Python -B -u -S из частного Unicode path, DAP — подготовленный
+Rust/CodeLLDB, без системного LLDB. Script regression последовательно выполняет
+buffers8/code-focus3/debug-panels4/dap-output-policy3/dap-output4 на Windows,
+затем Ubuntu (22 checks на ОС). Полные команды gate script:
+
+```powershell
+powershell -NoProfile -File scripts/test.ps1 quick
+& ./.tools/neovim/windows-x64/bin/nvim.exe -l tests/run.lua trace
+docker compose -f tests/containers/compose.yaml -f tests/containers/limits.yaml run --rm --no-deps --pull never ubuntu quick
+docker compose -f tests/containers/compose.yaml -f tests/containers/limits.yaml run --rm --no-deps --pull never --entrypoint nvim ubuntu -l tests/run.lua trace
+npx.cmd --yes @fission-ai/openspec@1.13.2 validate --all --strict --no-interactive
+python -B .tests/ide023-audit.py
+python -B .tests/ide023-finish-audit.py
+Get-Content .tests/ide023-audit.txt
+git diff --check
+git diff --numstat -- nvim_forge/FIXLOG.md docs/AGENT_COMMANDS.md
+```
+
+Audit читает BOM-aware redirected logs и JSON, не заменяет проверки конфигом.
+По28 positive checks/22 native profiles на ОС, root0/APIerrors[]/own scopes
+empty, source/test/worker copies совпали. Два Ubuntu owned group SIGTERM
+сохранены отдельно от root exit. Quick358, trace11 +1 manual-link SKIP на ОС,
+strict86. Первый draft подсчёта audit дважды считал PASS из сводки ID; итог
+считает только строки результатов файлов (→ PASS). Runtime/test не ослаблялись.
+SDK SHA74AFF15B…C6AD9 и lock/backports прежние. История171/commands84 добавлены
+raw UTF8 append с проверкой byte prefixes; полная перезапись журналов запрещена.
+Mac/GUI не проверялись, исходный IDE-097 assert/окно Python не объявлены fixed.
+Разовые scripts/reports в .tests игнорируются Git; постоянные E2E в tests/.

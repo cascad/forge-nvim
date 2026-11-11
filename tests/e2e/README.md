@@ -371,8 +371,9 @@ Cancel удерживает confirm 750 ms (дольше autosave debounce), п�
 
 Диалог не подменяется. Его mode=r? при blocking=false: ожидания идут через
 fast get_mode/nvim_input. editor.lua запрещает Lua RPC за confirm. Из terminal
-используется штатный F7; обнаруженный перехват Ctrl-\ у ToggleTerm зарегистрирован
-как IDE-023, без изменения его привязки. Начальная попытка считывала курсор
+используется штатный F7; обнаруженный перехват Ctrl-\ зарегистрирован как
+IDE-023 и исправлен отдельно в §171 (см. terminal-escape ниже).
+Начальная попытка считывала курсор
 сразу после nvim_input — теперь ожидается фактический переход. Telescope
 entry_maker использует штатный formatter с явным bufnr_width.
 
@@ -388,6 +389,36 @@ Mac/GUI/физические модификаторы и persistent session reop
 Save As dialog не добавлен, raw :bdelete/внешние plugin close не входят
 в стек Space b r. Для Mac после подготовки плагинов достаточно
 `nvim -l tests/e2e/buffers.test.lua`.
+
+### Native terminal escape — IDE-PANEL-16 / IDE-023
+
+`nvim -l tests/e2e/terminal-escape.test.lua` либо
+`nvim -l tests/run.lua e2e --id IDE-PANEL-16` — шесть настоящих editor cases:
+completed native command, interactive Python PTY до/после загрузки ToggleTerm,
+managed shell, cold/loaded normal aliases и paused Rust/CodeLLDB PTY.
+Проверяются literal input, repeated Ctrl-\ Ctrl-n, mode/window/buffer/channel/PID,
+история, DAP thread/frame и stdout после явного Continue; Esc Esc/F7 сохранены.
+Private F35 no-op подтверждает обработку async input и сам не меняет mode/focus.
+Закрытая команда проверяется по actual TermClose status0, не по сообщению UI.
+
+Нужны подготовленные editor plugins, Python 3 и Rust/CodeLLDB dependencies
+(см. [подготовку Rust](#rust-подготовка-и-cargo-workspace)); тест ничего не скачивает. Windows использует выбранный
+SDK, Linux/macOS — официальный Neovim. Прямые команды из корня checkout:
+
+```powershell
+$env:TEMP="$PWD/.tests/tmp"
+$env:TMP=$env:TEMP; $env:TMPDIR=$env:TEMP
+$env:NVIM_LOG_FILE="$env:TEMP/terminal-escape.log"
+& ./.tools/neovim/windows-x64/bin/nvim.exe -l tests/e2e/terminal-escape.test.lua
+docker compose -f tests/containers/compose.yaml -f tests/containers/limits.yaml run --rm --no-deps --pull never --entrypoint nvim ubuntu -l tests/e2e/terminal-escape.test.lua
+```
+
+Docker engine и image должны быть готовы заранее; команды не поднимают Desktop
+и не делают build/pull. Запускать поочерёдно. На Mac после подготовки:
+`nvim -l tests/e2e/terminal-escape.test.lua`. Source replay использует существующий
+`FORGE_E2E_CONFIG_SOURCE` с совпадающим lock:6dea7b8 дал5 native RED и1 alias
+control PASS на обеих ОС, исправленный config —6 PASS. Ещё22 buffer/focus/Debug
+regression на каждой ОС PASS (§171). Mac/физические клавиши WezTerm не проверены.
 
 Go E2E разделяют compiler cache одного прогона в native temp через
 `FORGE_E2E_GO_CACHE`; прямой Lua-файл получает отдельный temp cache.

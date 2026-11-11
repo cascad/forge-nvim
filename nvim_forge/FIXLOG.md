@@ -8831,3 +8831,81 @@ Evidence/audit: .tests/ubuntu-gates/evidence.json и audit.py; первые от
 optional tests/containers/limits.yaml, tests README, current gate tasks,
 PROBLEMS/IDE_ROADMAP/FEATURE_REVIEW/CODE_WINDOW_REVIEW/PROJECT_SESSION_REVIEW,
 HISTORY/AGENT_COMMANDS и test-only OpenSpec change.
+
+
+## 171. Native terminal escape: prefix в terminal-normal
+
+Дата: 2026-11-11. IDE-023, change preserve-native-terminal-escape.
+Спека: IDE-PANEL-16 (ADDED).
+
+**Проблема.** В старом buffers E2E после native `:terminal echo ...` сочетание
+Ctrl-\ Ctrl-n открыло дополнительный ToggleTerm. Artifact1353158363400 сохранён;
+тогда mode не записывался, а PROBLEMS ошибочно объяснял конфликт open_mapping.
+
+**Причина.** Native probe подтвердил: в terminal-input (`t`) исходный chord
+уже работает, в том числе после загрузки plugin, с прежним PID. Echo trace
+8990083162500 на source6dea7b8 показал terminal-normal (`nt`) до нажатия и
+новый toggleterm/t после. В pinned ToggleTerm open_mapping=nil, terminal-mode
+Ctrl-\ mapping отсутствует. Конфликтует normal Lazy shortcut в terminal.lua:
+после завершения job либо первого escape normal Ctrl-\ вызывает ToggleTerm.
+Повтор chord поэтому открывает другой terminal либо скрывает managed shell.
+Это уточнение исторической гипотезы, прежние журналы не переписаны.
+
+**Изменение.** Одна существующая normal expr-привязка: при buftype=terminal
+возвращает native control byte без remap; вне terminal buffer — прежнюю
+команду ToggleTerm. Нет новых controllers/autocmd/state/timers, OS branches,
+feedkeys или ожидания второго key. Single Ctrl-\ в terminal-normal теперь
+native prefix. Явные toggle Ctrl-t/Space tt здесь остаются; cold/loaded
+Ctrl-\ из кода, F7 и Esc Esc сохранены. SDK/67 pins/backports не менялись.
+
+**Проверка/E2E.** Добавлены шесть native editor cases в registry:
+completed command с actual TermClose0; live Python PTY cold/loaded с настоящим
+PID, literal Unicode input/ACK и typed normal exit0; managed shell/repeat;
+cold/loaded code aliases с reuse PID/channel/history; real Rust/CodeLLDB
+breakpoint/PTY с той же session/thread/frame и stdout после явного Continue.
+Повтор escape обязан оставить тот же buffer/window/channel/PID и вывод.
+
+Один immutable git archive6dea7b8 через существующий config override:
+Windows и Ubuntu по1 alias control PASS и5 RED с точной первичной ошибкой
+«Native escape changed terminal buffer». Финальные те же6 cases PASS на
+каждой ОС. Final logs: .tests/ide023-windows-source-complete.txt,
+ide023-windows-complete.txt, ide023-ubuntu-source.txt, ide023-ubuntu-final.txt.
+После перевода новых комментариев на русский выполнен полный paired replay;
+первые логи сохранены с суффиксом .before-comment-review, profiles не удалялись.
+
+Соседний регресс поочерёдно Windows→Ubuntu: buffers8, code-focus3,
+debug-panels4, dap-output-policy3, dap-output4 —22 PASS на ОС. Итого по28
+positive checks/22 native profiles. Все root exit/signal0, APIerrors[],
+последние QuitPre/VimLeavePre/VimLeave, own scopes empty. В двух Ubuntu
+positive profiles scope завершил оставшуюся owned child group graceful
+SIGTERM; root hard kill нет. Это не утверждение natural exit всех потомков.
+Audit сверил63 runtime/pin/patch source files каждого profile, точные test
+и Python worker copies, actual output/PID/DAP, прежний SDK SHA74AFF15B…C6AD9.
+
+**Исправленные предпосылки harness.** nvim_input асинхронен: private F35 no-op
+подтверждает потребление sequence, не меняя mode/focus/jobs; отдельный control
+доказывает, что marker сохраняет t. Completed native job проверяется по
+TermClose status, не по отсутствующей строке «Process exited». DAP readiness
+возвращает boolean, а не truthy vim.NIL; PTY stdout ищется по actual buffer,
+затем фокусируется. Code helper не посылает лишний F7, если код уже выбран:
+лишний deferred focus портил alias-control precondition после открытия shell.
+Эти отказы не называются product RED или F7 fix. Первые diagnostic ошибки
+escaping/serialization/dead jobpid и pilot логи сохранены; final RED отделён.
+
+Quick358/14files и trace11/2files прошли на каждой ОС; в trace по1 явному
+manual-link SKIP (main specs не содержат таких ссылок). Strict86/86.
+Это focused regression, full suite и physical GUI не запускались.
+Ubuntu использовал уже работающий engine28.5.1/image8a6b73261d91, без сети,
+build/pull, Desktop/WSL lifecycle, по одному контейнеру2CPU/3GiB/256pids.
+Windows temp/cache на F:. Evidence/audit: .tests/ide023-evidence.json,
+ide023-audit.py, ide023-finish-audit.py; журналы дополнены с SHA prefix guard.
+
+**Вывод.** IDE-023 исправлен на Windows/Ubuntu на границе normal mapping,
+без нового слоя управления. Mac/native и физические клавиши WezTerm остаются
+открытым gate; change не архивируется. Common Terminal/Trouble controls —
+следующий отдельный шаг. IDE-097 native assert и IDE-087 Docker caller не
+объявляются исправленными; точный текст прежнего окна Python неизвестен.
+
+**Файлы.** lua/plugins/terminal.lua; terminal-escape E2E/terminal-echo fixture,
+registry/tests README; QUICKSTART/PROBLEMS/IDE_ROADMAP/FEATURE_REVIEW,
+HISTORY/AGENT_COMMANDS и OpenSpec change preserve-native-terminal-escape.

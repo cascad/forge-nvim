@@ -45,6 +45,8 @@ IDE-001 параллельно ждёт диагностических данн�
 | Готово Windows/Ubuntu test harness | IDE-096: фильтр Python SELF suites | Общий early matcher, native source3RED/4PASS→7 Windows PASS (§168), Ubuntu7 PASS (§170). Выбранные ошибки/UTF8/no lookup/no spawn сохранены, Mac не запускался |
 | Диагностика открыта | IDE-097: native TUI wstream assert | Raw FAIL сохранён. Подготовлен [явный stack capture](NATIVE_ASSERT_DIAGNOSTICS.md),4 Windows control E2E;4 bounded original trials без assert (§169). Actual caller ещё не снят; product/SDK прежние, нужны minimal repro и native regression |
 | Готово Windows/Ubuntu test harness | IDE-098: native readiness resize fixture | Source Ubuntu FAIL→одинаковый native CodeLLDB PASS Windows/Ubuntu, actual viewport/rows и raw mismatch обязательны (§170). Shared helper/product/SDK прежние, без OS branch/sleep |
+| Готово Windows/Ubuntu; Mac/GUI открыт | IDE-023: native terminal escape | Одна expr-привязка, source5 RED/1 control →6 native PASS и22 соседних E2E на каждой ОС (§171). Terminal-input/normal, completed/live/managed и paused DAP; PID/channel/history сохранены |
+| Следующий функциональный шаг | Terminal/Trouble: общая модель панелей | Проверить штатные local controls и Space w, ввод/фокус/hide/help/zoom, затем узкие изменения с native E2E; без нового менеджера панелей |
 | Отложено до готового backend | Остаток SQL workflow, IDE-062 | SQLS references provider отсутствует. Собственный binder/index/LSP fork отменён (§143); не подменять references grep и не объявлять полную SQL поддержку |
 | Затем | Остальная [матрица языков](LANGUAGE_MATRIX.md) | SQL references IDE-062, Bash DAP IDE-057; Mac/native и оставшиеся сценарии матрицы |
 | После функциональной матрицы | Упрощение архитектуры | Общее ядро, явные системные границы и setup; сокращение дублирования с сохранением E2E |
@@ -61,8 +63,10 @@ Desktop/WSL не запускались. Native project/session baseline зав�
 production root/session glue тогда не менялся. IDE-095 выполнен следующим
 шагом (§167): один LoadPost вместо второго cleanup/open, необходимый fallback
 проверен настоящей Help-only сессией. IDE-096 завершён следующим шагом (§168):
-Python SELF теперь использует общий --id filter. Следующий приоритет — IDE-097,
-native TUI write после закрытия stream, без маскировки assert или product glue.
+Python SELF теперь использует общий --id filter. Для IDE-097 готов явный capture
+(§169); caller пока неизвестен, green repeat не считается исправлением.
+Следующий функциональный пункт — Terminal/Trouble: IDE-023 устранён в §171,
+оставшиеся local controls и E2E ещё открыты. Mac/GUI gates остаются отдельными.
 §169 добавляет проверенный explicit capture через bundled CodeLLDB/PDB:
 4 control E2E,4 original trials без воспроизведения. Системный LLVM LLDB
 требует отсутствующий python310.dll (вероятное окно ошибки владельца), повторно
@@ -233,7 +237,7 @@ VS Code — референс возможностей; Claude Code — рефе�
 | IDE-020 | P2 | Esc иногда оставляет фокус в дереве | 3 | Удалён конфликт <esc>/<Esc>, runtime-regression и 5 циклов (§82) |
 | IDE-021 | P2 | Удобные файловые вкладки/выбор/закрытие/reopen | 3 | Общая модель и 8 real editor E2E (§83) |
 | IDE-022 | P1 | Закрытие dirty файла меняет окна и запускает autosave до решения | 3 | Confirm до мутаций, защита autosave/Save/Discard/Cancel (§84) |
-| IDE-023 | P2 | Ctrl-\ из native terminal открывает ToggleTerm | 3 | Открыто для terminal/jobs; F7 проверен, Esc Esc — normal |
+| IDE-023 | P2 | Ctrl-\ из native terminal открывает ToggleTerm | 3 | Windows/Ubuntu source5 RED→6 native PASS, normal mapping учитывает terminal buffer (§171); Mac/GUI открыт |
 | IDE-050 | P2 | Common trim блокирует LSP форматирование без внешних tools | 4 | Общая политика исправлена; RED/6 language UI PASS Windows (§110), Ubuntu/Mac ещё не проверены |
 
 P0 мешает базовой работе; P1 ломает основной сценарий; P2 — поведение и UX,
@@ -384,7 +388,10 @@ Normal mode, прежние aliases сохранены:
 - [x] Tests/Test Output/Tasks/Search: Space w t/r/b/f, focus/hide/help/zoom,
   query/results/jobs сохраняются; 6 новых E2E Windows/Ubuntu (§109).
   Общая шпаргалка показывает один основной маршрут, aliases m*/p*/P*/D* сохранены.
-- [ ] Terminal/Trouble: оставшиеся локальные controls и E2E; IDE-023 отдельно.
+- [x] IDE-023 Windows/Ubuntu: native Ctrl-\ Ctrl-n и повтор не создают/скрывают
+  терминал; completed/live/managed/DAP и normal aliases проверены (§171).
+- [ ] IDE-023 Mac/GUI: native запуск и физические клавиши WezTerm.
+- [ ] Terminal/Trouble: оставшиеся локальные controls и E2E, общий Space w.
 - [x] IDE-008 Windows/Ubuntu: открыть слева, найти/раскрыть символ, перейти
   в код, скрыть/вернуть фокус; дерево и Outline заменяют друг друга в left-слоте.
 - [ ] IDE-008 Mac/GUI: тот же сценарий на машине владельца.
@@ -528,7 +535,9 @@ Normal mode, прежние aliases сохранены:
 | `F6` / `F7` | Следующее окно / фокус в редактор |
 
 Из terminal mode сначала `Ctrl+\`, затем `Ctrl+n`; после этого работают
-normal-привязки. IDE-005/008 проверены на Windows/Ubuntu; Mac может загружать
+normal-привязки. Повтор безопасен (IDE-023); одиночный Ctrl-\ внутри terminal
+buffer остаётся native prefix, для toggle здесь Ctrl-t/Space tt.
+IDE-005/008 проверены на Windows/Ubuntu; Mac может загружать
 другую версию и ждёт проверки. Общая локальная модель остальных панелей открыта.
 
 ## Текущая точка продолжения

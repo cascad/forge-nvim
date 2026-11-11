@@ -487,8 +487,17 @@ IDE-028 проверяется отдельным `worktree-refresh.test.lua` (F
 
 | Клавиша | Действие |
 |---|---|
-| `<leader>tt` | Открыть pwsh снизу |
-| `<Esc><Esc>` | Из терминала в normal mode |
+| `<leader>tt` / `<C-t>` в normal | Скрыть/вернуть managed terminal снизу, сохранив job и вывод |
+| `<C-\>` из normal вне terminal buffer | Тот же toggle терминала |
+| `<C-\>`, затем `<C-n>` | Выйти из terminal input в normal; повтор безопасен |
+| `<Esc><Esc>` | Из terminal input в normal mode |
+| `<F7>` | Вернуть фокус в код |
+
+Shell выбирается конфигом ToggleTerm: доступный pwsh либо `vim.o.shell`.
+В terminal-normal одиночный Ctrl-\ остаётся стандартным префиксом Neovim;
+для скрытия/возврата терминала здесь используйте Ctrl-t или Space tt.
+Эти normal-команды работают после выхода из terminal input; печатный текст
+в режиме ввода продолжает получать запущенная программа.
 
 ## 9. Сессии (persistence)
 

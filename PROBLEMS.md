@@ -643,12 +643,21 @@ IDE-025 (worktree cwd сбрасывается при фокусе старог�
 ## IDE-023 — стандартный выход из terminal перехватывается ToggleTerm
 
 В ходе E2E файловых вкладок настоящий `:terminal echo ...` получил
-Ctrl-\, Ctrl-n; вместо normal открылся дополнительный ToggleTerm. Native
-Ctrl-\ совпадает с open_mapping ToggleTerm. Проверенный маршрут возврата — F7
-(он выходит из terminal без remap), также настроен Esc Esc для normal.
-Конфликт прямого native выхода остаётся для этапа terminal/jobs; конфигурация
-ToggleTerm в задаче буферов не менялась. Воспроизведение — windows-buffers-first.txt,
-artifact 1353158363400: обычный terminal и дополнительный toggleterm.
+Ctrl-\, Ctrl-n; открылся дополнительный ToggleTerm. Первое воспроизведение —
+windows-buffers-first.txt, artifact1353158363400. Тогда mode не записывался.
+
+2026-11-11, §171: причина уточнена native trace и source replay6dea7b8.
+Terminal-input (`t`) уже корректно обрабатывал chord; после завершения команды
+или первого escape редактор находится в terminal-normal (`nt`). Здесь normal
+mapping Ctrl-\ открывал/скрывал ToggleTerm. Прежнее объяснение через
+open_mapping неверно: опция не задана, terminal-mode mapping отсутствует.
+
+Исправлена одна expr-привязка: в terminal buffer возвращается native prefix,
+в коде сохраняется toggle. Из terminal-normal явный toggle — Ctrl-t/Space tt;
+Esc Esc/F7 сохранены. Source5 RED +1 control PASS →6 PASS Windows и Ubuntu,
+ещё22 соседних E2E на каждой ОС; PID/channel/stdout и DAP pause сохраняются.
+Постоянный регресс tests/e2e/terminal-escape.test.lua, IDE-PANEL-16.
+Mac и физическая доставка клавиш WezTerm остаются непроверенными.
 
 ## IDE-013 — Windows: Starship прерывает Git при первом prompt в cs2d
 

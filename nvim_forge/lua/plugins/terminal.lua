@@ -17,7 +17,11 @@ return {
             { "<leader>tV", "<cmd>ToggleTerm direction=vertical<CR>",   desc = "Terminal: vertical split" },
             -- VS Code-style Ctrl+\` (на терминалах часто <C-_> или <C-/>).
             -- Backtick неуниверсален, поэтому <C-\\> + <C-t> как алиасы.
-            { "<C-\\>",     "<cmd>ToggleTerm<CR>",                        desc = "Terminal: toggle" },
+            -- В terminal-normal сохраняем native prefix, включая repeat escape
+            -- и завершившийся job. Из кода остаётся прежний быстрый toggle.
+            { "<C-\\>", function()
+                return vim.bo.buftype == "terminal" and string.char(28) or "<cmd>ToggleTerm<CR>"
+            end, expr = true, desc = "Terminal: toggle / native prefix" },
             { "<C-t>",      "<cmd>ToggleTerm<CR>",                        desc = "Terminal: toggle" },
         },
         opts = {

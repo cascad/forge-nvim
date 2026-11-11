@@ -39,6 +39,13 @@ Editor e2e требует Git, ripgrep и подготовленные исхо�
 Сам тест запускает настоящую сборку с подключённым RPC UI и приватным
 профилем; подробнее — [e2e/README.md](e2e/README.md).
 
+Native terminal escape: `nvim -l tests/e2e/terminal-escape.test.lua` или
+`nvim -l tests/run.lua e2e --id IDE-PANEL-16`. Шесть native cases, включая
+completed/live/managed terminal, normal aliases и paused CodeLLDB PTY.
+Нужны editor plugins, Python 3 и Rust/CodeLLDB prerequisites; source RED,
+точные команды Windows/Ubuntu/Mac и границы GUI — в
+[terminal escape](e2e/README.md#native-terminal-escape--ide-panel-16--ide-023).
+
 DAP E2E также требует совместимые Go/Delve. Явная подготовка частных версий:
 `python3 -B tests/e2e/prepare_dap.py --download` (Windows: `python`).
 Docker готовит их при build; в тесте нет загрузки SDK/адаптера.
