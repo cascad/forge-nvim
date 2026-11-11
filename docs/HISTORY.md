@@ -302,6 +302,7 @@ Python реализован и проверен 2026-11-03; после возо�
 | §170 | [Ubuntu gates и native resize readiness](../nvim_forge/FIXLOG.md#170-ubuntu-gates-и-native-resize-readiness) |
 | §171 | [Native terminal escape: prefix в terminal-normal](../nvim_forge/FIXLOG.md#171-native-terminal-escape-prefix-в-terminal-normal) |
 | §172 | [Terminal и Trouble: общий маршрут и native views](../nvim_forge/FIXLOG.md#172-terminal-и-trouble-общий-маршрут-и-native-views) |
+| §173 | [Цветная рамка Locals и сохранение floating zoom](../nvim_forge/FIXLOG.md#173-цветная-рамка-locals-и-сохранение-floating-zoom) |
 
 ## Как читать и дополнять
 

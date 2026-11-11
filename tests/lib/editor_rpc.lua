@@ -4,6 +4,10 @@ local M = {}
 
 function M.start(argv, options)
   local self = { replies = {}, serial = 0, redraw = 0, screen = {}, stderr = {}, notifications = {}, api_errors = {}, exited = false }
+  if options.capture_ui then
+    assert(options.artifacts,'UI capture requires owned artifacts')
+    self.ui_capture=require('ui_capture').new(options.artifacts..'/ui-redraw.jsonl',options.capture_ui_limit)
+  end
   self.trace=require('editor_trace').new(options)
   local function trace(kind,fields,detail) if self.trace then self.trace:emit(kind,fields,detail) end end
   local unpacker = vim.mpack.Unpacker()
@@ -19,6 +23,7 @@ function M.start(argv, options)
       return
     end
     if message[2] ~= 'redraw' then return end
+    if self.ui_capture then self.ui_capture:redraw(message[3]) end
     self.redraw = self.redraw + 1
     for _, batch in ipairs(message[3]) do
       if batch[1] == 'grid_line' then
@@ -66,11 +71,13 @@ function M.start(argv, options)
     }), function(result)
       trace('process_complete',{code=result.code,signal=result.signal})
       self.exited = true; self.exit_code = result.code; self.exit_signal=result.signal
+      if self.ui_capture then self.ui_capture:close() end
     end)
     self.scope:attach(self.process.pid)
     trace('process_started',{pid=self.process.pid})
   end)
   if not spawned then
+    if self.ui_capture then self.ui_capture:close() end
     if self.process then
       pcall(function() self.process:kill('sigkill') end)
       vim.wait(2000,function() return self.exited end,10)

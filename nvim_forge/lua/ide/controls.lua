@@ -265,6 +265,8 @@ function M.zoom()
         height = math.max(1, vim.o.lines - 5), border = 'rounded',
         title = ' ' .. titles[ft(source)] .. ' | Space w z: вернуть ', title_pos = 'center',
     })
+    -- spec: IDE-PANEL-18. Исключение только overlay, shared buffer остаётся в slot.
+    vim.w[win].edgy_disable = true
     zoom = { source = source, win = win }
     vim.api.nvim_win_set_cursor(win, cursor)
     vim.fn.winrestview(view)
@@ -376,8 +378,10 @@ function M.refresh()
     end
     local current = vim.api.nvim_get_current_win()
     active_win = current
+    local source_gone = zoom and not valid(zoom.source)
     if zoom and (not valid(zoom.source) or (current ~= zoom.win and not (help and current == help.win))) then
         M.restore(false)
+        if source_gone then M.focus_code() end
     end
     if help and current ~= help.win then close_help(false) end
     for _, win in ipairs(vim.api.nvim_tabpage_list_wins(0)) do

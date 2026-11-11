@@ -1,0 +1,76 @@
+{
+  "date": "2026-11-11",
+  "source_baseline": "2719e39",
+  "files": {
+    "baseline-split.svg": {
+      "source": ".tests/editor-e2e/19738739259500/ui/00-baseline-split.svg",
+      "sha256": "17cec16aca79b1069aa16ce46906f97bc444786a8d8cb631eb036967cdc5819d"
+    },
+    "frame-compact.svg": {
+      "source": ".tests/editor-e2e/19738739259500/ui/03-frame-compact.svg",
+      "sha256": "ac5777d0b51c8be3d01a351b20c0737e8322cc1243a9cf3e0387e45432ad7e5e"
+    },
+    "frame-inactive-help.svg": {
+      "source": ".tests/editor-e2e/19738739259500/ui/04-frame-inactive-help.svg",
+      "sha256": "3e5953cf4afa960afa1218a52d1c9fdbd163c1389e0a09fafcb1107dc5ddbc5a"
+    },
+    "frame-compact.png": {
+      "source": "same native cells; offscreen System.Drawing, Consolas 15px, cells 9x18; not physical WezTerm",
+      "sha256": "e4fd3dd4374ab12b26cc1b838646e0fa7bed72ad38bb61a0f5bfb6cdf862afb7"
+    }
+  },
+  "sources": {
+    "nvim_forge/lua/ide/controls.lua": "fb6d9063294a018802455c2a0ade211ff33654c251ecbe87ab4e1b507eeeadda",
+    "nvim_forge/lazy-lock.json": "c4c20bdacf68b2982b5614d167f3b0b66192f281ad5837ae55231cc2680e35bb",
+    "nvim_forge/patches/plugins.json": "35f887bf775a2b71e3888b1f31eb583178b3616a890351489af1ed554dbe8c72",
+    "tests/diagnostics/panel-frame-preview.lua": "c954c63d9fc67fb1b977db3fff478931c924fb424d9b764ecdce5251b006e8b2",
+    "tests/diagnostics/render-ui.py": "de454859667499c59ad3d02073a191be77918fa03163b4166d75042dbadc7dc4",
+    "tests/lib/ui_grid.py": "d1b7ef63edef84e868a001f736650e8fa2a8b3e2082ea96cc532c016afac0a52",
+    "tests/lib/ui_capture.lua": "49420a079a5dbb8050810e8d2094a13bc583ec7024d3fb57c2914670c0d29ced",
+    "tests/e2e/panel-frame.test.lua": "7677179b24aee07cd6ca38e9e208a67d0fb4038eeb8d12ccc6e80d262b2a64ee",
+    "tests/e2e/ui-capture.test.lua": "02bf51e2af198ac76f9b501136fcca9718236e2f3d549837fddb56b1c3d897e5",
+    "tests/e2e/debug-panels.test.lua": "f30814bad226e9a439058bfbc21984e4e1c2edaaa5b604a6dd12657a3e4ea3ef"
+  },
+  "profiles": {
+    "windows": {
+      "path": ".tests/editor-e2e/19738739259500",
+      "capture_sha256": "60498e85731b696088fb9b4377b54f04ffe92ee32d7870f8a4b9f912c6c02893",
+      "report_sha256": "0e7d93f521ac213403b7206ae65da23dfac4c347a1c86e344f6abbc2b235eefa",
+      "checkpoints": [
+        "baseline-split",
+        "baseline-zoom",
+        "frame-active",
+        "frame-compact",
+        "frame-inactive-help",
+        "frame-refocused",
+        "frame-resized",
+        "frame-restored",
+        "preview-stopped"
+      ],
+      "dap": "real Go/Delve; same paused session/thread/frame; explicit Continue -> PANEL_AFTER"
+    },
+    "ubuntu": {
+      "path": ".tests/ubuntu/editor-e2e/16367319094509",
+      "capture_sha256": "79baea202eb9dd8b0409f9ae365dad46ee24b01cf91b48af0626721c68b038ce",
+      "report_sha256": "01211e003daef9b98a7550641f37e301db62b2e68cb4870137def4c31805d0d5",
+      "checkpoints": [
+        "baseline-split",
+        "baseline-zoom",
+        "frame-active",
+        "frame-compact",
+        "frame-inactive-help",
+        "frame-refocused",
+        "frame-resized",
+        "frame-restored",
+        "preview-stopped"
+      ],
+      "dap": "real Go/Delve; same paused session/thread/frame; explicit Continue -> PANEL_AFTER"
+    }
+  },
+  "limits": [
+    "Native single-grid RGB reconstruction, not physical WezTerm screenshots",
+    "Compact frame is existing zoom overlay, not persistent split border",
+    "No native macOS / physical GUI check",
+    "Font/DPI/Nerd glyphs/cursor/underline are not reproduced exactly"
+  ]
+}

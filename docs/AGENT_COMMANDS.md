@@ -5509,3 +5509,135 @@ git commit -m "feat(panels): unify Terminal and Trouble controls"
 git status --short
 git log -1 --format='%h %s'
 ```
+
+
+## 86. Цельная рамка Locals, RGB capture и docking zoom
+
+2026-11-11, FIXLOG173, IDE-076/101. Сначала actual Termide source через
+GitHub connector: tree d701d7b9244eebe513c3a3d893a44808343b0b65,
+crates/ui-render/src/panel_rendering.rs blob3bcdbab…8f и MIT LICENSE.
+Фактическая логика Borders::ALL/accent/bold/dim, Rust не переносился.
+Локально прочитаны SDK options.txt/api-ui-events.txt и pinned Edgy README/
+layout.lua: window-local edgy_disable уже штатный API. Чтения — Get-Content,
+rg -n, Python pathlib.read_text; поиск файлов — rg --files. Git diff/status/
+numstat/check не запускают редактор. После compaction первый PowerShell
+список ranges оказался некорректным, первый Python print встретил cp1251:
+исправлены только команды чтения (UTF8 env), файлы ими не менялись.
+
+Windows среда прямых запусков, cwd F:/repo/forge-nvim, login:false:
+
+```powershell
+$env:TEMP='F:/repo/forge-nvim/.tests/tmp'
+$env:TMP=$env:TEMP; $env:TMPDIR=$env:TEMP
+$env:NVIM_LOG_FILE="$env:TEMP/frames-agent.log"
+$env:PYTHONIOENCODING='utf-8'
+$env:npm_config_cache='F:/forge-nvim-tmp/npm-cache'
+$env:GOMAXPROCS='2'; $env:GOFLAGS='-p=2'
+$env:GOTOOLCHAIN='local'; $env:CARGO_BUILD_JOBS='2'
+```
+
+Подготовка immutable source: .tests/frames-prepare.py использует subprocess
+git archive --format=tar 2719e39 nvim_forge и tarfile filter=data, сохраняет
+archive.json с revision/SHA. Working tree не откатывается. Source override
+относится только к конфигу; драйвер и permanent tests — текущие.
+OpenSpec context/root перед созданием обоих changes разрешён на этот repo,
+не на старую папку. Использованы new/status/instructions proposal/design/
+specs/tasks; preview намеренно skip_specs=true, IDE-PANEL-18 — отдельная delta.
+
+```powershell
+python -B .tests/frames-prepare.py
+python -B .tests/frames-engine.py before
+& ./.tools/neovim/windows-x64/bin/nvim.exe -l tests/lib/ui_grid.test.lua
+& ./.tools/neovim/windows-x64/bin/nvim.exe -l tests/lib/ui_capture.test.lua
+& ./.tools/neovim/windows-x64/bin/nvim.exe -l tests/e2e/ui-capture.test.lua
+& ./.tools/neovim/windows-x64/bin/nvim.exe -l tests/e2e/panel-frame.test.lua
+$env:FORGE_FRAME_TRACE='1'
+& ./.tools/neovim/windows-x64/bin/nvim.exe -l tests/e2e/panel-frame.test.lua
+Remove-Item Env:FORGE_FRAME_TRACE
+$env:FORGE_TEST_ID='IDE-PANEL-18'
+$env:FORGE_E2E_CONFIG_SOURCE='F:/repo/forge-nvim/.tests/ubuntu/frames-source-config/nvim_forge'
+& ./.tools/neovim/windows-x64/bin/nvim.exe -l tests/e2e/debug-panels.test.lua
+Remove-Item Env:FORGE_TEST_ID
+Remove-Item Env:FORGE_E2E_CONFIG_SOURCE
+& ./.tools/neovim/windows-x64/bin/nvim.exe -l tests/e2e/debug-panels.test.lua
+& ./.tests/frames-finish.ps1 > .tests/frames-finish.txt 2>&1
+& ./.tests/frames-finish-rest.ps1 > .tests/frames-finish-rest.txt 2>&1
+python -B .tests/frames-audit.py > .tests/frames-audit.txt 2>&1
+```
+
+Первый finish остановился на marker-only source-close focus regression;
+его log сохранён frames-first-finish-failure.txt. После узкого focus fix
+Windows debug5PASS (frames-debug-windows-v2.txt) использован без лишнего
+повтора; final batch повторил immutable source на обеих ОС,3capture cases,
+frame и соседние suites. Первый Ubuntu frame остановился на missing-gopls
+WARN/hit-enter до проверки рамки; первый log/profile сохранены. После exact
+known-WARN readiness и сохранения primary error отдельно прогнан Ubuntu
+frame, затем rest последовательно final Windows frame и оставшиеся Ubuntu
+tool-panels/work-panels/outline/buffers/terminal-escape, quick/trace/strict.
+Current source/driver/test копии audit совпали, helper/runtime в пути не
+подменялись. Это причинные изменения, не «повтор до зелёного».
+
+Прямые команды контейнера (имена --name только для owned prefix
+forge-nvim-frames-; каждый --rm, сеть отключена compose,2CPU/3GiB/256pids):
+
+```powershell
+docker compose -f tests/containers/compose.yaml -f tests/containers/limits.yaml run --rm --no-deps --pull never --name forge-nvim-frames-source -e FORGE_TEST_ID=IDE-PANEL-18 -e FORGE_E2E_CONFIG_SOURCE=/workspace/.tests/frames-source-config/nvim_forge --entrypoint nvim ubuntu -l tests/e2e/debug-panels.test.lua
+docker compose -f tests/containers/compose.yaml -f tests/containers/limits.yaml run --rm --no-deps --pull never --name forge-nvim-frames-panel-frame --entrypoint nvim ubuntu -l tests/e2e/panel-frame.test.lua
+powershell -NoProfile -File scripts/test.ps1 quick
+& ./.tools/neovim/windows-x64/bin/nvim.exe -l tests/run.lua trace
+docker compose -f tests/containers/compose.yaml -f tests/containers/limits.yaml run --rm --no-deps --pull never --name forge-nvim-frames-quick ubuntu quick
+docker compose -f tests/containers/compose.yaml -f tests/containers/limits.yaml run --rm --no-deps --pull never --name forge-nvim-frames-trace --entrypoint nvim ubuntu -l tests/run.lua trace
+npx.cmd --yes @fission-ai/openspec@1.13.2 validate --all --strict --no-interactive
+```
+
+Для остальных suites меняются только name и файл после -l: debug-panels,
+ui-capture, tool-panels, work-panels, outline, buffers, terminal-escape.
+Тяжёлые Windows/Ubuntu E2E не параллелились. Подготовленный engine/image
+использован без build/pull. Docker Desktop/WSL lifecycle не вызывался.
+
+Capture — native UI RPC notifications: opt-in JSONL содержит redraw batches
+и checkpoints, не DOM/screenshot/выдуманные виджеты. Binary Window handle
+невалидного UTF8 хранится hex-объектом, text остаётся UTF8. Stdlib renderer
+экспортирует composited grid1 в SVG/HTML, frame JSON содержит реальные
+клетки/colors/config/geometry. Additional packages не устанавливались.
+
+```powershell
+python -B tests/diagnostics/render-ui.py .tests/editor-e2e/19738739259500/ui-redraw.jsonl --output .tests/panel-frame-export
+& ./.tests/frames-raster.ps1 -FrameProfile F:/repo/forge-nvim/.tests/editor-e2e/19738739259500
+python -B .tests/frames-publish.py
+python -B .tests/frames-engine.py after
+```
+
+Render CLI вызывался E2E с его private path/output/ui. Private raster helper
+System.Drawing (Consolas15px,9×18) дал PNG для visual review, не GUI.
+Canonical SVG копируется без перерисовки из final profile. Published files/
+source/capture SHA — docs/assets/panel-frames/evidence.json. View_image
+показал actual compact/inactive images; CUA/физический WezTerm не использован.
+Font/DPI/Nerd glyphs/cursor/underline не объявлены проверенными.
+
+OpenSpec итоговая сверка через openspec-verify-change для обоих changes:
+
+```powershell
+npx.cmd --yes @fission-ai/openspec@1.13.2 status --change prototype-panel-frame-styles --json
+npx.cmd --yes @fission-ai/openspec@1.13.2 instructions apply --change prototype-panel-frame-styles --json
+npx.cmd --yes @fission-ai/openspec@1.13.2 status --change keep-panel-zoom-floating --json
+npx.cmd --yes @fission-ai/openspec@1.13.2 instructions apply --change keep-panel-zoom-floating --json
+git diff --check
+git diff --numstat -- nvim_forge/FIXLOG.md docs/AGENT_COMMANDS.md
+git diff --cached --check
+git diff --cached --stat
+git commit -m "fix(panels): preserve floating zoom and preview full frames"
+git status --short
+git log -1 --format='%h %s'
+```
+
+По44 positive E2E/35 profiles на ОС и1 source RED, всего72 final native
+profiles: root0/signal0/APIerrors[]/own scopes empty. Ubuntu tool-panels
+16450767099451 завершил свою группу144 graceful SIGTERM; не все descendants
+вышли сами. Quick360/trace11 +1manual-link SKIP на ОС, strict89. Source63
+normalized runtime/pin/patch files и exact driver/test copies сверены, SDK
+SHA74AFF15B…C6AD9 и pins прежние. Raw append FIXLOG173/commands86 защищён
+исходными sizes/SHA в .tests/frames-journal-prefix.json. После документов
+trace/strict/audit повторены. Mac/physical GUI и постоянные split frames
+остаются открытыми, changes не архивируются. Разовые scripts/raw reports
+в .tests игнорируются Git; постоянные доказательные сценарии находятся в tests/.

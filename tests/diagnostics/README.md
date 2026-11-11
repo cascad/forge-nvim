@@ -1,5 +1,55 @@
 # Диагностика native terminal и CLI
 
+## Цельная рамка Locals и RGB UI capture
+
+IDE-076: [сравнение/цена/границы](../../docs/PANEL_FRAME_REVIEW.md).
+Нужны заранее подготовленные editor plugins и Go/Delve; сетевой setup
+самими тестами не запускается. На Windows из корня checkout:
+
+```powershell
+$env:TEMP=Join-Path (Get-Location) '.tests/tmp'
+New-Item -ItemType Directory -Force -Path $env:TEMP | Out-Null
+$env:TMP=$env:TEMP; $env:TMPDIR=$env:TEMP
+$env:NVIM_LOG_FILE=Join-Path $env:TEMP 'panel-frame.log'
+. ./scripts/lib/nvim-sdk.ps1
+$forgeNvim=Get-ForgeNvim (Get-Location).Path
+& $forgeNvim -l tests/e2e/ui-capture.test.lua
+& $forgeNvim -l tests/e2e/panel-frame.test.lua
+& $forgeNvim -l tests/e2e/debug-panels.test.lua
+```
+
+Ubuntu/macOS используют официальный `nvim` с теми же `-l` аргументами.
+С уже работающим Ubuntu image/engine, без build/pull/сети:
+
+```sh
+docker compose -f tests/containers/compose.yaml -f tests/containers/limits.yaml run --rm --no-deps --pull never --entrypoint nvim ubuntu -l tests/e2e/panel-frame.test.lua
+```
+
+Логи выводят путь профиля `.tests/editor-e2e/<id>` (Ubuntu mount —
+`.tests/ubuntu/editor-e2e/<id>`). Внутри `ui-redraw.jsonl`, `ui/frames.json`,
+`ui/index.html`, SVG и `panel-frame.json`; source/driver/quit/scope сохранены
+рядом. Тест рамки делает девять checkpoints настоящей paused сессии.
+Known WARN об отсутствующем gopls разрешён явно: LSP этому DAP тесту не нужен;
+неожиданные blocking prompts и ERROR остаются отказами.
+
+Повторный экспорт raw записи без графических пакетов:
+
+```sh
+python -B tests/diagnostics/render-ui.py .tests/editor-e2e/PROFILE/ui-redraw.jsonl --output .tests/panel-frame-export
+```
+
+На Ubuntu/macOS команда — `python3`. Нужен composited RGB single-grid1,
+не ext_multigrid. Захват в RPC включается только `capture_ui=true`, default
+OFF; cap16MiB, ошибка записи видна отдельно и не разрывает живой RPC.
+Binary MessagePack Window handles сохраняются hex-объектом, UTF8 text точен.
+CLI экспортирует реальные клетки; physical GUI/font/DPI это не проверяет.
+Три E2E capture покрывают RGB/wide UTF8/scroll/resize, cap и default OFF.
+
+Preview можно включить в собственной уже открытой paused Locals zoom с
+`Space w z`: `:lua _G.frame_preview=dofile('/absolute/checkout/tests/diagnostics/panel-frame-preview.lua'); _G.frame_preview.start()`.
+Отключить: `:lua _G.frame_preview.stop()`. Compact placement делает только
+E2E для сравнения; runtime default и все обычные split не переоформляются.
+
 ## Project/session: настоящий TUI и restart
 
 `nvim -l tests/diagnostics/project-session.lua` после общей plugin подготовки.

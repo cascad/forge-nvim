@@ -99,6 +99,7 @@ local function start(root, options, holder)
   local rpc = require('editor_rpc').start({ vim.v.progpath, '--headless', '--embed', '-i', 'NONE',
     '--cmd', 'lua dofile(' .. vim.inspect(observer) .. ')', '-u', config .. '/init.lua' }, {
     cwd = project, env = env, clear_env = true, timeout = options.timeout, artifacts=dir,
+    capture_ui=options.capture_ui,capture_ui_limit=options.capture_ui_limit,
   })
   holder.rpc=rpc
   local self = { rpc = rpc, dir = dir, project = project, runtime = runtime }

@@ -47,6 +47,8 @@ IDE-001 параллельно ждёт диагностических данн�
 | Готово Windows/Ubuntu test harness | IDE-098: native readiness resize fixture | Source Ubuntu FAIL→одинаковый native CodeLLDB PASS Windows/Ubuntu, actual viewport/rows и raw mismatch обязательны (§170). Shared helper/product/SDK прежние, без OS branch/sleep |
 | Готово Windows/Ubuntu; Mac/GUI открыт | IDE-023: native terminal escape | Одна expr-привязка, source5 RED/1 control →6 native PASS и22 соседних E2E на каждой ОС (§171). Terminal-input/normal, completed/live/managed и paused DAP; PID/channel/history сохранены |
 | Готово Windows/Ubuntu; Mac/GUI открыт | Terminal/Trouble, IDE-099/100 | Space w T/x, common controls, current-view hide и native Trouble actions;9 новых +30 прежних E2E/source8 RED на ОС (§172). Show больше не скрывает native toggle; штатная help остаётся popup |
+| Прототип готов; общий стиль открыт | IDE-076: цельная цветная рамка | Реальные Locals/Delve, RGB active/dim/resize/restore, компактный образец и [сравнение](PANEL_FRAME_REVIEW.md); default style прежний. Постоянные рамки split и Mac/GUI отдельно (§173) |
+| Готово Windows/Ubuntu; Mac/GUI открыт | IDE-101: docking zoom при помощи | Документированный window-local Edgy opt-out, source RED → native IDE-PANEL-18 PASS; исходный slot/shared buffer сохранены, исчезнувший source возвращает код (§173) |
 | Отложено до готового backend | Остаток SQL workflow, IDE-062 | SQLS references provider отсутствует. Собственный binder/index/LSP fork отменён (§143); не подменять references grep и не объявлять полную SQL поддержку |
 | Затем | Остальная [матрица языков](LANGUAGE_MATRIX.md) | SQL references IDE-062, Bash DAP IDE-057; Mac/native и оставшиеся сценарии матрицы |
 | После функциональной матрицы | Упрощение архитектуры | Общее ядро, явные системные границы и setup; сокращение дублирования с сохранением E2E |
@@ -66,8 +68,10 @@ production root/session glue тогда не менялся. IDE-095 выпол�
 Python SELF теперь использует общий --id filter. Для IDE-097 готов явный capture
 (§169); caller пока неизвестен, green repeat не считается исправлением.
 Terminal/Trouble завершили общую normal модель Windows/Ubuntu в §172;
-IDE-023 устранён в §171. Следом — отдельный UI prototype рамок IDE-076,
-оставшаяся языковая матрица и выбор упрощений по FEATURE_REVIEW.
+IDE-023 устранён в §171. UI prototype рамок IDE-076 и найденный docking
+zoom IDE-101 выполнены в §173. Следом — выбрать постоянную реализацию рамок
+обычных split по сравнению, затем оставшаяся языковая матрица и упрощения
+по FEATURE_REVIEW. Прототип не включает рамки всех панелей по умолчанию.
 Mac/GUI gates остаются отдельными.
 §169 добавляет проверенный explicit capture через bundled CodeLLDB/PDB:
 4 control E2E,4 original trials без воспроизведения. Системный LLVM LLDB
@@ -345,12 +349,13 @@ Mac остаётся непроверенным. Дальше растим по�
 
 ## Этап 3. Единая клавиатурная модель панелей
 
-- [ ] IDE-076: рамки и заголовки панелей по образцу Termide. Исследовать
-  [референс](https://github.com/termide/termide/blob/main/doc/en/architecture.md),
-  ограничения Neovim split и Edgy/winbar/statusline; сделать прототип одной
-  панели, сравнить активную/неактивную рамку и title. Затем решить, применять
-  ли ко всем панелям. Сохранить Space w, zoom/resize, рабочую площадь и
-  Windows/macOS/Ubuntu; реализация требует UI E2E и visual/GUI проверки.
+- [x] IDE-076, исследование/прототип: владелец выбрал цельную рамку и цвет;
+  pinned Termide source/Neovim ограничения изучены. Test-only Locals,
+  active/dim/help/resize/restore и компактный образец в реальном DAP;
+  [сравнение и цена в ячейках](PANEL_FRAME_REVIEW.md), §173.
+- [ ] IDE-076, постоянное оформление: выбрать способ рамок обычных split,
+  проверить все панели/площадь/Space w и native Mac/physical GUI.
+  Прототип — существующий zoom overlay, не готовая замена layout.
 
 Первый пилот — **Run & Debug**: он сразу проверяет переходы между кодом,
 Locals, стеком и Output. После проверки переносим модель на Outline,

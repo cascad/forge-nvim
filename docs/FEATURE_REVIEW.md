@@ -382,5 +382,9 @@ language/test roots, interpreter/tools и save/format разобраны в
   Uniform interpreter/root policies ещё требуют отдельных сценариев;
   существующие Git результаты не заменяют их полной проверки.
 
-Принятых удалений рабочих фич пока нет. Termide frames (IDE-076) остаются
-отдельным будущим прототипом; оформление не должно добавлять ещё один lifecycle.
+Принятых удалений рабочих фич пока нет. Termide frames (IDE-076) получили
+отдельный opt-in native Locals prototype: [сравнение и ограничения](PANEL_FRAME_REVIEW.md),
+§173. Он украшает существующий zoom, включая компактный визуальный образец;
+постоянные рамки обычных split ещё не реализованы. Default style прежний,
+новый window manager/lifecycle не добавлен. Найденный IDE-101 исправляет
+штатный zoom отдельным window-local флагом, без новой layout-обёртки.

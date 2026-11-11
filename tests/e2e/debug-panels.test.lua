@@ -20,6 +20,7 @@ local function start()
   e = require('editor').start(root, { timeout = 240000,
     env = { PATH = path, GOTOOLCHAIN = 'local', GOENV = 'off', GOPROXY = 'off',
       GOCACHE = go_cache } })
+  assert(vim.uv.fs_copyfile(root..'/tests/e2e/debug-panels.test.lua',e.dir..'/debug-panels.test.lua'))
   for _, name in ipairs({ 'main.go', 'go.mod' }) do
     assert(vim.uv.fs_copyfile(root .. '/tests/e2e/fixtures/debug-panels/' .. name, e.project .. '/' .. name))
   end
@@ -163,6 +164,34 @@ check('IDE-PANEL-2 Output zoom/restore, REPL текст, q и восстанов
   paused()
   focus(' wc', 'dap-repl')
   assert(text('dap-repl'):find('PANEL_BEFORE', 1, true))
+end)
+
+check('IDE-PANEL-18 Locals zoom сохраняет floating при открытой помощи', function()
+  pause()
+  focus(' wd','dapui_scopes')
+  local original=e:lua([[return {win=vim.api.nvim_get_current_win(),buf=vim.api.nvim_get_current_buf(),
+    width=vim.api.nvim_win_get_width(0),height=vim.api.nvim_win_get_height(0)}]])
+  e:input(' wz')
+  e:wait('native floating Locals',function() return e:lua([[return vim.api.nvim_win_get_config(0).relative=='editor']]) end)
+  local overlay=e:lua('return vim.api.nvim_get_current_win()')
+  focus('?','forge-panel-help')
+  local report={original=original,overlay=overlay,observations={}}
+  local deadline=vim.uv.hrtime()+300000000
+  repeat
+    local observed=e:lua([[local w,source=...;return {config=vim.api.nvim_win_get_config(w),buf=vim.api.nvim_win_get_buf(w),
+      source_disable=vim.w[source].edgy_disable or false,buffer_disable=vim.b[vim.api.nvim_win_get_buf(w)].edgy_disable or false}]],{overlay,original.win})
+    report.observations[#report.observations+1]=observed
+    vim.fn.writefile({vim.json.encode(report)},e.dir..'/zoom-layout.json')
+    T.eq(observed.config.relative,'editor','Edgy docked native zoom overlay')
+    T.eq(observed.buf,original.buf);T.eq(observed.source_disable,false);T.eq(observed.buffer_disable,false)
+    paused();vim.wait(25)
+  until vim.uv.hrtime()>=deadline
+  focus('q','dapui_scopes');T.eq(e:lua('return vim.api.nvim_get_current_win()'),overlay)
+  e:input('<Esc>')
+  e:wait('исходное окно и geometry',function() return e:lua([[local o=...;return vim.api.nvim_get_current_win()==o.win and
+    vim.api.nvim_win_get_width(0)==o.width and vim.api.nvim_win_get_height(0)==o.height]],{original}) end)
+  T.eq(e:lua('return vim.api.nvim_win_is_valid(...)',{overlay}),false)
+  assert(text('dap-repl'):find('PANEL_BEFORE',1,true));paused()
 end)
 
 check('IDE-PANEL-2 Esc возвращает zoom, q скрывает группу без сиротских окон', function()

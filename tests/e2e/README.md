@@ -21,6 +21,15 @@
 
 ## Запуск на целевых машинах и внутри VM
 
+UI frame prototype (IDE-076): `ui-capture.test.lua` проверяет opt-in RGB
+record/replay на настоящем редакторе (3 cases); `panel-frame.test.lua` —
+9 состояний одной реальной Go/Delve pause, полную active/dim рамку, compact
+sample, help/resize/restore и Continue. IDE-PANEL-18 в `debug-panels.test.lua`
+отдельно воспроизводит docking общего zoom **без preview**, исходный source
+даёт RED. [Команды](../diagnostics/README.md#цельная-рамка-locals-и-rgb-ui-capture),
+[визуальное сравнение и ограничения](../../docs/PANEL_FRAME_REVIEW.md).
+Это native UI E2E, не физическая проверка WezTerm и не постоянные рамки split.
+
 Текущая схема: **Windows native + Ubuntu Docker на Windows + отдельный Mac**.
 Mint временно отложен. VM остаётся вариантом для нативных Linux GUI-проверок.
 

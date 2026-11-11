@@ -9004,3 +9004,108 @@ tool-panels E2E/registry/tests README; PANEL_KEYS/QUICKSTART/PANELS,
 PROBLEMS/IDE_ROADMAP/FEATURE_REVIEW/LANGUAGE_MATRIX/HISTORY/AGENT_COMMANDS,
 OpenSpec change. Evidence: .tests/panel-tools-evidence.json / audit.py;
 старые journal prefixes сохранены raw append с SHA guard.
+
+
+## 173. Цветная рамка Locals и сохранение floating zoom
+
+2026-11-11. IDE-076, IDE-101. Спека: IDE-PANEL-18 (FIX), change
+keep-panel-zoom-floating; tooling/research — prototype-panel-frame-styles
+(skip_specs=true, default style не меняется).
+
+**Проблема и пожелание.** Владелец уточнил: в Termide понравились цельная
+рамка, цвет и аккуратность; отдельного выбора заголовков не делал. Изучен
+фактический panel_rendering.rs tree d701d7b9244eebe513c3a3d893a44808343b0b65
+(blob3bcdbab34302082da237613478c6f2177490cd8f), MIT. Там Borders::ALL,
+accent/bold при фокусе и disabled без фокуса. Rust не переносился. В выбранном
+Neovim winborder — для floats; Edgy требует laststatus=3. Четыре стороны
+обычного split одной настройкой не получаются; заголовок с разделителями
+не заменяет пожелание о полной рамке.
+
+**Прототип.** Test-only module явно start/stop оборачивает существующий
+controls.refresh и украшает только floating Locals: rounded border целиком,
+accent/dim из нынешней темы, название в border вместо duplicate winbar.
+Нет product startup loading, нового manager/autocmd/timer. В реальном
+Go/Delve item.Value=42 снимаются9 состояний: baseline split/zoom, active,
+compact, inactive-help, refocused, resized, restored, stopped. Compact —
+тот же zoom overlay над исходным slot, не постоянная рамка split. Original
+32×12 с winbar даёт32×11 текста; compact inner31×11/outer33×13 стоит одного
+столбца, рамка занимает область winbar/разделителя. Full zoom136×40 получает
+40 строк вместо39 после снятия duplicate winbar. Stop возвращает функцию,
+options и highlights. Session/thread/frame одинаковы; Continue даёт реальный
+PANEL_AFTER после сохранённого PANEL_BEFORE42.
+
+**IDE-101 — причина и исходное воспроизведение.** Prototype17598934382700
+показал: zoom1019 relative=editor → relative="" при открытии ?. Trace
+restore_calls=[]: overlay пристыковал Edgy по filetype, restore не вызывался.
+Отдельный постоянный IDE-PANEL-18 без preview воспроизвёл то же на immutable
+2719e39 Windows/Ubuntu; ожидаемый0PASS/1FAIL, logs frames-source-*-final.txt.
+Новый тест не зависит от раскраски или RGB renderer.
+
+**Изменение runtime.** После nvim_open_win только overlay получает штатный
+документированный vim.w[win].edgy_disable. Shared buffer и исходный slot
+не исключаются из docking. Marker-only debug regression сначала дал2PASS/
+3FAIL: первый причинный FAIL — закрытие source backend оставляло фокус
+в другой Debug-секции, следующие shared-session cases каскадные. Причина —
+cleanup раньше неявно зависел от docking. Existing refresh теперь вызывает
+focus_code только при исчезновении source. Явный выбор другой существующей
+панели сохраняется. Эти4 добавленные строки controls.lua — весь product
+diff; SDK,67 pins/backports и default оформление прежние.
+
+**Проверяемый visual capture.** Opt-in RPC пишет bounded16MiB raw redraw
+JSONL/checkpoints; default OFF, ошибка/limit не разрывают живой RPC. Stdlib
+Python replay сохраняет single-grid RGB/UTF8/wide/repeat/clear/scroll/resize
+в SVG/HTML. Binary MessagePack Window handles оказались строками CD03E8:
+первый JSON был невалидным UTF8 (17055246034300). Теперь только невалидные
+UTF8 строки кодируются hex-объектом, valid text точен; transport не менялся.
+Native capture3E2E проверяют actual цвета/scroll100×35/wide, cap512 и default
+OFF; три отдельных protocol unit vectors проверяют rect scroll, resize/
+style/escaping и unsupported errors. Native Unicode artifact path проверен
+тем же stdio writer и проходил до правок; отдельного Unicode path bug/fix нет.
+
+**Неудачные предпосылки tooling.** Source capture trial1PASS/2FAIL показал
+отсутствие opt-in forwarding, не старый product bug. Первый Ubuntu frame
+profile16256224028091 остановился ещё при :edit main.go: known missing-gopls
+WARN открыл hit-enter, RPC Lua timeout; до рамки не дошли. Root завершился1
+после owned cleanup SIGTERM. Новый test readiness использует existing
+ack_warning только для точного WARN; LSP DAP-прототипу не нужен, ERROR/другой
+prompt не принимаются. Cleanup assertion больше не подменяет первичную
+ошибку: она сохраняется первой в итоговом report/log. Первый отказ и raw
+state/stderr сохранены в frames-ubuntu-first-frame-failure.txt и profile.
+Первые raster font/Bitmap overload ошибки были только экспортным helper;
+канонический SVG box glyphs соединяет vector strokes, чтобы сетка шрифта
+не рисовала пунктир. Runtime border ими не исправлялся.
+
+**Итоговый E2E и audit.** Последовательно Windows/Ubuntu по44 checks:
+debug-panels5, ui-capture3, panel-frame1, tool-panels9, work-panels6,
+outline6, buffers8, terminal-escape6. По35 positive native profiles и1 source
+RED на ОС, всего72 final profiles. Все final root exit/signal0, APIerrors[],
+QuitPre/VimLeavePre/VimLeave, own scopes пусты, root hard-kill нет. Один
+Ubuntu tool-panels profile16450767099451 потребовал graceful SIGTERM своей
+оставшейся uv.spawn group144; это не natural exit всех потомков. Audit
+сверил63 normalized runtime/pin/patch sources, exact driver/test copies и
+девять checkpoint states. Final frame Windows19738739259500,
+Ubuntu16367319094509; actual RGB все4 угла/active/dim/resize/restore PASS.
+
+Quick360/16files и trace11/2files на каждой ОС; trace имеет по1 явному SKIP
+manual-link. Strict89/89. Full suite, native Mac и physical WezTerm GUI не
+запускались. Ubuntu — уже работающий engine28.5.1/image8a6b73261d91,
+no network/build/pull, один container2CPU/3GiB/256pids; Desktop/WSL не
+управлялись. Read-only after check: engine/image прежние, own frames containers
+отсутствуют. Windows TEMP/cache на F:, SDK SHA74AFF15B…C6AD9 сохранён.
+
+**Вывод.** IDE-101 проверен Windows/Ubuntu; Mac/GUI gate открыт. IDE-076
+получил наглядный native prototype и цену в ячейках, но не закрыт:
+постоянные рамки обычных split требуют отдельного размещения/resize/focus
+дизайна и проверки всех панелей. Оформление по умолчанию не включено,
+новый lifecycle/плагин не добавлен. Изображения — реконструкция actual RGB
+grid, не физические WezTerm screenshots; font/DPI/Nerd glyphs/cursor/
+underline проверяются отдельно. Changes не архивируются. IDE-097/087 и
+остальная языковая матрица этим шагом не исправлены.
+
+**Файлы и доказательства.** ide/controls.lua, debug-panels/UI capture/frame
+E2E, tests/lib/ui_capture.lua/ui_grid.py и unit vectors, opt-in RPC forwarding,
+diagnostics preview/render CLI, registry; docs/PANEL_FRAME_REVIEW.md и
+assets/panel-frames (actual SVG/PNG + SHA manifest), PANEL_KEYS/FEATURE_REVIEW/
+ROADMAP/PROBLEMS/HISTORY/AGENT_COMMANDS, два OpenSpec changes. Raw evidence —
+.tests/frames-evidence.json, audit.py, source/current logs; interim FAIL
+сохранены отдельно. FIXLOG/commands только raw append с prefix SHA guard.

@@ -10,7 +10,7 @@ function M.new(options)
   local copy=options.artifacts..'/driver-source';vim.fn.mkdir(copy,'p')
   local sources={}
   for _,name in ipairs({'editor_rpc.lua','editor_process.lua','editor_trace.lua',
-    'process_scope.lua','process_scope_windows.lua','process_scope_posix.lua'}) do
+    'process_scope.lua','process_scope_windows.lua','process_scope_posix.lua','ui_capture.lua'}) do
     assert(uv.fs_copyfile(lib..'/'..name,copy..'/'..name))
     local raw=table.concat(vim.fn.readfile(copy..'/'..name,'b'),'\n')
     sources[name]={bytes=#raw,sha256=vim.fn.sha256(raw)}
