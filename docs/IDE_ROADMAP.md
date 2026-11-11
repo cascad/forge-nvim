@@ -42,7 +42,8 @@ IDE-001 параллельно ждёт диагностических данн�
 | Готово Windows test harness | IDE-094: dangling Windows junction | Source malformed RED →3 native link PASS, ещё10 lifecycle/descendants PASS и1 POSIX-only SKIP. Четыре owned остатка удалены; negative debug cleanup теперь проходит (§163), quick353/strict78. Ubuntu/Mac не запускались |
 | Готово Windows | Project/session native baseline, IDE-080 | Настоящий TUI: quit/relaunch/Space qs и A→B→A,4 backend PID,3 files/2 tabpages/cursors/unsaved edit/panels; permanent E2E +12 framework checks PASS, quick358/strict81 (§166). [Границы](PROJECT_SESSION_REVIEW.md), Ubuntu/Mac открыты |
 | Готово Windows; Ubuntu/Mac gates открыты | IDE-095: фокус после project restore | Source RED→5 native focus/legacy PASS +21 соседних editor checks, quick358/trace11/strict82 (§167). Второй restore callback удалён, listed-file fallback сохранён перед reveal; production net -8 строк |
-| Следующий независимый шаг | IDE-096: фильтр Python SELF suites | Targeted --id запускает три посторонних wrapper. Привести python_case к общему фильтру; native CLI regression skip/no spawn и прежние exit/output |
+| Готово Windows test harness | IDE-096: фильтр Python SELF suites | Общий early matcher, native source3RED/4PASS→7PASS;4 реальных wrapper PASS, targeted оставляет2 файла/5 editor cases без SELF. Quick358/trace11/strict83 (§168), Ubuntu/Mac не запускались |
+| Следующий приоритет | IDE-097: native TUI wstream assert | Первый integration run: assert !stream->closed в wstream.c:72 после tabedit, Quickfix timeout. Raw FAIL сохранён; повтор PASS не fix. Нужны caller/minimal repro и native SDK regression |
 | Отложено до готового backend | Остаток SQL workflow, IDE-062 | SQLS references provider отсутствует. Собственный binder/index/LSP fork отменён (§143); не подменять references grep и не объявлять полную SQL поддержку |
 | Затем | Остальная [матрица языков](LANGUAGE_MATRIX.md) | SQL references IDE-062, Bash DAP IDE-057; Mac/native и оставшиеся сценарии матрицы |
 | После функциональной матрицы | Упрощение архитектуры | Общее ядро, явные системные границы и setup; сокращение дублирования с сохранением E2E |
@@ -54,13 +55,16 @@ Desktop/WSL не запускались. Native project/session baseline зав�
 в §166: реальные разные backend, files/cursors/tabs/cwd и панели сохранены;
 production root/session glue тогда не менялся. IDE-095 выполнен следующим
 шагом (§167): один LoadPost вместо второго cleanup/open, необходимый fallback
-проверен настоящей Help-only сессией. Следующий независимый шаг — IDE-096,
-согласованный --id фильтр для Python SELF wrappers, без нового test runner.
+проверен настоящей Help-only сессией. IDE-096 завершён следующим шагом (§168):
+Python SELF теперь использует общий --id filter. Следующий приоритет — IDE-097,
+native TUI write после закрытия stream, без маскировки assert или product glue.
 Read-only проверка 21:51 MSK: Desktop/backend процессов и engine pipe нет,
 логи заканчиваются старым событием17:45, нового startup не видно. Container
 не запускался; отсутствие engine не выдаётся за новый crash от этих тестов.
 Read-only check22:43MSK также не нашёл pipe (.tests/ide095-engine-check.json).
 Ubuntu IDE-095 не запускался; Desktop/WSL агент не запускал и не перезапускал.
+Read-only check23:18MSK также не нашёл pipe (.tests/ide096-engine-check.json).
+Ubuntu IDE-096 не выполнялся; SDK/client Docker не перенастраивались.
 IDE-091 исправлен отдельно (§160); источник исторического одиночного failure
 без trace не объявляется единственным. IDE-088/090/091 Ubuntu gates открыты:
 последняя read-only проверка Linux engine не нашла pipe. Desktop/WSL агент

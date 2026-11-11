@@ -2,6 +2,9 @@
 local M = {}
 
 function M.run(root, test_file, class, title)
+  if not require('check').matches('SELF: ' .. title, os.getenv('FORGE_TEST_ID')) then
+    os.exit(0)
+  end
   -- Разница только в имени системного интерпретатора; сценарии общие.
   local names = vim.fn.has('win32') == 1 and { 'python', 'python3' } or { 'python3', 'python' }
   local python = ''

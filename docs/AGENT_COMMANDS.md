@@ -5111,3 +5111,63 @@ Neo-tree о смене cwd на SDK Help. Три Python SELF wrappers отраб
 пока без fix. History prefix bytes/SHA сняты до append§167/§80; после append
 проверены исходные prefix и Git additions-only. Production только2 Lua files,
 lazy-lock/SDK прежние, source artifacts и .tests не включаются в commit.
+
+
+## 81. IDE-096: ранний Python filter и native CLI, 2026-11-10–11
+
+Рабочий root F:/repo/forge-nvim, login:false; TEMP/TMP/TMPDIR/NVIM_LOG_FILE
+на F:, npm cache F:/forge-nvim-tmp/npm-cache. OpenSpec list/context подтвердили
+nearest root; respect-python-case-filter, skip_specs:true, apply ready.
+Proposal/design/tasks и context прочитаны. Product Lua/pins/SDK прежние.
+
+```powershell
+$env:FORGE_PYTHON_CASE_SOURCE='F:/repo/forge-nvim/.tests/ide096-source'
+& .tools/neovim/windows-x64/bin/nvim.exe -l tests/e2e/python-case.test.lua
+$env:FORGE_PYTHON_CASE_SOURCE='F:/repo/forge-nvim/tests/lib'
+& .tools/neovim/windows-x64/bin/nvim.exe -l tests/e2e/python-case.test.lua
+```
+
+Source module записан subprocess git show920e69e:tests/lib/python_case.lua,
+без shell interpolation. Native fixture наблюдает настоящий exepath (возвращает
+original), actual helper source и Python PID/argv/cwd marker. Observer ставится
+до require module. Missing PATH изменяется только у private child. Source4PASS/
+3FAIL→current7PASS; у чужих ID нет lookup/marker/output. Выбранные pass/failure7/
+missing-Python SKIP сохраняют native exit и streams; Unicode/space argv реальны.
+Empty Windows env в ready может быть nil: test нормализует только assertion.
+
+```powershell
+& .tools/neovim/windows-x64/bin/nvim.exe -l tests/shell-diagnostics.test.lua
+& .tools/neovim/windows-x64/bin/nvim.exe -l tests/e2e/shell-diagnostics.test.lua
+& .tools/neovim/windows-x64/bin/nvim.exe -l tests/e2e/entrypoints.test.lua
+& .tools/neovim/windows-x64/bin/nvim.exe -l tests/e2e/entrypoint-diagnostics.test.lua
+& .tools/neovim/windows-x64/bin/nvim.exe -l tests/run.lua e2e --id IDE-PANEL-15
+powershell -NoProfile -File scripts/test.ps1 quick
+& .tools/neovim/windows-x64/bin/nvim.exe -l tests/run.lua trace
+npx.cmd --yes @fission-ai/openspec@1.13.2 validate --all --strict --no-interactive
+python -B .tests/audit-ide096.py
+```
+
+Все suites последовательно, Go2/-p=2 для editor run. Реальные4 wrappers без
+filter PASS. Первый targeted run дал2 selected files/51NONE, но Quickfix timeout:
+raw native stream assertion. Сохранены first-failure/report.json, registry.txt,
+project-case.log/legacy-case.log и profile45802477968200; SDK binary SHA прежний.
+Один ограниченный повтор той же команды дал2PASS/5 editor cases/51NONE без SELF.
+Не retry-until-green и не SDK fix: исходный failure остаётся IDE-097. Raw TUI
+text содержит !stream->closed/wstream.c; caller/process/stack не установлены.
+Inspect pinned wstream.c подтвердил assert на source line72, source не менялся.
+
+Quick358/14files, trace11/2files, strict83. Registry report/case logs повторного
+run скопированы до следующих runner в ide096-registry-report.json/project-case.log/
+legacy-case.log. Audit сверяет14 exact source/final cases и5 editor snapshots,
+проверяет отсутствие лишних SELF, SDK SHA и сохраняет первый assertion в evidence.
+2026-11-11 после возобновления повторены audit и native7: PASS, исходники прежние.
+
+```powershell
+docker version --format '{{json .Server.Version}}'
+```
+
+Read-only23:18MSK 2026-11-10 exit1, pipe отсутствует; observed timestamp в
+.tests/ide096-engine-check.json. Docker Desktop/WSL/containers не управлялись,
+SDK не пересобирался, Ubuntu/Mac не проверены. History prefix bytes/SHA сняты
+до append§168/§81; проверены original prefixes и additions-only. Test artifacts
+и source module override в .tests не коммитятся. Следующий приоритет — IDE-097.

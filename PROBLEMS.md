@@ -10,7 +10,20 @@
 
 Маршрут и приоритеты: [рабочий план nvim_forge](docs/IDE_ROADMAP.md).
 Для новых пунктов используем следующий свободный ID `IDE-xxx`; исходный
-симптом хранится здесь, этап и состояние — в плане. Следующий ID: `IDE-097`.
+симптом хранится здесь, этап и состояние — в плане. Следующий ID: `IDE-098`.
+
+## IDE-097 — native TUI: assert wstream после открытия вкладки
+
+2026-11-10: первый IDE-096 integration run дал Quickfix open timeout в
+project-session; raw tui-final.json содержит native Neovim assert
+`!stream->closed`, event/wstream.c:72, после tabedit third.txt. Profile
+45802477968200, SDK BinarySHA74AFF15B…C6AD9 прежний. TUI exit ещё false перед
+host quit; backend/host завершились, own scope after0. Точный процесс/caller
+assert и stack не сняты. Product Lua/test TUI fixture не менялись.
+Один ограниченный повтор общего run прошёл; это не считается fix. Исходный
+FAIL/report/log и raw output сохранены, .tests/ide097-native-assert.json.
+Следующий шаг — изолировать native TUI stream lifecycle, получить caller/minimal
+repro и регресс; не маскировать assert/увеличивать timeout без причины.
 
 ## IDE-096 — targeted E2E запускает посторонние Python SELF suites
 
@@ -20,7 +33,12 @@ entrypoint-diagnostics. В tests/lib/python_case.lua нет проверки FOR
 до поиска интерпретатора/запуска Python; остальные Lua checks используют общий
 фильтр. Нужен общий contract фильтра и native CLI regression: чужой ID не должен
 запускать Python, совпадающий SELF/unfiltered должны сохранить exit/output.
-Наблюдение из report/log §167, fix пока не выполнялся; product Lua не затронут.
+Наблюдение из report/log §167. §168: три строки раннего check.matches guard,
+native source920e69e3RED/4PASS→7PASS; no lookup/no Python/no output подтверждены.
+Четыре настоящих wrapper проходят без filter; общий --id IDE-PANEL-15 теперь
+оставляет только2 выбранных файла/5 editor cases,51 NONE, посторонних SELF нет.
+Первый integration FAIL (native assert) вынесен в IDE-097, повтор не объявлен
+его исправлением. Production Lua/SDK/pins прежние; Ubuntu/Mac не проверены.
 
 ## IDE-095 — фокус после project/session restart возвращается в Explorer
 

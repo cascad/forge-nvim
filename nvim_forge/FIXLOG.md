@@ -8597,3 +8597,71 @@ registry/README, PROJECT_SESSION_REVIEW/FEATURE_REVIEW/IDE_ROADMAP/PROBLEMS,
 HISTORY/AGENT_COMMANDS и OpenSpec delta. Evidence .tests/ide095-evidence.json,
 ide095-final-red-*.txt, ide095-registry-{windows.txt,report.json},
 ide095-regression-*.txt, quick/trace/strict/engine-check.json.
+
+
+## 168. Python SELF: фильтр до lookup и запуска
+
+Проверки: 2026-11-10; повтор после паузы и запись: 2026-11-11.
+IDE-096, test-only respect-python-case-filter, skip_specs:true.
+
+**Проблема и причина.** Targeted e2e --id IDE-PANEL-15 выполнял нужные5 editor
+cases и три чужих SELF Python wrappers (§167). Python_case печатал protocol
+напрямую, не проверяя FORGE_TEST_ID до exepath/discovery/spawn. У других Lua
+cases общий check.matches уже отсекает работу до запуска body.
+
+**Изменение.** Три строки early guard в существующем python_case.run используют
+check.matches полного SELF: + title. Чужой filter завершает файл0 без output:
+runner видит NONE, а не SKIP/PASS. Interpreter discovery, timeout20s, argv,
+выбранные ok/FAIL/SKIP и передача stdout/stderr при ошибке прежние. Product
+nvim_forge/WezTerm/SDK/pins не менялись; новый runner/matcher не создавался.
+
+**Source RED и постоянный E2E.** Native python-case.test.lua запускает отдельный
+Neovim и настоящий короткий Python fixture в Unicode/space path. Observer
+устанавливается до require helper, пишет реальные exepath calls и возвращает
+исходный результат. Ready/source copy подтверждают observer; Python marker
+содержит actual PID/executable/cwd/argv. Нет подмены interpreter/discovery.
+Семь vectors: foreign ID, несовпадающая prefix boundary, foreign без Python
+PATH; unfiltered, SELF prefix, failure7 и выбранный missing-Python SKIP.
+Три excluded cases требуют пустых lookup log/output и отсутствия Python marker.
+Выбранный failure обязан дать native exit1, код7 в protocol и оба output stream.
+
+Source920e69e helper закреплён через git show в .tests/ide096-source, override
+существует только в test driver. Финальными идентичными test/driver/fixture
+bytes source дал4PASS/3FAIL, current7PASS. Source foreign/boundary действительно
+запускали Python; foreign-no-python искал оба имени и печатал лишний SKIP.
+Первый pilot ошибочно ожидал пустую строку вместо unset vim.env для Windows
+empty environment; исправлен только observer assertion. Этот pilot не product
+RED. Actual module source и fixtures сохранены для каждого из14 replay cases.
+После паузы 2026-11-11 native7 снова PASS без изменения кода.
+
+**Интеграция.** Четыре настоящих wrapper (unit diagnostics и3 CLI E2E) без
+filter прошли. Общий --id IDE-PANEL-15 теперь выбирает ровно2 файла/5 editor
+cases;51 остальных NONE, посторонних SELF/Python cases нет. Quick358/14files,
+trace11/2files и strict83/83 PASS. Audit проверил exact helper/driver/fixture
+bytes, реальный Python sentinel/argv/lookup и config snapshots повторного
+editor run; SDK SHA74AFF15B…C6AD9 прежний. Evidence .tests/ide096-evidence.json,
+source-replay/native-final/resume-native.txt, real-*.txt, registry-repeat.txt.
+
+**Первый integration failure сохранён отдельно.** Первый run не открыл Quickfix
+и дал FAIL; raw tui-final.json45802477968200 содержит Neovim assertion
+!stream->closed из event/wstream.c (source line72), после tabedit third.txt.
+TUI exit ещё false до host cleanup; host native exit0/APIerrors[]/scope after0.
+Точный процесс с assert, caller и stack не сняты. Product Lua/SDK/test TUI
+fixture в этом изменении не менялись. Один ограниченный повтор прошёл5 editor
+cases; он не объявляется исправлением assert. Исходный FAIL/report/log
+сохранены в .tests/ide096-first-failure, raw profile и ide097-native-assert.json.
+Это открытый IDE-097, следующий приоритет — native stream lifecycle/minimal
+repro. Связь с Docker или зависанием всей системы не установлена.
+
+**Границы.** Read-only Docker version23:18MSK 2026-11-10: engine pipe отсутствует,
+exit1 (.tests/ide096-engine-check.json). Desktop/WSL/container не запускались,
+SDK не пересобирался. Ubuntu/Mac native не проверены. Headless CLI E2E не
+заменяет редакторный TUI/GUI regression и не закрывает IDE-097.
+
+**Вывод.** Фильтр теперь останавливает постороннюю работу до поиска Python,
+сохраняя полный запуск и выбранные ошибки. Native assertion записан отдельным
+инцидентом; зелёный повтор не стирает первый отказ.
+
+**Файлы.** tests/lib/python_case.lua, tests/e2e/python-case.test.lua,
+tests/e2e/fixtures/python-case/{driver.lua,probe.py}, registry/README,
+PROBLEMS/IDE_ROADMAP/HISTORY/AGENT_COMMANDS и test-only OpenSpec change.

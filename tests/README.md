@@ -123,6 +123,13 @@ WT-CLIP-1. Служебные самопроверки начинаются с `
 попадают. Строки, не похожие на протокол, раннер пропускает (они остаются в
 логе).
 
+Python SELF wrappers используют тот же matcher, что `check.lua`: чужой
+`FORGE_TEST_ID` завершает файл0 без output до поиска интерпретатора и запуска
+suite. Под `--id` это «нет случаев», а не SKIP/PASS. Полный запуск сохраняет
+прежние ok/FAIL/SKIP; failure передаёт stdout/stderr Python. Native contract:
+`nvim -l tests/e2e/python-case.test.lua` —7 vectors с реальным Neovim/Python,
+файловым marker и observer фактических exepath calls; Python не подменяется.
+
 **Вердикт файла** (раннер, `tests/run.lua`):
 
 | Что случилось | Вердикт |

@@ -32,6 +32,16 @@ Native stale-PPID regression компилирует фактический SDK s
 командой `build-process-ancestry.ps1 -SdkCandidate` (нужен MSVC).
 Windows lifecycle guard на POSIX явно SKIP; там остаётся официальный SDK.
 
+IDE-097: один native TUI session run остановился с `!stream->closed` в
+wstream.c:72, после чего не открылся Quickfix. Raw assert и первый FAIL
+сохранены (§168); повтор прошёл, caller/stack пока не получены. Это открытый
+SDK/TUI пункт, не закрытый зелёными headless checks.
+
+CLI framework filter (IDE-096): `nvim -l tests/e2e/python-case.test.lua` на
+Windows/Ubuntu/Mac с Python3. Он запускает настоящий Neovim и короткий Python
+fixture, проверяет lookup/no spawn, UTF8 argv и exit/output; это тест каркаса,
+отдельный от editor workflows. Подготовка67 plugins этому файлу не нужна.
+
 Debug toggle с настоящим Rust/CodeLLDB: Windows —
 `& .tools/neovim/windows-x64/bin/nvim.exe -l tests/e2e/debug-toggle.test.lua`;
 Ubuntu с уже работающим Linux engine и подготовленным image —

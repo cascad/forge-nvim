@@ -292,6 +292,7 @@ Python реализован и проверен 2026-11-03; после возо�
 | §165 | [History assertion: terminal padding и реальные потери](../nvim_forge/FIXLOG.md#165-history-assertion-terminal-padding-и-реальные-потери) |
 | §166 | [Project sessions: native TUI restart baseline](../nvim_forge/FIXLOG.md#166-project-sessions-native-tui-restart-baseline) |
 | §167 | [Session focus: один restore route и listed file](../nvim_forge/FIXLOG.md#167-session-focus-один-restore-route-и-listed-file) |
+| §168 | [Python SELF: фильтр до lookup и запуска](../nvim_forge/FIXLOG.md#168-python-self-фильтр-до-lookup-и-запуска) |
 
 ## Как читать и дополнять
 
