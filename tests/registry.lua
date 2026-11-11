@@ -32,6 +32,7 @@ return {
   { file = 'tests/e2e/entrypoints.test.lua', suite = 'e2e' },
   { file = 'tests/e2e/entrypoint-diagnostics.test.lua', suite = 'e2e' },
   { file = 'tests/e2e/python-case.test.lua', suite = 'e2e', timeout = 90 },
+  { file = 'tests/e2e/native-assert.test.lua', suite = 'e2e', timeout = 120 },
   { file = 'tests/e2e/native-probe.test.lua', suite = 'e2e' },
   { file = 'tests/e2e/windows-sdk.test.lua', suite = 'e2e', timeout = 60 },
   { file = 'tests/e2e/process-lifecycle.test.lua', suite = 'e2e', timeout = 60 },

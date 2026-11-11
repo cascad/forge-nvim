@@ -8665,3 +8665,85 @@ SDK не пересобирался. Ubuntu/Mac native не проверены. 
 **Файлы.** tests/lib/python_case.lua, tests/e2e/python-case.test.lua,
 tests/e2e/fixtures/python-case/{driver.lua,probe.py}, registry/README,
 PROBLEMS/IDE_ROADMAP/HISTORY/AGENT_COMMANDS и test-only OpenSpec change.
+
+
+## 169. Native assertion: проверенный сборщик стека
+
+Дата: 2026-11-11. IDE-097 остаётся открыт. Test-only change
+`capture-native-wstream-assert` (`skip_specs: true`); product поведение и
+выбранный Windows SDK не меняются.
+
+**Проблема.** Первый native project-session run (§168) напечатал
+`!stream->closed` из wstream.c:72 после tabedit. Точный процесс/caller/stack
+не сняты. Во время следующей диагностики владелец заметил окно ошибки Python,
+но его текст не помнит. Запуск системного LLVM LLDB был действием агента.
+
+**Причина и границы знания.** PE import установленного liblldb.dll требует
+python310.dll; в проверенных каталогах загрузчика DLL не найдена. Это вероятный
+источник окна, не доказанная идентификация без его текста. CLI Python E2E7/7
+прошли отдельно (§168). Системный LLDB больше не запускался. Подготовленный
+CodeLLDB имеет собственный Python3.12.7; проверены LLDB22.1.4, embedded Python,
+hashes и PDB lookup wstream_write. Причина исходного wstream assert неизвестна:
+четыре native call sites прочитаны, но ни один не объявляется caller по догадке.
+
+**Изменение.** Явный observer через bundled LLDB, без lldbinit и пользовательского
+HOME. Worker проверяет private owner marker/token, SDK lock/hash/PDB и actual
+image/creation time; query handles удерживают identity. Свежие target PID берутся
+из собственного RPC/jobpid. Controller дублирует только QUERY handle точного
+fixture Job debugger-потомку; worker проверяет membership target+host и закрывает
+handle. Нет attach к произвольному PID или поиска по общему списку процессов.
+Breakpoint _wassert сохраняет actual threads/frames, x64 CRT expression/file/line,
+phase и доступные stream fields. Сначала durable capture, затем diagnostic kill
+только остановленного assertion target. Обычные stop/deadline делают detach.
+
+Pilot показал вложенные Jobs libuv: NULL/current Job не включает ConPTY sibling.
+Отказ до attach сохранён как ошибка observer, а не баг product; исправлена
+передача query handle точного scope. Общий controller дополнительно ограничен
+90s и отдельным собственным Job: зависший synchronous RPC не оставляет потомков.
+Windows HOME/TEMP/log остаются на F:. Error mode private launcher восстанавливается;
+искусственный control child направляет CRT в stderr, системные настройки прежние.
+
+**Проверки.** Четыре Windows native E2E: normal detach+RPC liveness;
+deadline+detach/liveness; refusal foreign Job и foreign recipient handle;
+реальный _wassert в отдельном controlled child. Последний требует actual frame,
+FORGE_CONTROL_ONLY/forge_capture_control/97, capture до termination; host остаётся
+отзывчивым. LLDB exit0, root native0/APIerrors[], Job естественно пуст перед close.
+Это positive control инструмента, не исходный RED IDE-097.
+
+Соседние editor-process/process-lifecycle/quit-trace/editor-descendants и полный
+project-session прошли. Вместе с новыми control:17PASS/1 ожидаемый POSIX SKIP.
+Quick358/14files, trace11/2files (один manual-link SKIP внутри trace), strict84/84.
+Четыре ограниченных original TUI trials:4 разных owned профиля,8 observer attach,
+по11 terminal input chunks полностью приняты;6 phases дошли до Quickfix,2 tabs
+и third.txt сохранены. Все observers detached/exit0, TUI/host native0, scope after0,
+terminated:false. Последний trial проверил внешний bounded launcher. Assert не
+повторился; debugger меняет timing. Actual caller по-прежнему не получен.
+
+**Неудачные прототипы сохранены.** Первый control run0/3: fast callback нельзя
+писать через vim.fn без schedule; assertion target не должен одновременно быть
+launcher host. Второй run прошёл detach/refusal, но проба child через неправильный
+Windows socket path заблокировала только controller9208. Его image/command/creation
+проверены перед остановкой собственного Process object; принадлежащий ему Job
+закрылся, единственный оставшийся runtime удалён через owner-guarded editor_runtime.
+Финальный control использует file-gated отдельный child без такого socket RPC.
+Эти отказы не считаются воспроизведением product assertion и не скрыты retry PASS.
+
+**Evidence.** .tests/ide097-evidence.json и ide097-audit.py проверяют4 control,
+4 original profiles, actual CRT arguments, byte copies worker/helper, native
+exit/empty scopes и SDK SHA74AFF15B…C6AD9. Original45802477968200 и первичный
+ide097-native-assert.json сохранены; resolved:false. Audit сначала ошибочно
+ожидал current file third.txt после copen; corrected assertion проверяет actual
+third.txt window и отдельный Quickfix, затем audit PASS. Product/pins diff пуст.
+Journals append-only: исходные prefix bytes/SHA проверены до и после добавления.
+
+**Вывод.** Ошибка системного LLDB больше не мешает этим проверкам; инструмент
+захвата подтверждён настоящими native controls. IDE-097 не исправлен и не закрыт.
+Следующий причинный шаг: captured caller → minimal native repro → отдельный SDK
+fix/source RED/регресс. Связь с Docker или зависанием компьютера не установлена;
+Desktop/WSL не управлялись, Ubuntu/Mac здесь не запускались.
+
+**Файлы.** tests/diagnostics/native-assert.lua и native_assert_worker.py,
+tests/lib/native_assert.lua, query-only метод process_scope_windows,
+tests/e2e/native-assert.test.lua и control fixture, registry/README,
+docs/NATIVE_ASSERT_DIAGNOSTICS.md, PROBLEMS/IDE_ROADMAP/HISTORY/AGENT_COMMANDS,
+test-only OpenSpec change.

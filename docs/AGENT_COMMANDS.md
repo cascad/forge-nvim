@@ -5171,3 +5171,75 @@ Read-only23:18MSK 2026-11-10 exit1, pipe отсутствует; observed timest
 SDK не пересобирался, Ubuntu/Mac не проверены. History prefix bytes/SHA сняты
 до append§168/§81; проверены original prefixes и additions-only. Test artifacts
 и source module override в .tests не коммитятся. Следующий приоритет — IDE-097.
+
+
+## 82. IDE-097: bundled LLDB и owned native capture, 2026-11-11
+
+Работа в F:/repo/forge-nvim. Все Windows TEMP/TMP/TMPDIR/NVIM_LOG_FILE на F:,
+npm cache F:/forge-nvim-tmp/npm-cache, editor Go2/-p=2. Нужных execution approvals
+не спрашивали. Docker/WSL/SDK install или системный Python не управлялись.
+
+```powershell
+Get-Content -LiteralPath .tests/ide097-lldb-dependency.json
+Get-Content -LiteralPath .tests/ide097-lldb-imports.txt
+Get-Content -LiteralPath .tests/ide097-nvim-imports.txt
+Get-Content -LiteralPath .tests/ide097-debugger-check/symbols.json
+& ./.tests/ide097-check-debugger.ps1
+```
+
+PE imports сняты llvm-readobj из установленного LLVM (не запуском liblldb).
+Системный lldb --version был запущен однажды до выяснения missing python310.dll;
+повторно не использовался. Exact user error неизвестен. Private PS launcher
+проверяет3 hashes из rust-deps manifest, запускает bundled LLDB --no-lldbinit,
+собственный PYTHONHOME/PYTHONPATH и scoped SetErrorMode, восстанавливаемый finally.
+Версия22.1.4-codelldb, embedded Python3.12.7, ctypes и PDB wstream_write PASS.
+Первый symbols.lldb имел PS5 UTF8 BOM, исправлен на UTF8 без BOM; это tool error.
+
+```powershell
+& ./.tools/neovim/windows-x64/bin/nvim.exe -l tests/e2e/native-assert.test.lua
+& ./.tools/neovim/windows-x64/bin/nvim.exe -l tests/diagnostics/native-assert.lua
+& ./.tests/ide097-checks.ps1
+powershell -NoProfile -File scripts/test.ps1 quick
+& ./.tools/neovim/windows-x64/bin/nvim.exe -l tests/run.lua trace
+npx.cmd --yes @fission-ai/openspec@1.13.2 validate --all --strict --no-interactive
+python -B .tests/ide097-audit.py
+```
+
+Постоянные команды: docs/NATIVE_ASSERT_DIAGNOSTICS.md. Первый тест:4 real controls,
+в том числе искусственный _wassert; не original RED. Общий probe дополнительно
+имеет outer90s/owned Job, наблюдает original TUI frontend/backend по свежим PID,
+фазам и числу реально принятых terminal bytes. Bad/foreign Job отклоняется доattach.
+Worker идёт внутри prepared LLDB, не требует системного Python3.10. Query-only
+handle передаётся через DuplicateHandle точного scope; current NULL Job оказался
+вложенным libuv Job и не видел ConPTY sibling. Руководствовались Microsoft
+QueryInformationJobObject/process-ID-list/DuplicateHandle и официальным LLDB API;
+ссылки сохранены в диагностическом руководстве.
+
+Разовый checks.ps1 последовательно запускает native-assert, editor-process,
+process-lifecycle, quit-trace, editor-descendants и project-session; stdout/stderr
+каждого в .tests/ide097-<name>.txt. Результат17PASS/1POSIX SKIP. Quick358/14files,
+trace11/2files, strict84. Четыре успешных original profiles4735058187900,
+4827391519100,5129053609200,5342661772100: no capture, оба observer detached/exit0,
+native TUI/host0, scope naturally0. Последний outer launcher5342626487500 также0.
+Первый trial4582017343000 отказал доattach из-за неверного immediate Job query;
+это pilot observer error. Все исходные failures и logs сохранены, не зачёркнуты.
+
+Два начальных control prototypes потребовали исправить fast callback/self-host
+assertion и Windows socket fixture. Второй оставил только свой controller9208:
+Get-CimInstance Win32_Process -Filter 'ProcessId = 9208' подтвердил полный exe,
+command tests/e2e/native-assert.test.lua и creation09:51:10; затем Stop-Process
+-InputObject использован только для его полученного Process object. Новый control
+child использует file release, этот socket path больше не применяется.
+
+```powershell
+& ./.tools/neovim/windows-x64/bin/nvim.exe -l .tests/ide097-clean-runtime.lua
+```
+
+Guarded cleanup проверил exact absolute F:/repo/forge-nvim/.tests/tmp/
+9208-4272189469700-forge-editor, owner root/token и отсутствие старого PID,
+затем существующий editor_runtime.remove удалил только этот private runtime.
+Пользовательские приложения не останавливались. Audit проверил source copies,
+CRT args, actual reports, сохранённый первичный assert и unchanged product/SDK.
+FIXLOG169/commands82 добавлены raw append после prefix-size/SHA snapshot;
+git additions-only проверены. Разовые скрипты и .tests artifacts не коммитятся.
+IDE-097 открыт, SDK не пересобран; Linux/macOS native coverage не заявляется.

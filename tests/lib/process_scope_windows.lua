@@ -26,6 +26,8 @@ int __stdcall TerminateJobObject(void*, unsigned int);
 void* __stdcall OpenProcess(uint32_t, int, uint32_t);
 int __stdcall CloseHandle(void*);
 uint32_t __stdcall GetLastError(void);
+void* __stdcall GetCurrentProcess(void);
+int __stdcall DuplicateHandle(void*, void*, void*, void**, uint32_t, int, uint32_t);
 ]]
 local kernel=ffi.load('kernel32')
 local M={}
@@ -66,6 +68,25 @@ function M.new()
     assert(kernel.QueryInformationJobObject(handle,1,accounting,ffi.sizeof(accounting),nil)~=0,
       failure('QueryInformationJobObject'))
     return tonumber(accounting.ActiveProcesses)
+  end
+  -- Explicit diagnostics receive QUERY rights only to this exact fixture Job.
+  -- NULL in QueryInformationJobObject would select libuv's nested immediate Job.
+  function self:duplicate_query_handle(pid)
+    assert(handle~=nil,'Process scope already closed')
+    local ids=ffi.new('uint8_t[?]',8+4096*ffi.sizeof('uintptr_t'))
+    assert(kernel.QueryInformationJobObject(handle,3,ids,ffi.sizeof(ids),nil)~=0,
+      failure('QueryInformationJobObject process list'))
+    local count=tonumber(ffi.cast('uint32_t*',ids)[1])
+    local members=ffi.cast('uintptr_t*',ids+8)
+    local found=false;for i=0,count-1 do if tonumber(members[i])==pid then found=true;break end end
+    assert(found,'Debugger is outside the fixture Job')
+    local process=kernel.OpenProcess(0x40,0,pid) -- PROCESS_DUP_HANDLE.
+    assert(process~=nil,failure('OpenProcess duplicate recipient'))
+    local duplicate=ffi.new('void*[1]')
+    local copied=kernel.DuplicateHandle(kernel.GetCurrentProcess(),handle,process,duplicate,4,0,0) -- JOB_OBJECT_QUERY.
+    local err=copied==0 and failure('DuplicateHandle query Job') or nil
+    kernel.CloseHandle(process);assert(copied~=0,err)
+    return tonumber(ffi.cast('uintptr_t',duplicate[0]))
   end
   function self:close()
     if self.result then return self.result end

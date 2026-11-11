@@ -25,6 +25,13 @@ FAIL/report/log и raw output сохранены, .tests/ide097-native-assert.js
 Следующий шаг — изолировать native TUI stream lifecycle, получить caller/minimal
 repro и регресс; не маскировать assert/увеличивать timeout без причины.
 
+2026-11-11, §169: [явный native capture](docs/NATIVE_ASSERT_DIAGNOSTICS.md)
+через bundled CodeLLDB/PDB,4 Windows E2E инструмента (включая настоящий
+искусственный CRT assert).4 bounded original trials не воспроизвели сбой,
+actual caller по-прежнему неизвестен; это не fix. Во время диагностики запуск
+системного LLDB мог показать окно из-за отсутствующего python310.dll; его
+больше не используем. Python CLI E2E7/7 прошли, product/SDK/pins прежние.
+
 ## IDE-096 — targeted E2E запускает посторонние Python SELF suites
 
 2026-11-10: общий `tests/run.lua e2e --id IDE-PANEL-15` выполнил нужные пять

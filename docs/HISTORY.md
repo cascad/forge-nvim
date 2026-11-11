@@ -1,6 +1,6 @@
 # HISTORY — единая хронология проекта
 
-Обновлено: 2026-11-10. История разработки терминальной IDE от Helix и раннего
+Обновлено: 2026-11-11. История разработки терминальной IDE от Helix и раннего
 Neovim до нынешнего nvim_forge. Здесь одна последовательность и ссылки на
 подробности; новые исправления описываются в FIXLOG, затем добавляются сюда.
 
@@ -293,6 +293,12 @@ Python реализован и проверен 2026-11-03; после возо�
 | §166 | [Project sessions: native TUI restart baseline](../nvim_forge/FIXLOG.md#166-project-sessions-native-tui-restart-baseline) |
 | §167 | [Session focus: один restore route и listed file](../nvim_forge/FIXLOG.md#167-session-focus-один-restore-route-и-listed-file) |
 | §168 | [Python SELF: фильтр до lookup и запуска](../nvim_forge/FIXLOG.md#168-python-self-фильтр-до-lookup-и-запуска) |
+
+## 2026-11-11
+
+| Запись | История проблемы и решения |
+|---|---|
+| §169 | [Native assertion: проверенный сборщик стека](../nvim_forge/FIXLOG.md#169-native-assertion-проверенный-сборщик-стека) |
 
 ## Как читать и дополнять
 

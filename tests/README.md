@@ -130,6 +130,13 @@ suite. Под `--id` это «нет случаев», а не SKIP/PASS. Пол
 `nvim -l tests/e2e/python-case.test.lua` —7 vectors с реальным Neovim/Python,
 файловым marker и observer фактических exepath calls; Python не подменяется.
 
+IDE-097: [Windows native assertion observer](../docs/NATIVE_ASSERT_DIAGNOSTICS.md).
+`nvim -l tests/e2e/native-assert.test.lua` — четыре настоящих SELF control E2E
+через подготовленный CodeLLDB (detach/deadline/foreign Job/искусственный assert).
+Это тест инструмента, не воспроизведение исходного бага. Явный original TUI
+trial: `nvim -l tests/diagnostics/native-assert.lua`, свежие owned PID/phase/stack;
+product/SDK не меняет. Нужен выбранный Windows SDK/PDB; другие ОС — SKIP.
+
 **Вердикт файла** (раннер, `tests/run.lua`):
 
 | Что случилось | Вердикт |
