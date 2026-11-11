@@ -103,11 +103,22 @@ local function check(name, fn)
       end
       if not ok and choosing then
         local captured,data=pcall(e.lua,e,[[local expected=...;local s=require('neo-tree.sources.manager').get_state_for_window()
-          local function info(n) return n and {name=n.name,path=n.path,id=n:get_id(),expanded=n:is_expanded(),depth=n:get_depth()} or false end
+          local function info(n) return n and {name=n.name,path=n.path,id=n:get_id(),expanded=n:is_expanded(),depth=n:get_depth(),
+            loaded=n.loaded,children=vim.deepcopy(n:get_child_ids()),filtered_by=vim.deepcopy(n.filtered_by),
+            skip_node=n.skip_node,type=n.type} or false end
           local rows={};if s and s.tree then for i=1,vim.api.nvim_buf_line_count(0) do
             local n=s.tree:get_node(i);if n then rows[#rows+1]={row=i,node=info(n)} end end end
+          local nodes,dropped={},0
+          local function collect(parent)
+            for _,n in ipairs(s.tree:get_nodes(parent)) do
+              if #nodes<128 then nodes[#nodes+1]=info(n);collect(n:get_id()) else dropped=dropped+1 end
+            end
+          end
+          if s and s.tree then collect() end
           return {expected=expected,ready=s and s._ready,path=s and s.path,source=s and s.name,
-            cursor=vim.api.nvim_win_get_cursor(0),selected=s and s.tree and info(s.tree:get_node()),rows=rows}]],{choosing})
+            cursor=vim.api.nvim_win_get_cursor(0),selected=s and s.tree and info(s.tree:get_node()),rows=rows,
+            nodes=nodes,dropped=dropped,filtered_items=s and s.filtered_items,search_pattern=s and s.search_pattern,
+            expanded=s and s.default_expanded_nodes,explicitly_opened=s and s.explicitly_opened_nodes}]],{choosing})
         vim.fn.writefile({vim.json.encode(captured and data or {error=tostring(data),expected=choosing})},e.dir..'/tree-choose-failure.json')
       end
       e:snapshot(name)

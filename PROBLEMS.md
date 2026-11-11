@@ -24,7 +24,12 @@ ready=true/expanded=true, но child отсутствует в visible rows. Ф�
 Добавлены failure-only tree-choose-failure.json, self test copy и opt-in
 bounded native event trace; ожидания/deadline/поведение locator не менялись.
 Один source replay и current trace/NoTrace дали7/7, что не объясняет два отказа
-и не является product fix. История §177, общая стабильность Files открыта.
+и не является product fix. §178: controlled native IO воспроизвёл механизм
+на Windows/Ubuntu: более старый full-root completion заменяет новое дерево,
+оставляя expanded=true/loaded=false/children=[] и существующий disk child.
+Historical failures без scan trace не приписываются ему как единственной
+причине. Change reject-stale-filesystem-scans/IDE-FILE-5 готовит regression и
+узкое исправление; runtime пока прежний, общая стабильность Files открыта.
 
 ## IDE-103 — Files delete может стирать несохранённый buffer
 

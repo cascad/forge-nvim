@@ -27,6 +27,25 @@ dropped count, FileAdded/BeforeRender/AfterRender, parent/child native state
 ошибки под ним не доказывает исправление. Default OFF, product init его не
 загружает. На Mac/physical GUI результата пока нет.
 
+Controlled IO reproducer: `nvim -l tests/diagnostics/file-create-order.lua`;
+Windows — выбранный SDK с TEMP/TMP/TMPDIR/NVIM_LOG_FILE на F: как ниже.
+Ubuntu — та же container команда с `-l tests/diagnostics/file-create-order.lua`.
+Это отдельный private editor process: helper удерживает один последний
+настоящий async root readdir от Neo-tree после реального watcher event,
+пользовательский a создаёт child и новый результат, затем старый ответ
+выпускается. Native entries/errors не заменяются, scan/renderer не подделаны.
+При cleanup libuv функции возвращаются; в обычном редакторе hook не запускать.
+
+`file-create-order.json` содержит before/newer/after nodes/rows, disk_child,
+native producer stack, held/released/drained и completed renders (cap64).
+Exit0 означает, что наблюдение снято штатно; `stale=true` означает
+воспроизведение бага, не PASS исправления. Queue barrier из4 turns относится
+только к final shallow callback→on_exit→job_complete→render→AFTER_RENDER.
+Windows/Ubuntu воспроизводят expanded=true/loaded=false/no-child при actual
+disk file; это совместимый механизм двух прежних untraced failures, не
+доказательство их единственной причины. [План исправления](../../openspec/changes/reject-stale-filesystem-scans/tasks.md),
+FIXLOG §178. Production/SDK/pins прежние, native Mac/physical GUI не запускались.
+
 ## Цельная рамка Locals и RGB UI capture
 
 IDE-076: [сравнение/цена/границы](../../docs/PANEL_FRAME_REVIEW.md).

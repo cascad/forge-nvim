@@ -5912,3 +5912,76 @@ copies и SDK74AFF15B…C6AD9. Prefix sizes/hash проверяются пере
 старые journal bytes не перекодируются. После docs повторяются только лёгкие
 trace/strict/audit, не тяжёлые native наборы без новой причины. Итоговые29PASS
 на ОС не означают исправление IDE-104, full suite/Mac/physicalGUI не запускались.
+
+
+## 90. IDE-104: порядок настоящих scan completions
+
+2026-11-11, FIXLOG §178. Диагностика source b94fc54; runtime fix пока нет.
+PowerShell без profile, cwd F:/repo/forge-nvim, TEMP/TMP/TMPDIR и NVIM_LOG_FILE
+в .tests/tmp на F:, PYTHONIOENCODING=utf-8, npm_config_cache на F: как в §89.
+Read-only Get-Content/rg: fs_scan.lua, filesystem/init.lua/commands.lua,
+renderer.lua, common/commands.lua, NUI native nodes, сохранённые failures §177.
+
+```powershell
+git status --short
+git log -2 --oneline
+docker version --format '{{.Server.Version}}'
+docker image inspect forge-nvim-tests:ubuntu24.04-nvim0.12.2 --format '{{.Id}}'
+docker compose -f tests/containers/compose.yaml -f tests/containers/limits.yaml run --rm --no-deps --pull never --name forge-nvim-tree-create-nodes --entrypoint nvim -e 'FORGE_TEST_ID=IDE-FILE-1 создать каталог/файл' ubuntu -l tests/e2e/file-explorer.test.lua > .tests/tree-create-node-probe.txt 2>&1
+& ./.tests/tree-create-probes.ps1 > .tests/tree-create-probes.txt 2>&1
+docker compose -f tests/containers/compose.yaml -f tests/containers/limits.yaml run --rm --no-deps --pull never --name forge-nvim-tree-create-order --entrypoint nvim ubuntu -l tests/diagnostics/file-create-order.lua > .tests/tree-create-order-first.txt 2>&1
+& ./.tools/neovim/windows-x64/bin/nvim.exe -l tests/diagnostics/file-create-order.lua > .tests/tree-create-order-windows.txt 2>&1
+docker compose -f tests/containers/compose.yaml -f tests/containers/limits.yaml run --rm --no-deps --pull never --name forge-nvim-tree-create-order-final --entrypoint nvim ubuntu -l tests/diagnostics/file-create-order.lua > .tests/tree-create-order-ubuntu.txt 2>&1
+& ./.tests/tree-create-finish.ps1 > .tests/tree-create-finish.txt 2>&1
+python -B .tests/tree-create-audit.py > .tests/tree-create-audit.txt 2>&1
+```
+
+Probes — ровно три дополнительных fresh source trials после первого, каждый
+с тем же early full-name filter; всего4 ordinary1PASS. Дальше не зацикливали
+случайный replay. First controlled diagnostic держал реальный первый batch;
+следующие удерживают последний native callback для известной shallow chain.
+Finish поочерёдно Windows→Ubuntu выполняет final exact diagnostic, обычные
+Files7, trace11; strict92. Scripts — ignored orchestration, публичные native
+команды те же -l. Existing engine/image, limits2CPU/3GiB/256pids, offline,
+Desktop/WSL lifecycle не вызывался. Observation session_id сохраняется и
+поллится до terminal exit; timeout наблюдения не считается окончанием E2E.
+
+file-create-order.lua создаёт private project, real FS marker вызывает watcher,
+native a создаёт файл. Hook удерживает только реальный root readdir с native
+entries/errors; оригинальные API возвращаются до release и на cleanup.
+Запрещено использовать helper в обычной долгоживущей сессии редактора.
+file-create-order.json показывает newer child виден → after child отсутствует,
+parent expanded/loaded=false/children=[], disk_child=true; stale=true —
+воспроизведение бага. Diagnostic exit0 не означает PASS fix. Последние source
+copies точные; ранние варианты сохранены под своими profile IDs.
+
+```powershell
+npx.cmd --yes @fission-ai/openspec@1.13.2 list --json
+npx.cmd --yes @fission-ai/openspec@1.13.2 context --json
+npx.cmd --yes @fission-ai/openspec@1.13.2 list --specs --json
+npx.cmd --yes @fission-ai/openspec@1.13.2 new change reject-stale-filesystem-scans
+npx.cmd --yes @fission-ai/openspec@1.13.2 status --change reject-stale-filesystem-scans --json
+npx.cmd --yes @fission-ai/openspec@1.13.2 instructions proposal --change reject-stale-filesystem-scans --json
+npx.cmd --yes @fission-ai/openspec@1.13.2 instructions specs --change reject-stale-filesystem-scans --json
+npx.cmd --yes @fission-ai/openspec@1.13.2 instructions design --change reject-stale-filesystem-scans --json
+npx.cmd --yes @fission-ai/openspec@1.13.2 instructions tasks --change reject-stale-filesystem-scans --json
+npx.cmd --yes @fission-ai/openspec@1.13.2 instructions apply --change reject-stale-filesystem-scans --json
+npx.cmd --yes @fission-ai/openspec@1.13.2 validate --all --strict --no-interactive
+git diff --check
+git diff --numstat -- nvim_forge/FIXLOG.md docs/AGENT_COMMANDS.md
+git diff --cached --check
+git commit -m "test(files): reproduce stale filesystem scan completion"
+git status --short
+```
+
+CLI root F:/repo/forge-nvim, spec-driven, apply1/5 (4 pending), archive не
+выполнялся. Before specs прочитан integrate-file-explorer delta; main inventory
+без nvim baseline, IDE-FILE-5 — отдельный ADDED capability,1/2/3/4 не переписаны.
+Official upstream search/main comparison — read-only, не доказательство готового
+fix и не причина обновить pins. Primary links и source attribution — reproduction.md.
+
+Audit через git archive --format=tar b94fc54 nvim_forge/capture_output сверяет63
+runtime/pin/patch files,11 roots/shutdown/scopes, driver/final source copies,
+SDK74AFF15B…C6AD9 и byte prefixes. Пять controlled stale observations, ordinary
+4+7+7=18 PASS; source mechanism не называется regression PASS. Последние full
+Files green не исправляют два §177 failures. Mac/GUI/full suite не запускались.

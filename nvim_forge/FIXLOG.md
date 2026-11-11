@@ -9406,3 +9406,91 @@ timeout и не отключать async/follow ради зелёного тес
 tests/diagnostics/file-create-trace.lua и README, PROBLEMS/IDE_ROADMAP/
 FEATURE_REVIEW/HISTORY/AGENT_COMMANDS, verification соседнего change.
 Raw artifacts/source review остаются в ignored .tests; production scan без diff.
+
+
+## 178. Files: запоздавший scan стирает новый child
+
+2026-11-11. IDE-104. Спека: IDE-FILE-5 (ADDED intent), change
+reject-stale-filesystem-scans; IDE-FILE-1 сохранён. Диагностика механизма,
+product fix ещё не реализован, change не архивирован.
+
+**Проблема.** §177 сохранил два Ubuntu Files6PASS/1FAIL: созданный child есть
+на диске, selected parent ready/expanded, но строка child отсутствует.
+Последующие обычные PASS не объясняли причину и не закрывали баг.
+
+**Исследование.** Без event trace выполнены ещё4 bounded fresh Ubuntu trials
+только исходного create/save case — по1PASS. Бесконечные повторы прекращены.
+Failure-only collector дополнен loaded/child_ids/filtered_by/skip_node/type,
+capped128 all-node map и expanded/filter/search state; locator/deadline прежние.
+В этих четырёх PASS ветка failure capture не сработала: не утверждаем, что
+новый all-node map снят из непроизвольного отказа. Source review указал на
+старый full-root context без проверки актуальности у render_context и
+renderer.draw, сохраняющий live expanded IDs при замене nodes.
+
+**Доказанный механизм.** tests/diagnostics/file-create-order.lua запускает
+реальный Forge. Initial parent collapsed/loaded=false. Внешняя запись marker
+в owned project вызывает настоящий FS watcher. Test-only libuv helper
+удерживает один настоящий async root readdir response; native a создаёт
+Unicode child и более новый full-root scan показывает его. После выпуска
+старого response старый root context снова применяется. Actual UI/state:
+expanded=true, loaded=false, children=[], child node/строка исчезли; файл
+на диске сохранён. Новый child был действительно виден до старого completion,
+это не просто проверка настроек или предположение из кода.
+
+Final helper удерживает последний callback с entries=nil после actual root
+enumeration, не меняет entries/errors/renderer/backend. Producer stack —
+fs_scan.lua; прочитанные root entries содержат parent. Hook действует только
+в private child и exact cwd realpath, при release/cleanup original libuv
+функции возвращаются. Отменённый до прихода callback hook больше не удерживает
+новые ответы. Четыре queue turns после выпуска соответствуют конкретной
+shallow chain on_exit→job_complete→render→AFTER_RENDER, не sleep для зелёного
+assertion. Completed render records capped64, product init hook не загружает.
+
+**Причина и границы вывода.** Pinned Neo-tree84c75e7a применяет старый scan
+после нового. Старый context не включал сканирование ещё закрытого parent;
+renderer затем сохраняет новое expanded состояние поверх старого unloaded
+node. Этот механизм воспроизводит точный наблюдаемый симптом. Исторические
+два untraced отказа не имеют scan timeline, поэтому единственность их причины
+задним числом не доказана. Не объявляем причиной gitignore, async prefetch
+expand_all или E216 только по совпадению симптома/errmsg.
+
+**Изменение.** Сохранены portable controlled diagnostic/helper, расширены
+только error-state capture старого E2E и инструкции. Runtime/backend/SDK/
+67 pins/backports прежние. Отдельный OpenSpec contract IDE-FILE-5 и design/
+tasks: сначала permanent native source RED и keyboard open/edit/save, затем
+готовый upstream correction либо узкий locked guard через existing backport
+pipeline. Independent partial loads/смена root/последующий watcher требуют
+controls: global latest-call-wins для всех folders не подходит. Ручной R,
+extra l/h, async=never или новый filesystem controller не принимаются как fix.
+Поиск official upstream и main source review не дали доказанного готового
+correction; это не доказательство отсутствия всех upstream вариантов.
+
+**Проверка.** Пять controlled observations: ранний Ubuntu первый batch,
+затем final-read Windows/Ubuntu и latest exact-source Windows/Ubuntu; все
+stale=true. Первые source copies сохранены, не выдаются за latest exact bytes.
+Последние profiles29999153942600/25679837753070 содержат before/newer/after,
+held/released/drained/restored, producer stack, настоящие nodes/rows/disk file.
+Diagnostic exit0 значит успешно снятое наблюдение; stale=true значит баг
+воспроизведён, а не regression PASS исправления. Latest Files7/7 на ОС,
+ранние4 single-case1PASS — positive ordinary controls, не fix.
+
+Audit .tests/tree-create-audit.py проверяет11 native roots: exit/signal0,
+APIerrors[], native QuitPre/VimLeavePre/VimLeave, owned scopes пусты, root
+hard-kill нет. Сверены63 normalized runtime/pin/patch sources с git archive
+b94fc54, driver copies и exact final self sources. SDK74AFF15B…C6AD9 прежний.
+Trace11/2files +1manual-link SKIP на ОС, strict92; Windows и Ubuntu heavy
+runs последовательны, existing engine28.5.1/image8a6b73261d91, без build/pull/
+сети или Desktop/WSL lifecycle. Temp/cache на F:. Full suite, native Mac и
+physical GUI не запускались. Apply1/5 tasks: диагностический шаг выполнен,
+permanent regression/production correction/общий регресс/MacGUI ещё открыты.
+
+**Вывод.** У IDE-104 теперь есть управляемое воспроизведение реального
+native completion race на обеих доступных ОС. Это позволяет проверять
+исправление по причинному RED, а не удачному повтору. Баг остаётся открытым;
+следующий шаг — постоянный E2E и минимальная защита актуального root result.
+
+**Файлы.** file-create-order/file-scan-delay diagnostics, file-explorer E2E
+failure capture, diagnostics README, новый OpenSpec proposal/design/spec/tasks/
+reproduction, FEATURE_REVIEW/IDE_ROADMAP/PROBLEMS/HISTORY/AGENT_COMMANDS.
+Raw logs/profiles и audit — ignored .tests. Journals raw append с byte-prefix
+guard .tests/tree-create-prefix.json, старые записи не переписаны.

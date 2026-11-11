@@ -307,6 +307,7 @@ Python реализован и проверен 2026-11-03; после возо�
 | §175 | [Terminal: optional pwsh и POSIX shell](../nvim_forge/FIXLOG.md#175-terminal-optional-pwsh-и-posix-shell) |
 | §176 | [Files: copy и защита несохранённых правок](../nvim_forge/FIXLOG.md#176-files-copy-и-защита-несохранённых-правок) |
 | §177 | [Files: раскрытый каталог без созданного child](../nvim_forge/FIXLOG.md#177-files-раскрытый-каталог-без-созданного-child) |
+| §178 | [Files: запоздавший scan стирает новый child](../nvim_forge/FIXLOG.md#178-files-запоздавший-scan-стирает-новый-child) |
 
 ## Как читать и дополнять
 

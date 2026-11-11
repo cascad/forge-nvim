@@ -83,6 +83,8 @@ Files normal delete теперь имеет command guard до/после native
 43 строки в существующем boundary, без fork/нового controller;9 native E2E
 Windows/Ubuntu плюс copy baseline. Отдельный legacy отказ создания child
 IDE-104 не закрыт поздними PASS; bounded event capture и first failures — §177.
+§178 воспроизвёл native full-root completion race Windows/Ubuntu с настоящим
+IO; план source-locked исправления отдельно, product scan пока прежний.
 
 ## Где наслоения заслуживают проверки
 
