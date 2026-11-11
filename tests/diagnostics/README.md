@@ -1,5 +1,32 @@
 # Диагностика native terminal и CLI
 
+## IDE-104: созданный child отсутствует в раскрытом Files
+
+Обычный `file-explorer.test.lua` при ошибке locator сохраняет
+`tree-choose-failure.json`: expected name/parent, actual source/path/ready,
+cursor и native nodes/rows/expanded. Test source копируется рядом. Дедлайн
+и логика ожидания не меняются. Первые6PASS/1FAIL Ubuntu сохранены отдельно;
+поздние PASS не являются исправлением причины.
+
+Для bounded native event trace (после обычной plugin подготовки):
+
+```powershell
+$env:FORGE_FILE_CREATE_TRACE='1'
+& .tools/neovim/windows-x64/bin/nvim.exe -l tests/e2e/file-explorer.test.lua
+Remove-Item Env:FORGE_FILE_CREATE_TRACE
+```
+
+TEMP/TMP/TMPDIR/NVIM_LOG_FILE на Windows задаются на диске checkout как в
+следующем примере. Ubuntu native: `FORGE_FILE_CREATE_TRACE=1 nvim -l tests/e2e/file-explorer.test.lua`;
+Docker с готовым engine/image: добавь `-e FORGE_FILE_CREATE_TRACE=1` к
+обычной `run --rm --no-deps --pull never --entrypoint nvim ubuntu -l ...`.
+Файл `file-create-trace.json` в профиле содержит максимум128 records,
+dropped count, FileAdded/BeforeRender/AfterRender, parent/child native state
+и наличие actual child на диске. Нет таймеров, refresh/scan overrides и
+записи на диск на каждый event. Observer может менять тайминги; отсутствие
+ошибки под ним не доказывает исправление. Default OFF, product init его не
+загружает. На Mac/physical GUI результата пока нет.
+
 ## Цельная рамка Locals и RGB UI capture
 
 IDE-076: [сравнение/цена/границы](../../docs/PANEL_FRAME_REVIEW.md).

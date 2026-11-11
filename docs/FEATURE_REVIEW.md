@@ -78,6 +78,12 @@ backend не умеет references, это ограничение, а не по�
 | Dashboard/recents | Alpha + start/project/session glue | Дополнительный workflow; сверить с обычным открытием проекта/поиском файлов |
 | Autosave | auto-save + events + format guards | Политика редактирования. Нельзя удалять как косметику без оценки save/test/debug |
 
+Files normal delete теперь имеет command guard до/после native confirmation
+(IDE-103, §176): backend force-wipe требовал защиты modified/hidden buffers.
+43 строки в существующем boundary, без fork/нового controller;9 native E2E
+Windows/Ubuntu плюс copy baseline. Отдельный legacy отказ создания child
+IDE-104 не закрыт поздними PASS; bounded event capture и first failures — §177.
+
 ## Где наслоения заслуживают проверки
 
 | Участок | Наблюдение | Что проверить до изменения |

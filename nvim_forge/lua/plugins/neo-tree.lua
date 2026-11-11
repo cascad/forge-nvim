@@ -120,6 +120,48 @@ local function safe_rename(state)
     end
 end
 
+-- spec: IDE-FILE-3. Native unlink затем force-wipe теряет modified buffer.
+local function delete_is_blocked(path)
+    local function canonical(value)
+        value = vim.fs.normalize(vim.uv.fs_realpath(value) or value):gsub('\\', '/')
+        return vim.fn.has('win32') == 1 and value:lower() or value
+    end
+    local target = canonical(path)
+    for _, buf in ipairs(vim.api.nvim_list_bufs()) do
+        if vim.api.nvim_buf_is_loaded(buf) and vim.bo[buf].buftype == '' and vim.bo[buf].modified then
+            local name = vim.api.nvim_buf_get_name(buf)
+            local file = name ~= '' and canonical(name) or ''
+            if file == target or file:sub(1, #target + 1) == target .. '/' then
+                vim.notify('Удаление отменено: несохранённые изменения в ' .. vim.fn.fnamemodify(name, ':t')
+                    .. '. Сохрани файл или закрой буфер с Discard, затем повтори.',
+                    vim.log.levels.WARN, { title = 'Files' })
+                return true
+            end
+        end
+    end
+    return false
+end
+
+local function safe_delete(state)
+    local node = safe_tree_node(state)
+    local commands = require('neo-tree.sources.filesystem.commands')
+    if not node or not node.path or node:get_depth() == 1
+        or (node.type ~= 'file' and node.type ~= 'directory') then
+        return commands.delete(state)
+    end
+    local path = node.path
+    if delete_is_blocked(path) then return end
+    local message = node.type == 'directory'
+        and ('Удалить каталог «' .. node.name .. '» со всем содержимым?')
+        or ('Удалить файл «' .. node.name .. '»?')
+    require('neo-tree.ui.inputs').confirm(message, function(confirmed)
+        if not confirmed or delete_is_blocked(path) then return end
+        require('neo-tree.sources.filesystem.lib.fs_actions').delete_node(path, function()
+            commands.refresh(state)
+        end, true)
+    end)
+end
+
 -- Страж «псевдо-файлов» в дереве.
 --
 -- neo-tree рисует строку «(7 hidden items)» как узел type="message" — у него
@@ -388,6 +430,7 @@ return {
                 commands = vim.tbl_extend("force", guarded_open_commands("filesystem"), {
                     open_folder_as_project = open_node_as_project,
                     rename = safe_rename,
+                    delete = safe_delete,
                 }),
                 follow_current_file = { enabled = true },
                 use_libuv_file_watcher = true,

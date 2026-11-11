@@ -74,6 +74,7 @@ return {
   { file = 'tests/e2e/outline.test.lua', suite = 'e2e', timeout = 180 },
   { file = 'tests/e2e/outline-focus.test.lua', suite = 'e2e', timeout = 240 },
   { file = 'tests/e2e/file-explorer.test.lua', suite = 'e2e', timeout = 180 },
+  { file = 'tests/e2e/file-copy-delete.test.lua', suite = 'e2e', timeout = 240 },
   { file = 'tests/e2e/buffers.test.lua', suite = 'e2e', timeout = 240 },
   { file = 'tests/e2e/deleted-files.test.lua', suite = 'e2e', timeout = 180 },
   { file = 'tests/e2e/plugin-backports.test.lua', suite = 'e2e', timeout = 180 },

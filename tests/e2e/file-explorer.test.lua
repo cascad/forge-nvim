@@ -2,6 +2,7 @@ local root = vim.fn.fnamemodify(debug.getinfo(1, 'S').source:sub(2), ':p:h:h:h')
 package.path = root .. '/tests/lib/?.lua;' .. package.path
 local T = require('check')
 local e
+local choosing
 
 local function file(name) return e.project .. '/' .. name end
 local function exists(name) return vim.uv.fs_stat(file(name)) ~= nil end
@@ -20,8 +21,15 @@ local function tree(keys)
   e:wait('дерево отрисовано', function()
     return tree_text():find('file_one.txt',1,true) and e:lua([[local s=require('neo-tree.sources.manager').get_state_for_window();return s and s._ready]])
   end)
+  if vim.env.FORGE_FILE_CREATE_TRACE=='1' and not e.file_create_trace then
+    local source=root..'/tests/diagnostics/file-create-trace.lua'
+    assert(vim.uv.fs_copyfile(source,e.dir..'/file-create-trace.lua'))
+    e:lua([[local source,project=...;_G.forge_file_create_trace=dofile(source).start(project)]],{source,e.project})
+    e.file_create_trace=true
+  end
 end
 local function choose(name, parent)
+  choosing = {name=name,parent=parent}
   -- '/' занят штатным fuzzy finder Neo-tree. Читаем видимые строки и
   -- перемещаемся обычным normal G, без вызова tree/focus private actions.
   e:wait('выбран ' .. name, function()
@@ -45,6 +53,7 @@ local function choose(name, parent)
     end
     return false
   end)
+  choosing = nil
 end
 local function popup(key)
   e:input(key)
@@ -66,6 +75,7 @@ end
 local function start()
   if e then return end
   e = require('editor').start(root)
+  assert(vim.uv.fs_copyfile(root .. '/tests/e2e/file-explorer.test.lua',e.dir .. '/file-explorer.test.lua'))
   vim.fn.mkdir(file('folder_old'), 'p')
   vim.fn.mkdir(file('destination'), 'p')
   for name, value in pairs({
@@ -87,9 +97,23 @@ local function check(name, fn)
       for _,n in ipairs(e.rpc.notifications) do assert(n.level<vim.log.levels.ERROR,n.message) end
     end)
     if e then
+      if e.file_create_trace then
+        local captured,data=pcall(e.lua,e,'return _G.forge_file_create_trace.result()')
+        vim.fn.writefile({vim.json.encode(captured and data or {error=tostring(data)})},e.dir..'/file-create-trace.json')
+      end
+      if not ok and choosing then
+        local captured,data=pcall(e.lua,e,[[local expected=...;local s=require('neo-tree.sources.manager').get_state_for_window()
+          local function info(n) return n and {name=n.name,path=n.path,id=n:get_id(),expanded=n:is_expanded(),depth=n:get_depth()} or false end
+          local rows={};if s and s.tree then for i=1,vim.api.nvim_buf_line_count(0) do
+            local n=s.tree:get_node(i);if n then rows[#rows+1]={row=i,node=info(n)} end end end
+          return {expected=expected,ready=s and s._ready,path=s and s.path,source=s and s.name,
+            cursor=vim.api.nvim_win_get_cursor(0),selected=s and s.tree and info(s.tree:get_node()),rows=rows}]],{choosing})
+        vim.fn.writefile({vim.json.encode(captured and data or {error=tostring(data),expected=choosing})},e.dir..'/tree-choose-failure.json')
+      end
       e:snapshot(name)
       if not ok then pcall(function() e:input('<Esc><Esc> pc w0') end) end
     end
+    choosing=nil
     assert(ok,failure)
   end)
 end

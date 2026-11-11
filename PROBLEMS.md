@@ -10,7 +10,35 @@
 
 Маршрут и приоритеты: [рабочий план nvim_forge](docs/IDE_ROADMAP.md).
 Для новых пунктов используем следующий свободный ID `IDE-xxx`; исходный
-симптом хранится здесь, этап и состояние — в плане. Следующий ID: `IDE-103`.
+симптом хранится здесь, этап и состояние — в плане. Следующий ID: `IDE-105`.
+
+## IDE-104 — Ubuntu Files E2E не видит созданный дочерний файл
+
+2026-11-11, соседний регресс IDE-103: file-explorer.test.lua первый case
+получил timeout «выбран новый файл.txt»,6 остальных PASS. Profile
+21367292576624, файл создано space/новый файл.txt реально есть; snapshot
+показывает папку без видимого child. Root exit0/APIerrors[]/scope empty.
+Повтор22020233924460: failure capture подтверждает правильный selected parent,
+ready=true/expanded=true, но child отсутствует в visible rows. Файл на диске
+есть. Причина не установлена; all-node map/child_ids в этом отказе не сняты.
+Добавлены failure-only tree-choose-failure.json, self test copy и opt-in
+bounded native event trace; ожидания/deadline/поведение locator не менялись.
+Один source replay и current trace/NoTrace дали7/7, что не объясняет два отказа
+и не является product fix. История §177, общая стабильность Files открыта.
+
+## IDE-103 — Files delete может стирать несохранённый buffer
+
+2026-11-11, расширение матрицы file operations. Закреплённый Neo-tree после
+подтверждения unlink вызывает clear_buffer → nvim_buf_delete(force=true).
+Внешний delete/IDE-032 и safe-close этого маршрута не защищают. Нужны source
+repro с autosave, выключенным через штатный ASToggle, hidden descendants и
+modified после открытия confirmation. Change protect-unsaved-files-in-explorer:
+IDE-FILE-3 guard normal d до/после решения пользователя, IDE-FILE-4 native
+copy baseline. §176: source acffa63 Windows/Ubuntu по3 реальных RED и6
+controls; с guard по9 PASS. В RED source file/late buffers действительно
+force-wiped, hidden descendant потерял файл на диске. Latest соседние наборы
+также прошли, но legacy нестабильность IDE-104 остаётся отдельной.
+Mac/GUI не проверены, filesystem backend/pins не менялись.
 
 ## IDE-102 — optional pwsh подменяет shell Terminal на POSIX
 

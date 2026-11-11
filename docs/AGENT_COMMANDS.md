@@ -5805,3 +5805,110 @@ strict90; Mac/physical GUI/full suite не запускались. После do
 и audit повторены. История и команды raw append, change task1.4 открыт и
 не архивирован; ignored .tests содержит одноразовые scripts/raw reports,
 permanent regression — tests/e2e/terminal-shell.test.lua и fixture.
+
+
+## 89. Files: native copy/delete, unsaved guard и create visibility
+
+2026-11-11, FIXLOG §176–177, IDE-103/104. Корень F:/repo/forge-nvim,
+PowerShell без profile; read-only rg/Get-Content/git diff вместо full host scan.
+Никаких новых SDK/pins или Docker Desktop/WSL lifecycle действий.
+
+```powershell
+$env:TEMP='F:/repo/forge-nvim/.tests/tmp'
+$env:TMP=$env:TEMP; $env:TMPDIR=$env:TEMP
+$env:NVIM_LOG_FILE="$env:TEMP/file-operations.log"
+$env:PYTHONIOENCODING='utf-8'
+$env:npm_config_cache='F:/forge-nvim-tmp/npm-cache'
+$env:GOMAXPROCS='2'; $env:GOFLAGS='-p=2'
+$env:GOTOOLCHAIN='local'; $env:CARGO_BUILD_JOBS='2'
+git status --short
+rg -n 'delete_node|clear_buffer|BEFORE_FILE_DELETE|force' .tests/editor-deps/lazy/neo-tree.nvim/lua/neo-tree/sources/filesystem/lib/fs_actions.lua
+rg -n 'function.*delete|refresh' .tests/editor-deps/lazy/neo-tree.nvim/lua/neo-tree/sources/filesystem/commands.lua
+Get-Content nvim_forge/lua/plugins/neo-tree.lua
+Get-Content tests/e2e/file-explorer.test.lua
+Get-Content tests/lib/editor.lua
+python -B .tests/files-prepare.py
+```
+
+Preparation script сохраняет prefix sizes/SHA256 двух journals, source revision/
+archive SHA и извлекает tarfile с filter=data в private .tests source directory.
+Он вызывает subprocess git archive --format=tar acffa63 nvim_forge с capture_output
+и распаковывает полученные bytes; runtime источник не копируется из current
+рабочей папки. Повторно поверх существующего source directory script не запускается.
+Source override только у тестового
+child, точные config/driver/test copies сохраняются рядом с native artifacts.
+
+```powershell
+$env:FORGE_E2E_CONFIG_SOURCE='F:/repo/forge-nvim/.tests/ubuntu/files-source-config/nvim_forge'
+& ./.tools/neovim/windows-x64/bin/nvim.exe -l tests/e2e/file-copy-delete.test.lua > .tests/files-source-windows.txt 2>&1
+Remove-Item Env:FORGE_E2E_CONFIG_SOURCE
+docker compose -f tests/containers/compose.yaml -f tests/containers/limits.yaml run --rm --no-deps --pull never --name forge-nvim-files-source -e FORGE_E2E_CONFIG_SOURCE=/workspace/.tests/files-source-config/nvim_forge --entrypoint nvim ubuntu -l tests/e2e/file-copy-delete.test.lua > .tests/files-source-ubuntu.txt 2>&1
+& ./.tools/neovim/windows-x64/bin/nvim.exe -l tests/e2e/file-copy-delete.test.lua > .tests/files-windows-file-copy-delete.txt 2>&1
+docker compose -f tests/containers/compose.yaml -f tests/containers/limits.yaml run --rm --no-deps --pull never --name forge-nvim-files-file-copy-delete --entrypoint nvim ubuntu -l tests/e2e/file-copy-delete.test.lua > .tests/files-ubuntu-file-copy-delete.txt 2>&1
+```
+
+Source expected exit1 проверяется по6PASS/3 конкретным RED, это не зелёный
+запуск. До runtime edit corrected8 baseline5/3 на ОС; final immutable9 replay
+6/3 добавляет root control. Current9/9. Для соседних Files7/Buffers8/
+Deleted-files5 используются те же -l команды с соответствующим filename,
+Windows и Ubuntu по очереди. Compose limits2CPU/3GiB/256pids, existing offline
+image, без build/pull/setup. Никаких delete вне private test project.
+
+Первые harness failures сохранены отдельно: retained API arity, redundant
+:edit dirty file, current_file gsub multi-return→normalize opts(number), root
+basename вместо actual path. Они исправлены в новом test helper; common
+editor driver не менялся, product source RED доказан отдельно от этих ошибок.
+FORGE_FILE_CASE фильтрует один case substring для sanity; FORGE_TEST_ID —
+стандартный ID. Перед final запуском фильтры убраны, полные9 не заменены sanity.
+
+```powershell
+& ./.tests/files-finish.ps1 > .tests/files-finish-first-failure.txt 2>&1
+& ./.tests/files-rest.ps1 > .tests/files-rest-first-failure.txt 2>&1
+$env:FORGE_FILE_CREATE_TRACE='1'
+docker compose -f tests/containers/compose.yaml -f tests/containers/limits.yaml run --rm --no-deps --pull never --name forge-nvim-files-create-trace -e FORGE_FILE_CREATE_TRACE=1 --entrypoint nvim ubuntu -l tests/e2e/file-explorer.test.lua > .tests/files-create-trace-run.txt 2>&1
+Remove-Item Env:FORGE_FILE_CREATE_TRACE
+& ./.tests/files-finish-independent.ps1 > .tests/files-independent.txt 2>&1
+python -B .tests/files-audit.py > .tests/files-audit.txt 2>&1
+```
+
+Это одноразовые ignored orchestration scripts, не новые публичные test entrypoints.
+Первые два wrapper exit1 сохранены: Ubuntu legacy first case6/1, без restart
+Docker/ослабления locator. Source diagnostic один7/7 и trace39records/7PASS,
+поздний NoTrace7PASS — bounded controls, IDE-104 открыт. Independent wrapper
+допускает только явно известный6/1 либо7/7 и проверяет остальные suites;
+итоговый audit отдельно сохраняет known_open и full_stability=false.
+Tool session_id сохраняется/поллится до terminal exit, observation yield не
+означает ошибку или разрешение начать второй тот же E2E.
+
+Состояния/исходники/квитанции в .tests/editor-e2e/<id> или
+.tests/ubuntu/editor-e2e/<id>. file-copy-delete.json содержит real buffers,
+owned resolved paths/решения, tree-choose-failure.json — actual native tree.
+Trace opt-in defaultOFF — read-only native events, cap128, без scan/refresh
+override; observer может менять тайминги. Первые два failed logs скопированы
+отдельно перед дальнейшими bounded diagnostics, latestPASS их не заменяет.
+Read-only upstream review через GitHub fetch_file официального fs_scan.lua
+не доказал причину104; pins не обновлялись.
+
+```powershell
+powershell -NoProfile -File scripts/test.ps1 quick
+& ./.tools/neovim/windows-x64/bin/nvim.exe -l tests/run.lua trace
+docker compose -f tests/containers/compose.yaml -f tests/containers/limits.yaml run --rm --no-deps --pull never --name forge-nvim-files-quick ubuntu quick
+docker compose -f tests/containers/compose.yaml -f tests/containers/limits.yaml run --rm --no-deps --pull never --name forge-nvim-files-trace --entrypoint nvim ubuntu -l tests/run.lua trace
+npx.cmd --yes @fission-ai/openspec@1.13.2 status --change protect-unsaved-files-in-explorer --json
+npx.cmd --yes @fission-ai/openspec@1.13.2 instructions apply --change protect-unsaved-files-in-explorer --json
+npx.cmd --yes @fission-ai/openspec@1.13.2 validate --all --strict --no-interactive
+git diff --check
+git diff --numstat -- nvim_forge/FIXLOG.md docs/AGENT_COMMANDS.md
+git diff --cached --check
+git commit -m "fix(files): protect unsaved buffers during deletion"
+git status --short
+```
+
+CLI repo root/planning context подтверждён, apply3/4 tasks,1.4 Mac/GUI открыт;
+verification skill advisory, archive не выполняется. Quick360/trace11(+1
+manual-linkSKIP) на ОС, strict91. Final64 matrix +4 diagnostics root0/APIerrors[]/
+scopes empty;63 normalized source/pin/patch files, exact captured driver/test
+copies и SDK74AFF15B…C6AD9. Prefix sizes/hash проверяются перед raw append,
+старые journal bytes не перекодируются. После docs повторяются только лёгкие
+trace/strict/audit, не тяжёлые native наборы без новой причины. Итоговые29PASS
+на ОС не означают исправление IDE-104, full suite/Mac/physicalGUI не запускались.

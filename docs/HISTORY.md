@@ -305,6 +305,8 @@ Python реализован и проверен 2026-11-03; после возо�
 | §173 | [Цветная рамка Locals и сохранение floating zoom](../nvim_forge/FIXLOG.md#173-цветная-рамка-locals-и-сохранение-floating-zoom) |
 | §174 | [Постоянные рамки: границы Edgy и Nui](../nvim_forge/FIXLOG.md#174-постоянные-рамки-границы-edgy-и-nui) |
 | §175 | [Terminal: optional pwsh и POSIX shell](../nvim_forge/FIXLOG.md#175-terminal-optional-pwsh-и-posix-shell) |
+| §176 | [Files: copy и защита несохранённых правок](../nvim_forge/FIXLOG.md#176-files-copy-и-защита-несохранённых-правок) |
+| §177 | [Files: раскрытый каталог без созданного child](../nvim_forge/FIXLOG.md#177-files-раскрытый-каталог-без-созданного-child) |
 
 ## Как читать и дополнять
 

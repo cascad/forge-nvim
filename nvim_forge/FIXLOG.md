@@ -9245,3 +9245,164 @@ create/name/reorder UX и IDE-076 этим шагом не закрыты.
 OpenSpec proposal/design/spec/tasks/verification, HISTORY/AGENT_COMMANDS.
 Старые journal bytes сохранены raw append с guard terminal-shell-prefix.json;
 source archive и полные отчёты остаются в ignored .tests.
+
+
+## 176. Files: copy и защита несохранённых правок
+
+2026-11-11. IDE-103. Спека: IDE-FILE-3 (FIX), IDE-FILE-4 (ADDED baseline),
+change protect-unsaved-files-in-explorer. Runtime guard и постоянный E2E;
+не общий rewrite Files и не закрытие Mac/GUI.
+
+**Проблема.** Normal d в Files обходил safe-close: после Yes можно потерять
+файл и несохранённый текст. Recursive delete мог удалить файл скрытого
+modified buffer. Copy/delete не имели достаточного native регресса.
+
+**Причина.** Закреплённый Neo-tree fs_actions.clear_buffer после unlink
+вызывает nvim_buf_delete(force=true), fs_actions.lua:140–160. Directory
+delete не проверяет modified descendants. IDE-032/safe-close защищали другие
+маршруты. Это подтверждено actual disk/buffer snapshots, а не выводом из
+одного source review: source dirty/late buffers действительно force-wiped,
+hidden child удалён на диске при оставшемся modified buffer.
+
+**Source RED.** Immutable nvim_forge из acffa63 через git archive, без
+подмены current конфигом. После исправления ошибки harness первые8 cases
+на Windows/Ubuntu дали5 controls PASS/3 реальных RED до runtime edit.
+Final source replay девяти cases с добавленным root control —6 controls/
+3 ожидаемых RED на обеих ОС; те же exact test bytes, что current. Три отказа:
+dirty file, hidden dirty descendant и modification during confirmation,
+все с "unsaved target was deleted". Публичный :ASToggle выключает autosave
+(enabled=false), иначе BufLeave save маскирует риск. Root control не удаляет
+корень: проверяет штатный отказ без подтверждения.
+
+**Изменение.** В existing plugins/neo-tree.lua добавлены43 строки:
+delete_is_blocked/safe_delete и filesystem.commands.delete. Сверяются
+loaded modified обычные file buffers, включая hidden/unlisted. Realpath/
+normalize, Windows case-fold и boundary '/' отличают descendant от соседнего
+prefix. Guard до native confirm и после Yes сохраняет file/buffer/text/
+modified state, выдаёт WARN с save/явным Discard/retry. Сам ничего не сохраняет
+и не отбрасывает. Clean target удаляется native delete_node(path,callback,true)
+с native refresh; popup закрывает captured path/тип, directory question явно
+говорит обо всём содержимом. safe_tree_node сохраняет выбранную строку после
+zoom; root/message/invalid type делегируются native refusal.
+
+BEFORE_FILE_DELETE handled=true не использован как veto: backend всё равно
+вызвал бы complete/FILE_DELETED. Global inputs interception, fork/plugin patch,
+новый controller/backend, таймеры и extra refresh для зелёного теста не нужны.
+Единственный runtime diff — этот файл; SDK,67 pins и backports не менялись.
+
+**Постоянный E2E.** file-copy-delete.test.lua/registry,9 fresh real editor
+profiles: y/p Unicode file с dirty source и независимой записью destination;
+recursive directory copy; typed c Unicode/conflict/cancel; clean d Esc/No/
+actual zoom selection Yes; recursive directory No/Yes; native root refusal;
+dirty→save→retry; hidden descendant/sibling prefix; actual modification при
+уже открытом popup. Copy берёт disk payload, не несохранённый buffer; это
+существующая native semantics. Поздняя правка сделана настоящим buffer API
+как background edit, команда/Yes — native keyboard, backend не подменён.
+Каждая destructive цель и fixture descendants проверены realpath строго
+внутри собственного project. Unexpected ERROR запрещены; единственный
+allowlist — ожидаемый native "Will not delete root node" в root case,
+это notification, не RPC API error.
+
+**Ошибки harness не выдаются за product bugs.** Первый8-case trial4/4
+включал неверную API arity retained (передавался лишний аргумент) и три
+реальных RED; после local buf capture baseline5/3 снят до runtime edit.
+Первый current7/1 открыл Save prompt из-за redundant :edit того же dirty
+file; open helper теперь сравнивает полный путь и не переоткрывает его.
+Затем inline vim.fs.normalize(e:current_file()) получил второй gsub return
+как opts(number), из-за чего early source9 cases падали до действий.
+Исправлен local capture первого return, общий editor helper не менялся.
+Root-only trial искал basename вместо actual node.path; d не нажимался,
+locator исправлен по пути. Первые логи сохранены; source9/current9 после
+этих исправлений проверены отдельно. Sanity copy/root/save по1PASS — не
+замена полным окончательным9 cases.
+
+**Проверка.** Current новые9/9 PASS на каждой ОС. Latest Files7/Buffers8/
+Deleted-files5 — ещё20 checks на каждой, всего29 PASS/23 positive profiles.
+Первые два Ubuntu legacy6/1 сохранены отдельно как IDE-104 (§177): latest
+PASS не является их исправлением и не доказывает стабильность всего Files.
+Audit .tests/files-audit.py:64 matrix profiles (по9 source+23 positive) и4
+дополнительных diagnostic profiles. У всех68 root exit/signal0, APIerrors[],
+QuitPre/VimLeavePre/VimLeave, owned scopes после выхода пусты и root hard-kill
+нет. У64 matrix scopes cleanup stages пусты — дополнительный signal не
+потребовался. Точные driver/test copies, где они захватываются, и63 normalized
+runtime/pin/patch sources сверены; SDK SHA74AFF15B…C6AD9 прежний. Не утверждаем,
+что каждый ранний ошибочный harness run имел эти же результаты.
+
+Quick360/16files и trace11/2files +1manual-link SKIP на ОС, strict91.
+Windows/Ubuntu heavy runs последовательны; Ubuntu existing image/engine,
+offline --no-deps --pull never,2CPU/3GiB/256pids. Docker Desktop/WSL lifecycle
+не вызывался; Windows temp/cache на F:. Post-doc trace/strict и audit
+повторяются перед commit. Full suite, native Mac и physical GUI не запускались;
+Trash/visual multi-select/cross-volume/case-only/LSP file ops и modified
+rename/move остаются отдельной работой. Verification:3/4 tasks, Mac/GUI1.4
+открыт, предупреждение IDE-104; change не архивируется.
+
+**Вывод.** Normal d больше не должен обходить политику несохранённого текста;
+узкая проверка до/после решения пользователя достаточна для подтверждённого
+риска. Native backend/copy сохранены. Windows/Ubuntu source RED→PASS доказан;
+общая стабильность Files и Mac/GUI этим коммитом не объявляются готовыми.
+
+**Файлы.** plugins/neo-tree.lua, file-copy-delete E2E/registry, Files workflow/
+QUICKSTART/PANEL_KEYS/FEATURE_REVIEW/IDE_ROADMAP/PROBLEMS, OpenSpec artifacts,
+HISTORY/AGENT_COMMANDS. Source archive, reports, evidence и helper trials —
+ignored .tests; permanent proof в tests/. Journals raw append с byte-prefix
+guard .tests/files-prefix.json.
+
+
+## 177. Files: раскрытый каталог без созданного child
+
+2026-11-11. IDE-104. Диагностика открытого отказа, product fix не заявлен.
+Спека: IDE-FILE-1 (диагностика); контракты/runtime scan не изменялись.
+
+**Проблема.** Соседний Ubuntu file-explorer.test.lua дважды дал6PASS/1FAIL
+на первом Unicode create/save case: timeout «выбран новый файл.txt».
+Файл project/создано space/новый файл.txt есть на диске, строки child в дереве
+нет. Первый profile21367292576624, повтор с capture22020233924460.
+
+**Что известно о причине.** Первый snapshot показывал folder без child,
+mode normal/nonblocking, без notifications; E216 FileExplorer в v:errmsg
+не доказан причиной. Failure capture повтора показывает правильный filesystem
+root/source, ready=true, selected actual создано space, expanded=true,
+но child отсутствует в visible rows. Это уже не объясняется только неверным
+выбором строки. Полный node map/child_ids/filtered flags в этом отказе не
+сняты, поэтому отсутствие native node или stale scan не доказаны. Возможная
+гонка scan/render/filter — гипотеза. Native partial folder scan синхронен;
+async prefetch expand_all первым case не вызывается, обвинять его нельзя.
+
+**Изменение диагностики.** Legacy E2E копирует свой source и только при
+locator failure сохраняет tree-choose-failure.json: expected/current source/
+path/ready/cursor/selected/native rows/expanded. Capture pcall не заменяет
+первую ошибку. Locator logic и deadline прежние. Opt-in
+FORGE_FILE_CREATE_TRACE=1 после обычного tree-ready подключает test-only
+file-create-trace.lua: native FILE_ADDED/BEFORE_RENDER/AFTER_RENDER, parent/
+child/loaded/expanded/child_ids, disk_child, expanded lists. Максимум128
+records+dropped в памяти, запись результата после case. Нет таймеров,
+scan/refresh overrides или дисковой записи на каждый event. Default OFF,
+product init observer не загружает, срок жизни — private test process.
+
+**Bounded controls.** Один immutable acffa63 source replay21782550061752 —
+7/7 PASS. Current trace22792418174176 —7/7:39 records, dropped0, capture
+errors0; child FILE_ADDED при disk=true, затем AFTER_RENDER с expanded parent,
+одним child_id и child node. Следующий current NoTrace тоже7/7. Это не
+причинный fix и не доказательство устойчивости: observer может менять
+тайминги, а прежние два отказа не исчезают из истории. Все4 diagnostic roots
+exit/signal0/APIerrors[]/scopes empty; первая ошибка не была зависшим nvim.
+
+Read-only review official upstream main fs_scan blob00be7e1e0841addd137651475bcfb7ce5e3425f2
+против pinned84c75e7a7e443586f60508d12fc50f90d9aee14e/blob855cb9176f9394d0f7610872d06cefe6e7f32cc0
+нашёл отличия gitignored/nested-worktree handling и scheduled job_complete.
+Это не доказательство исправления IDE-104; обновление pins и private patch
+не делались. Первые6/1 logs, source/trace controls и snapshots сохранены
+отдельно, последним7/7 не перезаписаны. Audit явно known_open=[IDE-104],
+stable_full_regression_proven=false.
+
+**Вывод/дальше.** Причина открыта. При следующем воспроизведении нужны
+actual node map/child_ids/filtered flags и порядок scan/render, чтобы отличить
+stale root render от фильтрации. Не добавлять R/extra toggle/sleep/больший
+timeout и не отключать async/follow ради зелёного теста. Native Windows и
+поздний Ubuntu PASS не закрывают отказ; Mac/GUI не проверялись.
+
+**Файлы.** file-explorer.test.lua (read-only failure capture/self copy/opt-in),
+tests/diagnostics/file-create-trace.lua и README, PROBLEMS/IDE_ROADMAP/
+FEATURE_REVIEW/HISTORY/AGENT_COMMANDS, verification соседнего change.
+Raw artifacts/source review остаются в ignored .tests; production scan без diff.

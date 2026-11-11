@@ -21,6 +21,16 @@
 
 ## Запуск на целевых машинах и внутри VM
 
+Files copy/delete (IDE-FILE-3/4): `nvim -l tests/e2e/file-copy-delete.test.lua`,
+Windows — выбранный SDK.9 fresh profiles: реальные clipboard/typed copy,
+Unicode/dir/conflict/cancel, normal delete/zoom/recursive/root refusal,
+modified file/hidden descendant/late modification. Autosave выключается
+публичным ASToggle. Последний случай меняет настоящий buffer native API при
+открытом диалоге, подтверждение остаётся пользовательским вводом; backend не
+подменён. Все destructive targets заранее проверены внутри private project.
+Root refusal — ожидаемое native ERROR notify, не API failure. Подробные
+клавиши/ограничения — [FILES_WORKFLOW](../../docs/FILES_WORKFLOW.md).
+
 Managed shell (IDE-PANEL-19): `nvim -l tests/e2e/terminal-shell.test.lua`;
 Windows — выбранный `.tools/neovim/windows-x64/bin/nvim.exe`, TEMP на диске
 checkout как в [diagnostics](../diagnostics/README.md). POSIX cases используют

@@ -51,5 +51,8 @@ Trouble: `Space xx` — diagnostics, `Space xQ` — Quickfix; `zo/zc` — рас
 имеют свою штатную справку `g?`; конкретные действия — в общей `?` и
 [полном руководстве](../nvim_forge/QUICKSTART.md).
 
+Files `y/p`, `c`, `d` и защита несохранённых правок —
+[краткий workflow](FILES_WORKFLOW.md).
+
 Windows/Ubuntu: native E2E. Mac и физическая доставка клавиш WezTerm проверяются
 отдельно; наличие одинаковой привязки не является результатом GUI-проверки.

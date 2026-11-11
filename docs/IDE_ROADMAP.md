@@ -50,6 +50,8 @@ IDE-001 параллельно ждёт диагностических данн�
 | Прототип готов; общий стиль открыт | IDE-076: цельная цветная рамка | Реальные Locals/Delve, RGB active/dim/resize/restore, компактный образец и [сравнение](PANEL_FRAME_REVIEW.md); default style прежний. Постоянные рамки split и Mac/GUI отдельно (§173) |
 | Готово Windows/Ubuntu; Mac/GUI открыт | IDE-101: docking zoom при помощи | Документированный window-local Edgy opt-out, source RED → native IDE-PANEL-18 PASS; исходный slot/shared buffer сохранены, исчезнувший source возвращает код (§173) |
 | Готово Windows/Ubuntu; Mac/GUI открыт | IDE-102: POSIX shell при optional pwsh | Source Ubuntu RED→2 policy PASS; Windows actual pwsh/fallback2 controls PASS. По29 соседних native E2E на ОС,3-line win32 guard в прежнем opts; SDK/pins/global shell прежние (§175) |
+| Проверено Windows/Ubuntu; Mac/GUI открыт | Files copy/delete, IDE-103 | По3 source RED/6 controls →9 новых E2E PASS на ОС. До/после Yes защищены modified/hidden/late buffers; latest29 PASS на ОС, известный legacy отказ отдельно IDE-104 (§176–177) |
+| Диагностика открыта | IDE-104: созданный child не виден | Два Ubuntu legacy6/1, actual parent expanded/ready без child в rows. Source7/7 и trace/NoTrace7/7 не считаются fix; failure snapshot + opt-in bounded native event trace (§177) |
 | Отложено до готового backend | Остаток SQL workflow, IDE-062 | SQLS references provider отсутствует. Собственный binder/index/LSP fork отменён (§143); не подменять references grep и не объявлять полную SQL поддержку |
 | Затем | Остальная [матрица языков](LANGUAGE_MATRIX.md) | SQL references IDE-062, Bash DAP IDE-057; Mac/native и оставшиеся сценарии матрицы |
 | После функциональной матрицы | Упрощение архитектуры | Общее ядро, явные системные границы и setup; сокращение дублирования с сохранением E2E |
@@ -415,7 +417,10 @@ Normal mode, прежние aliases сохранены:
 - [x] IDE-008 Windows/Ubuntu: открыть слева, найти/раскрыть символ, перейти
   в код, скрыть/вернуть фокус; дерево и Outline заменяют друг друга в left-слоте.
 - [ ] IDE-008 Mac/GUI: тот же сценарий на машине владельца.
-- [ ] Дерево: Mac/GUI, несохранённые буферы, отдельные copy/delete/trash,
+- [x] Files copy/delete Windows/Ubuntu, IDE-103: native copy file/dir, c/conflict/cancel,
+  normal d/zoom/recursive/root refusal, modified/hidden/late guard и save retry;
+  [клавиши](FILES_WORKFLOW.md), результаты §176. Mac/GUI и IDE-104 открыты.
+- [ ] Дерево: Mac/GUI, modified rename/move, Trash/visual multi-select,
   case-only rename/cross-volume и LSP file operations — расширение матрицы.
 - [x] Windows/Ubuntu, буферы/вкладки: общий цикл/picker/BufferLine, safe-close,
   alpha/reopen с курсором; 8 E2E (§83–84). Tabpages/WezTerm не меняются.
