@@ -44,18 +44,9 @@ function M.register(spec)
     -- Default focus: первая попавшаяся window с матчящимся filetype'ом.
     if not spec.focus then
         spec.focus = function()
-            for _, win in ipairs(vim.api.nvim_tabpage_list_wins(0)) do
-                if vim.api.nvim_win_is_valid(win) then
-                    local buf = vim.api.nvim_win_get_buf(win)
-                    local ft = vim.bo[buf].filetype
-                    for _, target in ipairs(spec.filetypes) do
-                        if ft == target then
-                            vim.api.nvim_set_current_win(win)
-                            return
-                        end
-                    end
-                end
-            end
+            require('ide.activities').focus_window(nil, function(buf)
+                return vim.tbl_contains(spec.filetypes, vim.bo[buf].filetype)
+            end)
         end
     end
 

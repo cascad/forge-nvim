@@ -10026,3 +10026,61 @@ ide14/2738, forge22/2610; сумма13567. DAP config1636, Edgy352. Это ка�
 **Файлы.** FEATURE_REVIEW, PLUGIN_INVENTORY, roadmap/HISTORY/AGENT_COMMANDS.
 Journals raw append-only, guard .tests/review184-prefix.json; E2E и code этой
 документационной сверкой не переписывались.
+
+
+## 185. Общий пассивный поиск окон компонентов
+
+2026-11-11. IDE-080, source ef9e921; change reuse-passive-panel-lookup.
+Спека: без изменения поведения (skip_specs:true); совместимость с прежними
+IDE-PANEL-1/2 и рабочими панелями проверяется native E2E.
+
+**Проблема.** После обзора §184 найдено настоящее небольшое дублирование:
+component visibility и registry default focus обходят окна сами, хотя
+activities уже предоставляет пассивный finder и focus/visibility wrappers.
+
+**Причина/решение.** Одинакова только пассивная операция выбора существующего
+окна текущего tab. Кодовый find/create и relocation guard имеют другие
+полномочия и не объединяются. Прямая передача FT/source в activities меняла
+бы вызовы predicate для других FT. Внешний цикл по FT менял бы window-first
+порядок; это не эквивалентная дедупликация.
+
+**Изменение.** Init visibility делегирует is_visible(nil, составной predicate)
+с FT-before-source short-circuit. Registry default focus делегирует прежнему
+focus_window(nil, FT membership predicate). Metadata читается в момент
+вызова, custom focus и nil default return сохраняются. Lazy require остаётся
+в callback, нового module/registry/cache/framework нет. Два outer loops
+удалены:7 строк добавлено/23 удалено, net−16 в2 runtime файлах.
+Activities.find_window, state/main, panel_guard,67 pins/6 plugin patches/SDK
+не менялись. Ускорение по LOC не заявляется.
+
+**Проверка/e2e.** Новый permanent window-lookup: настоящие normal/float
+windows, несколько FT в обратном приоритете, live metadata, empty/no-match,
+background tab, отсутствие создания окон, custom callback/return. Второй
+сценарий переключает настоящие Neo-tree filesystem/buffers/git_status,
+проверяет отдельную visibility и закрытие. Source baseline2 PASS на каждой
+ОС до runtime edits; тот же test source после изменения2 PASS на каждой.
+Это refactor baseline PASS→PASS, не выдуманный source RED или новый bugfix.
+
+Source Windows46671175518500/46679011438200, Ubuntu41647591409644/41652352422456;
+target Windows46757570198700/46764848030200, Ubuntu41742980780220/41749461213202.
+Существующие7 suites/37 checks на ОС: Debug, Outline, Files, Tests/Search/Tasks,
+Terminal/Problems, Logs, frame pilot. С новыми target2 —39 различных checks
+на ОС. Windows208.5с/Ubuntu137.9с — один scoped batch, не benchmark.
+Unit360+trace11 PASS на ОС, trace1 SKIP; OpenSpec strict95 PASS.
+
+Audit source/target SHA во всех52 profiles (26/ОС, включая source): native
+root exit0/signal0, APIerrors[], quit→exited, no root hard kill, owned scopes
+empty. Windows scratch runtime пути из snapshots отсутствуют. Завершение
+own scope при необходимости не объявляется естественным выходом всех children.
+Config-source и exact test SHA проверены, доказательства сохранены в tests,
+raw reports .tests/lookup-*, summary .tests/lookup-evidence.json. Это scoped
+Windows/Ubuntu regression; global full/Mac/физический WezTerm не заявляются.
+
+**Вывод.** Упрощены только доказанно одинаковые пассивные обходы. Основная
+клавиатурная модель, source discrimination и backend owners сохранены.
+Optional UI не удаляется без ответа владельца. Следующий полезный шаг —
+физическая проверка frame pilot в WezTerm Windows; Mac остаётся отдельным gate.
+
+**Файлы.** ide/init.lua, ide/registry.lua, window-lookup E2E/registry;
+OpenSpec proposal/design/tasks/verification, FEATURE_REVIEW/roadmap,
+E2E README/HISTORY/commands. Journals raw append-only, guard lookup-prefix.json.

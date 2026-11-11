@@ -6498,3 +6498,77 @@ Desktop/WSL lifecycle/settings/prune/build/pull; текущий Linux engine reu
 Более широкие проверки не повторялись ради текста review. Mac/physical GUI
 не проверены. Предыдущий рабочий commit e00bcea и18 scoped checks на ОС
 сохранены, следующая работа идёт по актуальной таблице FEATURE_REVIEW.
+
+
+## 97. IDE-080: дедупликация пассивного window lookup
+
+2026-11-11, cwd F:/repo/forge-nvim, login=false; temp/cache/env как §95.
+Наблюдения — raw UTF-8/Lua/diff и native RPC UI с config-source/exit records.
+
+```powershell
+git status --short
+git log -3 --oneline
+Get-Content CLAUDE.md
+Get-Content docs/FEATURE_REVIEW.md -TotalCount 66
+Get-Content nvim_forge/lua/ide/registry.lua
+rg -n 'any_window_with_ft|find_window\(|is_visible\(|focus_window\(' nvim_forge/lua -g '*.lua'
+npx.cmd --yes @fission-ai/openspec@1.13.2 list --json
+npx.cmd --yes @fission-ai/openspec@1.13.2 context --json
+npx.cmd --yes @fission-ai/openspec@1.13.2 list --specs
+npx.cmd --yes @fission-ai/openspec@1.13.2 new change reuse-passive-panel-lookup
+npx.cmd --yes @fission-ai/openspec@1.13.2 instructions apply --change reuse-passive-panel-lookup --json
+& .tools/neovim/windows-x64/bin/nvim.exe -l tests/e2e/window-lookup.test.lua > .tests/lookup-source-windows.txt 2>&1
+docker info --format '{{.OSType}}'
+docker compose -f tests/containers/compose.yaml -f tests/containers/limits.yaml run --rm --no-deps --pull never --name forge-nvim-lookup-source --entrypoint nvim ubuntu -l tests/e2e/window-lookup.test.lua > .tests/lookup-source-ubuntu.txt 2>&1
+# После изменения двух callbacks:
+& .tools/neovim/windows-x64/bin/nvim.exe -l tests/e2e/window-lookup.test.lua > .tests/lookup-target-windows.txt 2>&1
+docker compose -f tests/containers/compose.yaml -f tests/containers/limits.yaml run --rm --no-deps --pull never --name forge-nvim-lookup-target --entrypoint nvim ubuntu -l tests/e2e/window-lookup.test.lua > .tests/lookup-target-ubuntu.txt 2>&1
+```
+
+Proposal/design/tasks получены по instructions соответствующих artifacts;
+skip_specs:true, no behavior delta. Source/target по2 PASS/ОС, тест не менялся
+между baseline/refactor. Разрешения команд не запрашивались. Optional UI выбор
+остаётся открытым; изменения UI/новых backend этим шагом нет.
+
+Subset .tests/lookup-registry.lua:7 записей suite='e2e', tests/e2e/{debug-panels,
+outline,file-explorer,work-panels,tool-panels,ide-logs,frame-layout}.test.lua;
+timeout соответственно300/240/300/300/300/240/240. Файл копируется в Ubuntu
+.tests mount отдельно, source config остаётся read-only.
+
+```powershell
+& .tools/neovim/windows-x64/bin/nvim.exe -l tests/run.lua e2e --registry .tests/lookup-registry.lua > .tests/lookup-regression-windows.txt 2>&1
+Copy-Item .tests/report.json .tests/lookup-regression-windows.json
+Copy-Item .tests/lookup-registry.lua .tests/ubuntu/lookup-registry.lua
+docker compose -f tests/containers/compose.yaml -f tests/containers/limits.yaml run --rm --no-deps --pull never --name forge-nvim-lookup-regression --entrypoint nvim ubuntu -l tests/run.lua e2e --registry .tests/lookup-registry.lua > .tests/lookup-regression-ubuntu.txt 2>&1
+Copy-Item .tests/ubuntu/report.json .tests/lookup-regression-ubuntu.json
+Copy-Item .tests/logs .tests/lookup-regression-windows-logs -Recurse
+Copy-Item .tests/ubuntu/logs .tests/lookup-regression-ubuntu-logs -Recurse
+python -B .tests/lookup-audit.py
+& .tools/neovim/windows-x64/bin/nvim.exe -l tests/run.lua unit trace > .tests/lookup-quick-windows.txt 2>&1
+Copy-Item .tests/report.json .tests/lookup-quick-windows.json
+docker compose -f tests/containers/compose.yaml -f tests/containers/limits.yaml run --rm --no-deps --pull never --name forge-nvim-lookup-quick --entrypoint nvim ubuntu -l tests/run.lua unit trace > .tests/lookup-quick-ubuntu.txt 2>&1
+Copy-Item .tests/ubuntu/report.json .tests/lookup-quick-ubuntu.json
+npx.cmd --yes @fission-ai/openspec@1.13.2 validate --all --strict --no-interactive
+```
+
+На ОС2 source +2 target+37 regression checks; distinct target39/ОС,
+26 profiles/ОС. Audit проверяет normalized config-source SHA baseline ef9e921
+или текущих callbacks, exact test SHA, root0/signal0/APIerrors[]/quit→exited/
+scopes empty и отсутствие Windows runtime paths. Raw summary lookup-evidence.
+360 unit+11 trace PASS,1 trace SKIP на ОС, strict95. Current finder/main/guard/
+lock unchanged;7add/23delete runtime, net−16, новых modules нет. Git diff review
+и notes подтверждают, что общий activities predicate не менялся.
+
+```powershell
+python -B .tests/lookup-append.py
+git diff --check
+git diff --numstat -- nvim_forge/FIXLOG.md docs/AGENT_COMMANDS.md
+git diff --cached --check
+git commit -m "refactor(panels): reuse passive window lookup"
+git status --short
+```
+
+Journals full raw prefix guard до/после append. Windows temp/build/cache F:;
+Docker только текущий engine, без Desktop/WSL/settings/prune/build/pull.
+Source tests PASS до изменения, runtime bugfix не заявлен. Mac/physical task
+открыт, change не архивируется. Следующий шаг — настоящий WezTerm pilot.

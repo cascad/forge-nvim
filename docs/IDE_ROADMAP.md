@@ -17,7 +17,7 @@ IDE-001 параллельно ждёт диагностических данн�
 | Проверено Windows/Ubuntu | Общая консоль состояния и логов IDE | IDE-106/107: Space w i/:ForgeLogs, source/status/history/filters/report, native restart и late focus; по46 различных editor checks, §182; Mac/GUI отдельно |
 | Рабочий opt-in пилот | Аккуратные рамки как в Termide | IDE-076: :ForgeFramePilot, настоящие Code/Locals, шаги/цвет/resize/Space w/session; [команды, цена и ограничения](PANEL_FRAME_PILOT.md), §183. Default/physical gate открыт |
 | Обзор актуализирован; следующий выбор | Конкретные сокращения | IDE-080: [решения после Files/Logs/pilot](FEATURE_REVIEW.md), §184;67 pins/6 patched dependencies. Первый UI кандидат — breadcrumbs/ruler, выбор владельца открыт; отдельно пассивный window lookup |
-| Затем | Меньше слоёв управления окнами, фокусом и DAP | Маленькие изменения по review с сохранением проверенных пользовательских сценариев; большой переписи нет |
+| Первый небольшой refactor | Общий пассивный поиск окон | §185: два повторных цикла заменены существующим finder, net−16 строк; FT/source/window-order/tab/custom callbacks сохраняются, main/create/guard отдельны |
 | Остаток функциональности | Bash debug, сложные проекты/окружения, оставшиеся Git ошибки | Готовые backend; SQL references отложен до подходящего provider, собственный LSP не разрабатываем |
 | Отдельный платформенный gate | Mac startup/zsh/Go, Cmd+C, реальные клавиши, чистый setup Windows/macOS/Ubuntu | Нужны actual запуски на целевых машинах; Mint отложен |
 
@@ -57,9 +57,10 @@ Windows/Ubuntu: основной selected regression44, затем tail2 и по
 после последней правки reader —46 различных checks на ОС. Мак/physical GUI
 остаётся отдельным gate; global full suite этим набором не подтверждён.
 
-Рабочий frame pilot IDE-076 выполнен в §183; следующий результат —
-список оставить/удалить/заменить IDE-080; затем небольшие упрощения по
-этому списку. Проверка на реальных проектах и Mac ведётся отдельной матрицей.
+Рабочий frame pilot IDE-076 выполнен в §183, актуальный список сокращений —
+§184, первая дедупликация пассивного window lookup — §185. Следующие удаления
+UI зависят от выбора владельца; физическая оценка WezTerm и Mac — отдельные
+задачи, готовые headless проверки их не заменяют.
 
 ## Сделанное и границы проверок — 2026-11-11
 

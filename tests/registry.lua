@@ -75,6 +75,7 @@ return {
   { file = 'tests/e2e/ui-capture.test.lua', suite = 'e2e', timeout = 120 },
   { file = 'tests/e2e/panel-frame.test.lua', suite = 'e2e', timeout = 210 },
   { file = 'tests/e2e/frame-layout.test.lua', suite = 'e2e', timeout = 240 },
+  { file = 'tests/e2e/window-lookup.test.lua', suite = 'e2e', timeout = 120 },
   { file = 'tests/e2e/dap-output-policy.test.lua', suite = 'e2e', timeout = 360 },
   { file = 'tests/e2e/code-focus.test.lua', suite = 'e2e', timeout = 150 },
   { file = 'tests/e2e/outline.test.lua', suite = 'e2e', timeout = 180 },

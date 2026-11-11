@@ -36,6 +36,13 @@ predicate только для подходящего FT: сейчас после
 остаются разными операциями. Thin layouts/triggers/empty не удалять только
 ради числа файлов: это маленькие публичные routes, не новое тяжёлое ядро.
 
+Следующий небольшой шаг §185 реализует именно это: visibility и default
+focus используют прежний activities finder с составным predicate без FT
+аргумента. Два повторных цикла удалены, net−16 строк/2 файла. Сам finder,
+его predicate semantics, main/create/guard не изменены. Новый native
+window-lookup E2E проходит на исходном и новом варианте Windows/Ubuntu;
+это refactor, не новый bugfix или ускорение по замеру LOC.
+
 Свежие native inventory profiles: Windows45988123947700 / Ubuntu41007571888303,
 по67 plugins,45 loaded в обычном text buffer, installs0. Это не idle28 из
 первого обзора и не benchmark. Оба native exit0/signal0/APIerrors[]/scope ok.

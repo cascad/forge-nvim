@@ -79,17 +79,10 @@ end
 -- =============================================================
 
 local function any_window_with_ft(ft, predicate)
-    for _, win in ipairs(vim.api.nvim_tabpage_list_wins(0)) do
-        if vim.api.nvim_win_is_valid(win) then
-            local buf = vim.api.nvim_win_get_buf(win)
-            if vim.bo[buf].filetype == ft then
-                if not predicate or predicate(buf) then
-                    return true
-                end
-            end
-        end
-    end
-    return false
+    -- Source predicate вызывается только после подходящего FT, как прежде.
+    return require('ide.activities').is_visible(nil, function(buf)
+        return vim.bo[buf].filetype == ft and (not predicate or predicate(buf))
+    end)
 end
 
 local function neo_tree_open_with_source(source)

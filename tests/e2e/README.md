@@ -1359,11 +1359,20 @@ health сохраняет фактическое состояние до/пос�
 отсутствующий native SDK молчаливым SKIP. `FORGE_SEARCH_CASE` выбирает UI случай;
 полный suite без фильтра запускает также health check. Mac/ARM64/GUI отдельно.
 
-## Quit/RPC capture — IDE-085
+## Пассивный поиск окон компонентов
+
+Пассивный lookup/default focus компонентов: `nvim -l tests/e2e/window-lookup.test.lua`.
+Реальные окна normal/float и tab, несколько FT в обратном приоритете, live
+metadata/custom callback/no-match; настоящие Neo-tree filesystem/buffers/git_status.
+Проверки одинаково проходят до/после refactor (§185), не требуют новых SDK.
+
+## Рабочий пилот рамок
 
 Рабочий opt-in layout Code/Locals: `nvim -l tests/e2e/frame-layout.test.lua`.
 Сценарий использует подготовленные Editor/Go/Delve SDK, реальные F9/F5/F10,
 UI RGB и session save/restore; [команды и границы](../../docs/PANEL_FRAME_PILOT.md).
+
+## Quit/RPC capture — IDE-085
 
 Все RPC test children с artifacts получают controller/native JSONL и
 driver-source/SHA до init. `quit-trace.test.lua` проверяет normal quit,
