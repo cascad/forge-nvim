@@ -8909,3 +8909,98 @@ ide023-audit.py, ide023-finish-audit.py; журналы дополнены с SH
 **Файлы.** lua/plugins/terminal.lua; terminal-escape E2E/terminal-echo fixture,
 registry/tests README; QUICKSTART/PROBLEMS/IDE_ROADMAP/FEATURE_REVIEW,
 HISTORY/AGENT_COMMANDS и OpenSpec change preserve-native-terminal-escape.
+
+
+## 172. Terminal и Trouble: общий маршрут и native views
+
+Дата: 2026-11-11. Этап3/IDE-009, новые IDE-099/100;
+change unify-terminal-trouble-controls.
+Спека: IDE-PANEL-17 (ADDED).
+
+**Что было.** Terminal/Trouble уже зарегистрированы и размещаются Edgy,
+но отсутствовали в общем normal focus/help/hide/zoom. После IDE-023 появилась
+возможность проверить этот участок без конфликта native escape. Добавлены
+Space w T (t занят Tests) и Space w x (прежний diagnostics prefix — xx).
+
+**IDE-099 — причина и исходное воспроизведение.** Ctrl-t → F7 → :IdeShow
+terminal на b949919 скрывает уже видимое окно: registry open вызывает
+ToggleTerm без проверки видимости, external alias не записывает slot.
+Тот же конфликт выявился при новом Space w T после normal Esc в код.
+Отдельный native source case до guard: profile14223841443000,
+.tests/panel-tools-ide099-source.txt,0 views вместо1. Теперь существующий
+terminal.open проверяет native видимость; toggle shortcuts остаются toggle.
+
+**IDE-100 — причина и исходное воспроизведение.** Штатная help Trouble
+создаёт float с тем же filetype=trouble, что и список результатов. Edgy ловил
+его по ft и переносил вниз. Source profile14427049906300,
+panel-tools-ide100-source.txt: relative="" вместо"editor". У настоящей view
+есть native window metadata trouble, у help нет. Тот же признак теперь
+фильтрует docking и common maps, сохраняя native popup/q/Esc. Plugin не патчится.
+
+**Общий путь.** Существующие titles/work/show_work получили два backend;
+normal q/Esc/? и Space w q/z/? сохранены в едином controls. q закрывает текущее
+Terminal/Trouble окно публичным window API после возврата фокуса в код,
+не весь registry slot. Буфер/job и другие views остаются; native WinClosed
+выполняет backend cleanup. Whole-slot close при смене раскладки прежний.
+
+Trouble actions используют существующий механизм сохранённых callbacks:
+перед native действием восстановить source и перенести выбор из overlay,
+затем вызвать исходный callback. Jump/folds/filter не переписаны. Общая ?
+дополнена контекстом, штатная help остаётся по g?. Новый registry/views/PID
+state, controllers/autocmd/timers или terminal-mode печатные maps не добавлены.
+Весь runtime diff — четыре существующих Lua файла, SDK/67 pins/backports прежние.
+
+**Постоянный E2E.** tool-panels.test.lua в registry,9 native cases:
+cold/repeated Terminal и empty Problems; literal q/?/w/h в shell input;
+help/zoom/Esc/hide с тем же PID/channel/output и продолжением набранной команды;
+current hide из двух terminals с двумя живыми jobs; real gopls с двумя
+разными diagnostics и jump в выбранную Omega/строку5 после выбора в zoom;
+native folds; Quickfix jump во второй существующий файл/строку2, сохранение
+соседней Trouble view; old aliases; два отдельных source regressions выше.
+Native help дополнительно остаётся float300ms после появления, а не только
+в первом кадре до возможного docking. UI действия не запускают DAP.
+
+Один immutable archive b949919, существующий FORGE_E2E_CONFIG_SOURCE и те же
+test bytes: по8 ожидаемых source отказов/1 legacy control PASS Windows/Ubuntu,
+исправленный config —9 PASS на каждой ОС. Шесть отказов показывают отсутствие
+новых controls, ещё два — существовавшие IDE-099/100; это не «восемь старых багов».
+Итоговые логи: panel-tools-windows-source.txt/windows-v4.txt,
+panel-tools-ubuntu-source.txt/ubuntu-final.txt в .tests.
+
+**Соседний регресс.** Поочерёдно Windows→Ubuntu: terminal-escape6,
+work-panels6, debug-panels4, outline6, buffers8 —30 PASS на ОС.
+Итого по39 checks/31 positive native profiles; вместе с source —80 profiles.
+Все root exit/signal0, APIerrors[], QuitPre/VimLeavePre/VimLeave, own scopes
+пусты. В двух Ubuntu positive profiles scope завершил оставшуюся owned child
+group graceful SIGTERM; root hard kill нет. Это не natural exit всех потомков.
+Audit сверил точные test copies и63 runtime/pin/patch files после нормализации
+CRLF→LF относительно source/current; positive и source не перепутаны.
+
+**Уточнения harness.** Первый helper ошибочно брал PID из output_policy.state,
+который PID не возвращает, и считал loaded buffers видимыми окнами. Исправлено
+до финальных source/current прогонов, теперь PID берётся из реального job,
+views — из native windows. Первый Quickfix fixture ссылался на строку2 файла
+из1 строки; исправлены fixture-данные. Проверка «ноль всех floats» ошибочно
+поймала отдельный Fidget gopls popup; итог требует закрытия конкретного zoom ID,
+а не отсутствия независимых окон. Эти отказы не названы product bugs/RED.
+Ранние logs source-harness/source-v2/windows-v2/v3 сохранены; v4 и final source
+отделены. No-op F35 подтверждает обработку async input, UI/backend не подменяет.
+
+Quick358/14files, trace11/2files на каждой ОС; trace имеет по1 явному SKIP
+manual-link (main specs таких ссылок не содержат). Strict87/87. Full suite,
+Mac/native и физические клавиши WezTerm не запускались. Ubuntu использовал
+уже работающий engine28.5.1/image8a6b73261d91 без сети/build/pull, по одному
+контейнеру2CPU/3GiB/256pids; Desktop/WSL не управлялись. Windows temp на F:.
+
+**Вывод.** Общая normal модель основных панелей завершена Windows/Ubuntu,
+готова короткая docs/PANEL_KEYS.md. Mac/GUI gate остаётся открытым, change не
+архивируется. Полные create/name/reorder terminal workflows и все Trouble
+LSP modes не объявлены покрытыми этими9 cases. Следующий отдельный UI пункт —
+IDE-076 (Termide prototype); выбор упрощений из FEATURE_REVIEW до большой
+переписи остаётся за владельцем. Причины IDE-097/087 здесь не исправлялись.
+
+**Файлы.** ide/controls.lua, ide/init.lua, config/keymaps.lua, plugins/edgy.lua;
+tool-panels E2E/registry/tests README; PANEL_KEYS/QUICKSTART/PANELS,
+PROBLEMS/IDE_ROADMAP/FEATURE_REVIEW/LANGUAGE_MATRIX/HISTORY/AGENT_COMMANDS,
+OpenSpec change. Evidence: .tests/panel-tools-evidence.json / audit.py;
+старые journal prefixes сохранены raw append с SHA guard.

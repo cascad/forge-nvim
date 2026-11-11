@@ -5397,3 +5397,115 @@ SDK SHA74AFF15B…C6AD9 и lock/backports прежние. История171/comm
 raw UTF8 append с проверкой byte prefixes; полная перезапись журналов запрещена.
 Mac/GUI не проверялись, исходный IDE-097 assert/окно Python не объявлены fixed.
 Разовые scripts/reports в .tests игнорируются Git; постоянные E2E в tests/.
+
+
+## 85. Terminal/Trouble: native views и два source бага
+
+2026-11-11, checkout F:/repo/forge-nvim, HEADb949919 перед изменениями.
+Команды PowerShell без профиля, все Windows temp/cache на F:. Поочерёдные
+Windows/Ubuntu тесты, без lifecycle Desktop/WSL, скрытых build/pull/download.
+
+```powershell
+git status --short
+git log -1 --format='%h %s'
+Get-Content CLAUDE.md -TotalCount 140
+rg --files nvim_forge/lua/ide
+rg -l 'folke/trouble.nvim|Trouble diagnostics' nvim_forge/lua
+Get-Content nvim_forge/lua/ide/controls.lua
+Get-Content nvim_forge/lua/ide/init.lua | Select-Object -Skip 362 -First 45
+Get-Content nvim_forge/lua/plugins/ide.lua -TotalCount 43
+Get-Content .tests/editor-deps/lazy/trouble.nvim/lua/trouble/config/init.lua -TotalCount 82
+Get-Content .tests/editor-deps/lazy/trouble.nvim/lua/trouble/view/init.lua
+```
+
+Также прочитаны pinned Trouble api/actions/view/window и ToggleTerm close/get:
+backend хранит source win/cursor, native help использует ft=trouble без view
+metadata, WinClosed останавливает sections. Первые guesses panels.lua /
+plugins/trouble.lua и PowerShell wildcard argument в rg не нашли файлов;
+после rg --files использовались реальные ide/controls.lua и plugins/ide.lua.
+Это ошибки поиска, не изменения дерева или установка нового софта.
+
+```powershell
+$env:TEMP='F:/repo/forge-nvim/.tests/tmp'
+$env:TMP=$env:TEMP; $env:TMPDIR=$env:TEMP
+$env:NVIM_LOG_FILE="$env:TEMP/panel-tools-finish.log"
+$env:PYTHONIOENCODING='utf-8'
+$env:npm_config_cache='F:/forge-nvim-tmp/npm-cache'
+$env:GOMAXPROCS='2'; $env:GOFLAGS='-p=2'; $env:GOTOOLCHAIN='local'
+npx.cmd --yes @fission-ai/openspec@1.13.2 context --json
+npx.cmd --yes @fission-ai/openspec@1.13.2 list --json
+npx.cmd --yes @fission-ai/openspec@1.13.2 list --specs --json
+npx.cmd --yes @fission-ai/openspec@1.13.2 new change unify-terminal-trouble-controls
+npx.cmd --yes @fission-ai/openspec@1.13.2 status --change unify-terminal-trouble-controls --json
+npx.cmd --yes @fission-ai/openspec@1.13.2 instructions proposal --change unify-terminal-trouble-controls --json
+npx.cmd --yes @fission-ai/openspec@1.13.2 instructions specs --change unify-terminal-trouble-controls --json
+npx.cmd --yes @fission-ai/openspec@1.13.2 instructions design --change unify-terminal-trouble-controls --json
+npx.cmd --yes @fission-ai/openspec@1.13.2 instructions tasks --change unify-terminal-trouble-controls --json
+npx.cmd --yes @fission-ai/openspec@1.13.2 instructions apply --change unify-terminal-trouble-controls --json
+python -B .tests/panel-tools-prepare.py
+python -B .tests/panel-tools-engine.py
+```
+
+CLI artifacts/metadata — .tests/panel-tools-*.json. Prep использует Python
+subprocess `git archive --format=tar b949919 nvim_forge` и tarfile filter=data;
+archive SHA/revision — .tests/ubuntu/panel-tools-source-config/archive.json.
+Рабочее дерево не откатывается. Engine check — bounded20s readonly version /
+image inspect:28.5.1 / sha256:8a6b73261d91d7e194c9c31a128c9047741bad930da70b518e4b010d0882d309.
+
+```powershell
+$env:FORGE_E2E_CONFIG_SOURCE='F:/repo/forge-nvim/.tests/ubuntu/panel-tools-source-config/nvim_forge'
+& ./.tools/neovim/windows-x64/bin/nvim.exe -l tests/e2e/tool-panels.test.lua
+$env:FORGE_TOOL_PANEL_CASE='existing Terminal show'
+& ./.tools/neovim/windows-x64/bin/nvim.exe -l tests/e2e/tool-panels.test.lua
+$env:FORGE_TOOL_PANEL_CASE='native Trouble help remains'
+& ./.tools/neovim/windows-x64/bin/nvim.exe -l tests/e2e/tool-panels.test.lua
+Remove-Item Env:FORGE_E2E_CONFIG_SOURCE
+Remove-Item Env:FORGE_TOOL_PANEL_CASE
+& ./.tools/neovim/windows-x64/bin/nvim.exe -l tests/e2e/tool-panels.test.lua
+& ./.tests/panel-tools-finish.ps1 > .tests/panel-tools-finish.txt 2>&1
+python -B .tests/panel-tools-audit.py > .tests/panel-tools-audit.txt 2>&1
+```
+
+Отдельные IDE-099/100 source profiles сняты до соответствующих guards.
+Final Windows current9PASS — panel-tools-windows-v4.txt. Finish последовательно
+выполнил final Windows source9 (8 ожидаемых отказов/1 alias control), Ubuntu
+source9/current9, затем по30 соседних checks Windows/Ubuntu, unit/trace/strict.
+Все final test copies совпали. Ранние helper предпосылки (PID/loaded-vs-visible,
+Quickfix line range, Fidget float) описаны в FIXLOG172, logs сохранены отдельно.
+Точные Docker команды finish script (без сети и с optional resource limits):
+
+```powershell
+docker compose -f tests/containers/compose.yaml -f tests/containers/limits.yaml run --rm --no-deps --pull never -e FORGE_E2E_CONFIG_SOURCE=/workspace/.tests/panel-tools-source-config/nvim_forge --entrypoint nvim ubuntu -l tests/e2e/tool-panels.test.lua
+docker compose -f tests/containers/compose.yaml -f tests/containers/limits.yaml run --rm --no-deps --pull never --entrypoint nvim ubuntu -l tests/e2e/tool-panels.test.lua
+powershell -NoProfile -File scripts/test.ps1 quick
+& ./.tools/neovim/windows-x64/bin/nvim.exe -l tests/run.lua trace
+docker compose -f tests/containers/compose.yaml -f tests/containers/limits.yaml run --rm --no-deps --pull never ubuntu quick
+docker compose -f tests/containers/compose.yaml -f tests/containers/limits.yaml run --rm --no-deps --pull never --entrypoint nvim ubuntu -l tests/run.lua trace
+npx.cmd --yes @fission-ai/openspec@1.13.2 validate --all --strict --no-interactive
+git diff --check
+git diff --numstat -- nvim_forge/FIXLOG.md docs/AGENT_COMMANDS.md
+```
+
+Регресс поочерёдно выполняет terminal-escape/work-panels/debug-panels/outline/
+buffers, меняется только имя файла после `-l tests/e2e/`. По39 checks/31 native
+positive profiles на ОС; вместе с18 source profiles —80 root exits0/APIerrors[]/
+own scopes empty. Два Ubuntu owned groups SIGTERM сохранены в evidence.
+Quick358/trace11 +1 manual-link SKIP на ОС, strict87. Source63 files сверены
+с нормализацией CRLF→LF, test copies — точные bytes; SDK SHA74AFF15B…C6AD9 и
+pins прежние. FIXLOG172/commands85 дописаны raw UTF8 с проверкой prefixes.
+Mac/GUI не проверены, change не архивирован. Разовые scripts/reports в .tests
+игнорируются Git, постоянный regression находится в tests/e2e/tool-panels.test.lua.
+
+
+После правок документов trace повторён Windows/Ubuntu, strict87 и audit
+повторены успешно. Readonly post-check подтвердил engine28.5.1 и отсутствие
+own panel-tools containers; результаты .tests/panel-tools-after.json.
+
+```powershell
+python -B .tests/panel-tools-after.py
+git diff --cached --check
+git diff --cached --stat
+git commit -m "feat(panels): unify Terminal and Trouble controls"
+git status --short
+git log -1 --format='%h %s'
+```

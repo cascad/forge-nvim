@@ -257,6 +257,8 @@ return {
                 {
                     title = "Trouble",
                     ft = "trouble",
+                    -- spec: IDE-PANEL-17. Native help имеет тот же ft, но не view.
+                    filter = function(_, win) return vim.w[win].trouble ~= nil end,
                     size = { height = 0.30 },
                     pinned = false,
                 },

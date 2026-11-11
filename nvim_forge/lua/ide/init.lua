@@ -383,7 +383,12 @@ local default_components = {
     {
         id = "terminal", slot = "bottom", title = "Terminal",
         filetypes = { "toggleterm" },
-        open = function() pcall(vim.cmd, "ToggleTerm direction=horizontal") end,
+        open = function()
+            -- spec: IDE-PANEL-17. Show не должен скрывать видимый native toggle.
+            if not any_window_with_ft("toggleterm") then
+                pcall(vim.cmd, "ToggleTerm direction=horizontal")
+            end
+        end,
         -- toggleterm имеет несколько окон — закрываем все
         -- горизонтальные через TermNew API. Простой `close` close'ает
         -- активный — этого хватает.

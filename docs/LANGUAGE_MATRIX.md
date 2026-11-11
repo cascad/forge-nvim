@@ -91,5 +91,6 @@ IDE-077 process groups и IDE-078/079 observers — §137–139. Это attached
 последовательные Windows/Ubuntu прогоны, FIXLOG с причиной и отдельный commit.
 Mac выполняется отдельно на машине владельца; headless Ubuntu не заменяет
 проверку clipboard/физических клавиш/GUI. Большой рефакторинг ядра остаётся
-после функциональной матрицы. Остаток controls Terminal/Trouble и IDE-047/048
+после функциональной матрицы. Controls Terminal/Trouble проверены Windows/Ubuntu
+(§172); Mac/GUI и IDE-047/048
 сохраняются в очереди, не смешиваются с языковым шагом.

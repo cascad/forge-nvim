@@ -1,10 +1,11 @@
--- spec: IDE-PANEL-1/2/3/4/5/6/7/8 общий маршрут рабочих панелей.
+-- spec: IDE-PANEL-1/2/3/4/5/6/7/8/17 общий маршрут рабочих панелей.
 local M = {}
 local zoom, help
 local active_win
 local pending_panel
 local work = { ['neotest-summary']='tests', ['neotest-output-panel']='tests_output',
-    ['grug-far']='search', OverseerList='tasks_output', ['forge-sql']='sql.results' }
+    ['grug-far']='search', OverseerList='tasks_output', ['forge-sql']='sql.results',
+    toggleterm='terminal', trouble='trouble' }
 local backend_maps = {}
 local search_actions = { Goto=true, Open=true, ['Open Next']=true, ['Open Prev']=true, Preview=true }
 local titles = {
@@ -14,6 +15,7 @@ local titles = {
     aerial = 'Outline', ['neo-tree'] = 'Files', NeogitStatus = 'Git',
     ['neotest-summary']='Tests', ['neotest-output-panel']='Test Output',
     ['grug-far']='Search', OverseerList='Tasks', ['forge-sql']='SQL Results',
+    toggleterm='Terminal', trouble='Problems / Trouble',
 }
 local tree_components = { filesystem = 'explorer', buffers = 'buffers', git_status = 'git_status' }
 function M.tree_component(source) return tree_components[source] end
@@ -142,21 +144,39 @@ function M.test_output() show_work('tests_output') end
 function M.search() show_work('search') end
 function M.tasks() show_work('tasks_output') end
 function M.sql_results() show_work('sql.results') end
+function M.terminal() show_work('terminal') end
+function M.problems() show_work('trouble') end
 
 -- Перед native действием вернуть выбранный cursor в обычное окно backend.
 -- Grug-far ищет окно через bufwinid; его карты ввода текста не трогаем.
+local function trouble_view(buf)
+    -- Native help использует тот же filetype, но не имеет window metadata view.
+    for _, win in ipairs(vim.fn.win_findbuf(buf)) do
+        if vim.w[win].trouble then return true end
+    end
+    return false
+end
 function M.work_maps(buf)
     if not vim.api.nvim_buf_is_valid(buf) or not work[vim.bo[buf].filetype] then return end
+    local kind = vim.bo[buf].filetype
+    if kind == 'trouble' and not trouble_view(buf) then return end
+    if kind == 'trouble' then
+        -- Штатная справка остаётся доступна после общего normal ?.
+        for _, map in ipairs(vim.api.nvim_buf_get_keymap(buf,'n')) do
+            if map.lhs == '?' and map.callback and map.callback ~= M.help then
+                vim.keymap.set('n','g?',map.callback,{buffer=buf,nowait=true,silent=true,desc=map.desc})
+            end
+        end
+    end
     for key, action in pairs({ q=M.hide, ['<Esc>']=M.cancel, ['?']=M.help }) do
         vim.keymap.set('n',key,action,{buffer=buf,nowait=true,silent=true,desc='Panel: '..key})
     end
-    local kind = vim.bo[buf].filetype
-    if kind ~= 'OverseerList' and kind ~= 'grug-far' then return end
+    if kind ~= 'OverseerList' and kind ~= 'grug-far' and kind ~= 'trouble' then return end
     backend_maps[buf] = backend_maps[buf] or {}
     for _, map in ipairs(vim.api.nvim_buf_get_keymap(buf,'n')) do
         if map.callback and map.expr~=1 and map.expr~=true and map.lhs~='q' and map.lhs~='?'
             and map.lhs:lower()~='<esc>' and map.lhs~='j' and map.lhs~='k'
-            and (kind=='OverseerList' or search_actions[map.desc])
+            and (kind=='OverseerList' or kind=='trouble' or search_actions[map.desc])
             and backend_maps[buf][map.lhs]~=map.callback then
             local callback=map.callback
             local wrapped=function()
@@ -198,6 +218,14 @@ function M.hide()
     pending_panel = nil
     close_help(true)
     M.restore(true)
+    if ft(0) == 'toggleterm' or ft(0) == 'trouble' then
+        -- q скрывает текущую view; registry close при смене slot закрывает группу.
+        -- Буфер/job сохраняются, native WinClosed выполняет backend cleanup.
+        local source = vim.api.nvim_get_current_win()
+        M.focus_code()
+        if valid(source) then vim.api.nvim_win_close(source,true) end
+        return
+    end
     local id = component(0)
     if id == 'neogit' and #vim.api.nvim_tabpage_list_wins(0) == 1 and #vim.api.nvim_list_tabpages() > 1 then
         vim.cmd('tabclose')
@@ -258,6 +286,7 @@ function M.help()
         'g               Git справа',
         't / r           Tests / Test Output',
         'f / b           Search / Tasks',
+        'T / x           Terminal / Problems',
         'q               скрыть текущую панель',
         'z               развернуть / вернуть',
         '?               эта подсказка', '',
@@ -295,6 +324,13 @@ function M.help()
     elseif ft(source) == 'forge-sql' then
         lines[#lines + 1] = 'SQL: Space j o — output, j q — запрос из кода, j x — stop session.'
         lines[#lines + 1] = 'q скрывает результаты; повторное открытие не выполняет SQL.'
+    elseif ft(source) == 'toggleterm' then
+        lines[#lines + 1] = 'Terminal: i — ввод; Ctrl-\\ Ctrl-n / Esc Esc — normal.'
+        lines[#lines + 1] = 'q скрывает окно с живым job; Space w T возвращает терминал.'
+        lines[#lines + 1] = 'Ctrl-t / Space tt — прежний toggle; F7 — в код.'
+    elseif ft(source) == 'trouble' then
+        lines[#lines + 1] = 'Problems: Enter — перейти, zo/zc — раскрыть/свернуть.'
+        lines[#lines + 1] = 'Space xx/xQ — diagnostics/Quickfix; g? — native справка.'
     end
     vim.api.nvim_buf_set_lines(buf, 0, -1, false, lines)
     vim.bo[buf].bufhidden = 'wipe'
@@ -345,7 +381,9 @@ function M.refresh()
     end
     if help and current ~= help.win then close_help(false) end
     for _, win in ipairs(vim.api.nvim_tabpage_list_wins(0)) do
-        if titles[ft(win)] then vim.wo[win].winbar = winbar end
+        if titles[ft(win)] and (ft(win)~='trouble' or trouble_view(vim.api.nvim_win_get_buf(win))) then
+            vim.wo[win].winbar = winbar
+        end
         if work[ft(win)] then M.work_maps(vim.api.nvim_win_get_buf(win)) end
     end
     vim.cmd('redrawstatus')

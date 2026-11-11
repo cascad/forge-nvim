@@ -46,6 +46,12 @@ completed/live/managed terminal, normal aliases и paused CodeLLDB PTY.
 точные команды Windows/Ubuntu/Mac и границы GUI — в
 [terminal escape](e2e/README.md#native-terminal-escape--ide-panel-16--ide-023).
 
+Terminal/Trouble controls: `nvim -l tests/e2e/tool-panels.test.lua` или
+`nvim -l tests/run.lua e2e --id IDE-PANEL-17`. Девять editor cases, реальные
+shell/jobs, gopls diagnostics, Quickfix, multiple views и native help.
+Нужны общие editor dependencies и Go/gopls для LSP case; команды/границы —
+[tool panels](e2e/README.md#terminaltrouble--ide-panel-17).
+
 DAP E2E также требует совместимые Go/Delve. Явная подготовка частных версий:
 `python3 -B tests/e2e/prepare_dap.py --download` (Windows: `python`).
 Docker готовит их при build; в тесте нет загрузки SDK/адаптера.

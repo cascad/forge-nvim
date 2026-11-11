@@ -420,6 +420,43 @@ Docker engine и image должны быть готовы заранее; ком
 control PASS на обеих ОС, исправленный config —6 PASS. Ещё22 buffer/focus/Debug
 regression на каждой ОС PASS (§171). Mac/физические клавиши WezTerm не проверены.
 
+### Terminal/Trouble — IDE-PANEL-17
+
+`nvim -l tests/e2e/tool-panels.test.lua` либо
+`nvim -l tests/run.lua e2e --id IDE-PANEL-17`:9 editor E2E Windows/Ubuntu.
+Space w T/x cold/repeated focus, пустые Problems; literal terminal input,
+help/zoom/Esc/hide с тем же PID/channel/history; hide текущего из двух windows;
+real gopls diagnostics и выбор другой строки в zoom; native Quickfix jump,
+два Trouble views, folds и native help; old aliases; IDE-099/100 source regressions.
+Public Quickfix заполняется fixture-данными с существующими файлами/строками,
+gopls действительно выдаёт два разных diagnostics. Backend actions не подменяются.
+
+Нужны общие pinned editor plugins и явная подготовка Go/gopls через
+prepare_dap.py / prepare_lsp.py (см. Go workflow). Тест сам ничего не скачивает.
+Windows запускает выбранный SDK; Ubuntu/Mac — официальный Neovim:
+
+```powershell
+$env:TEMP="$PWD/.tests/tmp"
+$env:TMP=$env:TEMP; $env:TMPDIR=$env:TEMP
+$env:NVIM_LOG_FILE="$env:TEMP/tool-panels.log"
+& ./.tools/neovim/windows-x64/bin/nvim.exe -l tests/e2e/tool-panels.test.lua
+docker compose -f tests/containers/compose.yaml -f tests/containers/limits.yaml run --rm --no-deps --pull never --entrypoint nvim ubuntu -l tests/e2e/tool-panels.test.lua
+```
+
+Engine/image уже должны работать; запускать поочерёдно. На подготовленном Mac:
+`nvim -l tests/e2e/tool-panels.test.lua`. `FORGE_TOOL_PANEL_CASE` выбирает случай
+по подстроке (например `gopls`); без фильтра обязательны все9. Для source replay
+используется FORGE_E2E_CONFIG_SOURCE с archive b949919 и тем же lock:8 ожидаемых
+отказов/1 legacy control PASS на ОС, fixed9 PASS. Два отдельных существовавших
+бага воспроизводятся без новых shortcuts: :IdeShow terminal после Ctrl-t
+скрывает окно (IDE-099), native Trouble help dock-ится как панель (IDE-100).
+Native help проверяется в popup ещё300ms после отображения, чтобы не принять
+первый кадр до docking за PASS. Mac/GUI не проверены; полная матрица управления
+именами/порядком терминалов и LSP Trouble modes остаётся отдельной работой.
+Соседний регресс: terminal-escape6/work-panels6/debug-panels4/outline6/buffers8,
+по30 PASS на Windows/Ubuntu. Всего по39 checks/31 native profiles; root0,
+APIerrors[], собственные scopes пусты (§172).
+
 Go E2E разделяют compiler cache одного прогона в native temp через
 `FORGE_E2E_GO_CACHE`; прямой Lua-файл получает отдельный temp cache.
 Windows/Docker bind mount для runtime cache не используется. Source/flags

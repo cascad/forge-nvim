@@ -1,5 +1,12 @@
 # IDE Modes And Panels
 
+Основной normal-маршрут — Space w: h/j/k/l — соседняя область,0 — код,
+T — Terminal,x — Problems/Trouble; остальные панели и действия — в
+[краткой шпаргалке](../docs/PANEL_KEYS.md). q/Esc/? и Space w z работают
+одинаково в рабочих панелях. В Terminal/Trouble q скрывает текущее окно,
+сохраняя другие views и jobs; Trouble native help остаётся по g?.
+Прежние команды layout/режимов ниже сохраняются.
+
 > **Windows + WezTerm:** часть сочетаний (`Ctrl+Shift+буква`, `Ctrl+Enter`, `Ctrl+Space`, `Ctrl+/`, `Ctrl+.`, F-клавиши с модификаторами) через ConPTY до nvim не доходит (WT-KBD-6); сочетания nvim_forge WezTerm доставляет подменой. Список и альтернативы — `docs/WEZTERM.md`, раздел 12.
 
 ## Start Page / Recent Projects
@@ -82,9 +89,9 @@ Tool-windows (`neo-tree`, DAP View, Overseer, neotest, search panels, quickfix) 
 - Команды-эквиваленты: `:ForgeBufferNext`, `:ForgeBufferPrev`, `:ForgeFocusEditor`,
   `:ForgeCloseContext`.
 
-Это заменяет старую схему с `folke/edgy.nvim`: она была удобна как edge-accordion,
-но смешивала Git/Files/Tests/Debug/Search в одном общем наборе окон. Теперь
-layout переключается целиком.
+Edgy по-прежнему размещает tool-окна в edgebar; состояние компонентов и
+раскладки ведёт существующий ide framework. Команды layout переключают
+раскладку, Space w фокусирует и управляет отдельной панелью.
 
 ## Keyboard Layouts
 

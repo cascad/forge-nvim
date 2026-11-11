@@ -76,6 +76,8 @@ terminal в файловый цикл не входят. Из панели вы�
 | `Space w r` | Открыть/сфокусировать Test Output снизу |
 | `Space w f` | Открыть/сфокусировать Search снизу |
 | `Space w b` | Открыть/сфокусировать Tasks снизу |
+| `Space w T` | Открыть/сфокусировать managed Terminal |
+| `Space w x` | Открыть/сфокусировать Problems/Trouble |
 | `Space w 0` | Вернуться в код |
 | `Space w q` | Скрыть рабочую панель; в коде — прежнее закрытие окна |
 | `Space w z` | Развернуть текущую рабочую панель / вернуть её на место |
@@ -85,6 +87,9 @@ terminal в файловый цикл не входят. Из панели вы�
 из развёрнутого вида, иначе переводит фокус в код. Левая группа Debug
 (Locals/Watch/Stack/Breakpoints) скрывается целиком. Enter и j/k сохраняют
 штатные действия списка/дерева. `[focus]` в заголовке показывает активную область.
+В Terminal/Trouble q скрывает текущее окно, сохраняя другие views и jobs.
+Trouble: Enter/zo/zc используют выбор из zoom, `g?` открывает штатную справку.
+Все основные сочетания — в [краткой шпаргалке](../docs/PANEL_KEYS.md).
 Навигация и скрытие не продолжают/не завершают сессию и не очищают Output.
 
 Возврат Debug в код пропускает terminal и floating preview. `Space w 0`
@@ -488,6 +493,7 @@ IDE-028 проверяется отдельным `worktree-refresh.test.lua` (F
 | Клавиша | Действие |
 |---|---|
 | `<leader>tt` / `<C-t>` в normal | Скрыть/вернуть managed terminal снизу, сохранив job и вывод |
+| `Space w T` в normal | Открыть/сфокусировать Terminal; повтор сохраняет видимое окно |
 | `<C-\>` из normal вне terminal buffer | Тот же toggle терминала |
 | `<C-\>`, затем `<C-n>` | Выйти из terminal input в normal; повтор безопасен |
 | `<Esc><Esc>` | Из terminal input в normal mode |
@@ -569,7 +575,8 @@ TypeScript, Prettier и Jest имеют приоритет над общими t
 `Space j n` / `:NodeRun` выбирает package script; `Space j N` / `:NodeRunFile`
 запускает текущий JS в Tasks. F5 работает и без launch.json; F9 — breakpoint,
 Space d e — eval. Jest: Space T t / T f / T d — nearest / file / debug.
-Панели: Space w b — Tasks, w t — Tests, w r — Test Output, w c — DAP Output.
+Панели: Space w b — Tasks, w t — Tests, w r — Test Output, w c — DAP Output,
+w T — Terminal, w x — Problems/Trouble; [шпаргалка](../docs/PANEL_KEYS.md).
 Установка, ограничения и все команды: [Node workflow](../docs/NODE_WORKFLOW.md).
 
 ## Python project venv

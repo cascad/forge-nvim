@@ -63,6 +63,7 @@ return {
   { file = 'tests/e2e/debug-startup-visibility.test.lua', suite = 'e2e', timeout = 180 },
   { file = 'tests/e2e/output-resize.test.lua', suite = 'e2e', timeout = 210 },
   { file = 'tests/e2e/terminal-escape.test.lua', suite = 'e2e', timeout = 300 },
+  { file = 'tests/e2e/tool-panels.test.lua', suite = 'e2e', timeout = 300 },
   { file = 'tests/e2e/dap-output-policy.test.lua', suite = 'e2e', timeout = 360 },
   { file = 'tests/e2e/code-focus.test.lua', suite = 'e2e', timeout = 150 },
   { file = 'tests/e2e/outline.test.lua', suite = 'e2e', timeout = 180 },

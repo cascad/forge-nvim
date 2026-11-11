@@ -10,7 +10,30 @@
 
 Маршрут и приоритеты: [рабочий план nvim_forge](docs/IDE_ROADMAP.md).
 Для новых пунктов используем следующий свободный ID `IDE-xxx`; исходный
-симптом хранится здесь, этап и состояние — в плане. Следующий ID: `IDE-099`.
+симптом хранится здесь, этап и состояние — в плане. Следующий ID: `IDE-101`.
+
+## IDE-100 — native help Trouble пристыковывается как рабочая панель
+
+2026-11-11: native Trouble help создаёт floating window с filetype=trouble;
+Edgy ловит его как обычный Problems view и переносит вниз. Source b949919:
+.tests/panel-tools-ide100-source.txt, «Native Trouble help was docked».
+Отличие реального view — native window metadata trouble; help его не имеет.
+В unify-terminal-trouble-controls используется этот признак для docking и
+общих maps, чтобы native help сохранила popup/q/Esc. Постоянный регресс в
+tests/e2e/tool-panels.test.lua. §172:9 native E2E Windows/Ubuntu PASS,
+8 ожидаемых source отказов и1 alias control на ОС; Mac/GUI не проверены.
+
+## IDE-099 — Show скрывает терминал, открытый native toggle
+
+2026-11-11: Ctrl-t → F7 → :IdeShow terminal на b949919 скрывает уже видимый
+managed terminal вместо показа. Native E2E: .tests/panel-tools-ide099-source.txt,
+«Existing show hid visible Terminal»,0 views вместо1. Registry open вызывает
+ToggleTerm без проверки видимости, а external alias не записывает выбор slot.
+Это также мешает новому Space w T после старого Ctrl-t. Узкое исправление в
+unify-terminal-trouble-controls: visibility guard в terminal.open; постоянный
+регресс tests/e2e/tool-panels.test.lua, IDE-PANEL-17. §172:9 native E2E
+Windows/Ubuntu PASS, включая этот source RED→PASS, PID/channel/history
+сохранены. Mac/GUI остаются открытыми.
 
 ## IDE-098 — resize E2E снимает terminal padding до native refresh
 
@@ -780,7 +803,10 @@ FIXLOG). Источник текста — expression widget DAP; обычный
 Space w t/r/f/b, общие q/Esc/help/zoom/focus и сохранение состояния.
 По 6 новых + 19 прежних UI проверок Windows/Ubuntu PASS —
 [FIXLOG §109](nvim_forge/FIXLOG.md#109-рабочие-панели-общий-space-w-и-сохранение-поиска).
-Mac/GUI, terminal/Trouble и физические клавиши остаются отдельными проверками.
+§172 добавил Terminal/Trouble: Space w T/x, common controls, current-view hide,
+native выбор из zoom и штатная help;9 native E2E/source8 RED на ОС.
+Краткий маршрут — [PANEL_KEYS](docs/PANEL_KEYS.md). Mac/GUI и физические клавиши
+остаются отдельными проверками.
 
 ## Ранее зарегистрированные проблемы
 
