@@ -55,11 +55,14 @@ filetype cleanup и current-view q для Terminal/Trouble сохраняют о
 
 ## Outstanding
 
-CRITICAL:1.2 — повторить final source/target на Ubuntu;2.1 — тот же selected
-regression/unit/trace на Ubuntu;2.2 — actual Mac. На этой машине Linux engine
-недоступен, канал dockerDesktopLinuxEngine отсутствует. Прерванный 2026-11-11
-source не считается полным прогоном. Desktop/WSL агент не запускает.
+2026-11-12: cached Ubuntu engine готов, Desktop/WSL не управлялись. Полный
+source3ef37e0:12 RED/1 control + tab-scope1 RED; saved config/test SHA и
+same-container root/API/scopes/runtime проверены. Whole target7aa0ba9:
+12 PASS/1 FAIL + tab-scope1 PASS — новый IDE-116, поздний Files focus.
+После fix-panel-restore-focus обе ОС проходят13 переходов + tab-scope1;
+первая общая ошибка сохраняется в отчёте, а не заменяется повтором.
 
-Not verified: платформенная часть Spec/Scenario Coverage Ubuntu/Mac и
-physical key delivery. Код и Windows evidence сверены, расхождений design
-не найдено; archive readiness не заявляется.
+CRITICAL:2.1 — выбранный regression остаётся FAIL: Ubuntu scope probe
+IDE-117, Windows RPC stall IDE-118.2.2 — actual Mac/physical keys.
+Общие результаты, source identities и ограничения аудита описаны в
+verification fix-panel-restore-focus и FIXLOG §192–193. Archive не заявляется.

@@ -7,40 +7,38 @@ IDE-001 параллельно ждёт диагностических данн�
 
 ## Короткая актуальная очередь
 
-Ближайший блок — **панели и фокус**, change centralize-panel-transitions:
-один владелец явных переходов в существующем ide.state, подхват штатных
-окон, удаление повторных закрытий, сохранение процессов/вывода/вкладок.
-IDE-109/110 исправлены Windows:14 новых +53 прежних editor PASS, §187. Ubuntu
-engine снова доступен, actual source/target — следующий шаг. Desktop/WSL
-агент не запускает и не перезапускает.
-Затем: DAP lifecycle → общие инструменты и системные границы → Mac/чистая
-установка → Bash debug/сложные проекты/Git → общее оформление. Новые UI
-фичи до завершения текущего блока не добавляются. Необязательные plugins
-сохраняются до отдельного выбора владельца.
+Завершён текущий срез упрощения панелей/DAP/команд: один владелец переходов
+в ide.state (§187), общая подготовка F5/Space dP (§188), удалён устаревший
+debugpy filter (§189), сохранён порядок normal-команд (§190). Actual Ubuntu
+source/target выполнены: launch routes1, debugpy1 и command order6 PASS;
+исходные отрицательные проверки сохранены (§192).
 
-Выполнен первый Windows срез DAP refactor:
-deduplicate-dap-launch-preparation, §188. F5 и Space dP используют общую
-подготовку в прежнем dap.lua; source baseline и target проходят один native
-сценарий, target28 debug checks PASS. PTY/backend/session flags прежние;
-полный lifecycle review продолжается. Ubuntu обоих changes и Mac открыты.
+Общие E2E выявили конкретный баг: отложенное открытие Files после общего
+restore забирало фокус. IDE-116 исправлен в прежнем Neo-tree lifecycle;
+по5 новых target checks Windows/Ubuntu PASS, source на каждой ОС3 RED/
+2 controls (§193). Backend, SDK и67 pins/6 patched dependencies прежние.
 
-Следующий результат review — IDE-111/§189: legacy debugpy filter скрывал реальный
-CLI exit2, хотя backend уже отличает client-close. Filter удалён, UI/IDE Logs/
-stderr/edit recovery и normal shutdown подтверждены Windows19 checks.
-Отдельно зарегистрирован IDE-112: порядок F7 → следующая команда фокуса.
+Общий Windows на dab7bf6:74 файла,71 PASS/3 FAIL;363 checks PASS/3 FAIL/
+5 SKIP (§191). Общий Ubuntu на7aa0ba9 с исправленным observer IDE-115:
+74 файла,71 PASS/1 FAIL/2 SKIP;351 checks PASS/1 FAIL/6 SKIP (§192).
+Это исходные FAIL, их не заменяет selected PASS исправления IDE-116.
+Выбранный регресс также выявил независимые IDE-117/118; детали и границы
+проверок — verification fix-panel-restore-focus. Mac/physical gate открыт.
 
-IDE-112 исправлен Windows в §190/preserve-normal-command-order: normal action
-выполняется сразу, следующие focus/cycle/close сохраняют порядок.6 новых и57
-прежних native checks PASS, включая Diffview/merge/rebase и остальные режимы.
-Ubuntu/Mac остаются открытыми; runtime change —3 строки в прежнем helper.
+Следующие шаги по порядку:
 
-§191: общий Windows E2E завершён на dab7bf6 —74 файла:71 PASS/3 FAIL,
-363 checks PASS/3 FAIL/5 SKIP. Новые22 panel/DAP/key profiles прошли native
-audit; общий набор остаётся FAIL. IDE-113 — гонка observer пустого shell
-result — исправлен на Windows, controlled1 RED →1 PASS с постоянной delayed
-fixture. IDE-085 повторился4 раза; два старых файла скрыли native exit15,
-это новый IDE-114. После Ubuntu-проверки закрыть этот пробел E2E до следующего
-refactor. Ненулевые exit не лечатся зелёным повтором или увеличением timeout.
+1. IDE-114: обычный E2E обязан сообщать ненулевой native exit даже после
+   успешного cleanup. Сохранить первичную ошибку и контракт аварийных fixtures.
+2. IDE-117: записать полный результат ps probe и воспроизвести отказ scope
+   observer Ubuntu; сейчас code/signal/stdout отсутствуют, причина неизвестна.
+3. Продолжить обзор общих инструментов и системных границ по FEATURE_REVIEW:
+   убрать доказанные повторы, сохраняя готовые backend и функции редактора.
+4. Mac/чистая установка → Bash debug/сложные проекты/Git → общее оформление.
+
+IDE-085 и новый RPC stall IDE-118 остаются диагностикой при новых evidence;
+бесконечные повторы общего набора и повышение timeout не являются фиксом.
+Desktop/WSL агент не запускает и не перезапускает. Необязательные plugins
+сохраняются до отдельного выбора владельца; новые UI фичи сейчас не добавляются.
 
 Основные возможности мини-IDE уже реализованы. Сейчас идёт стабилизация,
 а не создание редактора с нуля. Windows/Ubuntu PASS ниже относится к указанным

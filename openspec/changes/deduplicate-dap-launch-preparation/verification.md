@@ -37,5 +37,22 @@ no-choice native fallback, scheduling и Space dP selection/cancel сохран�
 в своих маршрутах. 24 add/52 delete, net−28 в одном runtime file; это сокращение
 дублирования, не измеренное ускорение или завершение всего DAP lifecycle review.
 
-CRITICAL: выполнить задачи2.1/2.2. Linux engine недоступен; Desktop/WSL агент
-не запускает. Mac/physical key delivery не проверены; selected suite не full.
+## Ubuntu и observer IDE-115 — 2026-11-12
+
+Первый source fd6b965 остановлен CodeLLDB, но snapshot PTY ещё пуст;
+следующий содержит ROUTE_BEFORE42 (profile2954754232052). Сохранено в
+.tests/ubuntu/integration-20261112/source-initial, результат FAIL. DAP pause
+и stdout приходят независимо: тест теперь ждёт stdout прежним e:wait,
+сохраняет stdout_at_stop. Backend/PTY, порядок запуска и timeout прежние.
+Test SHA256 bc72e5cc71e2cf600fe50afce159fe153d22db3367957c464ab5bb414e1a200c.
+
+С исправленным observer source fd6b965/target7aa0ba9: по1 PASS Ubuntu;
+Windows source/target по1 PASS (16371339293100/16379551431900). Actual
+CodeLLDB/3 fresh PTY/args/cancel сохранены. Ubuntu whole debug suites:
+Python7+8, Node8, Rust8, Debug5, toggle2/startup1/tab1 PASS; root/API/scopes
+review 265 paths не нашёл неожиданных native отказов. Source audit внутри
+того же pod подтвердил config/test bytes и удаление runtime.
+
+CRITICAL:2.2 — native Mac/physical delivery не проверены. Общий Ubuntu
+остаётся FAIL на отдельном panel case IDE-116; это не PASS всего набора.
+Границы target audit и источники — verification fix-panel-restore-focus, §192.

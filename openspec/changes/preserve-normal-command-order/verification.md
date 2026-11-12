@@ -37,6 +37,11 @@ cycle/close —4 native cases, other modes —2 controls и existing escape/buff
 Helper продолжает возвращать nil. Не-normal stopinsert/feedkeys/schedule
 сохранены. Интерактивный modified-file dialog проверен прежним buffers suite.
 
-CRITICAL: задачи2.1/2.2 — actual Ubuntu source/target/selected regression и Mac.
-Engine pipe недоступен, Desktop/WSL агент не запускает. Windows PASS не
-подменяет платформенную проверку.
+2026-11-12: actual Ubuntu source dc748b7:4 RED/2 controls, target6 PASS.
+В source pod проверены exact config/test bytes, native root0/APIerrors[],
+scopes empty и runtime removed. Whole target buffers8/Files7/terminal escape/
+Diffview/git merge/rebase PASS; native audit 265 paths без неожиданных отказов.
+Общий Ubuntu FAIL из-за отдельного restore Files focus IDE-116 сохранён.
+Источники и границы target audit — verification fix-panel-restore-focus.
+CRITICAL:2.2 — native Mac и physical keys не проверены. Desktop/WSL не
+управлялись; archive не выполнялся.

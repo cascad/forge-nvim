@@ -163,7 +163,8 @@ end
 
 ---Открыть компонент.
 ---@param id string
-function M.show(id)
+---@param opts? ide.OpenOptions
+function M.show(id, opts)
     local comp = registry.get(id)
     if not comp then
         vim.notify("ide.show: unknown component '" .. tostring(id) .. "'",
@@ -174,7 +175,7 @@ function M.show(id)
     local slot = comp.slot
     close_active(slot, id)
     requested[slot] = id
-    if not comp.is_open() then pcall(comp.open) end
+    if not comp.is_open() then pcall(comp.open, opts) end
     state.slots[slot] = id
     state.last_shown[slot] = id
 end
@@ -312,13 +313,15 @@ function M.toggle_panels()
         end
         M.focus_main()
     else
+        -- spec: IDE-PANEL-23. Backend может открыть окно после возврата open.
+        M.focus_main()
         local snap = state.last_panel_slots
         if snap and (snap.left or snap.right or snap.bottom) then
             for _, slot in ipairs(SLOTS) do
-                if snap[slot] then M.show(snap[slot]) end
+                if snap[slot] then M.show(snap[slot], { focus = false }) end
             end
         else
-            M.show("explorer")
+            M.show("explorer", { focus = false })
         end
         M.focus_main()
     end

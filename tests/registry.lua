@@ -77,6 +77,7 @@ return {
   { file = 'tests/e2e/frame-layout.test.lua', suite = 'e2e', timeout = 240 },
   { file = 'tests/e2e/window-lookup.test.lua', suite = 'e2e', timeout = 120 },
   { file = 'tests/e2e/panel-transitions.test.lua', suite = 'e2e', timeout = 360 },
+  { file = 'tests/e2e/panel-restore-focus.test.lua', suite = 'e2e', timeout = 180 },
   { file = 'tests/e2e/dap-tab-scope.test.lua', suite = 'e2e', timeout = 240 },
   { file = 'tests/e2e/dap-launch-routes.test.lua', suite = 'e2e', timeout = 240 },
   { file = 'tests/e2e/debugpy-exit.test.lua', suite = 'e2e', timeout = 180 },

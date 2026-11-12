@@ -33,7 +33,16 @@ Selected source/target не превращает общий Windows FAIL в PASS
 
 ## Outstanding
 
-Tasks1.2/2.1: actual Ubuntu source/target и regression при уже готовом engine.
+2026-11-12 Ubuntu bash/sh: source2 RED/2 SKIP → target2 PASS/2 SKIP;
+оба target result=FORGE_AFTER, тот же PTY/PID/history/stdout. Тест/fixture
+SHA прежние. Source/target root0/signal0/APIerrors[]/empty scopes, удаление
+runtime проверено в соответствующем pod (readiness-*-audit.json). Whole
+Ubuntu74 файла:71 PASS/1 FAIL/2 SKIP,351 checks PASS/1 FAIL/6 SKIP;
+непрохождение — IDE-116, а не shell observer. Whole Windows не повторялся.
+Доказательства source-initial/source-v2 и native review — FIXLOG §192,
+verification fix-panel-restore-focus. Tasks1.2/2.1 выполнены как сбор actual
+результатов; общий статус обоих исходных наборов остаётся FAIL.
+
 Mac и real Windows pwsh не проверены (Neovim exepath не находит pwsh;
 Store alias от Get-Command не подменяет реальную проверку). Spec delta не
 создавалась: skip_specs=true, поведение IDE-PANEL-19/runtime не менялось.

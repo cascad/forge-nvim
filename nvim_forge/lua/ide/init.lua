@@ -108,7 +108,8 @@ local default_components = {
     {
         id = "explorer", slot = "left", title = "Explorer",
         filetypes = { "neo-tree" },
-        open    = function() vim.cmd("Neotree filesystem reveal left") end,
+        open    = function(opts) require('forge.neo_tree_lifecycle').open('filesystem', opts) end,
+        focus   = function() require('forge.neo_tree_lifecycle').focus('filesystem') end,
         close   = function()
             if neo_tree_open_with_source("filesystem") then
                 pcall(vim.cmd, "Neotree filesystem close")
@@ -119,7 +120,8 @@ local default_components = {
     {
         id = "buffers", slot = "left", title = "Buffers",
         filetypes = { "neo-tree" },
-        open    = function() vim.cmd("Neotree buffers reveal left") end,
+        open    = function(opts) require('forge.neo_tree_lifecycle').open('buffers', opts) end,
+        focus   = function() require('forge.neo_tree_lifecycle').focus('buffers') end,
         close   = function()
             if neo_tree_open_with_source("buffers") then
                 pcall(vim.cmd, "Neotree buffers close")
@@ -130,7 +132,8 @@ local default_components = {
     {
         id = "git_status", slot = "left", title = "Git Files",
         filetypes = { "neo-tree" },
-        open    = function() vim.cmd("Neotree git_status reveal left") end,
+        open    = function(opts) require('forge.neo_tree_lifecycle').open('git_status', opts) end,
+        focus   = function() require('forge.neo_tree_lifecycle').focus('git_status') end,
         close   = function()
             if neo_tree_open_with_source("git_status") then
                 pcall(vim.cmd, "Neotree git_status close")

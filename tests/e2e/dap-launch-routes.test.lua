@@ -32,6 +32,11 @@ T.check('IDE-DAP-1 F5 и project picker сохраняют source buffer и fres
         return e:lua([[local name=...;local s=require('dap').session();return s and s.config.name==name
           and s.stopped_thread_id~=nil and s.current_frame~=nil or false]],{name})
       end,120000)
+      local at_stop=P.state(e,'dap-terminal')[1]
+      e:wait('stdout до паузы '..name,function()
+        local output=P.state(e,'dap-terminal')[1]
+        return output and output.text:find('ROUTE_BEFORE 42',1,true)~=nil
+      end)
       local output=P.state(e,'dap-terminal')[1]
       assert(output and output.text:find('ROUTE_BEFORE 42',1,true),'stdout до паузы')
       for _,previous in ipairs(history) do
@@ -47,7 +52,8 @@ T.check('IDE-DAP-1 F5 и project picker сохраняют source buffer и fres
       e:wait('завершение '..name,function()
         return e:lua([[return require('dap').session()==nil]]) and P.state(e,'dap-terminal')[1].text:find('ROUTE_AFTER 42',1,true)~=nil
       end,30000)
-      history[#history+1]={buf=output.buf,channel=output.channel,label=label,name=name}
+      history[#history+1]={buf=output.buf,channel=output.channel,label=label,name=name,
+        stdout_at_stop=at_stop and at_stop.text:find('ROUTE_BEFORE 42',1,true)~=nil or false}
     end
     run('<F5>','Current Rust file bin',true)
     local function config(name,label)

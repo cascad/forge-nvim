@@ -21,17 +21,26 @@
 
 ## Запуск на целевых машинах и внутри VM
 
+IDE-PANEL-23 / IDE-116: `nvim -l tests/e2e/panel-restore-focus.test.lua`.
+5 native cases: fallback Files, сохранённые Files+Quickfix, последующий Logs,
+явный Files до render и штатный Files после render. Удерживается настоящий
+callback navigate после debounce; данные/renderer не подменяются. Windows/
+Ubuntu source3 RED/2 controls → target5 PASS на каждой ОС. Полные результаты,
+ошибки разработки fixture и ограничения интеграции — verification
+fix-panel-restore-focus. Mac/physical delivery открыты.
+
 IDE-113: `nvim -l tests/e2e/terminal-shell.test.lua`. Общая native fixture
 сначала создаёт пустой файл, затем пишет результат; observer ждёт payload,
 сохраняя shell/PID/channel/history и stdout. Windows cmd: controlled source
-RED → target PASS; POSIX и actual Windows pwsh имеют отдельные gates.
+RED → target PASS; Ubuntu bash/sh source2 RED → target2 PASS. Mac и actual
+Windows pwsh имеют отдельные gates.
 Общий Windows E2E2026-11-12:74 файла,71 PASS/3 FAIL; четыре native SIGTERM
 IDE-085 (два скрыты старыми callers, IDE-114). Это не общий PASS; §191.
 
 IDE-PANEL-22 / IDE-112: `nvim -l tests/e2e/focus-command-order.test.lua`.
 6 native cases: normal F7/F6/cycle/close → Logs и сохранение последнего
 выбора, insert text, настоящий terminal job/PID/channel/stdout. Source dc748b7
-даёт4 RED/2 controls, target6 PASS Windows. Source/test SHA и платформенные
+даёт4 RED/2 controls, target6 PASS Windows/Ubuntu. Source/test SHA и платформенные
 границы — verification preserve-normal-command-order; нужен готовый editor SDK.
 
 IDE-DAP-6 / IDE-111: `nvim -l tests/e2e/debugpy-exit.test.lua`, готовые Python
@@ -44,7 +53,9 @@ verification remove-obsolete-debugpy-exit-filter.
 DAP launch preparation: `nvim -l tests/e2e/dap-launch-routes.test.lua`.
 Требует готовые Rust deps; настоящий CodeLLDB проверяет F5/current-file,
 Space dP single/multiple/cancel, source args и3 fresh PTY. Source fd6b965
-и refactor проходят одинаково; этот срез сохраняет прежнее поведение.
+и refactor проходят одинаково Windows/Ubuntu; этот срез сохраняет прежнее
+поведение. IDE-115: после DAP pause отдельно ждём реальный stdout PTY;
+первый Ubuntu source FAIL сохранён, исправлен только observer с прежним timeout.
 Результаты и платформы — verification deduplicate-dap-launch-preparation.
 
 Переходы панелей (IDE-PANEL-21, IDE-109/110):

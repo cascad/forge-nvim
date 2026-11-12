@@ -4,6 +4,25 @@
 -- Используем события backend; его функции/таймеры не подменяются.
 local M = {}
 local pending = setmetatable({}, { __mode = 'k' })
+local passive = setmetatable({}, { __mode = 'k' })
+
+local function source_state(source)
+    require('neo-tree').ensure_config()
+    return require('neo-tree.sources.manager').get_state(source)
+end
+
+-- spec: IDE-PANEL-23. Только общий restore просит возврат после native render.
+function M.open(source, opts)
+    local state = source_state(source)
+    passive[state] = opts and opts.focus == false and { origin = vim.api.nvim_get_current_win() } or nil
+    require('neo-tree.command').execute({ source = source, position = 'left', reveal = true })
+end
+
+function M.focus(source)
+    passive[source_state(source)] = nil
+    -- Прежний default focus реестра: первая подходящая window текущей вкладки.
+    require('ide.activities').focus_window(nil, function(buf) return vim.bo[buf].filetype == 'neo-tree' end)
+end
 
 function M.opened(args)
     local state = require('neo-tree.sources.manager').get_state(args.source, args.tabid)
@@ -26,6 +45,9 @@ function M.rendered(state)
         pending[state] = nil
     end
     if state.current_position ~= 'left' then return end
+    local restore_request = passive[state]
+    local restore_focus = restore_request and require('neo-tree').get_prior_window()
+    if restore_focus and restore_focus < 0 then restore_focus = restore_request.origin end
     -- Отложенный navigate тоже может закончиться после смены left-слота.
     -- Завершаем render, затем сверяем намерение менеджера и убираем позднее
     -- окно. Не закрываем его внутри acquire_window / отрисовки backend.
@@ -45,6 +67,14 @@ function M.rendered(state)
             if focus > 0 and vim.api.nvim_win_is_valid(focus)
                 and vim.api.nvim_win_get_tabpage(focus) == vim.api.nvim_get_current_tabpage() then
                 vim.api.nvim_set_current_win(focus)
+            end
+        end
+        if restore_request and passive[state] == restore_request then
+            passive[state] = nil
+            if vim.api.nvim_get_current_win() == state.winid and restore_focus
+                and vim.api.nvim_win_is_valid(restore_focus)
+                and vim.api.nvim_win_get_tabpage(restore_focus) == vim.api.nvim_get_current_tabpage() then
+                vim.api.nvim_set_current_win(restore_focus)
             end
         end
         controls.refresh() -- selector backend уже отрисован; добавить общий фокус

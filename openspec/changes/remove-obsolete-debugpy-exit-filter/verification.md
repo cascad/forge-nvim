@@ -40,6 +40,11 @@ utils.notify в original_notify без benign_patterns; normal-close — existin
 client-close guard nvim-dap/session.lua + python-language pytest debug.
 Go server callback не имеет этого guard; его policy намеренно не удалена.
 
-CRITICAL:2.1/2.2 — пройти actual Ubuntu source/target/regression и Mac.
-Engine pipe недоступен; Desktop/WSL агент не запускает. Physical delivery и
-global full suite этим выбранным Windows набором не проверены.
+2026-11-12: actual Ubuntu source83cf6551 RED → target1 PASS: настоящий
+debugpy CLI exit2/stderr/WARN/IDE Logs/edit recovery. Source config/test,
+native root0/APIerrors[]/scopes empty/runtime removed подтверждены в том же
+pod. Whole target Python case7/language8, Go language6 и Go output cases PASS,
+native metadata audit 265 paths без неожиданных отказов. Desktop/WSL не
+управлялись. Общий Ubuntu FAIL на независимом Files focus IDE-116 сохранён.
+Подробности и границы target audit — verification fix-panel-restore-focus.
+CRITICAL:2.2 — actual Mac/physical delivery не проверены; archive открыт.

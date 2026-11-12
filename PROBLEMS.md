@@ -10,7 +10,67 @@
 
 Маршрут и приоритеты: [рабочий план nvim_forge](docs/IDE_ROADMAP.md).
 Для новых пунктов используем следующий свободный ID `IDE-xxx`; исходный
-симптом хранится здесь, этап и состояние — в плане. Следующий ID: `IDE-115`.
+симптом хранится здесь, этап и состояние — в плане. Следующий ID: `IDE-119`.
+
+## IDE-118 — Windows Go Output: RPC timeout во время теста
+
+2026-11-12, выбранный panel regression после IDE-116: work-panels,
+profile22849875041400/PID5876. Во время ожидания Go result/output запрос
+nvim_exec_lua id133 не получил ответа за10000 ms. editor_rpc.request после
+своего deadline отправил SIGTERM; native exit1/signal15, APIerrors[], Job
+уже пуст. В native trace есть только observer_ready, QuitPre/VimLeave нет.
+
+Это не доказанный crash, не shutdown deadline IDE-085 и не доказанный
+регресс focus fix. Причина RPC stall неизвестна. Исходный FAIL/артефакты
+сохранены; повтор без причинного изменения не закрывает пункт. Сначала
+ограниченная диагностика запроса/нативного процесса, без роста timeout,
+пересборки SDK и воздействия на чужие процессы.
+
+## IDE-117 — Ubuntu scope observer не получил успешный ответ ps
+
+2026-11-12, selected regression после IDE-116: session-legacy winfix-direct,
+profile8785983585636/controller8785945678253. Functional report.ok=true,
+native root0/signal0/APIerrors[], но process_scope_posix.active получил
+ненулевой ps -ax -o pgid= -o stat=. Stderr пуст; code/signal/stdout результата
+probe не записаны, причина не установлена. Вся проверка остаётся FAIL.
+
+Scope.ok=false, active_after неизвестен. Контейнер уже удалён --rm; это не
+подтверждает корректность own-group observer. Не повышать timeout и не
+выдавать повторный PASS за исправление. Сначала сохранить полный результат
+probe и воспроизвести границу. Приоритет рядом с IDE-114 после текущего fix.
+
+## IDE-116 — отложенное восстановление Files забирает фокус кода
+
+2026-11-12, общий Ubuntu E2E7aa0ba9: panel-transitions12 PASS/1 FAIL;
+profile4427955966267 после общего restore выбрал neo-tree вместо text.
+Bounded native trace5218296537742: restore вернулся в main1000/text на8.8 ms,
+filesystem navigate открыл1005/neo-tree на66 ms; через571 ms фокус там же.
+Это не ожидание недоставленного ввода: callback завершает штатный navigate
+позже синхронного focus_main. Root0/APIerrors[], scopes пусты.
+
+Change fix-panel-restore-focus / IDE-PANEL-23: pending возврат в existing
+Neo-tree lifecycle, отмена явным focus; стандартный backend, SDK/pins прежние.
+Permanent panel-restore-focus E2E удерживает настоящий native navigate
+callback после штатного debounce, не подменяя renderer/данные. На каждой ОС
+source3 RED/2 controls → target5 PASS;13 прежних переходов PASS. Исправление
+и границы — [FIXLOG §193](nvim_forge/FIXLOG.md#193-восстановление-панелей-сохраняет-поздний-выбор-фокуса).
+Исходный общий Ubuntu71 PASS/1 FAIL/2 SKIP сохранён. Selected на каждой ОС
+68 прежних PASS/1 FAIL: отдельные IDE-117/118; Mac/physical gate открыт.
+
+## IDE-115 — launch routes E2E читает PTY сразу после DAP pause
+
+2026-11-12, Ubuntu source fd6b965: profile2954754232052 остановлен настоящим
+CodeLLDB, но первый snapshot dap-terminal пуст; следующий содержит
+ROUTE_BEFORE42. Test dap-launch-routes ждал frame, затем сразу требовал stdout,
+хотя DAP и PTY доставляют данные независимо. Native root0/APIerrors[], scopes
+пусты; исходный FAIL сохранён в integration-20261112/source-initial.
+
+Уточнение проверки в deduplicate-dap-launch-preparation: ждать оба условия
+без смены backend/PTY или увеличения timeout, сохранять stdout_at_stop.
+Первое source сравнение Ubuntu завершилось FAIL; следующий source/target
+с исправленным observer даёт по1 PASS Windows/Ubuntu и не переписывает
+первый. [FIXLOG §192](nvim_forge/FIXLOG.md#192-dap-e2e-ждёт-stdout-независимо-от-паузы).
+Runtime/PTY прежние; Mac открыт.
 
 ## IDE-114 — успешный cleanup маскирует ненулевой native exit в старых E2E
 
@@ -36,7 +96,9 @@ Observer ждал filereadable, которое истинно уже до зап
 Change fix-terminal-shell-e2e-readiness, §191: постоянная native delayed-write
 fixture и ожидание полного payload с прежним timeout. Windows controlled
 source1 RED → target1 PASS, по3 SKIP; shell/PID/channel/history и native exit0
-подтверждены. Ubuntu/Mac и actual Windows pwsh остаются открытыми.
+подтверждены. Ubuntu bash/sh source2 RED → target2 PASS/2 SKIP (§192),
+exact bytes/root0/APIerrors[]/scopes/runtime проверены в том же pod.
+Mac и actual Windows pwsh остаются открытыми.
 Исходный общий Windows71 PASS/3 FAIL сохранён и не становится PASS от selected.
 Product Lua/SDK/pins и quit policy не меняются. Два отдельных shutdown
 SIGTERM в profiles13758269241400/13846181247700 — повтор IDE-085.
@@ -48,7 +110,8 @@ SIGTERM в profiles13758269241400/13846181247700 — повтор IDE-085.
 всегда планирует focus через vim.schedule, даже уже в normal mode. Source
 RED без DAP — профиль6809191856600. В change preserve-normal-command-order
 добавлен permanent focus-command-order.test.lua/IDE-PANEL-22:4 source RED и
-2 controls, target6 PASS. Windows63 checks PASS (§190); Ubuntu/Mac открыты.
+2 controls, target6 PASS. Windows63 checks PASS (§190); Ubuntu source4 RED/
+2 controls → target6 PASS (§192), Mac открыт.
 Normal action теперь выполняется сразу, переходы из других режимов сохранены.
 
 ## IDE-111 — настоящий отказ debugpy пропадает из UI
@@ -59,7 +122,8 @@ Normal action теперь выполняется сразу, переходы �
 process state; backend уже различает client-close. Negative forge_failure
 из IDE-053 этот тип не покрывал. Source RED — debugpy-exit.test.lua.
 Change remove-obsolete-debugpy-exit-filter, IDE-DAP-6. Windows19 PASS (§189);
-Ubuntu/Mac открыты. Go/TCP callback имеет другую семантику и не удаляется.
+Ubuntu source1 RED → target1 PASS (§192), Mac открыт. Go/TCP callback имеет
+другую семантику и не удаляется.
 
 ## IDE-110 — DAP Terminal смешивает видимость разных вкладок
 

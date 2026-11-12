@@ -13,6 +13,6 @@
 
 ## 2. Платформенная проверка
 
-- [ ] 2.1 Пройти source/target и выбранный debug regression Ubuntu при доступном
+- [x] 2.1 Пройти source/target и выбранный debug regression Ubuntu при доступном
   engine, проверить source identity/root/API/scopes; native Mac не засчитывать.
 - [ ] 2.2 Повторить native проверки на Mac и записать actual результат.

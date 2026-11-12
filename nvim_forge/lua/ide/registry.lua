@@ -10,11 +10,14 @@
 
 local M = {}
 
+---@class ide.OpenOptions
+---@field focus? boolean -- false: пассивное восстановление панели
+
 ---@class ide.Component
 ---@field id        string             -- уникальный, e.g. "explorer", "dap.console"
 ---@field slot      "left"|"right"|"bottom"
 ---@field title     string             -- человекочитаемое имя
----@field open      fun()              -- открыть и сделать видимым
+---@field open      fun(opts?: ide.OpenOptions) -- открыть и сделать видимым
 ---@field close     fun()              -- закрыть (если открыт)
 ---@field is_open   fun(): boolean
 ---@field focus?    fun()              -- сфокусироваться (default: find by filetypes)

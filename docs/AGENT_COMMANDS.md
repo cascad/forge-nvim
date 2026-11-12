@@ -6800,3 +6800,88 @@ root0/signal0/APIerrors[]/scope empty/runtime removed. Полные source/test/
 fixture SHA и artifact IDs — verification fix-terminal-shell-e2e-readiness.
 Unit360+trace11 PASS/1 SKIP, strict100. Broad Windows повторно не запускался;
 Ubuntu/Mac/real Windows pwsh остаются открытыми.
+
+
+## 104. Ubuntu integration и native restore focus regression
+
+2026-11-12. Продолжение §103; результаты FIXLOG §192–193, полная сверка в
+verification fix-panel-restore-focus. Windows/Ubuntu heavy последовательно,
+TEMP/TMP/TMPDIR Windows в F:/repo/forge-nvim/.tests/tmp, npm cache на F:.
+
+Чтение: Get-Content/rg/git diff/status/log показывают текст файлов и diff,
+Get-FileHash — SHA256 бинарника; они не запускают редактор. E2E ниже запускает
+настоящий изолированный nvim_forge, TUI/RPC, backend и owned процессы. Файлы
+*.json/txt в .tests — raw результаты, screenshots здесь terminal grid text,
+а не картинка физического WezTerm. Source config берётся из git archive.
+Ignored panels-run.ps1 задаёт F: env/ресурсные ограничения и запускает список
+файлов -l по очереди, останавливаясь на первом отказе. Он не передаёт args
+tests/run.lua: unit/trace запускать только напрямую с явными аргументами.
+
+```powershell
+Get-Content CLAUDE.md
+git status --short
+git log -3 --oneline
+git diff -- nvim_forge/lua/ide/state.lua nvim_forge/lua/forge/neo_tree_lifecycle.lua
+rg -n 'IDE-11[3-8]|Короткая актуальная' PROBLEMS.md docs/IDE_ROADMAP.md
+Get-FileHash -Algorithm SHA256 -LiteralPath .tools/neovim/windows-x64/bin/nvim.exe
+docker info --format '{{.OSType}}'
+docker image inspect forge-nvim-tests:ubuntu24.04-nvim0.12.2 --format '{{.Id}}'
+git archive --format=zip --output=.tests/restore-focus-7aa0ba9.zip 7aa0ba9 nvim_forge
+& .tests/panels-run.ps1 -Log launch-stdout-source -Source .tests/launch-baseline/nvim_forge -Files @('tests/e2e/dap-launch-routes.test.lua')
+& .tests/panels-run.ps1 -Log launch-stdout-target -Files @('tests/e2e/dap-launch-routes.test.lua')
+python -B .tests/launch-stdout-evidence.py
+```
+
+Ubuntu запускается из cached image, checkout ro, .tests/ubuntu отдельным rw
+mount, network none,2 CPU/3 GiB/256 pids. Entry scripts source.sh/target.sh/
+restore-regression.sh содержат точные списки тестов, audit и копирование отчёта
+до следующего запуска. Первый source-initial и source-v2 сохранены раздельно;
+source-v2 вызван изменением stdout observer, а не произвольным повтором.
+Docker compose использует tests/containers/compose.yaml и limits.yaml,
+run --no-deps --pull never --rm --entrypoint bash; Desktop/WSL не управлялись.
+
+```powershell
+Get-Content .tests/ubuntu/integration-20261112/source.sh
+Get-Content .tests/ubuntu/integration-20261112/target.sh
+Get-Content .tests/ubuntu/integration-20261112/restore-regression.sh
+$env:TEMP='F:/repo/forge-nvim/.tests/tmp'
+$env:TMP=$env:TEMP
+$env:TMPDIR=$env:TEMP
+$env:PYTHONIOENCODING='utf-8'
+$env:npm_config_cache='F:/forge-nvim-tmp/npm-cache'
+npx.cmd --yes @fission-ai/openspec@1.13.2 new change fix-panel-restore-focus
+npx.cmd --yes @fission-ai/openspec@1.13.2 status --change fix-panel-restore-focus --json
+npx.cmd --yes @fission-ai/openspec@1.13.2 instructions apply --change fix-panel-restore-focus --json
+& .tests/panels-run.ps1 -Log restore-focus-source -Source .tests/restore-focus-baseline/nvim_forge -ExpectFailure -Files @('tests/e2e/panel-restore-focus.test.lua')
+& .tests/panels-run.ps1 -Log restore-focus-target -Files @('tests/e2e/panel-restore-focus.test.lua')
+python -B .tests/restore-focus-audit.py source
+python -B .tests/restore-focus-audit.py target
+python -B .tests/restore-regression-audit.py windows
+python -B .tests/restore-regression-audit.py ubuntu
+& .tools/neovim/windows-x64/bin/nvim.exe -l tests/run.lua unit trace
+docker compose -f tests/containers/compose.yaml -f tests/containers/limits.yaml run --no-deps --pull never --rm --name forge-nvim-restore-unit-20261112 --entrypoint bash ubuntu -lc 'nvim -l tests/run.lua unit trace > .tests/integration-20261112/restore-unit-trace.txt 2>&1; result=$?; cp .tests/report.json .tests/integration-20261112/restore-unit-trace-report.json; tail -n 5 .tests/integration-20261112/restore-unit-trace.txt; exit $result'
+npx.cmd --yes @fission-ai/openspec@1.13.2 validate --all --strict --no-interactive
+python -B .tests/append-restore-history.py
+git diff --check
+git diff --cached --check
+```
+
+14-file Windows regression запускался panels-run с -Log restore-focus-regression:
+panel-transitions, window-lookup, file-explorer, outline-focus, tool-panels,
+work-panels; после FAIL — только оставшиеся code-focus, debug-panels,
+dap-tab-scope, frame-layout, buffers, project-session, session-legacy, outline.
+Ubuntu тот же список выполнялся restore-regression.sh, включая новый5-case test.
+
+При ошибке запуска tests/run.lua через wrapper без args начался лишний полный
+набор; его partial log restore-focus-final-run.txt сохранён, не засчитан.
+Get-CimInstance Win32_Process проверил точные PID9996/parent20644/commandline;
+taskkill.exe /PID 9996 /T /F остановил только это собственное тестовое дерево.
+Обычные пользовательские процессы не выбирались. Затем прямой unit trace
+на каждой ОС:371 PASS/1 SKIP; strict101 PASS. SDK hash прежний.
+
+Source restore3 RED/2 controls → target5 PASS на ОС. Existing regression
+68 PASS/1 FAIL на ОС, audit возвращает1: Windows RPC stall118, Ubuntu ps
+observer117. Отсутствие config snapshot после RPC не считается доказанным
+удалением runtime. Whole Ubuntu71/1/2 и Windows71/3 сохраняются как FAIL.
+Полные SHA/native metadata/границы FS и неудачные fixture attempts — verification.
+Истории raw append проверены по ubuntu-integration-prefix и staged HEAD prefix.

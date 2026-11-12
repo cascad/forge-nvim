@@ -12,6 +12,6 @@
 
 ## 2. Платформы
 
-- [ ] 2.1 Выполнить actual Ubuntu source/target/regression при доступном engine;
+- [x] 2.1 Выполнить actual Ubuntu source/target/regression при доступном engine;
  проверить artifacts/exit/scopes, не засчитывать Windows вместо Linux.
 - [ ] 2.2 Повторить native Mac и physical keys, записать actual результат.

@@ -11,6 +11,6 @@
 
 ## 2. Платформы
 
-- [ ] 2.1 Повторить source/target и выбранный regression на Ubuntu при доступном
+- [x] 2.1 Повторить source/target и выбранный regression на Ubuntu при доступном
   engine; проверить actual source/root/API/scopes, не засчитывать старый Windows.
 - [ ] 2.2 Пройти actual Mac и physical delivery отдельно, сохранить результаты.

@@ -189,6 +189,12 @@ ide.find_main_window()    -- nvim_win_id of main; nil если только tool
 
 ### 3.4 Инварианты
 
+IDE-PANEL-23: общее восстановление панелей, включая Files по умолчанию,
+оставляет фокус в коде после отложенного native render. Последующий явный
+выбор Logs сохраняется; общий focus Files отменяет ожидаемый возврат.
+Optional open context focus=false передаётся через state в существующий
+Neo-tree lifecycle; дополнительного таймера или window manager нет.
+
 IDE-PANEL-22: в normal mode команды focus/window cycle/buffer cycle/close
 выполняются в порядке ввода. Предыдущий F7 или close не отменяет следующий
 явный выбор панели. Переход из insert/terminal сохраняет прежний normalizer;

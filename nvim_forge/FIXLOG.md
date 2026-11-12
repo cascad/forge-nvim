@@ -10350,3 +10350,122 @@ PASS исправленного теста не меняет исходный о
 **Файлы.** terminal-shell E2E и delayed-write fixture,
 fix-terminal-shell-e2e-readiness, PROBLEMS/roadmap/E2E README/HISTORY/commands.
 Journals raw append-only, guard integration-prefix.json.
+
+
+## 192. DAP E2E ждёт stdout независимо от паузы
+
+2026-11-12. IDE-115; test-only уточнение deduplicate-dap-launch-preparation,
+без новой runtime политики. Дополнение платформенных результатов §187–191.
+
+**Проблема.** Первый Ubuntu source fd6b965 launch-routes остановлен настоящим
+CodeLLDB, но PTY snapshot ещё пуст. В следующем snapshot ROUTE_BEFORE42 есть
+(profile2954754232052). Это дало FAIL при неизменном корректном маршруте.
+
+**Причина.** DAP stopped/current_frame и terminal stdout доставляются разными
+каналами. Тест ждал pause и сразу читал PTY, хотя pause не подтверждает stdout.
+
+**Изменение.** Permanent dap-launch-routes.test.lua отдельно ждёт реальный
+ROUTE_BEFORE42 с прежним e:wait timeout, сохраняет stdout_at_stop каждого
+запуска. Backend/PTY, F5/Space dP и product Lua не менялись. Test SHA256
+bc72e5cc71e2cf600fe50afce159fe153d22db3367957c464ab5bb414e1a200c.
+
+**Проверка/e2e.** Windows source fd6b965/target по1 PASS, profiles
+16371339293100/16379551431900, root0/APIerrors[]/empty scopes/runtime removed.
+Ubuntu initial source FAIL сохранён в source-initial. После изменения теста
+source-v2: panels3ef37e0 даёт12 RED/1 control + tab1 RED; launchfd6b9651 PASS;
+debugpy83cf6551 RED; focusdc748b7 даёт4 RED/2 controls. Итого22 profiles,
+18 RED/4 controls; дополнительно shell readiness2 RED/2 SKIP. Все24 config/
+test/native root/API/scopes/runtime FS проверены в том же source pod.
+
+Whole Ubuntu target7aa0ba9 с новым observer:74 файла,71 PASS/1 FAIL/2 SKIP;
+351 checks PASS/1 FAIL/6 SKIP,1148.7 s. Launch1/debugpy1/command-order6 PASS,
+реальные Go/Python/Node/Rust workflows также PASS. Native metadata265 paths
+не содержат неожиданных отказов; intentional stopped-child SIGKILL9 отдельно
+классифицирован по actual PASS case/hardkill/RPC failure. Shell bash/sh2 PASS/
+2 SKIP, same PID/channel/history/stdout; payload FORGE_AFTER, root0/scopes
+empty, exact bytes/runtime FS подтверждены внутри соответствующего pod.
+
+Единственный общий FAIL — новый IDE-116: toggle Files возвращает neo-tree
+вместо кода. Audit22 target остановился на counts mismatch; independent FS
+всех22 target profiles не заявлен. Native metadata review и отдельный shell
+audit завершены. Новый общий Windows не запускался: его §191 FAIL сохранён.
+
+**Вывод.** Observer ждёт каждое независимое наблюдаемое событие. Новый запуск
+после причинного изменения теста различим от первоначального FAIL. Ubuntu
+gates launch/debugpy/normal-order и shell readiness выполнены; Mac/actual
+Windows pwsh открыты. Общий PASS не заявлен, IDE-085/114 не исправлены.
+
+**Файлы.** dap-launch-routes E2E, verification/tasks пяти changes,
+PROBLEMS/roadmap/E2E README/HISTORY/commands. Evidence
+.tests/ubuntu/integration-20261112 (initial/source-v2/target/raw audits).
+Cached image f63a05ca...33d0,2 CPU/3 GiB/256 pids/network none; checkout ro.
+Windows SDK74AFF15B...C6AD9 и67 pins/6 patched dependencies прежние;
+Desktop/WSL не управлялись. Journals raw append, ubuntu-integration-prefix.
+
+
+## 193. Восстановление панелей сохраняет поздний выбор фокуса
+
+2026-11-12. IDE-116. Спека: IDE-PANEL-23 (FIX), change fix-panel-restore-focus.
+
+**Проблема.** Whole Ubuntu panel-transitions12 PASS/1 FAIL, profile4427955966267:
+Files+Quickfix после общего restore остаются видимыми, но фокус у Files.
+Native trace5218296537742: main1000/text8.8 ms, Files1005/neo-tree66 ms,
+тот же фокус571 ms. Первоначальный общий отчёт §192 остаётся FAIL.
+
+**Причина.** Штатный filesystem.navigate использует debounce и открывает окно
+позже синхронного state.focus_main. Это завершённый поздний переход фокуса,
+а не отсутствие ожидания ввода. Backend show заранее запоминает старое окно
+и не покрывает последующий явный выбор Logs, поэтому одного show недостаточно.
+
+**Изменение.** Общий restore/fallback передаёт optional focus=false через
+state/init/registry. Existing Neo-tree lifecycle хранит weak request по source
+state, получает public prior window при rendered и возвращает его в прежнем
+scheduled callback только пока фокус ещё у этого дерева и tab валиден. Общий
+явный Files focus и обычный open отменяют ожидание. Дополнительных timers,
+window manager, patches/backend forks нет; остальные wrappers игнорируют opts.
+
+**Проверка/e2e.** Permanent panel-restore-focus5 cases удерживают настоящий
+native navigate callback после debounce: fallback Files, Files+Quickfix,
+поздний Logs, Files до render и native Files после render. Actual data/IO/
+renderer, real rows/queues, F35 input barrier, same main buffer/window.
+На каждой ОС source7aa0ba9:3 RED/2 controls → target5 PASS. Windows10 profiles
+и Ubuntu10: exact config/test/helper, root0/signal0/APIerrors[], scopes empty.
+Windows runtime FS проверен для10; Ubuntu target5 проверен в том же pod,
+source5 — только metadata после удаления его pod, independent FS не заявлен.
+
+Неудачные варианты fixture сохранены отдельно. EOF hold дал source5 PASS:
+окно создаётся раньше EOF, воспроизведения нет. Первый debounce helper
+повторно оборачивал свой callback и падал WrongProducer/prompt/RPC timeout
+даже на controls. Добавлен selector native callback source до обёртки;
+final source/target обеих ОС выполнены с неизменными test/helper bytes.
+
+Selected regression14 прежних файлов/69 checks: на каждой ОС68 PASS/1 FAIL,
+включая13 PASS исходных panel-transitions. Вместе с новыми5 —73 PASS/1 FAIL
+из74 на ОС. По54 native profiles,8 config files сверены. Ubuntu IDE-117:
+legacy winfix-direct functional report.ok=true/root0/APIerrors[], но scope
+ps -ax -o pgid= -o stat= вернул nonzero; stderr пуст, остальные поля не
+сохранены, active_after неизвестен. Причина не установлена; --rm pod не
+доказывает корректность observer. Windows IDE-118 profile22849875041400:
+Go Output RPC nvim_exec_lua id133 timeout10 s → драйвер SIGTERM/root1/signal15,
+Job empty/APIerrors[]; QuitPre/VimLeave нет, snapshot потерял config path.
+Причина stall и независимый runtime FS этого profile не подтверждены.
+
+Windows runner остановился на отказе; выполнены только оставшиеся8 файлов,
+сам отказ не повторялся. По обеим ОС unit360+trace11 PASS/1 SKIP,18 файлов;
+strict101 PASS. При финальном запуске агент ошибочно не передал unit/trace
+обёртке и начал лишний общий набор: он остановлен по проверенным PID/command/
+parent собственного дерева, результат не засчитан. Затем прямые unit trace
+прошли; partial log сохранён. SDK hash/lock/backports после этого прежние.
+
+**Вывод.** Фокус восстановления завершается в lifecycle реального открытия,
+последующий явный выбор сохраняется. Узкий product fix подтверждён на обеих
+ОС; общий integration gate остаётся FAIL по117/118. Следующие отдельные шаги:
+IDE-114 native exit propagation, IDE-117 полный probe result. Mac/physical
+keys и причины085/118 открыты, archive readiness не заявлена.
+
+**Файлы.** ide state/init/registry, forge.neo_tree_lifecycle, permanent
+panel-restore-focus E2E/neo-tree-navigate-delay diagnostic/registry,
+fix-panel-restore-focus, PANELS_PLAN/PROBLEMS/roadmap/README/HISTORY/commands.
+Evidence .tests/restore-focus-* и .tests/ubuntu/integration-20261112;
+restore-regression-{windows,ubuntu}-audit.json сохраняют FAIL. Windows temp F:;
+Desktop/WSL не управлялись. Raw append-only guard ubuntu-integration-prefix.
