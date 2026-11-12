@@ -7631,3 +7631,39 @@ Prefix .tests/go-workspace-prefix.json сохраняет журналы/ста�
 проверка working registry удаляет только новую go-workspace row для сравнения.
 Перед commit — strict/diff/prefix/allowlist, partial registry поверх HEAD,
 без пяти старых test-infra drafts/SDK/lock/secrets. Push не выполняется.
+
+
+## 118. Go.work Tests: source freeze, native adapter boundary, selected regression
+
+F:/repo/forge-nvim, PowerShell login=false; TEMP/TMP/TMPDIR=.tests/tmp на F:,
+NVIM_LOG_FILE там же, PYTHONIOENCODING=utf-8; npm_config_cache на F:.
+OpenSpec propose/apply использованы в рамках уже разрешённой очереди: test-only
+change повышен до bug delta IDE-TEST-7 перед runtime правкой, skip_specs удалён.
+Read-only rg/Get-Content: native find/dir/file, Neotest public build_spec/fallback/
+running.concurrent, текущие Go consumer/tests. GitHub connector fetch_file
+прочитал upstream main find.lua/dir.lua/init.lua; никаких сообщений/PR не отправлено.
+
+```powershell
+$env:GOTOOLCHAIN='local'; $env:GOMAXPROCS='2'; $env:GOFLAGS='-p=2'
+# Каждый файл выбранного набора выполняется один раз на версии:
+& ./.tools/neovim/windows-x64/bin/nvim.exe -l tests/e2e/go-workspace-tests.test.lua
+& ./.tools/neovim/windows-x64/bin/nvim.exe -l tests/e2e/test-runner.test.lua
+& ./.tools/neovim/windows-x64/bin/nvim.exe -l tests/e2e/work-panels.test.lua
+# Ubuntu: bash loop по тем же3 файлам, command/exit и stdout в artifact log.
+docker compose -f tests/containers/compose.yaml run --rm --no-deps --entrypoint bash -e GOMAXPROCS=2 -e GOFLAGS=-p=2 -e GOTOOLCHAIN=local ubuntu -c $script
+npx.cmd --yes @fission-ai/openspec@1.13.2 validate verify-go-workspace-tests --type change --strict --no-interactive
+```
+
+Source RED .tests/go-workspace-tests-windows; временная диагностическая копия
+.tests/diagnostic/go-workspace-tests.test.lua с instruction budget/JIT off
+дала стек (не PASS), .tests/go-workspace-tests-diagnostic.txt. Первый target
+.tests/go-workspace-tests-target дал E5560; после nio.scheduler новая версия
+прошла Windows12/Ubuntu12. Конечные логи/results: go-workspace-tests-main-context
+и go-workspace-tests-ubuntu. Никаких повторов неизменённой версии ради зелёного.
+Python -B - проверяет реальные counters/results/captured sources/shutdown/scope;
+сохраняет .tests/go-workspace-tests-audit.json. Prefix baseline
+.tests/go-workspace-tests-prefix.json, raw prefix journаls/frozen draft hashes,
+working registry с удалением только новой row; index registry из HEAD+new row.
+Exact allowlist staging, diff --check, strict validate; SDK/lock не меняются.
+После самостоятельного commit следующий продуктовый шаг — workspace gopls;
+тестовая инфраструктура/черновики каталога остаются отложенными, push нет.

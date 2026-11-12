@@ -46,9 +46,25 @@ breakpoint, `F5` → `Current Go package` запускает пакет теку
 В native E2E значение42 стало43, Delve подтвердил оба на паузе, stdout/stderr
 появились до breakpoint и сохранились после exit, повтор очистил старый вывод.
 Windows/Ubuntu по1 PASS, runtime/SDK/plugins не менялись (§206).
-Это проверка debug/edit-repeat; workspace LSP/Tests и смешанный проект целиком
+Это проверка debug/edit-repeat; workspace LSP и смешанный проект целиком
 ещё остаются в очереди. Mac и физические клавиши не проверены.
 Команда: `nvim -l tests/e2e/go-workspace.test.lua` с готовыми Editor/Go/Delve SDK.
+
+### Тесты всех модулей
+
+`Space T p` открывает Summary, `Space T t` запускает ближайший test,
+`Space T f` — текущий файл, `Space T A` — все обнаруженные tests проекта.
+Для go.work отдельный launch.json или открытие каждого модуля не нужны.
+Run all использует штатный Neotest fallback по файлам; команды выполняются
+последовательно, чтобы большой workspace не создавал сразу множество процессов.
+Семантика самих Go tests остаётся обычной. Такой запуск может быть медленнее
+одной команды на модуль, зато UI отвечает и Output сохраняет реальный fail.
+
+IDE-TEST-7/§207: Windows12 PASS/Ubuntu12 PASS в selected наборе Go.work Tests,
+прежних Go/DAP и рабочих панелей. Три tests двух модулей обнаружены до открытия
+shared; nearest/file/all, исправление fail и public native suite проверены
+с реальными счётчиками запусков. Mac/physical отдельно.
+Команда: `nvim -l tests/e2e/go-workspace-tests.test.lua` с готовым test-deps SDK.
 
 Постоянный regression: `tests/e2e/go-passive.test.lua` (IDE-BOOT-4). Он
 использует настоящий Go/Delve/gopls, включая отсутствующий SDK, явную версию,

@@ -23,7 +23,7 @@ E2E используются для защиты изменений продук
 |---|---|---|
 | 1. Этап 6: упрощение панелей/DAP | Сократить доказанные дубли по готовому review | Итерация §197 готова: общая подготовка восьми navigation-команд; Windows24 PASS, этап 6 целиком открыт |
 | 2. Оформление Termide | Довести Code/Locals pilot до решения для повседневной работы, затем остальные панели | Общий цветной zoom готов на Windows (§199); постоянные рамки split и physical review открыты |
-| 3. Реальные проекты | Go/Cargo workspace, Python venv, Node scripts, выбор цели и launch.json/default | Cargo picker Windows (§200), Go.work debug/edit-repeat Windows/Ubuntu (§206); workspace Tests/LSP и смешанный проект открыты |
+| 3. Реальные проекты | Go/Cargo workspace, Python venv, Node scripts, выбор цели и launch.json/default | Cargo picker Windows (§200), Go.work debug/edit-repeat и Tests Windows/Ubuntu (§206–207); workspace LSP и смешанный проект открыты |
 | 4. Git | Credentials, interactive rebase и оставшиеся ошибки worktree | Основной сценарий есть; остаток открыт |
 | 5. Языковые пробелы | Bash debug с готовым backend; SQL references при наличии подходящего provider | Открыто; собственный LSP не создаём |
 | 6. Переносимость | Чистый setup Windows/Ubuntu/macOS, terminal/SSH; Mac startup/Go и Cmd+C | Частично; native Mac и физические клавиши не проверены |
@@ -36,8 +36,10 @@ PASS на конечном runtime; расширенный case дополнит
 общий предыдущий Ubuntu selected15 PASS/1 FAIL по той же причине. Gate открыт,
 повтором не маскируется. Mac/physical и остальные панели WF-01 остаются открытыми.
 Следующий шаг очереди3 выполнен: Go.work debug/edit-repeat Windows1 PASS /
-Ubuntu1 PASS (§206), без изменений runtime. Workspace Tests/LSP и смешанный
-проект остаются следующими конкретными частями этой очереди.
+Ubuntu1 PASS (§206), без изменений runtime. Go.work Tests также завершены (§207): Windows12 PASS/Ubuntu12 PASS selected,
+исправлен backend infinite walk без новых зависимостей. Следующий конкретный
+шаг — Go.work LSP: definition/implementation/references между модулями через
+gopls; затем единый смешанный проект. Mac/physical остаются отдельно.
 
 Последняя итерация пункта 1: `deduplicate-panel-navigation`, FIXLOG §197.
 Повторная подготовка заменена одной локальной функцией, net−8 строк runtime.
@@ -76,7 +78,7 @@ Windows/macOS/Ubuntu — целевые ОС; натурные проверки 
 | WF-09 | Commit и push с понятным результатом | Основной путь/локальный remote и часть отказов проверены; реальные credentials и оставшиеся отказы отдельно |
 | WF-10 | Навигация по коду, включая реализации | LSP/Peek/Outline есть; implementations обязательны там, где их поддерживает готовый сервер |
 | WF-11 | Поиск файлов/текста и палитра команд | Основные действия есть; единая проверка из кода и панелей входит в приёмку |
-| WF-12 | Тесты проекта в общей панели | Nearest/file/all/output/debug tests есть по языкам; смешанный проект и применимые backend проверяются явно |
+| WF-12 | Тесты проекта в общей панели | Go.work discovery/nearest/file/all/fix/Output Windows/Ubuntu (§207); по языкам есть отдельные workflows, смешанный проект открыт |
 | WF-13 | Единая навигация внутри рабочих панелей и чтение вывода | Space w уже есть; localvox-light принят референсом, единый полный кейс/визуальное оформление ещё открыты |
 
 ### WF-01. Открытие и восстановление проекта

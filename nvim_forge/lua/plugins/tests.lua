@@ -53,7 +53,7 @@ return {
 
             local ok_go, go = pcall(require, "neotest-golang")
             if ok_go then
-                table.insert(adapters, go({
+                table.insert(adapters, require('forge.go_tests').wrap(go({
                     -- spec: IDE-TEST-1/2 adapter формирует argv/nearest-фильтр.
                     -- JSON-файл исключает искажение результатов терминальным PTY.
                     runner = "gotestsum",
@@ -64,7 +64,7 @@ return {
                         return { type = "go", name = "Debug Go test", request = "launch",
                             mode = "test", outputMode = "remote", args = { "-test.v" } }
                     end,
-                }))
+                })))
             end
 
             local ok_python, python = pcall(require, "neotest-python")
@@ -93,6 +93,7 @@ return {
                     force_default = false,
                 },
                 output = { open_on_run = false },
+                running = { concurrent = false }, -- native fallback не раздувает число команд
                 quickfix = { open = false },
                 summary = { mappings = { help = 'g?' } }, -- ? — общий panel help
             })

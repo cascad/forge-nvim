@@ -7,6 +7,15 @@
 debugpy fallback; native reproduction ещё требуется. UX-удаления не выбраны,
 готовые backend/67 pins/6 patched dependencies сохраняются.
 
+2026-11-12, §207: добавлена узкая public Adapter boundary `forge/go_tests.lua`:
+Go workspace без go.mod возвращает native nil fallback, вместо бесконечного
+backend поиска до HOME; nio.scheduler обеспечивает main context перед vim.fn.
+Neotest running.concurrent=false — общая policy ограничения числа команд,
+не отдельный executor. Нет нового parser/cache/private patch,67 pins/6 patched
+dependencies прежние. Цена — per-file suite вместо module batching. Удалить
+helper после готового upstream workspace builder + тех же nearest/file/all
+E2E на целевых ОС. Windows/Ubuntu selected по12 PASS; Mac ещё не проверен.
+
 ## Актуальный выбор после Files, Logs и frame pilot — 2026-11-11
 
 Source e00bcea. Выполнено: Files §180–181, обязательные Logs §182 и рабочий

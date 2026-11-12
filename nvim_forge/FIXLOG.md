@@ -11094,3 +11094,54 @@ Docker готовый image без build/start/repair/network. Mac/physical не
 **Файлы.** go-workspace E2E,5 fixture files,registry row, change artifacts,
 GO_TOOLS/LANGUAGE_MATRIX/IDE_ROADMAP/HISTORY/commands. Старые journal bytes и
 пять отложенных drafts сохраняются, push не выполняется.
+
+
+### 207. Go workspace: Run all без зависания редактора
+
+**Связь:** WF-12, очередь3; change `verify-go-workspace-tests`.
+Спека: IDE-TEST-7 (ADDED). **Статус:** Windows/Ubuntu selected по12 PASS;
+Mac/physical не проверены. Это не вся смешанная языковая матрица.
+
+**Проблема.** Summary находит tests app/shared из корня go.work без go.mod,
+nearest работает, но общий Run all блокирует весь UI. Исходный E2E profile
+20672770046900 сохранён: nearest counters1,0,0, затем RPC перестал отвечать;
+controller завершил редактор1/signal15. Это не доказательство native assertion.
+
+**Причина.** Временная диагностическая копия E2E с instruction budget/JIT off
+(profile21109013024200) сохранила стек: neotest-golang/lib/find.lua:37 →
+runspec/dir.lua:85 → Neotest runner → Forge consumer. Поиск go.mod ограничен
+HOME, а вне HOME путь на корне диска больше не меняется. Discovery уже умеет
+go.work; переписывать его не нужно. Read-only upstream main проверен:
+find.lua blob efed531d0585c27b94b3f59382577e86c65e278c, dir.lua
+274f497ba5eb2a0ca6a91a4ee7f6abf1612472ca — тот же алгоритм, pin update не лечит.
+
+**Изменение.** Public Go Adapter build_spec делегируется только при enclosing
+go.mod; workspace directory возвращает nil, штатный Neotest сам выполняет
+файлы в контексте модулей. Native running.concurrent=false ограничивает число
+команд без собственной очереди. Первый target profile22235373936700 дошёл до
+app, но получил E5560: sequential callback возобновился в fast event, backend
+вызвал vim.fn.expand. Добавлена public nio.scheduler на границе adapter.
+Source RED/diagnostic/intermediate target FAIL не удалены. В постоянном E2E
+нет JIT/instruction hooks; SDK/backports/pins/общий consumer прежние.
+
+**Проверка/e2e.** Конечная версия: Windows12 PASS/Ubuntu12 PASS, selected
+Go.work Tests1 + test-runner5 + work-panels6, по одному запуску на ОС.
+Feature profiles22494527852700/14580572705092: cold discovery3 до открытия
+shared; nearest1,0,0; общий all2,1,1; file2,2,2; UI fix assertion43→42 и public
+native suite3,3,3. Настоящие filesystem counters и Output/2pass1fail→3pass,
+ordinary runs без DAP float/session, installs0. Feature shutdown0/signal0,
+APIerrors[], scope ok; selected профили завершились штатно. Logs/source/
+reports: .tests/go-workspace-tests-main-context и go-workspace-tests-ubuntu;
+аудит go-workspace-tests-audit.json. Готовый Docker image, без build/network/
+start/stop/repair Desktop/WSL. Новый Ubuntu PASS не закрывает IDE-117 другого
+набора. Mac/physical не проверены, Go.work LSP/mixed workflow ещё открыты.
+
+**Вывод.** Неподдержанный native directory target надо отдавать штатному
+fallback на публичной границе. Цена per-file suite — больше команд последовательно;
+это явный компромисс до готовой upstream поддержки, не новый backend/parser.
+После upstream fix helper удаляется с тем же регрессом nearest/file/all.
+
+**Файлы.** forge/go_tests.lua, plugins/tests.lua,2 fixture test files,
+Go.work Tests E2E/registry row, change, GO_TOOLS/LANGUAGE_MATRIX/FEATURE_REVIEW/
+IDE_ROADMAP/HISTORY/commands. Прежние journal bytes и frozen drafts сохранены;
+в index registry попадает только новая строка поверх HEAD. Push не выполняется.
