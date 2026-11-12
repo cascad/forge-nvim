@@ -37,6 +37,11 @@ Ubuntu/Mint не требуют отдельных копий Lua-конфига
 границы. Ближайший кандидат — native managed debugpy venv (IDE-119), а не
 общий framework resolver или механическое объединение project roots.
 
+IDE-119 (§196): один существующий private venv builder в dap.lua используется
+для project и managed debugpy/Python. Windows source4/target4 и15 regression
+PASS; Unix source/target и Mac остаются открыты. Порядок selectors и project
+interpreter сохранён, новых общих modules/platform forks нет.
+
 - `forge/platform.lua`: небольшое описание среды, conventions путей,
   venv bin/Scripts, separator, shell. Определяется один раз; не устанавливает
   пакеты и не запускает внешние команды ради определения ОС.

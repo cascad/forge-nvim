@@ -330,6 +330,7 @@ Python реализован и проверен 2026-11-03; после возо�
 | §193 | [Восстановление панелей сохраняет поздний выбор фокуса](../nvim_forge/FIXLOG.md#193-восстановление-панелей-сохраняет-поздний-выбор-фокуса) |
 | §194 | [E2E сообщает ненулевой native exit после cleanup](../nvim_forge/FIXLOG.md#194-e2e-сообщает-ненулевой-native-exit-после-cleanup) |
 | §195 | [Обзор инструментов: сохранить границы и проверить managed Python](../nvim_forge/FIXLOG.md#195-обзор-инструментов-сохранить-границы-и-проверить-managed-python) |
+| §196 | [Managed debugpy: общий venv layout без смены interpreter](../nvim_forge/FIXLOG.md#196-managed-debugpy-общий-venv-layout-без-смены-interpreter) |
 
 ## Как читать и дополнять
 

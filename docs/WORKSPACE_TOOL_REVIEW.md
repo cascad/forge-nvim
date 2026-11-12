@@ -37,6 +37,11 @@ Mason-запусков этот review не подтверждает. Панел
 
 ### Следующий кандидат: IDE-119, managed debugpy venv
 
+После этого review выполнена Windows часть §196: прежний private venv
+helper переиспользуется для managed paths, source4/target4 и15 прежних UI
+checks PASS. Frozen7673dd3 сохранён; Unix source/target и Mac не проверены,
+IDE-119 остаётся открытым. Ниже исходное наблюдение source3d0e6b7.
+
 В `plugins/dap.lua` проектный adapter использует уже существующий
 debugpy_adapter_in_env с Windows/POSIX layout. Два Mason fallback ниже
 жёстко указывают venv/Scripts/debugpy-adapter.exe и venv/Scripts/python.exe

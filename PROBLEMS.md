@@ -21,10 +21,15 @@
 обычный Python workflow доказательством этой ветки: fixture ставит tools в
 project .venv и managed fallback не изолирует.
 
-Дальше отдельный source/target E2E настоящего managed adapter, project Python
-отдельно, F5/stop/eval/output/explicit overrides Windows/Ubuntu, Mac отдельно.
-Сначала воспроизведение, затем исправление layout в существующей границе;
-универсальный framework tools не создавать. [Разбор](docs/WORKSPACE_TOOL_REVIEW.md#следующий-кандидат-ide-119-managed-debugpy-venv).
+Change fix-managed-debugpy-venv-layout / IDE-PY-2: private venv helper теперь
+строит project и managed paths, без нового resolver framework. Windows
+source7673dd3/target по4 native PASS: real launcher/Python fallback/explicit
+global > env, project venv без debugpy, breakpoint/eval42/stdout/continue.
+15 прежних checks PASS; [FIXLOG §196](nvim_forge/FIXLOG.md#196-managed-debugpy-общий-venv-layout-без-смены-interpreter).
+
+**Открыто:** actual Unix source RED/target и Mac не получены — Linux engine
+недоступен. Frozen config сохранён до patch для replay. Windows доказывает
+сохранение поведения, но не Unix fix; IDE-119 не закрыт. [Исходный разбор](docs/WORKSPACE_TOOL_REVIEW.md#следующий-кандидат-ide-119-managed-debugpy-venv).
 
 ## IDE-118 — Windows Go Output: RPC timeout во время теста
 

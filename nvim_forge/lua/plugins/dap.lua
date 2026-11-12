@@ -667,14 +667,14 @@ local function path_executable(name)
     return resolved ~= "" and resolved or name
 end
 
-local function debugpy_adapter_in_env(env_dir)
+local function venv_executable(env_dir, name)
     if not env_dir or env_dir == "" then
         return nil
     end
     if vim.fn.has("win32") == 1 then
-        return env_dir .. "/Scripts/debugpy-adapter.exe"
+        return env_dir .. "/Scripts/" .. name .. ".exe"
     end
-    return env_dir .. "/bin/debugpy-adapter"
+    return env_dir .. "/bin/" .. name
 end
 
 local function python_project_roots()
@@ -729,7 +729,7 @@ local function debugpy_adapter_executable()
 
     for _, root in ipairs(python_project_roots()) do
         for _, folder in ipairs({ ".venv", "venv", ".env", "env" }) do
-            local candidate = executable_path(debugpy_adapter_in_env(root .. "/" .. folder))
+            local candidate = executable_path(venv_executable(root .. "/" .. folder, "debugpy-adapter"))
             if candidate then
                 return candidate
             end
@@ -741,7 +741,7 @@ local function debugpy_adapter_executable()
         return from_path
     end
 
-    local mason_adapter = vim.fn.stdpath("data") .. "/mason/packages/debugpy/venv/Scripts/debugpy-adapter.exe"
+    local mason_adapter = venv_executable(vim.fn.stdpath("data") .. "/mason/packages/debugpy/venv", "debugpy-adapter")
     return executable_path(mason_adapter)
 end
 
@@ -751,7 +751,7 @@ local function debugpy_adapter_python()
         return explicit
     end
 
-    local mason_python = vim.fn.stdpath("data") .. "/mason/packages/debugpy/venv/Scripts/python.exe"
+    local mason_python = venv_executable(vim.fn.stdpath("data") .. "/mason/packages/debugpy/venv", "python")
     return executable_path(mason_python) or project_python()
 end
 

@@ -36,8 +36,10 @@ IDE-114 выполнен (§194): обычный E2E сообщает nonzero na
    observer Ubuntu; сейчас code/signal/stdout отсутствуют, причина неизвестна.
 2. Обзор tools/OS boundaries выполнен на3d0e6b7: разные политики сохраняются,
    общий resolver framework не вводим. Следующий кандидат IDE-119 — native
-   managed debugpy fallback; сначала воспроизведение отдельным E2E, затем
-   исправление Windows/POSIX layout. Детали — WORKSPACE_TOOL_REVIEW/§195.
+   managed debugpy fallback. Windows часть выполнена в §196: private layout
+   helper, source4/target4 и15 прежних native checks PASS. Frozen7673dd3
+   сохранён; Ubuntu source RED/target и Mac остаются обязательными gates,
+   недоступный Linux engine не засчитан. IDE-119 пока открыт.
 3. Mac/чистая установка → Bash debug/сложные проекты/Git → общее оформление.
 
 IDE-085 и новый RPC stall IDE-118 остаются диагностикой при новых evidence;

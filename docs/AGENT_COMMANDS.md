@@ -7005,3 +7005,77 @@ source/target требуют работающего Linux engine, observer ещ�
 
 OpenSpec validate --all --strict --no-interactive после подготовки:103 PASS.
 Команда: npx.cmd --yes @fission-ai/openspec@1.13.2 validate --all --strict --no-interactive
+
+
+## 107. Native managed Python debug — Windows source/target
+
+2026-11-12, source config7673dd3, тот же Windows SDK/67 pins/backports.
+Через RPC настоящий nvim_forge получает F5/picker/F7/eval/continue; snapshots
+и buffer output — terminal UI/state, physical WezTerm/Mac не проверялись.
+Python venv/pip команды выполняет prepare до запуска child: verified local
+wheels, --no-index --no-deps, private HOME/TEMP/cache. commands.json содержит
+argv и настоящий result каждого setup subprocess; PATH adapter исключён.
+
+```powershell
+git status --short
+git log -3 --oneline
+Get-Content tests/lib/python_project.lua
+Get-Content tests/e2e/python-language.test.lua
+Get-Content .tests/python-deps/manifest.json -TotalCount 26
+rg -n 'debugpy_adapter|debugpy_python|project_python\(' nvim_forge/lua/plugins/dap.lua
+docker info --format '{{.OSType}}'
+$env:TEMP='F:/repo/forge-nvim/.tests/tmp'
+$env:TMP=$env:TEMP
+$env:TMPDIR=$env:TEMP
+$env:npm_config_cache='F:/forge-nvim-tmp/npm-cache'
+$env:PYTHONIOENCODING='utf-8'
+npx.cmd --yes @fission-ai/openspec@1.13.2 new change fix-managed-debugpy-venv-layout
+npx.cmd --yes @fission-ai/openspec@1.13.2 instructions apply --change fix-managed-debugpy-venv-layout --json
+git archive --format=zip --output=.tests/managed-python-7673dd3.zip 7673dd3 nvim_forge
+$env:FORGE_PY_MANAGED_CASE='managed launcher'
+& .tests/panels-run.ps1 -Log managed-python-first -Source .tests/managed-python-baseline/nvim_forge -Files @('tests/e2e/python-managed-debug.test.lua')
+$env:FORGE_PY_MANAGED_CASE=$null
+& .tests/panels-run.ps1 -Log managed-python-source-final -Source .tests/managed-python-baseline/nvim_forge -Files @('tests/e2e/python-managed-debug.test.lua')
+python -B .tests/managed-python-audit.py source-final
+& .tests/panels-run.ps1 -Log managed-python-target-final -Files @('tests/e2e/python-managed-debug.test.lua')
+python -B .tests/managed-python-audit.py target-final
+& .tests/managed-python-regression.ps1
+python -B .tests/managed-python-regression-audit.py
+& .tools/neovim/windows-x64/bin/nvim.exe -l tests/run.lua unit trace
+npx.cmd --yes @fission-ai/openspec@1.13.2 validate --all --strict --no-interactive
+Get-FileHash -Algorithm SHA256 -LiteralPath .tools/neovim/windows-x64/bin/nvim.exe
+python -B .tests/append-managed-python-history.py
+git diff --check
+git diff --cached --check
+```
+
+Первый pilot failed на observer exact ordinal, второй — на /answer вместо
+word boundary; managed spawn/stdout уже работал, исходные profiles/logs
+сохранены. Ready pilot1 и prototype source4/target4 прошли. Перед final
+capture test получил pre-F5 log path и lexical invocation identity, поскольку
+realpath может склеить разные venv на Unix. Final source4/target4 выполнены
+повторно после реальных изменений теста, это не blind retry отказа IDE.
+Предыдущие final files перед lexical правкой скопированы в before-lexical;
+все native profiles сохранены. Final test SHA — FIXLOG196/verification.
+
+Regression script запускает Python language8/debugpy-exit1/dap-output4/
+dap-launch-routes1, затем Node только default F5/project1.15 PASS,
+12 native profiles. Audits нового E2E8 и regression12 проверяют actual sources/
+root0/APIerrors[]/owned scopes/runtime removal. Unit371 PASS/1 SKIP, strict104.
+Main registry staged только для managed Python; незавершённый POSIX probe
+остаётся рабочим draft. Partial index строится из HEAD blob с одной новой
+строкой managed test, проверяется git show :tests/registry.lua.
+Native Unix source/target и Mac не запускались: engine missing, Desktop/WSL
+не управлялись. Frozen7673dd3 сохранён также в .tests/ubuntu для future replay.
+Source/target Windows не являются доказательством Unix fix или whole PASS.
+
+
+Для staged-only проверки git write-tree дал d17f55576a11e9a83a5cfd8af0f3b17bcfd15825.
+Git archive этого index tree извлечён с проверкой границ в
+.tests/staged-managed-python (без ignored SDK/deps и POSIX draft).
+Из его cwd исполнены абсолютный SDK -l tests/run.lua unit trace и
+npx.cmd --yes @fission-ai/openspec@1.13.2 validate --all --strict --no-interactive.
+Результат:371 PASS/1 SKIP и103 strict PASS; report/logs скопированы в
+.tests/managed-python-staged-*. Working tree104 включает POSIX change,
+поэтому эти counts различаются. После проверки в index добавляются только
+docs с результатом; code/test/spec сохранены. Raw/staged journal guards PASS.

@@ -21,6 +21,15 @@
 
 ## Запуск на целевых машинах и внутри VM
 
+IDE-PY-2 / IDE-119: `nvim -l tests/e2e/python-managed-debug.test.lua`.
+Требует prepared Python deps; создаёт private project venv без debugpy и
+private managed venv с настоящим offline debugpy.4 cases: launcher, Python
+fallback без launcher, global adapter/Python overrides при других env values.
+Реальные F5/breakpoint/eval42/stdout/project prefix/continue; raw argv и logs.
+Windows source7673dd3/target по4 PASS,15 прежних language/debug checks PASS.
+Ubuntu source/target и Mac не запускались, Unix fix ещё не подтверждён.
+Источник/гейты — verification fix-managed-debugpy-venv-layout, FIXLOG §196.
+
 IDE-114: `nvim -l tests/e2e/editor-native-outcome.test.lua`. Настоящие
 nvim_forge cquit23/SIGKILL собственного child/primary-error и normal quit;
 clean native cquit24 проверяет прежний generic cleanup контракт. На каждой

@@ -10583,3 +10583,75 @@ SDK/pins/backports или смены root policy нет. Mac/physical gates пр
 PROBLEMS IDE-119, IDE_ROADMAP, HISTORY и commands. Raw append-only journals
 проверены ps-probe-prefix и staged HEAD prefix; машинные cleanup-операции
 и их документы в репозиторий не добавлялись.
+
+
+## 196. Managed debugpy: общий venv layout без смены interpreter
+
+2026-11-12. IDE-119, fix-managed-debugpy-venv-layout.
+Спека: IDE-PY-2 (FIX). Windows проверен; native Unix source/target/Mac открыты.
+
+**Проблема.** Static review §195 нашёл два managed fallback с жёсткими
+venv/Scripts/*.exe на всех ОС. Старый Python E2E ставил debugpy в project
+venv и не изолировал эту ветку. Windows control не может воспроизвести Unix
+дефект, поэтому frozen source7673dd3 сохранён до patch для native replay.
+
+**Причина.** Проектный adapter уже использовал OS-aware private builder,
+а managed adapter/Python строили Windows paths отдельно. Это наблюдение
+кода, не установленный runtime outcome на недоступном Unix. Adapter Python
+и debuggee Python имеют разные зависимости и назначение.
+
+**Изменение.** Прежний builder обобщён до venv_executable(env,name) в том же
+dap.lua: Scripts/name.exe на Windows, bin/name на Unix. Его используют
+project adapter и оба managed fallback;6 add/6 delete, нового module/API/
+framework нет. Roots, explicit/project/PATH/Mason priority, project_python,
+F5/Output/session, SDK/67 pins/6 patched dependencies прежние.
+
+**Проверка/e2e.** Новый permanent Python managed debug создаёт project venv
+с одной dependency приложения и отдельный managed venv с verified offline
+debugpy1.8.22. Project Python действительно не может import debugpy, PATH
+не содержит adapter, до F5 нет adapter spawn/Mason install. Native F5,
+breakpoint/eval42/stdout/project prefix=True/continue проверены в4 случаях:
+launcher, managed Python без launcher, global adapter и global Python
+override при других env values. Подготовка profile-local до child, без сети.
+LSP в этой fixture выключен public API и проверен отдельным language E2E.
+
+Windows source7673dd3:4 PASS → target4 PASS, одинаковые final test bytes;
+это сохранение Windows поведения, не Unix source RED. Native audit8 profiles
+проверяет65 config Lua/init/lock files, test/fixture/driver bytes, actual
+argv, root0/signal0/APIerrors[]/empty scopes и FS removal в той же среде.
+Normalized source/target code отличается только plugins/dap.lua.15 прежних
+checks PASS: Python8, actual debugpy error1, Go Output4, Rust routes1,
+Node default/project1. Их12 native profiles также0/0/APIerrors[]/scopes
+empty/runtime removed. Итого19 различных target checks,20 audited profiles
+с учётом source4. Unit/trace371 PASS/1 SKIP; strict104 PASS.
+
+Две ошибки нового test observer сохранены отдельно: exact ordinal не
+учитывал подпись picker (2245446763000), /answer попадал в calculate_answer
+после уже успешного managed spawn/stdout (2316423880100). Это не IDE RED;
+поправлены ожидания по existing Python helper. Затем source/target4 прошли.
+Для возможного failed Unix launch путь DAP log сохраняется до F5, копирование
+не зависит от нового Lua RPC после hit-enter. Review теста заменил realpath
+comparison на lexical invocation path: venv identity не равна binary identity.
+После этих изменений final source4/target4 выполнены с теми же bytes;
+prototype logs/test versions сохранены, не засчитаны новыми target checks.
+
+**Вывод.** Windows managed/explicit workflows подтверждены, layout logic
+сосредоточена в existing helper. Native Unix source RED/target не получены:
+engine pipe dockerDesktopLinuxEngine отсутствует. Порядок работы изменён
+явно: frozen source сохранён до patch, native gate остаётся обязательным
+перед закрытием IDE-119. Mac также открыт, archive readiness не заявляется.
+Whole §191–193 не повторялся и не повышен до PASS; причины085/117/118 прежние.
+POSIX probe draft/observer не входят в этот commit. Desktop/WSL не управлялись.
+
+**Файлы.** plugins/dap.lua, managed Python native E2E/app fixture/registry,
+fix-managed-debugpy-venv-layout, PROBLEMS/roadmap/architecture/tool review,
+E2E README/HISTORY/commands. Evidence .tests/managed-python-*, test SHA256
+38e699107579cdd49705d947ab19399d8f648aa87c1e889881df602ce3e0047f,
+app8a60cc05224b1cf6ca3eb1e3f71a777550f5d02b110737c4f67968199fb7f778.
+Windows temp/build F:, SDK74AFF15B...C6AD9 прежний. Raw journal prefixes
+managed-python-prefix и staged HEAD prefixes проверяются перед commit.
+
+Дополнение проверки commit: отдельный export git index без POSIX draft дал
+371 unit/trace PASS/1 SKIP и103 strict PASS. Working-tree104 включает
+незавершённый POSIX change; это отдельный scope. После snapshot меняются
+только результаты docs, runtime/test/spec bytes сохранены.
