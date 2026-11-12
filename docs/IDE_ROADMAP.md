@@ -17,6 +17,12 @@ IDE-109/110 исправлены Windows:14 новых +53 прежних editor
 фичи до завершения текущего блока не добавляются. Необязательные plugins
 сохраняются до отдельного выбора владельца.
 
+Пока Ubuntu недоступен, выполнен первый Windows срез DAP refactor:
+deduplicate-dap-launch-preparation, §188. F5 и Space dP используют общую
+подготовку в прежнем dap.lua; source baseline и target проходят один native
+сценарий, target28 debug checks PASS. PTY/backend/session flags прежние;
+полный lifecycle review продолжается. Ubuntu обоих changes и Mac открыты.
+
 Основные возможности мини-IDE уже реализованы. Сейчас идёт стабилизация,
 а не создание редактора с нуля. Windows/Ubuntu PASS ниже относится к указанным
 сценариям; Mac и физические клавиши WezTerm остаются отдельной проверкой.

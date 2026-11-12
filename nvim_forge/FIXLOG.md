@@ -10167,3 +10167,46 @@ hide fixture попадал в штатный late-tree cleanup; финальн�
 **Файлы.** ide/state/init/controls/activities, panel-transitions и
 dap-tab-scope E2E/registry, centralize-panel-transitions, PANELS_PLAN/roadmap,
 E2E README, PROBLEMS/HISTORY/commands. Journals raw append-only.
+
+
+## 188. Общая подготовка запуска DAP
+
+**Проблема.** В IDE-080 следующий срез после панелей — DAP lifecycle.
+F5 и Space dP отдельно готовили source/UI и повторяли open/reset/run.
+
+**Причина.** run_config владел лишь Node guard и вызовом dap.run;
+run_debug_choice и picker.go повторяли предшествующий UI/reset, а обе
+команды отдельно выбирали вид текущей сессии. Изменение порядка требовало
+править несколько одинаковых последовательностей.
+
+**Изменение.** В том же dap.lua run_config принимает cfg и выполняет
+open → codelldb reset → Node readiness → with_launch_buffer → dap.run.
+prepare_debug_action объединяет terminal mode/source/current-session view.
+run_debug_choice и вложенный go удалены. Scheduling, native continue/fallback,
+adapters, PTY implementation, session flags, UI ownership и pins прежние.
+Один runtime file24 add/52 delete, net−28; новых runtime modules нет.
+Поведение сохраняется, OpenSpec skip_specs=true; ускорение не измерялось.
+
+**Проверка/e2e.** Permanent dap-launch-routes прошёл на source fd6b965
+(3796782590900) и final target (4235476794900). Настоящие3 CodeLLDB sessions:
+F5/current-file, project single и multiple, ${file}/args из source buffer,
+fresh buf/channel, stdout до/после breakpoint, отмена без потери истории.
+Это baseline PASS→PASS. Windows27 прежних checks плюс1 новый —28 target
+PASS: Go output/panic, Python/Node/Rust debug/project/nearest, missing tools,
+Debug UI/late focus/startup hide/toggle и PTY двух вкладок.
+Unit360+trace11 PASS, trace1 SKIP; strict97 PASS.
+
+Audit22 profiles (source1/target1/regression20): saved config/test SHA,
+root0/signal0/APIerrors[], без root hard kill, owned scopes empty, private
+runtime удалены. Старый Node filter с0 selected не засчитан: верный выбор
+project/missing отдельно прошёл; runner/verifier проверяют ненулевой набор.
+Финальные temp/build F:, SDK74AFF15B...C6AD9 прежний. Ubuntu engine недоступен,
+Mac/physical keys не проверены; selected regression не заменяет full suite.
+
+**Вывод.** Порядок подготовки двух обычных маршрутов теперь меняется в одном
+месте. Дальнейший lifecycle review и обе платформенные проверки остаются
+открытыми; refactor не объявляется новым функциональным исправлением.
+
+**Файлы.** plugins/dap.lua, dap-launch-routes E2E/registry, OpenSpec
+deduplicate-dap-launch-preparation, roadmap/E2E README/HISTORY/commands.
+Journals raw append-only, guard launch-prefix.json.

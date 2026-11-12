@@ -6639,3 +6639,41 @@ git status --short
 Engine pipe отсутствует; Ubuntu не запускался сегодня, Desktop/WSL/settings
 не менялись. Mac/physical gates открыты. Guard panels-prefix.json сохраняет
 полный исходный byte prefix обоих журналов.
+
+
+## 100. DAP: одна подготовка F5 и project picker
+
+Windows2026-11-12. Source fd6b965, одинаковый native baseline до/после.
+Ниже panels-run.ps1 — прежняя временная обёртка окружения F:/лимитов SDK/logs,
+launch-regression.ps1 — выбранные реальные cases, не mocks backend.
+
+```powershell
+git status --short
+rg -n 'run_config|run_debug_choice|dap_continue|dap_pick_any' nvim_forge/lua/plugins/dap.lua
+git archive --format=zip --output=.tests/launch-source-fd6b965.zip fd6b965 nvim_forge
+if (-not (Test-Path .tests/launch-baseline)) { Expand-Archive -LiteralPath .tests/launch-source-fd6b965.zip -DestinationPath .tests/launch-baseline }
+& .tests/panels-run.ps1 -Log launch-source -Files @('tests/e2e/dap-launch-routes.test.lua')
+& .tests/panels-run.ps1 -Log launch-final-target -Files @('tests/e2e/dap-launch-routes.test.lua')
+Get-Content .tests/launch-regression.ps1
+& .tests/launch-regression.ps1
+python -B .tests/launch-evidence.py
+& .tools/neovim/windows-x64/bin/nvim.exe -l tests/run.lua unit trace
+npx.cmd --yes @fission-ai/openspec@1.13.2 validate --all --strict --no-interactive
+python -B .tests/launch-append.py
+git diff --check
+git diff --numstat -- nvim_forge/FIXLOG.md docs/AGENT_COMMANDS.md
+git diff --cached --check
+git commit -m "refactor(dap): share launch preparation across entry points"
+git status --short
+```
+
+Source-run выполнен до runtime edit. Для повторения после него задать wrapper
+-Source F:/repo/forge-nvim/.tests/launch-baseline/nvim_forge. Raw logs хранятся
+раздельно.14 selected regression entries/27 checks (Rust3,Python2,Node4,
+Go4,Output3,Debug5,startup1,toggle2,late focus2,PTY1); с новым test28 target.
+Неверный Node filter дал0 selected и не засчитан; оба нужных Node entries
+отдельно прошли. Verifier требует count>0, проверяет22 native profiles/SHA/
+root0/signal0/APIerrors[]/scope empty/removed runtime. Source baseline PASS1,
+target PASS1; поведение не менялось. Unit360+trace11 PASS/1 SKIP, strict97.
+Windows temp/TMP/TMPDIR/NVIM_LOG_FILE/npm cache на F:. Ubuntu и Mac открыты;
+SDK/lock/deps/Desktop/WSL не менялись. Prefix guard launch-prefix.json.

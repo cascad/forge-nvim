@@ -513,7 +513,7 @@ end
 local function dap_terminal_win_cmd(_config)
     ide_dap.remember_output('terminal')
     -- Инвалидируем pool-entry в nvim-dap (старый buf уже невалиден если
-    -- мы reset'нули его в run_debug_choice; на всякий случай ещё раз).
+    -- мы reset'нули его в run_config; на всякий случай ещё раз).
     if vim.api.nvim_buf_is_valid(_last_dap_terminal_buf) then
         pcall(vim.api.nvim_buf_delete, _last_dap_terminal_buf, { force = true })
     end
@@ -558,6 +558,12 @@ local function with_launch_buffer(fn)
 end
 
 local function run_config(dap_mod, cfg)
+    if not cfg then return end
+    open_debug_for_config(cfg)
+    -- Свежий PTY перед каждым codelldb запуском, вне RPC callback адаптера.
+    if type(cfg) == "table" and cfg.type == "codelldb" then
+        reset_dap_terminal_buf()
+    end
     if require('forge.node').is_config(cfg) and not require('forge.node').debug_ready() then return end
     with_launch_buffer(function()
         dap_mod.run(cfg)
@@ -915,20 +921,7 @@ local function format_debug_choice(choice)
     return ("%s  [%s]  <%s>"):format(cfg.name or "?", cfg.type or "?", choice.source or "?")
 end
 
-local function run_debug_choice(dap_mod, choice)
-    local cfg = choice.config
-    if not cfg then return end
-    open_debug_for_config(cfg)
-    -- Свежий dap-terminal на каждый старт codelldb-сессии — фикс
-    -- "println! теряется после первого запуска". См. комментарий
-    -- у dap_terminal_win_cmd выше.
-    if type(cfg) == "table" and cfg.type == "codelldb" then
-        reset_dap_terminal_buf()
-    end
-    run_config(dap_mod, cfg)
-end
-
-local function dap_continue()
+local function prepare_debug_action()
     leave_terminal_mode()
     remember_launch_buffer()
     -- Если сессия уже идёт — открываем правильную секцию для её типа
@@ -939,16 +932,17 @@ local function dap_continue()
     -- чтобы не было мерцания console→repl при запуске Python/Go.
     -- Bottom поднимется в event_initialized listener с правильной
     -- секцией.
-    do
-        local dap_mod = require("dap")
-        local session = dap_mod.session()
-        local cfg = session and session.config
-        if cfg and cfg.type then
-            ide_dap.show_section(section_for_config(cfg), false, true)
-        else
-            ide_dap.show_section(nil, false)
-        end
+    local session = require("dap").session()
+    local cfg = session and session.config
+    if cfg and cfg.type then
+        ide_dap.show_section(section_for_config(cfg), false, true)
+    else
+        ide_dap.show_section(nil, false)
     end
+end
+
+local function dap_continue()
+    prepare_debug_action()
     vim.schedule(function()
         local dap = require("dap")
         if dap.session() then
@@ -959,7 +953,7 @@ local function dap_continue()
         local choices, path = debug_choices(current_launch_filetype())
         if #choices > 0 then
             if #choices == 1 then
-                run_debug_choice(dap, choices[1])
+                run_config(dap, choices[1].config)
                 return
             end
 
@@ -971,7 +965,7 @@ local function dap_continue()
                 format_item = format_debug_choice,
             }, function(choice)
                 if choice then
-                    run_debug_choice(dap, choice)
+                    run_config(dap, choice.config)
                 end
             end)
             return
@@ -988,21 +982,7 @@ end
 -- terminal) or when the active session should target a different language
 -- than the focused file's filetype.
 local function dap_pick_any()
-    leave_terminal_mode()
-    remember_launch_buffer()
-    -- То же что и в dap_continue: если сессия активна, открываем
-    -- секцию её типа, чтобы не сбивать фокус. Без сессии — только
-    -- sidebar, чтобы не было мерцания bottom при выборе адаптера.
-    do
-        local dap_mod = require("dap")
-        local session = dap_mod.session()
-        local cfg = session and session.config
-        if cfg and cfg.type then
-            ide_dap.show_section(section_for_config(cfg), false, true)
-        else
-            ide_dap.show_section(nil, false)
-        end
-    end
+    prepare_debug_action()
     vim.schedule(function()
         local dap = require("dap")
         local configs, path = load_launch_configs()
@@ -1015,16 +995,8 @@ local function dap_pick_any()
             return
         end
 
-        local function go(cfg)
-            open_debug_for_config(cfg)
-            if type(cfg) == "table" and cfg.type == "codelldb" then
-                reset_dap_terminal_buf()
-            end
-            run_config(dap, cfg)
-        end
-
         if #configs == 1 then
-            go(configs[1])
+            run_config(dap, configs[1])
             return
         end
 
@@ -1033,7 +1005,7 @@ local function dap_pick_any()
             format_item = format_launch_choice,
         }, function(choice)
             if choice then
-                go(choice)
+                run_config(dap, choice)
             end
         end)
     end)
@@ -1432,7 +1404,7 @@ return {
             -- autocmd dap-ui, тот лазит по окнам, делает set_current_buf —
             -- и весь этот фейерверк прилетает поверх асинхронного канала
             -- nvim-dap. Адаптер ждёт ответ → таймаут "Debug adapter didn't
-            -- respond". Reset делаем ДО dap.run в run_debug_choice, см.
+            -- respond". Reset делаем ДО dap.run в run_config, см.
             -- его выше: тогда мы вне rpc-callback и без побочки.
             dap.listeners.after.event_initialized.forge_session_flag = function() session_initialized = true end
             dap.listeners.after.event_initialized.dapview_config = open_debug_view

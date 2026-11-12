@@ -21,6 +21,12 @@
 
 ## Запуск на целевых машинах и внутри VM
 
+DAP launch preparation: `nvim -l tests/e2e/dap-launch-routes.test.lua`.
+Требует готовые Rust deps; настоящий CodeLLDB проверяет F5/current-file,
+Space dP single/multiple/cancel, source args и3 fresh PTY. Source fd6b965
+и refactor проходят одинаково; этот срез сохраняет прежнее поведение.
+Результаты и платформы — verification deduplicate-dap-launch-preparation.
+
 Переходы панелей (IDE-PANEL-21, IDE-109/110):
 `nvim -l tests/e2e/panel-transitions.test.lua` —13 настоящих сценариев
 Neotree/DAP UI/quickfix: native open, show/hide/toggle/cycle/focus/layout,
