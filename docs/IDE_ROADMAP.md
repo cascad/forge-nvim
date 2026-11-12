@@ -23,6 +23,11 @@ deduplicate-dap-launch-preparation, §188. F5 и Space dP используют �
 сценарий, target28 debug checks PASS. PTY/backend/session flags прежние;
 полный lifecycle review продолжается. Ubuntu обоих changes и Mac открыты.
 
+Следующий результат review — IDE-111/§189: legacy debugpy filter скрывал реальный
+CLI exit2, хотя backend уже отличает client-close. Filter удалён, UI/IDE Logs/
+stderr/edit recovery и normal shutdown подтверждены Windows19 checks.
+Отдельно зарегистрирован IDE-112: порядок F7 → следующая команда фокуса.
+
 Основные возможности мини-IDE уже реализованы. Сейчас идёт стабилизация,
 а не создание редактора с нуля. Windows/Ubuntu PASS ниже относится к указанным
 сценариям; Mac и физические клавиши WezTerm остаются отдельной проверкой.

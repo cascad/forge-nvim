@@ -21,6 +21,13 @@
 
 ## Запуск на целевых машинах и внутри VM
 
+IDE-DAP-6 / IDE-111: `nvim -l tests/e2e/debugpy-exit.test.lua`, готовые Python
+deps. Настоящий установленный debugpy получает invalid CLI option и выходит2;
+проверяются native stderr/exit log, WARN, общая IDE Logs и edit/save после
+отказа. Source83cf655 скрывает WARN, target сохраняет его. Normal client-close
+проверяется существующим python-language pytest debug. Платформы и результаты —
+verification remove-obsolete-debugpy-exit-filter.
+
 DAP launch preparation: `nvim -l tests/e2e/dap-launch-routes.test.lua`.
 Требует готовые Rust deps; настоящий CodeLLDB проверяет F5/current-file,
 Space dP single/multiple/cancel, source args и3 fresh PTY. Source fd6b965

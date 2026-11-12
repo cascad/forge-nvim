@@ -6677,3 +6677,37 @@ root0/signal0/APIerrors[]/scope empty/removed runtime. Source baseline PASS1,
 target PASS1; поведение не менялось. Unit360+trace11 PASS/1 SKIP, strict97.
 Windows temp/TMP/TMPDIR/NVIM_LOG_FILE/npm cache на F:. Ubuntu и Mac открыты;
 SDK/lock/deps/Desktop/WSL не менялись. Prefix guard launch-prefix.json.
+
+
+## 101. Настоящий debugpy exit2: UI, Logs и backend shutdown
+
+Windows2026-11-12. Source83cf655. Прежняя panels-run.ps1 задаёт F: temp/build/
+cache/logs и использует selected Windows SDK. Backend и tools не подменяются.
+
+```powershell
+git status --short
+git archive --format=zip --output=.tests/debugpy-source-83cf655.zip 83cf655 nvim_forge
+if (-not (Test-Path .tests/debugpy-baseline)) { Expand-Archive -LiteralPath .tests/debugpy-source-83cf655.zip -DestinationPath .tests/debugpy-baseline }
+& .tests/panels-run.ps1 -Log debugpy-verified-source -Source F:/repo/forge-nvim/.tests/debugpy-baseline/nvim_forge -ExpectFailure -Files @('tests/e2e/debugpy-exit.test.lua')
+& .tests/panels-run.ps1 -Log debugpy-verified-target -Files @('tests/e2e/debugpy-exit.test.lua')
+$env:FORGE_PYTHON_CASE=''
+& .tests/panels-run.ps1 -Log debugpy-regression -Files @('tests/e2e/python-language.test.lua','tests/e2e/dap-output.test.lua','tests/e2e/debug-focus-order.test.lua','tests/e2e/ide-logs.test.lua','tests/e2e/dap-launch-routes.test.lua')
+python -B .tests/debugpy-evidence.py
+& .tools/neovim/windows-x64/bin/nvim.exe -l tests/run.lua unit trace
+npx.cmd --yes @fission-ai/openspec@1.13.2 validate --all --strict --no-interactive
+python -B .tests/debugpy-append.py
+git diff --check
+git diff --cached --check
+git commit -m "fix(dap): preserve unexpected debugpy exit warnings"
+git status --short
+```
+
+Source1RED/target1PASS и18 regression PASS;19 различных Windows target checks,
+audit17 profiles: config/test SHA, real Process exit2, native stderr/notices,
+root0/signal0/APIerrors[]/empty scopes/removed runtime. Normal pytest rawexit1
+сохранён, ложного WARN нет. Unit360+trace11 PASS/1 SKIP, strict98. Backend patch,
+SDK/67 pins/6 patched dependencies прежние. Ubuntu/Mac открыты, Desktop/WSL не менялись.
+При подготовке trace заметил отдельный незарегистрированный draft IDE-112;
+он сохранён в .tests/focus-command-order.draft.lua до собственного change,
+а unit/trace текущего исправления повторён. Guard debugpy-prefix.json проверяет
+полный исходный byte prefix журналов, старые записи не переписаны.

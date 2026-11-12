@@ -10210,3 +10210,46 @@ Mac/physical keys не проверены; selected regression не заменя
 **Файлы.** plugins/dap.lua, dap-launch-routes E2E/registry, OpenSpec
 deduplicate-dap-launch-preparation, roadmap/E2E README/HISTORY/commands.
 Journals raw append-only, guard launch-prefix.json.
+
+
+## 189. Debugpy: настоящая ошибка адаптера видна в IDE
+
+Спека: IDE-DAP-6 (ADDED), уточняет ожидаемую диагностику IDE-DAP-5.
+
+**Проблема.** IDE-111: настоящий debugpy.adapter с invalid CLI option
+завершается2 и оставляет argparse error в stderr, но предупреждение в UI
+отсутствует. Найдено при review DAP lifecycle после §188.
+
+**Причина.** Backend IDE-053 уже различает client-close и unexpected stdio
+exit, а старый benign_patterns поверх него всегда скрывал debugpy WARN по
+имени Python executable. Прежний negative case forge_failure23 использовал
+другой adapter type и эту ветку не покрывал.
+
+**Изменение.** Удалены patterns/loop debugpy из config notify wrapper.
+Classified native WARN передаётся прежнему original_notify и общему recorder.
+Go/TCP policy сохранена: server callback отличается от stdio. Backend patch,
+SDK/pins/другие owners не менялись. Один runtime file4 add/21 delete, net−17;
+новой классификации по exit code, logger или session manager нет.
+
+**Проверка/e2e.** Permanent debugpy-exit: source83cf655 RED6646393541500,
+target PASS6665886202100. Публичная adapter configuration запускает настоящий
+installed debugpy; raw log подтверждает Process exit2, stderr содержит
+unrecognized arguments. Target показывает WARN в UI/IDE Logs и позволяет
+edit/save. Source не показывает WARN. Windows18 прежних checks PASS плюс1
+новый —19 target. Python8, Go output/panic4, late focus2, Logs3, launch routes1.
+В normal pytest debug raw Process exit1 остаётся, ложного WARN нет; из Python
+exit notifications остался только expected negative forge_failure23.
+Unit360+trace11 PASS, trace1 SKIP; strict98 PASS.
+
+Audit17 profiles (source1/target1/regression15): source/test SHA, stderr/raw
+exit/notices, root0/signal0/APIerrors[], no root hard kill, owned scopes empty,
+private runtime удалены. Финальные temp/build F:, SDK74AFF15B...C6AD9 прежний.
+Ubuntu engine недоступен, Mac/physical keys не проверены; selected suite не full.
+
+**Вывод.** Удалён obsolete слой, перекрывавший точное решение backend.
+Отдельно воспроизведён IDE-112: отложенный F7 отменяет следующий Logs focus;
+это другой шаг. Финальный debugpy test использует Space w i / Space w 0.
+
+**Файлы.** plugins/dap.lua, debugpy-exit E2E/registry, OpenSpec
+remove-obsolete-debugpy-exit-filter, PROBLEMS/roadmap/E2E README/HISTORY/commands.
+Journals raw append-only, guard debugpy-prefix.json.

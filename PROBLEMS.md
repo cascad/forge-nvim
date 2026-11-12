@@ -10,7 +10,26 @@
 
 Маршрут и приоритеты: [рабочий план nvim_forge](docs/IDE_ROADMAP.md).
 Для новых пунктов используем следующий свободный ID `IDE-xxx`; исходный
-симптом хранится здесь, этап и состояние — в плане. Следующий ID: `IDE-111`.
+симптом хранится здесь, этап и состояние — в плане. Следующий ID: `IDE-113`.
+
+## IDE-112 — отложенный F7 отменяет следующую команду фокуса
+
+2026-11-12: из обычного code buffer последовательность F7 → Space w i
+открывает Logs, но курсор возвращается в код. after_normal_mode в keymaps.lua
+всегда планирует focus через vim.schedule, даже уже в normal mode. Source
+RED без DAP — профиль6809191856600, после подтверждённого ввода и очереди
+callbacks. Черновик E2E сохранён в .tests/focus-command-order.draft.lua до
+отдельного change/регистрации. Обнаружен при IDE-111, отдельный этап исправления.
+
+## IDE-111 — настоящий отказ debugpy пропадает из UI
+
+2026-11-12, source83cf655: actual debugpy.adapter с неверным CLI option
+выходит2, native stderr хранит argparse error, session завершается, но WARN
+нет. Старый config benign_patterns подавляет debugpy независимо от реального
+process state; backend уже различает client-close. Negative forge_failure
+из IDE-053 этот тип не покрывал. Source RED — debugpy-exit.test.lua.
+Change remove-obsolete-debugpy-exit-filter, IDE-DAP-6. Windows19 PASS (§189);
+Ubuntu/Mac открыты. Go/TCP callback имеет другую семантику и не удаляется.
 
 ## IDE-110 — DAP Terminal смешивает видимость разных вкладок
 

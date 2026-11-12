@@ -1164,7 +1164,7 @@ return {
             end)
 
             -- true ПОСЛЕ event_initialized текущей сессии. Нужно, чтобы
-            -- отличить ШТАТНЫЙ выход delve/debugpy (после успешного запуска —
+            -- отличить ШТАТНЫЙ выход delve (после успешного запуска —
             -- глушим warning) от ПАДЕНИЯ НА СТАРТЕ (ошибка сборки → delve
             -- выходит ДО инициализации; такое НЕ глушим, иначе «нижняя панель
             -- просто не открылась» молча — ровно жалоба юзера). Сбрасывается
@@ -1255,24 +1255,12 @@ return {
                 force = true,
             })
 
-            -- ---------- Глушим заведомо безобидные warnings ----------
-            -- debugpy.adapter на Windows при normal disconnect выходит с
-            -- кодом 1 (известный квирк, не баг конфига). nvim-dap на это
-            -- кидает WARN "command python of adapter debugpy exited with 1".
-            -- Перехватываем dap.utils.notify и фильтруем такие сообщения.
-            -- delve иногда тоже выходит ненулевым кодом при обычном завершении -
-            -- держим тот же фильтр шире.
+            -- ---------- Диагностика запуска ----------
+            -- spec: IDE-DAP-6. Штатный stdio close различает backend (IDE-053).
+            -- Его unexpected WARN передаём в UI; Go/TCP имеет отдельную policy.
             do
                 local utils = require("dap.utils")
                 local original_notify = utils.notify
-                -- debugpy на Windows при normal disconnect выходит с кодом 1
-                -- (известный квирк) — глушим всегда.
-                local benign_patterns = {
-                    "command `python` of adapter `debugpy` exited with %d+",
-                    "command `python%d?%-?%d*` of adapter `debugpy` exited with %d+",
-                    "command `[^`]*[Pp]ython[^`]*` of adapter `debugpy` exited with %d+",
-                    "command `[^`]*debugpy%-adapter[^`]*` of adapter `debugpy` exited with %d+",
-                }
                 -- delve тоже выходит ненулевым кодом при ОБЫЧНОМ завершении —
                 -- но ТОЛЬКО эти глушим, и ТОЛЬКО если сессия успела
                 -- инициализироваться. Если delve выпал ДО инициализации —
@@ -1284,11 +1272,6 @@ return {
                 }
                 utils.notify = function(msg, log_level)
                     if log_level == vim.log.levels.WARN and type(msg) == "string" then
-                        for _, pattern in ipairs(benign_patterns) do
-                            if msg:match(pattern) then
-                                return
-                            end
-                        end
                         for _, pattern in ipairs(adapter_exit_patterns) do
                             if msg:match(pattern) then
                                 if session_initialized then
