@@ -111,7 +111,7 @@ local default_components = {
         open    = function() vim.cmd("Neotree filesystem reveal left") end,
         close   = function()
             if neo_tree_open_with_source("filesystem") then
-                pcall(vim.cmd, "Neotree close")
+                pcall(vim.cmd, "Neotree filesystem close")
             end
         end,
         is_open = function() return neo_tree_open_with_source("filesystem") end,
@@ -122,7 +122,7 @@ local default_components = {
         open    = function() vim.cmd("Neotree buffers reveal left") end,
         close   = function()
             if neo_tree_open_with_source("buffers") then
-                pcall(vim.cmd, "Neotree close")
+                pcall(vim.cmd, "Neotree buffers close")
             end
         end,
         is_open = function() return neo_tree_open_with_source("buffers") end,
@@ -133,7 +133,7 @@ local default_components = {
         open    = function() vim.cmd("Neotree git_status reveal left") end,
         close   = function()
             if neo_tree_open_with_source("git_status") then
-                pcall(vim.cmd, "Neotree close")
+                pcall(vim.cmd, "Neotree git_status close")
             end
         end,
         is_open = function() return neo_tree_open_with_source("git_status") end,
@@ -244,7 +244,7 @@ local default_components = {
             -- как есть (ide.state idempotent). Если буфер есть, но окно
             -- закрыто — re-open в bottom-split, edgy подхватит.
             local last_buf
-            for _, win in ipairs(vim.api.nvim_list_wins()) do
+            for _, win in ipairs(vim.api.nvim_tabpage_list_wins(0)) do
                 if vim.api.nvim_win_is_valid(win) then
                     local b = vim.api.nvim_win_get_buf(win)
                     if vim.bo[b].filetype == "dap-terminal" then
@@ -270,7 +270,7 @@ local default_components = {
         end,
         close = function()
             if any_window_with_ft('dap-terminal') then M.dap.remember_output('terminal') end
-            for _, win in ipairs(vim.api.nvim_list_wins()) do
+            for _, win in ipairs(vim.api.nvim_tabpage_list_wins(0)) do
                 if vim.api.nvim_win_is_valid(win) then
                     local b = vim.api.nvim_win_get_buf(win)
                     if vim.bo[b].filetype == "dap-terminal" then

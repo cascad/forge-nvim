@@ -10112,3 +10112,58 @@ pilot остаётся opt-in. Tasks physical review/default decision остаю
 
 **Файлы.** tests/diagnostics/wezterm-frame.lua, PANEL_FRAME_PILOT, tasks/
 verification pilot-bordered-locals-layout, HISTORY/commands.
+
+
+## 187. Единые переходы панелей и границы вкладок
+
+Спека: IDE-PANEL-21 (ADDED).
+
+**Проблема.** IDE-109: после штатных Neotree/DAP UI/copen общие hide/toggle/
+focus/cycle/layout пропускали окна; повторный Show оставлял соседа. IDE-110:
+Hide реального CodeLLDB PTY закрывал вид другой вкладки, Show пропускал
+текущую, когда чужой вид уже существовал.
+
+**Причина.** State проверял лишь прежний ID, а controls компенсировал только
+свой hide повторным close. Activities отдельно вызывал backend close API/
+команды. Neo-tree close не уточнял source; DAP Terminal open/close обходили
+все окна при tab-local is_open. Эти несогласованные границы воспроизведены.
+
+**Изменение.** Существующий state принимает фактическую видимость registry,
+сохраняя выбранный видимый ID. Show закрывает остальных и принимает открытый
+target без пересоздания. Hide закрывает свой компонент, hide_slot — видимые
+компоненты слота; layout/toggle/focus/cycle используют тот же путь.
+Controls fallback удалён, activities передаёт зарегистрированные панели
+state; legacy/popup cleanup сохранён. Neo-tree close уточняет source,
+DAP Terminal open/close ограничены текущей вкладкой. Main/guard/Edgy/DAP
+backend/67 pins/6 plugin backports/SDK прежние; новых runtime modules нет.
+Четыре runtime files52 add/65 delete, net−13; ускорение по LOC не заявляется.
+
+**Проверка/e2e.** Windows final source3ef37e0:13 RED/1 control в двух
+постоянных files. Отдельный промежуточный config после close fix подтвердил
+Show RED (1965903941300), затем оба исправления проходят. Target14 PASS и
+13 прежних suites/53 checks PASS —67 различных editor checks. Проверены
+native Files/sources/DAP UI/qf, реальные Go/CodeLLDB pauses/PTY/history,
+Tests/Search/Tasks/Terminal/Trouble, Logs/late focus, frame и native project/
+session/legacy restore. Unit360+trace11 PASS, trace1 SKIP; strict96 PASS.
+
+Audit panels-evidence проверил66 profiles:14 source/14 target/38 regression,
+saved test bytes/config SHA, root exit0/signal0/APIerrors[], no root hard kill,
+owned scopes empty и удалённые private runtime. В native session5 profiles
+quit уже выполнен клавишами: controller получает exited, native trace содержит
+VimLeave0. Завершение scope не выдаётся за естественный выход всех children.
+Финальные Windows temp/build на F:, SDK SHA74AFF15B...C6AD9 прежний.
+Ubuntu engine отсутствует; вчерашний прерванный source не засчитан. Mac и
+физические клавиши не проверены; это selected regression, не global full.
+
+Подготовка новых E2E уточнена: tree readiness по source/строкам; F35 barrier
+после nvim_input; tab-local visibility вместо общего has_window. Ранний
+hide fixture попадал в штатный late-tree cleanup; финальный явно держит Files
+и native Locals. Исторические попытки не считаются отдельными product fixes.
+
+**Вывод.** Явные переходы имеют одного владельца; штатные окна backend
+учитываются теми же командами. Process/data/layout owners сохранены. Windows
+часть проверена; Ubuntu/Mac задачи открыты, change не архивирован.
+
+**Файлы.** ide/state/init/controls/activities, panel-transitions и
+dap-tab-scope E2E/registry, centralize-panel-transitions, PANELS_PLAN/roadmap,
+E2E README, PROBLEMS/HISTORY/commands. Journals raw append-only.

@@ -6593,3 +6593,49 @@ git diff --check
 Артефакт48807705570000: server/frontend exit0, scope empty, Locals/VT F10/
 help/zoom/restore и ANSI. physical_keys=false; Mac и pixel/font QA открыты.
 Journals сохраняют исходный byte prefix, guard wezterm-proof-prefix.json.
+
+
+## 99. Панели: штатные окна, один путь переходов и вкладки
+
+Windows2026-11-12, source3ef37e0. Команды выполняются из F:/repo/forge-nvim.
+При прямом nvim запуске TEMP/TMP/TMPDIR и NVIM_LOG_FILE заданы на F:;
+GOMAXPROCS2/GOFLAGS-p=2/CARGO_BUILD_JOBS2 ограничивают тестовую нагрузку.
+
+```powershell
+git status --short
+git diff -- nvim_forge/lua/ide/state.lua nvim_forge/lua/ide/activities.lua
+git archive --format=zip --output=.tests/panels-source-3ef37e0.zip 3ef37e0 nvim_forge
+if (-not (Test-Path .tests/panels-baseline)) { Expand-Archive -LiteralPath .tests/panels-source-3ef37e0.zip -DestinationPath .tests/panels-baseline }
+Get-Content .tests/panels-run.ps1
+& .tests/panels-run.ps1 -Log panels-verified-source -Source F:/repo/forge-nvim/.tests/panels-baseline/nvim_forge -ExpectFailure -Files @('tests/e2e/panel-transitions.test.lua','tests/e2e/dap-tab-scope.test.lua')
+& .tests/panels-run.ps1 -Log panels-verified-target -Files @('tests/e2e/panel-transitions.test.lua','tests/e2e/dap-tab-scope.test.lua')
+& .tools/neovim/windows-x64/bin/nvim.exe -l tests/run.lua unit trace
+python -B .tests/panels-evidence.py
+python -B .tests/panels-append.py
+npx.cmd --yes @fission-ai/openspec@1.13.2 validate --all --strict --no-interactive
+git diff --check
+```
+
+panels-run.ps1 — временная обёртка окружения и раздельных raw logs; сами
+постоянные E2E запускаются обычным nvim -l, команды/зависимости в E2E README.
+Регресс тем же wrapper: debug-panels, dap-output-policy, code-focus, outline,
+outline-focus, file-explorer, work-panels, tool-panels, ide-logs,
+debug-focus-order, frame-layout, project-session, session-legacy (.test.lua).
+53 checks плюс14 новых. Source13 RED/1 control, target14 PASS; audit66 profiles
+с saved SHA/root0/signal0/APIerrors[]/empty scope/removed runtime. Unit360 и
+trace11 PASS/1 SKIP, strict96. Есть отдельный промежуточный source Show RED.
+Тесты используют настоящий backend; F35 подтверждает обработку клавиш,
+has_window общий для всех вкладок, tab boundary проверяется native API.
+
+```powershell
+docker info --format '{{.OSType}}'
+Get-FileHash -Algorithm SHA256 -LiteralPath .tools/neovim/windows-x64/bin/nvim.exe
+git diff --numstat -- nvim_forge/FIXLOG.md docs/AGENT_COMMANDS.md
+git diff --cached --check
+git commit -m "refactor(panels): reconcile native windows through slot state"
+git status --short
+```
+
+Engine pipe отсутствует; Ubuntu не запускался сегодня, Desktop/WSL/settings
+не менялись. Mac/physical gates открыты. Guard panels-prefix.json сохраняет
+полный исходный byte prefix обоих журналов.

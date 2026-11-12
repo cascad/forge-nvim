@@ -10,7 +10,28 @@
 
 Маршрут и приоритеты: [рабочий план nvim_forge](docs/IDE_ROADMAP.md).
 Для новых пунктов используем следующий свободный ID `IDE-xxx`; исходный
-симптом хранится здесь, этап и состояние — в плане. Следующий ID: `IDE-109`.
+симптом хранится здесь, этап и состояние — в плане. Следующий ID: `IDE-111`.
+
+## IDE-110 — DAP Terminal смешивает видимость разных вкладок
+
+2026-11-12: настоящий Rust/CodeLLDB остановлен на breakpoint, один PTY
+показан в двух вкладках. Hide bottom текущей вкладки закрывает и исходный
+вид: callback dap.terminal.close обходит nvim_list_wins(), хотя is_open
+смотрит текущую вкладку. После исправления close та же проверка воспроизвела
+вторую сторону: Show пропускает текущую вкладку, если вид уже есть в другой.
+Оба callback теперь используют текущую tabpage. Постоянный source RED — dap-tab-scope.test.lua.
+Windows исправлен:14 новых и53 прежних editor checks PASS, FIXLOG §187.
+Изменение: centralize-panel-transitions; Mac/Ubuntu пока открыты.
+
+## IDE-109 — общие переходы пропускают штатно открытые панели
+
+2026-11-12: после штатных Neotree/DAP UI/copen команды hide/toggle/layout/
+focus/cycle учитывают лишь прошлый ID слота. Source 3ef37e0 воспроизводит
+отказы panel-transitions.test.lua; повторный Show пропускает второго соседа,
+а generic Neotree close закрывает другой source. Controls компенсирует
+точечный hide вторым close, остальные маршруты остаются несогласованными.
+Изменение: centralize-panel-transitions, IDE-PANEL-21; Windows67 PASS (§187).
+Ubuntu engine сейчас недоступен, прерванный source не засчитан. Mac открыт.
 
 ## IDE-108 — длинное сообщение пилота блокирует маленький UI
 

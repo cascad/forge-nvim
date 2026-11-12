@@ -2,9 +2,8 @@
 -- инструментов. Перенесён из старого config/panels.lua (проверенная логика),
 -- очищен от mode-контроллера. Используется ide/dap.lua и ide.cleanup_for_session.
 --
--- Зачем отдельно от ide/state.lua: state — это чистый FSM слотов поверх
--- registry. Здесь же — «грубые» закрыватели для вещей, которые не являются
--- slot-компонентами (quickfix, Diffview) или которые надо снести принудительно
+-- Зарегистрированные панели закрывает state. Здесь остаются группы
+-- активностей и очистка не зарегистрированных legacy/popup окон
 -- (close_activity при смене активности). Один контроллер, два уровня.
 
 local M = {}
@@ -226,21 +225,23 @@ end
 -- Закрыватели активностей
 -- ------------------------------------------------------------------
 
+local function hide_components(ids)
+    local ide = ide_safe()
+    if not ide then return false end
+    for _, id in ipairs(ids) do ide.hide(id) end
+    return true
+end
+
 function M.close_files()
-    if package.loaded["neo-tree"] or has_buffer_filetype("neo-tree") then
+    if not hide_components({ "explorer", "buffers", "git_status" })
+        and (package.loaded["neo-tree"] or has_buffer_filetype("neo-tree")) then
         pcall_cmd("Neotree close")
     end
     close_filetypes({ ["neo-tree"] = true })
 end
 
 function M.close_debug()
-    local ide = ide_safe()
-    if ide then
-        ide.hide("dap.sidebar")
-        ide.hide("dap.console")
-        ide.hide("dap.repl")
-        ide.hide("dap.terminal")
-    else
+    if not hide_components({ "dap.sidebar", "dap.console", "dap.repl", "dap.terminal" }) then
         local ok, dapui = pcall(require, "dapui")
         if ok then
             pcall(dapui.close, { layout = 1 })
@@ -253,7 +254,7 @@ end
 
 function M.close_tests()
     local neotest = package.loaded["neotest"]
-    if neotest then
+    if not hide_components({ "tests", "tests_output" }) and neotest then
         pcall(neotest.summary.close)
         pcall(neotest.output_panel.close)
     end
@@ -264,18 +265,16 @@ function M.close_tests()
 end
 
 function M.close_jobs()
-    local overseer = package.loaded["overseer"]
-    if overseer then pcall(overseer.close) end
-    pcall_cmd("OverseerClose")
+    if not hide_components({ "tasks_output" }) then pcall_cmd("OverseerClose") end
 end
 
 function M.close_search()
-    pcall_cmd("GrugFarClose")
+    if not hide_components({ "search" }) then pcall_cmd("GrugFarClose") end
     close_filetypes({ ["grug-far"] = true })
 end
 
 function M.close_quickfix()
-    pcall_cmd("cclose")
+    if not hide_components({ "quickfix" }) then pcall_cmd("cclose") end
 end
 
 function M.close_git_diff()

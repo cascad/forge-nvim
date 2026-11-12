@@ -1,12 +1,13 @@
 -- FSM для panel/sidebar layout'а.
 --
--- Слоты: left / right / bottom. В каждом — максимум один visible
--- компонент. Editor group (main) НЕ слот, он живёт отдельно и
+-- Слоты: left / right / bottom. Каждый хранит один выбранный компонент;
+-- Show нормализует видимость слота, включая штатные окна backend.
+-- Editor group (main) НЕ слот, он живёт отдельно и
 -- никогда не закрывается этим модулем.
 --
 -- Инварианты (см. docs/PANELS_PLAN.md §3.4):
 --   1. Editor group существует всегда.
---   2. В слоте ≤ 1 компонент.
+--   2. После Show/layout в выбранном слоте ≤ 1 visible компонент.
 --   3. После любого transition: state.slots соответствует реальности.
 --   4. apply_layout идемпотентен.
 --   5. open_file_from_explorer → editor group.
@@ -50,17 +51,21 @@ local function is_valid_slot(slot)
     return slot == "left" or slot == "right" or slot == "bottom"
 end
 
--- Lazy refresh: подтянуть реальное состояние из registry перед
--- transition. Защищает от рассинхронизации, если кто-то закрыл
--- окно мимо нас (например, <C-w>q или :q на edgy view).
+-- spec: IDE-PANEL-21. Штатные команды backend тоже открывают панели.
+-- Сохраняем выбранный видимый компонент, иначе принимаем первый по ID.
+-- Пассивное чтение состояния не закрывает лишние штатные окна.
 local function refresh_slot(slot)
-    local id = state.slots[slot]
-    if id then
-        local comp = registry.get(id)
-        if comp and not comp.is_open() then
-            state.slots[slot] = nil
+    local comp = registry.get(state.slots[slot])
+    if not comp or not comp.is_open() then
+        state.slots[slot] = nil
+        for _, visible in ipairs(registry.list(slot)) do
+            if visible.is_open() then
+                state.slots[slot] = visible.id
+                break
+            end
         end
     end
+    if state.slots[slot] then state.last_shown[slot] = state.slots[slot] end
 end
 
 local function refresh_all_slots()
@@ -144,15 +149,15 @@ end
 -- Slot transitions
 -- =============================================================
 
----Закрыть текущий компонент в слоте (если есть).
+---Закрыть видимые компоненты слота, кроме явно оставленного target.
 ---@param slot string
-local function close_active(slot)
+---@param keep? string
+local function close_active(slot, keep)
     requested[slot] = nil
     refresh_slot(slot)
-    local id = state.slots[slot]
-    if not id then return end
-    local comp = registry.get(id)
-    if comp then pcall(comp.close) end
+    for _, comp in ipairs(registry.list(slot)) do
+        if comp.id ~= keep and comp.is_open() then pcall(comp.close) end
+    end
     state.slots[slot] = nil
 end
 
@@ -167,17 +172,9 @@ function M.show(id)
     end
 
     local slot = comp.slot
-    refresh_slot(slot)
-
-    -- Идемпотентность: если уже активен — оставляем как есть.
-    if state.slots[slot] == id and comp.is_open() then
-        requested[slot] = id
-        return
-    end
-
-    close_active(slot)
+    close_active(slot, id)
     requested[slot] = id
-    pcall(comp.open)
+    if not comp.is_open() then pcall(comp.open) end
     state.slots[slot] = id
     state.last_shown[slot] = id
 end
@@ -186,9 +183,9 @@ end
 function M.hide(id)
     local comp = registry.get(id)
     if not comp then return end
-    if state.slots[comp.slot] == id then
-        close_active(comp.slot)
-    end
+    if requested[comp.slot] == id then requested[comp.slot] = nil end
+    if comp.is_open() then pcall(comp.close) end
+    if state.slots[comp.slot] == id then state.slots[comp.slot] = nil end
 end
 
 -- spec: IDE-PANEL-4. Backend может сменить источник в том же окне
@@ -252,8 +249,7 @@ end
 function M.toggle(id)
     local comp = registry.get(id)
     if not comp then return end
-    refresh_slot(comp.slot)
-    if state.slots[comp.slot] == id then
+    if comp.is_open() then
         M.hide(id)
     else
         M.show(id)
@@ -385,18 +381,13 @@ function M.apply_layout(name)
         return
     end
 
-    refresh_all_slots()
-
     for _, slot in ipairs(SLOTS) do
         local target_id = layout[slot]
-        local current_id = state.slots[slot]
-
         if target_id == nil then
-            if current_id ~= nil then close_active(slot) end
-        elseif target_id ~= current_id then
+            M.hide_slot(slot)
+        else
             M.show(target_id)
         end
-        -- target_id == current_id: ничего не делаем (идемпотентность).
     end
 
     state.layout = name
@@ -434,6 +425,7 @@ function M.reset()
     requested = {}
     state = {
         slots = { left = nil, right = nil, bottom = nil },
+        last_shown = {},
         layout = nil,
         layouts = {},
     }

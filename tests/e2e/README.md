@@ -21,6 +21,17 @@
 
 ## Запуск на целевых машинах и внутри VM
 
+Переходы панелей (IDE-PANEL-21, IDE-109/110):
+`nvim -l tests/e2e/panel-transitions.test.lua` —13 настоящих сценариев
+Neotree/DAP UI/quickfix: native open, show/hide/toggle/cycle/focus/layout,
+раздельное закрытие source, повторный show и другая вкладка.
+`nvim -l tests/e2e/dap-tab-scope.test.lua` — настоящий Rust/CodeLLDB,
+один PTY в двух вкладках: hide текущего вида сохраняет другой, ту же паузу,
+channel/job и stdout после Continue. Второму нужны подготовленные Rust deps.
+Общий helper has_window смотрит все вкладки; эти проверки дополнительно
+используют текущую tabpage и исходный window ID. Mac проверяется отдельно;
+актуальные результаты — verification centralize-panel-transitions.
+
 IDE Logs (IDE-106/107): `nvim -l tests/e2e/ide-logs.test.lua`,
 `ide-log-sources.test.lua`, `ide-log-history.test.lua`, `ide-log-tail.test.lua`,
 `debug-focus-order.test.lua`. Настоящие missing Node→исправление→js-debug,

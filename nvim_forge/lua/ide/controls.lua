@@ -244,10 +244,6 @@ function M.hide()
     end
     local ide = require('ide')
     ide.hide(id)
-    -- Панель могла быть открыта штатной командой backend, вне ide.state.
-    -- Закрываем именно текущий компонент, сохраняя прочие слоты менеджера.
-    local comp = ide.registry.get(id)
-    if comp and comp.is_open() then comp.close() end
     ide.focus_main()
 end
 
