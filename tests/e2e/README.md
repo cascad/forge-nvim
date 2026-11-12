@@ -1423,6 +1423,14 @@ health сохраняет фактическое состояние до/пос�
 отсутствующий native SDK молчаливым SKIP. `FORGE_SEARCH_CASE` выбирает UI случай;
 полный suite без фильтра запускает также health check. Mac/ARM64/GUI отдельно.
 
+## Состояние Files в сессии
+
+`nvim -l tests/e2e/session-files-view.test.lua`: native TUI quit/relaunch,
+две вкладки с разным деревом/scroll/width, A→B→A, скрытый Files, удалённый узел,
+меньший UI, native Ctrl-w > и follow только при смене файла. Session/JSON,
+expected/actual и terminal при отказе сохраняются в artifacts. SDK — обычный
+Editor; отдельная framework/dependency не нужна. Platform gates — FIXLOG §205.
+
 ## Пассивный поиск окон компонентов
 
 Пассивный lookup/default focus компонентов: `nvim -l tests/e2e/window-lookup.test.lua`.

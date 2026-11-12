@@ -330,6 +330,7 @@ return {
         end,
         opts = {
             event_handlers = {
+                { event = 'vim_buffer_enter', handler = function(args) require('forge.neo_tree_lifecycle').follow_file(args) end },
                 { event = 'neo_tree_window_after_open', handler = function(args) require('forge.neo_tree_lifecycle').opened(args) end },
                 { event = 'after_render', handler = function(state) require('forge.neo_tree_lifecycle').rendered(state) end },
             },
@@ -435,7 +436,8 @@ return {
                     rename = safe_rename,
                     delete = safe_delete,
                 }),
-                follow_current_file = { enabled = true },
+                -- Native follow вызывается lifecycle handler при смене файла.
+                follow_current_file = { enabled = false },
                 use_libuv_file_watcher = true,
                 filtered_items = {
                     visible = false,

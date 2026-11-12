@@ -106,6 +106,7 @@ return {
   { file = 'tests/e2e/editor-native-outcome.test.lua', suite = 'e2e', timeout = 180 },
   { file = 'tests/e2e/runtime-links.test.lua', suite = 'e2e', timeout = 30 },
   { file = 'tests/e2e/project-session.test.lua', suite = 'e2e', timeout = 210 },
+  { file = 'tests/e2e/session-files-view.test.lua', suite = 'e2e', timeout = 240 },
   { file = 'tests/e2e/session-legacy.test.lua', suite = 'e2e', timeout = 420 },
   { file = 'tests/wezterm/config-loading.test.lua', suite = 'wezterm' },
   { file = 'tests/wezterm/snapshot.test.lua', suite = 'wezterm' },

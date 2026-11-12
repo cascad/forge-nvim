@@ -127,3 +127,75 @@ direct без Explorer; winfix-direct уже проходил до fix. Ubuntu �
 native host0/APIerrors[]/own groups empty. Mac/GUI gates открыты.
 Это небольшой общий restore fix; унификация всех root/interpreter
 политик, active DAP при restore и остальные session клавиши сюда не входят.
+
+## WF-01/02: Files view — незавершённый срез 2026-11-12
+
+`restore-files-session-view` сохраняет native state до cleanup и привязывает
+JSON к SHA session file. Предназначение — вернуть видимость, раскрытия,
+выбранный узел, прокрутку и ширину Files отдельно по вкладкам через штатные
+Neo-tree/Edgy API. Native persistence по-прежнему сохраняет файлы и code layout;
+остальные панели и живые процессы этим шагом не восстанавливаются.
+
+Один Windows прогон:14 PASS/2 FAIL. Новый native TUI case остановился при
+раскрытии fixture, до quit/relaunch; точная причина blocking не сохранена.
+Прежний project-session потерял Explorer. Найдена ошибка нового снимка:
+`get_state_for_window(win)` использует current tab, даже если win из другой
+вкладки. После прогона snapshot и read-only test reader переведены на
+`get_state('filesystem', tab)`. Locator теперь читает видимые строки перед
+нажатием G/l; при отказе сохраняет host terminal до quit.
+
+Правки после прогона непроверены, повторов не было, фича не принята и commit
+не сделан. Legacy4/Files7/Outline3 прошли на проверенной до правки версии.
+Не переносить эти PASS на новую версию. Доказательства и следующий шаг —
+FIXLOG §202 и `openspec/changes/restore-files-session-view/verification.md`.
+
+Продолжение, §203: один новый Windows прогон той версии подтвердил возврат
+Explorer в старом project-session. Legacy4 тоже PASS. Новый case прошёл
+подготовку/разные per-tab views/quit/relaunch и упал при равенстве после restore.
+Экран показывает раскрытое дерево, но точных actual полей тест не сохранил.
+Edgy хранит layout текущей вкладки, тогда как наш scheduled restore проходит
+все вкладки; это подозреваемый участок, не доказанная причина расхождения.
+
+Итог14 checks PASS/2 FAIL, дополнительно file-explorer teardown FAIL после
+7 успешных действий: SIGTERM спустя2 секунды ожидания quit. Второй case FAIL —
+Outline startup nvim_ui_attach timeout10s, до сценария. Причины этих отказов
+не установлены, timeout не менялся. Все10 owned scopes освобождены, но2 native
+exit1/signal15 нельзя называть чистым завершением. Повторов не было.
+Runtime не менялся. После прогона только новый E2E получил expected/actual,
+failure state и копирование metadata до cleanup. Диагностика ещё не запускалась;
+следующий ограниченный запуск — новый case. Финальная приёмка пяти файлов
+и закрытие остальных отказов не отменены. Коммита по-прежнему нет.
+
+Продолжение §204: один запуск только нового case,0 PASS/1 FAIL. Диагностика
+сработала: вкладка1 width32 вместо38 и topline14 вместо6; вкладка2 целиком
+совпала, selection/expanded/path в обеих тоже. Metadata до quit и при отказе
+одинаковы, session SHA совпал с native .vim. Ошибка находится в применении
+view после load, а не в снятии/сохранении snapshot.
+
+Прежний restore переключал все вкладки до выполнения scheduled callbacks.
+Edgy get_win ищет в layout текущей вкладки, поэтому чужой resize пропускался.
+Neo-tree focus_node сохраняет промежуточный viewport; прежний winrestview
+не обновлял эту native position. Подготовлен последовательный restore:
+следующая вкладка после after_render/resize/view предыдущей, затем общий
+возврат фокуса/разрешение follow; после winrestview — renderer.position.save.
+Это callback в существующем lifecycle, без timers/polling/private Edgy vars.
+
+Правки сделаны после единственного прогона и ещё не проверены. Тест/metadata
+из этой итерации сохранены без изменений; host и два TUI PID завершились0,
+owned scopes пусты. Шаг не принят, commit не сделан; следующий прогон —
+пять выбранных файлов, включая незакрытые отказы §203. Остальные платформы,
+меньший UI и полное рабочее место остаются отдельной проверкой.
+
+Завершение среза, §205: конечный runtime совпадает побайтно с16 PASS Windows
+selected прогоном sequential; финальный расширенный E2E без UI cache тоже PASS.
+Проверены точные per-tab views/hidden tree/quit/relaunch/A→B→A/missing node,
+уменьшенный UI с минимумом Edgy32, native Ctrl-w >, same-file focus/new-file
+follow. Прежние отказы не удалены. Дополнительный cache UI-геометрии оказался
+ненужной гипотезой и удалён после контрольного запуска: ожидание smaller UI
+должно использовать последний A snapshot и фактический минимум Edgy.
+
+Ubuntu на конечном source прошёл все workflow assertions, report.ok=true,
+но полный E2E FAIL на known process_scope_posix probe при cleanup. Общий
+Ubuntu selected дал15 PASS/1 FAIL (legacy cleanup той же причины); это не16 PASS.
+Gate IDE-117 остаётся за отложенной test-infra работой. Windows metadata/core
+и оба source artifacts сохранены; Mac/physical и другие панели ещё открыты.

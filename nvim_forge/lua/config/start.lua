@@ -126,14 +126,21 @@ local function save_current_session(root)
         return false
     end
 
-    local ok_ide, ide = pcall(require, "ide")
-    if ok_ide and type(ide.cleanup_for_session) == "function" then
-        ide.cleanup_for_session()
-    end
-
     local ok, persistence = pcall(require, "persistence")
     if ok and type(persistence.save) == "function" then
-        pcall(persistence.save)
+        local active = persistence.active()
+        local saved, err = pcall(function()
+            persistence.fire('SavePre')
+            persistence.save()
+            persistence.fire('SavePost')
+        end)
+        if not saved then
+            vim.notify('Project switch aborted: session save failed: ' .. tostring(err), vim.log.levels.ERROR, { title = 'Start' })
+            return false
+        end
+        -- :restart не должен повторно сохранить уже очищенный workspace.
+        persistence.stop()
+        return true, active
     end
     return true
 end
@@ -278,7 +285,8 @@ local function restart_project(path, opts)
         pcall(ide_dap.stop)
     end
 
-    if not save_current_session(current_path) then
+    local saved, resume_persistence = save_current_session(current_path)
+    if not saved then
         return
     end
 
@@ -287,6 +295,7 @@ local function restart_project(path, opts)
         :format(string.format("%q", path), open_files and "true" or "false")
     local ok, err = pcall(vim.cmd, command)
     if not ok then
+        if resume_persistence then require('persistence').start() end
         vim.notify("Hard project switch failed: " .. tostring(err), vim.log.levels.ERROR, { title = "Start" })
     end
 end

@@ -7319,3 +7319,268 @@ stevearc/resession.nvim; это review вариантов, plugin не уста�
 как существующие действия, не как вновь выполненный E2E или проверка clipboard.
 Prefix panel-reference-prefix сохраняет старые байты FIXLOG/commands, staged
 allowlist исключает прежние test-infra drafts. WF-01 runtime не переписывался.
+
+
+## 113. WF-01/02: Files view, первый Windows прогон и незавершённый результат
+
+PowerShell login=false, F:/repo/forge-nvim. Исходники/состояние прочитаны
+через rg/Get-Content/git diff; native API — из уже подготовленных локальных
+persistence/Neo-tree/Edgy. Файлы редактора менялись apply_patch. Новый change
+создан штатным CLI; planning artifacts и instructions apply прочитаны до кода.
+
+```powershell
+$env:TEMP='F:/repo/forge-nvim/.tests/tmp'
+$env:TMP=$env:TEMP
+$env:TMPDIR=$env:TEMP
+$env:NVIM_LOG_FILE="$env:TEMP/session-view.log"
+$env:npm_config_cache='F:/forge-nvim-tmp/npm-cache'
+$env:PYTHONIOENCODING='utf-8'
+$env:GOTOOLCHAIN='local'
+$env:GOMAXPROCS='2'
+$env:GOFLAGS='-p=2'
+$env:CARGO_BUILD_JOBS='2'
+$env:FORGE_E2E_CONFIG_SOURCE=$null
+$env:FORGE_TEST_ID=$null
+$env:FORGE_E2E_CASE=$null
+npx.cmd --yes @fission-ai/openspec@1.13.2 new change restore-files-session-view
+# status --change ... --json; instructions proposal/specs/design/tasks/apply --change ... --json
+$runDir='F:/repo/forge-nvim/.tests/session-files-view-windows-first'
+if (Test-Path -LiteralPath $runDir) { throw 'First-pass artifacts already exist; no rerun' }
+New-Item -ItemType Directory -Path $runDir | Out-Null
+$files=@('session-files-view','project-session','session-legacy','file-explorer','outline-focus')
+$results=@()
+foreach ($name in $files) {
+  Write-Output "START $name"
+  $began=Get-Date
+  & ./.tools/neovim/windows-x64/bin/nvim.exe -l "tests/e2e/$name.test.lua" *> "$runDir/$name.txt"
+  $code=$LASTEXITCODE
+  $results+= [pscustomobject]@{file=$name;exit=$code;seconds=[math]::Round(((Get-Date)-$began).TotalSeconds,2)}
+  $results | ConvertTo-Json -Depth 4 | Set-Content -LiteralPath "$runDir/results.json" -Encoding utf8
+  Get-Content -LiteralPath "$runDir/$name.txt" -Tail 14
+  Write-Output "DONE $name exit=$code"
+}
+if (@($results | Where-Object exit -ne 0).Count -gt 0) { exit 1 }
+```
+
+Это один последовательный прогон всех пяти файлов,14 PASS/2 FAIL/0 SKIP.
+Тесты не перезапускались. Каждый запуск nvim -l — controller с реальным
+Forge profile/окнами; новый session case использует настоящий PTY и RPC к
+native TUI, quit/relaunch/:restart. Он не дошёл до restore assertions.
+
+```powershell
+npx.cmd --yes @fission-ai/openspec@1.13.2 validate restore-files-session-view --type change --strict --no-interactive *> .tests/session-files-view-windows-first/openspec.txt
+Get-Content .tests/session-files-view-windows-first/results.json
+Get-Content .tests/editor-e2e/15133290047000/session-files-view.json
+Get-Content .tests/editor-e2e/15133290047000/screen-host-before-native-quit.txt
+rg -n 'neo_tree_source|get_state_for_window|VIM_BUFFER_ENTER' .tests/editor-deps/lazy/neo-tree.nvim/lua/neo-tree
+# read-only Python -B -: project-session report states/windows/messages/notices,
+# shutdown/native-host-exit/lifecycle/config-source SHA и SDK SHA256
+# полный результат audit.json рядом с первыми logs;10 profiles/13 TUI PID
+# Первый вариант audit ошибочно требовал native-host-exit у direct harness;
+# исправлен только reader, тесты не запускались повторно.
+git diff --check
+```
+
+Прочитаны rg/Get-Content по session_files/lifecycle/config.start/editor,
+новому E2E/session_tui и docs. После отказов apply_patch исправил явный tab ID,
+native locator и failure-terminal capture. Проверки после этих правок не было,
+commit/staging/push не выполнялись. FIXLOG §202/verification различают tested
+source и нынешнюю непроверенную версию. Prefix session-view-prefix проверяет
+старые байты журналов и прежние test-infra drafts; в working registry допускает
+только новую session-files-view row сверх сохранённого черновика.
+Docker/WSL не управлялись, SDK/pins/dependencies не подготавливались.
+
+
+## 114. Проверка явного tab ID и locator Files, оставшийся view FAIL
+
+PowerShell login=false, F:/repo/forge-nvim. Прочитан apply skill и текущие
+артефакты restore-files-session-view; CLI ready, spec-driven,1/3 tasks done.
+Runtime перед прогоном не менялся. Журналы/пять старых test-infra drafts
+сняты в .tests/session-view-followup-prefix.json до запуска.
+
+```powershell
+$env:TEMP='F:/repo/forge-nvim/.tests/tmp'
+$env:TMP=$env:TEMP
+$env:TMPDIR=$env:TEMP
+$env:NVIM_LOG_FILE="$env:TEMP/session-view-followup.log"
+$env:npm_config_cache='F:/forge-nvim-tmp/npm-cache'
+$env:PYTHONIOENCODING='utf-8'
+$env:GOTOOLCHAIN='local'
+$env:GOMAXPROCS='2'
+$env:GOFLAGS='-p=2'
+$env:CARGO_BUILD_JOBS='2'
+$env:FORGE_E2E_CONFIG_SOURCE=$null
+$env:FORGE_TEST_ID=$null
+$env:FORGE_E2E_CASE=$null
+npx.cmd --yes @fission-ai/openspec@1.13.2 status --change restore-files-session-view --json > .tests/session-view-followup-status.json
+npx.cmd --yes @fission-ai/openspec@1.13.2 instructions apply --change restore-files-session-view --json > .tests/session-view-followup-apply.json
+$runDir='F:/repo/forge-nvim/.tests/session-files-view-windows-followup'
+if (Test-Path -LiteralPath $runDir) { throw 'Follow-up artifacts already exist; no rerun' }
+New-Item -ItemType Directory -Path $runDir | Out-Null
+$results=@()
+foreach ($name in @('session-files-view','project-session','session-legacy','file-explorer','outline-focus')) {
+  Write-Output "START $name"
+  $began=Get-Date
+  & ./.tools/neovim/windows-x64/bin/nvim.exe -l "tests/e2e/$name.test.lua" *> "$runDir/$name.txt"
+  $code=$LASTEXITCODE
+  $results+= [pscustomobject]@{file=$name;exit=$code;seconds=[math]::Round(((Get-Date)-$began).TotalSeconds,2)}
+  $results | ConvertTo-Json -Depth 4 | Set-Content -LiteralPath "$runDir/results.json" -Encoding utf8
+  Get-Content -LiteralPath "$runDir/$name.txt" -Tail 14
+  Write-Output "DONE $name exit=$code"
+}
+if (@($results | Where-Object exit -ne 0).Count -gt 0) { exit 1 }
+npx.cmd --yes @fission-ai/openspec@1.13.2 validate restore-files-session-view --type change --strict --no-interactive *> .tests/session-files-view-windows-followup/openspec.txt
+```
+
+Один прогон:14 checks PASS/2 FAIL плюс file-explorer teardown FAIL после7
+успешных действий,2/5 файлов PASS. В tests/run.lua не входили: там остаётся
+отложенный catalogue draft. Старые первые logs §202 не перезаписывались.
+
+Read-only rg/Get-Content: CLAUDE, change artifacts, session_files/new E2E,
+IDE_ROADMAP/PROJECT_SESSION_REVIEW, хвосты журналов; native Neo-tree
+manager/renderer/follow, Edgy init/commands/editor/window/layout/state/config
+и его docs; persistence.branch, session_tui.stop, editor.stop. Чтение
+предполагаемого SDK doc/eval.txt вернуло missing file, ничего не создавалось.
+Сопоставлены before-quit JSON, failure-terminal, lifecycle, shutdown,
+quit-controller/native traces. Первый Python reader потребовал UTF-8 вывода;
+ширина/selected прочитаны из исходного JSON, экран сохранён до native quit.
+
+```powershell
+Get-Content .tests/editor-e2e/15758809460200/session-files-view.json
+Get-Content .tests/editor-e2e/15758809460200/failure-terminal.txt
+Get-Content .tests/editor-e2e/15970978381800/shutdown.json
+Get-Content .tests/editor-e2e/15970978381800/quit-controller.jsonl
+Get-Content .tests/editor-e2e/15970978381800/quit-native.jsonl
+# Python -B -: nine artifact paths from our logs plus one failed Outline startup,
+# then shutdown/native-host/source SHA/SDK SHA; result audit.json.
+# Initial all-numeric-range reader found unrelated SQL profiles; corrected selection,
+# no test reruns. SQL files/processes were not changed.
+git diff --check
+```
+
+После прогона apply_patch изменил только диагностику нового E2E и docs:
+expected/actual, failure state, metadata before cleanup. Нового запуска не было.
+Runtime текущий совпадает с audit tested_runtime_sha256. Коммита/staging/push
+нет. Системные Desktop/WSL не запускались и не управлялись. Причины teardown
+и UI attach не выдумывались; SIGTERM/timeout не скрыты зелёными checks.
+
+
+## 115. Точные width/topline Files и подготовка последовательного restore
+
+PowerShell login=false, F:/repo/forge-nvim. Один диагностический native PTY
+case; baseline журналов и пяти старых test-infra drafts перед ним сохранён
+в .tests/session-view-diagnostic-prefix.json. Повторов в этой итерации нет.
+
+```powershell
+$env:TEMP='F:/repo/forge-nvim/.tests/tmp'
+$env:TMP=$env:TEMP
+$env:TMPDIR=$env:TEMP
+$env:NVIM_LOG_FILE="$env:TEMP/session-view-diagnostic.log"
+$env:npm_config_cache='F:/forge-nvim-tmp/npm-cache'
+$env:PYTHONIOENCODING='utf-8'
+$env:GOTOOLCHAIN='local'
+$env:GOMAXPROCS='2'
+$env:GOFLAGS='-p=2'
+$env:CARGO_BUILD_JOBS='2'
+$env:FORGE_E2E_CONFIG_SOURCE=$null
+$env:FORGE_TEST_ID=$null
+$env:FORGE_E2E_CASE=$null
+$runDir='F:/repo/forge-nvim/.tests/session-files-view-windows-diagnostic'
+if (Test-Path -LiteralPath $runDir) { throw 'Diagnostic artifacts already exist; no rerun' }
+New-Item -ItemType Directory -Path $runDir | Out-Null
+# Python -B - записал baseline length/SHA256 семи файлов.
+$began=Get-Date
+& ./.tools/neovim/windows-x64/bin/nvim.exe -l tests/e2e/session-files-view.test.lua *> "$runDir/session-files-view.txt"
+$code=$LASTEXITCODE
+[pscustomobject]@{file='session-files-view';exit=$code;seconds=[math]::Round(((Get-Date)-$began).TotalSeconds,2)} | ConvertTo-Json | Set-Content -LiteralPath "$runDir/results.json" -Encoding utf8
+Get-Content -LiteralPath "$runDir/session-files-view.txt" -Tail 16
+exit $code
+```
+
+0 PASS/1 FAIL,31.16s. Native host0 и два child TUI0 не отменяют FAIL controller1.
+Python -B - прочитал report.view_comparison и отфильтровал все несовпадения:
+только tab1.topline6→14 и width38→32. Проверил first-quit/failure JSON bytes,
+SHA native .vim, shutdown/host scope и совпадение config/test copies; audit.json.
+Метаданные и выбор узлов верны, ошибка в применении view неактивной вкладки.
+
+Read-only rg/Get-Content: task/verification/proposal, session_files/lifecycle,
+OpenOptions/editor/state.show, controls.refresh; native Edgy Window/view/layout/
+editor/commands/edgebar и документация API, Neo-tree renderer.focus_node/
+position.save/restore/is_window_valid. Другие проекты/SQL profiles не читались.
+
+После evidence apply_patch изменил runtime на последовательный native render
+callback и position.save; docs/history/design/tasks обновлены. Сам E2E неизменен.
+
+```powershell
+npx.cmd --yes @fission-ai/openspec@1.13.2 validate restore-files-session-view --type change --strict --no-interactive *> .tests/session-files-view-windows-diagnostic/openspec.txt
+git diff --check
+# Python -B -: append-only raw prefixes + HEAD, frozen drafts, whitespace,
+# pending-source.json сравнивает нынешний runtime с captured tested version.
+```
+
+После правки runtime не запускался. Следующий нужный прогон — прежние пять
+selected файлов; их отказы §203 не сняты, PASS и commit не заявлены. Никаких
+staging/push/подготовки SDK/управления Desktop/WSL. Временные данные только F:.
+
+
+## 116. Автономные итерации Files: final native workflow и platform gate
+
+PowerShell login=false, F:/repo/forge-nvim. Окружение прямых nvim запусков —
+TEMP/TMP/TMPDIR/NVIM_LOG_FILE на F: и GOTOOLCHAIN=local/GOMAXPROCS2/GOFLAGS-p2,
+как §115; config override/ID/case filters очищены. Baseline journal/drafts:
+.tests/session-view-autonomous-prefix.json. Чтение — rg/Get-Content/git diff,
+правки — apply_patch, append-only journals — Python -B -.
+
+Один прогон каждой версии, имена каталогов не перезаписываются:
+
+| .tests/session-files-view-* | Файлы | Изменение перед прогоном |
+|---|---|---|
+| sequential | session-files-view/project-session/session-legacy/file-explorer/outline-focus | Последовательный native restore §204 |
+| acceptance | session-files-view | Добавлены smaller UI/focus/follow |
+| native-keys | session-files-view | Prepare через C-w >, layout-ready/actual telemetry |
+| stable-terminal | session-files-view | Terminal gutter стабилен, columns читаются перед quit |
+| ui-geometry | те же5 | Временная гипотеза UI geometry cache |
+| final-acceptance | session-files-view | Latest A metadata и minimum32 в expected |
+| no-ui-cache | session-files-view | Удалён ненужный cache/hooks, контрольный source |
+
+Для пяти файлов использовался тот же PowerShell foreach, что §114; сохранялись
+LASTEXITCODE/seconds/result JSON, все файлы продолжались после FAIL. Для одного:
+
+```powershell
+& ./.tools/neovim/windows-x64/bin/nvim.exe -l tests/e2e/session-files-view.test.lua *> "$runDir/session-files-view.txt"
+$code=$LASTEXITCODE
+[pscustomobject]@{file='session-files-view';exit=$code;seconds=[math]::Round(((Get-Date)-$began).TotalSeconds,2)} | ConvertTo-Json | Set-Content -LiteralPath "$runDir/results.json" -Encoding utf8
+Get-Content -LiteralPath "$runDir/session-files-view.txt" -Tail 16
+exit $code
+```
+
+Read-only docker info/image inspect установили готовый Linux engine/image:
+
+```powershell
+docker info --format '{{.OSType}}'
+docker image inspect forge-nvim-tests:ubuntu24.04-nvim0.12.2 --format '{{.Id}}'
+```
+
+Ubuntu selected использовал bash entrypoint и for по тем же5 именам с общим
+status, вывод DONE name exit=code. Это override entrypoint для selected scope,
+обычный scripts/test.sh оставлен неизменным. Final source — один case:
+
+```powershell
+docker compose -f tests/containers/compose.yaml run --rm --no-deps --entrypoint bash -e GOMAXPROCS=2 -e GOFLAGS=-p=2 -e GOTOOLCHAIN=local ubuntu -c $script > .tests/session-files-view-ubuntu/run.txt 2>&1
+docker compose -f tests/containers/compose.yaml run --rm --no-deps --entrypoint nvim -e GOMAXPROCS=2 -e GOFLAGS=-p=2 -e GOTOOLCHAIN=local ubuntu -l tests/e2e/session-files-view.test.lua > .tests/session-files-view-ubuntu-final/run.txt 2>&1
+```
+
+Desktop/WSL не запускались/не перезапускались; build/image pull/download не было.
+Windows и Ubuntu тяжёлые запуски строго поочерёдно. Сеть контейнера выключена
+compose.yaml. Неуспешный POSIX probe не подменён/не повторён до зелёного.
+
+Python -B - audit прочитал captured config/test, report expected/actual,
+first-quit/last snapshot SHA, selected/hidden/scaled views/follow, native PID,
+shutdown/host и сравнил final runtime с sequential. Final Windows16 distinct
+PASS; Ubuntu final workflow ok, весь E2E FAIL cleanup IDE-117. Все первичные
+версии/ошибки сохранены. Read-only просмотрены native Edgy API/minimum32,
+session_tui/input/geometry, renderer.position и current Go package defaults.
+
+Для commit: строгий validate change, diff/append-only/allowlist и partial
+registry staging (только новая Files row поверх HEAD, старые drafts вне index).
+Push не выполняется. Следующая очередь — Go.work; новый goal не создаётся.

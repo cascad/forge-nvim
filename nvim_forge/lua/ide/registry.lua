@@ -12,6 +12,8 @@ local M = {}
 
 ---@class ide.OpenOptions
 ---@field focus? boolean -- false: пассивное восстановление панели
+---@field tree_view? table -- native Files view из проектной сессии
+---@field on_tree_restored? fun(err?: any) -- завершение native render и возврата view
 
 ---@class ide.Component
 ---@field id        string             -- уникальный, e.g. "explorer", "dap.console"

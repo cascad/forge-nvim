@@ -234,11 +234,20 @@ return {
         config = function(_, opts)
             require("persistence").setup(opts)
 
-            -- После КАЖДОГО успешного восстановления сессии (recent project,
-            -- <leader>qs, <leader>ql) принудительно открываем file explorer
-            -- слева. Без этого session.load восстанавливает только окна с
-            -- кодом, и explorer остаётся закрытым даже если в прошлой
-            -- сессии он был открыт (persistence не сохраняет edgebar-окна).
+            vim.api.nvim_create_autocmd('User', {
+                group = vim.api.nvim_create_augroup('ForgeSessionFiles', { clear = true }),
+                pattern = { 'PersistenceLoadPre', 'PersistenceSavePost' },
+                callback = function(ev)
+                    if ev.match == 'PersistenceLoadPre' then
+                        require('forge.neo_tree_lifecycle').session_loading(true)
+                    else
+                        require('forge.session_files').save()
+                    end
+                end,
+            })
+
+            -- Native сессия возвращает файлы, снимок Files — его вид.
+            -- Старые/изменённые sessions сохраняют прежний Explorer fallback.
             vim.api.nvim_create_autocmd("User", {
                 group = vim.api.nvim_create_augroup("UserPersistenceExplorer", { clear = true }),
                 pattern = "PersistenceLoadPost",
@@ -250,16 +259,24 @@ return {
                             -- revealing a saved Help/tool path can prompt for
                             -- a different root instead of opening this project.
                             local win = require("config.start").focus_restored_session()
+                            local function complete(err)
+                                if err then vim.notify('Files session: ' .. tostring(err), vim.log.levels.WARN) end
+                                if vim.api.nvim_win_is_valid(win) then
+                                    vim.api.nvim_set_current_win(win)
+                                elseif type(ide.focus_main) == "function" then
+                                    pcall(ide.focus_main)
+                                end
+                                require('forge.neo_tree_lifecycle').session_loading(false)
+                            end
                             -- Вход в проект (restore) → дерево файлов
                             -- (ide/triggers.lua: project:open).
-                            pcall(function() ide.triggers.fire("project:open") end)
-                            -- Фокус обратно в editor: explorer открывается, но
-                            -- курсор остаётся на редактируемом файле.
-                            if vim.api.nvim_win_is_valid(win) then
-                                vim.api.nvim_set_current_win(win)
-                            elseif type(ide.focus_main) == "function" then
-                                pcall(ide.focus_main)
+                            local ok_view, restored = pcall(require('forge.session_files').restore, complete)
+                            if not ok_view or not restored then
+                                pcall(function() ide.triggers.fire("project:open") end)
+                                complete(not ok_view and restored or nil)
                             end
+                        else
+                            require('forge.neo_tree_lifecycle').session_loading(false)
                         end
                     end)
                 end,
@@ -269,6 +286,8 @@ return {
                 group = vim.api.nvim_create_augroup("UserPersistenceCleanSession", { clear = true }),
                 pattern = "PersistenceSavePre",
                 callback = function()
+                    local captured, err = pcall(require('forge.session_files').capture)
+                    if not captured then vim.notify('Files session: ' .. tostring(err), vim.log.levels.WARN) end
                     local ok, ide = pcall(require, "ide")
                     if ok and type(ide.cleanup_for_session) == "function" then
                         ide.cleanup_for_session()

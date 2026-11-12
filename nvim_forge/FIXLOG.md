@@ -10849,3 +10849,209 @@ Explorer создаётся заново. Native Edgy get_win/resize и Neo-tree
 **Файлы.** IDE_ROADMAP/PANEL_KEYS/PROJECT_SESSION_REVIEW, HISTORY/AGENT_COMMANDS.
 Все предыдущие кодовые шаги остаются отдельными commits638c309/104d210;
 старые test-infra drafts сохраняются вне этого commit.
+
+
+## 202. Снимок Files по вкладкам: первый прогон с двумя отказами
+
+**Проблема.** WF-01/02 требует вернуть дерево в прежнем виде, включая
+раскрытия, выбранный узел, прокрутку и ширину в каждой вкладке. Прежний
+session cleanup удаляет служебные окна до mksession; LoadPost создаёт Files
+заново. Explicit project save и quit используют разные пути сохранения.
+
+**Причина.** Native session отвечает за файлы/code layout; view дерева
+не снимался до cleanup. При :restart автоматическое сохранение могло ещё
+раз записать уже очищенное состояние. Это архитектурный разбор существующих
+routes, а не заявленное воспроизведение отдельной прежней потери данных.
+
+**Изменение.** Подготовлен session_files: снимок до cleanup, JSON после
+SavePost отдельно от native session dir, SHA содержимого session и canonical
+path для привязки. Per-tab Files открывается через registry/Neo-tree, ширина
+через Edgy resize, selection/view после render. Отсутствующий node даёт root,
+старый/неподходящий snapshot — прежний fallback. Explicit save вызывает общие
+события и останавливает повторный autosave до restart. Следование файлу идёт
+через штатный follow из buffer-enter только при смене файла, с подавлением
+во время load. Layout owner, pins, SDK и остальные панели не меняются.
+Спека: IDE-PANEL-25 (ADDED), change restore-files-session-view.
+
+**Проверка/e2e.** Один Windows прогон пяти файлов:14 PASS/2 FAIL/0 SKIP.
+Новый session-files-view остановился при раскрытии первого fixture-каталога:
+Native TUI is waiting for input, до quit/relaunch/save assertions. Исходный
+blocking screen до cleanup не сохранён, его точная причина не доказана.
+Прежний project-session завершил controller successfully, но внешний checker
+обнаружил Explorer missing. Его report.ok не считается PASS. Legacy4,
+Files CRUD/controls7 и Outline/focus3 прошли на этой проверенной версии.
+Raw .tests/session-files-view-windows-first/{results,audit}.json и пять logs;
+новый profile15133290047000, project-session15185467124900.
+10 root profiles завершились exit0/signal0/APIerrors[]/own scopes empty;
+6 native-session profiles дополнительно имеют native-host-exit active_after0,
+13 дочерних TUI PID в lifecycle. Config copies совпадают с tested source.
+SDK SHA74AFF15B3B6BC288753B721365B088AB44C9B2BFFF152F8D27F5885B4B1C6AD9.
+Strict OpenSpec PASS. Ubuntu/macOS/physical/full не запускались.
+
+**После отказа.** В native manager найдено: get_state_for_window(win)
+использует current tab вместо tab окна. Snapshot обходил чужие окна из
+текущей вкладки без Files и мог сохранить files=false. Snapshot и test reader
+переведены на get_state('filesystem', tab). Новый UI fixture вместо gg/j/l
+читает видимые строки после _ready и выбирает узлы реальными G/l. При FAIL
+сохраняет host terminal до quit. Эти правки после прогона НЕ проверены;
+locator не объявляется доказанной причиной/исправлением первого blocking.
+
+**Вывод.** Фича не принята, commit не сделан. Первичные14 PASS не относятся
+к версии после правки. Повторов до зелёного не было. Следующая ограниченная
+итерация — один прогон тех же пяти файлов и разбор сохранённых view/metadata;
+полный WF-01/02, остальные панели, меньший UI и целевые ОС остаются открытыми.
+Docker/WSL не управлялись; новая тестовая инфраструктура не строилась.
+
+**Файлы.** session_files, neo_tree_lifecycle, plugins/editor/neo-tree,
+config/start, registry OpenOptions, session-files-view E2E и его registry row;
+restore-files-session-view artifacts, IDE_ROADMAP/PROJECT_SESSION_REVIEW,
+HISTORY/AGENT_COMMANDS. Прежние catalogue/POSIX drafts сохранены отдельно.
+
+
+## 203. Возврат Explorer подтверждён, точный Files view ещё расходится
+
+**Проблема.** После §202 требовалось проверить явный tab ID в снимке и
+UI locator. Первая версия теряла чужой Files; новый case не доходил до save.
+
+**Причина.** Ошибка get_state_for_window(win) с current tab найдена в §202.
+Этот прогон проверяет её исправление. Причина оставшегося расхождения view
+ещё не доказана: actual поля и JSON sidecar не сохранялись до очистки.
+
+**Изменение.** Runtime после §202 не менялся. Выполнен один новый Windows
+прогон. После него только session-files-view E2E дополнен expected/actual,
+failure state и копированием metadata после первого quit и до failure cleanup.
+Спека: IDE-PANEL-25 (ADDED), change restore-files-session-view остаётся открытым.
+
+**Проверка/e2e.** Project-session1 и legacy4 PASS: возврат прежнего Explorer
+подтверждён. Новый case прошёл подготовку, два view entry40/entry20, widths38/34,
+toplines6/1, quit/relaunch с другим PID, но equality после restore FAIL.
+Экран показывает раскрытый child; конкретное поле отказа не доказано.
+Edgy get_win/layout относится к текущей вкладке; scheduled resize чужого
+окна — подозреваемый участок, runtime по этой гипотезе не менялся.
+Итог14 checks PASS/2 FAIL/0 SKIP, дополнительно teardown file-explorer FAIL
+после7 успешных действий: через2034ms quit controller отправил SIGTERM,
+root exit1/signal15. Второй case FAIL — Outline startup nvim_ui_attach
+RPC timeout10s, до его действий; другие2 Outline cases PASS. Причины этих
+отказов не установлены, timeout не менялся. Два из пяти файлов завершились
+успешно. Ни одного повторного запуска в этой итерации не было.
+Raw .tests/session-files-view-windows-followup/:5 logs/results/audit/openspec.
+Новый profile15758809460200; project15807114988600; teardown15970978381800;
+Outline startup16020020065900. Audit10 profiles:8 root exit0/signal0 и2
+exit1/signal15, APIerrors[], все owned scopes active_after0;14 native TUI PID.
+Config copies совпали с tested runtime; SDK SHA прежний74AFF15B3B6BC288753B721365B088AB44C9B2BFFF152F8D27F5885B4B1C6AD9.
+SQL profiles другого запуска в том же диапазоне времени исключены из audit;
+причинная связь с отказами не заявляется. Strict OpenSpec PASS.
+
+**Вывод.** Предыдущая потеря Explorer устранена, новый точный Files view
+не принят. Диагностика, добавленная после прогона, ещё не запускалась.
+Коммита нет; следующий ограниченный запуск — новый case для точных полей
+расхождения. Финальная приёмка пяти файлов, teardown/UI attach отказы,
+остальные панели WF-01/02 и Ubuntu/macOS/physical остаются открытыми.
+Docker/WSL не управлялись; оставшихся owned процессов после прогона нет.
+
+**Файлы.** Новый session-files-view E2E, tasks/verification, IDE_ROADMAP,
+PROJECT_SESSION_REVIEW/HISTORY/AGENT_COMMANDS. Старые журнальные байты и
+пять отложенных test-infra drafts сохранены. Runtime/dependencies/pins прежние.
+
+
+## 204. Неверные ширина и прокрутка неактивной вкладки Files
+
+**Проблема.** После §203 точный view после restore расходился; требовалось
+получить actual поля и metadata до cleanup, а не менять runtime по догадке.
+
+**Причина.** Один диагностический запуск подтвердил только2 расхождения
+вкладки1: width32 вместо38, topline14 вместо6. Вкладка2 полностью совпала,
+selected/expanded/path/visibility/col/leftcol в обеих тоже. Metadata до quit
+и при отказе побайтно равны, SHA native .vim соответствует session_hash.
+Снимок записывается верно. Restore переключал все tabpages до scheduled
+render callbacks; Edgy get_win ищет в layout текущей вкладки, чужой resize
+молча пропускался. Native focus_node сохранял промежуточную position до
+нашего winrestview; последующий redraw мог вернуть старую прокрутку.
+Порядок поздних redraw отдельно не трассирован.
+
+**Изменение.** После прогона подготовлено последовательное восстановление:
+следующая вкладка после native after_render/resize/selection/view предыдущей.
+Общий completion возвращает фокус/разрешает follow после цепочки либо ошибки.
+После winrestview вызывается native renderer.position.save(state,true).
+Ошибки open/render передаются completion; missing Edge больше не пропускается
+молча. Это extension существующего lifecycle/registry, без private Edgy vars,
+новых timers/polling/layout owner и dependency patch. Спека: IDE-PANEL-25 (ADDED).
+
+**Проверка/e2e.** Один Windows session-files-view запуск:0 PASS/1 FAIL,
+31.16s. Profile16551819802500, TUI24720→31244, editor host5968. До quit и
+failure сохранены native session/sidecar, before-quit/actual/state/screen.
+Host и оба TUI завершились0, owned scope active_after0/APIerrors[]; test
+controller exit1 по сравнению view. Captured config/test совпали с tested
+source. .tests/session-files-view-windows-diagnostic/{results,audit}.json,
+raw log, first-quit/failure metadata внутри profile. Strict OpenSpec PASS.
+Предыдущие результаты §202–203 сохранены. Другие4 файла не запускались;
+старые teardown/UI attach отказы не объявляются исправленными.
+
+**Вывод.** Ошибка точно локализована в применении width/topline чужой вкладки;
+исправление подготовлено после единственного прогона и ещё не проверено.
+Новых запусков/коммита нет. Следующая ограниченная итерация — один прогон
+пяти выбранных файлов для проверки причины/регресса. Меньший UI, все панели
+WF-01/02, Ubuntu/macOS/physical отдельно открыты. Docker/WSL не управлялись.
+
+**Файлы.** session_files/neo_tree_lifecycle/plugins/editor, OpenOptions callback;
+design/tasks/verification, IDE_ROADMAP/PROJECT_SESSION_REVIEW/HISTORY/commands.
+Сам постоянный E2E этой итерацией не менялся; старая история и пять test-infra
+черновиков сохранены. SDK/pins/dependencies прежние.
+
+
+## 205. Восстановление Files по вкладкам и проектам
+
+**Проблема.** WF-01/02 требует вернуть не только файлы, но и точный Files view.
+В §202–204 сохранены исходные отказы: дерево удалялось до session save,
+чужая вкладка читалась как current, scheduled restore терял width/topline.
+Владелец уточнил продолжать обоснованные итерации до реального блокера без
+нового «дальше»; правило записано в CLAUDE/плане. Неизменённые версии ради
+зелёного не повторялись, все промежуточные FAIL сохранены.
+
+**Причина.** Native mksession сохраняет code layout, cleanup удаляет tool views.
+Neo-tree get_state_for_window использует current tab; Edgy get_win видит
+текущий layout. Native focus_node сохраняет промежуточный viewport до нашего
+winrestview. Простого цикла открытия всех вкладок до async callbacks мало.
+
+**Изменение.** Native snapshot до cleanup, SHA session/JSON после save,
+общие save events без второго autosave при restart. По вкладкам: root/visible,
+expanded/selected/scroll/width, native render→Edgy resize→position.save→следующая
+вкладка; после цепочки code focus/follow. Скрытый Files остаётся скрытым,
+missing node даёт root, legacy/no-match snapshot сохраняет прежний fallback.
+Готовые backend API, без новой зависимости/SDK patch/layout owner.
+Спека: IDE-PANEL-25 (ADDED). QUICKSTART содержит поведение и Ctrl-w >/<.
+
+**Проверка/e2e.** Windows sequential пять файлов16 PASS/0 FAIL; его runtime
+побайтно равен конечному. Позже расширенный case на конечном source без cache
+тоже PASS:6 real TUI PID, exact two-tab quit/relaunch/A→B→A, hidden/missing node,
+smaller UI/native Ctrl-w >, same-file focus и new-file follow. Поэтому16 distinct
+Windows checks подтверждены; новый полный прогон final всех5 файлов не заявлен.
+Final profile18529870995600, исходный sequential17330432804000; host/root0,
+APIerrors[], own scopes0. .tests/session-view-final-audit.json фиксирует SHA.
+Ubuntu selected15 PASS/1 FAIL: новый workflow PASS, legacy winfix FAIL на
+известном POSIX scope probe IDE-117 при cleanup. Final source без cache:
+profile10746697986549 workflow report.ok=true, все assertions/8 states/6 TUI PID
+завершены, root/host0; весь E2E FAIL на том же scope probe. Clean scope/PASS
+Ubuntu не заявляются. Контейнеры обычным --rm завершены; engine/image уже были
+готовы, Desktop/WSL не управлялись, build/download не делались.
+
+**Промежуточные выводы.** Acceptance prepare Ex resize/quit отказ сохранён,
+его причина не доказана; fixture теперь дожидается Edgy model==actual и жмёт
+настоящий Ctrl-w >. Small-UI false ожидание читало columns первого quit вместо
+последнего A snapshot и забывало native minimum32. Геометрия внешнего terminal
+fixture фиксирована, ожидается точный max(minimum, scaled latest width).
+Гипотеза отдельного UI columns cache отвергнута контрольным запуском: старый
+first-quit UI133/saved133 уже совпадал; более поздние snapshots законно140.
+Временные hooks/cache удалены. Это уточняет прежний устный вывод о причине;
+дополнительного production слоя для UI geometry в конечном коде нет.
+
+**Вывод.** Bounded Files slice завершён и проверен Windows; Ubuntu functional
+цикл подтверждён, полный gate IDE-117 остаётся FAIL за отложенной test-infra
+работой. Mac/physical/другие панели WF-01 открыты. Следующий продуктовый пункт —
+Go.work с несколькими модулями. SDK/pins прежние, прежние INFRA/SQL drafts
+не входят в commit. Чистка/repair внешних систем не проводились.
+
+**Файлы.** session_files/lifecycle/editor/start/OpenOptions/neo-tree follow,
+новый native E2E/registry row, change restore-files-session-view, QUICKSTART,
+E2E README, roadmap/review/history/commands/CLAUDE. Старые журнальные байты
+сохранены; исходные §202–204 и их FAIL не переписаны.
