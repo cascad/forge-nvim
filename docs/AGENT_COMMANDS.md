@@ -7286,3 +7286,36 @@ project marker BETA: root0/signal0/APIerrors[]/owned scopes empty. Резуль�
 заявляется для новой фичи. Prefix rust-choice-prefix сохраняет журналы и пять
 прежних test-infra drafts; staged allowlist исключает их из commit.
 Ubuntu/macOS/physical/full не запускались; Docker/WSL не управлялись.
+
+
+## 112. Read-only reference localvox и кейс навигации панелей
+
+Windows/PowerShell, login=false. Все записи — только F:/repo/forge-nvim.
+Найдены две копии localvox-light, сравнение git log выбрало актуальную D:.
+Внешние репозитории не изменялись, их клиенты/демоны/тесты не запускались.
+
+```powershell
+Get-ChildItem -LiteralPath F:/repo -Directory
+Get-ChildItem -LiteralPath F:/claude_code -Directory -Filter '*vox*'
+Get-ChildItem -LiteralPath D:/rust_repo -Directory -Filter '*vox*'
+git -C F:/claude_code/localvox-light log -1 --format='%h %cs %s'
+git -C D:/rust_repo/localvox-light log -1 --format='%h %cs %s'
+# rg --files / Get-Content: AGENTS, README, docs/terminal-workspace.md,
+# terminal/src/app/{input,navigation,paging}.rs и render.rs в D:/rust_repo/localvox-light
+# view_image: D:/rust_repo/localvox-light/docs/media/tui-transcript.png
+rg -n 'C-u|C-d|C-f|PageUp|PageDown' nvim_forge/lua/config/keymaps.lua
+Get-Content nvim_forge/lua/plugins/terminal.lua
+Get-Content nvim_forge/lua/plugins/editor.lua
+Get-Content nvim_forge/lua/config/start.lua
+Get-Content .tests/editor-deps/lazy/persistence.nvim/lua/persistence/init.lua
+Get-Content .tests/editor-deps/lazy/edgy.nvim/doc/edgy.nvim.txt
+git diff --check
+```
+
+Для WF-01 также прочитан native Neo-tree renderer/command и существующий
+project-session E2E. Через web read-only открыт официальный GitHub README/API
+stevearc/resession.nvim; это review вариантов, plugin не устанавливался.
+Изменены только docs, тесты не запускались. Native scroll/search/yank описаны
+как существующие действия, не как вновь выполненный E2E или проверка clipboard.
+Prefix panel-reference-prefix сохраняет старые байты FIXLOG/commands, staged
+allowlist исключает прежние test-infra drafts. WF-01 runtime не переписывался.

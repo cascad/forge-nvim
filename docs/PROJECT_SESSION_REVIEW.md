@@ -1,5 +1,33 @@
 # Project/session: native baseline
 
+## WF-01/02: текущая граница восстановления — 2026-11-12
+
+Новые пользовательские кейсы требуют точного вида Files и положения/размеров/
+прокрутки панелей. Старый baseline ниже подтверждает files/tabs/cursors и A→B→A,
+но не это состояние. В plugins/editor.lua PersistenceSavePre вызывает очистку
+tool views; config.start.save_current_session отдельно очищает их перед save.
+LoadPost затем заново открывает Explorer. Данные дерева и Edgy resize overrides
+не входят в mksession после закрытия этих окон.
+
+У Edgy есть документированные get_win и Window:resize; Neo-tree предоставляет
+native navigate/reveal и renderer state. Тонкий адаптер этих данных должен
+снимать snapshot **до** очистки, восстанавливать его по готовности native render
+и учитывать оба пути сохранения/все tabpages. Добавление произвольного таймера
+или второго layout owner не решает порядок событий.
+
+Просмотрен альтернативный [resession.nvim](https://github.com/stevearc/resession.nvim):
+его документированный API расширений поддерживает пользовательские данные и
+восстановление специальных окон. Это само по себе не доказывает поддержку
+нашего Neo-tree/Edgy/DAP workspace. Замена текущего backend потребовала бы
+миграции сессий и регресса всех маршрутов; в этом обзоре она не выполнялась.
+Новых dependencies/pins/runtime edits и тестовых прогонов здесь нет.
+
+Следующий шаг WF-01 — отдельно спроектировать сохранение plugin view state
+через штатные события существующих компонентов. До реализации кейс открыт;
+полное восстановление всех панелей не объявлено выполненным.
+
+## Прежний native baseline
+
 2026-11-10. Продолжение IDE-080. Baseline §166 снят на runtime HEAD fad809c и
 закреплён c1beaaa без production edits. После него IDE-095 исправляет restore
 focus (§167); все67 pins и выбранный Windows SDK 0.12.2 прежние.

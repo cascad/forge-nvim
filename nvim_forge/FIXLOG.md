@@ -10812,3 +10812,40 @@ Explorer, но не точное раскрытие/прокрутку дере�
 **Файлы.** plugins/dap.lua, rust-language E2E, rust-target-choice4 fixture files,
 select-ambiguous-rust-targets, RUST_WORKFLOW/LANGUAGE_MATRIX/IDE_ROADMAP,
 HISTORY/AGENT_COMMANDS. Старые e2e-catalog/POSIX drafts и pins/SDK прежние.
+
+
+## 201. Референс панелей localvox и навигация по готовому выводу
+
+**Проблема.** Владелец уточнил, что localvox-light служит примером управления
+Debug/Tests/Console/Files/Git, и хочет удобно ходить по уже выведенному тексту.
+Предпочтение по визуалу — спокойное оформление Codex.
+
+**Причина.** WF-01..12 описывали действия, но отдельно не закрепляли общий
+внутрипанельный цикл/режим просмотра вывода и конкретный reference.
+
+**Изменение.** В основной план добавлен WF-13: focus/list/tree/actions,
+Esc к ближайшему контексту, чтение/search/select/copy вывода и возврат к вводу.
+Добавлены текущие native команды в PANEL_KEYS; новые bindings не вводились.
+Из localvox записаны фокус/возврат/прокрутка/доступные действия и стиль.
+Актуальный reference D:/rust_repo/localvox-light8900c58: README, terminal-
+workspace, app/input/navigation/paging, render и PNG примера. Репо только читался.
+Старая копия F:/claude_code/localvox-light42db779 использовалась только для
+сравнения даты/структуры; код референса взят из D:.
+
+**Проверка.** Read-only source review и diff --check; runtime/tests/pins
+не менялись, E2E не запускались ради документации. Ctrl-u/d и native motions
+сверены с отсутствием overrides; учтены собственные Ctrl-b и Ctrl-f.
+Системный clipboard/Cmd+C и physical GUI не объявлены проверенными.
+
+**Вывод.** Модель панелей теперь отдельный приёмочный кейс, пользователь
+получил конкретные команды просмотра истории. WF-01 пока открыт: текущий
+PersistenceSavePre/config.start закрывают tool windows до mksession, затем
+Explorer создаётся заново. Native Edgy get_win/resize и Neo-tree state есть,
+но сохранение до cleanup/возврат после render/два save routes требуют отдельного
+адаптера. Resession API рассмотрен как вариант, миграция сама по себе не
+доказывает поддержку нашего workspace. Нового слоя/зависимостей не добавлено;
+на этом участке реализационного продвижения пока нет — это явно зафиксировано.
+
+**Файлы.** IDE_ROADMAP/PANEL_KEYS/PROJECT_SESSION_REVIEW, HISTORY/AGENT_COMMANDS.
+Все предыдущие кодовые шаги остаются отдельными commits638c309/104d210;
+старые test-infra drafts сохраняются вне этого commit.
