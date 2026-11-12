@@ -6711,3 +6711,35 @@ SDK/67 pins/6 patched dependencies прежние. Ubuntu/Mac открыты, De
 он сохранён в .tests/focus-command-order.draft.lua до собственного change,
 а unit/trace текущего исправления повторён. Guard debugpy-prefix.json проверяет
 полный исходный byte prefix журналов, старые записи не переписаны.
+
+
+## 102. Normal command order: F7/window/buffer/close перед Logs
+
+Windows2026-11-12, source dc748b7. panels-run.ps1 — прежняя F: environment/
+resource wrapper. Native E2E6 cases; F35 + scheduled barrier подтверждают ввод.
+
+```powershell
+git status --short
+git archive --format=zip --output=.tests/focus-source-dc748b7.zip dc748b7 nvim_forge
+if (-not (Test-Path .tests/focus-baseline)) { Expand-Archive -LiteralPath .tests/focus-source-dc748b7.zip -DestinationPath .tests/focus-baseline }
+& .tests/panels-run.ps1 -Log focus-final-source -Source F:/repo/forge-nvim/.tests/focus-baseline/nvim_forge -ExpectFailure -Files @('tests/e2e/focus-command-order.test.lua')
+& .tests/panels-run.ps1 -Log focus-final-target -Files @('tests/e2e/focus-command-order.test.lua')
+& .tests/panels-run.ps1 -Log focus-regression -Files @('tests/e2e/editor.test.lua','tests/e2e/buffers.test.lua','tests/e2e/terminal-escape.test.lua','tests/e2e/tool-panels.test.lua','tests/e2e/file-explorer.test.lua','tests/e2e/diffview-close.test.lua','tests/e2e/git-conflicts.test.lua','tests/e2e/code-focus.test.lua','tests/e2e/debug-focus-order.test.lua','tests/e2e/debugpy-exit.test.lua')
+python -B .tests/focus-evidence.py
+& .tools/neovim/windows-x64/bin/nvim.exe -l tests/run.lua unit trace
+npx.cmd --yes @fission-ai/openspec@1.13.2 validate --all --strict --no-interactive
+python -B .tests/focus-append.py
+git diff --check
+git diff --cached --check
+git commit -m "fix(keys): preserve normal-mode command order"
+git status --short
+```
+
+Source4 RED/2 controls → target6 PASS,57 regression PASS =63 target checks.
+Audit54 profiles: config/test SHA, root0/signal0/APIerrors[]/no root hard kill,
+empty scopes, removed runtime. Insert text и real terminal PID/channel/history
+сохранены, context close/Save/Discard/merge/rebase проверены. Reader win→buf
+исправлен в новом тесте, final source/target повторены. Unit360+trace11 PASS/
+1 SKIP, strict99. Runtime change3 строки; backend/SDK/pins прежние. Ubuntu/Mac
+открыты; Linux engine отсутствует, Desktop/WSL не запускались. Prefix guard
+focus-prefix.json сохраняет исходные bytes обоих журналов.

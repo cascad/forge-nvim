@@ -21,6 +21,12 @@
 
 ## Запуск на целевых машинах и внутри VM
 
+IDE-PANEL-22 / IDE-112: `nvim -l tests/e2e/focus-command-order.test.lua`.
+6 native cases: normal F7/F6/cycle/close → Logs и сохранение последнего
+выбора, insert text, настоящий terminal job/PID/channel/stdout. Source dc748b7
+даёт4 RED/2 controls, target6 PASS Windows. Source/test SHA и платформенные
+границы — verification preserve-normal-command-order; нужен готовый editor SDK.
+
 IDE-DAP-6 / IDE-111: `nvim -l tests/e2e/debugpy-exit.test.lua`, готовые Python
 deps. Настоящий установленный debugpy получает invalid CLI option и выходит2;
 проверяются native stderr/exit log, WARN, общая IDE Logs и edit/save после

@@ -10253,3 +10253,45 @@ Ubuntu engine недоступен, Mac/physical keys не проверены; s
 **Файлы.** plugins/dap.lua, debugpy-exit E2E/registry, OpenSpec
 remove-obsolete-debugpy-exit-filter, PROBLEMS/roadmap/E2E README/HISTORY/commands.
 Journals raw append-only, guard debugpy-prefix.json.
+
+
+## 190. Normal-команды сохраняют порядок и контекст
+
+Спека: IDE-PANEL-22 (ADDED).
+
+**Проблема.** IDE-112: F7 → Space w i открывал Logs, затем курсор возвращался
+в code. Обнаружено при IDE-111, отдельно воспроизведено без DAP. Та же причина
+меняла порядок window/buffer cycle; deferred close закрывал уже открытый Logs
+вместо исходного сохранённого файла.
+
+**Причина.** after_normal_mode всегда выполнял action через vim.schedule,
+даже если режим уже normal. Callback позже читал новый current context.
+
+**Изменение.** Early branch normal вызывает fn сразу и возвращает nil.
+Stopinsert/feedkeys/schedule для других режимов прежние. В существующий helper
+добавлены3 строки, включая2 строки комментария; новых managers/state/timers нет.
+Алгоритмы buffers, panel ownership, DAP/SDK/deps не менялись.
+
+**Проверка/e2e.** Permanent focus-command-order: source dc748b7 —4 RED/2
+controls, target6 PASS. Реальные F7/F6/cycle/close → Logs сохраняют последнюю
+команду и применяют file operation к исходному context. Insert text и настоящий
+terminal job/PID/channel/stdout сохранены.57 прежних checks/10 suites PASS:
+editor10, buffers8, terminal escape6, Terminal/Trouble9, Files7, Diffview7,
+merge/rebase4, code focus3, late DAP focus2, actual debugpy error1.
+Итого63 различных Windows target checks. Unit360+trace11 PASS, trace1 SKIP;
+strict99 PASS. Начальный reader нового test ошибочно принимал win ID за buf ID;
+исправлен через win_get_buf, оба final source6/target6 повторены.
+
+Audit54 profiles (source6/target6/regression42): saved config/test SHA,
+root0/signal0/APIerrors[], no root hard kill, owned scopes empty, private
+runtime удалены. Только keymaps.lua отличается по runtime SHA. Финальные
+temp/build F:, SDK74AFF15B...C6AD9 прежний. Ubuntu engine недоступен;
+Mac/physical keys не проверены. Selected regression не является global full.
+
+**Вывод.** Normal path больше не создаёт лишнюю очередь и не действует поверх
+нового выбора пользователя. Смена режима остаётся отдельным необходимым шагом;
+интерактивный modified-file dialog защищён прежним buffers E2E.
+
+**Файлы.** config/keymaps.lua, focus-command-order E2E/registry,
+preserve-normal-command-order, PANELS_PLAN/roadmap/PROBLEMS/E2E README,
+HISTORY/commands. Journals raw append-only, guard focus-prefix.json.

@@ -28,6 +28,11 @@ CLI exit2, хотя backend уже отличает client-close. Filter уда�
 stderr/edit recovery и normal shutdown подтверждены Windows19 checks.
 Отдельно зарегистрирован IDE-112: порядок F7 → следующая команда фокуса.
 
+IDE-112 исправлен Windows в §190/preserve-normal-command-order: normal action
+выполняется сразу, следующие focus/cycle/close сохраняют порядок.6 новых и57
+прежних native checks PASS, включая Diffview/merge/rebase и остальные режимы.
+Ubuntu/Mac остаются открытыми; runtime change —3 строки в прежнем helper.
+
 Основные возможности мини-IDE уже реализованы. Сейчас идёт стабилизация,
 а не создание редактора с нуля. Windows/Ubuntu PASS ниже относится к указанным
 сценариям; Mac и физические клавиши WezTerm остаются отдельной проверкой.

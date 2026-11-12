@@ -17,9 +17,10 @@
 2026-11-12: из обычного code buffer последовательность F7 → Space w i
 открывает Logs, но курсор возвращается в код. after_normal_mode в keymaps.lua
 всегда планирует focus через vim.schedule, даже уже в normal mode. Source
-RED без DAP — профиль6809191856600, после подтверждённого ввода и очереди
-callbacks. Черновик E2E сохранён в .tests/focus-command-order.draft.lua до
-отдельного change/регистрации. Обнаружен при IDE-111, отдельный этап исправления.
+RED без DAP — профиль6809191856600. В change preserve-normal-command-order
+добавлен permanent focus-command-order.test.lua/IDE-PANEL-22:4 source RED и
+2 controls, target6 PASS. Windows63 checks PASS (§190); Ubuntu/Mac открыты.
+Normal action теперь выполняется сразу, переходы из других режимов сохранены.
 
 ## IDE-111 — настоящий отказ debugpy пропадает из UI
 

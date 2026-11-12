@@ -63,6 +63,9 @@ local function close_current_buffer() buffers.close() end
 
 local function after_normal_mode(fn)
     local mode = vim.api.nvim_get_mode().mode
+    -- spec: IDE-PANEL-22. В normal нет перехода: сохраняем порядок команд
+    -- и исходный context, не выполняем action поверх следующего выбора панели.
+    if mode == "n" then fn(); return end
 
     if mode:sub(1, 1) == "t" then
         vim.api.nvim_feedkeys(tc("<C-\\><C-n>"), "n", false)

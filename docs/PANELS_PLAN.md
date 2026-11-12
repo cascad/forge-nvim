@@ -189,6 +189,11 @@ ide.find_main_window()    -- nvim_win_id of main; nil если только tool
 
 ### 3.4 Инварианты
 
+IDE-PANEL-22: в normal mode команды focus/window cycle/buffer cycle/close
+выполняются в порядке ввода. Предыдущий F7 или close не отменяет следующий
+явный выбор панели. Переход из insert/terminal сохраняет прежний normalizer;
+modified-file confirmation остаётся интерактивным действием.
+
 IDE-PANEL-21: явные переходы учитывают также панели, открытые штатными
 командами backend. Show принимает уже видимый target без пересоздания и
 закрывает остальных в том же слоте; hide(id) закрывает только этот компонент,
