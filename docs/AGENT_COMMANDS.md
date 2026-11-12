@@ -7667,3 +7667,32 @@ working registry с удалением только новой row; index regist
 Exact allowlist staging, diff --check, strict validate; SDK/lock не меняются.
 После самостоятельного commit следующий продуктовый шаг — workspace gopls;
 тестовая инфраструктура/черновики каталога остаются отложенными, push нет.
+
+
+## 119. Go.work LSP: gd/back/gi type+method/gr/Enter через готовый gopls
+
+F:/repo/forge-nvim, PowerShell login=false. OpenSpec propose/apply продолжены
+без паузы по явному поручению владельца: context root nearest F:/repo/forge-nvim,
+list --specs прочитан, test-only skip_specs:true, proposal/design/tasks/apply
+ready. Context files прочитаны. Runtime/backends/SDK/pins не менялись.
+
+```powershell
+$env:TEMP='F:/repo/forge-nvim/.tests/tmp'
+$env:TMP=$env:TEMP; $env:TMPDIR=$env:TEMP
+$env:NVIM_LOG_FILE="$env:TEMP/go-workspace-language.log"
+$env:npm_config_cache='F:/forge-nvim-tmp/npm-cache'
+$env:PYTHONIOENCODING='utf-8'
+$env:GOTOOLCHAIN='local'; $env:GOMAXPROCS='2'; $env:GOFLAGS='-p=2'
+& ./.tools/neovim/windows-x64/bin/nvim.exe -l tests/e2e/go-workspace-language.test.lua > .tests/go-workspace-language-windows/run.txt 2>&1
+docker compose -f tests/containers/compose.yaml run --rm --no-deps --entrypoint nvim -e GOMAXPROCS=2 -e GOFLAGS=-p=2 -e GOTOOLCHAIN=local ubuntu -l tests/e2e/go-workspace-language.test.lua > .tests/go-workspace-language-ubuntu/run.txt 2>&1
+npx.cmd --yes @fission-ai/openspec@1.13.2 validate verify-go-workspace-language --type change --strict --no-interactive
+```
+
+По одному запуску на ОС:1 PASS Windows/1 PASS Ubuntu, без повторов. rg --files/
+rg/Get-Content читают mappings/native existing Go language tests и fixture.
+Python -B - читает reports/targets/LspRequest/shutdown, сравнивает captured
+runtime/test bytes; .tests/go-workspace-language-audit.json. Никаких подмен LSP
+ответов и mock процессов. Baseline .tests/go-workspace-language-prefix.json:
+raw journal prefixes,5 frozen drafts, working registry minus new row.
+Partial registry index из HEAD + только Go.work language row; точный allowlist,
+diff --check/strict/SDK SHA. Самостоятельный commit, push не выполняется.

@@ -11145,3 +11145,42 @@ fallback на публичной границе. Цена per-file suite — б�
 Go.work Tests E2E/registry row, change, GO_TOOLS/LANGUAGE_MATRIX/FEATURE_REVIEW/
 IDE_ROADMAP/HISTORY/commands. Прежние journal bytes и frozen drafts сохранены;
 в index registry попадает только новая строка поверх HEAD. Push не выполняется.
+
+
+### 208. Go workspace: переходы к определениям и реализациям
+
+**Связь:** WF-10, очередь3; change `verify-go-workspace-language`.
+**Статус:** конкретный native Go.work navigation case проверен Windows/Ubuntu;
+Mac/physical и весь mixed проект не проверены. Test-only skip_specs:true.
+
+**Проблема.** §206–207 подтверждают debug/Tests нескольких модулей, но ещё не
+переходы implementations между ними. Наличие mappings/server не доказательство
+того, куда они ведут и сохраняется ли корень проекта.
+
+**Причина.** Пробел acceptance, runtime дефект не воспроизведён. Готовые gopls
+и native gd/gi/gr уже способны обслуживать общий go.work без Forge root glue.
+
+**Изменение.** Добавлены app/shared navigation fixtures: interface Provider,
+Counter и реальный ForgeValue. Native E2E запускает gd из app/main.go до открытия
+shared, возвращается Ctrl-o, делает gi типа и gi метода из app/navigation.go,
+вызывает gr в shared и выбирает app reference через native quickfix/Enter.
+LspRequest events наблюдаются без подмены handler/response/locations.
+
+**Проверка/e2e.** По одному запуску Windows1 PASS/Ubuntu1 PASS. Profiles
+23312768645600/14980027664075, пять target snapshots на ОС. Actual gopls cmd,
+один client/root во всех buffers, cwd project, definition Answer/Counter type/
+Counter.ForgeValue и app/main.go:11 reference подтверждены. Два завершённых
+textDocument/implementation, definition/references; installs0. Source copies
+совпали, exit0/signal0/APIerrors[]/scope ok. Logs .tests/go-workspace-language-
+{windows,ubuntu}, сводка go-workspace-language-audit.json. Готовый Docker image
+без build/network/start/stop/repair. Runtime/SDK/pins прежние; Mac/physical
+и mixed project отдельно. Новый Ubuntu PASS не отменяет IDE-117 иных наборов.
+
+**Вывод.** Для этого workspace LSP не нужен новый resolver/backend. Сохраняем
+штатный gopls и проверенный пользовательский путь к реализации. Следующий
+конкретный шаг — согласованность языковых корней/запуска в смешанном repo.
+
+**Файлы.** Два navigation fixtures, go-workspace-language E2E/registry row,
+change artifacts, GO_TOOLS/LANGUAGE_MATRIX/IDE_ROADMAP/HISTORY/commands.
+Append-only/frozen drafts/partial registry allowlist проверяются перед commit,
+SDK/lock не меняются, push не выполняется.

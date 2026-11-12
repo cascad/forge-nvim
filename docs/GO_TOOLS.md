@@ -46,9 +46,20 @@ breakpoint, `F5` → `Current Go package` запускает пакет теку
 В native E2E значение42 стало43, Delve подтвердил оба на паузе, stdout/stderr
 появились до breakpoint и сохранились после exit, повтор очистил старый вывод.
 Windows/Ubuntu по1 PASS, runtime/SDK/plugins не менялись (§206).
-Это проверка debug/edit-repeat; workspace LSP и смешанный проект целиком
-ещё остаются в очереди. Mac и физические клавиши не проверены.
+Это проверка debug/edit-repeat; смешанный проект целиком ещё остаётся
+в очереди. Mac и физические клавиши не проверены.
 Команда: `nvim -l tests/e2e/go-workspace.test.lua` с готовыми Editor/Go/Delve SDK.
+
+### Навигация между модулями
+
+Обычные `gd`/`F12` идут к объявлению, `gi`/`Ctrl+F12` — к реализации,
+`gr`/`Shift+F12` — к ссылкам. `Ctrl+o` возвращает назад; в списке ссылок
+выберите строку и нажмите Enter. Готовый gopls обнаруживает общий go.work.
+WF-10/§208: Windows1 PASS/Ubuntu1 PASS — переход app→shared до открытия
+shared, возврат, implementation типа/метода и reference обратно в app.
+Во всех переходах один native client/root, cwd проекта сохранён, installs0.
+Runtime/pins не менялись. Mac/physical и mixed-language проект отдельно.
+Команда: `nvim -l tests/e2e/go-workspace-language.test.lua` с готовым LSP SDK.
 
 ### Тесты всех модулей
 

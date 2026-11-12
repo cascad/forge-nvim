@@ -67,13 +67,19 @@ LSP/Tests и Mac этим сценарием не проверены; [кома�
 nearest/file/Run all из workspace root, fail→edit→3 passed и настоящий Output.
 Исправлен бесконечный поиск go.mod в backend через public adapter nil fallback;
 native commands последовательны, SDK/pins прежние. Windows12 PASS/Ubuntu12 PASS
-в selected Go.work Tests+test-runner+work-panels. Workspace LSP/Mac ещё открыты.
+в selected Go.work Tests+test-runner+work-panels. Mac ещё открыт.
+
+2026-11-12, Go.work navigation (§208): Windows1 PASS/Ubuntu1 PASS через
+настоящий gopls — gd/назад/gi типа/gi метода/gr/Enter между app/shared.
+Один root/client, cwd не меняется, installs0. Runtime/SDK/pins прежние.
+Это закрывает конкретный Go.work navigation case WF-10; Mac/physical и весь
+mixed project ещё не проверены.
 
 1. Go language Windows/Ubuntu проверен после явного build образа.
    Windows/Ubuntu: по 6 UI PASS — настоящий gopls, completion, definition/references,
    rename, diagnostics, внешний/LSP format, save/health и отсутствие tools.
    Исправлен IDE-050: trim блокировал fallback. Module path содержит пробелы/
-   Unicode; Go.work debug/Tests проверены §206–207, workspace LSP и Mac отдельно.
+   Unicode; Go.work debug/Tests/navigation проверены §206–208, Mac отдельно.
    Явная подготовка фиксирует versions/sources, обычный старт ничего не ставит.
 2. JS/Node.js: Windows/Ubuntu минимальный workflow реализован и проверен 8 UI E2E.
    [Команды и явная подготовка](NODE_WORKFLOW.md), change add-node-language-workflow.
