@@ -17,7 +17,7 @@ local function start()
   local tools = vim.env.FORGE_E2E_DAP_TOOLS or root .. '/.tests/dap-tools'
   local path = vim.env.PATH
   if vim.fn.isdirectory(tools .. '/go/bin') == 1 then path = tools .. '/bin' .. sep .. tools .. '/go/bin' .. sep .. path end
-  e = require('editor').start(root, { timeout = 240000,
+  e = require('editor').start(root, { timeout = 240000, capture_ui = true,
     env = { PATH = path, GOTOOLCHAIN = 'local', GOENV = 'off', GOPROXY = 'off',
       GOCACHE = go_cache } })
   assert(vim.uv.fs_copyfile(root..'/tests/e2e/debug-panels.test.lua',e.dir..'/debug-panels.test.lua'))
@@ -192,6 +192,92 @@ check('IDE-PANEL-18 Locals zoom сохраняет floating при открыт�
     vim.api.nvim_win_get_width(0)==o.width and vim.api.nvim_win_get_height(0)==o.height]],{original}) end)
   T.eq(e:lua('return vim.api.nvim_win_is_valid(...)',{overlay}),false)
   assert(text('dap-repl'):find('PANEL_BEFORE',1,true));paused()
+end)
+
+check('IDE-PANEL-24 native RGB рамки Locals/Output/Files/Logs и возврат', function()
+  local capture = assert(e.rpc.ui_capture)
+  e:lua([[_G.zoom_style_keys=0;vim.keymap.set('n','<F35>',function() _G.zoom_style_keys=_G.zoom_style_keys+1 end)]])
+  local function keys(value)
+    local before=e:lua('return _G.zoom_style_keys')
+    e:input(value..'<F35>')
+    e:wait('ввод обработан',function() return e:lua('return _G.zoom_style_keys')>before end)
+  end
+  local function checkpoint(label,win,name,active)
+    e:wait('стиль рамки обновлён',function()
+      return e:lua([[local w,active=...;return vim.wo[w].winbar=='' and
+        vim.wo[w].winhl:find('FloatBorder:'..(active and 'DiagnosticInfo' or 'Comment'),1,true)~=nil]],{win,active})
+    end)
+    local previous=capture.flushes
+    local metadata=e:lua([[local w,name,active=...;vim.cmd('redraw!');return {
+      win=w,name=name,active=active,position=vim.api.nvim_win_get_position(w),
+      width=vim.api.nvim_win_get_width(w),height=vim.api.nvim_win_get_height(w),
+      accent=vim.api.nvim_get_hl(0,{name='DiagnosticInfo',link=false}).fg,
+      dim=vim.api.nvim_get_hl(0,{name='Comment',link=false}).fg}]],{win,name,active})
+    e:wait('native UI flush',function() return capture.flushes>previous end)
+    capture:checkpoint(label,metadata)
+    assert(not capture.error,capture.error)
+    paused()
+  end
+  for _,panel in ipairs({
+    {'locals',' wd','dapui_scopes','Locals'}, {'output',' wc','dap-repl','Output / REPL'},
+    {'files',' we','neo-tree','Files'}, {'logs',' wi','forge-logs','IDE Logs'},
+  }) do
+    keys(' w0');keys(panel[2])
+    e:wait('рабочая панель '..panel[1],function() return e:current_ft()==panel[3] end)
+    local source=e:lua([[return {win=vim.api.nvim_get_current_win(),buf=vim.api.nvim_get_current_buf(),
+      winbar=vim.wo.winbar,winhl=vim.wo.winhl,width=vim.api.nvim_win_get_width(0),height=vim.api.nvim_win_get_height(0)}]])
+    keys(' wz')
+    e:wait('native zoom '..panel[1],function() return e:lua([[return vim.api.nvim_win_get_config(0).relative=='editor']]) end)
+    local overlay=e:lua('return vim.api.nvim_get_current_win()')
+    T.eq(e:lua('return vim.api.nvim_get_current_buf()'),source.buf)
+    checkpoint('zoom-'..panel[1]..'-active',overlay,panel[4],true)
+    keys('?');T.eq(e:current_ft(),'forge-panel-help')
+    checkpoint('zoom-'..panel[1]..'-help',overlay,panel[4],false)
+    keys('q');T.eq(e:lua('return vim.api.nvim_get_current_win()'),overlay)
+    checkpoint('zoom-'..panel[1]..'-refocused',overlay,panel[4],true)
+    local cursor=e:lua('return vim.api.nvim_win_get_cursor(0)')
+    keys(panel[1]=='output' and ' wz' or '<Esc>')
+    e:wait('исходное окно '..panel[1],function() return e:lua('return vim.api.nvim_get_current_win()')==source.win end)
+    T.eq(e:lua('return vim.api.nvim_win_is_valid(...)',{overlay}),false)
+    T.eq(e:lua('return vim.api.nvim_get_current_buf()'),source.buf)
+    T.eq(e:lua('return vim.wo.winbar'),source.winbar)
+    T.eq(e:lua('return vim.wo.winhl'),source.winhl)
+    T.eq(e:lua('return {vim.api.nvim_win_get_width(0),vim.api.nvim_win_get_height(0)}'),{source.width,source.height})
+    T.eq(e:lua('return vim.api.nvim_win_get_cursor(0)'),cursor)
+    paused()
+  end
+  local python=vim.fn.exepath(vim.fn.has('win32')==1 and 'python' or 'python3');assert(python~='')
+  local result=vim.system({python,'-B',root..'/tests/diagnostics/render-ui.py',capture.path,'--output',e.dir..'/zoom-ui'},
+    {text=true,timeout=20000}):wait()
+  T.eq(result.code,0,(result.stdout or '')..(result.stderr or ''))
+  local frames=vim.json.decode(table.concat(vim.fn.readfile(e.dir..'/zoom-ui/frames.json'),'\n'))
+  T.eq(#frames,12)
+  for _,picture in ipairs(frames) do
+    local m=picture.metadata
+    assert(m.accent and m.dim and m.accent~=m.dim)
+    local expected=m.active and m.accent or m.dim
+    local row,col=m.position[1],m.position[2]
+    for _,point in ipairs({{row,col,'╭'},{row,col+m.width+1,'╮'},
+      {row+m.height+1,col,'╰'},{row+m.height+1,col+m.width+1,'╯'},
+      {row+math.floor(m.height/2),col,'│'},{row+math.floor(m.height/2),col+m.width+1,'│'},
+      {row+m.height+1,col+math.floor(m.width/2),'─'}}) do
+      local cell=picture.cells[point[1]+1][point[2]+1]
+      T.eq(cell[1],point[3],picture.label..' native border')
+      T.eq(picture.highlights[tostring(cell[2])].foreground,expected,picture.label..' native RGB')
+    end
+    local title={}
+    for x=col,col+m.width+1 do
+      local cell=picture.cells[row+1][x+1];title[#title+1]=cell[1]
+      if cell[1]~=' ' and cell[1]~='' then T.eq(picture.highlights[tostring(cell[2])].foreground,expected,picture.label..' title RGB') end
+    end
+    title=table.concat(title)
+    assert(title:find(m.name,1,true) and title:find('Space w z',1,true),picture.label..' visible title')
+    T.eq(title:find('[focus]',1,true)~=nil,m.active,picture.label..' visible focus')
+  end
+  -- Следующий сценарий продолжает общую паузу и ожидает открытый Output.
+  keys(' w0');keys(' wc')
+  e:wait('Output возвращён после style-сценария',function() return e:current_ft()=='dap-repl' end)
+  paused()
 end)
 
 check('IDE-PANEL-2 Esc возвращает zoom, q скрывает группу без сиротских окон', function()

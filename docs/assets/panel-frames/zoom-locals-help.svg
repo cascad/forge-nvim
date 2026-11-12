@@ -1,0 +1,1521 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1260" height="810" viewBox="0 0 1260 810" role="img">
+<title>zoom-locals-help</title>
+<g font-family="Cascadia Mono,Consolas,DejaVu Sans Mono,monospace" font-size="15" xml:space="preserve">
+<rect x="0" y="0" width="9" height="18" fill="#1b1b2a"/>
+<rect x="9" y="0" width="45" height="18" fill="#1b1b2a"/>
+<rect x="54" y="0" width="18" height="18" fill="#1b1b2a"/>
+<text x="54" y="14" fill="#00add8"></text>
+<rect x="72" y="0" width="117" height="18" fill="#1b1b2a"/>
+<text x="72" y="14" fill="#9399b2">m</text>
+<text x="81" y="14" fill="#9399b2">a</text>
+<text x="90" y="14" fill="#9399b2">i</text>
+<text x="99" y="14" fill="#9399b2">n</text>
+<text x="108" y="14" fill="#9399b2">.</text>
+<text x="117" y="14" fill="#9399b2">g</text>
+<text x="126" y="14" fill="#9399b2">o</text>
+<rect x="189" y="0" width="1071" height="18" fill="#101019"/>
+<rect x="0" y="18" width="9" height="18" fill="#1e1e2e"/>
+<rect x="9" y="18" width="1242" height="18" fill="#1e1e2e"/>
+<path d="M18,27.0H18.0Q13.5,27.0 13.5,31.5V36" fill="none" stroke="#9399b2" stroke-width="1"/>
+<path d="M18,27.0H27" fill="none" stroke="#9399b2" stroke-width="1"/>
+<path d="M27,27.0H36" fill="none" stroke="#9399b2" stroke-width="1"/>
+<path d="M36,27.0H45" fill="none" stroke="#9399b2" stroke-width="1"/>
+<path d="M45,27.0H54" fill="none" stroke="#9399b2" stroke-width="1"/>
+<path d="M54,27.0H63" fill="none" stroke="#9399b2" stroke-width="1"/>
+<path d="M63,27.0H72" fill="none" stroke="#9399b2" stroke-width="1"/>
+<path d="M72,27.0H81" fill="none" stroke="#9399b2" stroke-width="1"/>
+<path d="M81,27.0H90" fill="none" stroke="#9399b2" stroke-width="1"/>
+<path d="M90,27.0H99" fill="none" stroke="#9399b2" stroke-width="1"/>
+<path d="M99,27.0H108" fill="none" stroke="#9399b2" stroke-width="1"/>
+<path d="M108,27.0H117" fill="none" stroke="#9399b2" stroke-width="1"/>
+<path d="M117,27.0H126" fill="none" stroke="#9399b2" stroke-width="1"/>
+<path d="M126,27.0H135" fill="none" stroke="#9399b2" stroke-width="1"/>
+<path d="M135,27.0H144" fill="none" stroke="#9399b2" stroke-width="1"/>
+<path d="M144,27.0H153" fill="none" stroke="#9399b2" stroke-width="1"/>
+<path d="M153,27.0H162" fill="none" stroke="#9399b2" stroke-width="1"/>
+<path d="M162,27.0H171" fill="none" stroke="#9399b2" stroke-width="1"/>
+<path d="M171,27.0H180" fill="none" stroke="#9399b2" stroke-width="1"/>
+<path d="M180,27.0H189" fill="none" stroke="#9399b2" stroke-width="1"/>
+<path d="M189,27.0H198" fill="none" stroke="#9399b2" stroke-width="1"/>
+<path d="M198,27.0H207" fill="none" stroke="#9399b2" stroke-width="1"/>
+<path d="M207,27.0H216" fill="none" stroke="#9399b2" stroke-width="1"/>
+<path d="M216,27.0H225" fill="none" stroke="#9399b2" stroke-width="1"/>
+<path d="M225,27.0H234" fill="none" stroke="#9399b2" stroke-width="1"/>
+<path d="M234,27.0H243" fill="none" stroke="#9399b2" stroke-width="1"/>
+<path d="M243,27.0H252" fill="none" stroke="#9399b2" stroke-width="1"/>
+<path d="M252,27.0H261" fill="none" stroke="#9399b2" stroke-width="1"/>
+<path d="M261,27.0H270" fill="none" stroke="#9399b2" stroke-width="1"/>
+<path d="M270,27.0H279" fill="none" stroke="#9399b2" stroke-width="1"/>
+<path d="M279,27.0H288" fill="none" stroke="#9399b2" stroke-width="1"/>
+<path d="M288,27.0H297" fill="none" stroke="#9399b2" stroke-width="1"/>
+<path d="M297,27.0H306" fill="none" stroke="#9399b2" stroke-width="1"/>
+<path d="M306,27.0H315" fill="none" stroke="#9399b2" stroke-width="1"/>
+<path d="M315,27.0H324" fill="none" stroke="#9399b2" stroke-width="1"/>
+<path d="M324,27.0H333" fill="none" stroke="#9399b2" stroke-width="1"/>
+<path d="M333,27.0H342" fill="none" stroke="#9399b2" stroke-width="1"/>
+<path d="M342,27.0H351" fill="none" stroke="#9399b2" stroke-width="1"/>
+<path d="M351,27.0H360" fill="none" stroke="#9399b2" stroke-width="1"/>
+<path d="M360,27.0H369" fill="none" stroke="#9399b2" stroke-width="1"/>
+<path d="M369,27.0H378" fill="none" stroke="#9399b2" stroke-width="1"/>
+<path d="M378,27.0H387" fill="none" stroke="#9399b2" stroke-width="1"/>
+<path d="M387,27.0H396" fill="none" stroke="#9399b2" stroke-width="1"/>
+<path d="M396,27.0H405" fill="none" stroke="#9399b2" stroke-width="1"/>
+<path d="M405,27.0H414" fill="none" stroke="#9399b2" stroke-width="1"/>
+<path d="M414,27.0H423" fill="none" stroke="#9399b2" stroke-width="1"/>
+<path d="M423,27.0H432" fill="none" stroke="#9399b2" stroke-width="1"/>
+<path d="M432,27.0H441" fill="none" stroke="#9399b2" stroke-width="1"/>
+<path d="M441,27.0H450" fill="none" stroke="#9399b2" stroke-width="1"/>
+<path d="M450,27.0H459" fill="none" stroke="#9399b2" stroke-width="1"/>
+<path d="M459,27.0H468" fill="none" stroke="#9399b2" stroke-width="1"/>
+<path d="M468,27.0H477" fill="none" stroke="#9399b2" stroke-width="1"/>
+<path d="M477,27.0H486" fill="none" stroke="#9399b2" stroke-width="1"/>
+<path d="M486,27.0H495" fill="none" stroke="#9399b2" stroke-width="1"/>
+<text x="504" y="32" fill="#9399b2" font-style="italic">L</text>
+<text x="513" y="32" fill="#9399b2" font-style="italic">o</text>
+<text x="522" y="32" fill="#9399b2" font-style="italic">c</text>
+<text x="531" y="32" fill="#9399b2" font-style="italic">a</text>
+<text x="540" y="32" fill="#9399b2" font-style="italic">l</text>
+<text x="549" y="32" fill="#9399b2" font-style="italic">s</text>
+<text x="567" y="32" fill="#9399b2" font-style="italic">|</text>
+<text x="585" y="32" fill="#9399b2" font-style="italic">S</text>
+<text x="594" y="32" fill="#9399b2" font-style="italic">p</text>
+<text x="603" y="32" fill="#9399b2" font-style="italic">a</text>
+<text x="612" y="32" fill="#9399b2" font-style="italic">c</text>
+<text x="621" y="32" fill="#9399b2" font-style="italic">e</text>
+<text x="639" y="32" fill="#9399b2" font-style="italic">w</text>
+<text x="657" y="32" fill="#9399b2" font-style="italic">z</text>
+<text x="666" y="32" fill="#9399b2" font-style="italic">:</text>
+<text x="684" y="32" fill="#9399b2" font-style="italic">в</text>
+<text x="693" y="32" fill="#9399b2" font-style="italic">е</text>
+<text x="702" y="32" fill="#9399b2" font-style="italic">р</text>
+<text x="711" y="32" fill="#9399b2" font-style="italic">н</text>
+<text x="720" y="32" fill="#9399b2" font-style="italic">у</text>
+<text x="729" y="32" fill="#9399b2" font-style="italic">т</text>
+<text x="738" y="32" fill="#9399b2" font-style="italic">ь</text>
+<path d="M756,27.0H765" fill="none" stroke="#9399b2" stroke-width="1"/>
+<path d="M765,27.0H774" fill="none" stroke="#9399b2" stroke-width="1"/>
+<path d="M774,27.0H783" fill="none" stroke="#9399b2" stroke-width="1"/>
+<path d="M783,27.0H792" fill="none" stroke="#9399b2" stroke-width="1"/>
+<path d="M792,27.0H801" fill="none" stroke="#9399b2" stroke-width="1"/>
+<path d="M801,27.0H810" fill="none" stroke="#9399b2" stroke-width="1"/>
+<path d="M810,27.0H819" fill="none" stroke="#9399b2" stroke-width="1"/>
+<path d="M819,27.0H828" fill="none" stroke="#9399b2" stroke-width="1"/>
+<path d="M828,27.0H837" fill="none" stroke="#9399b2" stroke-width="1"/>
+<path d="M837,27.0H846" fill="none" stroke="#9399b2" stroke-width="1"/>
+<path d="M846,27.0H855" fill="none" stroke="#9399b2" stroke-width="1"/>
+<path d="M855,27.0H864" fill="none" stroke="#9399b2" stroke-width="1"/>
+<path d="M864,27.0H873" fill="none" stroke="#9399b2" stroke-width="1"/>
+<path d="M873,27.0H882" fill="none" stroke="#9399b2" stroke-width="1"/>
+<path d="M882,27.0H891" fill="none" stroke="#9399b2" stroke-width="1"/>
+<path d="M891,27.0H900" fill="none" stroke="#9399b2" stroke-width="1"/>
+<path d="M900,27.0H909" fill="none" stroke="#9399b2" stroke-width="1"/>
+<path d="M909,27.0H918" fill="none" stroke="#9399b2" stroke-width="1"/>
+<path d="M918,27.0H927" fill="none" stroke="#9399b2" stroke-width="1"/>
+<path d="M927,27.0H936" fill="none" stroke="#9399b2" stroke-width="1"/>
+<path d="M936,27.0H945" fill="none" stroke="#9399b2" stroke-width="1"/>
+<path d="M945,27.0H954" fill="none" stroke="#9399b2" stroke-width="1"/>
+<path d="M954,27.0H963" fill="none" stroke="#9399b2" stroke-width="1"/>
+<path d="M963,27.0H972" fill="none" stroke="#9399b2" stroke-width="1"/>
+<path d="M972,27.0H981" fill="none" stroke="#9399b2" stroke-width="1"/>
+<path d="M981,27.0H990" fill="none" stroke="#9399b2" stroke-width="1"/>
+<path d="M990,27.0H999" fill="none" stroke="#9399b2" stroke-width="1"/>
+<path d="M999,27.0H1008" fill="none" stroke="#9399b2" stroke-width="1"/>
+<path d="M1008,27.0H1017" fill="none" stroke="#9399b2" stroke-width="1"/>
+<path d="M1017,27.0H1026" fill="none" stroke="#9399b2" stroke-width="1"/>
+<path d="M1026,27.0H1035" fill="none" stroke="#9399b2" stroke-width="1"/>
+<path d="M1035,27.0H1044" fill="none" stroke="#9399b2" stroke-width="1"/>
+<path d="M1044,27.0H1053" fill="none" stroke="#9399b2" stroke-width="1"/>
+<path d="M1053,27.0H1062" fill="none" stroke="#9399b2" stroke-width="1"/>
+<path d="M1062,27.0H1071" fill="none" stroke="#9399b2" stroke-width="1"/>
+<path d="M1071,27.0H1080" fill="none" stroke="#9399b2" stroke-width="1"/>
+<path d="M1080,27.0H1089" fill="none" stroke="#9399b2" stroke-width="1"/>
+<path d="M1089,27.0H1098" fill="none" stroke="#9399b2" stroke-width="1"/>
+<path d="M1098,27.0H1107" fill="none" stroke="#9399b2" stroke-width="1"/>
+<path d="M1107,27.0H1116" fill="none" stroke="#9399b2" stroke-width="1"/>
+<path d="M1116,27.0H1125" fill="none" stroke="#9399b2" stroke-width="1"/>
+<path d="M1125,27.0H1134" fill="none" stroke="#9399b2" stroke-width="1"/>
+<path d="M1134,27.0H1143" fill="none" stroke="#9399b2" stroke-width="1"/>
+<path d="M1143,27.0H1152" fill="none" stroke="#9399b2" stroke-width="1"/>
+<path d="M1152,27.0H1161" fill="none" stroke="#9399b2" stroke-width="1"/>
+<path d="M1161,27.0H1170" fill="none" stroke="#9399b2" stroke-width="1"/>
+<path d="M1170,27.0H1179" fill="none" stroke="#9399b2" stroke-width="1"/>
+<path d="M1179,27.0H1188" fill="none" stroke="#9399b2" stroke-width="1"/>
+<path d="M1188,27.0H1197" fill="none" stroke="#9399b2" stroke-width="1"/>
+<path d="M1197,27.0H1206" fill="none" stroke="#9399b2" stroke-width="1"/>
+<path d="M1206,27.0H1215" fill="none" stroke="#9399b2" stroke-width="1"/>
+<path d="M1215,27.0H1224" fill="none" stroke="#9399b2" stroke-width="1"/>
+<path d="M1224,27.0H1233" fill="none" stroke="#9399b2" stroke-width="1"/>
+<path d="M1233,27.0H1242" fill="none" stroke="#9399b2" stroke-width="1"/>
+<path d="M1242,27.0H1242.0Q1246.5,27.0 1246.5,31.5V36" fill="none" stroke="#9399b2" stroke-width="1"/>
+<rect x="1251" y="18" width="9" height="18" fill="#1e1e2e"/>
+<rect x="0" y="36" width="9" height="18" fill="#181825"/>
+<text x="0" y="50" fill="#89dceb">v</text>
+<rect x="9" y="36" width="9" height="18" fill="#1e1e2e"/>
+<path d="M13.5,36V54" fill="none" stroke="#9399b2" stroke-width="1"/>
+<rect x="18" y="36" width="9" height="18" fill="#181825"/>
+<text x="18" y="50" fill="#89dceb">v</text>
+<rect x="27" y="36" width="9" height="18" fill="#181825"/>
+<rect x="36" y="36" width="54" height="18" fill="#181825"/>
+<text x="36" y="50" fill="#89dceb">L</text>
+<text x="45" y="50" fill="#89dceb">o</text>
+<text x="54" y="50" fill="#89dceb">c</text>
+<text x="63" y="50" fill="#89dceb">a</text>
+<text x="72" y="50" fill="#89dceb">l</text>
+<text x="81" y="50" fill="#89dceb">s</text>
+<rect x="90" y="36" width="1152" height="18" fill="#181825"/>
+<text x="90" y="50" fill="#cdd6f4">:</text>
+<rect x="1242" y="36" width="9" height="18" fill="#1e1e2e"/>
+<path d="M1246.5,36V54" fill="none" stroke="#9399b2" stroke-width="1"/>
+<rect x="1251" y="36" width="9" height="18" fill="#1e1e2e"/>
+<rect x="0" y="54" width="9" height="18" fill="#313244"/>
+<rect x="9" y="54" width="9" height="18" fill="#1e1e2e"/>
+<path d="M13.5,54V72" fill="none" stroke="#9399b2" stroke-width="1"/>
+<rect x="18" y="54" width="9" height="18" fill="#313244"/>
+<rect x="27" y="54" width="9" height="18" fill="#313244"/>
+<text x="27" y="68" fill="#89dceb">v</text>
+<rect x="36" y="54" width="54" height="18" fill="#313244"/>
+<text x="45" y="68" fill="#cdd6f4">i</text>
+<text x="54" y="68" fill="#cdd6f4">t</text>
+<text x="63" y="68" fill="#cdd6f4">e</text>
+<text x="72" y="68" fill="#cdd6f4">m</text>
+<rect x="90" y="54" width="99" height="18" fill="#313244"/>
+<text x="90" y="68" fill="#cba6f7">m</text>
+<text x="99" y="68" fill="#cba6f7">a</text>
+<text x="108" y="68" fill="#cba6f7">i</text>
+<text x="117" y="68" fill="#cba6f7">n</text>
+<text x="126" y="68" fill="#cba6f7">.</text>
+<text x="135" y="68" fill="#cba6f7">s</text>
+<text x="144" y="68" fill="#cba6f7">a</text>
+<text x="153" y="68" fill="#cba6f7">m</text>
+<text x="162" y="68" fill="#cba6f7">p</text>
+<text x="171" y="68" fill="#cba6f7">l</text>
+<text x="180" y="68" fill="#cba6f7">e</text>
+<rect x="189" y="54" width="27" height="18" fill="#313244"/>
+<text x="198" y="68" fill="#cdd6f4">=</text>
+<rect x="216" y="54" width="207" height="18" fill="#313244"/>
+<text x="216" y="68" fill="#89dceb">m</text>
+<text x="225" y="68" fill="#89dceb">a</text>
+<text x="234" y="68" fill="#89dceb">i</text>
+<text x="243" y="68" fill="#89dceb">n</text>
+<text x="252" y="68" fill="#89dceb">.</text>
+<text x="261" y="68" fill="#89dceb">s</text>
+<text x="270" y="68" fill="#89dceb">a</text>
+<text x="279" y="68" fill="#89dceb">m</text>
+<text x="288" y="68" fill="#89dceb">p</text>
+<text x="297" y="68" fill="#89dceb">l</text>
+<text x="306" y="68" fill="#89dceb">e</text>
+<text x="324" y="68" fill="#89dceb">{</text>
+<text x="333" y="68" fill="#89dceb">V</text>
+<text x="342" y="68" fill="#89dceb">a</text>
+<text x="351" y="68" fill="#89dceb">l</text>
+<text x="360" y="68" fill="#89dceb">u</text>
+<text x="369" y="68" fill="#89dceb">e</text>
+<text x="378" y="68" fill="#89dceb">:</text>
+<text x="396" y="68" fill="#89dceb">4</text>
+<text x="405" y="68" fill="#89dceb">2</text>
+<text x="414" y="68" fill="#89dceb">}</text>
+<rect x="423" y="54" width="819" height="18" fill="#313244"/>
+<rect x="1242" y="54" width="9" height="18" fill="#1e1e2e"/>
+<path d="M1246.5,54V72" fill="none" stroke="#9399b2" stroke-width="1"/>
+<rect x="1251" y="54" width="9" height="18" fill="#1e1e2e"/>
+<rect x="0" y="72" width="9" height="18" fill="#181825"/>
+<rect x="9" y="72" width="9" height="18" fill="#1e1e2e"/>
+<path d="M13.5,72V90" fill="none" stroke="#9399b2" stroke-width="1"/>
+<rect x="18" y="72" width="18" height="18" fill="#181825"/>
+<rect x="36" y="72" width="9" height="18" fill="#181825"/>
+<rect x="45" y="72" width="63" height="18" fill="#181825"/>
+<text x="54" y="86" fill="#cdd6f4">V</text>
+<text x="63" y="86" fill="#cdd6f4">a</text>
+<text x="72" y="86" fill="#cdd6f4">l</text>
+<text x="81" y="86" fill="#cdd6f4">u</text>
+<text x="90" y="86" fill="#cdd6f4">e</text>
+<rect x="108" y="72" width="27" height="18" fill="#181825"/>
+<text x="108" y="86" fill="#cba6f7">i</text>
+<text x="117" y="86" fill="#cba6f7">n</text>
+<text x="126" y="86" fill="#cba6f7">t</text>
+<rect x="135" y="72" width="27" height="18" fill="#181825"/>
+<text x="144" y="86" fill="#cdd6f4">=</text>
+<rect x="162" y="72" width="18" height="18" fill="#181825"/>
+<text x="162" y="86" fill="#89dceb">4</text>
+<text x="171" y="86" fill="#89dceb">2</text>
+<rect x="180" y="72" width="1062" height="18" fill="#181825"/>
+<rect x="1242" y="72" width="9" height="18" fill="#1e1e2e"/>
+<path d="M1246.5,72V90" fill="none" stroke="#9399b2" stroke-width="1"/>
+<rect x="1251" y="72" width="9" height="18" fill="#1e1e2e"/>
+<rect x="0" y="90" width="9" height="18" fill="#181825"/>
+<rect x="9" y="90" width="9" height="18" fill="#1e1e2e"/>
+<path d="M13.5,90V108" fill="none" stroke="#9399b2" stroke-width="1"/>
+<rect x="18" y="90" width="1224" height="18" fill="#181825"/>
+<rect x="1242" y="90" width="9" height="18" fill="#1e1e2e"/>
+<path d="M1246.5,90V108" fill="none" stroke="#9399b2" stroke-width="1"/>
+<rect x="1251" y="90" width="9" height="18" fill="#1e1e2e"/>
+<rect x="0" y="108" width="9" height="18" fill="#181825"/>
+<rect x="9" y="108" width="9" height="18" fill="#1e1e2e"/>
+<path d="M13.5,108V126" fill="none" stroke="#9399b2" stroke-width="1"/>
+<rect x="18" y="108" width="1224" height="18" fill="#181825"/>
+<rect x="1242" y="108" width="9" height="18" fill="#1e1e2e"/>
+<path d="M1246.5,108V126" fill="none" stroke="#9399b2" stroke-width="1"/>
+<rect x="1251" y="108" width="9" height="18" fill="#1e1e2e"/>
+<rect x="0" y="126" width="9" height="18" fill="#181825"/>
+<rect x="9" y="126" width="9" height="18" fill="#1e1e2e"/>
+<path d="M13.5,126V144" fill="none" stroke="#9399b2" stroke-width="1"/>
+<rect x="18" y="126" width="1224" height="18" fill="#181825"/>
+<rect x="1242" y="126" width="9" height="18" fill="#1e1e2e"/>
+<path d="M1246.5,126V144" fill="none" stroke="#9399b2" stroke-width="1"/>
+<rect x="1251" y="126" width="9" height="18" fill="#1e1e2e"/>
+<rect x="0" y="144" width="9" height="18" fill="#181825"/>
+<rect x="9" y="144" width="9" height="18" fill="#1e1e2e"/>
+<path d="M13.5,144V162" fill="none" stroke="#9399b2" stroke-width="1"/>
+<rect x="18" y="144" width="1224" height="18" fill="#181825"/>
+<rect x="1242" y="144" width="9" height="18" fill="#1e1e2e"/>
+<path d="M1246.5,144V162" fill="none" stroke="#9399b2" stroke-width="1"/>
+<rect x="1251" y="144" width="9" height="18" fill="#1e1e2e"/>
+<rect x="0" y="162" width="9" height="18" fill="#181825"/>
+<rect x="9" y="162" width="9" height="18" fill="#1e1e2e"/>
+<path d="M13.5,162V180" fill="none" stroke="#9399b2" stroke-width="1"/>
+<rect x="18" y="162" width="288" height="18" fill="#181825"/>
+<rect x="306" y="162" width="9" height="18" fill="#1e1e2e"/>
+<path d="M315,171.0H315.0Q310.5,171.0 310.5,175.5V180" fill="none" stroke="#89dceb" stroke-width="1"/>
+<rect x="315" y="162" width="180" height="18" fill="#181825"/>
+<text x="324" y="176" fill="#a6adc8">У</text>
+<text x="333" y="176" fill="#a6adc8">п</text>
+<text x="342" y="176" fill="#a6adc8">р</text>
+<text x="351" y="176" fill="#a6adc8">а</text>
+<text x="360" y="176" fill="#a6adc8">в</text>
+<text x="369" y="176" fill="#a6adc8">л</text>
+<text x="378" y="176" fill="#a6adc8">е</text>
+<text x="387" y="176" fill="#a6adc8">н</text>
+<text x="396" y="176" fill="#a6adc8">и</text>
+<text x="405" y="176" fill="#a6adc8">е</text>
+<text x="423" y="176" fill="#a6adc8">п</text>
+<text x="432" y="176" fill="#a6adc8">а</text>
+<text x="441" y="176" fill="#a6adc8">н</text>
+<text x="450" y="176" fill="#a6adc8">е</text>
+<text x="459" y="176" fill="#a6adc8">л</text>
+<text x="468" y="176" fill="#a6adc8">ь</text>
+<text x="477" y="176" fill="#a6adc8">ю</text>
+<rect x="495" y="162" width="477" height="18" fill="#1e1e2e"/>
+<path d="M495,171.0H504" fill="none" stroke="#89dceb" stroke-width="1"/>
+<path d="M504,171.0H513" fill="none" stroke="#89dceb" stroke-width="1"/>
+<path d="M513,171.0H522" fill="none" stroke="#89dceb" stroke-width="1"/>
+<path d="M522,171.0H531" fill="none" stroke="#89dceb" stroke-width="1"/>
+<path d="M531,171.0H540" fill="none" stroke="#89dceb" stroke-width="1"/>
+<path d="M540,171.0H549" fill="none" stroke="#89dceb" stroke-width="1"/>
+<path d="M549,171.0H558" fill="none" stroke="#89dceb" stroke-width="1"/>
+<path d="M558,171.0H567" fill="none" stroke="#89dceb" stroke-width="1"/>
+<path d="M567,171.0H576" fill="none" stroke="#89dceb" stroke-width="1"/>
+<path d="M576,171.0H585" fill="none" stroke="#89dceb" stroke-width="1"/>
+<path d="M585,171.0H594" fill="none" stroke="#89dceb" stroke-width="1"/>
+<path d="M594,171.0H603" fill="none" stroke="#89dceb" stroke-width="1"/>
+<path d="M603,171.0H612" fill="none" stroke="#89dceb" stroke-width="1"/>
+<path d="M612,171.0H621" fill="none" stroke="#89dceb" stroke-width="1"/>
+<path d="M621,171.0H630" fill="none" stroke="#89dceb" stroke-width="1"/>
+<path d="M630,171.0H639" fill="none" stroke="#89dceb" stroke-width="1"/>
+<path d="M639,171.0H648" fill="none" stroke="#89dceb" stroke-width="1"/>
+<path d="M648,171.0H657" fill="none" stroke="#89dceb" stroke-width="1"/>
+<path d="M657,171.0H666" fill="none" stroke="#89dceb" stroke-width="1"/>
+<path d="M666,171.0H675" fill="none" stroke="#89dceb" stroke-width="1"/>
+<path d="M675,171.0H684" fill="none" stroke="#89dceb" stroke-width="1"/>
+<path d="M684,171.0H693" fill="none" stroke="#89dceb" stroke-width="1"/>
+<path d="M693,171.0H702" fill="none" stroke="#89dceb" stroke-width="1"/>
+<path d="M702,171.0H711" fill="none" stroke="#89dceb" stroke-width="1"/>
+<path d="M711,171.0H720" fill="none" stroke="#89dceb" stroke-width="1"/>
+<path d="M720,171.0H729" fill="none" stroke="#89dceb" stroke-width="1"/>
+<path d="M729,171.0H738" fill="none" stroke="#89dceb" stroke-width="1"/>
+<path d="M738,171.0H747" fill="none" stroke="#89dceb" stroke-width="1"/>
+<path d="M747,171.0H756" fill="none" stroke="#89dceb" stroke-width="1"/>
+<path d="M756,171.0H765" fill="none" stroke="#89dceb" stroke-width="1"/>
+<path d="M765,171.0H774" fill="none" stroke="#89dceb" stroke-width="1"/>
+<path d="M774,171.0H783" fill="none" stroke="#89dceb" stroke-width="1"/>
+<path d="M783,171.0H792" fill="none" stroke="#89dceb" stroke-width="1"/>
+<path d="M792,171.0H801" fill="none" stroke="#89dceb" stroke-width="1"/>
+<path d="M801,171.0H810" fill="none" stroke="#89dceb" stroke-width="1"/>
+<path d="M810,171.0H819" fill="none" stroke="#89dceb" stroke-width="1"/>
+<path d="M819,171.0H828" fill="none" stroke="#89dceb" stroke-width="1"/>
+<path d="M828,171.0H837" fill="none" stroke="#89dceb" stroke-width="1"/>
+<path d="M837,171.0H846" fill="none" stroke="#89dceb" stroke-width="1"/>
+<path d="M846,171.0H855" fill="none" stroke="#89dceb" stroke-width="1"/>
+<path d="M855,171.0H864" fill="none" stroke="#89dceb" stroke-width="1"/>
+<path d="M864,171.0H873" fill="none" stroke="#89dceb" stroke-width="1"/>
+<path d="M873,171.0H882" fill="none" stroke="#89dceb" stroke-width="1"/>
+<path d="M882,171.0H891" fill="none" stroke="#89dceb" stroke-width="1"/>
+<path d="M891,171.0H900" fill="none" stroke="#89dceb" stroke-width="1"/>
+<path d="M900,171.0H909" fill="none" stroke="#89dceb" stroke-width="1"/>
+<path d="M909,171.0H918" fill="none" stroke="#89dceb" stroke-width="1"/>
+<path d="M918,171.0H927" fill="none" stroke="#89dceb" stroke-width="1"/>
+<path d="M927,171.0H936" fill="none" stroke="#89dceb" stroke-width="1"/>
+<path d="M936,171.0H945" fill="none" stroke="#89dceb" stroke-width="1"/>
+<path d="M945,171.0H954" fill="none" stroke="#89dceb" stroke-width="1"/>
+<path d="M954,171.0H963" fill="none" stroke="#89dceb" stroke-width="1"/>
+<path d="M963,171.0H963.0Q967.5,171.0 967.5,175.5V180" fill="none" stroke="#89dceb" stroke-width="1"/>
+<rect x="972" y="162" width="270" height="18" fill="#181825"/>
+<rect x="1242" y="162" width="9" height="18" fill="#1e1e2e"/>
+<path d="M1246.5,162V180" fill="none" stroke="#9399b2" stroke-width="1"/>
+<rect x="1251" y="162" width="9" height="18" fill="#1e1e2e"/>
+<rect x="0" y="180" width="9" height="18" fill="#181825"/>
+<rect x="9" y="180" width="9" height="18" fill="#1e1e2e"/>
+<path d="M13.5,180V198" fill="none" stroke="#9399b2" stroke-width="1"/>
+<rect x="18" y="180" width="288" height="18" fill="#181825"/>
+<rect x="306" y="180" width="9" height="18" fill="#1e1e2e"/>
+<path d="M310.5,180V198" fill="none" stroke="#89dceb" stroke-width="1"/>
+<rect x="315" y="180" width="648" height="18" fill="#181825"/>
+<text x="315" y="194" fill="#cdd6f4">L</text>
+<text x="324" y="194" fill="#cdd6f4">o</text>
+<text x="333" y="194" fill="#cdd6f4">c</text>
+<text x="342" y="194" fill="#cdd6f4">a</text>
+<text x="351" y="194" fill="#cdd6f4">l</text>
+<text x="360" y="194" fill="#cdd6f4">s</text>
+<text x="378" y="194" fill="#cdd6f4">—</text>
+<text x="396" y="194" fill="#cdd6f4">S</text>
+<text x="405" y="194" fill="#cdd6f4">p</text>
+<text x="414" y="194" fill="#cdd6f4">a</text>
+<text x="423" y="194" fill="#cdd6f4">c</text>
+<text x="432" y="194" fill="#cdd6f4">e</text>
+<text x="450" y="194" fill="#cdd6f4">w</text>
+<rect x="963" y="180" width="9" height="18" fill="#1e1e2e"/>
+<path d="M967.5,180V198" fill="none" stroke="#89dceb" stroke-width="1"/>
+<rect x="972" y="180" width="270" height="18" fill="#181825"/>
+<rect x="1242" y="180" width="9" height="18" fill="#1e1e2e"/>
+<path d="M1246.5,180V198" fill="none" stroke="#9399b2" stroke-width="1"/>
+<rect x="1251" y="180" width="9" height="18" fill="#1e1e2e"/>
+<rect x="0" y="198" width="9" height="18" fill="#181825"/>
+<rect x="9" y="198" width="9" height="18" fill="#1e1e2e"/>
+<path d="M13.5,198V216" fill="none" stroke="#9399b2" stroke-width="1"/>
+<rect x="18" y="198" width="288" height="18" fill="#181825"/>
+<rect x="306" y="198" width="9" height="18" fill="#1e1e2e"/>
+<path d="M310.5,198V216" fill="none" stroke="#89dceb" stroke-width="1"/>
+<rect x="315" y="198" width="648" height="18" fill="#181825"/>
+<rect x="963" y="198" width="9" height="18" fill="#1e1e2e"/>
+<path d="M967.5,198V216" fill="none" stroke="#89dceb" stroke-width="1"/>
+<rect x="972" y="198" width="270" height="18" fill="#181825"/>
+<rect x="1242" y="198" width="9" height="18" fill="#1e1e2e"/>
+<path d="M1246.5,198V216" fill="none" stroke="#9399b2" stroke-width="1"/>
+<rect x="1251" y="198" width="9" height="18" fill="#1e1e2e"/>
+<rect x="0" y="216" width="9" height="18" fill="#181825"/>
+<rect x="9" y="216" width="9" height="18" fill="#1e1e2e"/>
+<path d="M13.5,216V234" fill="none" stroke="#9399b2" stroke-width="1"/>
+<rect x="18" y="216" width="288" height="18" fill="#181825"/>
+<rect x="306" y="216" width="9" height="18" fill="#1e1e2e"/>
+<path d="M310.5,216V234" fill="none" stroke="#89dceb" stroke-width="1"/>
+<rect x="315" y="216" width="648" height="18" fill="#181825"/>
+<text x="315" y="230" fill="#cdd6f4">h</text>
+<text x="333" y="230" fill="#cdd6f4">/</text>
+<text x="351" y="230" fill="#cdd6f4">j</text>
+<text x="369" y="230" fill="#cdd6f4">/</text>
+<text x="387" y="230" fill="#cdd6f4">k</text>
+<text x="405" y="230" fill="#cdd6f4">/</text>
+<text x="423" y="230" fill="#cdd6f4">l</text>
+<text x="468" y="230" fill="#cdd6f4">с</text>
+<text x="477" y="230" fill="#cdd6f4">о</text>
+<text x="486" y="230" fill="#cdd6f4">с</text>
+<text x="495" y="230" fill="#cdd6f4">е</text>
+<text x="504" y="230" fill="#cdd6f4">д</text>
+<text x="513" y="230" fill="#cdd6f4">н</text>
+<text x="522" y="230" fill="#cdd6f4">е</text>
+<text x="531" y="230" fill="#cdd6f4">е</text>
+<text x="549" y="230" fill="#cdd6f4">в</text>
+<text x="558" y="230" fill="#cdd6f4">и</text>
+<text x="567" y="230" fill="#cdd6f4">д</text>
+<text x="576" y="230" fill="#cdd6f4">и</text>
+<text x="585" y="230" fill="#cdd6f4">м</text>
+<text x="594" y="230" fill="#cdd6f4">о</text>
+<text x="603" y="230" fill="#cdd6f4">е</text>
+<text x="621" y="230" fill="#cdd6f4">о</text>
+<text x="630" y="230" fill="#cdd6f4">к</text>
+<text x="639" y="230" fill="#cdd6f4">н</text>
+<text x="648" y="230" fill="#cdd6f4">о</text>
+<rect x="963" y="216" width="9" height="18" fill="#1e1e2e"/>
+<path d="M967.5,216V234" fill="none" stroke="#89dceb" stroke-width="1"/>
+<rect x="972" y="216" width="270" height="18" fill="#181825"/>
+<rect x="1242" y="216" width="9" height="18" fill="#1e1e2e"/>
+<path d="M1246.5,216V234" fill="none" stroke="#9399b2" stroke-width="1"/>
+<rect x="1251" y="216" width="9" height="18" fill="#1e1e2e"/>
+<rect x="0" y="234" width="9" height="18" fill="#1e1e2e"/>
+<path d="M0,243.0H9" fill="none" stroke="#11111b" stroke-width="1"/>
+<rect x="9" y="234" width="9" height="18" fill="#1e1e2e"/>
+<path d="M13.5,234V252" fill="none" stroke="#9399b2" stroke-width="1"/>
+<rect x="18" y="234" width="288" height="18" fill="#181825"/>
+<rect x="306" y="234" width="9" height="18" fill="#1e1e2e"/>
+<path d="M310.5,234V252" fill="none" stroke="#89dceb" stroke-width="1"/>
+<rect x="315" y="234" width="648" height="18" fill="#181825"/>
+<text x="315" y="248" fill="#cdd6f4">0</text>
+<text x="459" y="248" fill="#cdd6f4">в</text>
+<text x="468" y="248" fill="#cdd6f4">е</text>
+<text x="477" y="248" fill="#cdd6f4">р</text>
+<text x="486" y="248" fill="#cdd6f4">н</text>
+<text x="495" y="248" fill="#cdd6f4">у</text>
+<text x="504" y="248" fill="#cdd6f4">т</text>
+<text x="513" y="248" fill="#cdd6f4">ь</text>
+<text x="522" y="248" fill="#cdd6f4">с</text>
+<text x="531" y="248" fill="#cdd6f4">я</text>
+<text x="549" y="248" fill="#cdd6f4">в</text>
+<text x="567" y="248" fill="#cdd6f4">к</text>
+<text x="576" y="248" fill="#cdd6f4">о</text>
+<text x="585" y="248" fill="#cdd6f4">д</text>
+<rect x="963" y="234" width="9" height="18" fill="#1e1e2e"/>
+<path d="M967.5,234V252" fill="none" stroke="#89dceb" stroke-width="1"/>
+<rect x="972" y="234" width="270" height="18" fill="#181825"/>
+<rect x="1242" y="234" width="9" height="18" fill="#1e1e2e"/>
+<path d="M1246.5,234V252" fill="none" stroke="#9399b2" stroke-width="1"/>
+<rect x="1251" y="234" width="9" height="18" fill="#1e1e2e"/>
+<rect x="0" y="252" width="9" height="18" fill="#1e1e2e"/>
+<rect x="9" y="252" width="9" height="18" fill="#1e1e2e"/>
+<path d="M13.5,252V270" fill="none" stroke="#9399b2" stroke-width="1"/>
+<rect x="18" y="252" width="288" height="18" fill="#181825"/>
+<rect x="306" y="252" width="9" height="18" fill="#1e1e2e"/>
+<path d="M310.5,252V270" fill="none" stroke="#89dceb" stroke-width="1"/>
+<rect x="315" y="252" width="648" height="18" fill="#181825"/>
+<text x="315" y="266" fill="#cdd6f4">d</text>
+<text x="459" y="266" fill="#cdd6f4">L</text>
+<text x="468" y="266" fill="#cdd6f4">o</text>
+<text x="477" y="266" fill="#cdd6f4">c</text>
+<text x="486" y="266" fill="#cdd6f4">a</text>
+<text x="495" y="266" fill="#cdd6f4">l</text>
+<text x="504" y="266" fill="#cdd6f4">s</text>
+<rect x="963" y="252" width="9" height="18" fill="#1e1e2e"/>
+<path d="M967.5,252V270" fill="none" stroke="#89dceb" stroke-width="1"/>
+<rect x="972" y="252" width="270" height="18" fill="#181825"/>
+<rect x="1242" y="252" width="9" height="18" fill="#1e1e2e"/>
+<path d="M1246.5,252V270" fill="none" stroke="#9399b2" stroke-width="1"/>
+<rect x="1251" y="252" width="9" height="18" fill="#1e1e2e"/>
+<rect x="0" y="270" width="9" height="18" fill="#313244"/>
+<text x="0" y="284" fill="#eba0ac">N</text>
+<rect x="9" y="270" width="9" height="18" fill="#1e1e2e"/>
+<path d="M13.5,270V288" fill="none" stroke="#9399b2" stroke-width="1"/>
+<rect x="18" y="270" width="288" height="18" fill="#181825"/>
+<rect x="306" y="270" width="9" height="18" fill="#1e1e2e"/>
+<path d="M310.5,270V288" fill="none" stroke="#89dceb" stroke-width="1"/>
+<rect x="315" y="270" width="648" height="18" fill="#181825"/>
+<text x="315" y="284" fill="#cdd6f4">c</text>
+<text x="459" y="284" fill="#cdd6f4">O</text>
+<text x="468" y="284" fill="#cdd6f4">u</text>
+<text x="477" y="284" fill="#cdd6f4">t</text>
+<text x="486" y="284" fill="#cdd6f4">p</text>
+<text x="495" y="284" fill="#cdd6f4">u</text>
+<text x="504" y="284" fill="#cdd6f4">t</text>
+<text x="522" y="284" fill="#cdd6f4">/</text>
+<text x="540" y="284" fill="#cdd6f4">R</text>
+<text x="549" y="284" fill="#cdd6f4">E</text>
+<text x="558" y="284" fill="#cdd6f4">P</text>
+<text x="567" y="284" fill="#cdd6f4">L</text>
+<text x="585" y="284" fill="#cdd6f4">/</text>
+<text x="603" y="284" fill="#cdd6f4">T</text>
+<text x="612" y="284" fill="#cdd6f4">e</text>
+<text x="621" y="284" fill="#cdd6f4">r</text>
+<text x="630" y="284" fill="#cdd6f4">m</text>
+<text x="639" y="284" fill="#cdd6f4">i</text>
+<text x="648" y="284" fill="#cdd6f4">n</text>
+<text x="657" y="284" fill="#cdd6f4">a</text>
+<text x="666" y="284" fill="#cdd6f4">l</text>
+<rect x="963" y="270" width="9" height="18" fill="#1e1e2e"/>
+<path d="M967.5,270V288" fill="none" stroke="#89dceb" stroke-width="1"/>
+<rect x="972" y="270" width="270" height="18" fill="#181825"/>
+<rect x="1242" y="270" width="9" height="18" fill="#1e1e2e"/>
+<path d="M1246.5,270V288" fill="none" stroke="#9399b2" stroke-width="1"/>
+<rect x="1251" y="270" width="9" height="18" fill="#1e1e2e"/>
+<rect x="0" y="288" width="9" height="18" fill="#181825"/>
+<text x="0" y="302" fill="#cdd6f4">&gt;</text>
+<rect x="9" y="288" width="9" height="18" fill="#1e1e2e"/>
+<path d="M13.5,288V306" fill="none" stroke="#9399b2" stroke-width="1"/>
+<rect x="18" y="288" width="288" height="18" fill="#181825"/>
+<rect x="306" y="288" width="9" height="18" fill="#1e1e2e"/>
+<path d="M310.5,288V306" fill="none" stroke="#89dceb" stroke-width="1"/>
+<rect x="315" y="288" width="648" height="18" fill="#181825"/>
+<text x="315" y="302" fill="#cdd6f4">a</text>
+<text x="459" y="302" fill="#cdd6f4">O</text>
+<text x="468" y="302" fill="#cdd6f4">u</text>
+<text x="477" y="302" fill="#cdd6f4">t</text>
+<text x="486" y="302" fill="#cdd6f4">l</text>
+<text x="495" y="302" fill="#cdd6f4">i</text>
+<text x="504" y="302" fill="#cdd6f4">n</text>
+<text x="513" y="302" fill="#cdd6f4">e</text>
+<text x="531" y="302" fill="#cdd6f4">с</text>
+<text x="540" y="302" fill="#cdd6f4">л</text>
+<text x="549" y="302" fill="#cdd6f4">е</text>
+<text x="558" y="302" fill="#cdd6f4">в</text>
+<text x="567" y="302" fill="#cdd6f4">а</text>
+<rect x="963" y="288" width="9" height="18" fill="#1e1e2e"/>
+<path d="M967.5,288V306" fill="none" stroke="#89dceb" stroke-width="1"/>
+<rect x="972" y="288" width="270" height="18" fill="#181825"/>
+<rect x="1242" y="288" width="9" height="18" fill="#1e1e2e"/>
+<path d="M1246.5,288V306" fill="none" stroke="#9399b2" stroke-width="1"/>
+<rect x="1251" y="288" width="9" height="18" fill="#45475a"/>
+<rect x="0" y="306" width="9" height="18" fill="#181825"/>
+<rect x="9" y="306" width="9" height="18" fill="#1e1e2e"/>
+<path d="M13.5,306V324" fill="none" stroke="#9399b2" stroke-width="1"/>
+<rect x="18" y="306" width="288" height="18" fill="#181825"/>
+<rect x="306" y="306" width="9" height="18" fill="#1e1e2e"/>
+<path d="M310.5,306V324" fill="none" stroke="#89dceb" stroke-width="1"/>
+<rect x="315" y="306" width="648" height="18" fill="#181825"/>
+<text x="315" y="320" fill="#cdd6f4">e</text>
+<text x="459" y="320" fill="#cdd6f4">F</text>
+<text x="468" y="320" fill="#cdd6f4">i</text>
+<text x="477" y="320" fill="#cdd6f4">l</text>
+<text x="486" y="320" fill="#cdd6f4">e</text>
+<text x="495" y="320" fill="#cdd6f4">s</text>
+<text x="513" y="320" fill="#cdd6f4">с</text>
+<text x="522" y="320" fill="#cdd6f4">л</text>
+<text x="531" y="320" fill="#cdd6f4">е</text>
+<text x="540" y="320" fill="#cdd6f4">в</text>
+<text x="549" y="320" fill="#cdd6f4">а</text>
+<rect x="963" y="306" width="9" height="18" fill="#1e1e2e"/>
+<path d="M967.5,306V324" fill="none" stroke="#89dceb" stroke-width="1"/>
+<rect x="972" y="306" width="270" height="18" fill="#181825"/>
+<rect x="1242" y="306" width="9" height="18" fill="#1e1e2e"/>
+<path d="M1246.5,306V324" fill="none" stroke="#9399b2" stroke-width="1"/>
+<rect x="1251" y="306" width="9" height="18" fill="#1e1e2e"/>
+<rect x="0" y="324" width="9" height="18" fill="#181825"/>
+<rect x="9" y="324" width="9" height="18" fill="#1e1e2e"/>
+<path d="M13.5,324V342" fill="none" stroke="#9399b2" stroke-width="1"/>
+<rect x="18" y="324" width="288" height="18" fill="#181825"/>
+<rect x="306" y="324" width="9" height="18" fill="#1e1e2e"/>
+<path d="M310.5,324V342" fill="none" stroke="#89dceb" stroke-width="1"/>
+<rect x="315" y="324" width="648" height="18" fill="#181825"/>
+<text x="315" y="338" fill="#cdd6f4">g</text>
+<text x="459" y="338" fill="#cdd6f4">G</text>
+<text x="468" y="338" fill="#cdd6f4">i</text>
+<text x="477" y="338" fill="#cdd6f4">t</text>
+<text x="495" y="338" fill="#cdd6f4">с</text>
+<text x="504" y="338" fill="#cdd6f4">п</text>
+<text x="513" y="338" fill="#cdd6f4">р</text>
+<text x="522" y="338" fill="#cdd6f4">а</text>
+<text x="531" y="338" fill="#cdd6f4">в</text>
+<text x="540" y="338" fill="#cdd6f4">а</text>
+<rect x="963" y="324" width="9" height="18" fill="#1e1e2e"/>
+<path d="M967.5,324V342" fill="none" stroke="#89dceb" stroke-width="1"/>
+<rect x="972" y="324" width="270" height="18" fill="#181825"/>
+<rect x="1242" y="324" width="9" height="18" fill="#1e1e2e"/>
+<path d="M1246.5,324V342" fill="none" stroke="#9399b2" stroke-width="1"/>
+<rect x="1251" y="324" width="9" height="18" fill="#1e1e2e"/>
+<rect x="0" y="342" width="9" height="18" fill="#181825"/>
+<rect x="9" y="342" width="9" height="18" fill="#1e1e2e"/>
+<path d="M13.5,342V360" fill="none" stroke="#9399b2" stroke-width="1"/>
+<rect x="18" y="342" width="288" height="18" fill="#181825"/>
+<rect x="306" y="342" width="9" height="18" fill="#1e1e2e"/>
+<path d="M310.5,342V360" fill="none" stroke="#89dceb" stroke-width="1"/>
+<rect x="315" y="342" width="648" height="18" fill="#181825"/>
+<text x="315" y="356" fill="#cdd6f4">t</text>
+<text x="333" y="356" fill="#cdd6f4">/</text>
+<text x="351" y="356" fill="#cdd6f4">r</text>
+<text x="459" y="356" fill="#cdd6f4">T</text>
+<text x="468" y="356" fill="#cdd6f4">e</text>
+<text x="477" y="356" fill="#cdd6f4">s</text>
+<text x="486" y="356" fill="#cdd6f4">t</text>
+<text x="495" y="356" fill="#cdd6f4">s</text>
+<text x="513" y="356" fill="#cdd6f4">/</text>
+<text x="531" y="356" fill="#cdd6f4">T</text>
+<text x="540" y="356" fill="#cdd6f4">e</text>
+<text x="549" y="356" fill="#cdd6f4">s</text>
+<text x="558" y="356" fill="#cdd6f4">t</text>
+<text x="576" y="356" fill="#cdd6f4">O</text>
+<text x="585" y="356" fill="#cdd6f4">u</text>
+<text x="594" y="356" fill="#cdd6f4">t</text>
+<text x="603" y="356" fill="#cdd6f4">p</text>
+<text x="612" y="356" fill="#cdd6f4">u</text>
+<text x="621" y="356" fill="#cdd6f4">t</text>
+<rect x="963" y="342" width="9" height="18" fill="#1e1e2e"/>
+<path d="M967.5,342V360" fill="none" stroke="#89dceb" stroke-width="1"/>
+<rect x="972" y="342" width="270" height="18" fill="#181825"/>
+<rect x="1242" y="342" width="9" height="18" fill="#1e1e2e"/>
+<path d="M1246.5,342V360" fill="none" stroke="#9399b2" stroke-width="1"/>
+<rect x="1251" y="342" width="9" height="18" fill="#1e1e2e"/>
+<rect x="0" y="360" width="9" height="18" fill="#181825"/>
+<rect x="9" y="360" width="9" height="18" fill="#1e1e2e"/>
+<path d="M13.5,360V378" fill="none" stroke="#9399b2" stroke-width="1"/>
+<rect x="18" y="360" width="288" height="18" fill="#181825"/>
+<rect x="306" y="360" width="9" height="18" fill="#1e1e2e"/>
+<path d="M310.5,360V378" fill="none" stroke="#89dceb" stroke-width="1"/>
+<rect x="315" y="360" width="648" height="18" fill="#181825"/>
+<text x="315" y="374" fill="#cdd6f4">f</text>
+<text x="333" y="374" fill="#cdd6f4">/</text>
+<text x="351" y="374" fill="#cdd6f4">b</text>
+<text x="459" y="374" fill="#cdd6f4">S</text>
+<text x="468" y="374" fill="#cdd6f4">e</text>
+<text x="477" y="374" fill="#cdd6f4">a</text>
+<text x="486" y="374" fill="#cdd6f4">r</text>
+<text x="495" y="374" fill="#cdd6f4">c</text>
+<text x="504" y="374" fill="#cdd6f4">h</text>
+<text x="522" y="374" fill="#cdd6f4">/</text>
+<text x="540" y="374" fill="#cdd6f4">T</text>
+<text x="549" y="374" fill="#cdd6f4">a</text>
+<text x="558" y="374" fill="#cdd6f4">s</text>
+<text x="567" y="374" fill="#cdd6f4">k</text>
+<text x="576" y="374" fill="#cdd6f4">s</text>
+<rect x="963" y="360" width="9" height="18" fill="#1e1e2e"/>
+<path d="M967.5,360V378" fill="none" stroke="#89dceb" stroke-width="1"/>
+<rect x="972" y="360" width="270" height="18" fill="#181825"/>
+<rect x="1242" y="360" width="9" height="18" fill="#1e1e2e"/>
+<path d="M1246.5,360V378" fill="none" stroke="#9399b2" stroke-width="1"/>
+<rect x="1251" y="360" width="9" height="18" fill="#1e1e2e"/>
+<rect x="0" y="378" width="9" height="18" fill="#181825"/>
+<rect x="9" y="378" width="9" height="18" fill="#1e1e2e"/>
+<path d="M13.5,378V396" fill="none" stroke="#9399b2" stroke-width="1"/>
+<rect x="18" y="378" width="288" height="18" fill="#181825"/>
+<rect x="306" y="378" width="9" height="18" fill="#1e1e2e"/>
+<path d="M310.5,378V396" fill="none" stroke="#89dceb" stroke-width="1"/>
+<rect x="315" y="378" width="648" height="18" fill="#181825"/>
+<text x="315" y="392" fill="#cdd6f4">T</text>
+<text x="333" y="392" fill="#cdd6f4">/</text>
+<text x="351" y="392" fill="#cdd6f4">x</text>
+<text x="459" y="392" fill="#cdd6f4">T</text>
+<text x="468" y="392" fill="#cdd6f4">e</text>
+<text x="477" y="392" fill="#cdd6f4">r</text>
+<text x="486" y="392" fill="#cdd6f4">m</text>
+<text x="495" y="392" fill="#cdd6f4">i</text>
+<text x="504" y="392" fill="#cdd6f4">n</text>
+<text x="513" y="392" fill="#cdd6f4">a</text>
+<text x="522" y="392" fill="#cdd6f4">l</text>
+<text x="540" y="392" fill="#cdd6f4">/</text>
+<text x="558" y="392" fill="#cdd6f4">P</text>
+<text x="567" y="392" fill="#cdd6f4">r</text>
+<text x="576" y="392" fill="#cdd6f4">o</text>
+<text x="585" y="392" fill="#cdd6f4">b</text>
+<text x="594" y="392" fill="#cdd6f4">l</text>
+<text x="603" y="392" fill="#cdd6f4">e</text>
+<text x="612" y="392" fill="#cdd6f4">m</text>
+<text x="621" y="392" fill="#cdd6f4">s</text>
+<rect x="963" y="378" width="9" height="18" fill="#1e1e2e"/>
+<path d="M967.5,378V396" fill="none" stroke="#89dceb" stroke-width="1"/>
+<rect x="972" y="378" width="270" height="18" fill="#181825"/>
+<rect x="1242" y="378" width="9" height="18" fill="#1e1e2e"/>
+<path d="M1246.5,378V396" fill="none" stroke="#9399b2" stroke-width="1"/>
+<rect x="1251" y="378" width="9" height="18" fill="#1e1e2e"/>
+<rect x="0" y="396" width="9" height="18" fill="#1e1e2e"/>
+<path d="M0,405.0H9" fill="none" stroke="#11111b" stroke-width="1"/>
+<rect x="9" y="396" width="9" height="18" fill="#1e1e2e"/>
+<path d="M13.5,396V414" fill="none" stroke="#9399b2" stroke-width="1"/>
+<rect x="18" y="396" width="288" height="18" fill="#181825"/>
+<rect x="306" y="396" width="9" height="18" fill="#1e1e2e"/>
+<path d="M310.5,396V414" fill="none" stroke="#89dceb" stroke-width="1"/>
+<rect x="315" y="396" width="648" height="18" fill="#181825"/>
+<text x="315" y="410" fill="#cdd6f4">i</text>
+<text x="459" y="410" fill="#cdd6f4">I</text>
+<text x="468" y="410" fill="#cdd6f4">D</text>
+<text x="477" y="410" fill="#cdd6f4">E</text>
+<text x="495" y="410" fill="#cdd6f4">L</text>
+<text x="504" y="410" fill="#cdd6f4">o</text>
+<text x="513" y="410" fill="#cdd6f4">g</text>
+<text x="522" y="410" fill="#cdd6f4">s</text>
+<text x="540" y="410" fill="#cdd6f4">—</text>
+<text x="558" y="410" fill="#cdd6f4">с</text>
+<text x="567" y="410" fill="#cdd6f4">о</text>
+<text x="576" y="410" fill="#cdd6f4">о</text>
+<text x="585" y="410" fill="#cdd6f4">б</text>
+<text x="594" y="410" fill="#cdd6f4">щ</text>
+<text x="603" y="410" fill="#cdd6f4">е</text>
+<text x="612" y="410" fill="#cdd6f4">н</text>
+<text x="621" y="410" fill="#cdd6f4">и</text>
+<text x="630" y="410" fill="#cdd6f4">я</text>
+<text x="648" y="410" fill="#cdd6f4">и</text>
+<text x="666" y="410" fill="#cdd6f4">п</text>
+<text x="675" y="410" fill="#cdd6f4">о</text>
+<text x="684" y="410" fill="#cdd6f4">д</text>
+<text x="693" y="410" fill="#cdd6f4">р</text>
+<text x="702" y="410" fill="#cdd6f4">о</text>
+<text x="711" y="410" fill="#cdd6f4">б</text>
+<text x="720" y="410" fill="#cdd6f4">н</text>
+<text x="729" y="410" fill="#cdd6f4">ы</text>
+<text x="738" y="410" fill="#cdd6f4">е</text>
+<text x="756" y="410" fill="#cdd6f4">ж</text>
+<text x="765" y="410" fill="#cdd6f4">у</text>
+<text x="774" y="410" fill="#cdd6f4">р</text>
+<text x="783" y="410" fill="#cdd6f4">н</text>
+<text x="792" y="410" fill="#cdd6f4">а</text>
+<text x="801" y="410" fill="#cdd6f4">л</text>
+<text x="810" y="410" fill="#cdd6f4">ы</text>
+<rect x="963" y="396" width="9" height="18" fill="#1e1e2e"/>
+<path d="M967.5,396V414" fill="none" stroke="#89dceb" stroke-width="1"/>
+<rect x="972" y="396" width="270" height="18" fill="#181825"/>
+<rect x="1242" y="396" width="9" height="18" fill="#1e1e2e"/>
+<path d="M1246.5,396V414" fill="none" stroke="#9399b2" stroke-width="1"/>
+<rect x="1251" y="396" width="9" height="18" fill="#1e1e2e"/>
+<rect x="0" y="414" width="9" height="18" fill="#1e1e2e"/>
+<rect x="9" y="414" width="9" height="18" fill="#1e1e2e"/>
+<path d="M13.5,414V432" fill="none" stroke="#9399b2" stroke-width="1"/>
+<rect x="18" y="414" width="288" height="18" fill="#181825"/>
+<rect x="306" y="414" width="9" height="18" fill="#1e1e2e"/>
+<path d="M310.5,414V432" fill="none" stroke="#89dceb" stroke-width="1"/>
+<rect x="315" y="414" width="648" height="18" fill="#181825"/>
+<text x="315" y="428" fill="#cdd6f4">q</text>
+<text x="459" y="428" fill="#cdd6f4">с</text>
+<text x="468" y="428" fill="#cdd6f4">к</text>
+<text x="477" y="428" fill="#cdd6f4">р</text>
+<text x="486" y="428" fill="#cdd6f4">ы</text>
+<text x="495" y="428" fill="#cdd6f4">т</text>
+<text x="504" y="428" fill="#cdd6f4">ь</text>
+<text x="522" y="428" fill="#cdd6f4">т</text>
+<text x="531" y="428" fill="#cdd6f4">е</text>
+<text x="540" y="428" fill="#cdd6f4">к</text>
+<text x="549" y="428" fill="#cdd6f4">у</text>
+<text x="558" y="428" fill="#cdd6f4">щ</text>
+<text x="567" y="428" fill="#cdd6f4">у</text>
+<text x="576" y="428" fill="#cdd6f4">ю</text>
+<text x="594" y="428" fill="#cdd6f4">п</text>
+<text x="603" y="428" fill="#cdd6f4">а</text>
+<text x="612" y="428" fill="#cdd6f4">н</text>
+<text x="621" y="428" fill="#cdd6f4">е</text>
+<text x="630" y="428" fill="#cdd6f4">л</text>
+<text x="639" y="428" fill="#cdd6f4">ь</text>
+<rect x="963" y="414" width="9" height="18" fill="#1e1e2e"/>
+<path d="M967.5,414V432" fill="none" stroke="#89dceb" stroke-width="1"/>
+<rect x="972" y="414" width="270" height="18" fill="#181825"/>
+<rect x="1242" y="414" width="9" height="18" fill="#1e1e2e"/>
+<path d="M1246.5,414V432" fill="none" stroke="#9399b2" stroke-width="1"/>
+<rect x="1251" y="414" width="9" height="18" fill="#1e1e2e"/>
+<rect x="0" y="432" width="9" height="18" fill="#313244"/>
+<text x="0" y="446" fill="#89dceb">*</text>
+<rect x="9" y="432" width="9" height="18" fill="#1e1e2e"/>
+<path d="M13.5,432V450" fill="none" stroke="#9399b2" stroke-width="1"/>
+<rect x="18" y="432" width="288" height="18" fill="#181825"/>
+<rect x="306" y="432" width="9" height="18" fill="#1e1e2e"/>
+<path d="M310.5,432V450" fill="none" stroke="#89dceb" stroke-width="1"/>
+<rect x="315" y="432" width="648" height="18" fill="#181825"/>
+<text x="315" y="446" fill="#cdd6f4">z</text>
+<text x="459" y="446" fill="#cdd6f4">р</text>
+<text x="468" y="446" fill="#cdd6f4">а</text>
+<text x="477" y="446" fill="#cdd6f4">з</text>
+<text x="486" y="446" fill="#cdd6f4">в</text>
+<text x="495" y="446" fill="#cdd6f4">е</text>
+<text x="504" y="446" fill="#cdd6f4">р</text>
+<text x="513" y="446" fill="#cdd6f4">н</text>
+<text x="522" y="446" fill="#cdd6f4">у</text>
+<text x="531" y="446" fill="#cdd6f4">т</text>
+<text x="540" y="446" fill="#cdd6f4">ь</text>
+<text x="558" y="446" fill="#cdd6f4">/</text>
+<text x="576" y="446" fill="#cdd6f4">в</text>
+<text x="585" y="446" fill="#cdd6f4">е</text>
+<text x="594" y="446" fill="#cdd6f4">р</text>
+<text x="603" y="446" fill="#cdd6f4">н</text>
+<text x="612" y="446" fill="#cdd6f4">у</text>
+<text x="621" y="446" fill="#cdd6f4">т</text>
+<text x="630" y="446" fill="#cdd6f4">ь</text>
+<rect x="963" y="432" width="9" height="18" fill="#1e1e2e"/>
+<path d="M967.5,432V450" fill="none" stroke="#89dceb" stroke-width="1"/>
+<rect x="972" y="432" width="270" height="18" fill="#181825"/>
+<rect x="1242" y="432" width="9" height="18" fill="#1e1e2e"/>
+<path d="M1246.5,432V450" fill="none" stroke="#9399b2" stroke-width="1"/>
+<rect x="1251" y="432" width="9" height="18" fill="#1e1e2e"/>
+<rect x="0" y="450" width="9" height="18" fill="#181825"/>
+<text x="0" y="464" fill="#cdd6f4">&gt;</text>
+<rect x="9" y="450" width="9" height="18" fill="#1e1e2e"/>
+<path d="M13.5,450V468" fill="none" stroke="#9399b2" stroke-width="1"/>
+<rect x="18" y="450" width="288" height="18" fill="#181825"/>
+<rect x="306" y="450" width="9" height="18" fill="#1e1e2e"/>
+<path d="M310.5,450V468" fill="none" stroke="#89dceb" stroke-width="1"/>
+<rect x="315" y="450" width="648" height="18" fill="#181825"/>
+<text x="315" y="464" fill="#cdd6f4">?</text>
+<text x="459" y="464" fill="#cdd6f4">э</text>
+<text x="468" y="464" fill="#cdd6f4">т</text>
+<text x="477" y="464" fill="#cdd6f4">а</text>
+<text x="495" y="464" fill="#cdd6f4">п</text>
+<text x="504" y="464" fill="#cdd6f4">о</text>
+<text x="513" y="464" fill="#cdd6f4">д</text>
+<text x="522" y="464" fill="#cdd6f4">с</text>
+<text x="531" y="464" fill="#cdd6f4">к</text>
+<text x="540" y="464" fill="#cdd6f4">а</text>
+<text x="549" y="464" fill="#cdd6f4">з</text>
+<text x="558" y="464" fill="#cdd6f4">к</text>
+<text x="567" y="464" fill="#cdd6f4">а</text>
+<rect x="963" y="450" width="9" height="18" fill="#1e1e2e"/>
+<path d="M967.5,450V468" fill="none" stroke="#89dceb" stroke-width="1"/>
+<rect x="972" y="450" width="270" height="18" fill="#181825"/>
+<rect x="1242" y="450" width="9" height="18" fill="#1e1e2e"/>
+<path d="M1246.5,450V468" fill="none" stroke="#9399b2" stroke-width="1"/>
+<rect x="1251" y="450" width="9" height="18" fill="#1e1e2e"/>
+<rect x="0" y="468" width="9" height="18" fill="#181825"/>
+<rect x="9" y="468" width="9" height="18" fill="#1e1e2e"/>
+<path d="M13.5,468V486" fill="none" stroke="#9399b2" stroke-width="1"/>
+<rect x="18" y="468" width="288" height="18" fill="#181825"/>
+<rect x="306" y="468" width="9" height="18" fill="#1e1e2e"/>
+<path d="M310.5,468V486" fill="none" stroke="#89dceb" stroke-width="1"/>
+<rect x="315" y="468" width="648" height="18" fill="#181825"/>
+<rect x="963" y="468" width="9" height="18" fill="#1e1e2e"/>
+<path d="M967.5,468V486" fill="none" stroke="#89dceb" stroke-width="1"/>
+<rect x="972" y="468" width="270" height="18" fill="#181825"/>
+<rect x="1242" y="468" width="9" height="18" fill="#1e1e2e"/>
+<path d="M1246.5,468V486" fill="none" stroke="#9399b2" stroke-width="1"/>
+<rect x="1251" y="468" width="9" height="18" fill="#1e1e2e"/>
+<rect x="0" y="486" width="9" height="18" fill="#181825"/>
+<rect x="9" y="486" width="9" height="18" fill="#1e1e2e"/>
+<path d="M13.5,486V504" fill="none" stroke="#9399b2" stroke-width="1"/>
+<rect x="18" y="486" width="288" height="18" fill="#181825"/>
+<rect x="306" y="486" width="9" height="18" fill="#1e1e2e"/>
+<path d="M310.5,486V504" fill="none" stroke="#89dceb" stroke-width="1"/>
+<rect x="315" y="486" width="648" height="18" fill="#181825"/>
+<text x="315" y="500" fill="#cdd6f4">В</text>
+<text x="333" y="500" fill="#cdd6f4">п</text>
+<text x="342" y="500" fill="#cdd6f4">а</text>
+<text x="351" y="500" fill="#cdd6f4">н</text>
+<text x="360" y="500" fill="#cdd6f4">е</text>
+<text x="369" y="500" fill="#cdd6f4">л</text>
+<text x="378" y="500" fill="#cdd6f4">и</text>
+<text x="387" y="500" fill="#cdd6f4">:</text>
+<text x="405" y="500" fill="#cdd6f4">j</text>
+<text x="414" y="500" fill="#cdd6f4">/</text>
+<text x="423" y="500" fill="#cdd6f4">k</text>
+<text x="441" y="500" fill="#cdd6f4">—</text>
+<text x="459" y="500" fill="#cdd6f4">с</text>
+<text x="468" y="500" fill="#cdd6f4">п</text>
+<text x="477" y="500" fill="#cdd6f4">и</text>
+<text x="486" y="500" fill="#cdd6f4">с</text>
+<text x="495" y="500" fill="#cdd6f4">о</text>
+<text x="504" y="500" fill="#cdd6f4">к</text>
+<text x="513" y="500" fill="#cdd6f4">,</text>
+<text x="531" y="500" fill="#cdd6f4">E</text>
+<text x="540" y="500" fill="#cdd6f4">n</text>
+<text x="549" y="500" fill="#cdd6f4">t</text>
+<text x="558" y="500" fill="#cdd6f4">e</text>
+<text x="567" y="500" fill="#cdd6f4">r</text>
+<text x="585" y="500" fill="#cdd6f4">—</text>
+<text x="603" y="500" fill="#cdd6f4">р</text>
+<text x="612" y="500" fill="#cdd6f4">а</text>
+<text x="621" y="500" fill="#cdd6f4">с</text>
+<text x="630" y="500" fill="#cdd6f4">к</text>
+<text x="639" y="500" fill="#cdd6f4">р</text>
+<text x="648" y="500" fill="#cdd6f4">ы</text>
+<text x="657" y="500" fill="#cdd6f4">т</text>
+<text x="666" y="500" fill="#cdd6f4">ь</text>
+<text x="675" y="500" fill="#cdd6f4">/</text>
+<text x="684" y="500" fill="#cdd6f4">в</text>
+<text x="693" y="500" fill="#cdd6f4">ы</text>
+<text x="702" y="500" fill="#cdd6f4">б</text>
+<text x="711" y="500" fill="#cdd6f4">р</text>
+<text x="720" y="500" fill="#cdd6f4">а</text>
+<text x="729" y="500" fill="#cdd6f4">т</text>
+<text x="738" y="500" fill="#cdd6f4">ь</text>
+<text x="747" y="500" fill="#cdd6f4">.</text>
+<rect x="963" y="486" width="9" height="18" fill="#1e1e2e"/>
+<path d="M967.5,486V504" fill="none" stroke="#89dceb" stroke-width="1"/>
+<rect x="972" y="486" width="270" height="18" fill="#181825"/>
+<rect x="1242" y="486" width="9" height="18" fill="#1e1e2e"/>
+<path d="M1246.5,486V504" fill="none" stroke="#9399b2" stroke-width="1"/>
+<rect x="1251" y="486" width="9" height="18" fill="#1e1e2e"/>
+<rect x="0" y="504" width="9" height="18" fill="#181825"/>
+<text x="0" y="518" fill="#a6e3a1">[</text>
+<rect x="9" y="504" width="9" height="18" fill="#1e1e2e"/>
+<path d="M13.5,504V522" fill="none" stroke="#9399b2" stroke-width="1"/>
+<rect x="18" y="504" width="288" height="18" fill="#181825"/>
+<rect x="306" y="504" width="9" height="18" fill="#1e1e2e"/>
+<path d="M310.5,504V522" fill="none" stroke="#89dceb" stroke-width="1"/>
+<rect x="315" y="504" width="648" height="18" fill="#181825"/>
+<text x="315" y="518" fill="#cdd6f4">q</text>
+<text x="333" y="518" fill="#cdd6f4">—</text>
+<text x="351" y="518" fill="#cdd6f4">с</text>
+<text x="360" y="518" fill="#cdd6f4">к</text>
+<text x="369" y="518" fill="#cdd6f4">р</text>
+<text x="378" y="518" fill="#cdd6f4">ы</text>
+<text x="387" y="518" fill="#cdd6f4">т</text>
+<text x="396" y="518" fill="#cdd6f4">ь</text>
+<text x="405" y="518" fill="#cdd6f4">;</text>
+<text x="423" y="518" fill="#cdd6f4">E</text>
+<text x="432" y="518" fill="#cdd6f4">s</text>
+<text x="441" y="518" fill="#cdd6f4">c</text>
+<text x="459" y="518" fill="#cdd6f4">—</text>
+<text x="477" y="518" fill="#cdd6f4">в</text>
+<text x="486" y="518" fill="#cdd6f4">е</text>
+<text x="495" y="518" fill="#cdd6f4">р</text>
+<text x="504" y="518" fill="#cdd6f4">н</text>
+<text x="513" y="518" fill="#cdd6f4">у</text>
+<text x="522" y="518" fill="#cdd6f4">т</text>
+<text x="531" y="518" fill="#cdd6f4">ь</text>
+<text x="549" y="518" fill="#cdd6f4">z</text>
+<text x="558" y="518" fill="#cdd6f4">o</text>
+<text x="567" y="518" fill="#cdd6f4">o</text>
+<text x="576" y="518" fill="#cdd6f4">m</text>
+<text x="585" y="518" fill="#cdd6f4">,</text>
+<text x="603" y="518" fill="#cdd6f4">и</text>
+<text x="612" y="518" fill="#cdd6f4">н</text>
+<text x="621" y="518" fill="#cdd6f4">а</text>
+<text x="630" y="518" fill="#cdd6f4">ч</text>
+<text x="639" y="518" fill="#cdd6f4">е</text>
+<text x="657" y="518" fill="#cdd6f4">ф</text>
+<text x="666" y="518" fill="#cdd6f4">о</text>
+<text x="675" y="518" fill="#cdd6f4">к</text>
+<text x="684" y="518" fill="#cdd6f4">у</text>
+<text x="693" y="518" fill="#cdd6f4">с</text>
+<text x="711" y="518" fill="#cdd6f4">в</text>
+<text x="729" y="518" fill="#cdd6f4">к</text>
+<text x="738" y="518" fill="#cdd6f4">о</text>
+<text x="747" y="518" fill="#cdd6f4">д</text>
+<text x="756" y="518" fill="#cdd6f4">.</text>
+<rect x="963" y="504" width="9" height="18" fill="#1e1e2e"/>
+<path d="M967.5,504V522" fill="none" stroke="#89dceb" stroke-width="1"/>
+<rect x="972" y="504" width="270" height="18" fill="#181825"/>
+<rect x="1242" y="504" width="9" height="18" fill="#1e1e2e"/>
+<path d="M1246.5,504V522" fill="none" stroke="#9399b2" stroke-width="1"/>
+<rect x="1251" y="504" width="9" height="18" fill="#1e1e2e"/>
+<rect x="0" y="522" width="9" height="18" fill="#181825"/>
+<rect x="9" y="522" width="9" height="18" fill="#1e1e2e"/>
+<path d="M13.5,522V540" fill="none" stroke="#9399b2" stroke-width="1"/>
+<rect x="18" y="522" width="288" height="18" fill="#181825"/>
+<rect x="306" y="522" width="9" height="18" fill="#1e1e2e"/>
+<path d="M310.5,522V540" fill="none" stroke="#89dceb" stroke-width="1"/>
+<rect x="315" y="522" width="648" height="18" fill="#181825"/>
+<text x="315" y="536" fill="#cdd6f4">I</text>
+<text x="324" y="536" fill="#cdd6f4">n</text>
+<text x="333" y="536" fill="#cdd6f4">s</text>
+<text x="342" y="536" fill="#cdd6f4">e</text>
+<text x="351" y="536" fill="#cdd6f4">r</text>
+<text x="360" y="536" fill="#cdd6f4">t</text>
+<text x="369" y="536" fill="#cdd6f4">/</text>
+<text x="378" y="536" fill="#cdd6f4">t</text>
+<text x="387" y="536" fill="#cdd6f4">e</text>
+<text x="396" y="536" fill="#cdd6f4">r</text>
+<text x="405" y="536" fill="#cdd6f4">m</text>
+<text x="414" y="536" fill="#cdd6f4">i</text>
+<text x="423" y="536" fill="#cdd6f4">n</text>
+<text x="432" y="536" fill="#cdd6f4">a</text>
+<text x="441" y="536" fill="#cdd6f4">l</text>
+<text x="450" y="536" fill="#cdd6f4">:</text>
+<text x="468" y="536" fill="#cdd6f4">п</text>
+<text x="477" y="536" fill="#cdd6f4">е</text>
+<text x="486" y="536" fill="#cdd6f4">ч</text>
+<text x="495" y="536" fill="#cdd6f4">а</text>
+<text x="504" y="536" fill="#cdd6f4">т</text>
+<text x="513" y="536" fill="#cdd6f4">н</text>
+<text x="522" y="536" fill="#cdd6f4">ы</text>
+<text x="531" y="536" fill="#cdd6f4">е</text>
+<text x="549" y="536" fill="#cdd6f4">к</text>
+<text x="558" y="536" fill="#cdd6f4">л</text>
+<text x="567" y="536" fill="#cdd6f4">а</text>
+<text x="576" y="536" fill="#cdd6f4">в</text>
+<text x="585" y="536" fill="#cdd6f4">и</text>
+<text x="594" y="536" fill="#cdd6f4">ш</text>
+<text x="603" y="536" fill="#cdd6f4">и</text>
+<text x="621" y="536" fill="#cdd6f4">о</text>
+<text x="630" y="536" fill="#cdd6f4">с</text>
+<text x="639" y="536" fill="#cdd6f4">т</text>
+<text x="648" y="536" fill="#cdd6f4">а</text>
+<text x="657" y="536" fill="#cdd6f4">ю</text>
+<text x="666" y="536" fill="#cdd6f4">т</text>
+<text x="675" y="536" fill="#cdd6f4">с</text>
+<text x="684" y="536" fill="#cdd6f4">я</text>
+<text x="702" y="536" fill="#cdd6f4">в</text>
+<text x="711" y="536" fill="#cdd6f4">в</text>
+<text x="720" y="536" fill="#cdd6f4">о</text>
+<text x="729" y="536" fill="#cdd6f4">д</text>
+<text x="738" y="536" fill="#cdd6f4">о</text>
+<text x="747" y="536" fill="#cdd6f4">м</text>
+<text x="756" y="536" fill="#cdd6f4">.</text>
+<rect x="963" y="522" width="9" height="18" fill="#1e1e2e"/>
+<path d="M967.5,522V540" fill="none" stroke="#89dceb" stroke-width="1"/>
+<rect x="972" y="522" width="270" height="18" fill="#181825"/>
+<rect x="1242" y="522" width="9" height="18" fill="#1e1e2e"/>
+<path d="M1246.5,522V540" fill="none" stroke="#9399b2" stroke-width="1"/>
+<rect x="1251" y="522" width="9" height="18" fill="#1e1e2e"/>
+<path d="M1251,531.0H1260" fill="none" stroke="#11111b" stroke-width="1"/>
+<rect x="0" y="540" width="9" height="18" fill="#181825"/>
+<text x="0" y="554" fill="#a6e3a1">[</text>
+<rect x="9" y="540" width="9" height="18" fill="#1e1e2e"/>
+<path d="M13.5,540V558" fill="none" stroke="#9399b2" stroke-width="1"/>
+<rect x="18" y="540" width="288" height="18" fill="#181825"/>
+<rect x="306" y="540" width="9" height="18" fill="#1e1e2e"/>
+<path d="M310.5,540V558" fill="none" stroke="#89dceb" stroke-width="1"/>
+<rect x="315" y="540" width="648" height="18" fill="#181825"/>
+<text x="315" y="554" fill="#cdd6f4">И</text>
+<text x="324" y="554" fill="#cdd6f4">з</text>
+<text x="342" y="554" fill="#cdd6f4">t</text>
+<text x="351" y="554" fill="#cdd6f4">e</text>
+<text x="360" y="554" fill="#cdd6f4">r</text>
+<text x="369" y="554" fill="#cdd6f4">m</text>
+<text x="378" y="554" fill="#cdd6f4">i</text>
+<text x="387" y="554" fill="#cdd6f4">n</text>
+<text x="396" y="554" fill="#cdd6f4">a</text>
+<text x="405" y="554" fill="#cdd6f4">l</text>
+<text x="414" y="554" fill="#cdd6f4">:</text>
+<text x="432" y="554" fill="#cdd6f4">E</text>
+<text x="441" y="554" fill="#cdd6f4">s</text>
+<text x="450" y="554" fill="#cdd6f4">c</text>
+<text x="468" y="554" fill="#cdd6f4">E</text>
+<text x="477" y="554" fill="#cdd6f4">s</text>
+<text x="486" y="554" fill="#cdd6f4">c</text>
+<text x="504" y="554" fill="#cdd6f4">—</text>
+<text x="522" y="554" fill="#cdd6f4">n</text>
+<text x="531" y="554" fill="#cdd6f4">o</text>
+<text x="540" y="554" fill="#cdd6f4">r</text>
+<text x="549" y="554" fill="#cdd6f4">m</text>
+<text x="558" y="554" fill="#cdd6f4">a</text>
+<text x="567" y="554" fill="#cdd6f4">l</text>
+<text x="576" y="554" fill="#cdd6f4">;</text>
+<text x="594" y="554" fill="#cdd6f4">F</text>
+<text x="603" y="554" fill="#cdd6f4">7</text>
+<text x="621" y="554" fill="#cdd6f4">—</text>
+<text x="639" y="554" fill="#cdd6f4">в</text>
+<text x="657" y="554" fill="#cdd6f4">к</text>
+<text x="666" y="554" fill="#cdd6f4">о</text>
+<text x="675" y="554" fill="#cdd6f4">д</text>
+<text x="684" y="554" fill="#cdd6f4">.</text>
+<rect x="963" y="540" width="9" height="18" fill="#1e1e2e"/>
+<path d="M967.5,540V558" fill="none" stroke="#89dceb" stroke-width="1"/>
+<rect x="972" y="540" width="270" height="18" fill="#181825"/>
+<rect x="1242" y="540" width="9" height="18" fill="#1e1e2e"/>
+<path d="M1246.5,540V558" fill="none" stroke="#9399b2" stroke-width="1"/>
+<rect x="1251" y="540" width="9" height="18" fill="#1e1e2e"/>
+<rect x="0" y="558" width="9" height="18" fill="#181825"/>
+<rect x="9" y="558" width="9" height="18" fill="#1e1e2e"/>
+<path d="M13.5,558V576" fill="none" stroke="#9399b2" stroke-width="1"/>
+<rect x="18" y="558" width="288" height="18" fill="#181825"/>
+<rect x="306" y="558" width="9" height="18" fill="#1e1e2e"/>
+<path d="M310.5,558V576" fill="none" stroke="#89dceb" stroke-width="1"/>
+<rect x="315" y="558" width="648" height="18" fill="#181825"/>
+<text x="315" y="572" fill="#cdd6f4">Н</text>
+<text x="324" y="572" fill="#cdd6f4">а</text>
+<text x="333" y="572" fill="#cdd6f4">в</text>
+<text x="342" y="572" fill="#cdd6f4">и</text>
+<text x="351" y="572" fill="#cdd6f4">г</text>
+<text x="360" y="572" fill="#cdd6f4">а</text>
+<text x="369" y="572" fill="#cdd6f4">ц</text>
+<text x="378" y="572" fill="#cdd6f4">и</text>
+<text x="387" y="572" fill="#cdd6f4">я</text>
+<text x="405" y="572" fill="#cdd6f4">н</text>
+<text x="414" y="572" fill="#cdd6f4">е</text>
+<text x="432" y="572" fill="#cdd6f4">п</text>
+<text x="441" y="572" fill="#cdd6f4">р</text>
+<text x="450" y="572" fill="#cdd6f4">о</text>
+<text x="459" y="572" fill="#cdd6f4">д</text>
+<text x="468" y="572" fill="#cdd6f4">о</text>
+<text x="477" y="572" fill="#cdd6f4">л</text>
+<text x="486" y="572" fill="#cdd6f4">ж</text>
+<text x="495" y="572" fill="#cdd6f4">а</text>
+<text x="504" y="572" fill="#cdd6f4">е</text>
+<text x="513" y="572" fill="#cdd6f4">т</text>
+<text x="531" y="572" fill="#cdd6f4">и</text>
+<text x="549" y="572" fill="#cdd6f4">н</text>
+<text x="558" y="572" fill="#cdd6f4">е</text>
+<text x="576" y="572" fill="#cdd6f4">з</text>
+<text x="585" y="572" fill="#cdd6f4">а</text>
+<text x="594" y="572" fill="#cdd6f4">в</text>
+<text x="603" y="572" fill="#cdd6f4">е</text>
+<text x="612" y="572" fill="#cdd6f4">р</text>
+<text x="621" y="572" fill="#cdd6f4">ш</text>
+<text x="630" y="572" fill="#cdd6f4">а</text>
+<text x="639" y="572" fill="#cdd6f4">е</text>
+<text x="648" y="572" fill="#cdd6f4">т</text>
+<text x="666" y="572" fill="#cdd6f4">о</text>
+<text x="675" y="572" fill="#cdd6f4">т</text>
+<text x="684" y="572" fill="#cdd6f4">л</text>
+<text x="693" y="572" fill="#cdd6f4">а</text>
+<text x="702" y="572" fill="#cdd6f4">д</text>
+<text x="711" y="572" fill="#cdd6f4">к</text>
+<text x="720" y="572" fill="#cdd6f4">у</text>
+<text x="729" y="572" fill="#cdd6f4">.</text>
+<rect x="963" y="558" width="9" height="18" fill="#1e1e2e"/>
+<path d="M967.5,558V576" fill="none" stroke="#89dceb" stroke-width="1"/>
+<rect x="972" y="558" width="270" height="18" fill="#181825"/>
+<rect x="1242" y="558" width="9" height="18" fill="#1e1e2e"/>
+<path d="M1246.5,558V576" fill="none" stroke="#9399b2" stroke-width="1"/>
+<rect x="1251" y="558" width="9" height="18" fill="#181825"/>
+<rect x="0" y="576" width="9" height="18" fill="#181825"/>
+<rect x="9" y="576" width="9" height="18" fill="#1e1e2e"/>
+<path d="M13.5,576V594" fill="none" stroke="#9399b2" stroke-width="1"/>
+<rect x="18" y="576" width="288" height="18" fill="#181825"/>
+<rect x="306" y="576" width="9" height="18" fill="#1e1e2e"/>
+<path d="M310.5,576V594" fill="none" stroke="#89dceb" stroke-width="1"/>
+<rect x="315" y="576" width="648" height="18" fill="#181825"/>
+<rect x="963" y="576" width="9" height="18" fill="#1e1e2e"/>
+<path d="M967.5,576V594" fill="none" stroke="#89dceb" stroke-width="1"/>
+<rect x="972" y="576" width="270" height="18" fill="#181825"/>
+<rect x="1242" y="576" width="9" height="18" fill="#1e1e2e"/>
+<path d="M1246.5,576V594" fill="none" stroke="#9399b2" stroke-width="1"/>
+<rect x="1251" y="576" width="9" height="18" fill="#181825"/>
+<rect x="0" y="594" width="9" height="18" fill="#1e1e2e"/>
+<path d="M0,603.0H9" fill="none" stroke="#11111b" stroke-width="1"/>
+<rect x="9" y="594" width="9" height="18" fill="#1e1e2e"/>
+<path d="M13.5,594V612" fill="none" stroke="#9399b2" stroke-width="1"/>
+<rect x="18" y="594" width="288" height="18" fill="#181825"/>
+<rect x="306" y="594" width="9" height="18" fill="#1e1e2e"/>
+<path d="M310.5,594V612" fill="none" stroke="#89dceb" stroke-width="1"/>
+<rect x="315" y="594" width="648" height="18" fill="#181825"/>
+<text x="315" y="608" fill="#cdd6f4">З</text>
+<text x="324" y="608" fill="#cdd6f4">а</text>
+<text x="333" y="608" fill="#cdd6f4">к</text>
+<text x="342" y="608" fill="#cdd6f4">р</text>
+<text x="351" y="608" fill="#cdd6f4">ы</text>
+<text x="360" y="608" fill="#cdd6f4">т</text>
+<text x="369" y="608" fill="#cdd6f4">ь</text>
+<text x="387" y="608" fill="#cdd6f4">п</text>
+<text x="396" y="608" fill="#cdd6f4">о</text>
+<text x="405" y="608" fill="#cdd6f4">м</text>
+<text x="414" y="608" fill="#cdd6f4">о</text>
+<text x="423" y="608" fill="#cdd6f4">щ</text>
+<text x="432" y="608" fill="#cdd6f4">ь</text>
+<text x="441" y="608" fill="#cdd6f4">:</text>
+<text x="459" y="608" fill="#cdd6f4">q</text>
+<text x="477" y="608" fill="#cdd6f4">/</text>
+<text x="495" y="608" fill="#cdd6f4">E</text>
+<text x="504" y="608" fill="#cdd6f4">s</text>
+<text x="513" y="608" fill="#cdd6f4">c</text>
+<rect x="963" y="594" width="9" height="18" fill="#1e1e2e"/>
+<path d="M967.5,594V612" fill="none" stroke="#89dceb" stroke-width="1"/>
+<rect x="972" y="594" width="270" height="18" fill="#181825"/>
+<rect x="1242" y="594" width="9" height="18" fill="#1e1e2e"/>
+<path d="M1246.5,594V612" fill="none" stroke="#9399b2" stroke-width="1"/>
+<rect x="1251" y="594" width="9" height="18" fill="#181825"/>
+<rect x="0" y="612" width="9" height="18" fill="#1e1e2e"/>
+<rect x="9" y="612" width="9" height="18" fill="#1e1e2e"/>
+<path d="M13.5,612V630" fill="none" stroke="#9399b2" stroke-width="1"/>
+<rect x="18" y="612" width="288" height="18" fill="#181825"/>
+<rect x="306" y="612" width="666" height="18" fill="#1e1e2e"/>
+<path d="M310.5,612V616.5Q310.5,621.0 315.0,621.0H315" fill="none" stroke="#89dceb" stroke-width="1"/>
+<path d="M315,621.0H324" fill="none" stroke="#89dceb" stroke-width="1"/>
+<path d="M324,621.0H333" fill="none" stroke="#89dceb" stroke-width="1"/>
+<path d="M333,621.0H342" fill="none" stroke="#89dceb" stroke-width="1"/>
+<path d="M342,621.0H351" fill="none" stroke="#89dceb" stroke-width="1"/>
+<path d="M351,621.0H360" fill="none" stroke="#89dceb" stroke-width="1"/>
+<path d="M360,621.0H369" fill="none" stroke="#89dceb" stroke-width="1"/>
+<path d="M369,621.0H378" fill="none" stroke="#89dceb" stroke-width="1"/>
+<path d="M378,621.0H387" fill="none" stroke="#89dceb" stroke-width="1"/>
+<path d="M387,621.0H396" fill="none" stroke="#89dceb" stroke-width="1"/>
+<path d="M396,621.0H405" fill="none" stroke="#89dceb" stroke-width="1"/>
+<path d="M405,621.0H414" fill="none" stroke="#89dceb" stroke-width="1"/>
+<path d="M414,621.0H423" fill="none" stroke="#89dceb" stroke-width="1"/>
+<path d="M423,621.0H432" fill="none" stroke="#89dceb" stroke-width="1"/>
+<path d="M432,621.0H441" fill="none" stroke="#89dceb" stroke-width="1"/>
+<path d="M441,621.0H450" fill="none" stroke="#89dceb" stroke-width="1"/>
+<path d="M450,621.0H459" fill="none" stroke="#89dceb" stroke-width="1"/>
+<path d="M459,621.0H468" fill="none" stroke="#89dceb" stroke-width="1"/>
+<path d="M468,621.0H477" fill="none" stroke="#89dceb" stroke-width="1"/>
+<path d="M477,621.0H486" fill="none" stroke="#89dceb" stroke-width="1"/>
+<path d="M486,621.0H495" fill="none" stroke="#89dceb" stroke-width="1"/>
+<path d="M495,621.0H504" fill="none" stroke="#89dceb" stroke-width="1"/>
+<path d="M504,621.0H513" fill="none" stroke="#89dceb" stroke-width="1"/>
+<path d="M513,621.0H522" fill="none" stroke="#89dceb" stroke-width="1"/>
+<path d="M522,621.0H531" fill="none" stroke="#89dceb" stroke-width="1"/>
+<path d="M531,621.0H540" fill="none" stroke="#89dceb" stroke-width="1"/>
+<path d="M540,621.0H549" fill="none" stroke="#89dceb" stroke-width="1"/>
+<path d="M549,621.0H558" fill="none" stroke="#89dceb" stroke-width="1"/>
+<path d="M558,621.0H567" fill="none" stroke="#89dceb" stroke-width="1"/>
+<path d="M567,621.0H576" fill="none" stroke="#89dceb" stroke-width="1"/>
+<path d="M576,621.0H585" fill="none" stroke="#89dceb" stroke-width="1"/>
+<path d="M585,621.0H594" fill="none" stroke="#89dceb" stroke-width="1"/>
+<path d="M594,621.0H603" fill="none" stroke="#89dceb" stroke-width="1"/>
+<path d="M603,621.0H612" fill="none" stroke="#89dceb" stroke-width="1"/>
+<path d="M612,621.0H621" fill="none" stroke="#89dceb" stroke-width="1"/>
+<path d="M621,621.0H630" fill="none" stroke="#89dceb" stroke-width="1"/>
+<path d="M630,621.0H639" fill="none" stroke="#89dceb" stroke-width="1"/>
+<path d="M639,621.0H648" fill="none" stroke="#89dceb" stroke-width="1"/>
+<path d="M648,621.0H657" fill="none" stroke="#89dceb" stroke-width="1"/>
+<path d="M657,621.0H666" fill="none" stroke="#89dceb" stroke-width="1"/>
+<path d="M666,621.0H675" fill="none" stroke="#89dceb" stroke-width="1"/>
+<path d="M675,621.0H684" fill="none" stroke="#89dceb" stroke-width="1"/>
+<path d="M684,621.0H693" fill="none" stroke="#89dceb" stroke-width="1"/>
+<path d="M693,621.0H702" fill="none" stroke="#89dceb" stroke-width="1"/>
+<path d="M702,621.0H711" fill="none" stroke="#89dceb" stroke-width="1"/>
+<path d="M711,621.0H720" fill="none" stroke="#89dceb" stroke-width="1"/>
+<path d="M720,621.0H729" fill="none" stroke="#89dceb" stroke-width="1"/>
+<path d="M729,621.0H738" fill="none" stroke="#89dceb" stroke-width="1"/>
+<path d="M738,621.0H747" fill="none" stroke="#89dceb" stroke-width="1"/>
+<path d="M747,621.0H756" fill="none" stroke="#89dceb" stroke-width="1"/>
+<path d="M756,621.0H765" fill="none" stroke="#89dceb" stroke-width="1"/>
+<path d="M765,621.0H774" fill="none" stroke="#89dceb" stroke-width="1"/>
+<path d="M774,621.0H783" fill="none" stroke="#89dceb" stroke-width="1"/>
+<path d="M783,621.0H792" fill="none" stroke="#89dceb" stroke-width="1"/>
+<path d="M792,621.0H801" fill="none" stroke="#89dceb" stroke-width="1"/>
+<path d="M801,621.0H810" fill="none" stroke="#89dceb" stroke-width="1"/>
+<path d="M810,621.0H819" fill="none" stroke="#89dceb" stroke-width="1"/>
+<path d="M819,621.0H828" fill="none" stroke="#89dceb" stroke-width="1"/>
+<path d="M828,621.0H837" fill="none" stroke="#89dceb" stroke-width="1"/>
+<path d="M837,621.0H846" fill="none" stroke="#89dceb" stroke-width="1"/>
+<path d="M846,621.0H855" fill="none" stroke="#89dceb" stroke-width="1"/>
+<path d="M855,621.0H864" fill="none" stroke="#89dceb" stroke-width="1"/>
+<path d="M864,621.0H873" fill="none" stroke="#89dceb" stroke-width="1"/>
+<path d="M873,621.0H882" fill="none" stroke="#89dceb" stroke-width="1"/>
+<path d="M882,621.0H891" fill="none" stroke="#89dceb" stroke-width="1"/>
+<path d="M891,621.0H900" fill="none" stroke="#89dceb" stroke-width="1"/>
+<path d="M900,621.0H909" fill="none" stroke="#89dceb" stroke-width="1"/>
+<path d="M909,621.0H918" fill="none" stroke="#89dceb" stroke-width="1"/>
+<path d="M918,621.0H927" fill="none" stroke="#89dceb" stroke-width="1"/>
+<path d="M927,621.0H936" fill="none" stroke="#89dceb" stroke-width="1"/>
+<path d="M936,621.0H945" fill="none" stroke="#89dceb" stroke-width="1"/>
+<path d="M945,621.0H954" fill="none" stroke="#89dceb" stroke-width="1"/>
+<path d="M954,621.0H963" fill="none" stroke="#89dceb" stroke-width="1"/>
+<path d="M967.5,612V616.5Q967.5,621.0 963.0,621.0H963" fill="none" stroke="#89dceb" stroke-width="1"/>
+<rect x="972" y="612" width="270" height="18" fill="#181825"/>
+<rect x="1242" y="612" width="9" height="18" fill="#1e1e2e"/>
+<path d="M1246.5,612V630" fill="none" stroke="#9399b2" stroke-width="1"/>
+<rect x="1251" y="612" width="9" height="18" fill="#181825"/>
+<rect x="0" y="630" width="9" height="18" fill="#313244"/>
+<text x="0" y="644" fill="#89dceb">m</text>
+<rect x="9" y="630" width="9" height="18" fill="#1e1e2e"/>
+<path d="M13.5,630V648" fill="none" stroke="#9399b2" stroke-width="1"/>
+<rect x="18" y="630" width="1224" height="18" fill="#181825"/>
+<rect x="1242" y="630" width="9" height="18" fill="#1e1e2e"/>
+<path d="M1246.5,630V648" fill="none" stroke="#9399b2" stroke-width="1"/>
+<rect x="1251" y="630" width="9" height="18" fill="#313244"/>
+<rect x="0" y="648" width="9" height="18" fill="#181825"/>
+<rect x="9" y="648" width="9" height="18" fill="#1e1e2e"/>
+<path d="M13.5,648V666" fill="none" stroke="#9399b2" stroke-width="1"/>
+<rect x="18" y="648" width="1224" height="18" fill="#181825"/>
+<rect x="1242" y="648" width="9" height="18" fill="#1e1e2e"/>
+<path d="M1246.5,648V666" fill="none" stroke="#9399b2" stroke-width="1"/>
+<rect x="1251" y="648" width="9" height="18" fill="#181825"/>
+<rect x="0" y="666" width="9" height="18" fill="#181825"/>
+<rect x="9" y="666" width="9" height="18" fill="#1e1e2e"/>
+<path d="M13.5,666V684" fill="none" stroke="#9399b2" stroke-width="1"/>
+<rect x="18" y="666" width="1224" height="18" fill="#181825"/>
+<rect x="1242" y="666" width="9" height="18" fill="#1e1e2e"/>
+<path d="M1246.5,666V684" fill="none" stroke="#9399b2" stroke-width="1"/>
+<rect x="1251" y="666" width="9" height="18" fill="#181825"/>
+<rect x="0" y="684" width="9" height="18" fill="#181825"/>
+<rect x="9" y="684" width="9" height="18" fill="#1e1e2e"/>
+<path d="M13.5,684V702" fill="none" stroke="#9399b2" stroke-width="1"/>
+<rect x="18" y="684" width="1224" height="18" fill="#181825"/>
+<rect x="1242" y="684" width="9" height="18" fill="#1e1e2e"/>
+<path d="M1246.5,684V702" fill="none" stroke="#9399b2" stroke-width="1"/>
+<rect x="1251" y="684" width="9" height="18" fill="#181825"/>
+<rect x="0" y="702" width="9" height="18" fill="#181825"/>
+<rect x="9" y="702" width="9" height="18" fill="#1e1e2e"/>
+<path d="M13.5,702V720" fill="none" stroke="#9399b2" stroke-width="1"/>
+<rect x="18" y="702" width="1224" height="18" fill="#181825"/>
+<rect x="1242" y="702" width="9" height="18" fill="#1e1e2e"/>
+<path d="M1246.5,702V720" fill="none" stroke="#9399b2" stroke-width="1"/>
+<rect x="1251" y="702" width="9" height="18" fill="#181825"/>
+<rect x="0" y="720" width="9" height="18" fill="#181825"/>
+<rect x="9" y="720" width="9" height="18" fill="#1e1e2e"/>
+<path d="M13.5,720V738" fill="none" stroke="#9399b2" stroke-width="1"/>
+<rect x="18" y="720" width="1224" height="18" fill="#181825"/>
+<rect x="1242" y="720" width="9" height="18" fill="#1e1e2e"/>
+<path d="M1246.5,720V738" fill="none" stroke="#9399b2" stroke-width="1"/>
+<rect x="1251" y="720" width="9" height="18" fill="#181825"/>
+<rect x="0" y="738" width="9" height="18" fill="#181825"/>
+<rect x="9" y="738" width="9" height="18" fill="#1e1e2e"/>
+<path d="M13.5,738V756" fill="none" stroke="#9399b2" stroke-width="1"/>
+<rect x="18" y="738" width="1224" height="18" fill="#181825"/>
+<rect x="1242" y="738" width="9" height="18" fill="#1e1e2e"/>
+<path d="M1246.5,738V756" fill="none" stroke="#9399b2" stroke-width="1"/>
+<rect x="1251" y="738" width="9" height="18" fill="#181825"/>
+<rect x="0" y="756" width="9" height="18" fill="#181825"/>
+<rect x="9" y="756" width="1242" height="18" fill="#1e1e2e"/>
+<path d="M13.5,756V760.5Q13.5,765.0 18.0,765.0H18" fill="none" stroke="#9399b2" stroke-width="1"/>
+<path d="M18,765.0H27" fill="none" stroke="#9399b2" stroke-width="1"/>
+<path d="M27,765.0H36" fill="none" stroke="#9399b2" stroke-width="1"/>
+<path d="M36,765.0H45" fill="none" stroke="#9399b2" stroke-width="1"/>
+<path d="M45,765.0H54" fill="none" stroke="#9399b2" stroke-width="1"/>
+<path d="M54,765.0H63" fill="none" stroke="#9399b2" stroke-width="1"/>
+<path d="M63,765.0H72" fill="none" stroke="#9399b2" stroke-width="1"/>
+<path d="M72,765.0H81" fill="none" stroke="#9399b2" stroke-width="1"/>
+<path d="M81,765.0H90" fill="none" stroke="#9399b2" stroke-width="1"/>
+<path d="M90,765.0H99" fill="none" stroke="#9399b2" stroke-width="1"/>
+<path d="M99,765.0H108" fill="none" stroke="#9399b2" stroke-width="1"/>
+<path d="M108,765.0H117" fill="none" stroke="#9399b2" stroke-width="1"/>
+<path d="M117,765.0H126" fill="none" stroke="#9399b2" stroke-width="1"/>
+<path d="M126,765.0H135" fill="none" stroke="#9399b2" stroke-width="1"/>
+<path d="M135,765.0H144" fill="none" stroke="#9399b2" stroke-width="1"/>
+<path d="M144,765.0H153" fill="none" stroke="#9399b2" stroke-width="1"/>
+<path d="M153,765.0H162" fill="none" stroke="#9399b2" stroke-width="1"/>
+<path d="M162,765.0H171" fill="none" stroke="#9399b2" stroke-width="1"/>
+<path d="M171,765.0H180" fill="none" stroke="#9399b2" stroke-width="1"/>
+<path d="M180,765.0H189" fill="none" stroke="#9399b2" stroke-width="1"/>
+<path d="M189,765.0H198" fill="none" stroke="#9399b2" stroke-width="1"/>
+<path d="M198,765.0H207" fill="none" stroke="#9399b2" stroke-width="1"/>
+<path d="M207,765.0H216" fill="none" stroke="#9399b2" stroke-width="1"/>
+<path d="M216,765.0H225" fill="none" stroke="#9399b2" stroke-width="1"/>
+<path d="M225,765.0H234" fill="none" stroke="#9399b2" stroke-width="1"/>
+<path d="M234,765.0H243" fill="none" stroke="#9399b2" stroke-width="1"/>
+<path d="M243,765.0H252" fill="none" stroke="#9399b2" stroke-width="1"/>
+<path d="M252,765.0H261" fill="none" stroke="#9399b2" stroke-width="1"/>
+<path d="M261,765.0H270" fill="none" stroke="#9399b2" stroke-width="1"/>
+<path d="M270,765.0H279" fill="none" stroke="#9399b2" stroke-width="1"/>
+<path d="M279,765.0H288" fill="none" stroke="#9399b2" stroke-width="1"/>
+<path d="M288,765.0H297" fill="none" stroke="#9399b2" stroke-width="1"/>
+<path d="M297,765.0H306" fill="none" stroke="#9399b2" stroke-width="1"/>
+<path d="M306,765.0H315" fill="none" stroke="#9399b2" stroke-width="1"/>
+<path d="M315,765.0H324" fill="none" stroke="#9399b2" stroke-width="1"/>
+<path d="M324,765.0H333" fill="none" stroke="#9399b2" stroke-width="1"/>
+<path d="M333,765.0H342" fill="none" stroke="#9399b2" stroke-width="1"/>
+<path d="M342,765.0H351" fill="none" stroke="#9399b2" stroke-width="1"/>
+<path d="M351,765.0H360" fill="none" stroke="#9399b2" stroke-width="1"/>
+<path d="M360,765.0H369" fill="none" stroke="#9399b2" stroke-width="1"/>
+<path d="M369,765.0H378" fill="none" stroke="#9399b2" stroke-width="1"/>
+<path d="M378,765.0H387" fill="none" stroke="#9399b2" stroke-width="1"/>
+<path d="M387,765.0H396" fill="none" stroke="#9399b2" stroke-width="1"/>
+<path d="M396,765.0H405" fill="none" stroke="#9399b2" stroke-width="1"/>
+<path d="M405,765.0H414" fill="none" stroke="#9399b2" stroke-width="1"/>
+<path d="M414,765.0H423" fill="none" stroke="#9399b2" stroke-width="1"/>
+<path d="M423,765.0H432" fill="none" stroke="#9399b2" stroke-width="1"/>
+<path d="M432,765.0H441" fill="none" stroke="#9399b2" stroke-width="1"/>
+<path d="M441,765.0H450" fill="none" stroke="#9399b2" stroke-width="1"/>
+<path d="M450,765.0H459" fill="none" stroke="#9399b2" stroke-width="1"/>
+<path d="M459,765.0H468" fill="none" stroke="#9399b2" stroke-width="1"/>
+<path d="M468,765.0H477" fill="none" stroke="#9399b2" stroke-width="1"/>
+<path d="M477,765.0H486" fill="none" stroke="#9399b2" stroke-width="1"/>
+<path d="M486,765.0H495" fill="none" stroke="#9399b2" stroke-width="1"/>
+<path d="M495,765.0H504" fill="none" stroke="#9399b2" stroke-width="1"/>
+<path d="M504,765.0H513" fill="none" stroke="#9399b2" stroke-width="1"/>
+<path d="M513,765.0H522" fill="none" stroke="#9399b2" stroke-width="1"/>
+<path d="M522,765.0H531" fill="none" stroke="#9399b2" stroke-width="1"/>
+<path d="M531,765.0H540" fill="none" stroke="#9399b2" stroke-width="1"/>
+<path d="M540,765.0H549" fill="none" stroke="#9399b2" stroke-width="1"/>
+<path d="M549,765.0H558" fill="none" stroke="#9399b2" stroke-width="1"/>
+<path d="M558,765.0H567" fill="none" stroke="#9399b2" stroke-width="1"/>
+<path d="M567,765.0H576" fill="none" stroke="#9399b2" stroke-width="1"/>
+<path d="M576,765.0H585" fill="none" stroke="#9399b2" stroke-width="1"/>
+<path d="M585,765.0H594" fill="none" stroke="#9399b2" stroke-width="1"/>
+<path d="M594,765.0H603" fill="none" stroke="#9399b2" stroke-width="1"/>
+<path d="M603,765.0H612" fill="none" stroke="#9399b2" stroke-width="1"/>
+<path d="M612,765.0H621" fill="none" stroke="#9399b2" stroke-width="1"/>
+<path d="M621,765.0H630" fill="none" stroke="#9399b2" stroke-width="1"/>
+<path d="M630,765.0H639" fill="none" stroke="#9399b2" stroke-width="1"/>
+<path d="M639,765.0H648" fill="none" stroke="#9399b2" stroke-width="1"/>
+<path d="M648,765.0H657" fill="none" stroke="#9399b2" stroke-width="1"/>
+<path d="M657,765.0H666" fill="none" stroke="#9399b2" stroke-width="1"/>
+<path d="M666,765.0H675" fill="none" stroke="#9399b2" stroke-width="1"/>
+<path d="M675,765.0H684" fill="none" stroke="#9399b2" stroke-width="1"/>
+<path d="M684,765.0H693" fill="none" stroke="#9399b2" stroke-width="1"/>
+<path d="M693,765.0H702" fill="none" stroke="#9399b2" stroke-width="1"/>
+<path d="M702,765.0H711" fill="none" stroke="#9399b2" stroke-width="1"/>
+<path d="M711,765.0H720" fill="none" stroke="#9399b2" stroke-width="1"/>
+<path d="M720,765.0H729" fill="none" stroke="#9399b2" stroke-width="1"/>
+<path d="M729,765.0H738" fill="none" stroke="#9399b2" stroke-width="1"/>
+<path d="M738,765.0H747" fill="none" stroke="#9399b2" stroke-width="1"/>
+<path d="M747,765.0H756" fill="none" stroke="#9399b2" stroke-width="1"/>
+<path d="M756,765.0H765" fill="none" stroke="#9399b2" stroke-width="1"/>
+<path d="M765,765.0H774" fill="none" stroke="#9399b2" stroke-width="1"/>
+<path d="M774,765.0H783" fill="none" stroke="#9399b2" stroke-width="1"/>
+<path d="M783,765.0H792" fill="none" stroke="#9399b2" stroke-width="1"/>
+<path d="M792,765.0H801" fill="none" stroke="#9399b2" stroke-width="1"/>
+<path d="M801,765.0H810" fill="none" stroke="#9399b2" stroke-width="1"/>
+<path d="M810,765.0H819" fill="none" stroke="#9399b2" stroke-width="1"/>
+<path d="M819,765.0H828" fill="none" stroke="#9399b2" stroke-width="1"/>
+<path d="M828,765.0H837" fill="none" stroke="#9399b2" stroke-width="1"/>
+<path d="M837,765.0H846" fill="none" stroke="#9399b2" stroke-width="1"/>
+<path d="M846,765.0H855" fill="none" stroke="#9399b2" stroke-width="1"/>
+<path d="M855,765.0H864" fill="none" stroke="#9399b2" stroke-width="1"/>
+<path d="M864,765.0H873" fill="none" stroke="#9399b2" stroke-width="1"/>
+<path d="M873,765.0H882" fill="none" stroke="#9399b2" stroke-width="1"/>
+<path d="M882,765.0H891" fill="none" stroke="#9399b2" stroke-width="1"/>
+<path d="M891,765.0H900" fill="none" stroke="#9399b2" stroke-width="1"/>
+<path d="M900,765.0H909" fill="none" stroke="#9399b2" stroke-width="1"/>
+<path d="M909,765.0H918" fill="none" stroke="#9399b2" stroke-width="1"/>
+<path d="M918,765.0H927" fill="none" stroke="#9399b2" stroke-width="1"/>
+<path d="M927,765.0H936" fill="none" stroke="#9399b2" stroke-width="1"/>
+<path d="M936,765.0H945" fill="none" stroke="#9399b2" stroke-width="1"/>
+<path d="M945,765.0H954" fill="none" stroke="#9399b2" stroke-width="1"/>
+<path d="M954,765.0H963" fill="none" stroke="#9399b2" stroke-width="1"/>
+<path d="M963,765.0H972" fill="none" stroke="#9399b2" stroke-width="1"/>
+<path d="M972,765.0H981" fill="none" stroke="#9399b2" stroke-width="1"/>
+<path d="M981,765.0H990" fill="none" stroke="#9399b2" stroke-width="1"/>
+<path d="M990,765.0H999" fill="none" stroke="#9399b2" stroke-width="1"/>
+<path d="M999,765.0H1008" fill="none" stroke="#9399b2" stroke-width="1"/>
+<path d="M1008,765.0H1017" fill="none" stroke="#9399b2" stroke-width="1"/>
+<path d="M1017,765.0H1026" fill="none" stroke="#9399b2" stroke-width="1"/>
+<path d="M1026,765.0H1035" fill="none" stroke="#9399b2" stroke-width="1"/>
+<path d="M1035,765.0H1044" fill="none" stroke="#9399b2" stroke-width="1"/>
+<path d="M1044,765.0H1053" fill="none" stroke="#9399b2" stroke-width="1"/>
+<path d="M1053,765.0H1062" fill="none" stroke="#9399b2" stroke-width="1"/>
+<path d="M1062,765.0H1071" fill="none" stroke="#9399b2" stroke-width="1"/>
+<path d="M1071,765.0H1080" fill="none" stroke="#9399b2" stroke-width="1"/>
+<path d="M1080,765.0H1089" fill="none" stroke="#9399b2" stroke-width="1"/>
+<path d="M1089,765.0H1098" fill="none" stroke="#9399b2" stroke-width="1"/>
+<path d="M1098,765.0H1107" fill="none" stroke="#9399b2" stroke-width="1"/>
+<path d="M1107,765.0H1116" fill="none" stroke="#9399b2" stroke-width="1"/>
+<path d="M1116,765.0H1125" fill="none" stroke="#9399b2" stroke-width="1"/>
+<path d="M1125,765.0H1134" fill="none" stroke="#9399b2" stroke-width="1"/>
+<path d="M1134,765.0H1143" fill="none" stroke="#9399b2" stroke-width="1"/>
+<path d="M1143,765.0H1152" fill="none" stroke="#9399b2" stroke-width="1"/>
+<path d="M1152,765.0H1161" fill="none" stroke="#9399b2" stroke-width="1"/>
+<path d="M1161,765.0H1170" fill="none" stroke="#9399b2" stroke-width="1"/>
+<path d="M1170,765.0H1179" fill="none" stroke="#9399b2" stroke-width="1"/>
+<path d="M1179,765.0H1188" fill="none" stroke="#9399b2" stroke-width="1"/>
+<path d="M1188,765.0H1197" fill="none" stroke="#9399b2" stroke-width="1"/>
+<path d="M1197,765.0H1206" fill="none" stroke="#9399b2" stroke-width="1"/>
+<path d="M1206,765.0H1215" fill="none" stroke="#9399b2" stroke-width="1"/>
+<path d="M1215,765.0H1224" fill="none" stroke="#9399b2" stroke-width="1"/>
+<path d="M1224,765.0H1233" fill="none" stroke="#9399b2" stroke-width="1"/>
+<path d="M1233,765.0H1242" fill="none" stroke="#9399b2" stroke-width="1"/>
+<path d="M1246.5,756V760.5Q1246.5,765.0 1242.0,765.0H1242" fill="none" stroke="#9399b2" stroke-width="1"/>
+<rect x="1251" y="756" width="9" height="18" fill="#181825"/>
+<rect x="0" y="774" width="72" height="18" fill="#89b4fa"/>
+<text x="9" y="788" fill="#181825" font-weight="bold">N</text>
+<text x="18" y="788" fill="#181825" font-weight="bold">O</text>
+<text x="27" y="788" fill="#181825" font-weight="bold">R</text>
+<text x="36" y="788" fill="#181825" font-weight="bold">M</text>
+<text x="45" y="788" fill="#181825" font-weight="bold">A</text>
+<text x="54" y="788" fill="#181825" font-weight="bold">L</text>
+<rect x="72" y="774" width="90" height="18" fill="#313244"/>
+<text x="81" y="788" fill="#89b4fa"></text>
+<text x="99" y="788" fill="#89b4fa">m</text>
+<text x="108" y="788" fill="#89b4fa">a</text>
+<text x="117" y="788" fill="#89b4fa">s</text>
+<text x="126" y="788" fill="#89b4fa">t</text>
+<text x="135" y="788" fill="#89b4fa">e</text>
+<text x="144" y="788" fill="#89b4fa">r</text>
+<rect x="162" y="774" width="801" height="18" fill="#181825"/>
+<text x="171" y="788" fill="#cdd6f4">[</text>
+<text x="180" y="788" fill="#cdd6f4">N</text>
+<text x="189" y="788" fill="#cdd6f4">o</text>
+<text x="207" y="788" fill="#cdd6f4">N</text>
+<text x="216" y="788" fill="#cdd6f4">a</text>
+<text x="225" y="788" fill="#cdd6f4">m</text>
+<text x="234" y="788" fill="#cdd6f4">e</text>
+<text x="243" y="788" fill="#cdd6f4">]</text>
+<text x="936" y="788" fill="#cdd6f4"></text>
+<path d="M958.5,774V792" fill="none" stroke="#cdd6f4" stroke-width="1"/>
+<rect x="963" y="774" width="27" height="18" fill="#181825"/>
+<text x="972" y="788" fill="#6d8086"></text>
+<rect x="990" y="774" width="153" height="18" fill="#181825"/>
+<text x="990" y="788" fill="#cdd6f4">f</text>
+<text x="999" y="788" fill="#cdd6f4">o</text>
+<text x="1008" y="788" fill="#cdd6f4">r</text>
+<text x="1017" y="788" fill="#cdd6f4">g</text>
+<text x="1026" y="788" fill="#cdd6f4">e</text>
+<text x="1035" y="788" fill="#cdd6f4">-</text>
+<text x="1044" y="788" fill="#cdd6f4">p</text>
+<text x="1053" y="788" fill="#cdd6f4">a</text>
+<text x="1062" y="788" fill="#cdd6f4">n</text>
+<text x="1071" y="788" fill="#cdd6f4">e</text>
+<text x="1080" y="788" fill="#cdd6f4">l</text>
+<text x="1089" y="788" fill="#cdd6f4">-</text>
+<text x="1098" y="788" fill="#cdd6f4">h</text>
+<text x="1107" y="788" fill="#cdd6f4">e</text>
+<text x="1116" y="788" fill="#cdd6f4">l</text>
+<text x="1125" y="788" fill="#cdd6f4">p</text>
+<rect x="1143" y="774" width="45" height="18" fill="#313244"/>
+<text x="1152" y="788" fill="#89b4fa">T</text>
+<text x="1161" y="788" fill="#89b4fa">o</text>
+<text x="1170" y="788" fill="#89b4fa">p</text>
+<rect x="1188" y="774" width="72" height="18" fill="#89b4fa"/>
+<text x="1215" y="788" fill="#181825" font-weight="bold">1</text>
+<text x="1224" y="788" fill="#181825" font-weight="bold">:</text>
+<text x="1233" y="788" fill="#181825" font-weight="bold">1</text>
+<rect x="0" y="792" width="1260" height="18" fill="#1e1e2e"/>
+<text x="0" y="806" fill="#cdd6f4">:</text>
+<text x="9" y="806" fill="#cdd6f4">l</text>
+<text x="18" y="806" fill="#cdd6f4">u</text>
+<text x="27" y="806" fill="#cdd6f4">a</text>
+<text x="45" y="806" fill="#cdd6f4">r</text>
+<text x="54" y="806" fill="#cdd6f4">e</text>
+<text x="63" y="806" fill="#cdd6f4">q</text>
+<text x="72" y="806" fill="#cdd6f4">u</text>
+<text x="81" y="806" fill="#cdd6f4">i</text>
+<text x="90" y="806" fill="#cdd6f4">r</text>
+<text x="99" y="806" fill="#cdd6f4">e</text>
+<text x="108" y="806" fill="#cdd6f4">(</text>
+<text x="117" y="806" fill="#cdd6f4">&#x27;</text>
+<text x="126" y="806" fill="#cdd6f4">d</text>
+<text x="135" y="806" fill="#cdd6f4">a</text>
+<text x="144" y="806" fill="#cdd6f4">p</text>
+<text x="153" y="806" fill="#cdd6f4">u</text>
+<text x="162" y="806" fill="#cdd6f4">i</text>
+<text x="171" y="806" fill="#cdd6f4">&#x27;</text>
+<text x="180" y="806" fill="#cdd6f4">)</text>
+<text x="189" y="806" fill="#cdd6f4">.</text>
+<text x="198" y="806" fill="#cdd6f4">c</text>
+<text x="207" y="806" fill="#cdd6f4">l</text>
+<text x="216" y="806" fill="#cdd6f4">o</text>
+<text x="225" y="806" fill="#cdd6f4">s</text>
+<text x="234" y="806" fill="#cdd6f4">e</text>
+<text x="243" y="806" fill="#cdd6f4">(</text>
+<text x="252" y="806" fill="#cdd6f4">{</text>
+<text x="261" y="806" fill="#cdd6f4">l</text>
+<text x="270" y="806" fill="#cdd6f4">a</text>
+<text x="279" y="806" fill="#cdd6f4">y</text>
+<text x="288" y="806" fill="#cdd6f4">o</text>
+<text x="297" y="806" fill="#cdd6f4">u</text>
+<text x="306" y="806" fill="#cdd6f4">t</text>
+<text x="315" y="806" fill="#cdd6f4">=</text>
+<text x="324" y="806" fill="#cdd6f4">3</text>
+<text x="333" y="806" fill="#cdd6f4">}</text>
+<text x="342" y="806" fill="#cdd6f4">)</text>
+</g>
+</svg>

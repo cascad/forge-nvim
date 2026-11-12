@@ -41,6 +41,23 @@ local function close_help(enter)
     if enter and valid(old.source) then vim.api.nvim_set_current_win(old.source) end
 end
 
+-- spec: IDE-PANEL-24. Один заголовок в native рамке общего zoom.
+local function refresh_zoom()
+    if not zoom or not valid(zoom.win) then return end
+    local focused = vim.api.nvim_get_current_win() == zoom.win
+    local highlight = focused and 'DiagnosticInfo' or 'Comment'
+    local title = ' ' .. (titles[ft(zoom.win)] or 'Панель')
+        .. (focused and ' [focus]' or '') .. ' | Space w z: вернуть '
+    vim.api.nvim_win_set_config(zoom.win, { title = { { title, highlight } }, title_pos = 'center' })
+    local highlights = {}
+    for _, entry in ipairs(vim.split(vim.wo[zoom.win].winhl, ',', { trimempty = true })) do
+        if not entry:match('^FloatBorder:') then highlights[#highlights + 1] = entry end
+    end
+    highlights[#highlights + 1] = 'FloatBorder:' .. highlight
+    vim.wo[zoom.win].winhl = table.concat(highlights, ',')
+    vim.wo[zoom.win].winbar = ''
+end
+
 function M.restore(enter)
     local pilot=package.loaded['forge.frame_pilot']
     if pilot and pilot.restore() then return true end
@@ -260,11 +277,11 @@ function M.zoom()
     local win = vim.api.nvim_open_win(buf, true, {
         relative = 'editor', row = 1, col = 1, width = math.max(1, vim.o.columns - 4),
         height = math.max(1, vim.o.lines - 5), border = 'rounded',
-        title = ' ' .. titles[ft(source)] .. ' | Space w z: вернуть ', title_pos = 'center',
     })
     -- spec: IDE-PANEL-18. Исключение только overlay, shared buffer остаётся в slot.
     vim.w[win].edgy_disable = true
     zoom = { source = source, win = win }
+    refresh_zoom()
     vim.api.nvim_win_set_cursor(win, cursor)
     vim.fn.winrestview(view)
 end
@@ -390,6 +407,8 @@ function M.refresh()
         local pilot=package.loaded['forge.frame_pilot']
         if pilot and pilot.owns(win) then
             pilot.refresh()
+        elseif zoom and win == zoom.win then
+            refresh_zoom()
         elseif titles[ft(win)] and (ft(win)~='trouble' or trouble_view(vim.api.nvim_win_get_buf(win))) then
             vim.wo[win].winbar = winbar
         end

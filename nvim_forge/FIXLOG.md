@@ -10688,3 +10688,88 @@ change deduplicate-panel-navigation. Журналы дописаны с сохр
 
 **Файлы.** ide/controls.lua, CLAUDE.md, IDE_ROADMAP, HISTORY, AGENT_COMMANDS,
 change deduplicate-panel-navigation. Новые зависимости/SDK/patches не нужны.
+
+
+## 198. Цветные рамки общего zoom: первый прогон
+
+**Проблема.** IDE-076: владелец хочет цельные цветные рамки и понятный фокус.
+У повседневного Space w z была native рамка, но повторный winbar внутри и
+обычный цвет без связи с активностью окна.
+
+**Причина.** Общий zoom ещё не использовал оформление рабочего frame pilot.
+Для этого состояния уже есть один native float и existing controls.refresh.
+
+**Изменение.** Локальный refresh_zoom задаёт title/[focus]/подсказку возврата,
+DiagnosticInfo либо Comment при справке, убирает overlay winbar. Другие winhl
+mappings и исходный split сохраняются. Runtime net+19 строк/один файл.
+Новых backend/layout owner/plugins нет. Спека: IDE-PANEL-24 (ADDED).
+
+**Проверка.** Один Windows selected прогон: Debug5 PASS/1 FAIL, work-panels6,
+Outline6, Git6, tool-panels9, frame1 PASS; итог33 PASS/1 FAIL/0 SKIP. Новый
+IDE-PANEL-24 PASS:12 native RGB состояний Locals/Output/Files/Logs, title,
+четыре угла/стороны, help/refocus/restore и реальная DAP pause. У24 native
+profiles root0/signal0/APIerrors[]/own scopes empty; captured runtime совпадает.
+Строгая проверка change PASS. Raw .tests/zoom-style-* и profile9757080411800;
+подробности и hashes в change verification. Native SVG active/help скопированы
+в docs/assets/panel-frames. Ubuntu/macOS/physical/font QA/full не запускались.
+
+**Ошибка нового E2E.** Он оставлял Files/Logs в общем fixture; следующий старый
+IDE-PANEL-2 ожидал открытый dap-repl и получил false. Snapshot сразу после
+нового сценария содержит neo-tree/go/forge-logs, без dap-repl. Исправлен только
+postamble теста: вернуть код/Output и проверить прежнюю паузу. Правка внесена
+после прогона и НЕ запускалась; исходные bytes/log/FAIL сохранены. Runtime
+после прогона не менялся. Это не подтверждённый регресс поведения редактора.
+
+**Вывод.** Визуальный сценарий подтверждён, общая итерация ещё не готова к
+commit. Повтора в этой итерации нет по правилу владельца. Следующий отдельный
+шаг — один исправленный debug-panels прогон, затем commit при PASS; остальные
+пять файлов прошли с тем же runtime. Физическая оценка постоянных рамок и
+замена split layout остаются отдельными задачами. Docker/WSL не управлялись.
+
+**Файлы.** ide/controls.lua, existing debug-panels, style-panel-zoom-borders,
+PANEL_KEYS/IDE_ROADMAP/HISTORY/AGENT_COMMANDS, два native SVG. Тестовая
+инфраструктура и прежние e2e-catalog/POSIX drafts не изменялись.
+
+
+## 199. Цветные рамки zoom: завершение Windows-проверки
+
+**Проблема.** Первый прогон §198 подтвердил новый визуальный сценарий,
+но добавленный тест оставлял Logs вместо Output для следующего старого case.
+Общая Debug fixture требовала восстановления исходного состояния.
+
+**Причина.** Snapshot после IDE-PANEL-24 содержит Files/Logs без dap-repl;
+следующий IDE-PANEL-2 проверяет открытый Output. Postamble был исправлен
+в предыдущей итерации, её исходный FAIL и test bytes сохранены.
+
+**Изменение.** Возврат code/Output и проверка прежней DAP pause после нового
+сценария. Runtime после первого прогона не менялся: SHA256 controls.lua
+2118d8e70e8c8578f06613e015091b5c558a0e713a6be1b22466488c27da97dd.
+Спека: IDE-PANEL-24 (ADDED), итоговое оформление описано в §198.
+
+**Проверка.** По новому поручению владельца один Windows debug-panels прогон:
+6 PASS/0 FAIL/0 SKIP,12 native RGB checkpoints и следующий старый case PASS.
+Native profile10274073955800: root0/signal0/APIerrors[]/own scopes empty;
+captured controls/test bytes совпадают. Test SHA256:
+3ee74119346b007704ce8384d5938fc067e10dc8b75d196bbc2ca27084310a18.
+Пять остальных E2E файлов и runtime неизменны, их прежние28 PASS сохранены.
+Суммарно34 различных selected checks подтверждены на Windows; это не новый
+полный прогон. Первый33 PASS/1 FAIL остаётся результатом §198. Строгая
+проверка change, diff и append-only guards проверяются перед commit.
+Логи .tests/zoom-style-final-{debug-panels.txt,result.json,audit.json}.
+Ubuntu/macOS/physical/font QA не запускались. Desktop/WSL не управлялись.
+
+**Вывод.** Windows-проверка оформления завершена после конкретного исправления
+порядка в тесте; зелёный повтор не подменяет причину первого FAIL. Заголовок,
+акцент и приглушение доступны обычным Space w z. Постоянные рамки split и
+распространение Code/Locals pilot остаются отдельными задачами. После commit
+итерация останавливается; следующая очередь продукта — реальные проекты.
+
+**Файлы.** controls.lua, debug-panels, style-panel-zoom-borders, два native SVG,
+PANEL_KEYS/IDE_ROADMAP/HISTORY/AGENT_COMMANDS. Черновики e2e-catalog/POSIX и
+их изменения тестовой инфраструктуры в commit не включаются.
+
+
+Уточнение владельца после этой проверки: завершённые шаги коммитить самому
+и продолжать очередь до завершения плана, полного упора в его натурные
+проверки или отсутствия продвижения. Новый goal не включается. После этого
+commit продолжаем пункт3; правило одного прогона на итерацию сохраняется.

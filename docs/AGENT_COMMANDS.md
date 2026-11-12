@@ -7133,3 +7133,109 @@ staged blobs журналов отдельно сверяются с git show HE
 Ubuntu/macOS/physical GUI не запускались, Docker/WSL не управлялись. В commit
 входят только controls и документация этой итерации. Старые e2e-catalog/
 POSIX probe, tests/lib/spec_index/trace, registry/run/trace CLI остаются draft.
+
+
+## 109. Цветные рамки zoom: один прогон и ошибка postamble теста
+
+Windows/PowerShell, login=false, cwd F:/repo/forge-nvim. Чтение: Get-Content
+PANEL_FRAME_PILOT/REVIEW, controls/frame_pilot/debug-panels/frame-layout,
+rg по title/refresh/IDE-PANEL IDs. Ошибочный rg путь с literal * в аргументе
+PowerShell дал os error123; дальше поиск выполнялся рекурсивно по openspec.
+
+```powershell
+$env:TEMP='F:/repo/forge-nvim/.tests/tmp'
+$env:TMP=$env:TEMP
+$env:TMPDIR=$env:TEMP
+$env:NVIM_LOG_FILE="$env:TEMP/zoom-style.log"
+$env:npm_config_cache='F:/forge-nvim-tmp/npm-cache'
+$env:PYTHONIOENCODING='utf-8'
+$env:GOTOOLCHAIN='local'
+$env:GOMAXPROCS='2'
+$env:GOFLAGS='-p=2'
+$env:CARGO_BUILD_JOBS='2'
+$env:FORGE_E2E_CONFIG_SOURCE=$null
+$env:FORGE_TEST_ID=$null
+$env:FORGE_WORK_PANEL_CASE=$null
+$env:FORGE_TOOL_PANEL_CASE=$null
+$env:FORGE_LOG_CASE=$null
+npx.cmd --yes @fission-ai/openspec@1.13.2 context --json
+npx.cmd --yes @fission-ai/openspec@1.13.2 new change style-panel-zoom-borders
+npx.cmd --yes @fission-ai/openspec@1.13.2 status --change style-panel-zoom-borders --json
+# instructions proposal/specs/design/tasks/apply, JSON читался через ConvertFrom-Json
+npx.cmd --yes @fission-ai/openspec@1.13.2 instructions apply --change style-panel-zoom-borders --json
+$files=@('debug-panels','work-panels','outline','git-workflow','tool-panels','frame-layout')
+foreach ($name in $files) {
+  & .tools/neovim/windows-x64/bin/nvim.exe -l "tests/e2e/$name.test.lua" > ".tests/zoom-style-$name.txt" 2>&1
+  # actual loop сохранял LASTEXITCODE/result.json, печатал хвост, общий exit1 при FAIL
+}
+npx.cmd --yes @fission-ai/openspec@1.13.2 validate style-panel-zoom-borders --type change --strict --no-interactive > .tests/zoom-style-openspec.txt 2>&1
+Copy-Item -LiteralPath tests/e2e/debug-panels.test.lua -Destination .tests/zoom-style-first-debug-panels.test.lua
+Get-Content -LiteralPath '.tests/zoom-style-result.json'
+git diff --check
+```
+
+Первый единственный прогон33 PASS/1 FAIL/0 SKIP. Новый RGB E2E PASS;
+последний старый Debug case ожидал Output после оставленных новым сценарием
+Logs. Сохранённый snapshot IDE-PANEL-24 profile9757080411800 подтверждает
+отсутствие dap-repl. После сохранения исходного теста исправлен его postamble,
+повтора не было, commit отложен. Новый test SHA в zoom-style-audit.json;
+проверенная версия aa4e783c...65e3b5 остаётся в .tests и native profile.
+
+RGB render-ui.py вызван самим E2E, экспорт12 checkpoints в zoom-ui. Два
+исходных SVG скопированы Copy-Item из profile9757080411800/zoom-ui в
+ docs/assets/panel-frames/zoom-locals-{active,help}.svg после проверки, что
+пути не заняты. Read-only Python -B - audit прочитал все логи и24 shutdown:
+editor root0/signal0/APIerrors[]/scopes empty, captured controls совпадают.
+Outer Debug test code1 сохранён отдельно от успешного native cleanup.
+
+Prefix guard zoom-style-prefix.json: старые байты FIXLOG/commands и неизменные
+прежние test-infra drafts. Ubuntu/macOS/physical/full не запускались,
+Desktop/WSL не управлялись. Следующий отдельный прогон нужен только для
+исправленного debug-panels; пять соседних файлов и runtime после первого
+прогона не менялись. Развитие инфраструктуры не продолжалось.
+
+
+## 110. Завершение рамок zoom: один исправленный Debug прогон
+
+Windows/PowerShell, login=false, cwd F:/repo/forge-nvim. Продолжение §109,
+change style-panel-zoom-borders. Сначала status/apply instructions и чтение
+его proposal/design/specs/tasks/verification. Guard zoom-style-final-prefix
+сохраняет существующие байты журналов, включая §198/109, и hashes runtime/
+теста/пяти прежних test-infra drafts. Controls/test совпали с audit §109.
+
+```powershell
+$env:TEMP='F:/repo/forge-nvim/.tests/tmp'
+$env:TMP=$env:TEMP
+$env:TMPDIR=$env:TEMP
+$env:NVIM_LOG_FILE="$env:TEMP/zoom-style-final.log"
+$env:npm_config_cache='F:/forge-nvim-tmp/npm-cache'
+$env:PYTHONIOENCODING='utf-8'
+$env:GOTOOLCHAIN='local'
+$env:GOMAXPROCS='2'
+$env:GOFLAGS='-p=2'
+$env:CARGO_BUILD_JOBS='2'
+$env:FORGE_E2E_CONFIG_SOURCE=$null
+$env:FORGE_TEST_ID=$null
+npx.cmd --yes @fission-ai/openspec@1.13.2 status --change style-panel-zoom-borders --json
+npx.cmd --yes @fission-ai/openspec@1.13.2 instructions apply --change style-panel-zoom-borders --json
+& .tools/neovim/windows-x64/bin/nvim.exe -l tests/e2e/debug-panels.test.lua > .tests/zoom-style-final-debug-panels.txt 2>&1
+# actual command сохранял LASTEXITCODE в zoom-style-final-result.json и выходил с тем же code
+npx.cmd --yes @fission-ai/openspec@1.13.2 validate style-panel-zoom-borders --type change --strict --no-interactive > .tests/zoom-style-final-openspec.txt 2>&1
+git diff --check
+git diff --cached --check
+```
+
+Один native прогон6 PASS/0 FAIL/0 SKIP. Read-only Python -B - audit прочитал
+log,12 RGB checkpoints, shutdown10274073955800 и captured runtime/test bytes:
+root0/signal0/APIerrors[]/empty owned scope. Проверены прежний runtime SHA и
+неизменность остальных пяти test files: их28 PASS не прогонялись повторно.
+Audit .tests/zoom-style-final-audit.json различает34 разных checks выбранного
+покрытия и первый общий33 PASS/1 FAIL, который сохранён. После теста runtime
+и test не меняются; дописываются история и текущие статусы. Staged allowlist
+исключает прежние e2e-catalog/POSIX drafts, journal blobs начинаются с HEAD.
+Ubuntu/macOS/full/physical GUI не запускались. Docker/WSL не управлялись.
+
+
+Итог: strict/diff/append-only guards PASS. Владелец уточнил: самостоятельно
+коммитить и продолжать план; остановка только по окончании, полному manual
+gate либо отсутствию продвижения. Настройка записана в CLAUDE/roadmap.

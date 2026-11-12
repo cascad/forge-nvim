@@ -40,6 +40,18 @@
 в неё, `Esc` из zoom — в исходный slot. Если backend закрыл исходное окно,
 zoom убирается с возвратом в код. Явный выбор другой панели сохраняет её фокус.
 
+В zoom название и `[focus]` находятся в цельной скруглённой рамке, без второй
+строки заголовка внутри. Активная рамка использует DiagnosticInfo текущей
+темы; при открытии `?` она становится приглушённой (Comment). Закрытие помощи
+возвращает акцент. Оформление общее для панелей `Space w z`; постоянные
+рамки обычных split пока остаются отдельным экспериментом.
+
+Native UI образец: [активная рамка Locals](assets/panel-frames/zoom-locals-active.svg),
+[та же рамка при открытой помощи](assets/panel-frames/zoom-locals-help.svg).
+Windows E2E проверяет12 состояний рамок Locals/Output/Files/Logs и сохранение
+настоящей DAP pause (§199). Для нового оформления Ubuntu/macOS и физическая
+оценка WezTerm/шрифтов ещё не выполнены.
+
 Terminal: `i` — ввод; normal `Ctrl-t` / `Space tt` — toggle, `Ctrl-\` из кода —
 тот же toggle. В terminal-normal `Ctrl-\` остаётся native prefix; повтор
 `Ctrl-\ Ctrl-n` безопасен. `Space w T` открывает/фокусирует без toggle.
