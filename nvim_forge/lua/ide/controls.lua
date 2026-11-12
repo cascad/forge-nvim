@@ -68,10 +68,16 @@ end
 -- вернуть туда выбранную строку overlay; команды самого backend не меняются.
 function M.tree_action() if zoom and ft(0) == 'neo-tree' then M.restore(true) end end
 
-function M.focus_code()
+-- Общая подготовка явного перехода. enter сохраняет прежний выбор окна
+-- при закрытии справки и возврате из zoom.
+local function prepare_navigation(enter)
     pending_panel = nil
-    close_help(false)
-    M.restore(false)
+    close_help(enter)
+    M.restore(enter)
+end
+
+function M.focus_code()
+    prepare_navigation(false)
     local pilot=package.loaded['forge.frame_pilot']
     if pilot and pilot.focus_code() then return end
     if ft(0) == 'NeogitStatus' and #vim.api.nvim_tabpage_list_wins(0) == 1 and #vim.api.nvim_list_tabpages() > 1 then
@@ -82,32 +88,24 @@ function M.focus_code()
 end
 
 function M.direction(direction)
-    pending_panel = nil
-    close_help(true)
-    M.restore(true)
+    prepare_navigation(true)
     local pilot=package.loaded['forge.frame_pilot']
     if pilot and pilot.direction(direction) then return end
     vim.cmd('wincmd ' .. direction)
 end
 
 function M.locals()
-    pending_panel = nil
-    close_help(false)
-    M.restore(false)
+    prepare_navigation(false)
     require('ide.dap').focus_section('scopes')
 end
 
 function M.output()
-    pending_panel = nil
-    close_help(false)
-    M.restore(false)
+    prepare_navigation(false)
     require('ide.dap').focus_output()
 end
 
 function M.outline(toggle)
-    pending_panel = nil
-    close_help(false)
-    M.restore(false)
+    prepare_navigation(false)
     local ide = require('ide')
     ide.focus_main() -- Aerial получает файл кода, даже при входе из другой панели.
     if toggle then ide.toggle('outline') else ide.show('outline') end
@@ -115,9 +113,7 @@ function M.outline(toggle)
 end
 
 function M.explorer(source, toggle)
-    pending_panel = nil
-    close_help(false)
-    M.restore(false)
+    prepare_navigation(false)
     local ide = require('ide')
     ide.focus_main()
     local id = tree_components[source or 'filesystem']
@@ -126,9 +122,7 @@ function M.explorer(source, toggle)
 end
 
 function M.git()
-    pending_panel = nil
-    close_help(false)
-    M.restore(false)
+    prepare_navigation(false)
     local ide = require('ide')
     ide.focus_main()
     ide.show('neogit')
@@ -222,9 +216,7 @@ function M.git_maps(buf)
 end
 
 function M.hide()
-    pending_panel = nil
-    close_help(true)
-    M.restore(true)
+    prepare_navigation(true)
     if ft(0) == 'toggleterm' or ft(0) == 'trouble' then
         -- q скрывает текущую view; registry close при смене slot закрывает группу.
         -- Буфер/job сохраняются, native WinClosed выполняет backend cleanup.

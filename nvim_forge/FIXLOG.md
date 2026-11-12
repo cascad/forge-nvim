@@ -10655,3 +10655,36 @@ managed-python-prefix и staged HEAD prefixes проверяются перед 
 371 unit/trace PASS/1 SKIP и103 strict PASS. Working-tree104 включает
 незавершённый POSIX change; это отдельный scope. После snapshot меняются
 только результаты docs, runtime/test/spec bytes сохранены.
+
+
+## 197. Общая подготовка навигации панелей
+
+**Проблема.** После готового IDE-080 review восемь команд ide.controls
+содержали одинаковую подготовку перехода. Поддержка очередного изменения
+требовала сохранять один порядок в восьми местах.
+
+**Причина.** Три последовательные операции повторялись в entry-функциях:
+сброс pending_panel, close_help, restore. У direction/hide аргумент true,
+у code/Locals/Output/Outline/Files/Git — false.
+
+**Изменение.** Одна локальная prepare_navigation(enter), восемь вызовов;
+16 добавленных/24 удалённых строки runtime, net−8. Специальные пути
+show_work/zoom/cancel/help сохраняют прежнюю логику. Чистый рефакторинг,
+skip_specs=true; пользовательские IDE-PANEL contracts и хоткеи прежние.
+
+**Проверка.** Один Windows selected прогон: Debug5, work-panels6, Outline6,
+Git6, frame1 —24 PASS/0 FAIL/0 SKIP. Постоянные E2E не менялись. По15 native
+profiles проверены captured controls, exit0/signal0/APIerrors[] и пустой own
+process scope. Строгая проверка change PASS. Ubuntu/macOS, physical WezTerm
+и общий full suite не запускались. Evidence: .tests/navigation-*.txt,
+navigation-result.json, navigation-audit.json; подробности — verification
+change deduplicate-panel-navigation. Журналы дописаны с сохранением byte prefix.
+
+**Вывод.** Убрали точный повтор без нового владельца окон. Это небольшая
+итерация этапа6, не новая фича и не закрытие всего этапа. По решению владельца:
+одна конкретная задача/один прогон/отчёт, затем остановка. Развитие тестовой
+инфраструктуры отложено до отдельного понятного плана. Черновики E2E-каталога
+и POSIX probe не входят в этот commit. Docker Desktop/WSL не управлялись.
+
+**Файлы.** ide/controls.lua, CLAUDE.md, IDE_ROADMAP, HISTORY, AGENT_COMMANDS,
+change deduplicate-panel-navigation. Новые зависимости/SDK/patches не нужны.

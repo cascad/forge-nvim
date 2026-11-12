@@ -7079,3 +7079,57 @@ npx.cmd --yes @fission-ai/openspec@1.13.2 validate --all --strict --no-interacti
 .tests/managed-python-staged-*. Working tree104 включает POSIX change,
 поэтому эти counts различаются. После проверки в index добавляются только
 docs с результатом; code/test/spec сохранены. Raw/staged journal guards PASS.
+
+
+## 108. Одна итерация подготовки навигации панелей
+
+Windows/PowerShell, login=false, cwd F:/repo/forge-nvim. Сначала читались
+CLAUDE, FEATURE_REVIEW/PANEL_OWNERSHIP_REVIEW, ide/state/dap/activities/controls,
+релевантные existing E2E через Get-Content и rg. PowerShell не поддерживает
+Bash brace expansion: ошибочная строка rg с {a,b} дала ParserError до
+исполнения; пути переданы отдельными аргументами. Разработка тестовой
+инфраструктуры и её черновики в этом проходе не продолжались.
+
+```powershell
+$env:TEMP='F:/repo/forge-nvim/.tests/tmp'
+$env:TMP=$env:TEMP
+$env:TMPDIR=$env:TEMP
+$env:NVIM_LOG_FILE="$env:TEMP/navigation.log"
+$env:npm_config_cache='F:/forge-nvim-tmp/npm-cache'
+$env:PYTHONIOENCODING='utf-8'
+$env:GOTOOLCHAIN='local'
+$env:GOMAXPROCS='2'
+$env:GOFLAGS='-p=2'
+$env:CARGO_BUILD_JOBS='2'
+$env:FORGE_E2E_CONFIG_SOURCE=$null
+$env:FORGE_TEST_ID=$null
+npx.cmd --yes @fission-ai/openspec@1.13.2 context --json
+npx.cmd --yes @fission-ai/openspec@1.13.2 new change deduplicate-panel-navigation
+npx.cmd --yes @fission-ai/openspec@1.13.2 status --change deduplicate-panel-navigation --json
+# instructions для proposal/design/tasks/apply; JSON читался через ConvertFrom-Json
+npx.cmd --yes @fission-ai/openspec@1.13.2 instructions apply --change deduplicate-panel-navigation --json
+npx.cmd --yes @fission-ai/openspec@1.13.2 list --specs --json
+$files=@('debug-panels','work-panels','outline','git-workflow','frame-layout')
+foreach ($name in $files) {
+  & .tools/neovim/windows-x64/bin/nvim.exe -l "tests/e2e/$name.test.lua" > ".tests/navigation-$name.txt" 2>&1
+  # В actual loop сохранялись LASTEXITCODE и .tests/navigation-result.json;
+  # выводился хвост лога, после всех пяти файлов общий exit=1 при любом FAIL.
+}
+npx.cmd --yes @fission-ai/openspec@1.13.2 validate deduplicate-panel-navigation --type change --strict --no-interactive > .tests/navigation-openspec.txt 2>&1
+Get-Content -LiteralPath '.tests/navigation-result.json'
+git diff -- nvim_forge/lua/ide/controls.lua
+git diff --check
+git diff --cached --check
+```
+
+Это один последовательный прогон, без source/target повторов и без full:
+24 PASS/0 FAIL/0 SKIP. Строгая проверка change PASS. Read-only Python -B -
+прочитал логи и shutdown.json пятнадцати native profiles: actual controls
+совпадают, root0/signal0/APIerrors[]/own scopes empty. Audit сохранил
+.tests/navigation-audit.json. Prefix guard navigation-prefix.json проверяет
+старые байты журналов и неизменность прежних test-infra drafts; перед commit
+staged blobs журналов отдельно сверяются с git show HEAD:path.
+
+Ubuntu/macOS/physical GUI не запускались, Docker/WSL не управлялись. В commit
+входят только controls и документация этой итерации. Старые e2e-catalog/
+POSIX probe, tests/lib/spec_index/trace, registry/run/trace CLI остаются draft.
