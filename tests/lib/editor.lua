@@ -17,6 +17,10 @@ end
 local function stop_process(rpc,dir,primary_error)
   local result=require('editor_process').stop(rpc,dir,primary_error)
   assert(result.ok,result.error)
+  if rpc then
+    assert(result.exit_code==0 and result.exit_signal==0,
+      ('Native exit: code=%s, signal=%s'):format(tostring(result.exit_code),tostring(result.exit_signal)))
+  end
 end
 
 local function start(root, options, holder)

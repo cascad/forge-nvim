@@ -10469,3 +10469,67 @@ fix-panel-restore-focus, PANELS_PLAN/PROBLEMS/roadmap/README/HISTORY/commands.
 Evidence .tests/restore-focus-* и .tests/ubuntu/integration-20261112;
 restore-regression-{windows,ubuntu}-audit.json сохраняют FAIL. Windows temp F:;
 Desktop/WSL не управлялись. Raw append-only guard ubuntu-integration-prefix.
+
+
+## 194. E2E сообщает ненулевой native exit после cleanup
+
+2026-11-12. IDE-114, enforce-editor-native-outcome, test harness/skip_specs=true.
+
+**Проблема.** Общий Windows набор §191 дал SQL Tests/plugin-backports file
+PASS при native exit1/signal15. Успешная очистка сама не означает успешное
+завершение редактора; прежний итог скрывал реальный отказ IDE-085.
+
+**Причина.** stop_process в tests/lib/editor.lua проверял только generic
+editor_process.stop.ok. Это контракт cleanup, не code/signal; у intentional
+negative fixtures ненулевой outcome может быть ожидаемым.
+
+**Изменение.** Четыре строки в обычной editor wrapper требуют code0/signal0
+при существующем rpc. Прежний pcall/merge/remove путь сначала сохраняет
+артефакты и удаляет runtime, затем сообщает Native exit с code/signal и
+primary_error. rpc=nil при ошибке подготовки прежний. Generic cleanup.ok,
+его cached verdict и quit/RPC deadlines не менялись. Product Lua/SDK/pins
+прежние; это обнаружение отказа, не устранение причин IDE-085/118.
+
+**Проверка/e2e.** Permanent editor-native-outcome5: actual nvim_forge cquit23,
+SIGKILL собственного child, primary error, normal quit; clean native cquit24
+как control generic stop.ok=true. Source driver af982a9 заморожен git archive:
+на каждой ОС3 RED/2 controls → target5 PASS. Windows SIGKILL даёт1/9, Ubuntu
+0/9: проверка signal нужна отдельно от code. Primary error сохранён в
+исключении/shutdown.json, normal0/0 и generic24/0 остаются успешными.
+
+По10 source/target native profiles на ОС: actual test/driver/config bytes,
+APIerrors[], empty owned scopes. У8 Forge profiles на ОС runtime FS removal
+проверен в той же среде; два clean controls не создают editor runtime.
+Intentional negative receipt сохраняется после проверки actual outcome;
+при аудите требуется также actual PASS case, marker не разрешает любой exit.
+
+Первый Linux signal fixture ошибочно ожидал signal15 после SIGTERM: Neovim
+обрабатывает его и выходит1/0. Исходные raw test/logs сохранены. Для pure
+signal ветки выбран unhandled SIGKILL только собственного child; после
+реального изменения fixture source/target обеих ОС повторены. Первый Linux
+3-FAIL итог не засчитан как полное воспроизведение — один отказ был в тесте.
+
+Шесть прежних suites: editor-process/runtime, backports, SQL Tests,
+project/session-legacy. Windows37 PASS/2 POSIX-only SKIP,
+Ubuntu39 PASS; вместе с новым5 —42/44 target PASS соответственно.
+Native audits21/23 profiles без unexpected failures: normal roots0/0,
+APIerrors[], scopes empty, saved config/driver files совпадают. На Ubuntu
+два прежних stopped-child SIGKILL fixtures отдельно проверены по PASS case/
+hardkill/RPC/primary, без общего исключения сигналов. Обобщённый metadata
+audit не объявляется независимой FS проверкой всех этих regression profiles.
+Unit/trace на каждой ОС371 PASS/1 SKIP, strict102 PASS. Windows/Ubuntu heavy
+последовательно, Windows temp/build F:, cached container/network none/limits
+прежние; Desktop/WSL не управлялись.
+
+**Вывод.** Обычные E2E больше не скрывают nonzero native outcome после cleanup,
+intentional fixtures сохраняют прежний контракт. Selected PASS не изменяет
+старые whole/selected FAIL и не закрывает причины IDE-085/117/118. Следующий
+пункт IDE-117: полный ps probe result, а не зелёный повтор legacy-сессии.
+Mac не запускался, архивирование change не заявлено.
+
+**Файлы.** tests/lib/editor.lua, editor-native-outcome.test.lua/registry,
+enforce-editor-native-outcome, test READMEs/PROBLEMS/roadmap/HISTORY/commands.
+Test SHA256 c60a9e2cc442f9128fc99b6a7004e9f350bba006f7c53745f64e316e0b1e0a6d;
+source editor SHA5f9ff598...4b7838, targetc93029a9...35adb. Evidence
+.tests/native-exit-* и .tests/ubuntu/integration-20261112/native-exit-*.
+Journals raw append, native-exit-prefix guard и staged HEAD prefix.

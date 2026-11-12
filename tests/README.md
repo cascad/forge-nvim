@@ -39,6 +39,16 @@ Editor e2e требует Git, ripgrep и подготовленные исхо�
 Сам тест запускает настоящую сборку с подключённым RPC UI и приватным
 профилем; подробнее — [e2e/README.md](e2e/README.md).
 
+Обычный `editor.stop` требует native code0/signal0 после сохранения artifacts
+и очистки runtime; успешный cleanup не скрывает отказ процесса (IDE-114).
+`editor_process.stop.ok` отдельно означает cleanup: intentional negative
+fixtures проверяют ожидаемые code/signal сами. Permanent native self E2E —
+`nvim -l tests/e2e/editor-native-outcome.test.lua`: cquit, сигнал собственного
+child, primary error, normal quit и generic control. Native outcome/cleanup
+сохраняются в shutdown.json, ожидаемый negative — в native-outcome.json.
+При аудите исключение требует actual PASS case и совпадения ожидаемого
+code/signal; один marker или общее имя suite не разрешают игнорировать exit.
+
 Native terminal escape: `nvim -l tests/e2e/terminal-escape.test.lua` или
 `nvim -l tests/run.lua e2e --id IDE-PANEL-16`. Шесть native cases, включая
 completed/live/managed terminal, normal aliases и paused CodeLLDB PTY.

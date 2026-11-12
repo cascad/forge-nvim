@@ -80,11 +80,12 @@ file PASS, хотя profiles14623960430300/13526618364100 завершены к�
 не всегда отдельно проверяют native outcome. Новые terminal/tool tests это
 проверяют и дают FAIL на тот же симптом IDE-085.
 
-Нужна постоянная проверка передачи native exit failure из обычного editor
-E2E после сохранения первичной ошибки и cleanup. У намеренно аварийных
-process fixtures остаётся свой контракт. Это пробел наблюдения, не причина
-задержки IDE-085 и не исправление SDK. Приоритет — после текущего IDE-113 и
-Ubuntu-проверки последних panel/DAP/key changes, до следующего refactor.
+Исправлено в enforce-editor-native-outcome / [FIXLOG §194](nvim_forge/FIXLOG.md#194-e2e-сообщает-ненулевой-native-exit-после-cleanup):
+обычный editor.stop сообщает nonzero code/signal после сохранения artifacts,
+primary error и cleanup. Generic cleanup.ok сохраняет контракт intentional
+fixtures. На каждой ОС source3 RED/2 controls → target5 PASS; выбранные
+Windows37 PASS/2 SKIP, Ubuntu39 PASS. Product/SDK/deadlines прежние.
+Это исправление наблюдения, причины IDE-085/117/118 не установлены; Mac открыт.
 
 ## IDE-113 — shell E2E читает созданный, но ещё пустой результат
 

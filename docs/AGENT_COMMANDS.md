@@ -6885,3 +6885,60 @@ observer117. Отсутствие config snapshot после RPC не счита
 удалением runtime. Whole Ubuntu71/1/2 и Windows71/3 сохраняются как FAIL.
 Полные SHA/native metadata/границы FS и неудачные fixture attempts — verification.
 Истории raw append проверены по ubuntu-integration-prefix и staged HEAD prefix.
+
+
+## 105. Native outcome editor E2E — IDE-114
+
+2026-11-12, исходный driver af982a9. Read-only Get-Content/rg показали:
+editor.stop проверял generic cleanup.ok без native code/signal. Для source
+git archive tests/lib загружен через FORGE_E2E_DRIVER_SOURCE до require(editor),
+actual editor-source.lua копируется в каждый Forge profile. Source replay
+не меняет текущий SDK/config и не подменяет ответы процесса.
+
+```powershell
+Get-Content tests/lib/editor.lua
+Get-Content tests/lib/editor_process.lua
+Get-Content tests/e2e/editor-runtime.test.lua
+Get-Content tests/e2e/editor-process.test.lua
+rg -n 'driver-source|FORGE_E2E_DRIVER' tests/lib/editor_trace.lua tests/lib/editor_rpc.lua
+$env:TEMP='F:/repo/forge-nvim/.tests/tmp'
+$env:TMP=$env:TEMP
+$env:TMPDIR=$env:TEMP
+$env:npm_config_cache='F:/forge-nvim-tmp/npm-cache'
+$env:PYTHONIOENCODING='utf-8'
+npx.cmd --yes @fission-ai/openspec@1.13.2 list --json
+npx.cmd --yes @fission-ai/openspec@1.13.2 new change enforce-editor-native-outcome
+npx.cmd --yes @fission-ai/openspec@1.13.2 instructions apply --change enforce-editor-native-outcome --json
+git archive --format=zip --output=.tests/native-exit-af982a9.zip af982a9 tests/lib
+$env:FORGE_E2E_DRIVER_SOURCE='F:/repo/forge-nvim/.tests/native-exit-baseline/tests/lib'
+& .tests/panels-run.ps1 -Log native-exit-source -ExpectFailure -Files @('tests/e2e/editor-native-outcome.test.lua')
+python -B .tests/native-exit-audit.py source
+$env:FORGE_E2E_DRIVER_SOURCE=$null
+& .tests/panels-run.ps1 -Log native-exit-target -Files @('tests/e2e/editor-native-outcome.test.lua')
+python -B .tests/native-exit-audit.py target
+& .tests/native-exit-regression.ps1
+python -B .tests/native-exit-regression-audit.py
+& .tools/neovim/windows-x64/bin/nvim.exe -l tests/run.lua unit trace
+docker compose -f tests/containers/compose.yaml -f tests/containers/limits.yaml run --no-deps --pull never --rm --name forge-nvim-native-exit-source2-20261112 -e FORGE_E2E_DRIVER_SOURCE=/workspace/.tests/native-exit-baseline/tests/lib --entrypoint bash ubuntu -lc 'nvim -l tests/e2e/editor-native-outcome.test.lua > .tests/integration-20261112/native-exit-source-editor-native-outcome.test.txt 2>&1; result=$?; tail -n 5 .tests/integration-20261112/native-exit-source-editor-native-outcome.test.txt; test "$result" -eq 1 && python3 -B .tests/integration-20261112/native-exit-audit.py source'
+docker compose -f tests/containers/compose.yaml -f tests/containers/limits.yaml run --no-deps --pull never --rm --name forge-nvim-native-exit-target-20261112 --entrypoint bash ubuntu /workspace/.tests/integration-20261112/native-exit-target.sh
+npx.cmd --yes @fission-ai/openspec@1.13.2 validate --all --strict --no-interactive
+python -B .tests/append-native-exit-history.py
+git diff --check
+git diff --cached --check
+```
+
+Точные списки selected suites — native-exit-regression.ps1/sh: process,
+runtime, plugin-backports, sql-tests, project-session, session-legacy. Linux
+target.sh последовательно запускает новый test, audit в том же pod, selected
+regression/audit, unit trace и копирует report до следующей команды.
+Root code/signal берутся из реального vim.system process, не из assertion
+об успехе cleanup. SIGKILL направлен только handle собственного child.
+
+Final source3 RED/2 controls → target5 PASS на ОС; initial Linux SIGTERM
+fixture неправильно ожидал signal15 вместо observed1/0 и сохранён отдельно.
+После исправления pure-signal fixture source/target выполнены с одинаковыми
+финальными bytes. Selected Windows37 PASS/2 SKIP, Ubuntu39 PASS, native
+audits21/23 profiles; unit/trace371 PASS/1 SKIP на ОС, strict102.
+Никакого нового whole E2E, SDK build или управления Desktop/WSL. Prefix
+guard native-exit-prefix проверяет прежние bytes; staged blobs начинаются
+с точного HEAD prefix. Mac и причины085/117/118 остаются открытыми.

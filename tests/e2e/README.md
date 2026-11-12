@@ -21,6 +21,13 @@
 
 ## Запуск на целевых машинах и внутри VM
 
+IDE-114: `nvim -l tests/e2e/editor-native-outcome.test.lua`. Настоящие
+nvim_forge cquit23/SIGKILL собственного child/primary-error и normal quit;
+clean native cquit24 проверяет прежний generic cleanup контракт. На каждой
+ОС Windows/Ubuntu source driver af982a9 даёт3 RED/2 controls; target5 PASS.
+Product Lua/SDK/quit deadlines прежние. Зависимости только editor; Mac gate
+открыт, actual результаты — verification enforce-editor-native-outcome.
+
 IDE-PANEL-23 / IDE-116: `nvim -l tests/e2e/panel-restore-focus.test.lua`.
 5 native cases: fallback Files, сохранённые Files+Quickfix, последующий Logs,
 явный Files до render и штатный Files после render. Удерживается настоящий
