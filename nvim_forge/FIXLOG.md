@@ -11055,3 +11055,42 @@ Go.work с несколькими модулями. SDK/pins прежние, п�
 новый native E2E/registry row, change restore-files-session-view, QUICKSTART,
 E2E README, roadmap/review/history/commands/CLAUDE. Старые журнальные байты
 сохранены; исходные §202–204 и их FAIL не переписаны.
+
+
+## 206. Go workspace: запуск пакета и повтор после изменения зависимости
+
+**Проблема.** Очередь3/WF-05/07 включает реальный Go.work с несколькими
+модулями. Прежние Go DAP проверки брали один go.mod и не доказывали разрешение
+локальной workspace dependency или пересборку после её редактирования.
+
+**Причина.** Пробел приёмочного сценария. Existing Current Go package уже
+использует native fileDirname/workspaceFolder/Delve, новый resolver не нужен.
+Поведенческий дефект/source RED не заявляется. Спека: существующий IDE-DAP-1
+(first/repeat output), change verify-go-workspace-debug — skip_specs:true.
+
+**Изменение.** Fixture app/shared без replace; go.work соединяет модули,
+app требует shared v0.0.0. Native E2E F9/F5/picker, breakpoint/local evaluate,
+stdout/stderr, продолжение/сохранение Output. Затем реальное ciw/write в shared
+меняет42→43, повтор F5 пересобирает зависимость и очищает старый вывод.
+Ни runtime/plugins/SDK, ни framework не менялись; одна registry row.
+GO_TOOLS/LANGUAGE_MATRIX и приёмочные WF-05/07 актуализированы.
+
+**Проверка/e2e.** По одному запуску Windows/Ubuntu: по1 PASS/0 FAIL/0 SKIP.
+Profiles19658831179000/11708549389431; два actual Delve launch на ОС,
+program=app/cwd=project/frame=app/main.go, Go env GOWORK=fixture go.work.
+Evaluate42/43 и все markers до/после pause/exit совпали; прежний WORK_BEFORE42
+отсутствует во второй сессии. Return43 сохранён на диске, launch.json нет,
+GOPROXYoff/GOENVoff/GOTOOLCHAINlocal, installs0. DAP trace/source/fixture/data
+сохранены. Root0/signal0/APIerrors[]/owned scope empty на обеих ОС.
+.tests/go-workspace-{windows,ubuntu}/ и go-workspace-audit.json. Runtime/test
+copies совпали; новый Ubuntu PASS не отменяет прежние IDE-117 cleanup FAIL.
+Docker готовый image без build/start/repair/network. Mac/physical не проверены.
+
+**Вывод.** Native backend поддерживает этот Go.work/debug/edit-repeat уже
+сейчас; дополнительная логика не понадобилась. Это не вся workspace LSP/Tests
+матрица и не весь mixed-language проект. Следующая часть — Go.work Tests/LSP;
+общая тестовая инфраструктура остаётся прежней, исторические FAIL сохранены.
+
+**Файлы.** go-workspace E2E,5 fixture files,registry row, change artifacts,
+GO_TOOLS/LANGUAGE_MATRIX/IDE_ROADMAP/HISTORY/commands. Старые journal bytes и
+пять отложенных drafts сохраняются, push не выполняется.

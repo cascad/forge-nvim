@@ -81,6 +81,7 @@ return {
   { file = 'tests/e2e/panel-restore-focus.test.lua', suite = 'e2e', timeout = 180 },
   { file = 'tests/e2e/dap-tab-scope.test.lua', suite = 'e2e', timeout = 240 },
   { file = 'tests/e2e/dap-launch-routes.test.lua', suite = 'e2e', timeout = 240 },
+  { file = 'tests/e2e/go-workspace.test.lua', suite = 'e2e', timeout = 240 },
   { file = 'tests/e2e/debugpy-exit.test.lua', suite = 'e2e', timeout = 180 },
   { file = 'tests/e2e/focus-command-order.test.lua', suite = 'e2e', timeout = 240 },
   { file = 'tests/e2e/dap-output-policy.test.lua', suite = 'e2e', timeout = 360 },

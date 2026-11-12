@@ -7584,3 +7584,50 @@ session_tui/input/geometry, renderer.position и current Go package defaults.
 Для commit: строгий validate change, diff/append-only/allowlist и partial
 registry staging (только новая Files row поверх HEAD, старые drafts вне index).
 Push не выполняется. Следующая очередь — Go.work; новый goal не создаётся.
+
+
+## 117. Go.work: два native debug запуска с изменением shared модуля
+
+PowerShell login=false, F:/repo/forge-nvim. Использованы openspec-propose/apply:
+контекст/root подтверждены CLI, config.yaml и существующий IDE-DAP-1 прочитаны,
+proposal/design/tasks готовы, specs skipped по test-only .openspec.yaml.
+Последнее явное поручение владельца продолжать работу имеет приоритет над
+planning-only паузой skill; implementation продолжен без вопроса о разрешении.
+
+```powershell
+$env:TEMP='F:/repo/forge-nvim/.tests/tmp'
+$env:TMP=$env:TEMP
+$env:TMPDIR=$env:TEMP
+$env:NVIM_LOG_FILE="$env:TEMP/go-workspace.log"
+$env:npm_config_cache='F:/forge-nvim-tmp/npm-cache'
+$env:PYTHONIOENCODING='utf-8'
+$env:GOTOOLCHAIN='local'
+$env:GOMAXPROCS='2'
+$env:GOFLAGS='-p=2'
+$env:FORGE_TEST_ID=$null
+$env:FORGE_E2E_CONFIG_SOURCE=$null
+npx.cmd --yes @fission-ai/openspec@1.13.2 context --json
+npx.cmd --yes @fission-ai/openspec@1.13.2 list --specs
+npx.cmd --yes @fission-ai/openspec@1.13.2 new change verify-go-workspace-debug
+# status/instructions proposal→design→tasks→apply; context files прочитаны.
+& ./.tools/neovim/windows-x64/bin/nvim.exe -l tests/e2e/go-workspace.test.lua > .tests/go-workspace-windows/run.txt 2>&1
+docker compose -f tests/containers/compose.yaml run --rm --no-deps --entrypoint nvim -e GOMAXPROCS=2 -e GOFLAGS=-p=2 -e GOTOOLCHAIN=local ubuntu -l tests/e2e/go-workspace.test.lua > .tests/go-workspace-ubuntu/run.txt 2>&1
+```
+
+По одному запуску на ОС, Windows затем Ubuntu; LASTEXITCODE/seconds записаны
+в соответствующие result.json. Новая feature framework не создавалась:
+existing editor/input/output_policy и настоящее DAP request evaluate, без mocks.
+Test driver записал actual go env GOWORK/cwd,2 config/frame/evaluate/output
+runs и dap.log; native ciw/write изменил source dependency, не adapter config.
+
+Read-only rg/Get-Content: current_file_configs/go picker, project manual mode,
+existing dap-output/output_policy/editor helpers, native neotest Go root;
+GO_TOOLS/LANGUAGE_MATRIX/roadmap. Python -B - проверил report42/43/stdout/stderr,
+old output absence/edited disk source/shutdown/scope, config/test SHA; результат
+.tests/go-workspace-audit.json. Scope в этом Ubuntu case PASS не закрывает
+IDE-117 из прежнего Files набора. Runtime не менялся, повторов не было.
+
+Prefix .tests/go-workspace-prefix.json сохраняет журналы/старые drafts;
+проверка working registry удаляет только новую go-workspace row для сравнения.
+Перед commit — strict/diff/prefix/allowlist, partial registry поверх HEAD,
+без пяти старых test-infra drafts/SDK/lock/secrets. Push не выполняется.

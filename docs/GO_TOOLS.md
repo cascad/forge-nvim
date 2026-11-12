@@ -34,6 +34,22 @@ Space w c — Output, Space w 0 — код. Переключение панел�
 [плане панелей](PANELS_PLAN.md). Полнота language/run/tests —
 [языковая матрица](LANGUAGE_MATRIX.md).
 
+## Go workspace с несколькими модулями
+
+Откройте корень с `go.work`, затем `main.go` нужного приложения. `F9` ставит
+breakpoint, `F5` → `Current Go package` запускает пакет текущего файла.
+Отдельный `launch.json` для этого не требуется: зависимости из соседних
+модулей разрешает сам Go. Окружение `GOWORK`/`GOENV` сохраняет обычное влияние;
+проверенный сценарий использует стандартный поиск go.work.
+
+После изменения и сохранения соседнего модуля новый `F5` пересобирает его.
+В native E2E значение42 стало43, Delve подтвердил оба на паузе, stdout/stderr
+появились до breakpoint и сохранились после exit, повтор очистил старый вывод.
+Windows/Ubuntu по1 PASS, runtime/SDK/plugins не менялись (§206).
+Это проверка debug/edit-repeat; workspace LSP/Tests и смешанный проект целиком
+ещё остаются в очереди. Mac и физические клавиши не проверены.
+Команда: `nvim -l tests/e2e/go-workspace.test.lua` с готовыми Editor/Go/Delve SDK.
+
 Постоянный regression: `tests/e2e/go-passive.test.lua` (IDE-BOOT-4). Он
 использует настоящий Go/Delve/gopls, включая отсутствующий SDK, явную версию,
 старый реальный ответ после смены контекста и late override/F5/breakpoint.

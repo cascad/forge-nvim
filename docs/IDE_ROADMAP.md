@@ -23,7 +23,7 @@ E2E используются для защиты изменений продук
 |---|---|---|
 | 1. Этап 6: упрощение панелей/DAP | Сократить доказанные дубли по готовому review | Итерация §197 готова: общая подготовка восьми navigation-команд; Windows24 PASS, этап 6 целиком открыт |
 | 2. Оформление Termide | Довести Code/Locals pilot до решения для повседневной работы, затем остальные панели | Общий цветной zoom готов на Windows (§199); постоянные рамки split и physical review открыты |
-| 3. Реальные проекты | Go/Cargo workspace, Python venv, Node scripts, выбор цели и launch.json/default | Cargo picker готов на Windows (§200); смешанный проект, Go.work и другие env-сценарии открыты |
+| 3. Реальные проекты | Go/Cargo workspace, Python venv, Node scripts, выбор цели и launch.json/default | Cargo picker Windows (§200), Go.work debug/edit-repeat Windows/Ubuntu (§206); workspace Tests/LSP и смешанный проект открыты |
 | 4. Git | Credentials, interactive rebase и оставшиеся ошибки worktree | Основной сценарий есть; остаток открыт |
 | 5. Языковые пробелы | Bash debug с готовым backend; SQL references при наличии подходящего provider | Открыто; собственный LSP не создаём |
 | 6. Переносимость | Чистый setup Windows/Ubuntu/macOS, terminal/SSH; Mac startup/Go и Cmd+C | Частично; native Mac и физические клавиши не проверены |
@@ -35,7 +35,9 @@ PASS на конечном runtime; расширенный case дополнит
 успешно, но весь E2E FAIL из-за известного POSIX scope probe IDE-117 при cleanup;
 общий предыдущий Ubuntu selected15 PASS/1 FAIL по той же причине. Gate открыт,
 повтором не маскируется. Mac/physical и остальные панели WF-01 остаются открытыми.
-Следующий продуктовый шаг очереди3 — реальный Go.work с несколькими модулями.
+Следующий шаг очереди3 выполнен: Go.work debug/edit-repeat Windows1 PASS /
+Ubuntu1 PASS (§206), без изменений runtime. Workspace Tests/LSP и смешанный
+проект остаются следующими конкретными частями этой очереди.
 
 Последняя итерация пункта 1: `deduplicate-panel-navigation`, FIXLOG §197.
 Повторная подготовка заменена одной локальной функцией, net−8 строк runtime.
@@ -67,9 +69,9 @@ Windows/macOS/Ubuntu — целевые ОС; натурные проверки 
 | WF-02 | Перейти в другой репозиторий и вернуться | Per-tab Files A→B→A проверен Windows (§205); Ubuntu scope gate/Mac и остальные панели WF-01 открыты |
 | WF-03 | Управлять файлами через дерево | Create/rename/move/copy/delete/filter проверялись; единый цикл и сохранение вида дерева входят в приёмку |
 | WF-04 | Работать в проекте со смесью языков | Отдельные language workflows есть; единый смешанный проект целиком не объявлен проверенным |
-| WF-05 | Запустить файл или конкретный debug-кейс | Базовые default/launch.json workflows есть; неоднозначный Cargo target/cancel проверен на Windows (§200), остальные пробелы открыты |
+| WF-05 | Запустить файл или конкретный debug-кейс | Default/launch.json есть; Cargo target Windows (§200), native Go.work package Windows/Ubuntu (§206); смешанный проект открыт |
 | WF-06 | Отлаживать с Output, консолью, переменными и стеком | Основные панели/пауза/output есть; полный цикл и реальные клавиши на всех ОС остаются проверкой |
-| WF-07 | Исправить код и перезапустить тот же кейс | Отдельные restart/повторные запуски проверялись; единый смешанный workflow ещё не закрыт |
+| WF-07 | Исправить код и перезапустить тот же кейс | Go.work dependency edit→F5→42/43 проверен Windows/Ubuntu (§206); смешанный workflow целиком открыт |
 | WF-08 | Посмотреть цветной diff и выбрать изменения для коммита | Hunk/stage/unstage/diff/history есть; выбор отдельных строк обязателен в полном кейсе |
 | WF-09 | Commit и push с понятным результатом | Основной путь/локальный remote и часть отказов проверены; реальные credentials и оставшиеся отказы отдельно |
 | WF-10 | Навигация по коду, включая реализации | LSP/Peek/Outline есть; implementations обязательны там, где их поддерживает готовый сервер |
@@ -211,7 +213,8 @@ render.rs и пример native TUI. Репозиторий-референс т
 После Cargo picker следующий конкретный продуктовый пробел — WF-01/02:
 Files view завершён на Windows: последовательный native restore и точные views,
 меньший UI и follow (§205). Ubuntu workflow прошёл assertions, полный gate
-блокирует ранее известный POSIX probe. Дальше — Go.work из очереди3;
+блокирует ранее известный POSIX probe. Go.work debug из очереди3 проверен §206;
+дальше — workspace Tests/LSP и смешанный проект;
 остальные панели/Mac и весь WF-01/02 не объявляются завершёнными.
 
 ## Предыдущий технический срез и результаты проверок

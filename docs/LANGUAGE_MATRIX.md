@@ -55,14 +55,19 @@ python-deps — pinned wheelhouse/tools venv, Pyright и Python parser, host SDK
 отмена не запускает программу. Windows Rust suite9 + launch routes1 PASS;
 два binaries с общей library, marker выбранного BETA, реальная pause/eval/
 stdout. Прежние default/alternate/project debug и Tests сохранены (§200).
-Новый сценарий Ubuntu/macOS ещё не выполнялся; смешанный проект и Go.work
-с несколькими модулями остаются открытыми по WF-04/05 плана.
+Этот Cargo сценарий Ubuntu/macOS ещё не выполнялся; смешанный проект остаётся
+открытым по WF-04/05 плана. Go.work debug проверен отдельно ниже.
+
+2026-11-12, Go.work debug/edit-repeat (§206): app/shared без replace и launch.json,
+настоящий Go/Delve,42→edit library→43, stdout/stderr/evaluate/exit/очистка
+предыдущего вывода. Windows1 PASS/Ubuntu1 PASS, runtime прежний. Workspace
+LSP/Tests и Mac этим сценарием не проверены; [команды](GO_TOOLS.md).
 
 1. Go language Windows/Ubuntu проверен после явного build образа.
    Windows/Ubuntu: по 6 UI PASS — настоящий gopls, completion, definition/references,
    rename, diagnostics, внешний/LSP format, save/health и отсутствие tools.
    Исправлен IDE-050: trim блокировал fallback. Module path содержит пробелы/
-   Unicode; Go.work с несколькими модулями и Mac остаются отдельными сценариями.
+   Unicode; Go.work debug проверен §206, workspace LSP/Tests и Mac отдельно.
    Явная подготовка фиксирует versions/sources, обычный старт ничего не ставит.
 2. JS/Node.js: Windows/Ubuntu минимальный workflow реализован и проверен 8 UI E2E.
    [Команды и явная подготовка](NODE_WORKFLOW.md), change add-node-language-workflow.
