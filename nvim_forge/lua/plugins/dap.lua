@@ -307,15 +307,19 @@ local function rust_current_program()
     if #candidates == 1 then
         return candidates[1].exe
     elseif #candidates > 1 then
-        local names = vim.tbl_map(function(candidate)
-            return candidate.target.name .. ":" .. candidate.kind
-        end, candidates)
-        vim.notify(
-            "Multiple Cargo debug targets; using " .. names[1] .. ". Targets: " .. table.concat(names, ", "),
-            vim.log.levels.WARN,
-            { title = "DAP" }
-        )
-        return candidates[1].exe
+        -- spec: IDE-DAP-7. nvim-dap штатно ожидает coroutine option.
+        return coroutine.create(function(co)
+            vim.ui.select(candidates, {
+                prompt = "Cargo debug target:",
+                format_item = function(candidate)
+                    return candidate.target.name .. " [" .. candidate.kind .. "]"
+                end,
+            }, function(candidate)
+                vim.schedule(function()
+                    coroutine.resume(co, candidate and candidate.exe or dap_abort())
+                end)
+            end)
+        end)
     end
 
     vim.notify("No bin/example Cargo target found for debug", vim.log.levels.ERROR, { title = "DAP" })

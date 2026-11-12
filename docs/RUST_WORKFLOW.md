@@ -20,6 +20,15 @@ VS Code extension-only cargo поле не заменяет его в nvim-dap.
 F9 ставит breakpoint, Space d e вычисляет выражение, F5 продолжает исполнение.
 Locals/Debug Output/код: Space w d / Space w c / F7 (или Space w 0).
 
+Если текущий файл не определяет executable, нет bin имени package и целей
+несколько, появляется `Cargo debug target:` с именем и видом цели. Выберите
+нужную с клавиатуры; отмена прерывает запуск. Раньше в этой ситуации выбиралась
+первая цель с предупреждением. Явный program из launch.json и прежние
+однозначные маршруты сохраняются. Обычный preLaunchTask по-прежнему делает
+`cargo build`; сборку examples/особые flags задавайте проектной build-задачей.
+Windows: отмена и выбранный второй bin проверены настоящим CodeLLDB (§200).
+Ubuntu/macOS этой новой проверкой не подтверждены.
+
 Нужен CodeLLDB в PATH либо явно установленный Mason adapter; на Windows
 поддерживается также существующий каталог %LOCALAPPDATA%/codelldb.
 Вывод Rust идёт через integrated terminal и остаётся в Debug Output.

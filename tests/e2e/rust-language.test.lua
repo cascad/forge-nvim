@@ -139,6 +139,38 @@ check('Rust alternate binary и project launch.json',function(e)
   vim.fn.writefile({vim.json.encode({version='0.2.0',configurations={cfg}})},e.rust_project..'/.vscode/launch.json')
   e:input('<F7><F5>');choose(e,'Project Rust');debugged(e,'RUST_ALTERNATE 42 from-launch')
 end)
+check('IDE-DAP-7 Rust Cargo target отмена и запуск выбранного второго bin',function(e)
+  for _,file in ipairs({'Cargo.toml','src/lib.rs','src/main.rs','src/bin/alternate.rs'}) do
+    assert(vim.uv.fs_copyfile(root..'/tests/e2e/fixtures/rust-target-choice/'..file,e.rust_project..'/app/'..file))
+  end
+  open(e,'app/src/lib.rs');e:input('gg/E2E_BREAKPOINT<CR><F9><F5>')
+  choose(e,'Current Rust file bin')
+  local function target_picker()
+    return e:current_ft()=='TelescopePrompt' and e:lua([[local v=require('telescope.actions.state').get_selected_entry();
+      return v and v.ordinal:find('_worker',1,true)~=nil or false]])
+  end
+  e:wait('список реальных Cargo targets',target_picker)
+  e:input('<Esc><Esc>')
+  e:wait('выбор отменён без DAP session',function()
+    return e:current_ft()~='TelescopePrompt' and e:lua([[return require('dap').session()==nil]])
+  end)
+  local marker=e.rust_project..'/app/rust-target-ran.txt'
+  T.eq(vim.fn.filereadable(marker),0,'отмена запустила первый binary')
+  e:input('<F7><F5>');choose(e,'Current Rust file bin')
+  e:wait('повторный список Cargo targets',target_picker)
+  e:input('beta_worker')
+  e:wait('выбран beta_worker',function()
+    return e:lua([[local v=require('telescope.actions.state').get_selected_entry();
+      return v and v.ordinal:find('beta_worker',1,true)~=nil or false]])
+  end)
+  e:input('<CR>');breakpoint(e)
+  local program=e:lua([[return require('dap').session().config.program]])
+  T.eq(vim.fs.basename(program),'beta_worker'..e.rust_suffix)
+  T.eq(vim.fn.readfile(marker),{'BETA'},'запущена другая Cargo цель')
+  debugged(e,'RUST_CHOICE_BETA 42')
+  assert(not text(e,'dap-terminal'):find('RUST_CHOICE_ALPHA',1,true),'запущен первый target вместо выбранного')
+end)
+
 local function counts(e)
   return e:lua([[local n=require('neotest');local out={passed=0,failed=0,skipped=0,running=0,total=0};for _,id in ipairs(n.state.adapter_ids()) do local s=n.state.status_counts(id);if s then
     for k in pairs(out) do out[k]=out[k]+(s[k] or 0) end end end;return out]])

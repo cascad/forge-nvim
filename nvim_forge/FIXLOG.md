@@ -10773,3 +10773,42 @@ PANEL_KEYS/IDE_ROADMAP/HISTORY/AGENT_COMMANDS. Черновики e2e-catalog/PO
 и продолжать очередь до завершения плана, полного упора в его натурные
 проверки или отсутствия продвижения. Новый goal не включается. После этого
 commit продолжаем пункт3; правило одного прогона на итерацию сохраняется.
+
+
+## 200. Явный выбор неоднозначной Cargo цели
+
+**Проблема.** WF-05: открытый helper/library файл не определяет binary, а в
+пакете несколько bin/example. Прежний fallback предупреждал и запускал первый.
+Владелец также уточнил полный рабочий цикл: WF-01..12 теперь записаны в плане,
+включая A→B→A, точное дерево/панели, файловые операции, debug/Git/навигацию.
+Частично проверенные сценарии не помечены завершёнными.
+
+**Причина.** В rust_current_program последняя ветка возвращала candidates[1].
+Готовый nvim-dap уже поддерживает coroutine option, а общий vim.ui.select
+показывает native picker; собственного target manager не нужно.
+
+**Изменение.** Только неоднозначный fallback возвращает coroutine с выбором
+имени/kind. Callback возобновляет DAP с exe либо штатным ABORT. Сохранены
+current-source/package-name/single-target приоритеты и explicit launch.json.
+13 добавленных/9 удалённых строк runtime, один файл. Спека: IDE-DAP-7 (ADDED).
+Cargo build policy и необходимость явных examples flags прежние.
+
+**Проверка.** Один Windows прогон Rust suite9 + launch-routes1:10 PASS/0 FAIL/
+0 SKIP. Новый native E2E отменяет выбор, проверяет отсутствие marker/session,
+затем выбирает второй bin. Реальные Cargo build/CodeLLDB, breakpoint в общей
+library, eval42, basename beta_worker.exe, marker BETA и stdout выбранного
+процесса подтверждены. Старые language/format/Tests/default/alternate/project
+пути также прошли.10 profiles root0/signal0/APIerrors[]/own scopes empty;
+captured runtime/test/fixture совпадают. Target profile11436853664100.
+Evidence .tests/rust-choice-*.txt/result/audit.json; strict change PASS.
+Новая фича: source RED не заявляется. Ubuntu/macOS/physical/full не запускались.
+
+**Вывод.** Пользователь выбирает ambiguous target вместо неявного first.
+WF-05 целиком не закрыт: смешанные проекты/Go.work и непроверенные ОС отдельно.
+В WF-01 обнаружен конкретный следующий пробел: session cleanup возвращает
+Explorer, но не точное раскрытие/прокрутку дерева и размеры панелей. Продолжить
+через native hooks/API существующих компонентов. Docker/WSL не управлялись.
+
+**Файлы.** plugins/dap.lua, rust-language E2E, rust-target-choice4 fixture files,
+select-ambiguous-rust-targets, RUST_WORKFLOW/LANGUAGE_MATRIX/IDE_ROADMAP,
+HISTORY/AGENT_COMMANDS. Старые e2e-catalog/POSIX drafts и pins/SDK прежние.

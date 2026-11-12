@@ -51,6 +51,13 @@ python-deps — pinned wheelhouse/tools venv, Pyright и Python parser, host SDK
 
 ## Следующие законченные шаги
 
+2026-11-12, IDE-DAP-7: неоднозначная Cargo цель выбирается через native picker,
+отмена не запускает программу. Windows Rust suite9 + launch routes1 PASS;
+два binaries с общей library, marker выбранного BETA, реальная pause/eval/
+stdout. Прежние default/alternate/project debug и Tests сохранены (§200).
+Новый сценарий Ubuntu/macOS ещё не выполнялся; смешанный проект и Go.work
+с несколькими модулями остаются открытыми по WF-04/05 плана.
+
 1. Go language Windows/Ubuntu проверен после явного build образа.
    Windows/Ubuntu: по 6 UI PASS — настоящий gopls, completion, definition/references,
    rename, diagnostics, внешний/LSP format, save/health и отсутствие tools.

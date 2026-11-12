@@ -1,0 +1,17 @@
+[package]
+name = "forge_app"
+version = "0.1.0"
+edition = "2021"
+autobins = false
+autoexamples = false
+
+[[bin]]
+name = "alpha_worker"
+path = "src/main.rs"
+
+[[bin]]
+name = "beta_worker"
+path = "src/bin/alternate.rs"
+
+[dependencies]
+forge_math = { path = "../math" }

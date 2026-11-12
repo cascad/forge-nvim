@@ -7239,3 +7239,50 @@ Ubuntu/macOS/full/physical GUI не запускались. Docker/WSL не уп
 Итог: strict/diff/append-only guards PASS. Владелец уточнил: самостоятельно
 коммитить и продолжать план; остановка только по окончании, полному manual
 gate либо отсутствию продвижения. Настройка записана в CLAUDE/roadmap.
+
+
+## 111. Cargo target picker и основные пользовательские кейсы
+
+Windows/PowerShell, login=false, cwd F:/repo/forge-nvim. Read-only:
+Get-Content LANGUAGE_MATRIX/RUST_WORKFLOW/PROJECT_SESSION_REVIEW, dap/tasks,
+rust_project/rust-language/fixture. rg искал Cargo resolver, coroutine/ABORT,
+Persistence hooks и известные IDs. Прочитаны закреплённые native dap.lua
+(eval_option) и overseer/dap.lua; plugins/SDK не менялись. Каталога specs у
+verify-rust-language-workflow нет (skip_specs); это был read-only path error.
+WF-01..12 записаны непосредственно в основной roadmap по двум сообщениям
+владельца; тестовая инфраструктура не развивалась.
+
+```powershell
+$env:TEMP='F:/repo/forge-nvim/.tests/tmp'
+$env:TMP=$env:TEMP
+$env:TMPDIR=$env:TEMP
+$env:NVIM_LOG_FILE="$env:TEMP/rust-choice.log"
+$env:npm_config_cache='F:/forge-nvim-tmp/npm-cache'
+$env:PYTHONIOENCODING='utf-8'
+$env:GOTOOLCHAIN='local'
+$env:GOMAXPROCS='2'
+$env:GOFLAGS='-p=2'
+$env:CARGO_BUILD_JOBS='2'
+$env:FORGE_E2E_CONFIG_SOURCE=$null
+$env:FORGE_TEST_ID=$null
+$env:FORGE_RUST_CASE=$null
+$env:FORGE_RUST_LEGACY=$null
+$env:FORGE_RUST_OUTPUT_LEGACY=$null
+npx.cmd --yes @fission-ai/openspec@1.13.2 new change select-ambiguous-rust-targets
+# status + instructions proposal/specs/design/tasks/apply, JSON через ConvertFrom-Json
+foreach ($name in @('rust-language','dap-launch-routes')) {
+  & .tools/neovim/windows-x64/bin/nvim.exe -l "tests/e2e/$name.test.lua" > ".tests/rust-choice-$name.txt" 2>&1
+  # actual loop сохранял LASTEXITCODE/result.json и возвращал1 при любом FAIL
+}
+npx.cmd --yes @fission-ai/openspec@1.13.2 validate select-ambiguous-rust-targets --type change --strict --no-interactive > .tests/rust-choice-openspec.txt 2>&1
+git diff --check
+git diff --cached --check
+```
+
+Один прогон10 PASS/0 FAIL/0 SKIP, повторов нет. Read-only Python -B - audit
+прочитал логи/10 shutdown/captured dap.lua, точные fixture/test bytes и
+project marker BETA: root0/signal0/APIerrors[]/owned scopes empty. Результат
+.tests/rust-choice-audit.json, target profile11436853664100. Source RED не
+заявляется для новой фичи. Prefix rust-choice-prefix сохраняет журналы и пять
+прежних test-infra drafts; staged allowlist исключает их из commit.
+Ubuntu/macOS/physical/full не запускались; Docker/WSL не управлялись.
