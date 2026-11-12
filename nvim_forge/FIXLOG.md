@@ -10295,3 +10295,58 @@ Mac/physical keys не проверены. Selected regression не являет
 **Файлы.** config/keymaps.lua, focus-command-order E2E/registry,
 preserve-normal-command-order, PANELS_PLAN/roadmap/PROBLEMS/E2E README,
 HISTORY/commands. Journals raw append-only, guard focus-prefix.json.
+
+
+## 191. Shell E2E ждёт завершённую запись
+
+2026-11-12. IDE-113; исправление test observer, skip_specs=true.
+Поведение IDE-PANEL-19 и product Lua не меняются.
+
+**Проблема.** Общий Windows E2E dab7bf6 получил пустой terminal-shell.again
+вместо FORGE_AFTER (profile13792255328900). Shell выбран верно; тот же
+PID/channel/history и повторный ввод до чтения сохранены. Исходный общий
+набор завершён целиком и сохранён:74 файла,71 PASS/3 FAIL;363 cases PASS,
+3 FAIL/5 SKIP,2604.6 s. Два остальных file FAIL — native shutdown IDE-085.
+
+**Причина.** Observer ждал filereadable: shell создаёт файл перенаправления
+раньше записи. Assertion читает пустую строку, cleanup прекращает ещё идущую
+command. Существование файла не является подтверждением готового payload.
+
+**Изменение.** В постоянном native shell E2E первая kind запись ждёт непустого
+значения, повторная command — точного FORGE_AFTER. Общая delayed-write.lua
+запускается текущим shell через настоящий установленный Neovim: empty file,
+1 s ожидания, запись payload и stdout marker. Target явно наблюдает empty →
+payload. Timeout observer/quit прежние. Source replay использует FORGE_REPO,
+каждый profile хранит реально исполненные test и fixture bytes.
+
+**Проверка/e2e.** Controlled source698bf751...02b677 даёт1 RED/3 SKIP
+(15234331353600), targete9370455...e6e99 —1 PASS/3 SKIP (15267032176800).
+Fixture SHA ecd1f9d3...8e01a3. Оба native root0/signal0/APIerrors[], без
+SIGTERM/hard kill корня; scopes пусты, actual config/test/fixture совпадают,
+runtime удалён. Реальный Windows pwsh не найден Neovim exepath, POSIX/Mac
+ещё не проверены. Unit360+trace11 PASS/1 SKIP; strict100 PASS.
+
+Отдельный audit22 новых panel/DAP/key profiles общего набора PASS: source/
+test SHA, root0/signal0/APIerrors[], scopes empty/runtime removed. Metadata
+всего общего набора:263 paths =262 editor shutdown +1 standalone health CLI0.
+Четыре roots завершены code1/signal15:13758269241400,13846181247700,
+13526618364100,14623960430300. Везде native QuitPre/VimLeavePre/VimLeave
+exiting0, затем controller SIGTERM около2.07 s после quit. Native VimLeave
+бывает ранним и близким к deadline; причина задержки процесса не установлена.
+Hard kill отсутствует, APIerrors[], scopes пусты. SQL tests/plugin-backports
+скрыли два таких exit под file PASS — это новый IDE-114. Один health CLI
+использует health-process.json, отсутствие editor shutdown там ожидаемо.
+
+Raw evidence: .tests/integration-20261112-wide-1 (report/logs/run/native-audit,
+target-audit и readiness source/target/audits). SDK74AFF15B...C6AD9,67 pins/
+6 patched dependencies прежние; temp/build Windows F:. Desktop/WSL не
+управлялись; готовый Linux engine/image обнаружен read-only, Ubuntu далее.
+
+**Вывод.** Observer опирается на содержимое завершённой command. Selected
+PASS исправленного теста не меняет исходный общий FAIL и не чинит IDE-085.
+После Ubuntu-проверки последних panel/DAP/key changes отдельно закрыть
+пробел передачи native exit failure IDE-114 до следующего refactor.
+
+**Файлы.** terminal-shell E2E и delayed-write fixture,
+fix-terminal-shell-e2e-readiness, PROBLEMS/roadmap/E2E README/HISTORY/commands.
+Journals raw append-only, guard integration-prefix.json.

@@ -21,6 +21,13 @@
 
 ## Запуск на целевых машинах и внутри VM
 
+IDE-113: `nvim -l tests/e2e/terminal-shell.test.lua`. Общая native fixture
+сначала создаёт пустой файл, затем пишет результат; observer ждёт payload,
+сохраняя shell/PID/channel/history и stdout. Windows cmd: controlled source
+RED → target PASS; POSIX и actual Windows pwsh имеют отдельные gates.
+Общий Windows E2E2026-11-12:74 файла,71 PASS/3 FAIL; четыре native SIGTERM
+IDE-085 (два скрыты старыми callers, IDE-114). Это не общий PASS; §191.
+
 IDE-PANEL-22 / IDE-112: `nvim -l tests/e2e/focus-command-order.test.lua`.
 6 native cases: normal F7/F6/cycle/close → Logs и сохранение последнего
 выбора, insert text, настоящий terminal job/PID/channel/stdout. Source dc748b7

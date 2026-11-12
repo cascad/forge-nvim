@@ -1,5 +1,6 @@
 -- spec: IDE-PANEL-19. Реальные native shell/PTY; окружение только private child.
-local root=vim.fn.fnamemodify(debug.getinfo(1,'S').source:sub(2),':p:h:h:h'):gsub('\\','/')
+local test_source=debug.getinfo(1,'S').source:sub(2)
+local root=vim.env.FORGE_REPO or vim.fn.fnamemodify(test_source,':p:h:h:h'):gsub('\\','/')
 package.path=root..'/tests/lib/?.lua;'..package.path
 local T=require('check')
 local P=require('output_policy')
@@ -12,6 +13,10 @@ local function keys(e,value)
 end
 local function normal(e)
   if mode(e)=='t' then e:input(escape);e:wait('terminal normal',function() return mode(e):sub(1,1)=='n' end) end
+end
+local function result(path)
+  if vim.fn.filereadable(path)~=1 then return nil end
+  return vim.trim(table.concat(vim.fn.readfile(path),'\n'))
 end
 local function state(e)
   return e:lua([[local all=require('toggleterm.terminal').get_all();assert(#all==1,'expected one managed terminal')
@@ -53,7 +58,9 @@ local function check(label,posix,present)
         end
         prepared.path=env.PATH
       end})
-      assert(vim.uv.fs_copyfile(root..'/tests/e2e/terminal-shell.test.lua',e.dir..'/terminal-shell.test.lua'))
+      assert(vim.uv.fs_copyfile(test_source,e.dir..'/terminal-shell.test.lua'))
+      local writer=root..'/tests/e2e/fixtures/terminal-shell/delayed-write.lua'
+      assert(vim.uv.fs_copyfile(writer,e.dir..'/delayed-write.lua'))
       if posix and present then assert(vim.uv.fs_copyfile(root..'/tests/e2e/fixtures/terminal-shell/pwsh',e.dir..'/pwsh-fixture')) end
       report={case=label,fixture=prepared,states={}}
       e:wait('real config ready',function() return e:lua('return _G.forge_e2e_observed') end,10000)
@@ -69,7 +76,9 @@ local function check(label,posix,present)
         command='Write-Output FORGE_TERMINAL_BEFORE; Set-Content terminal-shell.kind $PSVersionTable.PSEdition'
       else command='echo FORGE_TERMINAL_BEFORE & echo %ComSpec% > terminal-shell.kind' end
       e:input(command..'<CR>')
-      e:wait('shell wrote actual kind file',function() return vim.fn.filereadable(e.project..'/terminal-shell.kind')==1 end,10000)
+      e:wait('shell wrote actual kind file',function()
+        local value=result(e.project..'/terminal-shell.kind');return value~=nil and value~=''
+      end,10000)
       local before=state(e);report.states[#report.states+1]=before
       report.kind=vim.trim(table.concat(vim.fn.readfile(e.project..'/terminal-shell.kind'),'\n'))
       report.pwsh_started=vim.fn.filereadable(prepared.pwsh_log)==1
@@ -90,11 +99,25 @@ local function check(label,posix,present)
       for _,key in ipairs({'buf','pid','channel','shell','selected'}) do T.eq(after[key],before[key],key..' changed on reopen') end
       T.eq(after.status,-1);assert(P.history_preserved(before,after),'terminal history lost')
       if mode(e)~='t' then e:input('i');e:wait('shell input resumed',function() return mode(e)=='t' end) end
-      local again=windows and present and 'Write-Output FORGE_TERMINAL_AFTER; Set-Content terminal-shell.again FORGE_AFTER'
-        or windows and 'echo FORGE_TERMINAL_AFTER & echo FORGE_AFTER > terminal-shell.again'
-        or [[printf 'FORGE_TERMINAL_AFTER\n'; printf 'FORGE_AFTER\n' > terminal-shell.again]]
-      e:input(again..'<CR>');e:wait('real next command completed',function() return vim.fn.filereadable(e.project..'/terminal-shell.again')==1 end)
-      T.eq(vim.trim(table.concat(vim.fn.readfile(e.project..'/terminal-shell.again'),'\n')),'FORGE_AFTER')
+      local argv={vim.v.progpath:gsub('\\','/'),'--clean','--headless','-l',writer,e.project..'/terminal-shell.again'}
+      for i,value in ipairs(argv) do
+        assert(not value:find('["$`]'),'Неожиданный shell metacharacter в private fixture path')
+        argv[i]='"'..value..'"'
+      end
+      local again=(windows and present and '& ' or '')..table.concat(argv,' ')
+      report.command=again
+      report.saw_empty=false
+      e:input(again..'<CR>');e:wait('real next command completed',function()
+        local value=result(e.project..'/terminal-shell.again')
+        if value=='' then report.saw_empty=true end
+        return value=='FORGE_AFTER'
+      end)
+      report.result=result(e.project..'/terminal-shell.again')
+      T.eq(report.result,'FORGE_AFTER')
+      assert(report.saw_empty,'Delayed fixture не показала границу empty → payload')
+      e:wait('actual command stdout completed',function()
+        return state(e).text:find('FORGE_TERMINAL_AFTER',1,true)~=nil
+      end)
       normal(e);local final=state(e);report.states[#report.states+1]=final
       T.eq(final.pid,before.pid);T.eq(final.channel,before.channel);T.eq(final.installs,0);T.eq(final.dap,false)
       for _,n in ipairs(e.rpc.notifications) do assert(n.level<vim.log.levels.ERROR,n.message) end

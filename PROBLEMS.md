@@ -10,7 +10,36 @@
 
 Маршрут и приоритеты: [рабочий план nvim_forge](docs/IDE_ROADMAP.md).
 Для новых пунктов используем следующий свободный ID `IDE-xxx`; исходный
-симптом хранится здесь, этап и состояние — в плане. Следующий ID: `IDE-113`.
+симптом хранится здесь, этап и состояние — в плане. Следующий ID: `IDE-115`.
+
+## IDE-114 — успешный cleanup маскирует ненулевой native exit в старых E2E
+
+2026-11-12, Windows общий E2E dab7bf6: plugin-backports и sql-tests получили
+file PASS, хотя profiles14623960430300/13526618364100 завершены контроллером
+с code1/signal15. shutdown.ok означает завершение cleanup, а старые callers
+не всегда отдельно проверяют native outcome. Новые terminal/tool tests это
+проверяют и дают FAIL на тот же симптом IDE-085.
+
+Нужна постоянная проверка передачи native exit failure из обычного editor
+E2E после сохранения первичной ошибки и cleanup. У намеренно аварийных
+process fixtures остаётся свой контракт. Это пробел наблюдения, не причина
+задержки IDE-085 и не исправление SDK. Приоритет — после текущего IDE-113 и
+Ubuntu-проверки последних panel/DAP/key changes, до следующего refactor.
+
+## IDE-113 — shell E2E читает созданный, но ещё пустой результат
+
+2026-11-12, общий Windows E2E source dab7bf6: terminal-shell profile
+13792255328900 получил пустой terminal-shell.again вместо FORGE_AFTER.
+Выбор cmd, тот же PID/channel/history и повторный ввод до этого прошли.
+Observer ждал filereadable, которое истинно уже до записи payload.
+
+Change fix-terminal-shell-e2e-readiness, §191: постоянная native delayed-write
+fixture и ожидание полного payload с прежним timeout. Windows controlled
+source1 RED → target1 PASS, по3 SKIP; shell/PID/channel/history и native exit0
+подтверждены. Ubuntu/Mac и actual Windows pwsh остаются открытыми.
+Исходный общий Windows71 PASS/3 FAIL сохранён и не становится PASS от selected.
+Product Lua/SDK/pins и quit policy не меняются. Два отдельных shutdown
+SIGTERM в profiles13758269241400/13846181247700 — повтор IDE-085.
 
 ## IDE-112 — отложенный F7 отменяет следующую команду фокуса
 
@@ -440,6 +469,15 @@ detail cap. Три подробных и два unhooked followup заверши
 ограниченные наблюдения, а не установленная причина/фикс. Capture остаётся
 включённым в следующих обычных E2E; при повторе смотреть QuitPre/exit/error
 timeline. Новый намеренно задержанный fixture не доказывает механизм старого RED.
+
+2026-11-12, §191: общий Windows E2E повторил code1/signal15 в четырёх profiles:
+13758269241400 (terminal-escape), 13846181247700 (tool-panels),
+13526618364100 (sql-tests), 14623960430300 (plugin-backports). Везде получены
+QuitPre/VimLeavePre/VimLeave с native exiting0, затем примерно через2.07 s
+после quit контроллер отправляет SIGTERM. Native VimLeave бывает как ранним,
+так и близким к deadline; это не доказательство причины задержки процесса.
+APIerrors[], hard_kill=false, own scopes пусты. Два последних file PASS
+маскировали exit — зарегистрирован IDE-114. Timeout/SDK не менялись.
 
 ## IDE-080 — большой обзор фич и наслоений перед рефакторингом
 

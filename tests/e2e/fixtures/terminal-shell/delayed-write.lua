@@ -1,0 +1,10 @@
+-- Настоящий child в shell: файл существует до появления результата команды.
+local path = assert(arg[1], 'Нужен путь результата')
+local file = assert(io.open(path, 'wb'))
+assert(file:close())
+print('FORGE_TERMINAL_PENDING')
+vim.wait(1000)
+file = assert(io.open(path, 'wb'))
+assert(file:write('FORGE_AFTER\n'))
+assert(file:close())
+print('FORGE_TERMINAL_AFTER')

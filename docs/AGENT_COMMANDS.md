@@ -6743,3 +6743,60 @@ empty scopes, removed runtime. Insert text и real terminal PID/channel/history
 1 SKIP, strict99. Runtime change3 строки; backend/SDK/pins прежние. Ubuntu/Mac
 открыты; Linux engine отсутствует, Desktop/WSL не запускались. Prefix guard
 focus-prefix.json сохраняет исходные bytes обоих журналов.
+
+
+## 103. Общий Windows E2E и native shell result readiness
+
+2026-11-12, runtime source dab7bf6. Все agent temp/build — F:; heavy Windows
+и Ubuntu последовательно. panels-run.ps1 — прежняя ignored wrapper, задаёт
+F: env/ресурсные ограничения и запускает перечисленные native test files.
+
+```powershell
+git status --short
+git log -4 --oneline
+rg -n -C 5 'wsl|probe_posix|detect_host' tests/run.lua
+Get-Content scripts/test.ps1
+Get-Content tests/registry.lua
+$env:TEMP='F:/repo/forge-nvim/.tests/tmp'
+$env:TMP=$env:TEMP
+$env:TMPDIR=$env:TEMP
+$env:NVIM_LOG_FILE="$env:TEMP/integration-20261112.log"
+$env:npm_config_cache='F:/forge-nvim-tmp/npm-cache'
+$env:PYTHONIOENCODING='utf-8'
+$env:GOTOOLCHAIN='local'
+$env:GOMAXPROCS='2'
+$env:GOFLAGS='-p=2'
+$env:CARGO_BUILD_JOBS='2'
+powershell -NoProfile -File scripts/test.ps1 e2e > .tests/integration-20261112-wide-1/run.txt 2>&1
+docker info --format '{{.OSType}}'
+docker image inspect forge-nvim-tests:ubuntu24.04-nvim0.12.2 --format '{{.Id}}'
+docker ps --format '{{.ID}} {{.Image}} {{.Status}}'
+$env:FORGE_REPO='F:/repo/forge-nvim'
+$env:FORGE_TEST_ID=$null
+& .tests/panels-run.ps1 -Log readiness-source -ExpectFailure -Files @('.tests/terminal-readiness-source/terminal-shell.test.lua')
+& .tests/panels-run.ps1 -Log readiness-target -Files @('tests/e2e/terminal-shell.test.lua')
+python -B .tests/ubuntu/integration-20261112/readiness-audit.py source .tests/integration-20261112-wide-1/readiness
+python -B .tests/ubuntu/integration-20261112/readiness-audit.py target .tests/integration-20261112-wide-1/readiness
+python -B .tests/ubuntu/integration-20261112/audit.py target .tests/integration-20261112-wide-1
+python -B .tests/integration-20261112-wide-1/audit-wide.py .tests/integration-20261112-wide-1
+& .tools/neovim/windows-x64/bin/nvim.exe -l tests/run.lua unit trace
+npx.cmd --yes @fission-ai/openspec@1.13.2 new change fix-terminal-shell-e2e-readiness
+npx.cmd --yes @fission-ai/openspec@1.13.2 status --change fix-terminal-shell-e2e-readiness --json
+npx.cmd --yes @fission-ai/openspec@1.13.2 instructions apply --change fix-terminal-shell-e2e-readiness --json
+npx.cmd --yes @fission-ai/openspec@1.13.2 validate --all --strict --no-interactive
+python -B .tests/integration-append-windows.py
+git diff --check
+git diff --cached --check
+git commit -m "test(terminal): await completed shell output"
+git status --short
+```
+
+Первичный e2e exit1/report/logs скопированы до unit/trace и не перезаписаны:
+71/74 file PASS,363 checks PASS/3 FAIL/5 SKIP. Native metadata audit263 paths
+возвращает1 из-за4 реальных SIGTERM, два не отражены file FAIL (IDE-114).
+Standalone health-process.json0 учитывается отдельно. Recent22 profiles PASS.
+Controlled source старого observer:1 RED/3 SKIP; target1 PASS/3 SKIP, оба
+root0/signal0/APIerrors[]/scope empty/runtime removed. Полные source/test/
+fixture SHA и artifact IDs — verification fix-terminal-shell-e2e-readiness.
+Unit360+trace11 PASS/1 SKIP, strict100. Broad Windows повторно не запускался;
+Ubuntu/Mac/real Windows pwsh остаются открытыми.
