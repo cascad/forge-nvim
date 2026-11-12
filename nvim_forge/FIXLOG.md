@@ -10084,3 +10084,31 @@ Optional UI не удаляется без ответа владельца. Сл
 **Файлы.** ide/init.lua, ide/registry.lua, window-lookup E2E/registry;
 OpenSpec proposal/design/tasks/verification, FEATURE_REVIEW/roadmap,
 E2E README/HISTORY/commands. Journals raw append-only, guard lookup-prefix.json.
+
+
+## 186. Рамки через настоящий WezTerm frontend
+
+**Проблема.** Native RPC UI не подтверждал отображение пилота реальным
+WezTerm-клиентом. Нужна дополнительная проверка существующего IDE-PANEL-20.
+
+**Причина.** Разные границы: виртуальный UI редактора, native TUI/PTY и
+физическая доставка клавиш. Ранние class probes не находили отдельный mux;
+унаследованный endpoint имеет приоритет. Это не заявляется багом WezTerm.
+
+**Изменение.** Opt-in tests/diagnostics/wezterm-frame.lua использует уже
+работающий WezTerm и создаёт только собственный pane. До ввода проверяет
+новый ID/cwd; native remote TUI соединён с частным Forge через Node bridge.
+Содержимое берётся как реальный text/ANSI. Product/SDK/lock не менялись.
+
+**Проверка/e2e.** Windows 2026-11-11: wezterm-frame-native5.txt, профиль
+48807705570000, ok=true. Настоящий Delve: Locals42→43, VT F10, focus/help/
+zoom/restore; frontend exit0, server0/signal0/APIerrors[], own scope empty.
+Client/bridge завершены, собственный pane закрыт. Две UI ограничивают server
+140×45 при pane196×65. Ранние неуспешные discovery probes не получали ввод
+в чужие панели. Physical keys, pixel/font QA и Mac не проверены.
+
+**Вывод.** CLI→PTY→native frontend проверен отдельно от физической клавиатуры;
+pilot остаётся opt-in. Tasks physical review/default decision остаются открыты.
+
+**Файлы.** tests/diagnostics/wezterm-frame.lua, PANEL_FRAME_PILOT, tasks/
+verification pilot-bordered-locals-layout, HISTORY/commands.

@@ -6572,3 +6572,24 @@ Journals full raw prefix guard до/после append. Windows temp/build/cache 
 Docker только текущий engine, без Desktop/WSL/settings/prune/build/pull.
 Source tests PASS до изменения, runtime bugfix не заявлен. Mac/physical task
 открыт, change не архивируется. Следующий шаг — настоящий WezTerm pilot.
+
+
+## 98. Рамки через native WezTerm клиент
+
+Проверка завершена 2026-11-11; оформление результата 2026-11-12. Требует
+уже работающего WezTerm с WEZTERM_UNIX_SOCKET и подготовленных Go/Delve,
+editor deps и Node. Запускает собственный pane, не запускает mux/server.
+
+```powershell
+$env:TEMP='F:/repo/forge-nvim/.tests/tmp'
+$env:TMP=$env:TEMP; $env:TMPDIR=$env:TEMP
+$env:NVIM_LOG_FILE="$env:TEMP/wezterm-frame.log"
+& .tools/neovim/windows-x64/bin/nvim.exe -l tests/diagnostics/wezterm-frame.lua
+Get-FileHash -Algorithm SHA256 tests/diagnostics/wezterm-frame.lua,.tests/editor-e2e/48807705570000/wezterm-frame.lua
+python -B .tests/finalize-wezterm-proof.py
+git diff --check
+```
+
+Артефакт48807705570000: server/frontend exit0, scope empty, Locals/VT F10/
+help/zoom/restore и ANSI. physical_keys=false; Mac и pixel/font QA открыты.
+Journals сохраняют исходный byte prefix, guard wezterm-proof-prefix.json.

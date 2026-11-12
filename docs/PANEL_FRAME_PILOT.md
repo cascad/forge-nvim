@@ -46,8 +46,16 @@ nvim -l tests/e2e/frame-layout.test.lua
 ```
 
 Editor/DAP test SDK готовится отдельно по [E2E README](../tests/e2e/README.md).
-Mac и физический WezTerm ещё не проверены. Обычная раскладка по умолчанию
+Mac, физические клавиши и pixel/font QA WezTerm ещё не проверены. Обычная раскладка по умолчанию
 прежняя; все панели этим пилотом не покрыты.
+
+Дополнение §186: `nvim -l tests/diagnostics/wezterm-frame.lua` из уже
+запущенного Windows WezTerm открывает собственное тестовое окно через CLI.
+Нужны готовые Editor/Go/Delve SDK и Node. Новый pane ID проверяется по cwd;
+CLI ввод проходит PTY → native remote TUI → Forge. Проверены Locals42→43,
+VT F10, направления, помощь/zoom/возврат и реальные текст/ANSI-атрибуты pane.
+Физические OS key events и pixel/font QA этим не проверены. В этом probe
+две UI: RPC140×45 ограничивает размер native клиента, хотя pane196×65.
 
 ## Цена и решение перед распространением
 

@@ -40,3 +40,12 @@ Critical до archive: task2.1 — реальный WezTerm Windows/Mac; task2.2
 о распространении. Текущая рекомендация — сохранить пилот opt-in, не делать
 двух параллельных менеджеров всего IDE. Native dapui.close layout1 не владеет
 pilot float; для него q/ForgeFramePilot. Все панели не покрыты этим change.
+
+Дополнение §186, 2026-11-11: opt-in tests/diagnostics/wezterm-frame.lua
+прошёл через настоящий Windows WezTerm CLI/PTY/remote TUI. Артефакт
+.tests/editor-e2e/48807705570000/wezterm-frame.json: ok=true,
+physical_keys=false, frontend exit0, собственный pane8, client/bridge PID
+завершены. Native text/ANSI, Locals42→43 и VT F10, focus/help/zoom/restore
+проверены. Две UI ограничивают server140×45 при pane196×65. Это не
+физическая доставка клавиш и не pixel/font QA; tasks2.1/2.2 остаются открыты,
+теперь5/7 tasks. Product Lua/SDK/lock в этом дополнении не менялись.

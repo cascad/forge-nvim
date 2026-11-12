@@ -10,6 +10,11 @@
 - [x] 1.4 Записать FIXLOG с IDE-PANEL-20 (ADDED), HISTORY/commands/руководство
   и измерения цены пилота, окна/строки/время; проверить prefixes и diff --check.
 
+- [x] 1.5 Дополнить Windows native frontend probe: собственное окно в уже
+  запущенном WezTerm, CLI/PTY/remote TUI, Locals/step/help/zoom/restore,
+  проверка pane ID/cwd и завершения. tests/diagnostics/wezterm-frame.lua;
+  CLI ввод не засчитывать за физические клавиши/pixel QA.
+
 ## 2. Оценка перед распространением
 
 - [ ] 2.1 Проверить пилот физически в WezTerm Windows/macOS, включая ввод,
