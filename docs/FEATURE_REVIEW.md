@@ -1,5 +1,12 @@
 # IDE-080 — обзор фич и стоимости поддержки перед рефакторингом
 
+2026-11-12, source3d0e6b7: выполнен следующий read-only проход
+[tools/OS boundaries](WORKSPACE_TOOL_REVIEW.md#актуальный-проход-инструментов--2026-11-12).
+Общий resolver framework не нужен: порядок и отказ override различаются по
+языкам. Найден статический кандидат IDE-119 — Windows layout в managed
+debugpy fallback; native reproduction ещё требуется. UX-удаления не выбраны,
+готовые backend/67 pins/6 patched dependencies сохраняются.
+
 ## Актуальный выбор после Files, Logs и frame pilot — 2026-11-11
 
 Source e00bcea. Выполнено: Files §180–181, обязательные Logs §182 и рабочий

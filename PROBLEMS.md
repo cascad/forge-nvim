@@ -10,7 +10,21 @@
 
 Маршрут и приоритеты: [рабочий план nvim_forge](docs/IDE_ROADMAP.md).
 Для новых пунктов используем следующий свободный ID `IDE-xxx`; исходный
-симптом хранится здесь, этап и состояние — в плане. Следующий ID: `IDE-119`.
+симптом хранится здесь, этап и состояние — в плане. Следующий ID: `IDE-120`.
+
+## IDE-119 — managed debugpy fallback использует Windows venv layout
+
+2026-11-12, static review source3d0e6b7. В plugins/dap.lua проектный adapter
+выбирается через debugpy_adapter_in_env с OS layout, но Mason adapter/Python
+построены как venv/Scripts/debugpy-adapter.exe и venv/Scripts/python.exe
+на всех ОС. Native Unix Mason failure пока не воспроизведён; нельзя считать
+обычный Python workflow доказательством этой ветки: fixture ставит tools в
+project .venv и managed fallback не изолирует.
+
+Дальше отдельный source/target E2E настоящего managed adapter, project Python
+отдельно, F5/stop/eval/output/explicit overrides Windows/Ubuntu, Mac отдельно.
+Сначала воспроизведение, затем исправление layout в существующей границе;
+универсальный framework tools не создавать. [Разбор](docs/WORKSPACE_TOOL_REVIEW.md#следующий-кандидат-ide-119-managed-debugpy-venv).
 
 ## IDE-118 — Windows Go Output: RPC timeout во время теста
 

@@ -8,6 +8,53 @@ IDE-082 после этого исходного review реализован о�
 fix-passive-go-discovery; актуальная семантика и команды — [GO_TOOLS](GO_TOOLS.md),
 результаты/gates — PROBLEMS/roadmap. Исходные observations ниже сохраняют контекст.
 
+## Актуальный проход инструментов — 2026-11-12
+
+Source `3d0e6b7`. Проверено чтением текущих Lua/helpers/fixtures; новых native
+Mason-запусков этот review не подтверждает. Панели/DAP/normal order уже прошли
+отдельные изменения §187–194; здесь следующий участок, общие tools/OS boundaries.
+
+| Владелец | Фактическая политика | Решение |
+|---|---|---|
+| `forge.python.resolve` | Валидный explicit → active venv → conda → project venv → PATH; invalid explicit допускает fallback | Сохранить порядок. Conda Windows использует env/python.exe, обычный venv — Scripts/python.exe |
+| Python DAP | Adapter explicit → project venv → PATH → Mason; Python adapter explicit → Mason → project Python | Adapter и debuggee имеют разные роли; один interpreter resolver их не заменяет |
+| `forge.node` | Node отдельно от настоящего JS entrypoint; project parents → shared → Mason → PATH package → Node globals | Сохранить Node+script argv без .cmd; Bash LS уже использует эту границу |
+| `forge.bash_host`/`forge.bats` | Native Bash с исключением WSL launcher на Windows; Bats script из project/PATH, MSYS/cygpath и child env отдельно | Не заменять native checks простым exepath; startup scripts не читать |
+| `forge.sql.tool`/SQL Tests | Invalid explicit блокирует PATH fallback; SQL Tests ищет forge-sqltest при собственных override keys | Четыре похожие строки не оправдывают связь Tests с SQL LSP module или новый framework |
+| Delve/codelldb | Delve выбирает versioned candidates по явному debug; codelldb имеет PATH/Mason/Windows guess | Сохранить backend-specific порядок; по внешнему сходству с Python не объединять |
+| Terminal/Treesitter | pwsh только на Windows; WinGet tree-sitter lookup только Windows и только в явной install command | Уже системные границы. Прежняя строка review про POSIX pwsh историческая, не текущий дефект |
+
+Общие `forge/platform.lua`/`forge/tools.lua` в архитектурном плане были
+предложением. В текущем runtime их нет; создавать обязательный слой с
+параметрами для всех перечисленных исключений сейчас не нужно. Политики
+остаются в имеющихся небольших языковых модулях; hotkeys/panels общие.
+
+Есть точное совпадение primitive `executable_path` в dap.lua и private
+`executable` в forge.python: type/string/expand/executable. Вынос этих строк
+сам по себе не устраняет Windows-only путь и добавляет публичный API/alias.
+Сначала исправляется доказанный workflow; общий primitive можно пересмотреть
+в том же участке, если от этого уменьшится ответственность, а не только LOC.
+
+### Следующий кандидат: IDE-119, managed debugpy venv
+
+В `plugins/dap.lua` проектный adapter использует уже существующий
+debugpy_adapter_in_env с Windows/POSIX layout. Два Mason fallback ниже
+жёстко указывают venv/Scripts/debugpy-adapter.exe и venv/Scripts/python.exe
+без OS branch. Это статическое наблюдение; native Mason failure на Unix
+ещё не воспроизводился. Статус — PROBLEMS IDE-119.
+
+Existing python_project fixture устанавливает locked Python tools в project
+.venv, поэтому обычный Python workflow не доказывает выбор managed fallback.
+Нужен отдельный настоящий debugpy сценарий: adapter только в частном managed
+venv, project Python отдельно, без adapter в project/PATH. Проверить F5,
+breakpoint/eval42/stdout/continue, фактические выбранные adapter/interpreter,
+explicit overrides и отсутствие установки при открытии файла. Source/target
+Windows/Ubuntu, Mac отдельно. Не строить ради этого общий tools framework.
+
+До native source RED поведение этих resolvers не меняется. SQL backend,
+private language servers и UI/plugins не заменяются. Историческая причина
+IDE-117 ps failure остаётся неизвестной; Docker Desktop/WSL для review не нужны.
+
 ## Что оставлять раздельным
 
 | Понятие | Текущий владелец/правило | Почему это отдельная задача |

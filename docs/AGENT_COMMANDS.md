@@ -6942,3 +6942,66 @@ audits21/23 profiles; unit/trace371 PASS/1 SKIP на ОС, strict102.
 Никакого нового whole E2E, SDK build или управления Desktop/WSL. Prefix
 guard native-exit-prefix проверяет прежние bytes; staged blobs начинаются
 с точного HEAD prefix. Mac и причины085/117/118 остаются открытыми.
+
+
+## 106. Tools/OS review и подготовка POSIX probe
+
+2026-11-12, source3d0e6b7. Get-Content/rg ниже читают код и дают static
+observations, это не запуск backend. Главный результат review — матрица
+политик WORKSPACE_TOOL_REVIEW/IDE-119; product Lua не менялся.
+
+```powershell
+git status --short
+git log -3 --oneline
+Get-Content tests/lib/process_scope_posix.lua
+Get-Content .tests/ubuntu/editor-e2e/8785983585636/shutdown.json
+Get-Content .tests/ubuntu/session-legacy/8785945678253/child.log -Tail 24
+rg --files nvim_forge/lua/forge
+Get-Content nvim_forge/lua/forge/python.lua
+Get-Content nvim_forge/lua/forge/node.lua
+Get-Content nvim_forge/lua/forge/bash_host.lua
+Get-Content nvim_forge/lua/forge/sql.lua -TotalCount 40
+Get-Content nvim_forge/lua/forge/sql_tests.lua -TotalCount 25
+rg -n -C 3 'DEBUGPY|debugpy|VIRTUAL_ENV|PATH' tests/lib/python_project.lua
+rg -n 'debugpy_adapter|debugpy_python|project_python\(' nvim_forge/lua/plugins/dap.lua
+Get-Content docs/WORKSPACE_TOOL_REVIEW.md
+Get-Content docs/FEATURE_REVIEW.md
+Get-Content docs/PORTABLE_ARCHITECTURE.md
+docker info --format '{{.OSType}}'
+docker image inspect forge-nvim-tests:ubuntu24.04-nvim0.12.2 --format '{{.Id}}'
+```
+
+Docker read-only probes получили missing dockerDesktopLinuxEngine; нет
+запуска/рестарта/ремонта engine. Availability question оставлен владельцу,
+review выполнялся независимо. Следующие команды относятся к незавершённой
+подготовке POSIX regression в working tree, а не к source/target PASS:
+
+```powershell
+$env:TEMP='F:/repo/forge-nvim/.tests/tmp'
+$env:TMP=$env:TEMP
+$env:TMPDIR=$env:TEMP
+$env:npm_config_cache='F:/forge-nvim-tmp/npm-cache'
+$env:PYTHONIOENCODING='utf-8'
+npx.cmd --yes @fission-ai/openspec@1.13.2 new change capture-posix-scope-probe-failure
+npx.cmd --yes @fission-ai/openspec@1.13.2 instructions apply --change capture-posix-scope-probe-failure --json
+git archive --format=zip --output=.tests/ps-probe-3d0e6b7.zip 3d0e6b7 tests/lib
+& .tools/neovim/windows-x64/bin/nvim.exe -l tests/e2e/posix-scope-probe.test.lua
+$env:BASH_ENV=''
+$env:ENV=''
+& 'C:/Program Files/Git/bin/bash.exe' --noprofile --norc -n tests/e2e/fixtures/process-scope-probe/ps.sh
+& .tools/neovim/windows-x64/bin/nvim.exe -l tests/run.lua unit trace
+python -B .tests/append-tools-review-history.py
+git diff --check
+git diff --cached --check
+```
+
+Git Bash абсолютный native path, WSL launcher не использовался. POSIX test
+Windows0 PASS/4 SKIP; unit/trace371 PASS/1 SKIP. Это не проверка native ps
+на Ubuntu/Mac и не доказательство исправления117. Source frozen archive
+подготовлен в .tests/ps-probe-baseline и .tests/ubuntu/ps-probe-baseline.
+Результаты Windows сохранены в ps-probe-windows.txt/ps-probe-unit-trace-*.json.
+Review commit исключает незавершённые POSIX test/registry/change artifacts;
+source/target требуют работающего Linux engine, observer ещё не менялся.
+
+OpenSpec validate --all --strict --no-interactive после подготовки:103 PASS.
+Команда: npx.cmd --yes @fission-ai/openspec@1.13.2 validate --all --strict --no-interactive

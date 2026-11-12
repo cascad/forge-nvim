@@ -34,8 +34,10 @@ IDE-114 выполнен (§194): обычный E2E сообщает nonzero na
 
 1. IDE-117: записать полный результат ps probe и воспроизвести отказ scope
    observer Ubuntu; сейчас code/signal/stdout отсутствуют, причина неизвестна.
-2. Продолжить обзор общих инструментов и системных границ по FEATURE_REVIEW:
-   убрать доказанные повторы, сохраняя готовые backend и функции редактора.
+2. Обзор tools/OS boundaries выполнен на3d0e6b7: разные политики сохраняются,
+   общий resolver framework не вводим. Следующий кандидат IDE-119 — native
+   managed debugpy fallback; сначала воспроизведение отдельным E2E, затем
+   исправление Windows/POSIX layout. Детали — WORKSPACE_TOOL_REVIEW/§195.
 3. Mac/чистая установка → Bash debug/сложные проекты/Git → общее оформление.
 
 IDE-085 и новый RPC stall IDE-118 остаются диагностикой при новых evidence;

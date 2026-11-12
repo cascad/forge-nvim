@@ -10533,3 +10533,53 @@ Test SHA256 c60a9e2cc442f9128fc99b6a7004e9f350bba006f7c53745f64e316e0b1e0a6d;
 source editor SHA5f9ff598...4b7838, targetc93029a9...35adb. Evidence
 .tests/native-exit-* и .tests/ubuntu/integration-20261112/native-exit-*.
 Journals raw append, native-exit-prefix guard и staged HEAD prefix.
+
+
+## 195. Обзор инструментов: сохранить границы и проверить managed Python
+
+2026-11-12. IDE-080, static review source3d0e6b7. Поведение не менялось.
+
+**Проблема.** Следующий шаг общего review — tools/OS boundaries. Старый
+архитектурный план предлагал platform/tools modules, но текущие языковые
+selectors имеют разные override, fallback и cwd/interpreter роли. Создание
+общего resolver по одному сходству exepath не обосновано.
+
+**Причина.** Python invalid explicit допускает fallback через active venv,
+conda/project/PATH; Node/Bash/SQL при заданном невалидном override обычно
+возвращают отсутствие. Bash проверяет native launcher/MSYS/cygpath; Node
+разделяет executable и JS entrypoint; Delve сравнивает version candidates.
+Workspace, language/test root и adapter interpreter тоже не одна сущность.
+
+**Изменение.** В WORKSPACE_TOOL_REVIEW добавлена текущая матрица политик и
+точные кандидаты. PORTABLE_ARCHITECTURE/FEATURE_REVIEW/roadmap уточняют:
+новые generic modules не обязательны; existing language boundaries сохраняются.
+Следующий кандидат IDE-119: project debugpy adapter строит OS layout через
+existing helper, а Mason adapter/Python fallback жёстко указывает Scripts/*.exe.
+Статическое наблюдение записано с требованием отдельного native E2E до fix.
+
+**Проверка/e2e.** Проверено вручную, read-only: forge.python/node/bash_host/
+bats/sql/sql_tests/go, plugins/dap/terminal/treesitter и python_project fixture.
+Current terminal уже ограничивает pwsh Windows; Treesitter WinGet lookup
+уже находится за Windows check и явной install command. Это не новые баги.
+Python fixture ставит locked tools в project .venv, поэтому прежний Python
+PASS не доказывает managed Mason fallback. Native Unix Mason failure не
+воспроизведён; новых feature PASS этот review не заявляет.
+
+Отдельная подготовка IDE-117 остаётся в рабочем дереве:4 POSIX native cases
+и source driver3d0e6b7. Windows0 PASS/4 platform SKIP, Git Bash -n и unit/
+trace371 PASS/1 SKIP подтверждают только загрузку/регистрацию/синтаксис.
+Actual Linux source/target не запускались: pipe dockerDesktopLinuxEngine
+отсутствует. POSIX observer и пользовательский runtime не менялись; исходный
+ps cause остаётся неизвестным. Desktop/WSL не запускались и не ремонтировались.
+Подготовленные regression artifacts не входят в этот отдельный review commit
+и не выдаются за завершённое исправление; работа продолжается отдельным change.
+
+**Вывод.** Сначала реальный managed Python workflow, затем узкое исправление
+layout в существующей границе. Вынос нескольких validation строк сам по себе
+не устраняет platform bug. Нового resolver framework/LSP, удаления plugins,
+SDK/pins/backports или смены root policy нет. Mac/physical gates прежние.
+
+**Файлы.** WORKSPACE_TOOL_REVIEW, PORTABLE_ARCHITECTURE, FEATURE_REVIEW,
+PROBLEMS IDE-119, IDE_ROADMAP, HISTORY и commands. Raw append-only journals
+проверены ps-probe-prefix и staged HEAD prefix; машинные cleanup-операции
+и их документы в репозиторий не добавлялись.
