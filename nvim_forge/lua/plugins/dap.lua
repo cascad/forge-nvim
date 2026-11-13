@@ -828,6 +828,8 @@ local function current_file_configs(ft)
     if ft == 'javascript' then
         local config = require('forge.node').default_config(current_launch_path())
         return config and { config } or {}
+    elseif ft == 'sh' then
+        return { require('forge.bash_debug').default_config(current_launch_path()) }
     elseif ft == "rust" then
         local base = {
             type = "codelldb",
@@ -1468,6 +1470,7 @@ return {
             -- =================================================================
             -- codelldb adapter — для C / C++ / Rust.
             -- =================================================================
+            require('forge.bash_debug').setup(dap)
             -- spec: IDE-DAP-4 поиск нужен при запуске, не при загрузке Go/DAP.
             dap.adapters.codelldb = function(on_config)
                 local cl = codelldb_path()

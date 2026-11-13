@@ -10,7 +10,17 @@
 
 Маршрут и приоритеты: [рабочий план nvim_forge](docs/IDE_ROADMAP.md).
 Для новых пунктов используем следующий свободный ID `IDE-xxx`; исходный
-симптом хранится здесь, этап и состояние — в плане. Следующий ID: `IDE-127`.
+симптом хранится здесь, этап и состояние — в плане. Следующий ID: `IDE-128`.
+
+## IDE-127 — Bash debugConsole: native /dev/stdin warning в Linux
+
+2026-11-13, Ubuntu5716518719042: bundle0.3.9 выполняет debug workflow,
+но dbg-main.sh/source.sh повторно открывает /dev/stdin Node child pipe
+и выдаёт ENXIO в stderr. Default теперь использует штатный integrated PTY
+и не выдаёт эту ошибку (§215); explicit debugConsole оставлен пользователю,
+его stderr не скрывается. Это ограничение готового bundle, fork/фильтр не
+добавлен. Регресс default PTY входит в bash-debug.test.lua; opt-in console
+остаётся видимым в DAP trace. Mac/stdin отдельно.
 
 ## IDE-124 — Windows: старый rebase abort test не дошёл до запуска
 
@@ -686,6 +696,15 @@ mkfifo (реальный probe PASS), но pkill отсутствует; это 
 Владельцу задан выбор Docker/WSL/другого Linux host/VM. DAP остаётся отдельной
 открытой работой полного Bash roadmap; текущие язык/run/tests его не подменяют.
 Источники: .tests/bash-debug-readme.md, pinned VSIX SHA и bash-fifo-probe.json.
+
+2026-11-13: владелец выбрал WSL2; существующий default Ubuntu Running2
+использован штатным launcher официального adapter. Реализованы F5 текущего
+файла и launch.json, F9/variables/evaluate/output/edit-repeat/stop, native PTY.
+Windows и Ubuntu по17 distinct selected PASS (§215), Node/adapter negative
+и Unix child cleanup включены. Нет install/lifecycle/смены distro/нового bridge.
+Bash nearest debug, Mac/physical/interactive stdin/cold distro/UNC/custom mounts
+не заявлены готовыми; ограничение explicit console записано IDE-127.
+
 
 ## IDE-048 — completed Gitsigns E2E не дождался следующего Git-read
 

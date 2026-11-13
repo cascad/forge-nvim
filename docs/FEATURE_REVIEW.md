@@ -38,6 +38,14 @@ sequence workflows и15 preparation guards. Удалить только этот
 или нового Git backend. Companions удалять отдельно после upstream equivalents
 и тех же workflow checks. Real accounts/OAuth/SSH/Mac остаются отдельными.
 
+2026-11-13, §215: Bash debug использует неизменённый pinned bash-debug0.3.9,
+Windows Node→native WSL launcher, Linux/Mac native Bash4+. Малый Bash module
+и3 строки DAP integration; existing enrich_config/PTY/панели, без своего
+backend/WSL bridge/plugin pins/backports. Default integrated PTY убрал native
+stdin warning console transport; explicit console warning IDE-127 остаётся.
+SDK prepare явный, startup не запускает WSL.17 distinct Windows/Ubuntu PASS,
+Mac/cold/interactive stdin отдельно. После этого — passive window lookup review.
+
 ## Актуальный выбор после Files, Logs и frame pilot — 2026-11-11
 
 Source e00bcea. Выполнено: Files §180–181, обязательные Logs §182 и рабочий

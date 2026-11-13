@@ -16,7 +16,12 @@ preparation guards. Исправлен ложный ERROR при отмене р
 (§213–214): исправлены быстрый Push до refresh и пустой пароль из CR+LF; native
 cancel/rejection/retry, masked input и реальный pre-push. Windows24 distinct
 checks на конечном runtime, Ubuntu final24 PASS; полный regression не заявлен.
-Далее очередь4 — оставшиеся worktree gates IDE-038/048.
+Очередь5 Bash debug готова Windows+WSL2/Ubuntu (§215): default native PTY,
+F9/F5/evaluate/output/edit-repeat/launch.json/Stop, missing Node/adapter;
+по17 distinct selected PASS, Mac/physical/cold/interactive stdin отдельно.
+Очередь4 worktree IDE-038/048 остаётся открытым расследованием: прежних logs
+недостаточно для нового причинного исправления. Следующее — малый refactor
+пассивного поиска окон из FEATURE_REVIEW; SQL references ждут готовый provider.
 Отдельные Windows native quit IDE-121 и старый rebase-start timeout IDE-124
 не закрыты исторически; old rebase-abort на новой версии PASS (§214), причина
 исходного timeout без лога не установлена. Полный Windows regression PASS не заявлен. Mac/physical
@@ -40,7 +45,7 @@ E2E используются для защиты изменений продук
 | 2. Оформление Termide | Довести Code/Locals pilot до решения для повседневной работы, затем остальные панели | Общий цветной zoom готов на Windows (§199); постоянные рамки split и physical review открыты |
 | 3. Реальные проекты | Go/Cargo workspace, Python venv, Node scripts, выбор цели и launch.json/default | Go.work §206–208 и mixed context/Node script/Python venv debug Windows/Ubuntu9 PASS (§209–211); остальная mixed матрица открыта |
 | 4. Git | Credentials, interactive rebase и оставшиеся ошибки worktree | Sequence и HTTP credentials Windows/Ubuntu (§212–214); worktree IDE-038/048 и real OAuth/SSH/Mac открыты |
-| 5. Языковые пробелы | Bash debug с готовым backend; SQL references при наличии подходящего provider | Открыто; собственный LSP не создаём |
+| 5. Языковые пробелы | Bash debug с готовым backend; SQL references при наличии подходящего provider | Bash default/launch.json Windows+WSL2 и Ubuntu17 distinct PASS (§215); Mac и explicit console IDE-127 отдельно. SQL references ждут готовый provider |
 | 6. Переносимость | Чистый setup Windows/Ubuntu/macOS, terminal/SSH; Mac startup/Go и Cmd+C | Частично; native Mac и физические клавиши не проверены |
 
 Завершён Windows срез `restore-files-session-view` (§205): видимость/root,
@@ -779,12 +784,13 @@ Normal mode, прежние aliases сохранены:
 - [x] Go language Ubuntu: явный build и те же 6 E2E, вместе с остальной матрицей (§137–139).
 - [x] Bash Windows edit/run/tests: 8 real UI, исходный RED и Unicode rename
   регресс (§116–117), без новых plugins и startup installs.
-- [ ] Bash DAP: IDE-057, выбор Linux backend Windows; Mac Bash UI. Ubuntu edit/run/tests проверены (§137).
+- [x] Bash DAP Windows+WSL2/Ubuntu: IDE-SH-5/IDE-057, default/launch.json/Output/Stop и missing tools (§215).
+- [ ] Bash Mac/physical/interactive stdin/cold distro и opt-in console warning IDE-127; nearest debug Bats не поддержан.
 - [ ] Матрица Go/Rust/Python/JS-Node/Bash/SQL: LSP, completion, definition,
   references, rename, diagnostics, format, run, debug и tests где применимо.
 - [ ] Проверить оставшиеся сценарии языковой матрицы на реальных проектах:
   Go/Rust/Python/JS-Node/Bash/SQL уже имеют Windows/Ubuntu workflow выше;
-  Bash DAP/SQL references и native Mac остаются отдельными пробелами.
+  SQL references, оставшиеся Bash gates IDE-057/127 и native Mac остаются отдельными пробелами.
 - [ ] Проверить venv, Cargo workspace, Go workspace, package scripts,
   локальные зависимости и SQL dialect/подключение при необходимости.
 - [ ] Явный `launch.json` имеет приоритет; без него стартует разумный сценарий

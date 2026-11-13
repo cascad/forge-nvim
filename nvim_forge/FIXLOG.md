@@ -11454,3 +11454,89 @@ cancel/rejection/retry cases. Real accounts/helpers/OAuth/SSH agent/Mac/physical
 **Файлы.** Neogit manifest/README, git-auth E2E/server/registry, OpenSpec,
 QUICKSTART/PANEL_KEYS/e2e README/FEATURE_REVIEW/roadmap/PROBLEMS/HISTORY/commands.
 Append-only journals и frozen drafts сохранены, exact staging, push нет.
+
+### 215. Bash debug: native WSL2 и общий PTY
+
+**Связь:** IDE-057/WF-05–07, change `add-bash-debug-workflow`.
+Спека: IDE-SH-5 (ADDED). **Статус:** Windows+WSL2 и Ubuntu по17 distinct
+selected PASS; Mac/physical/interactive stdin/cold distro отдельно.
+
+**Проблема.** Bash уже имел language/run/Bats, но F5 не давал разумный
+current-file debug, а готовый adapter на Windows требует Linux backend.
+Владелец явно выбрал WSL2. Default Ubuntu уже Running2; Bash5.2/cat/mkfifo/
+rm/pkill проверены без установки/смены distro/WSL lifecycle.
+
+**Причина/решение.** Официальный bash-debug0.3.9 уже содержит Windows Node→
+wsl.exe launcher и program/cwd/source mapping. Новый bridge/backend не нужен.
+forge.bash_debug регистрирует существующий DAP adapter и public enrich_config,
+сохраняет пользовательские args/env/cwd/pathBash/terminalKind. DAP current-file
+factory получил sh route, setup — одну регистрацию;3 строки в общем dap.lua.
+OS граница в малом Bash module: bundled paths Windows→/mnt/drive и native
+Bash4+ на Unix (Mac Brew paths). Source protocol не модифицируется.
+
+Явный prepare_bash_dap.py получает неизменённый VSIX, SHA
+7fc154642bf3fcfa27a903fd44235bc902d93e737939c7b411ece6fe10f5f458,
+проверяет269 files и repeat; offline existing archive использован на F:.
+Node/WSL не устанавливаются; runtime ищет explicit JS/Mason и сообщает
+missing Node/adapter только при debug. Startup не запускает WSL/установки.
+67 pins/6 dependencies16 files/SDK SHA прежние, новых plugin backports нет.
+
+**Найденные границы.** Первый Windows8021920639600 получил native4s adapter
+warning без trace; точная фаза/длительность не установлены, cleanup1/signal15
+сохранён. Для WSL установлен public initialize_timeout_sec30; cold distro
+startup не объявлен проверенным. Observe8256677084400 прошёл defaults42/43,
+но Enter в ещё не готовом Telescope picker дал Nothing currently selected.
+Ожидание публичного выбранного item исправило test race, без sleep.
+
+Первый Ubuntu0/2: Node находится в готовом отдельном SDK, но fixture не
+передавал путь. Runtime правильно сообщил missing Node; теперь test задаёт
+pinned executable и имеет отдельный negative case. После этого Ubuntu2 PASS,
+но audit5716518719042 показал stderr /dev/stdin ENXIO в debugConsole:
+bundle dbg-main.sh/source.sh заново открывает stdin у Node child pipe.
+Default integrated+integratedTerminal использует готовый DAP PTY и не выдаёт
+ошибку; это narrow настройка native transport без fork. Explicit console
+сохранён, его upstream warning открыт IDE-127 и не фильтруется.
+
+**Проверка/e2e.** Permanent3 cases: native F9/F5/entry→breakpoint, Local PWD
+и stack, evaluate42, Output; edit→43→F5/repeat; launch.json args/env/cwd,
+explicit console и keyboard Stop. Другие два — missing adapter и missing Node,
+редактор остаётся доступен, installs0, нет WSL spawn до F5. Готовый backend
+перечисляет главным образом PWD/last status, остальные значения через
+Watch/Evaluate; полного Locals resolver не добавлено.
+
+Final native Windows9411332712100 и Ubuntu6163498681282 проверили default
+PTY и отсутствие /dev/stdin error; negative Windows9669743566800/9674206015400,
+Ubuntu6318044467070/6321200519815. Controls Bash8+debug panels6 ранее одним
+прогоном на каждой ОС, позже менялись лишь Bash defaults/fixture SDK binding,
+которые controls не вызывают. Итого по17 разных checks, не единый полный17
+run на каждой промежуточной версии. Unchanged green retry нет. Source
+first1/1, observe FAIL, Ubuntu first0/2 и console2 PASS-with-warning сохранены.
+
+По12 выбранных native profiles: exit0/signal0/APIerrors[]/hard_kill=false/
+scope active_after0. Записанные4 пары Linux PID/parent после остановки
+отсутствуют (ps code1/empty), включая WSL. Current active module/dap.lua,
+manifest/pins/269 SDK files сверены. .tests/bash-debug-final-audit.json и
+change verification; raw .tests/bash-debug-{pty,missing}-{windows,ubuntu},
+controls-windows и первый Ubuntu run. Docker использовал готовый imagef63a05ca
+с private SDK overlay/network none; build/download/lifecycle нет.
+
+**Вывод.** Общие DAP панели и штатный PTY закрывают Bash default/launch.json
+без нового layer/backend/terminal manager. WSL2 выбран владельцем и используется
+официальным launcher. Mac/Bash3.2, physical/interactive stdin/cold distro,
+UNC/custom mounts/полный Locals и nearest Bats debug отдельно. Старые
+worktree/Node native инциденты этим PASS не закрываются.
+
+**Файлы.** forge/bash_debug.lua, dap.lua3 lines, pinned preparer/Bash E2E/
+registry, change, BASH_WORKFLOW/LANGUAGE_MATRIX/QUICKSTART/e2e README/
+FEATURE_REVIEW/roadmap/PROBLEMS/HISTORY/commands. Append-only journals,
+frozen drafts и source lock сохранены, exact staging; remote push нет.
+
+**Уточнение той же итерации.** Изолированный CLI probe на том же Linux Node
+показал тип stdin `socket`, а повторное открытие /dev/stdin вернуло ENXIO.
+Это подтверждает механизм native console warning, не предположение по тексту.
+SDK prepare/check/chmod проверены как user forge на обычном /tmp filesystem:
+payload принадлежит forge, chmod проходит,269 hashes прежние. Новый поздний
+Dockerfile layer выполняет эту подготовку как forge и задаёт
+FORGE_E2E_BASH_DAP_DEPS; полный image build не запускался и не объявлен
+проверенным. Добавлены только Dockerfile SDK строки и единый E2E env selector,
+нет нового runner/инфраструктурного этапа. CLI raw .tests/bash-sdk-owner-probe.txt.

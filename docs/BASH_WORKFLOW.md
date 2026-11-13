@@ -49,8 +49,43 @@ filter. Его exit/output принадлежит этому test. Dynamic regis
 Права администратора и изменение Windows настроек не нужны. Пути
 scripts/temp переводит `cygpath` из того же native SDK.
 
-Bash F5 и debug nearest ещё не реализованы: IDE-057, отдельный Linux
-backend для Windows. Обычные Tests не создают DAP session.
+Bash debug IDE-057/IDE-SH-5 работает через официальный bash-debug (§215).
+Windows использует текущий default WSL2 distro (выбран владельцем), Linux/macOS
+— native Bash4+. Обычные Tests не создают DAP session; debug nearest Bats
+остаётся отдельным неподдержанным действием.
+
+Явная подготовка adapter (Node и WSL/Bash этим не устанавливаются):
+
+```sh
+python -B tests/e2e/prepare_bash_dap.py --download
+python -B tests/e2e/prepare_bash_dap.py
+```
+
+SDK: `.tests/bash-dap-deps/extension/out/bashDebug.js`. Для обычной установки
+есть `:MasonInstall bash-debug-adapter`; для своего SDK задайте
+`FORGE_BASH_DEBUG_ADAPTER` либо `vim.g.forge_bash_debug_adapter` на этот JS.
+Windows использует host Node и штатный WSL launcher adapter, Node внутри
+WSL не требуется. Distro/default/mounts сборка не меняет; поддержан native
+adapter layout `/mnt/<drive>`. Для нестандартных mounts пути bashdb задаются
+явно в launch.json; UNC этим срезом не проверен.
+
+Сохранённый `.sh` → F9 на строке → F5; F5 продолжает, Space d q/Shift-F5
+останавливает. Output — общая `Space w c`, переменные/стек — `Space w d`.
+Явный case имеет `type: "bashdb"`; args/env/cwd/pathBash/terminalKind
+пользователя сохраняются. Default `terminalKind: "integrated"` и
+`console: "integratedTerminal"` используют общий DAP PTY; stdout остаётся
+видимым после завершения. Для Watch: `Space d w` → `$answer`, Evaluate — `Space d e`.
+Mac: `FORGE_BASH_DEBUG_BASH` или launch.json `pathBash` на Bash4+; системного
+Bash3.2 недостаточно, Brew Bash ищется по стандартным путям при debug.
+
+Ограничение готового bundle: Locals содержит главным образом `$PWD` и `$?`.
+Остальные значения смотрятся через Watch/Evaluate (`$answer`), полный список
+переменных не эмулируется. Runtime не устанавливает adapter и не запускает
+WSL до debug. Native workflow, missing adapter/Node и14 Bash/DAP controls —
+17 distinct PASS Windows+WSL2 и17 Ubuntu. Mac/physical/cold distro startup
+и interactive stdin отдельно. Opt-in `terminalKind: "debugConsole"` с
+`console: "internalConsole"` сохраняется; на Linux bundle0.3.9 пишет native
+`/dev/stdin` warning (IDE-127). Он не скрывается, default PTY не выдаёт его.
 
 ## Постоянные E2E
 

@@ -105,3 +105,12 @@ RUN apt-get update && apt-get install -y --no-install-recommends cmake make \
     && rm -rf /var/lib/apt/lists/* \
     && python3 /opt/forge/tests/e2e/prepare_fzf.py --editor-deps /opt/forge/editor-deps --build-root /tmp/forge-fzf
 USER forge
+
+# Bash DAP — поздний маленький слой, cache остальных SDK сохраняется.
+# Native bundle делает chmod при launch; payload принадлежит test user.
+USER root
+COPY tests/e2e/prepare_bash_dap.py /opt/forge/tests/e2e/
+RUN mkdir -p /opt/forge/bash-dap-deps && chown forge:forge /opt/forge/bash-dap-deps
+USER forge
+RUN python3 /opt/forge/tests/e2e/prepare_bash_dap.py --download --output /opt/forge/bash-dap-deps
+ENV FORGE_E2E_BASH_DAP_DEPS=/opt/forge/bash-dap-deps

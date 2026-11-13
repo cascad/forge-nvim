@@ -1479,3 +1479,28 @@ verify-git-authentication-flow/verification.md. Native Mac/physical/OAuth/SSH/
 user helper/real account отдельно. Существующий Docker image должен иметь
 актуальный SDK payload: final run использовал private overlay готового Neogit,
 без image rebuild/lifecycle. Установленный IDE: :Lazy build neogit и restart.
+
+## Bash debug — IDE-SH-5
+
+Нужны Editor SDK и pinned Node SDK из обычной Node подготовки выше. Затем:
+
+```sh
+python -B tests/e2e/prepare_bash_dap.py --download
+python -B tests/e2e/prepare_bash_dap.py
+<nvim> -l tests/e2e/bash-debug.test.lua
+```
+
+Три случая: real debug current file/edit-repeat/launch.json/Stop, missing
+adapter и missing Node. Fixture использует public DAP и клавиши, нет backend
+mocks/private state writes. Windows — уже готовый default WSL2 Linux с
+Bash4+/cat/mkfifo/rm/pkill, host Node; Linux/macOS — native Bash4+. Distro или
+системные tools preparer не устанавливает. VSIX0.3.9 закреплён SHA, повтор
+проверяет269 payload files; --archive позволяет готовый offline VSIX.
+
+Default — integrated PTY, explicit args/env/cwd и optional debugConsole
+проверены; Linux warning optional console описан IDE-127, не скрывается.
+После штатного Stop/Editor stop проверяются записанные Unix PID/parent,
+включая WSL, дополнительно native scope. Windows/Ubuntu по17 distinct PASS
+с Bash8/DAP panels6 controls; подробные версии/raw failures — change
+add-bash-debug-workflow/verification.md. Mac/physical/interactive stdin,
+cold distro/UNC/custom mounts/полный Locals не заявлены проверенными.

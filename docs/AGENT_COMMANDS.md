@@ -7833,3 +7833,63 @@ registry staging из HEAD825ce2e + только new git-auth row. Python все
 read/write UTF-8; diff/strict/exact allowlist/index-prefix guards перед commit.
 User plugin cache/remote credentials/Desktop/WSL lifecycle не затронуты.
 Mac/OAuth/SSH/physical и исторические native failures отдельно.
+
+## 123. Bash DAP: официальный WSL launcher, native PTY и scopes
+
+2026-11-13, PowerShell login=false, F:/repo/forge-nvim. TEMP/TMP/TMPDIR и
+NVIM_LOG_FILE F:/repo/forge-nvim/.tests/tmp; PYTHONUTF8=1/PYTHONIOENCODING=utf-8,
+npm cacheF:/forge-nvim-tmp/npm-cache. OpenSpec add-bash-debug-workflow: root/
+proposal/spec/design/tasks/apply ready прочитаны, IDE-SH-5 delta до runtime.
+GitHub read-only package.json vscode-bash-debug и Mason package.yaml подтвердили
+готовые entrypoint/WSL backend; локальный exact VSIX проверен SHA (§215).
+
+```powershell
+# Read-only inventory; Ubuntu уже Running2, default не менялся:
+wsl.exe --list --verbose
+wsl.exe --distribution Ubuntu --exec sh -c 'command -v bash; bash --version | head -n 1; command -v node; command -v pkill; command -v mkfifo; command -v cat; command -v rm; uname -m'
+python -B tests/e2e/prepare_bash_dap.py --archive .tests/bash-research/bash-debug-0.3.9.vsix
+python -B tests/e2e/prepare_bash_dap.py
+& ./.tools/neovim/windows-x64/bin/nvim.exe -l tests/e2e/bash-debug.test.lua
+# Изменённые части запускаются по одному разу каждой версии:
+$env:FORGE_TEST_ID='IDE-SH-5 native workflow'
+& ./.tools/neovim/windows-x64/bin/nvim.exe -l tests/e2e/bash-debug.test.lua
+$env:FORGE_TEST_ID='IDE-SH-5 missing'
+& ./.tools/neovim/windows-x64/bin/nvim.exe -l tests/e2e/bash-debug.test.lua
+$env:FORGE_TEST_ID=$null
+& ./.tools/neovim/windows-x64/bin/nvim.exe -l tests/e2e/bash-language.test.lua
+& ./.tools/neovim/windows-x64/bin/nvim.exe -l tests/e2e/debug-panels.test.lua
+# Три последующих Ubuntu scripts запускали только изменённые Bash DAP cases:
+docker compose -f tests/containers/compose.yaml run --rm --no-deps --entrypoint bash -e GOMAXPROCS=2 -e GOFLAGS=-p=2 -e GOTOOLCHAIN=local -e CARGO_BUILD_JOBS=2 ubuntu /workspace/.tests/bash-debug-pty-20261113.sh
+docker compose -f tests/containers/compose.yaml run --rm --no-deps --entrypoint bash -e GOMAXPROCS=2 -e GOFLAGS=-p=2 -e GOTOOLCHAIN=local -e CARGO_BUILD_JOBS=2 ubuntu /workspace/.tests/bash-debug-missing-20261113.sh
+python -B .tests/audit-bash-debug.py
+python -B tests/e2e/prepare_bash_dap.py
+npx.cmd --yes @fission-ai/openspec@1.13.2 validate add-bash-debug-workflow --type change --strict --no-interactive
+```
+
+Ранние Ubuntu scripts bash-debug-20261113.sh (0/2 + controls14 PASS),
+bash-debug-v2-20261113.sh (2 PASS, console stderr) сохранены. Windows raw
+bash-debug-windows (1/1), observe FAIL, v2 workflow PASS, sdk-windows2 PASS,
+pty-windows1 PASS, missing-windows2 PASS; controls-windows14 PASS один раз.
+Final17 distinct каждого OS =3 Bash cases+14 controls. Active module/SHA,
+code/signal/API/scopes и записанные Unix PID/parent проверяет audit. F: host
+mount содержит adapter269 files; private Neogit overlay обновляет ready image
+payload6/16, не /opt. Source lock/SDK прежние; no network/build/lifecycle.
+
+Source /dev/stdin warning остаётся в explicit Linux console (IDE-127), default
+PTY не скрывает stderr и не выдаёт эту ошибку. Mac/physical/interactive stdin/
+cold distro/UNC/custom mounts отдельно. Native source4s warning не выдаётся
+за точно установленный cold-start диагноз. Сервер прерывал turn: DONE rc0
+и отсутствие текущего контейнера проверены до продолжения, повторов не было.
+
+Prefix .tests/bash-dap-prefix.json: журналы append-only,5 frozen drafts exact,
+registry index из HEAD521559b + только Bash debug row. Tests/run.lua и frozen
+catalog/probe changes не исполнялись/не staged. Все Python reads/writes UTF-8.
+Exact allowlist, staged prefix/diff/strict перед самостоятельным commit, no push.
+
+Дополнительный один CLI probe (без GUI повторов):
+`docker compose -f tests/containers/compose.yaml run --rm --no-deps --user root --entrypoint bash ubuntu /workspace/.tests/bash-sdk-owner-probe.sh`.
+В ephemeral /tmp создан только свой SDK dir, передан forge; runuser forge
+prepare/check/chmod PASS. Node child stdin stat=socket, exec3</dev/stdin даёт
+code1/ENXIO. Raw .tests/bash-sdk-owner-probe.txt. Dockerfile получил поздний
+слой того же user-owned SDK и FORGE_E2E_BASH_DAP_DEPS, чистый build не выполнялся.
+SDK E2E env name согласован с остальными языками, default host path прежний.

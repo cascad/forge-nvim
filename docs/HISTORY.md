@@ -351,6 +351,7 @@ Python реализован и проверен 2026-11-03; после возо�
 | §212 | [Interactive rebase: отмена todo без ложного конфликта](../nvim_forge/FIXLOG.md#212-interactive-rebase-отмена-todo-без-ложного-конфликта) |
 | §213 | [Быстрый Git Push до первого repo refresh](../nvim_forge/FIXLOG.md#213-быстрый-git-push-до-первого-repo-refresh) |
 | §214 | [Git credentials: один Enter вместо пустого пароля](../nvim_forge/FIXLOG.md#214-git-credentials-один-enter-вместо-пустого-пароля) |
+| §215 | [Bash debug: native WSL2 и общий PTY](../nvim_forge/FIXLOG.md#215-bash-debug-native-wsl2-и-общий-pty) |
 
 ## Как читать и дополнять
 

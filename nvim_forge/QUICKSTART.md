@@ -630,3 +630,14 @@ cargo-nextest, для debug — CodeLLDB. После обновления вып
 тестов/executable и сохранения debug output. F5 сам собирает Cargo binary;
 Space T t / T f / T d — nearest / file / debug. Подготовка, ограничения и
 команды: [Rust workflow](../docs/RUST_WORKFLOW.md).
+
+### Bash debug
+
+После явной установки bash-debug adapter: `.sh` → F9 → F5. Windows использует
+готовый default WSL2 Linux, Linux/Mac — Bash4+. Default Output — общий native
+PTY; F5 продолжает, Shift-F5/Space d q останавливают. Space d w добавляет Watch
+(`$answer`), Space d e — Evaluate, Space w c/d — Output/переменные и стек.
+Поддержан type=bashdb launch.json с args/env/cwd. [Подготовка, ограничения и
+проверенные сценарии](../docs/BASH_WORKFLOW.md): Windows/Ubuntu17 distinct PASS,
+Mac/physical/interactive stdin/cold отдельно. Полный список Locals готовый
+bundle не предоставляет; native console warning описан IDE-127.
