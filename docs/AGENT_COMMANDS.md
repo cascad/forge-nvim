@@ -8150,3 +8150,45 @@ python -B .tests/stage-managed-unix.py
 git commit -m 'docs(python): verify managed debugpy fallback on Ubuntu'
 git status --short
 ```
+
+
+## 130. Actual installed profile и ручная проверка Windows
+
+2026-11-13. Cwd F:/repo/forge-nvim, login=false, TEMP/TMP/TMPDIR/NVIM_LOG_FILE
+на F, PYTHONUTF8=1/PYTHONIOENCODING=utf-8, npm cache F:/forge-nvim-tmp/npm-cache.
+Python прочитал plugins.json и actual LOCALAPPDATA/nvim_forge-data/lazy:
+67 Git HEAD/status и16 normalized SHA, inventory сохранён .tests/installed-*
+before.json. Неизвестные payload/revisions не применялись. Скрипт repair
+сохранил16 файлов/2 HEAD на F, проверил чистоту двух repos и наличие pinned
+objects, git checkout --detach только Neogit/Neotest без fetch/force; затем:
+
+```powershell
+python -B .tests/repair-installed-plugins.py
+# Скрипт вызывает реальный SDK -l prepare-plugins.lua --plugin-root <actual Lazy>
+# и тот же вызов с --check. Backup .tests/installed-plugin-repair-20261113.
+$env:FORGE_TEST_ID='IDE-BOOT-1'
+$env:FORGE_PLUGIN_PREPARE_LEGACY='1'
+& .tools/neovim/windows-x64/bin/nvim.exe -l tests/e2e/plugin-backports.test.lua > .tests/plugin-first-open-source.txt 2>&1
+# После исправления fixture nested CLI → тот же direct public applier:
+& .tools/neovim/windows-x64/bin/nvim.exe -l tests/e2e/plugin-backports.test.lua > .tests/plugin-first-open-source-v2.txt 2>&1
+$env:FORGE_PLUGIN_PREPARE_LEGACY=$null
+& .tools/neovim/windows-x64/bin/nvim.exe -l tests/e2e/plugin-backports.test.lua > .tests/plugin-first-open-target.txt 2>&1
+```
+
+Первый pilot15s nested CLI timeout не доказывает config error. Source-v2
+nvim_ui_attach10s timeout/native1/15; target nativeFiles/Tests reached, но
+Locals общий60s watchdog/native124/15. Полный FAIL сохранён как IDE-133,
+deadline не повышался; unchanged repeats/full/Cargo/container не запускались.
+Source→target меняет explicit setup3→all6, не SDK/deadline/GUI predicate.
+
+Get-Content/rg использованы для lsp.lua, neo-tree.lua, actual user lsp.log
+(последние ошибки) и nvim.log. Get-CimInstance/Get-Process — только read-only
+inventory nvim/rust-analyzer/cargo/rustc. User log даёт missing cargo-clippy
+custom1.99.1 + actual build.rs error; repo проекта/SDK не менялись. Пункты
+IDE-131/132 записаны, их причина/исправление не смешаны с plugin preparation.
+
+OpenSpec создан штатным new change verify-plugin-profile-preparation,
+skip_specs:true; инструкции proposal/design/tasks/apply прочитаны, runtime
+не менялся. В tasks1.2 остаётся FAIL. История222 append-only; frozen old
+runner/trace/registry/catalog и lazy-lock bytes проверяются по
+.tests/plugin-first-open-prefix.json. Коммит шага до готовности gate не сделан.

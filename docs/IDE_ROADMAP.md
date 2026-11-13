@@ -7,6 +7,25 @@ IDE-001 параллельно ждёт диагностических данн�
 
 ## Текущая очередь продукта — решение владельца 2026-11-12
 
+**Приоритет после натурной проверки владельца2026-11-13:**
+
+1. IDE-130 — первый запуск установленного профиля: восстановить plugins из
+   lock, явно подготовить все6 backports, проверить native Files/Tests/Debug.
+   User cache исправлен offline, инструкция исправлена. Target открывает Files/
+   Tests, но полный case FAIL при открытии Locals (IDE-133, общий60s watchdog).
+   Native gate остаётся открытым; воспроизведение и артефакты — FIXLOG222.
+2. IDE-131 — Rust: обязательная диагностика через готовый cargo check вместо
+   безусловного Clippy; отдельно асинхронная подготовка при входе в проект,
+   штатный cache и время first/reopen. Actual custom toolchain не имеет Clippy.
+3. IDE-132 — убрать0.5–1s задержки раскрытия Files/открытия файла после
+   профилирования реального проекта. Проверять отклик UI отдельно от LSP ready.
+4. Затем вернуться к оставшейся очереди ниже. IDE-048 probe остановился раньше
+   remove: RPC timeout/forced native cleanup класса IDE-047, raw26364912087090
+   сохранён; отмена Gitsigns этим запуском не подтверждена, условие не ослаблено.
+
+Пока владелец работает в IDE, тяжёлые language/container suites не запускаем.
+Одно короткое plain-text native E2E подготовки допустимо без Cargo/LSP builds.
+
 **Последний результат — §221:** подтверждён Linux fix managed Python debug
 (IDE-119): старая версия2 RED/2 explicit PASS → текущая4 PASS, ещё15 соседних
 language/debug checks PASS. Native adapter и debuggee используют разные venv;

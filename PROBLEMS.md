@@ -10,7 +10,74 @@
 
 Маршрут и приоритеты: [рабочий план nvim_forge](docs/IDE_ROADMAP.md).
 Для новых пунктов используем следующий свободный ID `IDE-xxx`; исходный
-симптом хранится здесь, этап и состояние — в плане. Следующий ID: `IDE-130`.
+симптом хранится здесь, этап и состояние — в плане. Следующий ID: `IDE-134`.
+
+## IDE-133 — native startup regression завершился до полной проверки Locals
+
+2026-11-13, новый plain-text plugin preparation case, Windows SDK74aff15b.
+Первый pilot33187497113100: nested CLI code124/signal15 по15s deadline, до UI.
+Fixture использует тот же public applier без nested SDK (внешний CLI отдельно
+проверен на actual user profile). Legacy source33357806558800: RPC timeout
+nvim_ui_attach/id1/10s, native1/signal15, scope0. Это не точное воспроизведение
+Neo-tree config error: тот подтверждён пользовательским stacktrace IDE-130.
+
+Target33445583136000:16 patches ready, VeryLazy, Files и Tests реально открылись;
+при переходе в Locals child завершён по прежнему общему60s watchdog: code124/
+signal15, APIerrors[], notifications[], scope0, hard_kill=false. Native log
+содержит observer_ready; per-stage times/main stack отсутствуют. Причина пока
+не установлена: нельзя назвать это config error, ConPTY crash или доказанной
+блокировкой конкретного module. Общий case FAIL; timeout не увеличен, green
+retry не запускался. Native gate1.2 остаётся открытым, черновик теста сохранён.
+Следующий разбор — bounded stage/CPU/stack capture, без общего E2E прогона.
+
+## IDE-132 — UI задерживается при раскрытии Files и открытии файла
+
+2026-11-13, натурная Windows-проверка владельца: раскрытие дерева Files
+задерживается примерно на0.5–1 секунду, открытие файла тоже должно отвечать
+сразу. Требование: ввод/фокус/отрисовка без заметной блокировки; фоновые Git,
+scan/LSP/компиляция не удерживают UI. Нужны измерения именно рабочего проекта:
+key→первая перерисовка, main-loop gap, scan/Git/decorations и FileType/LspAttach.
+Причина пока неизвестна; Rust readiness IDE-131 не объявлен причиной Files.
+Следующий шаг после готовности запуска IDE-130 — ограниченный профиль этой
+операции; E2E с реальной вложенностью и native UI, не только маленький fixture.
+
+## IDE-131 — Rust readiness запаздывает и check использует отсутствующий Clippy
+
+2026-11-13, владелец: building compile-time deps начинается после открытия
+Rust-файла; спустя минуту ошибка компиляции ещё не подсвечена. Ожидание:
+установленный backend асинхронно готовит workspace при открытии проекта,
+редактор сразу отвечает на ввод/открытие файлов; повторное открытие использует
+штатный Cargo/rust-analyzer cache. Собственный cache не выбран без измерений.
+
+Static source: plugins/lsp.lua event BufReadPre/BufNewFile, затем native
+vim.lsp.enable; Rust settings cargo.allFeatures=true, buildScripts.enable=true,
+procMacro.enable=true, check.command=clippy. В user lsp.log19:07–19:09 есть
+actual Flycheck error: cargo-clippy.exe отсутствует для выбранного custom
+Windows toolchain1.99.1; check завершается exit1. Также FetchBuildDataError
+показывает actual syntax error build.rs7:14. Исходники проекта/SDK не менялись.
+Это доказанный отказ текущего check; задержка полной подготовки и ошибка
+build script — отдельные наблюдения. План: штатный cargo check для обязательной
+компиляторной диагностики; Clippy только при явном выборе/готовом toolchain;
+затем отдельно project warmup/cancel/root/cache и замеры первого/повторного входа.
+Любые изменения runtime — отдельный bounded change + real Rust E2E.
+
+## IDE-130 — установленный профиль не прошёл первый native запуск
+
+2026-11-13, после инструкции ручной проверки Windows: Failed to run config
+for neo-tree.nvim, backport не подготовлен. Ранее E2E использовали заранее
+подготовленные плагины и не покрывали данную инструкцию обновления. Агент
+перечислил только3 Lazy build, хотя декларация содержит6 plugins/16 files.
+
+Actual inventory C:/Users/cascad/AppData/Local/nvim_forge-data/lazy:
+все6 backports original; Neogit/Neotest HEAD отличаются от lock, остальные65
+совпадают. У двух несовпавших plugins git status чистый, pinned objects есть
+локально. Две ревизии восстановлены offline, все6 patches применены общим
+prepare-plugins.lua и --check прошёл.16 исходных файлов/HEAD сохранены на F:
+.tests/installed-plugin-repair-20261113. Lazy-lock не менялся. Требуются native
+регресс неподготовленного profile→явная общая подготовка→Files/Tests/Debug.
+Инструкция исправлена, общая подготовка actual profile ready. Target Files/Tests
+открылись, но весь native case FAIL на Locals/watchdog (IDE-133); готовность
+patches не объявляется полным startup PASS. История — FIXLOG §222.
 
 ## IDE-129 — Windows: единичная задержка SavePre → SavePost при quit
 

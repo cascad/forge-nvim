@@ -37,6 +37,24 @@ Windows SDK исправляет native ConPTY crash IDE-027; хранится �
 скачивается/собирается. Системный `nvim` не меняется; прямой `nvim` по-прежнему
 запускает системную программу. Подробности: `tests/diagnostics/README.md`.
 
+После обновления checkout подготовь **все** объявленные plugin backports,
+а не выборочный список. Если версия установленного плагина отличается от
+lazy-lock.json, сначала выполни в Forge `:Lazy restore`, дождись завершения
+и закрой редактор. Затем из корня репозитория:
+
+```powershell
+.\nvim_forge.cmd -l .\nvim_forge\scripts\prepare-plugins.lua
+.\nvim_forge.cmd -l .\nvim_forge\scripts\prepare-plugins.lua --check
+```
+
+Обе команды используют тот же Windows SDK/NVIM_APPNAME и установленный Lazy
+профиль, что обычный launcher. Первая явно применяет все декларации, вторая
+только проверяет. Сейчас это6 plugins/16 файлов; список берётся из metadata.
+После подготовки запусти Forge заново в каталоге проекта. Неизвестные ревизии
+и пользовательские изменения applier сохраняет и отклоняет.
+На Linux/macOS те же команды: `./nvim_forge.sh -l
+nvim_forge/scripts/prepare-plugins.lua` и повтор с `--check` (в одной строке).
+
 **macOS** — один скрипт ставит всё (зависимости, шрифт, WezTerm и его
 конфиг) и проверяет результат; повторный запуск безопасен и чинит то, что
 разъехалось:

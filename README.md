@@ -58,6 +58,24 @@ Launcher/test entrypoint проверяют manifest и SHA256, ничего н�
 при старте. Системный `nvim` не заменяется. Причина, A/B и команды:
 [tests/diagnostics/README.md](tests/diagnostics/README.md).
 
+После обновления checkout подготовь **все** объявленные plugin backports,
+а не выборочный список. Если версия установленного плагина отличается от
+lazy-lock.json, сначала выполни в Forge `:Lazy restore`, дождись завершения
+и закрой редактор. Затем из корня репозитория:
+
+```powershell
+.\nvim_forge.cmd -l .\nvim_forge\scripts\prepare-plugins.lua
+.\nvim_forge.cmd -l .\nvim_forge\scripts\prepare-plugins.lua --check
+```
+
+Обе команды используют тот же Windows SDK/NVIM_APPNAME и установленный Lazy
+профиль, что обычный launcher. Первая явно применяет все декларации, вторая
+только проверяет. Сейчас это6 plugins/16 файлов; список берётся из metadata.
+После подготовки запусти Forge заново в каталоге проекта. Неизвестные ревизии
+и пользовательские изменения applier сохраняет и отклоняет.
+На Linux/macOS те же команды: `./nvim_forge.sh -l
+nvim_forge/scripts/prepare-plugins.lua` и повтор с `--check` (в одной строке).
+
 Neovim then reads `<repo>/<NVIM_APPNAME>/init.lua` and keeps data,
 state and cache in:
 

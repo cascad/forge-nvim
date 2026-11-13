@@ -11869,3 +11869,49 @@ tests/e2e/python-managed-debug.test.lua и language/debug cases того же ru
 Raw .tests/managed-unix-*, .tests/ubuntu/managed-unix-{source,target}; точные
 profiles/argv/versions — change verification и audit JSON. Journals append-only,
 isolated doc staging/commit; пользовательские environments не менялись.
+
+
+## 222. Первый запуск: неподготовленные plugins и неполная инструкция
+
+2026-11-13. IDE-130, существующий контракт IDE-BOOT-1; runtime не менялся.
+
+**Проблема.** Владелец сразу получил Failed to run config neo-tree.nvim.
+Агент перечислил3 Lazy build при6 обязательных backports. Прежние E2E начинали
+с готовых plugins и не доказывали успешное обновление installed user profile.
+
+**Причина.** Actual inventory67 plugins:65 HEAD совпадают с lazy-lock, у
+Neogit/Neotest другие clean revisions; все16 patch files original. Это actual
+несогласованность установленного профиля и недостаточная инструкция, не баг
+самого SHA guard. Guard правильно остановил неподготовленный Neo-tree.
+
+**Изменение.** Два clean checkout восстановлены из локальных Git objects,
+без fetch/SDK downloads;16 original files/HEAD backup на F. Общий existing CLI
+apply/check подготовил все6 patches. Lock, guards и startup policy прежние.
+QUICKSTART/README/patch guide теперь используют CLI без выборочного списка,
+при расхождении pin — native Lazy restore. Новый E2E начинает с original6,
+явно вызывает тот же public applier, затем открывает настоящие panels.
+
+**Проверка/e2e.** Actual user CLI apply/check successful. Native pilot с nested
+CLI остановился15s/code124 до UI; fixture убрал вложенный SDK, сохранив applier
+CLI/Lazy build. Legacy source33357806558800: nvim_ui_attach timeout10s, exit1/
+signal15/scope0. Это не точное E2E reproduction Neo-tree assertion; source
+ошибка известна из пользовательского stacktrace. Target33445583136000: все16
+prepared, Files/Tests открылись, notifications[]; Locals не завершил весь case
+до прежнего60s watchdog, native124/signal15/scope0/hard_kill=false (IDE-133).
+Полный case FAIL; source/target не повторялись ради зелёного, deadlines прежние.
+
+**Вывод.** Installed patches исправлены, но полная native приёмка пока не
+пройдена. OpenSpec1.2 остаётся открытым, runtime/test gate не закрыт текстом.
+Дополнительно записаны жалобы IDE-131 Rust readiness/missing Clippy и IDE-132
+Files/open latency. User LSP log подтверждает actual cargo-clippy отсутствует
+в custom1.99.1 и error в build.rs; SDK/project source не менялись. Эти жалобы
+не считаются исправленными подготовкой plugins. Пока владелец работает,
+Cargo/container/full suites не запускались; короткий startup case остановлен
+на новом evidence, дальнейшие неизменённые retries не выполнялись.
+
+**Файлы/evidence.** PROBLEMS/roadmap/guides, existing plugin-backports E2E,
+verify-plugin-profile-preparation artifacts. Raw .tests/installed-plugin-repair-
+20261113, installed-{lock,backports}-before.json, plugin-first-open-{source,
+source-v2,target}.txt. Тест пока рабочий draft, законченный commit не заявлен.
+Предшествующий IDE-048 probe26364912087090 остановился раньше remove на RPC
+класса IDE-047/forced cleanup; артефакты сохранены, условие не ослаблялось.
