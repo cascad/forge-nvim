@@ -8369,3 +8369,44 @@ commands/notifications/stages/native exits/scope и frozen/prefix guards.
 изменений нет. Старый IDE-133 cause неизвестен. Ready Docker/private overlay,
 UTF-8/LF guest script, serial Win/Linux без lifecycle/build/download. Temp F.
 Перед commit — exact allowlist и staged journals startswith HEAD blobs.
+
+
+## 135. Rust F5: sync source, async target и реальный debug control
+
+2026-11-13; FIXLOG227, make-rust-debug-metadata-asynchronous. PowerShell
+-NoProfile из F:/repo/forge-nvim, TEMP/TMP/TMPDIR/NVIM_LOG_FILE на F .tests/tmp,
+npm cache F:/forge-nvim-tmp/npm-cache, Python UTF-8. Чтение: rg/Get-Content
+rust_current_program, pinned nvim-dap eval_option, Overseer integration,
+saved mode/notifications/quit traces. Личный рабочий проект не менялся.
+
+```powershell
+npx.cmd --yes @fission-ai/openspec@1.13.2 context --json
+npx.cmd --yes @fission-ai/openspec@1.13.2 new change make-rust-debug-metadata-asynchronous
+# status / instructions proposal,specs,design,tasks,apply --change ... --json
+git archive --format=zip --output=.tests/rust-debug-async-source.zip c4e44b8 nvim_forge
+# Python ZipFile: пути проверены внутри .tests, snapshots Windows/Ubuntu.
+$env:FORGE_RUST_CASE='IDE-DAP-9'
+# FORGE_E2E_CONFIG_SOURCE=...source только для source-isolated.
+& .tools/neovim/windows-x64/bin/nvim.exe -l tests/e2e/rust-language.test.lua
+$env:FORGE_RUST_CASE='IDE-DAP-7'
+& .tools/neovim/windows-x64/bin/nvim.exe -l tests/e2e/rust-language.test.lua
+docker version --format '{{.Server.Version}}'
+docker compose -f tests/containers/compose.yaml run --rm --no-deps --pull never --entrypoint bash ubuntu /workspace/.tests/rust-debug-async.sh > .tests/rust-debug-async-ubuntu.txt 2>&1
+python -B .tests/audit-rust-debug-async.py
+python -B .tests/record-rust-debug-async.py
+npx.cmd --yes @fission-ai/openspec@1.13.2 validate make-rust-debug-metadata-asynchronous --type change --strict --no-interactive
+git diff --check
+git diff --cached --check
+```
+
+Final Windows logs source-isolated/target-isolated/control, Ubuntu source-isolated/
+target/control. По2 RED→3 selected PASS/ОС. Test-only observer сохраняет native
+metadata result, не фальсифицирует Cargo. Prototype fixture/focus/normalized/
+native-quit-fail logs сохранены; каждый изменённый вариант один раз, без
+повторов неизменённой ошибки ради зелёного. Новый native quit1/15 остаётся
+IDE-121. Final cases ждут native ABORT/idle, old quit deadline2s прежний.
+Audit:10 final и7 prior profiles, copied config/test/common/control/helper,
+SDK/frozen/prefix guards. Control Windows не повторяли после правки только
+новых tests; runtime один и тот же. Guest script UTF-8/LF, ready image,
+network none, Win/Linux serial без lifecycle/download/build image. Temp F.
+Перед commit — exact allowlist и staged journals startswith HEAD blobs.

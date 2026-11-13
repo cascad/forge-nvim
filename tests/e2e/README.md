@@ -1607,6 +1607,17 @@ Windows/Ubuntu source1 RED → target1+прежний completion control1 PASS (
 Mac не запускался. Это не тест cold warmup или полного editor regression.
 
 
+## IDE-DAP-9: асинхронное разрешение Cargo debug target
+
+IDE-DAP-9 (§227): `FORGE_RUST_CASE=IDE-DAP-9 nvim -l tests/e2e/rust-language.test.lua`
+выбирает два native cases: input/picker cancel и stale cwd/ABORT. Observer
+удерживает реальный Cargo callback и отличает DAP producer от LSP. Source2 RED,
+target2 PASS; existing IDE-DAP-7 actual build/второй bin/eval/output1 PASS на
+Windows/Ubuntu. Native ABORT и quiescent RA ожидаются до quit; это не regression
+выхода активного LSP. Intermediate native quit FAIL сохранён как IDE-121.
+В PowerShell переменную задавать через `$env:FORGE_RUST_CASE='IDE-DAP-9'`, затем
+очистить. Mac/рабочий проект отложены; full suite не заявлен.
+
 ## IDE-RUST-2 / IDE-BOOT-7: ранняя подготовка и первое открытие
 
 FORGE_RUST_CASE=IDE-RUST-2 nvim -l tests/e2e/rust-language.test.lua после

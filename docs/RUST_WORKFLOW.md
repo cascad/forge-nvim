@@ -22,7 +22,9 @@ workspace preparation, ранний project warmup и UI latency — отдел�
 `Space l f`/`Shift Alt f`/`:Format` — форматирование.
 
 F5 предлагает Current Rust file bin и вариант с аргументами. Cargo metadata
-определяет target текущего package; перед debug выполняется cargo build (debug)
+асинхронно определяет target текущего package: пока ожидается ответ, можно
+переходить между панелями и печатать. Смена cwd до ответа отменяет прежний
+запуск. Перед debug выполняется cargo build (debug)
 в Tasks. Для .vscode/launch.json codelldb launch нужен явный program:
 VS Code extension-only cargo поле не заменяет его в nvim-dap.
 F9 ставит breakpoint, Space d e вычисляет выражение, F5 продолжает исполнение.
@@ -34,8 +36,8 @@ Locals/Debug Output/код: Space w d / Space w c / F7 (или Space w 0).
 первая цель с предупреждением. Явный program из launch.json и прежние
 однозначные маршруты сохраняются. Обычный preLaunchTask по-прежнему делает
 `cargo build`; сборку examples/особые flags задавайте проектной build-задачей.
-Windows: отмена и выбранный второй bin проверены настоящим CodeLLDB (§200).
-Ubuntu/macOS этой новой проверкой не подтверждены.
+Windows/Ubuntu: отмена и выбранный второй bin проверены настоящим CodeLLDB
+(§227), вместе с pending input и stale cwd. Mac/большой проект отложены.
 
 Нужен CodeLLDB в PATH либо явно установленный Mason adapter; на Windows
 поддерживается также существующий каталог %LOCALAPPDATA%/codelldb.

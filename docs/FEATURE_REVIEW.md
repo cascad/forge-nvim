@@ -591,3 +591,16 @@ startup88ms. Existing references3 и editor10 плюс Rust3 PASS на кажд�
 Rust project boundary — async native metadata → LSP start attach=false; own
 pending metadata handle/generation, клиентами владеет Neovim. Mac/large project/
 forced pending cancel и Files expansion ещё открыты.
+
+
+## Rust F5: граница Cargo program — 2026-11-13
+
+§227 / IDE-134: review нашёл оставшийся sync metadata subprocess в DAP.
+Program целиком использует native coroutine; отдельная coroutine ambiguous
+picker заменена общим completion callback. Политика target сохранена, cwd
+guard отменяет старый результат. Нет нового module/manager/cache/backend,
+SDK/pins/patches прежние. Это устранение блокирующей границы, а не перенос
+кода по папкам. Windows/Ubuntu source2 RED → target2 + real debug control1
+PASS. Натурные проверки отложены владельцем и не являются стопом очереди.
+Новый native quit artifact остаётся IDE-121; idle-only PASS не доказывает
+выход активного compiler. Точные границы — change verification/FIXLOG227.

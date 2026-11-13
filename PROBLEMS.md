@@ -10,7 +10,17 @@
 
 Маршрут и приоритеты: [рабочий план nvim_forge](docs/IDE_ROADMAP.md).
 Для новых пунктов используем следующий свободный ID `IDE-xxx`; исходный
-симптом хранится здесь, этап и состояние — в плане. Следующий ID: `IDE-134`.
+симптом хранится здесь, этап и состояние — в плане. Следующий ID: `IDE-135`.
+
+## IDE-134 — Rust F5 синхронно ожидает Cargo metadata
+
+2026-11-13, самостоятельный review после отложения натурных проверок.
+`rust_current_program` вызывал vim.fn.system перед выбором цели. §227:
+source c4e44b8 подтверждает sync call из plugins/dap.lua; native coroutine
+и vim.system сохраняют ввод, target picker/ABORT и не применяют результат после
+смены cwd. Windows/Ubuntu source2 RED → target2 + actual debug control1 PASS,
+held input40/8ms. Нет нового cache/backend/SDK/pins. Mac/большой проект
+отложены; reference числа не являются SLA произвольного проекта.
 
 ## IDE-133 — native startup regression завершился до полной проверки Locals
 
@@ -168,6 +178,12 @@ Raw .tests/mixed-project-target-windows/node-language.txt и native profile.
 Повтор неизменённого case ради зелёного не выполнялся. Тот же класс native
 quit code1/signal15 зафиксирован Bash missing-tools profile24391104731200;
 Node7/1 и Bash7/1 сохраняются FAIL, source SDK/deadline не менялись.
+
+§227 добавил Rust profile41303674536800: functional metadata/cancel/stale ok,
+но quit1/signal15 после QuitPre/VimLeavePre, active_before3→scope0, APIerrors[],
+без hard kill. Причина не установлена. Новый program-resolution E2E ждёт
+native Run aborted и окончания фоновой работы RA; final PASS не закрывает
+исторический quit при активной работе. Raw rust-debug-async-target-native-quit-fail.txt.
 
 ## IDE-119 — managed debugpy fallback использует Windows venv layout
 

@@ -12101,3 +12101,58 @@ guest .tests/ubuntu/startup-stage-*; audit startup-stage-audit.json, профи�
 39944011612800/40010990465400/33928073232403/33942668160731; observation39868897959000.
 Frozen infra drafts/SDK/67 pins/6 backports16 files прежние; host temp F,
 journals append-only, staging только этого законченного среза.
+
+
+## 227. Rust F5: асинхронное разрешение Cargo target
+
+2026-11-13. Спека: IDE-DAP-9 (ADDED). IDE-134, продолжение обзора IDE-080.
+Владелец отложил натурные проверки; они записаны в начале roadmap.
+
+**Проблема/причина.** rust_current_program выполнял настоящий Cargo metadata
+через vim.fn.system до выбора binary. Source c4e44b8 подтверждает sync_calls1
+с producer stack plugins/dap.lua. Это отдельная синхронная граница F5;
+не объявляется единственной причиной задержек Files или чужого рабочего проекта.
+
+**Изменение.** Program option целиком использует native coroutine nvim-dap
+и vim.system. Existing bin/example policy вынесена в local selection callback;
+один complete заменяет отдельную coroutine только для ambiguous picker.
+Captured cwd проверяется до выбора/доставки результата, stale launch получает
+ABORT. Spawn/exit/JSON/нет цели сохраняют отказ с сообщением. Native Cargo cwd,
+text и RUSTUP_AUTO_INSTALL0, без нового cache/backend/root/process manager.
+Existing preLaunchTask/Overseer и CodeLLDB launch сохранены.
+
+**Проверка/e2e.** Final same IDE-DAP-9 test/helper bytes: Windows/Ubuntu по2
+source RED на sync call → target2 PASS. Pending input/cancel и stale project
+проверяются отдельно через actual F5. Реальный Cargo JSON/argv/exit сохранён,
+observer удерживает только готовый callback и фильтрует DAP producer stack,
+данные/протокол не заменяет. Input40.293/8.001ms при300ms bound; по одному
+native Run aborted на case, session nil, RA quiescent до quit. Existing
+IDE-DAP-7 на каждой ОС1 PASS: cancel/repeat/выбран beta_worker/breakpoint/eval/
+output, настоящий build/CodeLLDB. Windows control на том же runtime до правки
+только новых case bodies; common/control bytes сверены, неизменённый control
+не повторялся.10 final profiles exit/scope сохранены; target/control0/0/API[]/
+hard_kill=false/scope0. SDK/pins/frozen WIP/journal prefixes сверены audit.
+
+**Неудачные попытки.** Первый fixture добавлял config в dap.configurations,
+которую smart F5 не показывает; ожидание label ошибочно. Предварительная
+гипотеза о двух pickers не подтвердилась. Combined flow после cancel оставлял
+код в Insert и пропускал следующий picker; попытка normal-key normalization
+не годится. Ветки metadata разделены, настоящий repeat остаётся в IDE-DAP-7.
+Отдельный intermediate41303674536800 имел functional ok, но native quit1/
+signal15 после VimLeavePre, scope0; сохранён как IDE-121, причина неизвестна.
+Финальные metadata cases ждут настоящий ABORT и native idle, не тестируют quit
+активного compiler. Старый quit этим не исправлен; budget2s не увеличен.
+Все7 prior profiles/raw сохранены, ни один прежний FAIL не переименован в PASS.
+
+**Вывод/границы.** UI во время ожидания metadata и stale launch подтверждены
+Windows/Ubuntu. Mac/большой проект отложены, whole suite/fault-injection error
+branches этой итерацией не заявлены. Маленькая reference fixture/jobs2,
+готовые SDK, serial Win/Linux. Docker ready28.5.1/imagef63a05ca/private overlay/
+network none, без build image/download/Desktop/WSL lifecycle. Host temp F.
+
+**Файлы.** Existing dap.lua/Rust E2E, test-only Cargo observer, OpenSpec,
+Rust guide/feature review/PROBLEMS/roadmap/tests README/HISTORY/commands.
+Raw .tests/rust-debug-async-* и guest .tests/ubuntu/rust-debug-async-*;
+audit rust-debug-async-audit.json.67 pins/6 backports16 files/SDK прежние,
+append-only journals, staged только этот срез. Натурные gates не блокируют
+следующие самостоятельные пункты по решению владельца.

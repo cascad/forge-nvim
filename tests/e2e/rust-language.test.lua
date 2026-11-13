@@ -261,6 +261,75 @@ check('Rust alternate binary и project launch.json',function(e)
   vim.fn.writefile({vim.json.encode({version='0.2.0',configurations={cfg}})},e.rust_project..'/.vscode/launch.json')
   e:input('<F7><F5>');choose(e,'Project Rust');debugged(e,'RUST_ALTERNATE 42 from-launch')
 end)
+local function metadata_pending(e,stale)
+  local report={scenario=stale and 'stale-project' or 'input-and-cancel'}
+  local helper=root..'/tests/diagnostics/cargo-metadata-delay.lua'
+  assert(vim.uv.fs_copyfile(helper,e.dir..'/cargo-metadata-delay.lua'))
+  local function observe() return e:lua('return _G.forge_metadata_delay.report()') end
+  local function arm()
+    e:lua([[local helper,manifest=...;_G.forge_metadata_delay=dofile(helper).arm(manifest)]],
+      {helper,e.rust_project..'/app/Cargo.toml'})
+  end
+  local function pending()
+    e:input('<F5>');choose(e,'Current Rust file bin')
+    e:wait('native metadata request observed',function()
+      report.io=observe();return report.io.sync_calls>0 or report.io.held
+    end)
+    T.eq(report.io.sync_calls,0,'Rust F5 used synchronous Cargo metadata')
+    assert(report.io.held and report.io.result.code==0,'Native Cargo result was not captured')
+    assert(#vim.json.decode(report.io.result.stdout).packages>0,'No actual Cargo packages')
+  end
+  local function release()
+    e:lua('_G.forge_metadata_delay.release()')
+    e:wait('native metadata completion drained',function() return observe().drained end)
+  end
+  local function aborted()
+    local count=0;for _,notice in ipairs(e.rpc.notifications) do
+      if notice.level==vim.log.levels.INFO and notice.message=='Run aborted' then count=count+1 end
+    end;return count
+  end
+  local ok,err=xpcall(function()
+    for _,file in ipairs({'Cargo.toml','src/lib.rs','src/main.rs','src/bin/alternate.rs'}) do
+      assert(vim.uv.fs_copyfile(root..'/tests/e2e/fixtures/rust-target-choice/'..file,e.rust_project..'/app/'..file))
+    end
+    open(e,'app/src/lib.rs')
+    arm();pending()
+    if stale then
+      e:input(':cd '..vim.fn.fnameescape(e.project)..'<CR>')
+      e:wait('another project selected',function() return e:lua('return vim.fn.getcwd()'):gsub('\\','/')==e.project:gsub('\\','/') end)
+      release();e:wait('native stale launch aborted',function() return aborted()==1 end)
+      T.eq(e:current_ft()=='TelescopePrompt',false)
+      T.eq(e:lua('return require("dap").session()==nil'),true);report.stale_aborted=true
+    else
+      e:input(' we');e:wait('Files focus before metadata delivery',function() return e:current_ft()=='neo-tree' end)
+      e:input(' w0');e:wait('Code focus before metadata delivery',function() return e:current_ft()=='rust' end)
+      local started=vim.uv.hrtime();e:input('ggO//PENDING_METADATA_INPUT<Esc>')
+      e:wait('real code input before metadata delivery',function() return content(e):find('PENDING_METADATA_INPUT',1,true)~=nil end)
+      report.input_ms=(vim.uv.hrtime()-started)/1e6
+      assert(report.input_ms<300,'Reference input exceeded 300ms: '..report.input_ms)
+      T.eq(observe().released,false);release()
+      e:wait('native Cargo target picker after metadata',function()
+        return e:current_ft()=='TelescopePrompt' and e:lua([[local v=require('telescope.actions.state').get_selected_entry();
+          return v and v.ordinal:find('_worker',1,true)~=nil or false]])
+      end)
+      e:input('<Esc><Esc>');e:wait('native target cancel completed',function()
+        return aborted()==1 and e:current_ft()~='TelescopePrompt' and e:lua('return require("dap").session()==nil')
+      end);report.cancelled=true
+    end
+    report.final=observe();report.native_aborts=aborted()
+    -- Этот case проверяет program resolution, а не shutdown активного RA build.
+    e:wait('Rust background settled before native quit',function()
+      return e:lua('local s=_G.forge_rust_server_status;return s and s.quiescent==true')
+    end,30000)
+    report.server_quiescent=true
+  end,debug.traceback)
+  pcall(function() e:lua('if _G.forge_metadata_delay then _G.forge_metadata_delay.release() end') end)
+  report.ok=ok;report.error=not ok and tostring(err) or nil
+  vim.fn.writefile({vim.json.encode(report)},e.dir..'/rust-debug-metadata.json')
+  assert(ok,err)
+end
+check('IDE-DAP-9 Rust metadata pending input and picker cancel',function(e) metadata_pending(e,false) end)
+check('IDE-DAP-9 Rust metadata stale project abort',function(e) metadata_pending(e,true) end)
 check('IDE-DAP-7 Rust Cargo target отмена и запуск выбранного второго bin',function(e)
   for _,file in ipairs({'Cargo.toml','src/lib.rs','src/main.rs','src/bin/alternate.rs'}) do
     assert(vim.uv.fs_copyfile(root..'/tests/e2e/fixtures/rust-target-choice/'..file,e.rust_project..'/app/'..file))
