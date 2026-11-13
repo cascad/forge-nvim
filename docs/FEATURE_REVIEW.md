@@ -83,6 +83,16 @@ PASS. У Tests public summary нет полного snapshot раскрытий;
 и собственный renderer не добавлять. Terminal/Debug deferred sizes выбран
 владельцем: restore не запускает процессы, реализация следующим пунктом.
 
+2026-11-13, §220: optional Tests width/visibility и deferred размеры Terminal/
+Debug остаются в том же session_views JSON. Около118 строк UI data/events:
+readonly WinLeave/WinResized, один apply на win/buf при явном открытии, cleanup
+меток и отмена при native load boundary. Без этого скрытая перед quit панель
+теряла бы размер. Readiness Tests — штатное событие, symbols/results/folds
+не копируются. Нового module/backend/provider/renderer/process manager/SDK/
+backports нет;67 pins/6 dependencies16 files прежние. Core3 PASS Windows/Ubuntu,
+Ubuntu22 PASS, Windows21/1 с открытым IDE-129. Один диагностический phase probe
+не закрывает исходный quit FAIL. Mac/physical/full Tests state отдельно.
+
 ## Актуальный выбор после Files, Logs и frame pilot — 2026-11-11
 
 Source e00bcea. Выполнено: Files §180–181, обязательные Logs §182 и рабочий

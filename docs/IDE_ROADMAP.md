@@ -7,6 +7,29 @@ IDE-001 параллельно ждёт диагностических данн�
 
 ## Текущая очередь продукта — решение владельца 2026-11-12
 
+**Последний результат — §220:** Tests возвращает открытость/ширину штатного
+окна; Terminal/Debug после restart скрыты, сохранённые размеры применяются
+при явном открытии/F5, без новых процессов из restore. Три новых native cases
+PASS Windows/Ubuntu. Ubuntu selected22 PASS; Windows selected21 PASS/1 FAIL:
+однократный медленный quit Logs (IDE-129, SavePre→SavePost13.9s). Отдельное
+phase measurement1 PASS не закрывает этот FAIL. Реализация готова, строгий
+Windows gate остаётся открытым. Все изменения выполнялись в F:/repo/forge-nvim.
+
+Ближайшие оставшиеся работы после этого среза:
+
+1. IDE-129: при новом медленном quit собрать save phases, не повышать timeout
+   и не повторять неизменённый общий набор. Один текущий probe не воспроизвёл
+   задержку; причинного исправления сейчас нет.
+2. Натурный проход владельца: своё рабочее место A→B→A, смешанный проект,
+   Debug/Tests/Terminal и клавиши WezTerm. Mac startup/zsh/Go и Cmd+C требуют
+   настоящего Mac; Windows/Ubuntu не заменяют этот gate.
+3. Git worktree IDE-038/048 — нужен воспроизводимый текущий кейс; старых данных
+   недостаточно для нового причинного fix. SSH/OAuth также отдельные gates.
+4. Постоянные рамки Termide — оценить готовый Code/Locals pilot в повседневной
+   работе перед сменой default; zoom borders уже реализованы.
+5. Готовые provider limits: SQL references и full Tests expansion snapshot.
+   Свой LSP/renderer/private tree serializer не разрабатываем.
+
 **Текущая точка 2026-11-13:** mixed context завершён Windows9 PASS/Ubuntu9
 PASS (§209–211):6 language roots, Node script, Python venv/debug/output/Go return.
 Native interactive rebase также проверен (§212): reorder/fixup/submit, отмена
@@ -37,13 +60,12 @@ refactor сохраняет эти функции. SQL references ждут го�
 selected PASS/Ubuntu10 PASS; прежние Files/project/legacy сохранены. Один
 sidecar/session backend, без возобновления процессов. Следующий срез —
 Outline завершён первым срезом (§219): открытость/ширина и native symbols/follow,
-Windows6 PASS/Ubuntu6 PASS вместе с Files/Logs/Outline focus. Далее Tests и
-размеры console/debug по принятому ниже решению владельца.
+Windows6 PASS/Ubuntu6 PASS вместе с Files/Logs/Outline focus. Tests и размеры console/debug реализованы §220, с открытым Windows quit gate IDE-129.
 
 Решение владельца 2026-11-13: Terminal/Debug после полного перезапуска
 скрыты до явного открытия/запуска; тогда применяется сохранённый размер.
-Новые shell/debug процессы восстановление сессии не запускает. Реализация
-этого поведения — следующий отдельный пункт, пока не объявлена готовой.
+Новые shell/debug процессы восстановление сессии не запускает. Реализовано
+§220; новый функционал PASS Windows/Ubuntu, полный Windows gate IDE-129 открыт.
 Tests: первым срезом native открытость/геометрия. У Neotest есть open/close/
 expand/target, но нет public getter полного состояния раскрытий; private
 summary internals не сериализуем и собственный parser дерева не добавляем.
@@ -111,8 +133,8 @@ Windows/macOS/Ubuntu — целевые ОС; натурные проверки 
 
 | ID | Кейс | Текущая точка |
 |---|---|---|
-| WF-01 | Открыть проект и восстановить рабочее место | Files/Logs (§218), Outline visibility/width/native follow (§219): Windows/Ubuntu6 selected PASS. Tests/console/debug и Mac открыты; старый IDE-117 не закрыт |
-| WF-02 | Перейти в другой репозиторий и вернуться | Files/Logs/Outline A→B→A Windows/Ubuntu PASS (§218–219), hidden panels и filters проекта. Tests/console/debug/Mac открыты |
+| WF-01 | Открыть проект и восстановить рабочее место | Files/Logs (§218), Outline visibility/width/native follow (§219): Windows/Ubuntu6 selected PASS. Tests/native deferred Terminal/Debug §220: core3 PASS Windows/Ubuntu, Win quit gate IDE-129; Mac/full view-state открыты, старый IDE-117 не закрыт |
+| WF-02 | Перейти в другой репозиторий и вернуться | Files/Logs/Outline A→B→A Windows/Ubuntu PASS (§218–219), hidden panels и filters проекта. Tests/deferred console/debug §220, core3 PASS Windows/Ubuntu; Mac/IDE-129/full view-state открыты |
 | WF-03 | Управлять файлами через дерево | Create/rename/move/copy/delete/filter проверялись; единый цикл и сохранение вида дерева входят в приёмку |
 | WF-04 | Работать в проекте со смесью языков | 6 native roots/cwd + Node script/Python venv debug Windows (§209–210); полная mixed matrix/Mac открыты |
 | WF-05 | Запустить файл или конкретный debug-кейс | Cargo/Go.work есть; mixed Node script и Python default из nested venv Windows/Ubuntu (§209–211) |

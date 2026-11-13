@@ -8028,3 +8028,58 @@ write UTF-8, shell scripts LF. Exact allowlist/index-prefix/diff/strict,
 Получен реальный UX выбор владельца: Terminal/Debug после restart скрыть до
 явного открытия/запуска и тогда применить saved size; не создавать фоновые
 shell/debug при restore. Решение записано в roadmap/review, пока без реализации.
+
+
+## 128. Tests и deferred размеры Terminal/Debug
+
+2026-11-13, F:/repo/forge-nvim, PowerShell login=false. Host TEMP/TMP/TMPDIR/
+NVIM_LOG_FILE — .tests/tmp на F, npm cacheF:/forge-nvim-tmp/npm-cache, Python
+UTF-8. OpenSpec restore-native-tool-panel-sizes root/artifacts/apply ready,
+IDE-PANEL-27/28 delta и явный выбор владельца до runtime. Public Neotest window/
+event/positions и существующие Bats/ToggleTerm/DAP boundaries прочитаны.
+
+```powershell
+python -B tests/e2e/prepare_bash_dap.py
+& .tools/neovim/windows-x64/bin/nvim.exe -l tests/e2e/session-tool-views.test.lua
+& .tools/neovim/windows-x64/bin/nvim.exe -l tests/e2e/session-files-view.test.lua
+& .tools/neovim/windows-x64/bin/nvim.exe -l tests/e2e/session-logs-view.test.lua
+& .tools/neovim/windows-x64/bin/nvim.exe -l tests/e2e/session-outline-view.test.lua
+& .tools/neovim/windows-x64/bin/nvim.exe -l tests/e2e/session-legacy.test.lua
+& .tools/neovim/windows-x64/bin/nvim.exe -l tests/e2e/debug-panels.test.lua
+& .tools/neovim/windows-x64/bin/nvim.exe -l tests/e2e/work-panels.test.lua
+docker compose -f tests/containers/compose.yaml run --rm --no-deps --pull never --entrypoint bash -e GOMAXPROCS=2 -e GOFLAGS=-p=2 -e GOTOOLCHAIN=local -e CARGO_BUILD_JOBS=2 ubuntu /workspace/.tests/session-tools-20261113.sh
+# Один выполненный diagnostic, не повтор общего набора:
+& .tools/neovim/windows-x64/bin/nvim.exe -l .tests/probe-session-save.lua
+# Идентичный script теперь сохранён в репозитории для новых проявлений:
+# nvim -l tests/diagnostics/session-save-phases.lua
+python -B .tests/audit-session-tools.py
+npx.cmd --yes @fission-ai/openspec@1.13.2 validate restore-native-tool-panel-sizes --type change --strict --no-interactive
+git diff --check
+```
+
+Source first0/3 с двумя observer/mode ошибками; v2 реальные Tests/Terminal RED,
+Debug hide неверно ожидал Output вместе с sidebar. Отдельный изменённый Debug
+source v3 (`FORGE_TEST_ID='IDE-PANEL-28 Debug hidden'`) дал RED saved sizes.
+Новая версия fixture — причина узкого прогона, неизменённый green retry нет.
+Один readonly wsl ps probe искал только private path source Debug25938345371300,
+нашёл0 оставшихся процессов; никаких global kills/lifecycle actions.
+
+Target Windows new3 PASS, общий selected21 PASS/1 FAIL (Logs quit IDE-129).
+Ubuntu22 PASS. Отдельный phase measurement1 PASS,6 saves, прежний runtime и
+10s deadline, без смены behavior; измеряет own capture/cleanup/native save
+через wrappers private TUI, не SDK/protocol. Проверена идентичность transient/
+committed diagnostic bytes, второй запуск после копирования не выполнялся.
+Raw .tests/session-tool-{source,source-v2,target}-windows,
+session-tool-debug-source-v3-windows, target-ubuntu и session-save-phase-probe-
+windows. Не смешивать диагностический PASS с исходным21/1.
+
+По17 native profiles: parent0/APIerrors[]/scope0, new fixtures7 child PID/OS,
+core measurements/metadata/source/pins/SDK сверяет audit JSON. IDE-129 latency
+SavePre→Post13.9s остаётся open, задача1.2 не отмечена completed. SDK/pins прежние,
+готовый image/network none; no build/download/Desktop/WSL lifecycle. Один
+setup UI callbacks, никаких shell/debug процессов из restore. Native Macro/
+physical/provider gates явно записаны в plan. Baseline .tests/tool-session-
+prefix.json: append-only journals/frozen5/registry/lock/backports/exe exact.
+Registry index из HEAD20b1210 + только session-tool row, frozen2 остаются working
+copy. Все Python read/write UTF-8, shell scripts LF, exact allowlist/index-prefix/
+diff/strict перед commit без push. Tests/run.lua/catalog не разрабатывались.

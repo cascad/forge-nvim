@@ -1546,3 +1546,25 @@ Windows/Ubuntu по6 selected PASS одним script на OS: новый1 + File
 Outline focus3. Source Windows0/1 до runtime сохранён. Mac/physical отдельно.
 Общие Edge resize и native view теперь находятся в session_views, plugin pins
 и SDK прежние. Это не закрывает Tests/console/debug или весь WF-01.
+
+
+## Tests и отложенные размеры Terminal/Debug — IDE-PANEL-27/28
+
+`<nvim> -l tests/e2e/session-tool-views.test.lua` —3 native PTY cases:50 настоящих
+Bats positions без run; сохранённая после q высота Terminal, отсутствие shell
+после restore и настоящий echo после явного открытия; официальный Bash F9/F5,
+сохранённые sidebar/Output после завершения/скрытия и отсутствие auto session.
+Readonly наблюдение — public positions/windows/session; новые runner/mocks нет.
+
+Для Debug нужен ready Node и исправленный pinned Bash SDK:
+`python -B tests/e2e/prepare_bash_dap.py` (check; явная подготовка --download
+описана выше). Tests discovery новых SDK не требует. На Windows готовый WSL2
+выбран владельцем. Сценарии принимают FORGE_TEST_ID как обычные E2E.
+
+Итог §220: core3 PASS на каждой ОС; Ubuntu22 PASS одним selected script.
+Windows21 PASS/1 FAIL — Logs quit SavePre→SavePost13.9s (IDE-129), host/frontend
+позже exit0; исходный FAIL сохранён. Native phase diagnostic:
+`<nvim> -l tests/diagnostics/session-save-phases.lua`. Один выполненный probe
+имел прежний runtime/deadline,6 быстрых saves и PASS; это не замена исходному
+FAIL. Скрипт только измеряет capture/cleanup/save в private TUI fixture.
+Полный Windows gate/Mac/physical остаются открытыми, timeouts не увеличивались.

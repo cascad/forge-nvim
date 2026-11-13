@@ -11743,3 +11743,82 @@ download/Desktop/WSL lifecycle. Mac/physical/Tests и весь WF-01 ещё от
 **Файлы.** session_views/Logs helper move, native E2E/registry, OpenSpec и
 product guides/roadmap/history/commands. Prefix journals/frozen drafts exact,
 изолированный index, commit без push.
+
+
+### 220. Tests и сохранённые размеры Terminal/Debug
+
+**Связь:** WF-01/02, change restore-native-tool-panel-sizes.
+Спека: IDE-PANEL-27 (ADDED).
+Спека: IDE-PANEL-28 (ADDED).
+**Статус:** реализация и3 новых native cases PASS Windows/Ubuntu. Ubuntu
+selected22 PASS; Windows selected21 PASS/1 FAIL — IDE-129 при первом quit Logs.
+Строгий Windows gate задачи1.2 остаётся открытым, change не объявлен полностью
+верифицированным. Mac/physical/full provider state отдельно.
+
+**Что было/причина.** Прежний sidecar не сохранял Tests и размеры Terminal/
+Debug. После q окна уже нет, поэтому capture только в SavePre терял его размер.
+Владелец явно выбрал: Terminal/Debug после restart скрыты, размеры вернуть лишь
+при явном открытии/запуске; не создавать shell/debug из restore.
+
+**Изменение.** Optional tab.tests=false/width+columns и tab.deferred с тремя
+логическими размерами: Terminal height, debug sidebar width, debug Output height.
+Те же version1/hash/tab-order/JSON и existing Edgy dimension helper. Tests
+открывается в своей native вкладке, готовность — public NeotestSummaryOpen.
+Один штатный Summary window не клонируется; positions/discovery остаются
+существующего adapter, результаты/раскрытия не сериализуются.
+
+WinLeave/WinResized снимают реальные размеры до скрытия, memory по tab handles
+остаётся в session_views. BufWinEnter/WinEnter/FileType применяют их только к
+появившемуся native окну: один queued apply на win/buf, затем focus не сбрасывает
+ручной resize. Before-first-apply defaults не заменяют saved data. WinClosed/
+TabClosed чистят метки, native load boundary отменяет старые queued applies.
+Floating views пропускаются; сохраняются размеры обычных нижних/боковых панелей,
+не per-section DAP heights. Setup только регистрирует UI callbacks. Новых
+module/backend/provider/renderer/timer/polling/process manager нет.
+
+**E2E/source.** Первые3 source FAIL включали две ошибки fixture: ожидание всех
+раскрытых labels вместо public Bats positions и Ctrl-\ из normal-панели,
+который по существующим hotkeys открывал Terminal. Исправлены observers/mode
+check, cleanup завершает свой DAP. Source v2 Tests26520839508500 подтвердил
+исчезнувшую панель, Terminal26556788249700 — потерю height. Debug v2 ошибочно
+ждал закрытия Output по q в Locals: это разные components. После двух native
+hide действий source v326898254885800 подтвердил потерю debug sizes. Root
+runtime до этих source не менялся, прежние артефакты не переписаны.
+
+**Итоговая проверка.** Новый1:50 настоящих Bats positions до/после restart,
+Tests width и вкладка, скрытый Tests, TEST_EXECUTED отсутствует. Новый2: Terminal
+resize→q→quit/relaunch, before-explicit live0/panels0/sessionfalse, manual open
+с saved height, настоящий echo, следующий user resize не сброшен фокусом.
+Новый3: официальный Bash F9/F5/breakpoint3, изменить Locals/Output, Stop и
+скрыть оба components, restart без debug/jobs, explicit F5 с saved sizes.
+Public API/настоящий PTY, без backend mocks/private state writes. SDK Node/
+Bash уже ready; нового parser для Bats discovery не требуется.
+
+По7 native child PID трёх новых fixtures каждой ОС, по17 native profiles всего:
+host exit0/signal0/APIerrors[]/hard_kill=false/scope empty. Current modules,
+67 pins/6 plugin dependencies16 files/Windows SDK SHA74aff15b сверены. Полный
+selected22: new3 + Files1/Logs1/Outline1/legacy4/debug6/work6. Ubuntu22 PASS одним
+script; Windows21/1, исходный failed Logs сохранён.
+
+**Открытый IDE-129.** Logs27485199147400/backend26348: SavePre→SavePost13919.208ms
+при native quit deadline10s, до restore. Позже VimLeave/frontend0/host0. Один
+отдельный измерительный workflow28333531556800, прежний runtime/deadline,
+6 saves PASS: capture max5.467ms, cleanup67.682ms, native save27.587ms. Нет
+длительностей отдельных функций в медленном цикле, причина не установлена.
+Этот diagnostic PASS не заменяет основной FAIL. Timeout не повышен, SDK/
+сохранение не «исправлялись» без причины. Проверенный идентичный script сохранён
+как tests/diagnostics/session-save-phases.lua для следующего проявления.
+
+**Вывод/границы.** View data не требуют перезапуска процессов. Реализация
+готова для натурного прохода, строгий Windows gate не закрыт. Mac startup/Go/
+Cmd+C, physical keyboard/style review, старые worktree incidents и готовые
+provider limits SQL references/full Tests folds остаются в плане. Без нового
+медленного цикла сейчас нет причинного fix IDE-129; общий набор не повторяем.
+Docker existing imagef63a05ca/network none, Windows/Ubuntu serial, без build/
+download/Desktop/WSL lifecycle. Source WSL private-path leftover probe дал0.
+
+**Файлы.** session_views/setup, E2E/registry, targeted phase diagnostic,
+OpenSpec/PROBLEMS130 counter, product guides/roadmap/HISTORY/commands. Raw
+.tests/session-tool-source*-windows, target-{windows,ubuntu}, phase-probe-
+windows; audit .tests/session-tools-audit.json. Journals append-only/frozen
+exact, isolated staging; commit без push. Native gate не спрятан как skip/PASS.

@@ -688,3 +688,16 @@ Diff view устроен как в IDE-review:
 4. Добавить keymap в `lua/config/keymaps.lua`.
 5. Добавить группу/подсказку в `lua/plugins/ui.lua`, если нужен новый leader group.
 6. Если режим создает output-буфер, добавить его filetype в wrap-настройку.
+
+
+## Сессия и явное открытие процессов
+
+Files/Logs возвращают свои сохранённые views, Outline — открытость/ширину и
+native follow, Tests — своё штатное окно/ширину и настоящий discovery.
+Terminal и Debug после restart скрыты: открыть консоль `Space w T` или явно
+запустить F5. Только после этого применится saved height консоли/Output и
+width debug sidebar. q скрывает текущий компонент: Locals/sidebar и Output
+закрываются отдельно. Процессы из снимка не запускаются.
+
+Core3 Windows/Ubuntu PASS; полный текущий Windows selected имеет IDE-129
+при quit, Mac/physical и полное arbitrary view-state ещё открыты (§220).

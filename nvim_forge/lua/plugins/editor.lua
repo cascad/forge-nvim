@@ -233,6 +233,7 @@ return {
         },
         config = function(_, opts)
             require("persistence").setup(opts)
+            require('forge.session_views').setup()
 
             vim.api.nvim_create_autocmd('User', {
                 group = vim.api.nvim_create_augroup('ForgeSessionFiles', { clear = true }),

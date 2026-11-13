@@ -10,7 +10,24 @@
 
 Маршрут и приоритеты: [рабочий план nvim_forge](docs/IDE_ROADMAP.md).
 Для новых пунктов используем следующий свободный ID `IDE-xxx`; исходный
-симптом хранится здесь, этап и состояние — в плане. Следующий ID: `IDE-129`.
+симптом хранится здесь, этап и состояние — в плане. Следующий ID: `IDE-130`.
+
+## IDE-129 — Windows: единичная задержка SavePre → SavePost при quit
+
+2026-11-13, Logs native TUI27485199147400/backend26348: SavePre27497086.878ms,
+SavePost27511006.086ms, интервал13919.208ms. Fixture ждёт native quit10s и
+завершился FAIL до восстановления Logs. Затем тот же backend выполнил VimLeave,
+frontend job exit0; host тоже0/scope empty, hard kill не потребовался.
+Это не доказательство дефекта новых размеров, ConPTY или конкретного I/O.
+
+Основной Windows selected:21 PASS/1 FAIL. Одно отдельное фазовое измерение
+28333531556800, без смены runtime/deadline:6 циклов сохранения, capture max5.467ms,
+cleanup max67.682ms, native save max27.587ms; workflow PASS. Диагностический
+PASS не заменяет исходный FAIL, задержка не воспроизведена и не исправлена.
+Raw .tests/session-tool-target-windows/session-logs-view.txt и
+.tests/session-save-phase-probe-windows/run.txt; save-phases.jsonl в профиле.
+При новом проявлении нужны длительности функций в самом медленном цикле;
+повышение timeout и повтор неизменённого набора не считаются исправлением.
 
 ## IDE-128 — Bash Stop завершал посторонние процессы редактора
 

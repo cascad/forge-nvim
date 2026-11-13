@@ -1,5 +1,25 @@
 # Project/session: native baseline
 
+## Последний срез — Tests и отложенные размеры (§220)
+
+Tests sidebar возвращается с native привязкой к вкладке и шириной; positions
+обнаруживает прежний Neotest/Bats adapter. Раскрытия/results не сериализуются,
+штатное одно окно не клонируется. Readiness — public NeotestSummaryOpen.
+
+По явному выбору владельца Terminal/Debug после полного restart скрыты.
+Высота нижней консоли и debug Output, общая ширина debug sidebar запоминаются
+по native WinLeave/WinResized даже после q. При явном открытии/F5 размеры
+получает появившееся штатное окно; focus не сбрасывает последующий user resize.
+Sidecar version1 дополнен optional fields. Native load boundary отменяет старые
+queued applies; WinClosed/TabClosed чистят метки. Нового storage/backend/процессов
+или timers/polling нет. Регистрация UI callbacks — один setup существующего module.
+
+Core Tests/Terminal/Debug3 PASS на каждой ОС; Ubuntu selected22 PASS. Windows
+selected21 PASS/1 FAIL — первый quit Logs, SavePre→SavePost13.9s (IDE-129).
+Один отдельный instrumented Logs workflow дал6 быстрых saves; исходный FAIL
+не заменён этим PASS. Строгий Windows gate открыт. Mac/physical/full arbitrary
+view state остаются отдельными. Прежние срезы ниже сохраняют свои границы.
+
 ## Текущая граница — 2026-11-13
 
 Files реализован в §205, Logs — §218. Общий прежний sidecar module теперь
@@ -25,8 +45,7 @@ selected PASS, включая прежние Files/Logs и3 Outline focus contro
 Следующий срез — Tests visibility/geometry; public summary API не даёт snapshot
 раскрытых узлов. Private structures не сериализуем. Решение владельца: после
 полного restart Terminal/Debug скрыты до явного открытия/запуска, затем вернуть
-сохранённый размер; не создавать shell/debug из session restore. Эта реализация
-ещё впереди. Прежний обзор ниже — исходная точка до выполненных изменений.
+сохранённый размер; не создавать shell/debug из session restore. Реализовано §220 с описанным выше Windows gate. Прежний обзор ниже — исходная точка до выполненных изменений.
 
 ## WF-01/02: текущая граница восстановления — 2026-11-12
 

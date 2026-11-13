@@ -117,6 +117,7 @@ return {
   { file = 'tests/e2e/session-files-view.test.lua', suite = 'e2e', timeout = 240 },
   { file = 'tests/e2e/session-logs-view.test.lua', suite = 'e2e', timeout = 240 },
   { file = 'tests/e2e/session-outline-view.test.lua', suite = 'e2e', timeout = 240 },
+  { file = 'tests/e2e/session-tool-views.test.lua', suite = 'e2e', timeout = 420 },
   { file = 'tests/e2e/session-legacy.test.lua', suite = 'e2e', timeout = 420 },
   { file = 'tests/wezterm/config-loading.test.lua', suite = 'wezterm' },
   { file = 'tests/wezterm/snapshot.test.lua', suite = 'wezterm' },
