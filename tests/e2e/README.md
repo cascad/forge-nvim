@@ -700,7 +700,7 @@ shell/process/clipboard и подготовке VM. Крупные sleep, пер
 | Базовое ядро редактора | Запуск, открыть/изменить/сохранить, дерево, имя/содержимое, буферы, фокус | `editor.test.lua`: Windows и Ubuntu PASS; Mac ждёт прогона |
 | IDE-BOOT-1/2 | Старт без установки инструментов, отсутствие предупреждения Go в .txt | `editor.test.lua`: Windows и Ubuntu PASS; Mac ждёт прогона; наличие gopls в Windows не фиксируется, отсутствие подтверждено в Ubuntu |
 | IDE-016–019, управление файлами | Создать/переименовать/переместить, cut/paste, отмена/конфликт, сохранённые буферы, общий маршрут/selector/zoom | `file-explorer.test.lua`: 7 real editor E2E; границы и результаты ниже |
-| Git/worktree | Локальный bare remote → worktree → изменение → commit/push; hunks/diff/history; rejected/missing remote → retry | `git-workflow.test.lua`: 6 real editor E2E; `git-errors.test.lua`: 3 UI (IDE-GIT-10/12) + parser matrix 10 строк; `git-conflicts.test.lua`: 4 IDE-GIT-11; `diffview-close.test.lua`: 7; `worktree-refresh.test.lua`: 3; `active-worktree.test.lua`: 2 IDE-GIT-7; `gitsigns-worktree.test.lua`: 2 IDE-GIT-8; `gitsigns-live-read.test.lua`: CLI + 3 UI IDE-GIT-9; `plugin-backports.test.lua`: 9, включая настоящий Lazy build/отсутствие записи при открытии Git/файла, обновление предыдущего payload и отказ на неизвестный companion до записи. Credentials и sequence editor открыты; IDE-043 исправляет OSC output |
+| Git/worktree | Локальный bare remote → worktree → изменение → commit/push; hunks/diff/history; rejected/missing remote → retry | `git-workflow.test.lua`: 6 real editor E2E; `git-errors.test.lua`: 3 UI (IDE-GIT-10/12) + parser matrix 10 строк; `git-conflicts.test.lua`: 4 IDE-GIT-11; `diffview-close.test.lua`: 7; `worktree-refresh.test.lua`: 3; `active-worktree.test.lua`: 2 IDE-GIT-7; `gitsigns-worktree.test.lua`: 2 IDE-GIT-8; `gitsigns-live-read.test.lua`: CLI + 3 UI IDE-GIT-9; `plugin-backports.test.lua`: 9, включая настоящий Lazy build/отсутствие записи при открытии Git/файла, обновление предыдущего payload и отказ на неизвестный companion до записи. Sequence3 (IDE-GIT-13) и HTTP credentials2 (IDE-GIT-14) проверены Windows/Ubuntu; real OAuth/SSH/Mac отдельно; IDE-043 исправляет OSC output |
 | Тестовый runtime IDE-030 | Реальное завершение редактора, сохранение артефактов, удаление своего профиля и отказ по чужому маркеру | `editor-runtime.test.lua`: 4 сценария, включая ошибку prepare и временный file lock внешнего процесса; `dap-output.test.lua` проверяет фактический go env GOCACHE |
 | Shell/jobs | Открыть terminal, job, закрыть/восстановить фокус | Не реализован; смена/закрытие файлов и базовый фокус покрыты ядром |
 
@@ -1457,3 +1457,25 @@ driver-source/SHA до init. `quit-trace.test.lua` проверяет normal qui
 не отбрасываются. Только для unhooked сравнения исходного сценария можно
 задать `FORGE_E2E_QUIT_TRACE=0`; обычный регресс/CI использует capture.
 Протокол, команды и границы выводов — [diagnostics](../diagnostics/README.md#ide-085-quit-и-api-error-timeline).
+
+## Native Git HTTP credentials — IDE-GIT-14
+
+После обычной явной подготовки Editor SDK (prepare_editor.py --download):
+
+```sh
+<nvim> -l tests/e2e/git-auth.test.lua
+```
+
+Два native UI случая: cancel Username→P u→success и wrong Password→видимый
+Authentication Failed/Enter→native retry→success. Настоящий Git http-backend
+работает через stdlib Python127.0.0.1 fixture в owned job; внешних accounts,
+сети и global Git/helper настроек нет. Synthetic secret маскируется; audit
+хранит только совпадения/длину. Проверяются прежние refs до успеха, POST200,
+remote HEAD, clean tree и реальный pre-push marker. Host Python/Git обязательны.
+
+FIXLOG §213–214: Windows auth2 distinct на конечном runtime +22 controls PASS;
+Ubuntu final auth2+22=24 PASS. Source failures сохранены, детали версий в change
+verify-git-authentication-flow/verification.md. Native Mac/physical/OAuth/SSH/
+user helper/real account отдельно. Существующий Docker image должен иметь
+актуальный SDK payload: final run использовал private overlay готового Neogit,
+без image rebuild/lifecycle. Установленный IDE: :Lazy build neogit и restart.

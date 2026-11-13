@@ -10,7 +10,7 @@
 
 Маршрут и приоритеты: [рабочий план nvim_forge](docs/IDE_ROADMAP.md).
 Для новых пунктов используем следующий свободный ID `IDE-xxx`; исходный
-симптом хранится здесь, этап и состояние — в плане. Следующий ID: `IDE-125`.
+симптом хранится здесь, этап и состояние — в плане. Следующий ID: `IDE-127`.
 
 ## IDE-124 — Windows: старый rebase abort test не дошёл до запуска
 
@@ -19,8 +19,10 @@
 Selected old Windows3 PASS/1 FAIL, тот же Ubuntu4 PASS. Причина не установлена;
 это не доказательство дефекта нового sequence matcher (onto_branch не менялся).
 Raw .tests/git-sequence-target-windows/git-conflicts.txt; source сохранён,
-повтор неизменённой версии ради зелёного не выполнялся. Новые native interactive
-conflict+abort проходят на обеих ОС, но не закрывают этот старый gate.
+повтор неизменённой версии ради зелёного не выполнялся. После изменений
+IDE-125/126 этот старый case прошёл на новой версии вместе со всеми4 conflicts
+на Windows/Ubuntu (§214). Историческую причину source timeout без исходного
+Neogit log не приписываем hook guard; source остаётся неразобранным инцидентом.
 
 ## IDE-121 — Windows Node/Bash: native exit после успешного workflow
 
@@ -1119,6 +1121,15 @@ native выбор из zoom и штатная help;9 native E2E/source8 RED на
 остаются отдельными проверками.
 
 ## Ранее зарегистрированные проблемы
+
+IDE-125 → [FIXLOG §213](nvim_forge/FIXLOG.md#213-быстрый-git-push-до-первого-repo-refresh):
+initial hook metadata допускает nil; быстрый native Push не падает до Git.
+Настоящий pre-push исполнен в обоих auth scenarios Windows/Ubuntu.
+
+IDE-126 → [FIXLOG §214](nvim_forge/FIXLOG.md#214-git-credentials-один-enter-вместо-пустого-пароля):
+runner посылает один PTY Enter; native cancel/rejection/retry и refs/mask
+проверены Windows/Ubuntu,24 distinct checks на конечном runtime каждой ОС.
+Mac/OAuth/SSH/helper/real account отдельно; user cache требует Lazy build neogit.
 
 IDE-123 → [FIXLOG §212](nvim_forge/FIXLOG.md#212-interactive-rebase-отмена-todo-без-ложного-конфликта):
 Neogit распознаёт раздельные строки editor abort и оба варианта There/there.

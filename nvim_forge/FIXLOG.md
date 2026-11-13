@@ -11358,3 +11358,99 @@ Credentials остаются следующей частью очереди4. П
 **Файлы.** patches/plugins.json/README, Git sequence E2E/registry, change,
 QUICKSTART/PANEL_KEYS/FEATURE_REVIEW/roadmap/PROBLEMS/HISTORY/commands. Pins/SDK
 и прежние journals/frozen drafts сохранены; stage registry только новая Git row.
+
+### 213. Быстрый Git Push до первого repo refresh
+
+**Связь:** IDE-125/WF-09, change `verify-git-authentication-flow`.
+Спека: IDE-GIT-14 (ADDED). **Статус:** исправлен, acceptance в §214.
+
+**Проблема.** Source4738415166800/4773315743900:0/2, Git status виден,
+P u сообщает Pushing, но Username не появляется. Нет Git push/HTTP запроса.
+
+**Причина.** Diagnostic5845225903000 наблюдал публичный hooks.exists:
+hooks_type=nil, точный стек hooks.lua:70 → cli.to_process → push_to, ошибка
+vim.tbl_contains(nil, hook), пойманная popup pcall и оставленная только в log.
+Repo.empty_state не содержит hooks, asynchronous refresh ещё не опубликовал
+новый state. Upstream blobadb248d4ed2bdb67abad830bcceca352e335ff5b сохраняет
+тот же вызов. Это доказанный source дефект; старый IDE-124 ему без лога
+ретроспективно не приписывается.
+
+**Изменение.** Один companion существующего Neogit: hooks.exists использует
+пустую таблицу при отсутствии metadata. Флаг git_hook выбирает preview/error
+UI, а не исполнение Git hooks; --no-verify не добавляется. Before SHA
+c156abcf1c0a874e9c0164c487f6c3b00b9f51e2f6f1c0f52aefd4c8cf4ac3c3,
+after4223bac65236d219a2a9e007eaf1d97f0fc972079b314b5586c561227f45cf10.
+
+**Проверка/e2e.** Следующий target уже дошёл до настоящих Username/inputsecret,
+но открыл независимый PTY defect — §214. Конечные auth2/sequence3/conflicts4
+и15 preparation guards PASS на Windows/Ubuntu; fixture pre-push исполнился,
+refs/clean/native shutdown/scopes проверены. Итоговые raw/границы — §214.
+
+**Вывод.** Доступность клавиши не означает готовность asynchronous metadata.
+Guard остаётся узким local companion до upstream эквивалента и тех же E2E.
+Новый scheduler/очередь Push/credential manager не добавлялись.
+
+**Файлы.** patches/plugins.json/README, git-auth E2E/HTTP fixture/registry,
+OpenSpec delta, QUICKSTART/PANEL_KEYS/FEATURE_REVIEW/roadmap/PROBLEMS/HISTORY.
+
+### 214. Git credentials: один Enter вместо пустого пароля
+
+**Связь:** IDE-126/WF-09, change `verify-git-authentication-flow`.
+Спека: IDE-GIT-14 (FIX). **Статус:** Windows24 distinct PASS на конечном
+runtime, Ubuntu один final24 PASS. HTTP Basic synthetic; OAuth/SSH/Mac отдельно.
+
+**Проблема.** После §213 prompts появились, secret маскировался, но даже
+верный пароль отклонялся. Target6017154110000/6033264429800:0/2. Второй case
+оставил native prompt/error при cleanup, code1/signal15; исходный FAIL сохранён.
+
+**Причина.** Neogit runner отправляет value+CR+LF в PTY. Input diagnostic
+6144285730200 доказал точный fixture secret в Process.send; HTTP audit получил
+правильный Username, password_length=0. В Windows второй символ конца строки
+после Username стал пустым Password. Observer-only6211541205600 с одним CR
+дал настоящий successful HTTP push. Upstream runner blob39a6808f5b149c15419c930e0ff9c1e078b2fd2c
+содержит CR+LF. Отсутствие Git/helper не было причиной.
+
+**Изменение.** Один companion runner.lua завершает ответ единственным PTY
+Enter (CR) для всех ОС. Before8b62d22735281f5917bf421979c83a9c414a07c67a39a973ce966d017fc4542a,
+afterb5df114cd38fabe2b957df742b641c083bf85be6ac7e32dfafa5fe186729fcc5.
+Native input/inputsecret, cached username и штатные3 попытки сохранены.
+Теперь Neogit5 files, всего6 dependencies/16 files, прежние67 pins и SDK SHA.
+Подготовлен только owned test SDK, user cache не изменялся. Установленной
+сборке нужны :Lazy build neogit и перезапуск.
+
+**Проверка/e2e.** Permanent git-auth использует настоящий Git http-backend,
+stdlib loopback HTTP fixture в owned Editor job и synthetic credentials.
+Cancel Username → refs сохранены → P u с правильным secret; неверный password
+→ видимый отказ/Enter → native retry с cached username и правильным password.
+Проверены mask/no-secret-output, unchanged local commit/remote до успеха,
+remote HEAD после POST200, clean tree, настоящий pre-push marker без --no-verify,
+jobstop и process scope. Никаких mocks/private state mutation в acceptance.
+
+Windows cancel6268974488500 PASS в v2 (общий v2 был1/1); reject6538339947200
+PASS в v4. Между ними runtime не менялся, исправлялся retry predicate и
+observability. Reject6275313251300/6382683624600/6463749626600 FAIL:
+pre-cleanup screenshot последнего доказал mode r/blocking, Authentication Failed
+и Press ENTER. Тест ждал prompt, не подтвердив native сообщение. V4 отвечает
+Enter только на ожидаемый auth failure, native E errors остаются FAIL.
+Повтор unchanged ради зелёного не выполнялся. Диагностические probes не выдаются
+за acceptance; это24 разных Windows checks, не полный PASS любого source run.
+
+Windows controls: sequence3/conflicts4/backports15=22 PASS одним прогоном.
+Ubuntu final auth2+те же22=24 PASS, auth3588482326369/3592177129872.
+По11 native profiles: exit0/signal0/APIerrors[]/hard_kill=false/scope active0.
+Current manifest/SHA/67 pins совпали. .tests/git-auth-final-audit.json,
+.git-auth-{v2-windows,v4-windows,controls-windows,ubuntu}; Ubuntu script создаёт
+private Neogit overlay в готовом imagef63a05ca с network none. Docker/WSL
+lifecycle/build/download не выполнялись. Old rebase-abort на новой версии PASS;
+историческая причина IDE-124 остаётся неизвестной. Другие native gates этим
+не закрыты, полный общий regression PASS не заявлен.
+
+**Вывод.** Terminal Enter — одно событие, а не текстовый CRLF файла. Исправление
+одинаково для ОС, не требует нового auth backend/manager и проверено настоящим
+HTTP transport. Удалить runner companion после upstream fix и тех же native
+cancel/rejection/retry cases. Real accounts/helpers/OAuth/SSH agent/Mac/physical
+отдельно; Basic fixture их не заменяет.
+
+**Файлы.** Neogit manifest/README, git-auth E2E/server/registry, OpenSpec,
+QUICKSTART/PANEL_KEYS/e2e README/FEATURE_REVIEW/roadmap/PROBLEMS/HISTORY/commands.
+Append-only journals и frozen drafts сохранены, exact staging, push нет.

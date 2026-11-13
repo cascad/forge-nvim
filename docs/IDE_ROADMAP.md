@@ -12,9 +12,14 @@ PASS (§209–211):6 language roots, Node script, Python venv/debug/output/Go re
 Native interactive rebase также проверен (§212): reorder/fixup/submit, отмена
 изменённого todo и настоящий конфликт/abort; Windows18 PASS/Ubuntu18 PASS с
 preparation guards. Исправлен ложный ERROR при отмене редактора, для установленной
-сборки нужен `:Lazy build neogit` и перезапуск. Следующая очередь4 — credentials.
+сборки нужен `:Lazy build neogit` и перезапуск. HTTP credentials завершены
+(§213–214): исправлены быстрый Push до refresh и пустой пароль из CR+LF; native
+cancel/rejection/retry, masked input и реальный pre-push. Windows24 distinct
+checks на конечном runtime, Ubuntu final24 PASS; полный regression не заявлен.
+Далее очередь4 — оставшиеся worktree gates IDE-038/048.
 Отдельные Windows native quit IDE-121 и старый rebase-start timeout IDE-124
-остаются открытыми; полный Windows regression PASS не заявлен. Mac/physical
+не закрыты исторически; old rebase-abort на новой версии PASS (§214), причина
+исходного timeout без лога не установлена. Полный Windows regression PASS не заявлен. Mac/physical
 и полная mixed матрица отдельно. Docker engine использован без lifecycle изменений.
 
 Один ограниченный пункт → изменения → один прогон нужных тестов → отчёт и
@@ -34,7 +39,7 @@ E2E используются для защиты изменений продук
 | 1. Этап 6: упрощение панелей/DAP | Сократить доказанные дубли по готовому review | Итерация §197 готова: общая подготовка восьми navigation-команд; Windows24 PASS, этап 6 целиком открыт |
 | 2. Оформление Termide | Довести Code/Locals pilot до решения для повседневной работы, затем остальные панели | Общий цветной zoom готов на Windows (§199); постоянные рамки split и physical review открыты |
 | 3. Реальные проекты | Go/Cargo workspace, Python venv, Node scripts, выбор цели и launch.json/default | Go.work §206–208 и mixed context/Node script/Python venv debug Windows/Ubuntu9 PASS (§209–211); остальная mixed матрица открыта |
-| 4. Git | Credentials, interactive rebase и оставшиеся ошибки worktree | Native sequence submit/abort/true-conflict Windows/Ubuntu (§212); credentials/IDE-124 открыты |
+| 4. Git | Credentials, interactive rebase и оставшиеся ошибки worktree | Sequence и HTTP credentials Windows/Ubuntu (§212–214); worktree IDE-038/048 и real OAuth/SSH/Mac открыты |
 | 5. Языковые пробелы | Bash debug с готовым backend; SQL references при наличии подходящего provider | Открыто; собственный LSP не создаём |
 | 6. Переносимость | Чистый setup Windows/Ubuntu/macOS, terminal/SSH; Mac startup/Go и Cmd+C | Частично; native Mac и физические клавиши не проверены |
 
@@ -51,7 +56,8 @@ Ubuntu1 PASS (§206), без изменений runtime. Go.work Tests такж�
 шаг Go.work LSP выполнен (§208): Windows1 PASS/Ubuntu1 PASS, gd/back/gi type/
 gi method/gr/выбор через один настоящий gopls, runtime не менялся. Теперь —
 mixed context Windows/Ubuntu9 PASS (§209–211); остальная mixed матрица/Mac/physical
-открыты. Очередь4: interactive rebase готов (§212), далее credentials.
+открыты. Очередь4: interactive rebase и HTTP credentials готовы (§212–214);
+далее worktree IDE-038/048, real OAuth/SSH/Mac отдельно.
 
 Последняя итерация пункта 1: `deduplicate-panel-navigation`, FIXLOG §197.
 Повторная подготовка заменена одной локальной функцией, net−8 строк runtime.
@@ -87,7 +93,7 @@ Windows/macOS/Ubuntu — целевые ОС; натурные проверки 
 | WF-06 | Отлаживать с Output, консолью, переменными и стеком | Основные панели/пауза/output есть; полный цикл и реальные клавиши на всех ОС остаются проверкой |
 | WF-07 | Исправить код и перезапустить тот же кейс | Go.work dependency edit→F5→42/43 проверен Windows/Ubuntu (§206); смешанный workflow целиком открыт |
 | WF-08 | Посмотреть цветной diff и выбрать изменения для коммита | Hunk/stage/unstage/diff/history есть; выбор отдельных строк обязателен в полном кейсе |
-| WF-09 | Commit и push с понятным результатом | Основной путь/локальный remote и часть отказов проверены; реальные credentials и оставшиеся отказы отдельно |
+| WF-09 | Commit и push с понятным результатом | HTTP Basic cancel/rejection/retry и pre-push Windows/Ubuntu (§213–214); real OAuth/SSH/Mac и оставшиеся ошибки отдельно |
 | WF-10 | Навигация по коду, включая реализации | Go.work gd/gi type+method/gr/back Windows/Ubuntu (§208); остальные языки имеют отдельные workflows, mixed/Mac открыты |
 | WF-11 | Поиск файлов/текста и палитра команд | Основные действия есть; единая проверка из кода и панелей входит в приёмку |
 | WF-12 | Тесты проекта в общей панели | Go.work discovery/nearest/file/all/fix/Output Windows/Ubuntu (§207); по языкам есть отдельные workflows, смешанный проект открыт |

@@ -360,7 +360,11 @@ push в upstream (для новой ветки предлагает remote). `l 
 Сообщение `Press ENTER…` подтверждается Enter; недоступный remote может
 показать несколько fatal сообщений подряд. Локальный commit сохраняется.
 После согласования истории или исправления origin повтори `P u` в той же
-сессии. Конфликты проверяются отдельным набором; credentials остаются открытыми.
+сессии. HTTP credentials: Username подтверждается Enter, пароль скрыт звёздочками;
+Esc отменяет ввод. После неверного пароля Enter подтверждает `Authentication
+Failed`, затем Neogit снова спрашивает пароль (до трёх попыток, Username помнит).
+Отмена не удаляет local commit; повтор — `P u`. Проверены synthetic HTTP Basic
+на Windows/Ubuntu (§213–214); OAuth/SSH agent/real account и Mac отдельно.
 
 Конфликты: `m m` запускает merge с выбранной веткой, `r e` — rebase на
 выбранный ref. После остановки `Space g d` открывает Diffview. `Space g F`
@@ -420,7 +424,9 @@ Worktree/Open folder меняют его явно; `:ProjectRoot` определ
 не закрывает файл. `Space e` из просмотра возвращает Explorer в исходном tab.
 Два отказа push покрыты `git-errors.test.lua` (IDE-GIT-10); merge/rebase
 continue/abort — четырьмя `git-conflicts.test.lua` (IDE-GIT-11) на Windows/Ubuntu.
-Credentials и interactive sequence editor ещё требуют отдельных проверок.
+Interactive sequence editor — `git-sequence.test.lua` (IDE-GIT-13); HTTP
+cancel/rejection/retry и настоящий pre-push — `git-auth.test.lua` (IDE-GIT-14).
+После обновления этих backports: `:Lazy build neogit`, затем перезапуск.
 Быстрый worktree visit
 IDE-028 проверяется отдельным `worktree-refresh.test.lua` (FIXLOG §91).
 

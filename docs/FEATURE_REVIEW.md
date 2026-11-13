@@ -31,6 +31,13 @@ Abort воспроизведён, latest upstream blobed8aa001 сохраняе�
 sequence workflows и15 preparation guards. Удалить только этот companion после
 готового upstream эквивалента и тех же submit/abort/true-conflict cases.
 
+2026-11-13, §213–214: Neogit ещё два узких companions: nil initial hooks
+и один PTY Enter вместо CR+LF. Цена теперь6 dependencies/16 files, Neogit5,
+67 pins прежние. Auth cancel/rejection/retry и настоящий pre-push проверены
+на Windows/Ubuntu; по24 distinct checks на конечном runtime. Нет auth manager
+или нового Git backend. Companions удалять отдельно после upstream equivalents
+и тех же workflow checks. Real accounts/OAuth/SSH/Mac остаются отдельными.
+
 ## Актуальный выбор после Files, Logs и frame pilot — 2026-11-11
 
 Source e00bcea. Выполнено: Files §180–181, обязательные Logs §182 и рабочий
@@ -81,7 +88,7 @@ Raw summaries: .tests/review-after-pilot-{windows,ubuntu}.json (Ubuntu под
 .tests/ubuntu), агрегат .tests/review-after-pilot-summary.json.
 
 Фактический plugin backport manifest и prepared manifest совпадают:
-**6 dependencies /14 files** (прежние5/11, Neo-tree2 и Neogit sequence1). Старое5/11
+**6 dependencies /16 files** (прежние5/11, Neo-tree2, Neogit sequence1 и auth2). Старое5/11
 ниже обновлено; число4 в §182–183 не является корректным числом plugin
 backports. Windows SDK/SQLS source patch учитываются отдельно. Runtime и pins
 в этом проходе обзора не менялись. Следующий шаг — выбранное UI сокращение
@@ -222,7 +229,7 @@ forge:22/2610; сумма13567 строк включает комментари�
 |---|---|---|
 | Windows Neovim SDK | IDE-027, native ConPTY lifecycle bug | Подтверждённый upstream fix и тот же core/buffer regression на официальном SDK |
 | Gitsigns, 2 patch files | IDE-035/038, стабильный cwd Git jobs/worktree | Проверить upstream на закреплённом кандидате, прежние race/worktree E2E |
-| Neogit, 3 | IDE-034/043/123, worktree scheduling, ANSI/title и sequence abort | Upstream equivalent + worktree/Unicode/error и submit/abort/true-conflict regression |
+| Neogit, 5 | IDE-034/043/123/125/126, worktree scheduling, ANSI/title, sequence abort, initial hooks и PTY Enter | Upstream equivalent + worktree/Unicode/error, sequence и native credential/pre-push regression |
 | Neotest, 4 | IDE-051/070, native/canonical path identity | Upstream equivalent + Node/Python/Rust/SQL discovery/nearest/all |
 | nvim-dap, 1 | IDE-053, expected adapter close | Upstream equivalent + normal stop и настоящий unexpected exit |
 | neotest-rust, 2 | IDE-054, Cargo workspace/native paths/results | Upstream equivalent + workspace/nearest/integration/debug tests |

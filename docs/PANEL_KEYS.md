@@ -99,6 +99,11 @@ Git sequence editor: status `r i` → commit диапазона → Enter; `gk/g
 отменить todo. Штатная отмена сохраняет HEAD/ветки/файлы. Настоящий конфликт
 остаётся ошибкой; обычный rebase abort — status `r a`/Yes (§212).
 
+Git HTTP credentials: `P u` → Username/Enter → скрытый Password/Enter;
+Esc отменяет ввод. Неверный пароль → Enter на `Authentication Failed` →
+новый Password prompt. После полной отмены повторить `P u`; commit сохранён.
+Synthetic Basic проверен Windows/Ubuntu (§213–214); OAuth/SSH agent/Mac отдельно.
+
 Files `y/p`, `c`, `d` и защита несохранённых правок —
 [краткий workflow](FILES_WORKFLOW.md).
 

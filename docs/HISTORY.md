@@ -1,6 +1,6 @@
 # HISTORY — единая хронология проекта
 
-Обновлено: 2026-11-12. История разработки терминальной IDE от Helix и раннего
+Обновлено: 2026-11-13. История разработки терминальной IDE от Helix и раннего
 Neovim до нынешнего nvim_forge. Здесь одна последовательность и ссылки на
 подробности; новые исправления описываются в FIXLOG, затем добавляются сюда.
 
@@ -349,6 +349,8 @@ Python реализован и проверен 2026-11-03; после возо�
 | §210 | [Python debug: холодный handshake в смешанном проекте](../nvim_forge/FIXLOG.md#210-python-debug-холодный-handshake-в-смешанном-проекте) |
 | §211 | [Mixed project: финальная Ubuntu проверка](../nvim_forge/FIXLOG.md#211-mixed-project-финальная-ubuntu-проверка) |
 | §212 | [Interactive rebase: отмена todo без ложного конфликта](../nvim_forge/FIXLOG.md#212-interactive-rebase-отмена-todo-без-ложного-конфликта) |
+| §213 | [Быстрый Git Push до первого repo refresh](../nvim_forge/FIXLOG.md#213-быстрый-git-push-до-первого-repo-refresh) |
+| §214 | [Git credentials: один Enter вместо пустого пароля](../nvim_forge/FIXLOG.md#214-git-credentials-один-enter-вместо-пустого-пароля) |
 
 ## Как читать и дополнять
 

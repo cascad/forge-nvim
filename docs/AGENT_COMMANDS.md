@@ -7788,3 +7788,48 @@ credentials не затрагиваются. Prefix .tests/rebase-editor-prefix.
 append-only journals/5 frozen drafts/working registry minus Git row, exact
 allowlist/partial registry из HEAD+new row. Strict/diff, самостоятельный commit,
 никаких unchanged green retry. IDE-121/124/Mac/physical остаются отдельно.
+
+## 122. Git HTTP credentials, hooks metadata и PTY Enter
+
+2026-11-13, F:/repo/forge-nvim, PowerShell login=false. TEMP/TMP/TMPDIR и
+NVIM_LOG_FILE на F:/repo/forge-nvim/.tests/tmp; PYTHONUTF8=1 и
+PYTHONIOENCODING=utf-8; npm cacheF:/forge-nvim-tmp/npm-cache.
+OpenSpec verify-git-authentication-flow: apply/context прочитаны, test-only
+повышен до IDE-GIT-14 delta до runtime patch. GitHub fetch_file hooks.lua и
+runner.lua read-only, external writes нет. Upstream blobs в FIXLOG §213–214.
+
+```powershell
+& ./.tools/neovim/windows-x64/bin/nvim.exe -l tests/e2e/git-auth.test.lua
+# Явная подготовка owned test SDK после каждого нового companion:
+& ./.tools/neovim/windows-x64/bin/nvim.exe -l nvim_forge/scripts/prepare-plugins.lua --plugin-root F:/repo/forge-nvim/.tests/editor-deps/lazy --plugin neogit
+# backports.neogit из JSON stdout записан в ignored manifest.json.
+# После исправления только retry ожидания, runtime прежний:
+$env:FORGE_TEST_ID='SELF: GIT-AUTH reject'
+& ./.tools/neovim/windows-x64/bin/nvim.exe -l tests/e2e/git-auth.test.lua
+$env:FORGE_TEST_ID=$null
+& ./.tools/neovim/windows-x64/bin/nvim.exe -l tests/e2e/git-sequence.test.lua
+& ./.tools/neovim/windows-x64/bin/nvim.exe -l tests/e2e/git-conflicts.test.lua
+& ./.tools/neovim/windows-x64/bin/nvim.exe -l tests/e2e/plugin-backports.test.lua
+# Engine уже включён владельцем; только read-only:
+docker info --format '{{.OSType}}'
+docker image inspect forge-nvim-tests:ubuntu24.04-nvim0.12.2 --format '{{.Id}}'
+docker compose -f tests/containers/compose.yaml run --rm --no-deps --entrypoint bash -e GOMAXPROCS=2 -e GOFLAGS=-p=2 -e GOTOOLCHAIN=local -e CARGO_BUILD_JOBS=2 ubuntu /workspace/.tests/git-auth-20261113.sh
+python -B .tests/audit-git-auth.py
+npx.cmd --yes @fission-ai/openspec@1.13.2 validate verify-git-authentication-flow --type change --strict --no-interactive
+```
+
+Windows/Ubuntu heavy checks последовательно. Source raw0/2, target0/2,
+v2 1/1, v3/observe0/1 сохранены. Дополнительные ignored diagnostic копии
+теста временно наблюдали hooks.exists/Process.send; CR-only probe PASS не
+считается acceptance. Постоянный тест не содержит этих wrappers. Audit
+записывает лишь совпадения/длину synthetic password, не Authorization/secret.
+Итог Windows24 distinct PASS (cancel v2 + reject v4 + controls22), Ubuntu
+final24 PASS в одном script. По11 native shutdown0/scopes0; secret output
+отсутствует, реальные refs/POST/pre-push проверены. Frozen tests/run.lua не
+использовался. SDK SHA прежний,67 pins/6 dependencies/16 files.
+
+Prefix .tests/git-auth-prefix.json: raw append-only journals и5 frozen drafts,
+registry staging из HEAD825ce2e + только new git-auth row. Python все
+read/write UTF-8; diff/strict/exact allowlist/index-prefix guards перед commit.
+User plugin cache/remote credentials/Desktop/WSL lifecycle не затронуты.
+Mac/OAuth/SSH/physical и исторические native failures отдельно.

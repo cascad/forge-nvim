@@ -24,6 +24,24 @@ stdout[1] принимала отмену за конфликт. Classification-
 Windows/Ubuntu3 native sequence cases и15 preparation checks сохранены (§212).
 После готового upstream fix убрать только этот companion с теми же cases.
 
+IDE-125/IDE-GIT-14: companion `lua/neogit/lib/git/hooks.lua` допускает отсутствие
+metadata до первого repo refresh. Быстрый Push раньше падал в
+`vim.tbl_contains(nil, hook)` до запуска Git. Guard меняет лишь выбор preview
+UI; Git argv и исполнение hooks остаются штатными. Тот же nil доступ сохранён
+в [upstream hooks.lua](https://github.com/NeogitOrg/neogit/blob/adb248d4ed2bdb67abad830bcceca352e335ff5b/lua/neogit/lib/git/hooks.lua).
+На этом этапе Neogit4 files, всего6 dependencies/15 files. Удалить этот companion
+после upstream guard и native credential/pre-push regression на целевых ОС.
+
+IDE-126/IDE-GIT-14: companion `lua/neogit/runner.lua` завершает ответ в PTY
+одним CR вместо CR+LF. На Windows второй символ становился пустым Password
+сразу после Username, раньше введённого пароля. Synthetic HTTP audit доказал
+правильный username/password_length=0; один CR исправил native push.
+[Upstream runner](https://github.com/NeogitOrg/neogit/blob/39a6808f5b149c15419c930e0ff9c1e078b2fd2c/lua/neogit/runner.lua)
+проверен 2026-11-13 и сохраняет CR+LF. Текущий ID
+`IDE-034-043-123-125-126-neogit-native-git`: Neogit5 files, всего6 dependencies/
+16 files. Удалить runner companion после upstream эквивалента и тех же native
+cancel/rejection/retry cases на целевых ОС; везде используется один PTY Enter.
+
 `plugins.json` содержит ревизию, точную замену и SHA256 файла до/после.
 `ide/backports.lua` — общий applier для Lazy и явной подготовки тестов.
 Hash нормализует CRLF→LF; запись сохраняет исходные переводы строк.

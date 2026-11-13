@@ -24,7 +24,7 @@
     ]
   },
   "neogit": {
-    "id": "IDE-034-043-123-neogit-cwd-output-sequence",
+    "id": "IDE-034-043-123-125-126-neogit-native-git",
     "revision": "d7bb91b42f984416adc6116d6ba8fba287857af3",
     "file": "lua/neogit/popups/worktree/actions.lua",
     "before_sha256": "71316bf6f499fccb55689e3dd1f3a3711ee4fb632b0b7724075a56e10c022513",
@@ -45,6 +45,20 @@
         "after_sha256": "acfa813fd5c2d1db0edd2a78bfecfaf53f249ffe2160ef09b2290a420a35360b",
         "before": "    if result.stdout[1]:match(\"^hint: Waiting for your editor to close the file%.%.%. error\") then",
         "after": "    -- spec: IDE-GIT-13. Git может вывести hint и отказ editor отдельными строками.\n    local output = table.concat(result.stdout or {}, \"\\n\"):lower()\n    if output:find(\"hint: waiting for your editor to close the file...\", 1, true)\n      and output:find(\"error: there was a problem with the editor \", 1, true)\n    then"
+      },
+      {
+        "file": "lua/neogit/lib/git/hooks.lua",
+        "before_sha256": "c156abcf1c0a874e9c0164c487f6c3b00b9f51e2f6f1c0f52aefd4c8cf4ac3c3",
+        "after_sha256": "4223bac65236d219a2a9e007eaf1d97f0fc972079b314b5586c561227f45cf10",
+        "before": "      if vim.tbl_contains(git.repo.state.hooks, hook) then\n",
+        "after": "      -- Forge IDE-125 / IDE-GIT-14: metadata may await the first repo refresh.\n      if vim.tbl_contains(git.repo.state.hooks or {}, hook) then\n"
+      },
+      {
+        "file": "lua/neogit/runner.lua",
+        "before_sha256": "8b62d22735281f5917bf421979c83a9c414a07c67a39a973ce966d017fc4542a",
+        "after_sha256": "b5df114cd38fabe2b957df742b641c083bf85be6ac7e32dfafa5fe186729fcc5",
+        "before": "      process:send(value .. \"\\r\\n\")\n",
+        "after": "      -- Forge IDE-126 / IDE-GIT-14: one PTY Enter, no extra empty response.\n      process:send(value .. \"\\r\")\n"
       }
     ]
   },

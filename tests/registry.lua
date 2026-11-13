@@ -86,6 +86,7 @@ return {
   { file = 'tests/e2e/go-workspace-language.test.lua', suite = 'e2e', timeout = 180 },
   { file = 'tests/e2e/mixed-project.test.lua', suite = 'e2e', timeout = 240 },
   { file = 'tests/e2e/git-sequence.test.lua', suite = 'e2e', timeout = 180 },
+  { file = 'tests/e2e/git-auth.test.lua', suite = 'e2e', timeout = 180 },
   { file = 'tests/e2e/debugpy-exit.test.lua', suite = 'e2e', timeout = 180 },
   { file = 'tests/e2e/focus-command-order.test.lua', suite = 'e2e', timeout = 240 },
   { file = 'tests/e2e/dap-output-policy.test.lua', suite = 'e2e', timeout = 360 },
