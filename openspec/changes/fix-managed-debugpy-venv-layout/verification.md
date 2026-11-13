@@ -72,3 +72,50 @@ CRITICAL: tasks1.2, Unix часть1.3/1.4 и2.1 не выполнены. Тол
 Archive readiness не заявляется. Whole Windows/Ubuntu §191–193 не повторялись
 и не повышены до PASS; причины085/117/118 прежние. POSIX probe draft не
 включается в этот commit, observer не менялся. Desktop/WSL не управлялись.
+
+
+## Дополнение: native Ubuntu — 2026-11-13 (§221)
+
+Предыдущие ограничения относятся к срезу2026-11-12. Теперь выполнены tasks1.2–1.4,
+итого5/6;2.1 Mac остаётся открытым. Runtime target — HEAD007c567, source —
+неизменённый frozen7673dd3. Они включают и другие изменения после §196;
+не утверждается, что весь config diff состоит только из venv helper.
+
+| Проверка | Результат |
+|---|---|
+| Ubuntu source, прежний config |2 managed RED,2 explicit controls PASS |
+| Ubuntu current, тот же permanent E2E |4 PASS: launcher, Python fallback, global adapter, global Python |
+| Ubuntu selected regression |15 PASS: Python8, debugpy error1, Go Output4, Rust routes1, Node launch1 |
+| Native outcome |20 profiles exit0/signal0/APIerrors[]/scope empty/hard_kill=false |
+| Target shutdown |Все16 target только quit→exited; два failed source потребовали SIGTERM из-за hit-enter |
+| Unit/trace, чистый HEAD export |18 файлов PASS,371 cases PASS/1 SKIP;18/0 files — не полный E2E |
+| Не проверено |Native Mac, physical WezTerm; чужие IDE-117/121/129 не закрыты |
+
+У source launcher/Python fallback готовые managed venv и реальный import debugpy
+подтверждены offline setup commands exit0. Однако DapPythonInfo показывает
+`<none found; fallback to python -m debugpy.adapter>`, DAP log содержит command
+project `.venv/bin/python`, args `-m debugpy.adapter` и Process exit1. Это actual
+ошибочный выбор adapter Python, а не вывод из Windows control/названия OS.
+У target реальные spawn — managed `bin/debugpy-adapter` и `bin/python`,
+при этом stdout `MANAGED_PROJECT_VENV True`/`MANAGED_VALUE 42`/`MANAGED_AFTER 42`,
+breakpoint/eval42/continue и оба global>env overrides проверены тем же E2E.
+Открытие файла tools не устанавливает и adapter не запускает.
+
+Managed profiles source4 затем target4: 25507631498944; 25553502218965; 25594881574030; 25609491487009; 25622104757678; 25633602828423; 25644540427625; 25657008732075.
+Тест SHA25638e699107579cdd49705d947ab19399d8f648aa87c1e889881df602ce3e0047f,
+его сохранённая копия и fixture совпали для всех8. Source83/target87 config
+files и записанные driver hashes сверены с соответствующими исходниками.
+Audit .tests/managed-unix-audit.json:20 profiles, issues[], frozen/prefix guards.
+Raw .tests/ubuntu/managed-unix-source, managed-unix-target; source и target
+выполнены по одному разу, без зелёных повторов. Первый audit ошибочно искал
+spawns в blocked snapshot; использован уже сохранённый до F5 DAP log, E2E
+не перезапускались. Это исправление чтения артефактов, не runtime.
+
+Docker imagef63a05ca, Ubuntu24.04/official Neovim0.12.2, network none;
+private Neogit overlay довёл image manifest до текущих6 dependencies16 files,
+образ и его SDK не менялись.67 pins и Windows SDK74aff15b прежние.
+Unit/trace использовали git archive HEAD007c567 в guest /tmp, а не frozen
+рабочие runner/catalog drafts. Archive SHA256af89cbda356a1053163861b8adb6a12122888a2b9b91d72df43f1c355b3de661.
+Desktop/WSL lifecycle/build/download не выполнялись. Docker tmp исчез при --rm;
+host temp/артефакты остаются на F. Windows повтор не нужен: runtime не менялся.
+Mac source/target/override остаются реальным gate; change не архивирован.

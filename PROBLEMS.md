@@ -94,9 +94,13 @@ source7673dd3/target по4 native PASS: real launcher/Python fallback/explicit
 global > env, project venv без debugpy, breakpoint/eval42/stdout/continue.
 15 прежних checks PASS; [FIXLOG §196](nvim_forge/FIXLOG.md#196-managed-debugpy-общий-venv-layout-без-смены-interpreter).
 
-**Открыто:** actual Unix source RED/target и Mac не получены — Linux engine
-недоступен. Frozen config сохранён до patch для replay. Windows доказывает
-сохранение поведения, но не Unix fix; IDE-119 не закрыт. [Исходный разбор](docs/WORKSPACE_TOOL_REVIEW.md#следующий-кандидат-ide-119-managed-debugpy-venv).
+**Ubuntu подтверждён 2026-11-13 (§221):** frozen7673dd3 дал2 managed RED/
+2 explicit PASS; current007c567 —4 PASS и15 прежних language/debug PASS.
+Старая сборка реально запускала project Python без debugpy (adapter exit1),
+новая использует managed bin/debugpy-adapter либо bin/python.20 native profiles:
+exit0/signal0/APIerrors[]/scope empty; у двух source RED cleanup потребовал
+SIGTERM из-за hit-enter, у всех target16 только quit→exited. SDK/pins прежние.
+**Открыто:** native Mac; Windows/Ubuntu не закрывают этот platform gate. [Исходный разбор](docs/WORKSPACE_TOOL_REVIEW.md#следующий-кандидат-ide-119-managed-debugpy-venv).
 
 ## IDE-118 — Windows Go Output: RPC timeout во время теста
 

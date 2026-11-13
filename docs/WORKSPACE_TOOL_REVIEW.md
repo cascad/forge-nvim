@@ -39,8 +39,10 @@ Mason-запусков этот review не подтверждает. Панел
 
 После этого review выполнена Windows часть §196: прежний private venv
 helper переиспользуется для managed paths, source4/target4 и15 прежних UI
-checks PASS. Frozen7673dd3 сохранён; Unix source/target и Mac не проверены,
-IDE-119 остаётся открытым. Ниже исходное наблюдение source3d0e6b7.
+checks PASS. В §221 native Ubuntu source7673dd3 дал2 managed RED/2 explicit
+PASS; target007c567 —4 PASS и15 прежних checks PASS. Сохранены actual spawn/
+exit1 source и выбор managed bin/* target. IDE-119 ждёт только native Mac.
+Ниже исходное статическое наблюдение source3d0e6b7, до Linux reproduction.
 
 В `plugins/dap.lua` проектный adapter использует уже существующий
 debugpy_adapter_in_env с Windows/POSIX layout. Два Mason fallback ниже

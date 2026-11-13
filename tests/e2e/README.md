@@ -27,8 +27,10 @@ private managed venv с настоящим offline debugpy.4 cases: launcher, Py
 fallback без launcher, global adapter/Python overrides при других env values.
 Реальные F5/breakpoint/eval42/stdout/project prefix/continue; raw argv и logs.
 Windows source7673dd3/target по4 PASS,15 прежних language/debug checks PASS.
-Ubuntu source/target и Mac не запускались, Unix fix ещё не подтверждён.
-Источник/гейты — verification fix-managed-debugpy-venv-layout, FIXLOG §196.
+Ubuntu (§221): source7673dd3 дал2 managed RED/2 explicit PASS, target007c567
+четыре PASS, ещё15 прежних language/debug PASS.20 native profiles с empty scope;
+у всех target16 штатный quit. Mac не запускался и остаётся отдельным gate.
+Источник/гейты — verification fix-managed-debugpy-venv-layout, FIXLOG §196/221.
 
 IDE-114: `nvim -l tests/e2e/editor-native-outcome.test.lua`. Настоящие
 nvim_forge cquit23/SIGKILL собственного child/primary-error и normal quit;

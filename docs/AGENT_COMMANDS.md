@@ -8083,3 +8083,70 @@ prefix.json: append-only journals/frozen5/registry/lock/backports/exe exact.
 Registry index из HEAD20b1210 + только session-tool row, frozen2 остаются working
 copy. Все Python read/write UTF-8, shell scripts LF, exact allowlist/index-prefix/
 diff/strict перед commit без push. Tests/run.lua/catalog не разрабатывались.
+
+
+## 129. Native Ubuntu managed Python: source RED и current target
+
+2026-11-13, cwd F:/repo/forge-nvim, PowerShell login=false, temp/TMP/TMPDIR/
+npm cache на F. Использован existing fix-managed-debugpy-venv-layout: status,
+instructions apply, list --json с root nearest F:/repo/forge-nvim. Артефакты и
+CLAUDE/config прочитаны до исполнения; platform tasks1.2–1.4 завершены, Mac2.1 открыт.
+
+```powershell
+git status --short
+rg -n -A 12 -B 4 'IDE-119|IDE-038|IDE-048|IDE-129' PROBLEMS.md
+Get-Content openspec/changes/fix-managed-debugpy-venv-layout/tasks.md
+Get-Content tests/e2e/python-managed-debug.test.lua
+docker version --format '{{.Server.Version}}'
+docker image inspect forge-nvim-tests:ubuntu24.04-nvim0.12.2 --format '{{.Id}}'
+$env:TEMP='F:/repo/forge-nvim/.tests/tmp'
+$env:TMP=$env:TEMP
+$env:TMPDIR=$env:TEMP
+$env:PYTHONUTF8='1'
+$env:PYTHONIOENCODING='utf-8'
+$env:npm_config_cache='F:/forge-nvim-tmp/npm-cache'
+npx.cmd --yes @fission-ai/openspec@1.13.2 status --change fix-managed-debugpy-venv-layout --json
+npx.cmd --yes @fission-ai/openspec@1.13.2 instructions apply --change fix-managed-debugpy-venv-layout --json
+python -B .tests/prepare-managed-unix.py
+docker compose -f tests/containers/compose.yaml run --rm --no-deps --pull never --entrypoint bash ubuntu /workspace/.tests/managed-python-unix-20261113.sh > .tests/managed-unix-run.txt 2>&1
+python -B .tests/audit-managed-unix.py
+git archive --format=tar --output=.tests/ubuntu/managed-unix-head.tar HEAD
+docker compose -f tests/containers/compose.yaml run --rm --no-deps --pull never --entrypoint bash ubuntu /workspace/.tests/managed-python-unit-20261113.sh > .tests/managed-unix-unit-run.txt 2>&1
+python -B .tests/record-managed-unix.py
+npx.cmd --yes @fission-ai/openspec@1.13.2 validate fix-managed-debugpy-venv-layout --type change --strict --no-interactive
+git diff --check
+git diff --cached --check
+```
+
+Здесь .tests scripts — сохранённые локальные команды этого запуска. Подготовка
+проверяет frozen7673dd3 по git blob, lock exact, journals/frozen baseline; пишет
+Linux shell через UTF-8 write_bytes (LF). Source4 и current4 затем selected15
+выполнялись последовательно одним готовым imagef63a05ca, network none. Private
+Neogit overlay из image соответствует нынешним6 dependencies16 files; SDK image
+не меняется. Между source/target сменён только FORGE_E2E_CONFIG_SOURCE; config
+7673dd3 и current007c567 включают и другие накопленные изменения. Тест/fixture
+совпадают byte-for-byte; source2 managed RED/2 explicit PASS и actual DAP logs
+доказывают wrong project adapter Python. Target4+15 PASS.20 profiles native0/
+APIerrors[]/scope empty, source2 cleanup SIGTERM/hit-enter, target16 quit→exited.
+Audit сначала дал KeyError spawns у blocked source snapshot: прочитан уже
+сохранённый DAP log; E2E не перезапускались. Audit не является тестом продукта.
+
+Unit script распаковывает git archive HEAD007c567 в guest /tmp, запускает только
+nvim -l tests/run.lua unit trace, копирует report/log до --rm:18 файлов PASS,
+371 cases PASS/1 SKIP. Frozen рабочие tests/run/trace/spec_index/registry/catalog
+не исполнялись и не менялись. Не запускались Windows или общий E2E ради зелёного.
+На подготовленной целевой машине постоянная команда: nvim -l
+tests/e2e/python-managed-debug.test.lua; setup Python deps — tests/e2e/README.md.
+Mac остаётся отдельным native gate; Docker Desktop/WSL lifecycle не трогались.
+Коммит только doc/task allowlist, без push. Raw/staged prefix и frozen guards.
+
+Повтор чтения audit после записи FIXLOG сравнивает сохранённый runtime FIXLOG
+с исходным journal prefix: новая запись появляется после E2E. Сравнение со всем
+уже дополненным журналом дало ожидаемое несовпадение; baseline prefix SHA
+сохранён. Код/тесты не менялись, E2E повторно не запускались.
+
+```powershell
+python -B .tests/stage-managed-unix.py
+git commit -m 'docs(python): verify managed debugpy fallback on Ubuntu'
+git status --short
+```

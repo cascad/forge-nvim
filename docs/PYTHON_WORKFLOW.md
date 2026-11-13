@@ -73,6 +73,13 @@ Windows/Ubuntu mixed+Python8 проверены (§210–211); Mac/physical ещ
 или перед запуском редактора. Выбор backend и Python отлаживаемой программы —
 две разные настройки; обычному project venv эти overrides не нужны.
 
+Установленный через Mason debugpy обнаруживается по native venv layout:
+Windows Scripts/debugpy-adapter.exe либо Scripts/python.exe; Ubuntu/macOS
+bin/debugpy-adapter либо bin/python. При этом программа запускается Python
+проекта и может использовать свои зависимости без debugpy в project venv.
+Windows4 cases проверены §196; Ubuntu source2 RED/2 controls PASS → target4
+PASS и15 соседних checks PASS (§221). Native Mac пока не проверен.
+
 ## Подготовка постоянных E2E
 
 Сначала общие plugins и Node SDK по [инструкции E2E](../tests/e2e/README.md).

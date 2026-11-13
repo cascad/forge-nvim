@@ -7,7 +7,14 @@ IDE-001 параллельно ждёт диагностических данн�
 
 ## Текущая очередь продукта — решение владельца 2026-11-12
 
-**Последний результат — §220:** Tests возвращает открытость/ширину штатного
+**Последний результат — §221:** подтверждён Linux fix managed Python debug
+(IDE-119): старая версия2 RED/2 explicit PASS → текущая4 PASS, ещё15 соседних
+language/debug checks PASS. Native adapter и debuggee используют разные venv;
+startup install0, все16 target profiles вышли штатно. Runtime уже исправлен
+в §196, новых обёрток/SDK/плагинов здесь нет. OpenSpec5/6: остался настоящий Mac.
+Ubuntu unit/trace из чистого HEAD:18 файлов PASS,371 cases PASS/1 SKIP.
+
+**Предыдущий результат — §220:** Tests возвращает открытость/ширину штатного
 окна; Terminal/Debug после restart скрыты, сохранённые размеры применяются
 при явном открытии/F5, без новых процессов из restore. Три новых native cases
 PASS Windows/Ubuntu. Ubuntu selected22 PASS; Windows selected21 PASS/1 FAIL:
@@ -22,7 +29,8 @@ Windows gate остаётся открытым. Все изменения вып
    задержку; причинного исправления сейчас нет.
 2. Натурный проход владельца: своё рабочее место A→B→A, смешанный проект,
    Debug/Tests/Terminal и клавиши WezTerm. Mac startup/zsh/Go и Cmd+C требуют
-   настоящего Mac; Windows/Ubuntu не заменяют этот gate.
+   настоящего Mac; Windows/Ubuntu не заменяют этот gate. Managed Python debug
+   IDE-119 также ждёт Mac; Ubuntu source/target завершены в §221.
 3. Git worktree IDE-038/048 — нужен воспроизводимый текущий кейс; старых данных
    недостаточно для нового причинного fix. SSH/OAuth также отдельные gates.
 4. Постоянные рамки Termide — оценить готовый Code/Locals pilot в повседневной
@@ -318,8 +326,9 @@ IDE-114 выполнен (§194): обычный E2E сообщает nonzero na
    общий resolver framework не вводим. Следующий кандидат IDE-119 — native
    managed debugpy fallback. Windows часть выполнена в §196: private layout
    helper, source4/target4 и15 прежних native checks PASS. Frozen7673dd3
-   сохранён; Ubuntu source RED/target и Mac остаются обязательными gates,
-   недоступный Linux engine не засчитан. IDE-119 пока открыт.
+   сохранён; Ubuntu gate теперь выполнен (§221): source2 RED/2 controls PASS,
+   target4 + regression15 PASS. IDE-119 ждёт native Mac; engine unavailable
+   был прежним ограничением, теперь не является причиной остановки Ubuntu.
 3. Mac/чистая установка → Bash debug/сложные проекты/Git → общее оформление.
 
 IDE-085 и новый RPC stall IDE-118 остаются диагностикой при новых evidence;

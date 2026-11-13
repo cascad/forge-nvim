@@ -9,7 +9,9 @@
 [tools/OS boundaries](WORKSPACE_TOOL_REVIEW.md#актуальный-проход-инструментов--2026-11-12).
 Общий resolver framework не нужен: порядок и отказ override различаются по
 языкам. Найден статический кандидат IDE-119 — Windows layout в managed
-debugpy fallback; native reproduction ещё требуется. Breadcrumbs/Satellite сохранены решением владельца 2026-11-13,
+debugpy fallback. Native Ubuntu reproduction и target завершены §221:
+2 managed RED/2 controls PASS →4 PASS,15 соседних checks PASS; Mac отдельно.
+Breadcrumbs/Satellite сохранены решением владельца 2026-11-13,
 готовые backend/67 pins/6 patched dependencies сохраняются.
 
 2026-11-12, §207: добавлена узкая public Adapter boundary `forge/go_tests.lua`:

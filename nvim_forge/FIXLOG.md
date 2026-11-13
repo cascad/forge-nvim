@@ -11822,3 +11822,50 @@ OpenSpec/PROBLEMS130 counter, product guides/roadmap/HISTORY/commands. Raw
 .tests/session-tool-source*-windows, target-{windows,ubuntu}, phase-probe-
 windows; audit .tests/session-tools-audit.json. Journals append-only/frozen
 exact, isolated staging; commit без push. Native gate не спрятан как skip/PASS.
+
+
+## 221. Managed Python debug: подтверждение native Linux fallback
+
+2026-11-13. Спека: IDE-PY-2 (FIX), продолжение §196; IDE-119.
+
+**Проблема.** Windows исправление managed venv уже было в runtime, но Ubuntu
+source/target gate оставался открытым из-за недоступного engine. Обычная project
+venv с debugpy этот fallback не проверяет. Теперь готовый Linux engine доступен.
+
+**Причина.** Frozen7673dd3 содержит Windows Scripts/*.exe для Mason на всех OS.
+В native Ubuntu два managed cases реально выбрали project .venv/bin/python без
+debugpy: DapPythonInfo `<none found>`, actual DAP spawn -m debugpy.adapter,
+Process exit1. Managed import/setup успешны; explicit controls2 PASS. Таким
+образом Unix defect подтверждён непосредственно, Windows control его не подменяет.
+
+**Изменение.** Новых runtime edits/обёрток/SDK нет: прежний private venv helper
+§196 уже выбирает native bin/*; этот шаг завершает Linux gates1.2–1.4 существующего
+change. Permanent4-case E2E и fixture прежние, SHA38e69910.5/6 tasks завершены,
+native Mac2.1 остаётся открытым. Guides/plan/PROBLEMS обновлены без смены pins.
+
+**Проверка/e2e.** Один source7673dd3:2 managed RED/2 explicit PASS. Один current
+007c567 target:4 PASS.15 выбранных соседних cases PASS: Python8, actual debugpy
+error1, Go Output4, Rust launch routes1, Node default/project1.20 native profiles
+exit0/signal0/APIerrors[]/scope empty/hard_kill=false. Два failed source с hit-enter
+потребовали штатного SIGTERM cleanup; все16 target только quit→exited. Startup
+install0, breakpoint/eval42/stdout/continue/project interpreter/global>env реальные.
+Saved config83/87 files, test/fixture/driver hashes проверены. Audit сначала
+искал spawns в blocked snapshot; прочитан pre-F5 saved DAP log без E2E retry.
+Ubuntu unit/trace из чистого HEAD export:18 файлов PASS,371 cases PASS/1 SKIP.
+Не исполнялись отложенные рабочие runner/catalog drafts; frozen bytes сохранены.
+
+**Вывод/границы.** Linux portability этого fallback подтверждена. Source и
+current config включают и другие изменения, их полный diff не объявлен одним
+helper; причина двух RED видна из actual wrong adapter path/exit1 и успешных
+explicit controls. Mac требует своей машины; IDE-119 не закрыт целиком.
+Общий Windows/Ubuntu E2E не прогонялся и не объявлен зелёным; IDE-129/117/121,
+worktree038/048, Mac startup/Go/Cmd+C и physical/frame review остаются открытыми.
+Docker ready imagef63a05ca/network none, private plugin overlay, без build/download/
+Desktop/WSL lifecycle;67 pins/6 dependencies16 files/Windows SDK прежние, temp F.
+
+**Файлы.** OpenSpec tasks/verification, PROBLEMS, roadmap/feature/tools/Python
+guides, E2E README, HISTORY/commands. Проверка — прежний permanent
+tests/e2e/python-managed-debug.test.lua и language/debug cases того же runtime.
+Raw .tests/managed-unix-*, .tests/ubuntu/managed-unix-{source,target}; точные
+profiles/argv/versions — change verification и audit JSON. Journals append-only,
+isolated doc staging/commit; пользовательские environments не менялись.
