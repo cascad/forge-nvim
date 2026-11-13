@@ -12226,3 +12226,45 @@ feature review/PROBLEMS/roadmap/tests README/HISTORY/commands. Raw .tests/go-
 discovery-* и guest equivalents, audit go-discovery-audit.json; первая Ubuntu
 ошибка go-discovery-ubuntu.txt, final go-discovery-ubuntu-final.txt. SDK/67 pins/
 6 backports16 files/frozen infra drafts прежние, journals append-only.
+
+
+## 230. Rust: подготовка учитывает штатное отключение LSP
+
+2026-11-13. Спека: IDE-RUST-3 (ADDED). IDE-136, обзор IDE-080.
+
+**Проблема.** После настройки LSP native enable(false) не запрещал раннюю
+подготовку Cargo; поздний ответ возвращал отключённый rust-analyzer.
+**Причина.** Warmup напрямую вызывал vim.lsp.start, обходя native autostart
+state. Source91baabb на Windows/Ubuntu: два точных RED. В in-flight случае
+наблюдался start(enabled=false), настоящий spawn и initialize в lsp.log;
+get_clients до initialization ещё пуст, это не отсутствие процесса.
+
+**Изменение.** Проверка vim.lsp.is_enabled до metadata и после epoch/cwd
+guard при доставке ответа. Пропуск отмечается в existing IDE Logs (INFO).
+Нового lifecycle manager/cache/root resolver нет; native API владеет
+повторным включением и остановкой клиента. Pins/SDK/backports прежние.
+
+**Проверка/e2e.** На каждой ОС один source2 RED → target2 + controls3 PASS.
+Initial disable: metadata0, client/start0, Rust code редактируется; native
+re-enable даёт настоящий initialized/quiescent attached RA. In-flight: реальный
+Cargo code0/JSON удержан observer, после disable/release state false и start0.
+Controls: enabled early warmup/reuse, completion/diagnostics/correction,
+прежний DAP metadata input/picker ABORT. Helper получил optional producer;
+default plugins/dap.lua подтверждён control. Native результаты не подменялись.
+Все14 profiles exit0/signal0/APIerrors[]/scope0/hard_kill=false, shutdown ok;
+source runner1 — ожидаемые assertion FAIL, не native crash. Неизменённых
+повторов/промежуточных prototype failures в этом срезе нет.
+
+**Вывод/границы.** Настроенный Rust LSP штатно отключается без возврата из
+warmup. Уже запрошенная metadata может закончиться: immediate kill здесь
+не добавлен, прежний live-process cancel gate остаётся открытым. Initial
+config/Mason policy, LspStop и root/library algorithm не менялись. Mac,
+physical/large project и whole suite не проверены; IDE-121/129/133 не закрыты.
+Готовые SDK, Win/Linux serial/jobs2, engine28.5.1/imagef63a05ca/private Neogit
+overlay/network none; без download/build image/Desktop/WSL lifecycle. Temp F.
+
+**Файлы.** forge/rust_project.lua, existing Rust E2E/Cargo observer, OpenSpec
+respect-disabled-rust-language-server, Rust guide/review/PROBLEMS/roadmap/
+tests README/HISTORY/commands. Raw .tests/rust-disabled-* и guest equivalents;
+audit-rust-disabled.py проверил14 profiles, config/test/helper bytes, frozen
+hashes и append-only prefixes. Frozen infra drafts не менялись.

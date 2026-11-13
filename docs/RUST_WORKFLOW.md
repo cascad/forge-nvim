@@ -130,6 +130,25 @@ toolchain. Состояние/ошибки — Space w i, source Rust project; n
 Каталог без верхнего Cargo.toml не сканируется рекурсивно: для вложенных Rust
 подпроектов прежний file-triggered LSP сохраняется. Клиентами владеет Neovim.
 
+После загрузки LSP-конфигурации сервер можно отключить и включить штатно:
+
+```vim
+:lua vim.lsp.enable('rust_analyzer', false)
+:lua vim.lsp.enable('rust_analyzer', true)
+```
+
+Ранняя подготовка учитывает это состояние до Cargo metadata и при доставке
+ответа. Отключённый сервер не запускается; причина пропуска записывается в
+IDE Logs. Повторное включение запускает LSP для открытого Rust файла.
+Уже запрошенная metadata может завершиться: этот guard отменяет запуск LSP,
+но не добавляет немедленную остановку Cargo. Семантика `:LspStop` и политика
+при повторной загрузке конфигурации остаются штатными.
+
+Регресс IDE-RUST-3: `FORGE_RUST_CASE=IDE-RUST-3 nvim -l
+tests/e2e/rust-language.test.lua` (PowerShell: сначала
+`$env:FORGE_RUST_CASE='IDE-RUST-3'`). Windows/Ubuntu: оба исходных сценария RED,
+после исправления2 новых и3 прежних проверки PASS на ОС (§230). Mac отдельно.
+
 Регресс: FORGE_RUST_CASE=IDE-RUST-2 nvim -l tests/e2e/rust-language.test.lua.
 Real held build.rs подтверждает раннюю работу, UI input/open и один client.
 Windows/Ubuntu selected16 PASS (§224). Reference cold profile: first txt262/

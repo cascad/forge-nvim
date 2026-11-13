@@ -630,3 +630,13 @@ Windows/Ubuntu source RED → target/passive/actual debug3 distinct PASS на О
 input84/25ms. Первая Linux SDK-path ошибка fixture сохранена, контролы не
 повторяли после правки лишь нового case. Native Mac/полная selection matrix
 отдельно. Общая отзывчивость прежней рабочей сборки подтверждена владельцем.
+
+## Rust warmup и native LSP control — 2026-11-13
+
+§230 / IDE-136: manual start ранней подготовки обходил native enable(false).
+Два guards используют vim.lsp.is_enabled; пропуск идёт в existing IDE Logs.
+Native API остаётся единственным владельцем enable/disable и повторного запуска.
+Root/library resolver, SDK и cache не менялись; отдельный lifecycle manager
+не добавлен. Windows/Ubuntu source2 RED → target2 + controls3 PASS/ОС, включая
+настоящий re-enable и прежний warmup/reuse. Отмена ещё живой Cargo metadata и
+Mac/physical этим callback-сценарием не подтверждаются.

@@ -8470,3 +8470,45 @@ controls отличаются только неисполненным SDK fallba
 сверяет native events/data/config/SDK/lock/frozen/prefix. Ready engine/image,
 UTF-8/LF guest script/network none, serial Win/Linux без lifecycle/install/
 image build. Перед commit exact staging и staged journal prefixes.
+
+
+## 138. Rust warmup и native enable/disable
+
+2026-11-13, FIXLOG230, respect-disabled-rust-language-server. PowerShell
+-NoProfile, cwd F:/repo/forge-nvim. TEMP/TMP/TMPDIR/NVIM_LOG_FILE — .tests/tmp,
+npm cache F:/forge-nvim-tmp/npm-cache; Python UTF-8. rg/Get-Content: native
+vim.lsp enable/is_enabled/start, forge.rust_project, LSP config, existing
+Rust helper/E2E/Cargo observer и соседние changes. Root/library resolver
+сохранён; synchronous native sysroot probe здесь не переписывался.
+
+```powershell
+npx.cmd --yes @fission-ai/openspec@1.13.2 context --json
+npx.cmd --yes @fission-ai/openspec@1.13.2 new change respect-disabled-rust-language-server
+# status/instructions proposal/specs/design/tasks/apply --change ... --json
+git archive --format=zip --output=.tests/rust-disabled-source.zip 91baabb nvim_forge
+$env:FORGE_RUST_CASE='IDE-RUST-3'
+# Source: FORGE_E2E_CONFIG_SOURCE=F:/repo/forge-nvim/.tests/rust-disabled-source/nvim_forge
+& .tools/neovim/windows-x64/bin/nvim.exe -l tests/e2e/rust-language.test.lua
+# Затем удалить source override и выполнить этот selector для target.
+$env:FORGE_RUST_CASE='IDE-RUST-2'
+& .tools/neovim/windows-x64/bin/nvim.exe -l tests/e2e/rust-language.test.lua
+$env:FORGE_RUST_CASE='Rust LSP completion diagnostics correction'
+& .tools/neovim/windows-x64/bin/nvim.exe -l tests/e2e/rust-language.test.lua
+$env:FORGE_RUST_CASE='IDE-DAP-9 Rust metadata pending input and picker cancel'
+& .tools/neovim/windows-x64/bin/nvim.exe -l tests/e2e/rust-language.test.lua
+docker version --format '{{.Server.Version}}'
+docker compose -f tests/containers/compose.yaml run --rm --no-deps --pull never --entrypoint bash ubuntu /workspace/.tests/rust-disabled.sh > .tests/rust-disabled-ubuntu.txt 2>&1
+python -B .tests/audit-rust-disabled.py
+python -B .tests/record-rust-disabled.py
+npx.cmd --yes @fission-ai/openspec@1.13.2 validate respect-disabled-rust-language-server --type change --strict --no-interactive
+git diff --check
+git diff --cached --check
+```
+
+Source2 RED и target2+controls3 PASS на каждой ОС,14 native profiles. Observer
+только удерживает реальный ответ и записывает делегированный native start;
+source spawn/initialize проверены отдельно от get_clients. Audit сохраняет
+native exits/scopes, bytes, frozen/prefix guard. LF guest script, ready image
+с private pinned Neogit overlay, no network/lifecycle/download/image build;
+Win/Linux serial. Изменяемый общий tests/run.lua не запускался. Перед commit
+exact staging allowlist, SHA SDK/lock/backports/frozen и staged journal prefix.

@@ -1,4 +1,4 @@
--- spec: IDE-RUST-2. Native Cargo workspace до первого Rust-буфера.
+-- spec: IDE-RUST-2 IDE-RUST-3. Native Cargo workspace до первого Rust-буфера.
 local M = {}
 local generation, pending, directory = 0, nil, nil
 
@@ -19,6 +19,10 @@ function M.warmup()
     if vim.fn.filereadable(cwd .. '/Cargo.toml') ~= 1 then return end
 
     require('lazy').load({ plugins = { 'nvim-lspconfig' } })
+    if not vim.lsp.is_enabled('rust_analyzer') then
+        log('Подготовка Rust пропущена: rust_analyzer отключён.')
+        return
+    end
     local config = vim.deepcopy(vim.lsp.config.rust_analyzer)
     local cargo = vim.env.CARGO or vim.fn.exepath('cargo')
     local command = type(config.cmd) == 'table' and config.cmd[1] or nil
@@ -39,6 +43,10 @@ function M.warmup()
             vim.schedule(function()
                 if epoch ~= generation or vim.fs.normalize(vim.fn.getcwd()) ~= cwd then return end
                 pending = nil
+                if not vim.lsp.is_enabled('rust_analyzer') then
+                    log('Запуск Rust отменён: rust_analyzer отключён.')
+                    return
+                end
                 if result.code ~= 0 then
                     log('Cargo metadata: ' .. cwd .. '\n' .. (result.stderr or ''), vim.log.levels.WARN)
                     return

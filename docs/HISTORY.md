@@ -366,6 +366,7 @@ Python реализован и проверен 2026-11-03; после возо�
 | §227 | [Rust F5: асинхронное разрешение Cargo target](../nvim_forge/FIXLOG.md#227-rust-f5-асинхронное-разрешение-cargo-target) |
 | §228 | [Обзор Comment.nvim: сохранить явный block toggle](../nvim_forge/FIXLOG.md#228-обзор-commentnvim-сохранить-явный-block-toggle) |
 | §229 | [Go debug: асинхронные probes без повторного поиска](../nvim_forge/FIXLOG.md#229-go-debug-асинхронные-probes-без-повторного-поиска) |
+| §230 | [Rust: подготовка учитывает штатное отключение LSP](../nvim_forge/FIXLOG.md#230-rust-подготовка-учитывает-штатное-отключение-lsp) |
 
 ## Как читать и дополнять
 

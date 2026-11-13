@@ -60,6 +60,76 @@ local function check(name,fn,before_enter)
     assert(ok,err)
   end)
 end
+local function observe_rust_control(disabled)
+  return function(e)
+    e:wait('Forge ready before Rust control',function() return e:lua('return _G.forge_e2e_observed') end,10000)
+    e:lua([[require('lazy').load({plugins={'nvim-lspconfig'}})
+      assert(vim.lsp.is_enabled('rust_analyzer'),'Prepared Rust LSP must be available')]])
+    e:lua([[local helper,manifest,disabled=...
+      local record={warmups=0,starts={}};_G.forge_rust_control=record
+      _G.forge_metadata_delay=dofile(helper).arm(manifest,'forge/rust_project.lua')
+      local module=require('forge.rust_project');local warmup=module.warmup
+      module.warmup=function()
+        warmup()
+        if vim.fs.normalize(vim.fn.getcwd())==vim.fs.dirname(manifest) then record.warmups=record.warmups+1 end
+      end
+      local start=vim.lsp.start
+      vim.lsp.start=function(config,opts)
+        if config.name=='rust_analyzer' then record.starts[#record.starts+1]={enabled=vim.lsp.is_enabled('rust_analyzer')} end
+        return start(config,opts)
+      end
+      vim.lsp.enable('rust_analyzer',not disabled)
+      record.initial_enabled=vim.lsp.is_enabled('rust_analyzer')]],
+      {root..'/tests/diagnostics/cargo-metadata-delay.lua',e.rust_project..'/Cargo.toml',disabled})
+  end
+end
+local function rust_control_state(e)
+  return e:lua([[return {enabled=vim.lsp.is_enabled('rust_analyzer'),control=_G.forge_rust_control,
+    metadata=_G.forge_metadata_delay.report(),clients=vim.tbl_map(function(c)
+      return {id=c.id,root=c.config.root_dir,initialized=c.initialized} end,vim.lsp.get_clients({name='rust_analyzer'}))}]])
+end
+local function rust_control(e,disabled)
+  local report={scenario=disabled and 'disabled-before-project' or 'disabled-before-delivery'}
+  assert(vim.uv.fs_copyfile(root..'/tests/diagnostics/cargo-metadata-delay.lua',e.dir..'/cargo-metadata-delay.lua'))
+  local ok,err=xpcall(function()
+    e:wait('real warmup returned',function() return rust_control_state(e).control.warmups>0 end)
+    report.before=rust_control_state(e)
+    if disabled then
+      T.eq(report.before.enabled,false)
+      T.eq(report.before.metadata.async_calls,0,'Disabled Rust started Cargo warmup')
+      T.eq(#report.before.clients,0)
+      open(e,'app/src/lib.rs');report.opened=rust_control_state(e)
+      T.eq(report.opened.enabled,false);T.eq(#report.opened.clients,0)
+      T.eq(#report.opened.control.starts,0,'Disabled Rust client started on FileType')
+      e:input('ggO// DISABLED_RUST_INPUT<Esc>')
+      e:wait('Rust code editable while LSP disabled',function() return content(e):find('DISABLED_RUST_INPUT',1,true)~=nil end)
+      e:lua("vim.lsp.enable('rust_analyzer',true)")
+      e:wait('native re-enable attached actual client',function() return e:lua([[for _,c in ipairs(vim.lsp.get_clients({name='rust_analyzer',bufnr=0})) do
+        if c.initialized then return true end end;return false]]) end,30000)
+      e:wait('re-enabled Rust server quiescent',function() return e:lua([[local s=_G.forge_rust_server_status;return s and s.quiescent==true]]) end,30000)
+      report.reenabled=true
+    else
+      e:wait('real warmup Cargo result held',function() return rust_control_state(e).metadata.held end)
+      report.held=rust_control_state(e)
+      T.eq(report.held.metadata.result.code,0)
+      assert(vim.json.decode(report.held.metadata.result.stdout).workspace_root)
+      e:lua("vim.lsp.enable('rust_analyzer',false);_G.forge_metadata_delay.release()")
+      e:wait('warmup delivery drained',function() return rust_control_state(e).metadata.drained end)
+      local after=rust_control_state(e)
+      T.eq(after.enabled,false)
+      T.eq(#after.control.starts,0,'Late Cargo result started disabled Rust LSP')
+      T.eq(#after.clients,0);report.late_skipped=true
+    end
+  end,debug.traceback)
+  local got,after=pcall(rust_control_state,e);if got then report.after=after end
+  pcall(function() e:lua('_G.forge_metadata_delay.release()') end)
+  report.ok=ok;report.error=not ok and tostring(err) or nil
+  vim.fn.writefile({vim.json.encode(report)},e.dir..'/rust-disabled.json')
+  assert(ok,err)
+end
+check('IDE-RUST-3 disabled before project and native re-enable',function(e) rust_control(e,true) end,observe_rust_control(true))
+check('IDE-RUST-3 disabled while Cargo metadata pending',function(e) rust_control(e,false) end,observe_rust_control(false))
+
 local function without_clippy(e)
   local manifest=vim.json.decode(table.concat(vim.fn.readfile(e.rust_deps..'/manifest.json'),'\n'))
   local sdk=manifest.sysroot:gsub('\\','/')..'/bin/'

@@ -50,14 +50,24 @@ worktree IDE-038/048 ждут нового воспроизведения. Пр�
 6. IDE-135 / §229 — Go/Delve probes теперь async, env JSON и info list без
    повторного обхода. Source RED → по3 selected PASS Windows/Ubuntu, input84/
    25ms; meta local, global toolchain прежний, real debug first/repeat сохранён.
-7. Затем вернуться к оставшейся очереди ниже. IDE-048 probe остановился раньше
+7. IDE-136 / §230 — ранняя подготовка Rust учитывает native enable(false)
+   до metadata и перед start; поздний ответ не возвращает отключённый сервер.
+   Windows/Ubuntu source2 RED → target2 + controls3 PASS/ОС, native re-enable
+   работает. Отмена ещё живого metadata процесса остаётся отдельным gate.
+8. Затем вернуться к оставшейся очереди ниже. IDE-048 probe остановился раньше
    remove: RPC timeout/forced native cleanup класса IDE-047, raw26364912087090
    сохранён; отмена Gitsigns этим запуском не подтверждена, условие не ослаблено.
 
 Пока владелец работает в IDE, тяжёлые language/container suites не запускаем.
 Одно короткое plain-text native E2E подготовки допустимо без Cargo/LSP builds.
 
-**Последний результат — §229:** убраны оставшиеся sync Go/Delve subprocess из
+**Последний результат — §230:** Rust warmup больше не обходит штатное отключение
+сервера. Две проверки native state и запись в IDE Logs, без своего lifecycle
+manager. Initial/in-flight disable и повторное включение проверены настоящими
+Cargo/RA; вместе с enabled warmup, completion и DAP observer по5 selected PASS
+Windows/Ubuntu. Mac/physical и живой metadata cancel отдельно.
+
+**Предыдущий результат — §229:** убраны оставшиеся sync Go/Delve subprocess из
 DAP discovery. Explicit info с отсутствующим project SDK использует local Go
 и отвечает асинхронно; actual build/debug сохраняют свой toolchain. Target,
 passive edit и first/repeat debug — по3 selected PASS/ОС. Качественная натурная

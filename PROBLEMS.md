@@ -10,7 +10,19 @@
 
 Маршрут и приоритеты: [рабочий план nvim_forge](docs/IDE_ROADMAP.md).
 Для новых пунктов используем следующий свободный ID `IDE-xxx`; исходный
-симптом хранится здесь, этап и состояние — в плане. Следующий ID: `IDE-136`.
+симптом хранится здесь, этап и состояние — в плане. Следующий ID: `IDE-137`.
+
+## IDE-136 — ранняя подготовка возвращает отключённый Rust LSP
+
+2026-11-13, обзор IDE-080: после настройки LSP вызов
+`vim.lsp.enable('rust_analyzer', false)` не учитывался в forge.rust_project.
+Manual start обходил native enabled state; поздний Cargo ответ запускал
+настоящий сервер даже после отключения. §230 добавил две проверки native
+state: до metadata и перед start. Пропуск виден в IDE Logs, без нового manager.
+Windows/Ubuntu source2 RED → target2 + controls3 PASS на каждой ОС;
+повторное native enable запускает настоящий клиент. Mac/physical и отмена
+ещё живого metadata процесса остаются отдельными непроверенными сценариями.
+История: [FIXLOG §230](nvim_forge/FIXLOG.md#230-rust-подготовка-учитывает-штатное-отключение-lsp).
 
 ## IDE-135 — синхронный Go/Delve discovery при debug и явной информации
 

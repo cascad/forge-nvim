@@ -1,7 +1,8 @@
--- IDE-DAP-9: наблюдение настоящего Cargo и задержка только его готового ответа.
+-- IDE-DAP-9/IDE-RUST-3: настоящий Cargo, задержка только готового ответа.
 -- JSON/exit/stdout не подменяются; область — один manifest частного проекта.
 local M={}
-function M.arm(manifest)
+function M.arm(manifest,producer)
+  producer=producer or 'plugins/dap.lua'
   local target=vim.fs.normalize(assert(vim.uv.fs_realpath(manifest)))
   local function same(path)
     local value=vim.fs.normalize(path)
@@ -10,13 +11,13 @@ function M.arm(manifest)
   end
   local function matches(args)
     if type(args)~='table' or args[2]~='metadata' then return false end
-    -- LSP может вызвать такой же Cargo command; здесь нужен producer DAP.
-    if not debug.traceback('',2):find('plugins/dap.lua',1,true) then return false end
+    -- Одинаковый command может исходить из DAP, warmup или native root detection.
+    if not debug.traceback('',2):gsub('\\','/'):find(producer,1,true) then return false end
     for i,arg in ipairs(args) do if arg=='--manifest-path' then return same(args[i+1]) end end
     return false
   end
   local sync,async=vim.fn.system,vim.system
-  local report={manifest=target,sync_calls=0,async_calls=0,held=false,released=false,drained=false}
+  local report={manifest=target,producer=producer,sync_calls=0,async_calls=0,held=false,released=false,drained=false}
   local delivery
   vim.fn.system=function(args,...)
     if matches(args) then

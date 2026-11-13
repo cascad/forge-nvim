@@ -1640,3 +1640,17 @@ references3/editor10; это не whole regression. Native processes/scopes пр
 Для нового latency incident: nvim -l tests/diagnostics/rust-open-latency.lua
 сохраняет native Lazy profile + key/BufRead/FileType/LspAttach events. Script
 измерительный; результат его workflow не заменяет исходный FAIL.
+
+## IDE-RUST-3: штатное отключение Rust LSP
+
+`FORGE_RUST_CASE=IDE-RUST-3 nvim -l tests/e2e/rust-language.test.lua` выбирает
+initial disable/re-enable и disable до доставки metadata. В PowerShell сначала
+задать `$env:FORGE_RUST_CASE='IDE-RUST-3'`. Нужны прежние prepared Rust deps.
+Настоящие Cargo/RA/native enable; observer удерживает готовый ответ одного
+warmup и делегирует native start без подмены. Проверяется отсутствие metadata
+при initial disable и отсутствие start при позднем ответе, затем настоящий
+initialized клиент после повторного включения. Windows/Ubuntu source2 RED →
+target2 + enabled warmup1 + completion1 + DAP observer1 PASS/ОС (§230).
+Общий helper по умолчанию по-прежнему наблюдает plugins/dap.lua; control
+IDE-DAP-9 сохраняет native picker ABORT. Mac/physical отдельно. Удержание
+готового callback не доказывает остановку живого Cargo процесса.
