@@ -12156,3 +12156,23 @@ Raw .tests/rust-debug-async-* и guest .tests/ubuntu/rust-debug-async-*;
 audit rust-debug-async-audit.json.67 pins/6 backports16 files/SDK прежние,
 append-only journals, staged только этот срез. Натурные gates не блокируют
 следующие самостоятельные пункты по решению владельца.
+
+
+## 228. Обзор Comment.nvim: сохранить явный block toggle
+
+2026-11-13, IDE-080. Поведение не менялось; это завершённое сравнение кандидата.
+
+**Проблема.** Comment.nvim частично дублирует штатный gc/gcc Neovim.
+**Причина/граница.** Native defaults/_comment и :help commenting используют
+один commentstring с Treesitter context. Go/Rust/JS defaults //, SQL --.
+Comment.nvim e30b7f2 даёт отдельные line/block pairs и gb/gbc; Python/Bash
+не получают искусственных block comments. Native gc умеет delimiters из
+commentstring, но отдельного выбора line/block вместо gb не предоставляет.
+**Решение.** Сохранить плагин и действующие Ctrl_/Ctrl/ n/x/i, RU aliases.
+Собственный block operator/временный commentstring glue ради удаления plugin
+добавлять нецелесообразно. Подменять весь native комментарий private API тоже.
+**Проверка/вывод.** Статическое чтение pinned SDK74aff15b runtime/doc и plugin
+source/config/keymaps. GUI/RU/EN behavior не прогонялся и PASS не объявляется;
+runtime/lock/SDK не менялись. Отдельного E2E для изменения нет: изменения нет.
+**Файлы.** FEATURE_REVIEW/roadmap/HISTORY/AGENT_COMMANDS; выбор кандидата закрыт,
+остальные конкретные направления обзора сохраняются. Натурные проверки позже.

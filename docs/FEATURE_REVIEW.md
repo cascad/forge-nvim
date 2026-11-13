@@ -306,8 +306,8 @@ compatibility regression новых версий ещё нужен. Ни оди�
 1. Breadcrumbs navic/barbecue, Satellite, Glance, dashboard/recents — сравнить
    удобство без них, количество отдельных UI и собственных защитных hooks.
    Это кандидаты, а не уже одобренные удаления.
-2. Comment.nvim и другие небольшие editor helpers — сравнить со штатными
-   возможностями закреплённого Neovim, включая RU/EN mappings и block comments.
+2. Comment.nvim: сравнение §228 завершено, сохранить explicit line/block.
+   Остальные небольшие helpers рассматривать по их действующим возможностям.
 3. Neo-tree/Edgy/DAP/ide lifecycle — искать повторное владение окнами и обходы
    соседнего слоя. Переносить код по папкам без уменьшения ответственности не цель.
 4. Tools/root/interpreter selection — найти одинаковые политики, а не просто
@@ -514,7 +514,7 @@ Ubuntu 9265858326624/9281597222561/9295146798511. В каждом source diagnos
 | Breadcrumbs/ruler | Сохранить navic + barbecue + Satellite — выбор владельца 2026-11-13 | Полезны строка текущего контекста и карта файла; дальнейший refactor сохраняет эти функции |
 | Git/DAP/panel ядро | Gitsigns + Neogit + Diffview, state/registry + DAP UI + Edgy, guard | Сокращать только дублирующие правила, не разные рабочие роли |
 | Alpha/project/persistence | Folder/recents/session workflows | Сначала native restart/restore coverage, затем оценка цены удаления/упрощения |
-| Comment.nvim и вторичные helpers | Line/block comments и RU/EN keys | Сравнение со штатным Nvim, без потери block/context действий ради минус одного plugin |
+| Comment.nvim | Сохранить line/block comments и RU/EN keys | §228: native gc использует один commentstring; explicit gb/gbc потребует собственного glue, удаление не оправдано |
 | SQLLogicTest | SQL queries/schema/format и Tests остальных языков | Отдельно решить нужность SQL assertion runner/SDK; не удалять рабочий SQL вместе с ним |
 | Временные patches/Windows SDK | Проверенные исправления и portability | Снимать только после native equivalent regression на готовом upstream |
 
@@ -604,3 +604,16 @@ SDK/pins/patches прежние. Это устранение блокирующ�
 PASS. Натурные проверки отложены владельцем и не являются стопом очереди.
 Новый native quit artifact остаётся IDE-121; idle-only PASS не доказывает
 выход активного compiler. Точные границы — change verification/FIXLOG227.
+
+
+## Comment.nvim и native comments — 2026-11-13
+
+§228: сохранить Comment.nvim. В закреплённом Neovim defaults задают gc/gcc,
+комментирование использует commentstring и Treesitter context. Go/Rust/JS
+имеют //, SQL --. Native умеет парные delimiters при таком commentstring,
+но не даёт отдельного выбора explicit line/block. Existing Comment.nvim
+имеет gb/gbc, пары line/block и API для Ctrl+/ в Normal/Visual/Insert; Python/
+Bash остаются line-only. Удаление потребовало бы собственного переключателя
+commentstring/operator и новой матрицы; такое усложнение не оправдано.
+Вывод из pinned runtime/defaults/_comment/doc и plugin ft/config, не из LOC.
+Runtime/lock не менялись; GUI и RU/EN behavioral результат не заявляется.

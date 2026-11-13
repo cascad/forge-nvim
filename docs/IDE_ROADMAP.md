@@ -37,7 +37,11 @@ worktree IDE-038/048 ждут нового воспроизведения. Пр�
    прежнего cwd даёт ABORT. Windows/Ubuntu source2 RED → target2 + настоящий
    debug control1 PASS, held input40/8ms. Нет нового backend/cache/framework.
    Native Mac/рабочий проект отложены; прежний quit IDE-121 остаётся открытым.
-5. Затем вернуться к оставшейся очереди ниже. IDE-048 probe остановился раньше
+5. IDE-080 / §228 — сравнение Comment.nvim со штатным gc завершено. Плагин
+   сохраняется: explicit line/block и действующие Ctrl+/ RU/EN; собственного
+   block operator ради удаления dependency не добавляем. Статический review,
+   новых behavioral PASS здесь нет. Продолжать другие конкретные наслоения.
+6. Затем вернуться к оставшейся очереди ниже. IDE-048 probe остановился раньше
    remove: RPC timeout/forced native cleanup класса IDE-047, raw26364912087090
    сохранён; отмена Gitsigns этим запуском не подтверждена, условие не ослаблено.
 

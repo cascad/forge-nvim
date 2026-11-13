@@ -8410,3 +8410,16 @@ SDK/frozen/prefix guards. Control Windows не повторяли после п�
 новых tests; runtime один и тот же. Guest script UTF-8/LF, ready image,
 network none, Win/Linux serial без lifecycle/download/build image. Temp F.
 Перед commit — exact allowlist и staged journals startswith HEAD blobs.
+
+
+## 136. Статическое сравнение Comment.nvim и native comments
+
+2026-11-13, FIXLOG228. Get-Content/rg: plugins/editor.lua, config/keymaps.lua,
+config/ru_keys.lua, Comment.nvim README/ft.lua; SDK runtime/lua/vim/_comment.lua,
+_core/defaults.lua, doc/various.txt:commenting, ftplugin go/rust/javascript/sql.
+rg --files runtime нашёл defaults после отсутствующего прежнего пути. Lock
+Comment.nvim e30b7f2008e52442154b66f7c519bfd2f1e32acb; SDK74aff15b, оба прежние.
+Вывод только статический: сохранить explicit line/block без своего operator.
+Никаких новых SDK/plugin installs, containers, поведенческих тестов или изменений
+live IDE. Python проверил frozen hashes, appended journals, staged exact docs;
+git diff --check / git diff --cached --check и commit. Temp/Python UTF-8 на F.
