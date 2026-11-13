@@ -36,7 +36,17 @@ refactor сохраняет эти функции. SQL references ждут го�
 источник и фильтры проекта, в том числе при всех скрытых окнах. Windows10
 selected PASS/Ubuntu10 PASS; прежние Files/project/legacy сохранены. Один
 sidecar/session backend, без возобновления процессов. Следующий срез —
-Outline/Tests, затем доступное сохраняемое состояние console/debug.
+Outline завершён первым срезом (§219): открытость/ширина и native symbols/follow,
+Windows6 PASS/Ubuntu6 PASS вместе с Files/Logs/Outline focus. Далее Tests и
+размеры console/debug по принятому ниже решению владельца.
+
+Решение владельца 2026-11-13: Terminal/Debug после полного перезапуска
+скрыты до явного открытия/запуска; тогда применяется сохранённый размер.
+Новые shell/debug процессы восстановление сессии не запускает. Реализация
+этого поведения — следующий отдельный пункт, пока не объявлена готовой.
+Tests: первым срезом native открытость/геометрия. У Neotest есть open/close/
+expand/target, но нет public getter полного состояния раскрытий; private
+summary internals не сериализуем и собственный parser дерева не добавляем.
 
 Один ограниченный пункт → изменения → один прогон нужных тестов → отчёт и
 commit при успехе. Затем самостоятельно следующий пункт. Остановка — по
@@ -101,8 +111,8 @@ Windows/macOS/Ubuntu — целевые ОС; натурные проверки 
 
 | ID | Кейс | Текущая точка |
 |---|---|---|
-| WF-01 | Открыть проект и восстановить рабочее место | Files и Logs Windows/Ubuntu selected10 PASS (§218), tabs/height/scroll/filters/меньший UI. Старый source IDE-117 не закрыт; Outline/Tests/console/debug и Mac открыты |
-| WF-02 | Перейти в другой репозиторий и вернуться | Files и Logs A→B→A Windows/Ubuntu PASS (§218), скрытая панель и filters проекта. Остальные панели/Mac открыты |
+| WF-01 | Открыть проект и восстановить рабочее место | Files/Logs (§218), Outline visibility/width/native follow (§219): Windows/Ubuntu6 selected PASS. Tests/console/debug и Mac открыты; старый IDE-117 не закрыт |
+| WF-02 | Перейти в другой репозиторий и вернуться | Files/Logs/Outline A→B→A Windows/Ubuntu PASS (§218–219), hidden panels и filters проекта. Tests/console/debug/Mac открыты |
 | WF-03 | Управлять файлами через дерево | Create/rename/move/copy/delete/filter проверялись; единый цикл и сохранение вида дерева входят в приёмку |
 | WF-04 | Работать в проекте со смесью языков | 6 native roots/cwd + Node script/Python venv debug Windows (§209–210); полная mixed matrix/Mac открыты |
 | WF-05 | Запустить файл или конкретный debug-кейс | Cargo/Go.work есть; mixed Node script и Python default из nested venv Windows/Ubuntu (§209–211) |

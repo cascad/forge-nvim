@@ -72,6 +72,17 @@ winrestview и public Edgy resize, refresh сохраняет виды суще�
 новых managers/timers/процессов/plugins/SDK/backports нет. Windows/Ubuntu по10
 selected PASS. Остальные панели WF-01 и Mac/physical открыты.
 
+2026-11-13, §219: optional tab.outline сохраняет открытость/ширину. Native
+Aerial возвращает настоящие symbols/follow по code cursor; arbitrary scroll/
+folds не подменяются. Одинаковый resize вынесен из Logs.restore_view в один
+session_views local helper, который использует уже общий activities.find_window.
+Табличная последовательность двух native tools сохраняет Files→Outline→Logs
+и code focus. Нового module/state manager/provider/backport нет. Цена — один
+optional view и общий resize вместо двух копий. Windows/Ubuntu по6 selected
+PASS. У Tests public summary нет полного snapshot раскрытий; private internals
+и собственный renderer не добавлять. Terminal/Debug deferred sizes выбран
+владельцем: restore не запускает процессы, реализация следующим пунктом.
+
 ## Актуальный выбор после Files, Logs и frame pilot — 2026-11-11
 
 Source e00bcea. Выполнено: Files §180–181, обязательные Logs §182 и рабочий

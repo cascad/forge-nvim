@@ -16,8 +16,17 @@ Logs сохраняет видимость/высоту/scroll по tabs и об
 новые PID. Меньший UI42→29 адаптирует высоту18→12. Только данные представления,
 процессы не возобновляются. Mac/physical и остальные панели WF-01 открыты.
 
-Следующий срез — Outline/Tests через готовые API, затем доступное сохраняемое
-состояние console/debug. Прежний обзор ниже — исходная точка до этих изменений.
+Outline visibility/width реализован §219: native AerialOpen показывает символы
+восстановленного файла и сохраняет прежний follow, arbitrary browsing scroll/
+folds не переопределяются. Общий scheduled Edgy dimension helper теперь в
+session_views для Outline/Logs; новых module/controller нет. Windows/Ubuntu6
+selected PASS, включая прежние Files/Logs и3 Outline focus controls.
+
+Следующий срез — Tests visibility/geometry; public summary API не даёт snapshot
+раскрытых узлов. Private structures не сериализуем. Решение владельца: после
+полного restart Terminal/Debug скрыты до явного открытия/запуска, затем вернуть
+сохранённый размер; не создавать shell/debug из session restore. Эта реализация
+ещё впереди. Прежний обзор ниже — исходная точка до выполненных изменений.
 
 ## WF-01/02: текущая граница восстановления — 2026-11-12
 

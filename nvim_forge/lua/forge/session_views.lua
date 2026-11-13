@@ -1,4 +1,4 @@
--- spec: IDE-PANEL-25/IDE-LOG-5. Данные native views, не копии окон/процессов.
+-- spec: IDE-PANEL-25/26/IDE-LOG-5. Данные native views, не копии окон/процессов.
 local M = {}
 local captured
 
@@ -12,13 +12,31 @@ local function data_file(session)
     return vim.fn.stdpath('state') .. '/forge-session-views/' .. vim.fn.sha256(path) .. '.json'
 end
 
+local function restore_window(ft, view, dimension, done)
+    local win = require('ide.activities').find_window(ft, function(_, w)
+        return vim.api.nvim_win_get_config(w).relative == ''
+    end)
+    local buf = win and vim.api.nvim_win_get_buf(win)
+    vim.schedule(function()
+        local ok, err = pcall(function()
+            assert(win and vim.api.nvim_win_is_valid(win) and vim.api.nvim_win_get_buf(win) == buf, 'Session view window changed')
+            local edge = assert(require('edgy').get_win(win), 'Session view is not registered in Edgy')
+            local extent = dimension == 'width' and 'columns' or 'lines'
+            local size = math.max(1, math.floor(view[dimension] * math.min(1, vim.o[extent] / view[extent]) + 0.5))
+            edge:resize(dimension, size - vim.api['nvim_win_get_' .. dimension](win))
+            if view.view then vim.api.nvim_win_call(win, function() vim.fn.winrestview(view.view) end) end
+        end)
+        done(not ok and err or nil)
+    end)
+end
+
 function M.capture()
     captured = nil
     local snapshot = {}
     local logs = package.loaded['forge.logs']
     if logs then snapshot.logs = { source = logs.source, minimum = logs.minimum, query = logs.query } end
     for _, tab in ipairs(vim.api.nvim_list_tabpages()) do
-        local item = { files = false, logs = false }
+        local item = { files = false, logs = false, outline = false }
         for _, win in ipairs(vim.api.nvim_tabpage_list_wins(tab)) do
             local buf = vim.api.nvim_win_get_buf(win)
             if vim.bo[buf].filetype == 'neo-tree' and vim.b[buf].neo_tree_source == 'filesystem'
@@ -40,6 +58,8 @@ function M.capture()
                     view = vim.api.nvim_win_call(win, vim.fn.winsaveview),
                     height = vim.api.nvim_win_get_height(win), lines = vim.o.lines,
                 }
+            elseif vim.bo[buf].filetype == 'aerial' and vim.api.nvim_win_get_config(win).relative == '' then
+                item.outline = { width = vim.api.nvim_win_get_width(win), columns = vim.o.columns }
             end
         end
         snapshot[tab] = item
@@ -56,7 +76,7 @@ function M.save()
         local data = { version = 1, session_hash = fingerprint(session), tabs = {}, logs = snapshot.logs }
         -- Cleanup может закрыть tabpage, где не было файлов кода.
         for _, tab in ipairs(vim.api.nvim_list_tabpages()) do
-            data.tabs[#data.tabs + 1] = snapshot[tab] or { files = false, logs = false }
+            data.tabs[#data.tabs + 1] = snapshot[tab] or { files = false, logs = false, outline = false }
         end
         local file = data_file(session)
         vim.fn.mkdir(vim.fs.dirname(file), 'p')
@@ -101,6 +121,10 @@ function M.restore(done)
                 if type(logs.view[field]) ~= 'number' then return false end
             end
         end
+        local outline = item.outline
+        if outline ~= nil and outline ~= false and (type(outline) ~= 'table'
+            or type(outline.width) ~= 'number' or outline.width < 1
+            or type(outline.columns) ~= 'number' or outline.columns < 1) then return false end
     end
     if data.logs then
         local logs = require('forge.logs')
@@ -130,16 +154,24 @@ function M.restore(done)
                 local code = vim.api.nvim_get_current_win()
                 local ide = require('ide')
                 ide.hide('explorer')
+                local tools = {
+                    { id = 'outline', ft = 'aerial', view = item.outline, dimension = 'width' },
+                    { id = 'logs', ft = 'forge-logs', view = item.logs, dimension = 'height' },
+                }
+                local tool_index = 0
                 local function after_files(err)
                     if err then advance(err); return end
+                    tool_index = tool_index + 1
+                    local tool = tools[tool_index]
+                    if not tool then advance(); return end
                     local opened, why = pcall(function()
-                        -- nil — прежний Files-only snapshot; false — явно скрытый Logs.
-                        if item.logs ~= nil then ide.hide('logs') end
-                        if type(item.logs) == 'table' then
-                            ide.show('logs', { focus = false })
-                            require('forge.logs').restore_view(item.logs, advance)
+                        -- nil — прежний snapshot; false — явно скрытая панель.
+                        if tool.view ~= nil then ide.hide(tool.id) end
+                        if type(tool.view) == 'table' then
+                            ide.show(tool.id, { focus = false })
+                            restore_window(tool.ft, tool.view, tool.dimension, after_files)
                         else
-                            advance()
+                            after_files()
                         end
                         if not finished and vim.api.nvim_win_is_valid(code) then vim.api.nvim_set_current_win(code) end
                     end)

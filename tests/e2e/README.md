@@ -1532,3 +1532,17 @@ Windows controls9 один раз на итоговом runtime, затем ис
 fixture нового case и выполнен он один. Ubuntu10 одним script. Первый source
 RED и target fixture FAIL сохранены; Mac/physical отдельно. Готовых Editor deps
 достаточно; нет новых SDK/build/network/Docker lifecycle требований.
+
+
+## Сессия Outline — IDE-PANEL-26
+
+`<nvim> -l tests/e2e/session-outline-view.test.lua`: встроенный Lua Tree-sitter,
+реальные50 functions/Aerial,2 вкладки, quit/relaunch и A→B→A, hidden и меньший
+UI. Никаких LSP/backend mocks/parser downloads;6 native child PID, session/
+sidecar/source/lifecycle/shutdown сохранены. Проверяются открытость/ширина и
+symbols, прежний native follow не заменён arbitrary saved scroll/folds.
+
+Windows/Ubuntu по6 selected PASS одним script на OS: новый1 + Files1 + Logs1 +
+Outline focus3. Source Windows0/1 до runtime сохранён. Mac/physical отдельно.
+Общие Edge resize и native view теперь находятся в session_views, plugin pins
+и SDK прежние. Это не закрывает Tests/console/debug или весь WF-01.

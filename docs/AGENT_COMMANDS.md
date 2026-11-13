@@ -7989,3 +7989,42 @@ raw journal prefixes .tests/logs-session-prefix.json. Registry index — HEAD +
 только session-logs-view row, frozen2 rows остаются working copy. Русская
 формулировка предыдущего Bash verification и append-only Speka уточнение217,
 новая история218; exact allowlist/index-prefix/diff/strict, no push.
+
+
+## 127. Outline geometry через native сессию
+
+2026-11-13, F:/repo/forge-nvim, PowerShell login=false. Host TEMP/TMP/TMPDIR/
+NVIM_LOG_FILE на F:. Python UTF-8, npm cacheF:/forge-nvim-tmp/npm-cache.
+OpenSpec restore-outline-session-view root/proposal/spec/design/tasks/apply
+ready, IDE-PANEL-26 delta до runtime. Прочитаны Aerial API/source и Neotest
+summary public/private границы; новый provider или tree snapshot не внедрён.
+
+```powershell
+& .tools/neovim/windows-x64/bin/nvim.exe -l .tests/check-lua-outline-sdk.lua
+& .tools/neovim/windows-x64/bin/nvim.exe -l tests/e2e/session-outline-view.test.lua
+& .tools/neovim/windows-x64/bin/nvim.exe -l tests/e2e/session-files-view.test.lua
+& .tools/neovim/windows-x64/bin/nvim.exe -l tests/e2e/session-logs-view.test.lua
+& .tools/neovim/windows-x64/bin/nvim.exe -l tests/e2e/outline-focus.test.lua
+docker compose -f tests/containers/compose.yaml run --rm --no-deps --pull never --entrypoint bash -e GOMAXPROCS=2 -e GOFLAGS=-p=2 -e GOTOOLCHAIN=local -e CARGO_BUILD_JOBS=2 ubuntu /workspace/.tests/session-outline-20261113.sh
+python -B .tests/audit-session-outline.py
+npx.cmd --yes @fission-ai/openspec@1.13.2 validate restore-outline-session-view --type change --strict --no-interactive
+git diff --check
+```
+
+Source Windows24005408657800 RED: после relaunch оба Outline скрыты. Target
+Windows24205071681000 и Ubuntu main PASS,6 checks/6 native profiles каждой ОС.
+Controls: Files1/Logs1/Outline focus3; source и target по разу, runtime больше
+не менялся. Raw .tests/session-outline-source-windows и target-{windows,ubuntu},
+audit JSON, code/sidecar/lifecycle/native host preserved. Меньший UI140→106,
+width40→32,6 разных child PID, настоящий Lua parser/functions, code cursor35.
+Новых LSP/SDK/tools/download/build нет. Docker/WSL lifecycle не затронут.
+
+Baseline .tests/outline-session-prefix.json: raw journals append-only/frozen5/
+registry/lock/backports/SDK exact. Registry staged из HEAD083de13 + только
+session-outline row; frozen2 строки остаются working copy. Все Python read/
+write UTF-8, shell scripts LF. Exact allowlist/index-prefix/diff/strict,
+никаких tests/run.lua/catalog правок или remote push.
+
+Получен реальный UX выбор владельца: Terminal/Debug после restart скрыть до
+явного открытия/запуска и тогда применить saved size; не создавать фоновые
+shell/debug при restore. Решение записано в roadmap/review, пока без реализации.

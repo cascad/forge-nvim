@@ -11686,3 +11686,60 @@ verification приведён к русскому языку без смены �
 **Файлы.** session_views rename, Logs view restore/refresh,3 Persistence require,
 native E2E/registry, OpenSpec, guides/review/roadmap/history/commands. Journals
 append-only, frozen drafts exact, isolated staging; commit без push.
+
+
+### 219. Outline: открытость и ширина в проектной сессии
+
+**Связь:** WF-01/02, change restore-outline-session-view.
+Спека: IDE-PANEL-26 (ADDED).
+**Результат:** Windows6 PASS/Ubuntu6 PASS, по6 native profiles exit0/signal0/
+APIerrors[]/hard_kill=false/scope empty; Mac/physical отдельно.
+
+**Что было.** После Files/Logs открытый вместо Files Outline пропадал. Source
+24005408657800 RED: после quit/relaunch оба Outline закрыты. До quit показаны
+50 настоящих Lua functions в каждом файле, width40/36. Наличие панели на старте
+не эмулируется runtime fixture или mock provider.
+
+**Причина/изменение.** SavePre cleanup удаляет tool windows из mksession,
+а sidecar ещё не содержит Outline. Добавлен optional tab.outline=false либо
+width/columns в прежнем version1/hash/tab-order JSON; nil оставляет старые
+данные совместимыми. Capture снимает только видимость/геометрию, не symbols.
+Native AerialOpen возвращает символы восстановленного code buffer, штатное
+centering/follow не меняется. Произвольный browsing scroll/folds этим срезом
+не сохраняется и не заявляется. Своих provider/tree parser не добавлено.
+
+Общая scheduled процедура Edgy dimension/optional winrestview перенесена из
+Logs.restore_view в session_views local helper. Она использует уже общий
+activities.find_window, проверяет то же окно/буфер, public resize и callback.
+После Files идут два native tools Outline→Logs, затем следующая вкладка/code
+focus. Новых module/controller/timer/private state patches нет. Window symbols
+готовит существующий provider, а не копия buffer из старой сессии.
+
+**Проверка/e2e.** Новый PTY case: A first.lua/second.lua и B first.lua с50
+functions из встроенного Lua Tree-sitter, два tab widths, quit→новый PID→Space qs,
+code cursor35 и focus, hidden tab, A→B→A, меньший UI140→106/width40→32. Всего6
+разных native backend PID. Symbols каждой вкладки соответствуют её файлу.
+Никаких LSP/parser downloads для нового case; прежние Go Outline controls
+используют ready gopls. Final Windows24205071681000 и Ubuntu main из target-ubuntu.
+
+На каждой ОС один script: new1 + Files1 + Logs1 + Outline focus3 =6 PASS.
+Source RED не переписан, unchanged green retry нет. Audit .tests/session-outline-
+audit.json проверяет source/native shutdown/scope/host/JSON/actual views и
+позволяет отличить новую геометрию от полного сохранения произвольного scroll.
+Raw .tests/session-outline-source-windows, target-windows/target-ubuntu.
+
+**Вывод/границы.** Можно вернуть native видимость/ширину без второго layout
+owner и без вмешательства в follow.67 pins/6 plugin dependencies16 files и
+nvim SDK SHA прежние. Docker existing imagef63a05ca/network none, без build/
+download/Desktop/WSL lifecycle. Mac/physical/Tests и весь WF-01 ещё открыты.
+Старые IDE-117/121/124 этим selected PASS не закрыты.
+
+**Следующее решение владельца.** Terminal/Debug после полного restart скрыты
+до явного открытия/запуска, затем применять сохранённый размер. Session restore
+не должен запускать новые shell/debug процессы. Решение принято, реализация
+следующая. Native Tests summary имеет open/expand/target, но нет public getter
+снимка всех раскрытий; private internals/свой renderer не добавлять.
+
+**Файлы.** session_views/Logs helper move, native E2E/registry, OpenSpec и
+product guides/roadmap/history/commands. Prefix journals/frozen drafts exact,
+изолированный index, commit без push.
