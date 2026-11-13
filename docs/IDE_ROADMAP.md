@@ -11,9 +11,10 @@ IDE-001 параллельно ждёт диагностических данн�
 
 1. IDE-130 — первый запуск установленного профиля: восстановить plugins из
    lock, явно подготовить все6 backports, проверить native Files/Tests/Debug.
-   User cache исправлен offline, инструкция исправлена. Target открывает Files/
-   Tests, но полный case FAIL при открытии Locals (IDE-133, общий60s watchdog).
-   Native gate остаётся открытым; воспроизведение и артефакты — FIXLOG222.
+   User cache исправлен offline, инструкция исправлена. §226 завершил native
+   gate: legacy3 даёт точную config ERROR Neo-tree, all открывает Files/Tests/
+   Locals без ERROR/install/adapter/patch writes. Source RED → target PASS на
+   Windows/Ubuntu. Исторический timeout IDE-133 с неизвестной причиной сохранён.
 2. IDE-131 — Rust: cargo check без обязательного Clippy исправлен §223,
    Windows/Ubuntu source1 RED → target1 + control1 PASS. Ранний native warmup
    теперь реализован §224: до первого Rust-файла, тот же client ID; selected16
@@ -32,7 +33,13 @@ IDE-001 параллельно ждёт диагностических данн�
 Пока владелец работает в IDE, тяжёлые language/container suites не запускаем.
 Одно короткое plain-text native E2E подготовки допустимо без Cargo/LSP builds.
 
-**Последний результат — §225:** ручное раскрытие Files теперь читает каталог
+**Последний результат — §226:** постоянный регресс полной подготовки профиля
+завершён: шесть исходных payloads → all/check → Files/Tests/Locals. Windows/
+Ubuntu по legacy1 RED с точной ошибкой владельца → target1 PASS; native hooks
+выключены, SDK/pins/deadlines прежние. Старый обрыв Locals не повторился,
+причина не установлена; отдельный инцидент IDE-133 сохранён.
+
+**Предыдущий результат — §225:** ручное раскрытие Files теперь читает каталог
 асинхронно средствами Neo-tree. Source dc23a30 RED на sync opendir, target
 scan-order8 + filter2 PASS на Windows и Ubuntu; ввод до окончания чтения
 113/12ms.22 final native profiles штатно завершены, SDK/pins/backports прежние.

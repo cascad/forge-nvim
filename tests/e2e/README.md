@@ -97,6 +97,22 @@ late Problems focus RED сохранены. [Пользовательские к
 Выбранные source/tail профили не заменяют full suite или Mac/physical GUI;
 итоговые результаты — verification change add-ide-log-console.
 
+IDE-BOOT-1 (§226), полный setup профиля:
+
+```powershell
+$env:FORGE_TEST_ID='IDE-BOOT-1'
+& .tools/neovim/windows-x64/bin/nvim.exe -l tests/e2e/plugin-backports.test.lua
+$env:FORGE_TEST_ID=$null
+```
+
+Тест начинает с исходных6 payloads в private profile, применяет общий public
+applier и открывает Files/Tests/Locals. Проверяет ERROR/install/adapter/patch
+writes; сохраняет startup-stages.jsonl. FORGE_PLUGIN_STAGE_TRACE=1 дополнительно
+включает native events/Locals capture; в final PASS hooks выключены.
+FORGE_PLUGIN_PREPARE_LEGACY=1 — намеренно красный source прежней инструкции:
+точная native config ERROR Neo-tree. На Windows/Ubuntu source1 RED → target1
+PASS; Mac/physical и исторический IDE-133 отдельно, full suite не заявлен.
+
 IDE-FILE-5/6: `nvim -l tests/e2e/file-scan-order.test.lua`,8 native cases.
 §225 добавляет manual expansion → native async IO held → Code/input →
 release/open/write. Source dc23a30 использует sync opendir и RED; target
@@ -707,7 +723,7 @@ shell/process/clipboard и подготовке VM. Крупные sleep, пер
 | IDE-008, Outline и IDE-015 | Открыть слева → найти/раскрыть символ → перейти в код → вернуться; Explorer/файлы/zoom и pending callbacks | `outline.test.lua`: 6 real Aerial E2E Windows/Ubuntu PASS; Mac/GUI и остальные языковые backend открыты |
 | IDE-009/049, панели | Общий focus/hide/help/zoom, Go summary/output, running task и query/selected search result | `work-panels.test.lua`: 6 UI E2E Windows/Ubuntu PASS; ранее Debug/Outline/Neo-tree/Neogit; Mac/GUI и terminal/Trouble открыты |
 | Базовое ядро редактора | Запуск, открыть/изменить/сохранить, дерево, имя/содержимое, буферы, фокус | `editor.test.lua`: Windows и Ubuntu PASS; Mac ждёт прогона |
-| IDE-BOOT-1/2 | Старт без установки инструментов, отсутствие предупреждения Go в .txt | `editor.test.lua`: Windows и Ubuntu PASS; Mac ждёт прогона; наличие gopls в Windows не фиксируется, отсутствие подтверждено в Ubuntu |
+| IDE-BOOT-1/2 | Старт без установки инструментов, отсутствие предупреждения Go в .txt | `editor.test.lua`: Windows и Ubuntu PASS; §226 `plugin-backports.test.lua` проверяет исходные6 payloads → all → Files/Tests/Locals; Mac ждёт прогона |
 | IDE-016–019, управление файлами | Создать/переименовать/переместить, cut/paste, отмена/конфликт, сохранённые буферы, общий маршрут/selector/zoom | `file-explorer.test.lua`: 7 real editor E2E; границы и результаты ниже |
 | Git/worktree | Локальный bare remote → worktree → изменение → commit/push; hunks/diff/history; rejected/missing remote → retry | `git-workflow.test.lua`: 6 real editor E2E; `git-errors.test.lua`: 3 UI (IDE-GIT-10/12) + parser matrix 10 строк; `git-conflicts.test.lua`: 4 IDE-GIT-11; `diffview-close.test.lua`: 7; `worktree-refresh.test.lua`: 3; `active-worktree.test.lua`: 2 IDE-GIT-7; `gitsigns-worktree.test.lua`: 2 IDE-GIT-8; `gitsigns-live-read.test.lua`: CLI + 3 UI IDE-GIT-9; `plugin-backports.test.lua`: 9, включая настоящий Lazy build/отсутствие записи при открытии Git/файла, обновление предыдущего payload и отказ на неизвестный companion до записи. Sequence3 (IDE-GIT-13) и HTTP credentials2 (IDE-GIT-14) проверены Windows/Ubuntu; real OAuth/SSH/Mac отдельно; IDE-043 исправляет OSC output |
 | Тестовый runtime IDE-030 | Реальное завершение редактора, сохранение артефактов, удаление своего профиля и отказ по чужому маркеру | `editor-runtime.test.lua`: 4 сценария, включая ошибку prepare и временный file lock внешнего процесса; `dap-output.test.lua` проверяет фактический go env GOCACHE |

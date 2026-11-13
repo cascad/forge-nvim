@@ -8330,3 +8330,42 @@ helper, native exit0/signal0/API[]/scope0 и frozen .tests/tree-async-prefix.jso
 Guest script UTF-8/LF, ready engine/image прежние, network none/private overlay,
 без lifecycle/build/download. Никаких новых SDK/pins/backports. Mac/большой
 проект и IDE-133 остаются открыты. Exact allowlist/prefix guards перед commit.
+
+
+## 134. Полный setup: Files / Tests / Locals, source и target
+
+2026-11-13; FIXLOG226, change verify-plugin-profile-preparation. PowerShell
+-NoProfile из F:/repo/forge-nvim; TEMP/TMP/TMPDIR/NVIM_LOG_FILE в .tests/tmp
+на F, npm cache F:/forge-nvim-tmp/npm-cache, Python UTF-8.
+
+Чтение: git status/diff, rg по DAP/controls и editor driver, Get-Content старого
+shutdown/quit trace/screen и OpenSpec/плана. Ничего не менялось в live user IDE.
+Go probes находятся на adapter launch, их связь с прежним Locals FAIL не
+доказана. Per-stage test capture добавлен вместо повторения общего набора.
+
+```powershell
+npx.cmd --yes @fission-ai/openspec@1.13.2 list --json
+npx.cmd --yes @fission-ai/openspec@1.13.2 instructions apply --change verify-plugin-profile-preparation --json
+$env:FORGE_TEST_ID='IDE-BOOT-1'
+& .tools/neovim/windows-x64/bin/nvim.exe -l tests/e2e/plugin-backports.test.lua
+# Первый observed variant с native capture: startup-stage-observed.txt.
+# Final source с FORGE_PLUGIN_PREPARE_LEGACY=1: startup-stage-legacy.txt;
+# final target после очистки этой переменной: startup-stage-target.txt.
+# FORGE_PLUGIN_STAGE_TRACE не задан: native hooks выключены в обоих final.
+docker version --format '{{.Server.Version}}'
+docker compose -f tests/containers/compose.yaml run --rm --no-deps --pull never --entrypoint bash ubuntu /workspace/.tests/startup-stage.sh > .tests/startup-stage-ubuntu.txt 2>&1
+python -B .tests/audit-startup-stage.py
+python -B .tests/record-startup-stage.py
+npx.cmd --yes @fission-ai/openspec@1.13.2 validate verify-plugin-profile-preparation --type change --strict --no-interactive
+git diff --check
+git diff --cached --check
+```
+
+Один final source и target на ОС, по1 RED/1 PASS. Source ERROR точный, target
+all/check6/16 → panels/native0/0. Audit проверяет config/test bytes, hashes,
+commands/notifications/stages/native exits/scope и frozen/prefix guards.
+Первое требование audit о nonzero source process exit отвергнуто Ubuntu0/0:
+данные config ERROR уже есть, E2E не повторяли. Новых runtime/SDK/deadline
+изменений нет. Старый IDE-133 cause неизвестен. Ready Docker/private overlay,
+UTF-8/LF guest script, serial Win/Linux без lifecycle/build/download. Temp F.
+Перед commit — exact allowlist и staged journals startswith HEAD blobs.

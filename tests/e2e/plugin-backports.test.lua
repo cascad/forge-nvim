@@ -343,4 +343,109 @@ T.check('IDE-FILE-5 unknown Neo-tree companion preserves primary',function()
     for _,item in ipairs(files) do T.eq(bytes(item.path),item.raw) end
   end)
 end)
+T.check('IDE-BOOT-1 полный setup исходных plugins открывает Files Tests Locals без config ERROR',function()
+  local e
+  local started=vim.uv.hrtime()
+  local prepared_files={}
+  local setup=root..'/.tests/plugin-first-open-setup/'..tostring(vim.uv.hrtime())
+  vim.fn.mkdir(setup,'p')
+  local function stage(name,fields)
+    local row={stage=name,ms=(vim.uv.hrtime()-started)/1e6,loop_ms=vim.uv.now(),fields=fields}
+    local f=assert(io.open(setup..'/stages.jsonl','ab'));assert(f:write(vim.json.encode(row)..'\n'));assert(f:close())
+  end
+  stage('setup.begin')
+  local commands={}
+  local function prepare(applier,data,name)
+    -- Тот же public applier, который вызывают CLI и Lazy build. Внешний CLI
+    -- проверяется отдельно; здесь подготовка не создаёт вложенный SDK process.
+    stage('apply.begin',{plugin=name or '*'})
+    local result=name and {[name]=applier.run(name,data..'/'..name,'apply')} or applier.all(data,'apply')
+    commands[#commands+1]={plugin=name or '*',result=result}
+    vim.fn.writefile({vim.json.encode(commands)},setup..'/commands.json')
+    stage('apply.end',{plugin=name or '*'})
+    return result
+  end
+  local ok,err=xpcall(function()
+    e=require('editor').start(root,{prepare=function(_,env)
+      stage('profile.copied')
+      local data=env.XDG_DATA_HOME..'/nvim_forge'..(vim.fn.has('win32')==1 and '-data' or '')..'/lazy'
+      local applier=dofile(root..'/nvim_forge/lua/ide/backports.lua')
+      local declarations=vim.json.decode(bytes(root..'/nvim_forge/patches/plugins.json'))
+      applier.all(data,'revert')
+      stage('payloads.reverted')
+      for name,spec in pairs(declarations) do
+        local list={spec};vim.list_extend(list,spec.extra or {})
+        for _,item in ipairs(list) do
+          T.eq(vim.fn.sha256((bytes(data..'/'..name..'/'..item.file):gsub('\r\n','\n'))),item.before_sha256)
+        end
+      end
+      if vim.env.FORGE_PLUGIN_PREPARE_LEGACY=='1' then
+        -- Прежняя неполная инструкция владельцу; source replay сохраняется RED.
+        for _,name in ipairs({'neogit','gitsigns.nvim','nvim-dap'}) do
+          prepare(applier,data,name)
+        end
+      else
+        local applied=prepare(applier,data)
+        T.eq(applier.all(data,'check'),applied)
+        for name,spec in pairs(declarations) do
+          assert(applied[name],'Общий setup пропустил '..name)
+          local list={spec};vim.list_extend(list,spec.extra or {})
+          for _,item in ipairs(list) do
+            local path=data..'/'..name..'/'..item.file
+            T.eq(vim.fn.sha256((bytes(path):gsub('\r\n','\n'))),item.after_sha256)
+            prepared_files[#prepared_files+1]={path=path,raw=bytes(path),mtime=vim.uv.fs_stat(path).mtime}
+          end
+        end
+      end
+      stage('profile.prepared')
+    end})
+    stage('editor.started',{dir=e.dir,pid=e.rpc.process.pid})
+    e:wait('IDE ready after explicit setup',function() return e:lua('return _G.forge_e2e_observed') end,10000)
+    assert(vim.uv.fs_copyfile(root..'/tests/e2e/plugin-backports.test.lua',e.dir..'/plugin-backports.test.lua'))
+    if vim.env.FORGE_PLUGIN_STAGE_TRACE=='1' then
+      e:lua([[local path=...;local uv=vim.uv;local start=uv.hrtime()
+      local function record(kind)
+        local f=assert(io.open(path,'ab'));f:write(vim.json.encode({kind=kind,ms=(uv.hrtime()-start)/1e6,
+          ft=vim.bo.filetype,mode=vim.api.nvim_get_mode()})..'\n');f:close()
+      end
+      vim.api.nvim_create_autocmd({'WinEnter','BufEnter','FileType'},{callback=function(ev) record(ev.event) end})
+      local controls=require('ide.controls');local original=controls.locals
+      controls.locals=function(...) record('locals.begin');original(...);record('locals.end') end
+      record('observer.ready')]],{e.dir..'/startup-native.jsonl'})
+    end
+    local function no_errors()
+      for _,notice in ipairs(e.rpc.notifications) do assert(notice.level<vim.log.levels.ERROR,notice.message) end
+    end
+    stage('files.begin');e:input(' we')
+    e:wait('Files opens after explicit setup',function() no_errors();return e:current_ft()=='neo-tree' end)
+    stage('files.end')
+    e:input(' w0:edit file_one.txt<CR>')
+    e:wait('plain file opens',function() no_errors();return e:current_file():find('file_one.txt',1,true)~=nil end)
+    stage('plain.end')
+    e:input(' wt')
+    e:wait('Tests opens after explicit setup',function() no_errors();return e:current_ft()=='neotest-summary' end)
+    stage('tests.end');e.rpc.trace.detail=vim.env.FORGE_PLUGIN_STAGE_TRACE=='1'
+    stage('locals.begin')
+    e:input(' wd')
+    e:wait('Locals opens after explicit setup',function() no_errors();return e:current_ft()=='dapui_scopes' end)
+    stage('locals.end')
+    e:input(' w0')
+    no_errors()
+    T.eq(e:lua('return vim.g.forge_e2e_installs'),0)
+    T.eq(e:lua([[return require('dap').session()==nil]]),true,'Открытие Locals не запускает adapter')
+    for _,item in ipairs(prepared_files) do
+      T.eq(bytes(item.path),item.raw,'Открытие панели не меняет подготовленный plugin')
+      T.eq(vim.uv.fs_stat(item.path).mtime,item.mtime,'Открытие панели не пишет patch')
+    end
+  end,debug.traceback)
+  stage('case.end',{ok=ok,error=not ok and tostring(err) or nil})
+  if e then
+    assert(vim.uv.fs_copyfile(setup..'/stages.jsonl',e.dir..'/startup-stages.jsonl'))
+    assert(vim.uv.fs_copyfile(setup..'/commands.json',e.dir..'/plugin-setup-commands.json'))
+    e:snapshot('plugin-first-open');io.stdout:write('  artifacts: '..e.dir..'\n')
+    local stopped,issue=pcall(e.stop,e,not ok and tostring(err) or nil)
+    if not stopped then ok=false;err=tostring(err or '')..'\nCleanup: '..tostring(issue) end
+  end
+  assert(ok,err)
+end)
 T.finish()

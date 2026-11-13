@@ -30,6 +30,12 @@ signal15, APIerrors[], notifications[], scope0, hard_kill=false. Native log
 retry не запускался. Native gate1.2 остаётся открытым, черновик теста сохранён.
 Следующий разбор — bounded stage/CPU/stack capture, без общего E2E прогона.
 
+§226: stage/native-event probe прошёл; final unhooked setup case тоже PASS
+Windows/Ubuntu, Locals359/74ms, target exit0/signal0/scope0. Причина старого
+124 не установлена, исправлением его не объявляем. Постоянный setup регресс
+сохранён с phases; native capture включается FORGE_PLUGIN_STAGE_TRACE=1.
+При новом проявлении нужен новый медленный trace, повтор ради зелёного не нужен.
+
 ## IDE-132 — UI задерживается при раскрытии Files и открытии файла
 
 2026-11-13, натурная Windows-проверка владельца: раскрытие дерева Files
@@ -89,9 +95,12 @@ Actual inventory C:/Users/cascad/AppData/Local/nvim_forge-data/lazy:
 prepare-plugins.lua и --check прошёл.16 исходных файлов/HEAD сохранены на F:
 .tests/installed-plugin-repair-20261113. Lazy-lock не менялся. Требуются native
 регресс неподготовленного profile→явная общая подготовка→Files/Tests/Debug.
-Инструкция исправлена, общая подготовка actual profile ready. Target Files/Tests
-открылись, но весь native case FAIL на Locals/watchdog (IDE-133); готовность
-patches не объявляется полным startup PASS. История — FIXLOG §222.
+Инструкция исправлена (a9758ed), общая подготовка actual profile ready. Ранний
+native case FAIL на Locals/watchdog сохранён как IDE-133. §226 завершил текущий
+регресс: прежние3 prepare дают точную native config ERROR Neo-tree; общий all
+открывает Files/Tests/Locals, install0/adapter nil/patch writes0. Windows/Ubuntu
+по source1 RED → target1 PASS. Setup gap закрыт; Mac/physical отдельно.
+История — FIXLOG §222/226; старый timeout не объявляется причинно исправленным.
 
 ## IDE-129 — Windows: единичная задержка SavePre → SavePost при quit
 

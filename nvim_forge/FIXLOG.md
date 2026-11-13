@@ -12054,3 +12054,50 @@ OpenSpec delta/verification, Files guide/tests README/PROBLEMS/roadmap/HISTORY/
 commands. Raw .tests/tree-async-*, guest .tests/ubuntu/tree-async-*;
 audit .tests/tree-async-audit.json, draft tree-async-source-observer-error.txt.
 Отложенные startup/infra drafts не включаются в commit.
+
+
+## 226. Первый запуск: завершён регресс подготовки профиля
+
+2026-11-13. Спека: IDE-BOOT-1 (FIX), продолжение IDE-130/133 и §222.
+
+**Проблема.** Инструкция перечисляла3 build при6 backports; native Neo-tree
+у владельца не открылся. Cache/инструкции уже исправлены, но прежний E2E draft
+остановился на Locals с124 и не подтверждал весь путь подготовки.
+
+**Причина.** Пробел инструкции/setup coverage известен: missing Neo-tree payload.
+Причина прежнего Locals/watchdog остаётся неизвестной. Его child жил около24s
+при60s watchdog; одного старого лога недостаточно для вывода о конкретной
+блокировке или timer. Новое наблюдение с phases/native events прошло за8.8s;
+runtime исправление из этого не выводили.
+
+**Изменение.** Постоянный case в existing plugin-backports E2E: revert6 до
+original hashes → public all/check16 files → Files/plain file/Tests/Locals.
+Проверены notifications/install0, dap.session nil, неизменные bytes/mtime
+patches при открытии. Сохраняются parent stages/loop clock; native capture
+FORGE_PLUGIN_STAGE_TRACE=1 опционален, обычный регресс его не включает.
+Runtime, SDK, pins, backports и deadlines в этой итерации не менялись.
+
+**Проверка/e2e.** Windows/Ubuntu по одному final legacy3 source1 RED и target1
+PASS с одинаковыми test bytes и без native hooks. Source поймал точную ERROR
+из сообщения владельца: Backport neo-tree.nvim не подготовлен; последующий
+Files RPC timeout обусловлен error prompt, это не watchdog124. Target case
+8298/4668ms, Locals359/74ms; native exit0/signal0/APIerrors[]/scope empty,
+hard_kill=false. Source Windows1/signal15, Ubuntu0/0 при cleanup; оба scope0,
+без hard kill/API errors. Это красный config verdict, не требование к exit
+процесса после завершения теста. Первый artifact audit ошибочно требовал nonzero
+native source exit и отказал на Ubuntu0/0; исправлена только проверка артефактов,
+E2E не повторялся. Предварительный observed profile отдельно PASS0/0/scope0.
+
+**Вывод/границы.** Setup gate §222 теперь подтверждён native source/target,
+OpenSpec3/3. Документация подготовки уже в a9758ed. Исторический IDE-133 не
+объявляется причинно исправленным, его124/raw сохранены; новый slow trace нужен
+при повторе. Mac/physical и полный regression не заявлены. Windows/Ubuntu
+serial/plain text, без Cargo/LSP builds. Ready engine28.5.1/imagef63a05ca/private
+Neogit overlay/network none, без build/download/Desktop/WSL lifecycle.
+
+**Файлы.** Existing plugin-backports case, OpenSpec tasks/verification,
+PROBLEMS/roadmap/tests README/HISTORY/commands. Raw .tests/startup-stage-* и
+guest .tests/ubuntu/startup-stage-*; audit startup-stage-audit.json, профили
+39944011612800/40010990465400/33928073232403/33942668160731; observation39868897959000.
+Frozen infra drafts/SDK/67 pins/6 backports16 files прежние; host temp F,
+journals append-only, staging только этого законченного среза.
