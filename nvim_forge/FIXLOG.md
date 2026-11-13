@@ -12268,3 +12268,43 @@ respect-disabled-rust-language-server, Rust guide/review/PROBLEMS/roadmap/
 tests README/HISTORY/commands. Raw .tests/rust-disabled-* и guest equivalents;
 audit-rust-disabled.py проверил14 profiles, config/test/helper bytes, frozen
 hashes и append-only prefixes. Frozen infra drafts не менялись.
+
+
+## 231. Проект: корень файловой системы и native сессия
+
+2026-11-13. Спека: IDE-PANEL-29 (ADDED). IDE-137, обзор IDE-080.
+
+**Проблема/причина.** config.start.normalize_dir('/') удалял separator и
+возвращал ''. Ubuntu native source3184bc4 подтвердил отказ Open project с
+ERROR «Project path is not a directory: ». Root containment также строил
+двойной slash. Windows source workflow прошёл: native exit save компенсировал
+пропуск explicit save; пользовательскую потерю сессии там не утверждаем.
+
+**Изменение.** POSIX root сохранён рядом с прежним drive-root исключением;
+containment добавляет slash только при его отсутствии. Native root selection,
+restart/persistence и case/symlink policies прежние. Отдельного path framework
+нет. Dashboard ownership review: Alpha actions, project history, native session
+и panel views имеют разные роли; основания удалить backend не найдено.
+
+**Проверка/e2e.** Existing project-session получил IDE-PANEL-29: root→B→root,
+4 actual backend PID, private unsaved edit/save/restore файла. Ubuntu source1
+RED → target1+прежний A→B→A control1 PASS; Windows source1 PASS, target/control2
+PASS. По одному target/control на ОС. Первый Windows prototype49437891540500
+слишком рано проверял modified: fixture FAIL сохранён, добавлено ожидание
+реального insert/text до Escape. Source-final49472751127900 PASS; Linux уже
+использовал исправленный test. Audit сперва искал control test-copy не в том
+artifact directory; исправлен audit path, E2E не повторялись. Все7 host profiles
+exit0/signal0, native TUI0, APIerrors[], scopes empty, force kill не требовался.
+
+**Вывод/границы.** POSIX root теперь можно выбрать и восстановить как обычную
+папку. Windows поведение сохранено. Языковые SDK/67 pins/6 backports16 files/
+Neovim74aff15b прежние, frozen drafts не менялись. Win/Linux serial, host tempF;
+ready engine28.5.1/imagef63a05ca, private Neogit overlay/network none, без
+download/build image/Desktop/WSL lifecycle. Mac/physical/UNC/symlink/branch
+matrix и whole suite не проверены; прежние incidents не закрываются.
+
+**Файлы.** config/start.lua, existing project-session E2E, OpenSpec
+preserve-filesystem-project-roots, PROJECT_SESSION_REVIEW/FEATURE_REVIEW,
+PROBLEMS/roadmap/tests README/HISTORY/commands. Raw .tests/project-root-* и
+guest equivalents; audit-project-root.py проверяет native/data/bytes/frozen/
+journal prefixes. Прежние записи журналов сохранены байт-в-байт.

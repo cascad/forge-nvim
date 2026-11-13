@@ -8512,3 +8512,44 @@ native exits/scopes, bytes, frozen/prefix guard. LF guest script, ready image
 с private pinned Neogit overlay, no network/lifecycle/download/image build;
 Win/Linux serial. Изменяемый общий tests/run.lua не запускался. Перед commit
 exact staging allowlist, SHA SDK/lock/backports/frozen и staged journal prefix.
+
+
+## 139. Filesystem root через native project/session
+
+2026-11-13, FIXLOG231, preserve-filesystem-project-roots. PowerShell -NoProfile,
+cwd F:/repo/forge-nvim, TEMP/TMP/TMPDIR/NVIM_LOG_FILE .tests/tmp, npm cache
+F:/forge-nvim-tmp/npm-cache, Python UTF-8. rg/Get-Content: config.start,
+project/persistence config, existing session_tui/native observer/project-session.
+Несколько первоначальных чтений несуществующих project-start/native_tui/
+PROJECT_WORKFLOW путей дали FileNotFound; фактические пути найдены через rg.
+Runtime/package resolver этим не затронут.
+
+```powershell
+npx.cmd --yes @fission-ai/openspec@1.13.2 context --json
+npx.cmd --yes @fission-ai/openspec@1.13.2 new change preserve-filesystem-project-roots
+# status/instructions proposal/specs/design/tasks/apply --change ... --json
+python -B .tests/prepare-project-root.py
+# git archive source3184bc4, private Windows/Ubuntu config snapshots.
+$env:FORGE_TEST_ID='IDE-PANEL-29'
+# source override: .tests/project-root-source/nvim_forge; затем очистить.
+& .tools/neovim/windows-x64/bin/nvim.exe -l tests/e2e/project-session.test.lua
+$env:FORGE_TEST_ID='IDE-PANEL-15'
+& .tools/neovim/windows-x64/bin/nvim.exe -l tests/e2e/project-session.test.lua
+python -B .tests/prepare-project-root-guest.py
+docker version --format '{{.Server.Version}}'
+docker compose -f tests/containers/compose.yaml run --rm --no-deps --pull never --entrypoint bash ubuntu /workspace/.tests/project-root-source.sh > .tests/project-root-ubuntu-source.txt 2>&1
+docker compose -f tests/containers/compose.yaml run --rm --no-deps --pull never --entrypoint bash ubuntu /workspace/.tests/project-root-target.sh > .tests/project-root-ubuntu-target.txt 2>&1
+python -B .tests/audit-project-root.py
+python -B .tests/record-project-root.py
+npx.cmd --yes @fission-ai/openspec@1.13.2 validate preserve-filesystem-project-roots --type change --strict --no-interactive
+git diff --check
+git diff --cached --check
+```
+
+Windows source prototype fixture input race FAIL сохранён; test ожидание
+исправлено, source-final PASS. Ubuntu source RED с реальным пустым путём;
+target/control2 PASS на ОС. Семь host profiles с native exits/scopes0.
+Control wrapper хранит test-copy в controller directory; audit path исправлен
+без повторного E2E. LF guest scripts/ready image private overlay/no network,
+serial, без Desktop/WSL lifecycle/install/image build. Перед commit exact16
+files staging, staged journal prefixes и frozen guard; общий WIP runner не шёл.

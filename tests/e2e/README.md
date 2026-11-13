@@ -1654,3 +1654,15 @@ target2 + enabled warmup1 + completion1 + DAP observer1 PASS/ОС (§230).
 Общий helper по умолчанию по-прежнему наблюдает plugins/dap.lua; control
 IDE-DAP-9 сохраняет native picker ABORT. Mac/physical отдельно. Удержание
 готового callback не доказывает остановку живого Cargo процесса.
+
+## IDE-PANEL-29: filesystem root и проектная сессия
+
+`FORGE_TEST_ID=IDE-PANEL-29 nvim -l tests/e2e/project-session.test.lua`
+(PowerShell: `$env:FORGE_TEST_ID='IDE-PANEL-29'`). Existing session_tui запускает
+настоящий TUI, root→B→root даёт4 backend PID, unsaved private текст записывается
+и восстанавливается. Файлы создаются только внутри fixture/private XDG,
+Языковые SDK не нужны. Ubuntu source RED: '/' нормализован в ''; Windows source уже PASS.
+После fix target1 и прежний IDE-PANEL-15 A→B→A control1 PASS на каждой ОС.
+Первый Windows prototype FAIL из-за преждевременной проверки ввода сохранён;
+ожидание реального native input исправлено до source сравнения. Mac/physical
+отдельно. Семь host profiles завершены0/0, scopes пусты, force kill не требовался.

@@ -6,7 +6,8 @@ local close_file_buffers
 
 local function normalize_dir(path)
     path = vim.fs.normalize(vim.fn.fnamemodify(path, ":p"))
-    if path:match("^%a:/$") then
+    -- spec: IDE-PANEL-29. Корни сохраняют separator на всех ОС.
+    if path == "/" or path:match("^%a:/$") then
         return path
     end
     return (path:gsub("[/\\]+$", ""))
@@ -23,7 +24,8 @@ end
 local function path_inside_dir(path, dir)
     local file = normalized_key(path)
     local root = normalized_key(dir)
-    return file == root or file:sub(1, #root + 1) == root .. "/"
+    local prefix = root:sub(-1) == "/" and root or root .. "/"
+    return file == root or file:sub(1, #prefix) == prefix
 end
 
 local function normal_file_buffers(match)

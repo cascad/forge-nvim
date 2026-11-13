@@ -10,7 +10,17 @@
 
 Маршрут и приоритеты: [рабочий план nvim_forge](docs/IDE_ROADMAP.md).
 Для новых пунктов используем следующий свободный ID `IDE-xxx`; исходный
-симптом хранится здесь, этап и состояние — в плане. Следующий ID: `IDE-137`.
+симптом хранится здесь, этап и состояние — в плане. Следующий ID: `IDE-138`.
+
+## IDE-137 — выбор POSIX root отвергается как пустой путь
+
+2026-11-13, review dashboard/project/session: normalize_dir('/') удалял
+separator и получал ''. Ubuntu source подтвердил ERROR «Project path is not
+a directory: ». §231 сохраняет POSIX/drive roots и один containment separator.
+Windows source workflow уже работал через native exit save; потерю сессии
+там не объявляем. Target и обычный A→B→A control по2 PASS Windows/Ubuntu:
+настоящий restart, private unsaved edit/save и restore. Mac/physical отдельно.
+История: [FIXLOG §231](nvim_forge/FIXLOG.md#231-проект-корень-файловой-системы-и-native-сессия).
 
 ## IDE-136 — ранняя подготовка возвращает отключённый Rust LSP
 

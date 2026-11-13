@@ -640,3 +640,14 @@ Root/library resolver, SDK и cache не менялись; отдельный li
 не добавлен. Windows/Ubuntu source2 RED → target2 + controls3 PASS/ОС, включая
 настоящий re-enable и прежний warmup/reuse. Отмена ещё живой Cargo metadata и
 Mac/physical этим callback-сценарием не подтверждаются.
+
+## Dashboard/project/session — 2026-11-13
+
+§231: Alpha — действия/recents display, project.nvim — manual history,
+persistence — native session, session_views — представление панелей.
+config.start — save/restart/open orchestration; общий LoadPost уже владеет
+restore/focus. Прямой native Telescope projects picker не заменяет наш restart
+при выборе папки. Доказанного повторного storage/restore здесь не найдено;
+сохраняем роли. Найденный POSIX root normalize bug исправлен узко, без нового
+path/backend framework. Ubuntu source RED, Windows source workflow PASS;
+target1 + прежний session control1 PASS на каждой ОС. Mac отдельно.

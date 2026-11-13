@@ -109,4 +109,78 @@ T.check('IDE-PANEL-15 native session restore returns code focus and preserves pr
   for _,tab in ipairs(fresh.tabs) do for _,w in ipairs(tab.windows) do if w.win==fresh.current then fresh_ft=w.ft end end end
   T.eq(fresh_ft,'neo-tree','A fresh project without a session keeps Explorer focus')
 end)
+T.check('IDE-PANEL-29 filesystem root survives project switch and native session restore',function()
+  local tui,report
+  local ok,err=xpcall(function()
+    tui=require('session_tui').start(root)
+    report={states={}}
+    local e=tui.host
+    assert(vim.uv.fs_copyfile(root..'/tests/e2e/project-session.test.lua',e.dir..'/project-session.test.lua'))
+    local function capture(label)
+      local state=tui:state();report.states[#report.states+1]={label=label,state=state}
+      e:snapshot(label);return state
+    end
+    report.initial=tui:launch();capture('initial')
+    local fsroot=vim.fn.has('win32')==1 and assert(tui.a:match('^%a:'))..'/' or '/'
+    report.root=fsroot
+    tui:command('lua require("config.start").open_project('..vim.inspect(fsroot)..', {open_files=false})')
+    report.selected=tui:connect(report.initial.pid)
+    T.eq(capture('root-selected').cwd,fsroot)
+    local file=tui.a..'/first.txt';report.file=file
+    tui:command('edit '..vim.fn.fnameescape(file))
+    e:wait('private file opened under filesystem root',function() return tui:state().file==file end)
+    tui:send('A_ROOT_SESSION_EDIT')
+    e:wait('root file edit reached native TUI',function()
+      return tui:mode().mode=='i' and tui:lua('return vim.bo.modified and vim.api.nvim_get_current_line():find("_ROOT_SESSION_EDIT",1,true)~=nil')
+    end)
+    tui:normal()
+    local before=capture('root-edited')
+    T.eq(before.cwd,fsroot)
+    assert(before.buffers[1] and before.buffers[1].modified,'Fixture did not modify a file')
+    report.session=tui:lua("return require('persistence').current()")
+    tui:command('lua require("config.start").open_project('..vim.inspect(tui.b)..')')
+    report.switched=tui:connect(report.selected.pid)
+    T.eq(capture('project-b').cwd,tui.b)
+    T.eq(vim.fn.filereadable(report.session),1,'Filesystem root session was not saved')
+    report.written=vim.fn.readfile(file)[1]
+    T.eq(report.written,'first.txt line 1 | Project A ü_ROOT_SESSION_EDIT')
+    tui:save_sessions('filesystem-root-left')
+    tui:command('lua require("config.start").open_project('..vim.inspect(fsroot)..', {open_files=false})')
+    report.returned=tui:connect(report.switched.pid)
+    e:wait('filesystem root file restored',function()
+      local state=tui:state();return state.cwd==fsroot and state.file==file
+    end,10000)
+    local restored=capture('root-restored')
+    T.eq(#restored.buffers,1)
+    report.loaded=tui:lua('return vim.api.nvim_buf_get_lines(0,0,1,false)[1]')
+    T.eq(report.loaded,report.written)
+    local pids={}
+    for _,key in ipairs({'initial','selected','switched','returned'}) do
+      local pid=report[key].pid;assert(not pids[pid],'Backend PID did not change');pids[pid]=true
+    end
+    for _,row in ipairs(report.states) do
+      local state=row.state;T.eq(state.installs,0);assert(#state.ui>0 and not state.mode.blocking)
+      for _,notice in ipairs(state.notices) do assert(notice.level<vim.log.levels.ERROR,notice.message) end
+    end
+  end,debug.traceback)
+  if tui then
+    report=report or {states={}}
+    local got,state=pcall(tui.state,tui);if got then report.final_state=state end
+    report.ok=ok;report.error=not ok and tostring(err) or nil
+    assert(vim.fn.writefile({vim.json.encode(report)},tui.host.dir..'/project-root.json')==0)
+    local stopped,cleanup=pcall(tui.stop,tui,not ok and err or nil)
+    io.stdout:write('  artifacts: '..tui.host.dir..'\n')
+    if not stopped then ok=false;err=tostring(err or '')..'\nCleanup: '..tostring(cleanup) end
+    if stopped then
+      local function read(name) return vim.json.decode(table.concat(vim.fn.readfile(tui.host.dir..'/'..name),'\n')) end
+      local shutdown=read('shutdown.json')
+      assert(shutdown.ok and shutdown.exit_code==0 and shutdown.exit_signal==0 and not shutdown.hard_kill)
+      T.eq(shutdown.api_errors,{})
+      assert(shutdown.scope.ok and (shutdown.scope.active_after==0 or shutdown.scope.active_after==false))
+      T.eq(read('tui-final.json').exit,0)
+      local host=read('native-host-exit.json');T.eq(host.exit_code,0);T.eq(host.exit_signal,0)
+    end
+  end
+  assert(ok,err)
+end)
 T.finish()

@@ -1,5 +1,22 @@
 # Project/session: native baseline
 
+## Filesystem root и ownership review (§231)
+
+Выбор папки принимает '/' на POSIX и корень диска вроде 'F:/' на Windows.
+Используются прежние Space o f / Open folder path и native restart. Файлы
+внутри такого root сохраняются обычной проектной сессией; отдельного режима нет.
+
+Review3184bc4: Alpha показывает действия, project.nvim хранит history при
+manual_mode, persistence владеет native session, session_views — только видом
+панелей. config.start выполняет переход/save/restart и использует общий LoadPost;
+разные роли не объединяем ради уменьшения числа plugins. В этом проходе найден
+и исправлен именно normalize_dir('/') → ''. Root containment имеет один slash.
+
+IDE-PANEL-29: настоящий root→B→root, private unsaved edit/save,4 backend PID
+и restore файла. Ubuntu source RED с пустым путём; Windows source PASS через
+native exit save. Target и прежний A→B→A control по2 PASS на Windows/Ubuntu.
+Mac/physical и прочие незакрытые session gates ниже этим срезом не заменены.
+
 ## Последний срез — Tests и отложенные размеры (§220)
 
 Tests sidebar возвращается с native привязкой к вкладке и шириной; positions

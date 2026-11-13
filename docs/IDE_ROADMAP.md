@@ -54,14 +54,24 @@ worktree IDE-038/048 ждут нового воспроизведения. Пр�
    до metadata и перед start; поздний ответ не возвращает отключённый сервер.
    Windows/Ubuntu source2 RED → target2 + controls3 PASS/ОС, native re-enable
    работает. Отмена ещё живого metadata процесса остаётся отдельным gate.
-8. Затем вернуться к оставшейся очереди ниже. IDE-048 probe остановился раньше
+8. IDE-137 / §231 — выбор '/' больше не превращается в пустой путь. Общий
+   containment сохраняет один separator у roots. Ubuntu source RED → target1+
+   control1 PASS; Windows исходный workflow уже PASS, target/control также2 PASS.
+   Alpha/history/persistence/session views имеют разные роли, удаления нет.
+9. Затем вернуться к оставшейся очереди ниже. IDE-048 probe остановился раньше
    remove: RPC timeout/forced native cleanup класса IDE-047, raw26364912087090
    сохранён; отмена Gitsigns этим запуском не подтверждена, условие не ослаблено.
 
 Пока владелец работает в IDE, тяжёлые language/container suites не запускаем.
 Одно короткое plain-text native E2E подготовки допустимо без Cargo/LSP builds.
 
-**Последний результат — §230:** Rust warmup больше не обходит штатное отключение
+**Последний результат — §231:** выбор filesystem root и возврат к его сессии
+проверены actual restart/edit/save/restore. Исправлен подтверждённый POSIX
+пустой путь; Windows сохранён control. Dashboard/project/session ownership
+review не нашёл основания для удаления backend или дополнительного manager.
+По2 selected PASS на Windows/Ubuntu, Mac/physical отдельно.
+
+**Предыдущий результат — §230:** Rust warmup больше не обходит штатное отключение
 сервера. Две проверки native state и запись в IDE Logs, без своего lifecycle
 manager. Initial/in-flight disable и повторное включение проверены настоящими
 Cargo/RA; вместе с enabled warmup, completion и DAP observer по5 selected PASS
