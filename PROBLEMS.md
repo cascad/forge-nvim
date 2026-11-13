@@ -10,7 +10,17 @@
 
 Маршрут и приоритеты: [рабочий план nvim_forge](docs/IDE_ROADMAP.md).
 Для новых пунктов используем следующий свободный ID `IDE-xxx`; исходный
-симптом хранится здесь, этап и состояние — в плане. Следующий ID: `IDE-123`.
+симптом хранится здесь, этап и состояние — в плане. Следующий ID: `IDE-125`.
+
+## IDE-124 — Windows: старый rebase abort test не дошёл до запуска
+
+2026-11-13, git-conflicts profile2633297634000: timeout «настоящий Git конфликт»
+до abort, notifications пусты, HEAD/refs/tree не изменились, unmerged нет.
+Selected old Windows3 PASS/1 FAIL, тот же Ubuntu4 PASS. Причина не установлена;
+это не доказательство дефекта нового sequence matcher (onto_branch не менялся).
+Raw .tests/git-sequence-target-windows/git-conflicts.txt; source сохранён,
+повтор неизменённой версии ради зелёного не выполнялся. Новые native interactive
+conflict+abort проходят на обеих ОС, но не закрывают этот старый gate.
 
 ## IDE-121 — Windows Node/Bash: native exit после успешного workflow
 
@@ -1110,14 +1120,18 @@ native выбор из zoom и штатная help;9 native E2E/source8 RED на
 
 ## Ранее зарегистрированные проблемы
 
+IDE-123 → [FIXLOG §212](nvim_forge/FIXLOG.md#212-interactive-rebase-отмена-todo-без-ложного-конфликта):
+Neogit распознаёт раздельные строки editor abort и оба варианта There/there.
+Submit/Abort/настоящий conflict+abort Windows/Ubuntu по3 PASS, preparation15.
+Нужен `:Lazy build neogit` после обновления; Mac/physical не проверены.
+
 IDE-120 → [FIXLOG §209](nvim_forge/FIXLOG.md#209-смешанный-проект-поиск-локальных-node-tools-из-каталога):
 существующий каталог без package.json сохраняется в fallback, локальный Bash
 LSP больше не пропускается. Mixed Windows и Node helper Ubuntu проверены; Mac открыт.
 
 IDE-122 → [FIXLOG §210](nvim_forge/FIXLOG.md#210-python-debug-холодный-handshake-в-смешанном-проекте):
 холодный debugpy отвечал после native4s и warning блокировал UI на Press ENTER.
-Public Python adapter budget30s; Windows mixed1+Python8 PASS. Финальный Ubuntu
-нового budget ждёт engine, Mac открыт; исходные отказы сохранены.
+Public Python adapter budget30s; Windows/Ubuntu mixed1+Python8 PASS (§211). Mac открыт; исходные отказы сохранены.
 
 
 ### IDE-010 — универсальная поддержка Windows/macOS/Ubuntu, Mint позже

@@ -24,7 +24,7 @@
     ]
   },
   "neogit": {
-    "id": "IDE-034-043-neogit-cwd-output",
+    "id": "IDE-034-043-123-neogit-cwd-output-sequence",
     "revision": "d7bb91b42f984416adc6116d6ba8fba287857af3",
     "file": "lua/neogit/popups/worktree/actions.lua",
     "before_sha256": "71316bf6f499fccb55689e3dd1f3a3711ee4fb632b0b7724075a56e10c022513",
@@ -38,6 +38,13 @@
         "after_sha256": "c8d23331352fd316845ed4009ca5b87f9206cf5101adfc995b53260e8ec53e57",
         "before": "local pattern_1 = \"[\\27\\155][][()#;?%d]*[A-PRZcf-ntqry=><~]\"\nlocal pattern_2 = \"[\\r\\n\\04\\08]\"\nlocal BLANK = \"\"\nlocal gsub = string.gsub\n\nfunction M.remove_ansi_escape_codes(s)\n  s, _ = gsub(s, pattern_1, BLANK)\n  s, _ = gsub(s, pattern_2, BLANK)\n  return s\nend",
         "after": "-- 0x9B бывает продолжением UTF-8; OSC удаляем целиком до CSI.\nlocal pattern_1 = \"\\27[][()#;?%d]*[A-PRZcf-ntqry=><~]\"\nlocal pattern_2 = \"[\\r\\n\\04\\08]\"\nlocal BLANK = \"\"\nlocal gsub = string.gsub\n\nfunction M.remove_ansi_escape_codes(s)\n  s, _ = gsub(s, \"\\27%][^\\7\\27]*\\7\", BLANK)\n  s, _ = gsub(s, \"\\27%][^\\7\\27]*\\27\\\\\", BLANK)\n  s, _ = gsub(s, pattern_1, BLANK)\n  s, _ = gsub(s, pattern_2, BLANK)\n  return s\nend"
+      },
+      {
+        "file": "lua/neogit/lib/git/rebase.lua",
+        "before_sha256": "f110b2cb7e6cb9d3d679c4429ef673c0a5d84de3bc9e36b10cd3441c04007391",
+        "after_sha256": "acfa813fd5c2d1db0edd2a78bfecfaf53f249ffe2160ef09b2290a420a35360b",
+        "before": "    if result.stdout[1]:match(\"^hint: Waiting for your editor to close the file%.%.%. error\") then",
+        "after": "    -- spec: IDE-GIT-13. Git может вывести hint и отказ editor отдельными строками.\n    local output = table.concat(result.stdout or {}, \"\\n\"):lower()\n    if output:find(\"hint: waiting for your editor to close the file...\", 1, true)\n      and output:find(\"error: there was a problem with the editor \", 1, true)\n    then"
       }
     ]
   },

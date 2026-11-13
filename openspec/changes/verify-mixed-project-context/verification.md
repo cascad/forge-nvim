@@ -2,8 +2,8 @@
 
 Windows current9 PASS: mixed1 + Python8 (первые6 до owner pause, последние2
 после resume через FORGE_PYTHON_CASE=IDE-DAP-5, без повторов). Native source
-copies exact, exit0/signal0/APIerrors[]/scope ok. Финальный Ubuntu mixed+Python8
-pending: Linux engine channel отсутствует, владелец уведомлён. Task1.2 открыт.
+copies exact, exit0/signal0/APIerrors[]/scope ok. Финальный Ubuntu mixed+Python8:9 PASS, runtime Node/DAP copies exact,
+native exits/scopes ok. Task1.2 закрыт после подтверждения владельцем engine.
 Mac/physical и полная mixed Tests/rename/format/debug matrix не проверены.
 
 ## Подтверждено
@@ -42,7 +42,11 @@ SDK SHA74AFF15B3B6BC288753B721365B088AB44C9B2BFFF152F8D27F5885B4B1C6AD9,
 из cp1251 roundtrip в UTF-8, без переписывания журналов. Старые infra drafts
 не входят в index; partial registry только mixed row поверх HEAD. Push нет.
 
-Windows срез фиксируется с открытым task1.2. После engine availability:
-Ubuntu final mixed+python-language один прогон, записать verdict/audit новой
-append-only записью; не приписывать ему прошлые native gates IDE-117/121.
+Windows срез704044e первоначально содержал открытый task1.2. После engine
+availability 2026-11-13 финальный mixed+python-language дал9 PASS, profiles
+165377278508 и172404999344/178421438467/183972486640/189301809230/194465187763/
+203114926106/208784464094/215653556525. .tests/mixed-rebase-final-ubuntu,
+новый audit mixed-project-audit.json и append-only FIXLOG211. Private Neogit
+6/14 overlay обслуживал параллельный Git change; Node/DAP sources exact.
+Прежние native gates IDE-117/121 не закрываются этим результатом.
 Следующая независимая очередь4 — interactive rebase editor, spec-driven test-only.

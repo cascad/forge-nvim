@@ -7741,3 +7741,50 @@ raw debugpy access tokens; .tests/mixed-project-audit.json. Prefix guards
 .tests/mixed-project-prefix.json; raw append-only bytes/5 frozen drafts/registry
 minus only mixed row/SDK SHA. Exact allowlist staging, partial registry из HEAD,
 UTF-8 recovery двух completed tasks отдельно от журналов, push нет.
+
+
+## 121. Native Git sequence, Ubuntu mixed gate и локальный Neogit companion
+
+2026-11-13, PowerShell login=false, F:/repo/forge-nvim. TEMP/TMP/TMPDIR/
+NVIM_LOG_FILE на F:, PYTHONUTF8=1/PYTHONIOENCODING=utf-8, npm cacheF:.
+OpenSpec apply verify-interactive-rebase-editor context/артефакты прочитаны;
+source1/1 повышен из test-only до IDE-GIT-13 ADDED перед patch. GitHub connector
+fetch_file Neogit rebase.lua read-only (default blobed8aa001), external writes нет.
+
+```powershell
+& ./.tools/neovim/windows-x64/bin/nvim.exe -l tests/e2e/git-sequence.test.lua
+# Только owned SDK F:/repo/forge-nvim/.tests/editor-deps/lazy:
+& ./.tools/neovim/windows-x64/bin/nvim.exe -l nvim_forge/scripts/prepare-plugins.lua --plugin-root F:/repo/forge-nvim/.tests/editor-deps/lazy --plugin neogit
+# Перед сменой непубликованной v1 на v2 тот же CLI --revert, затем apply.
+# JSON backports.neogit из stdout записан в ignored prepared manifest.
+# Windows v2: git-sequence и plugin-backports по одному запуску.
+& ./.tools/neovim/windows-x64/bin/nvim.exe -l tests/e2e/git-sequence.test.lua
+& ./.tools/neovim/windows-x64/bin/nvim.exe -l tests/e2e/plugin-backports.test.lua
+# Read-only после подтверждения владельцем engine:
+docker info --format '{{.OSType}}'
+docker image inspect forge-nvim-tests:ubuntu24.04-nvim0.12.2 --format '{{.Id}}'
+docker compose -f tests/containers/compose.yaml run --rm --no-deps --entrypoint bash -e GOMAXPROCS=2 -e GOFLAGS=-p=2 -e GOTOOLCHAIN=local -e CARGO_BUILD_JOBS=2 ubuntu /workspace/.tests/rebase-v2-20261113.sh
+```
+
+Первый Ubuntu script combined-mixed-rebase-20261113.sh выполнял mixed/Python/
+Git sequence/old conflicts/preparation; mixed9 PASS, old conflicts4 PASS,
+preparation15 PASS, Git sequence2/1 из-за There/there. V2 script выполняет
+только изменённые Git3+preparation15:18 PASS Ubuntu,18 PASS Windows. Scripts
+в host .tests/ubuntu с LF, внутри контейнера доступны как /workspace/.tests.
+Private SDK overlay /tmp/forge-editor-deps-rebase содержит writable Neogit copy,
+links остальных ready plugins и новый manifest. Official image и /opt payload
+не изменяются, сети/build/download/Desktop/WSL lifecycle нет.
+
+Windows initial source .tests/git-sequence-windows (1/1), first target
+.git-sequence-target-windows (2/1 + old conflicts3/1 + preparation15).
+Final .tests/git-sequence-v2-{windows,ubuntu}, mixed-rebase-final-ubuntu;
+Python -B - audits real Git graph/tree/refs/unmerged/notifications/shutdown/
+scopes/source copies. Results git-sequence-final-audit.json и обновлённый
+mixed-project-audit.json. SDK SHA unchanged,67 pins,6 dependencies/14 files.
+
+git CLI читает только private fixture repo; snapshot Git abort HEAD/refs/tree
+подтверждён .tests/git-sequence-source-abort.json. Production history/push/
+credentials не затрагиваются. Prefix .tests/rebase-editor-prefix.json:
+append-only journals/5 frozen drafts/working registry minus Git row, exact
+allowlist/partial registry из HEAD+new row. Strict/diff, самостоятельный commit,
+никаких unchanged green retry. IDE-121/124/Mac/physical остаются отдельно.

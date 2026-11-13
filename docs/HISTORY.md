@@ -347,6 +347,8 @@ Python реализован и проверен 2026-11-03; после возо�
 | §208 | [Go workspace: переходы к определениям и реализациям](../nvim_forge/FIXLOG.md#208-go-workspace-переходы-к-определениям-и-реализациям) |
 | §209 | [Смешанный проект: поиск локальных Node tools из каталога](../nvim_forge/FIXLOG.md#209-смешанный-проект-поиск-локальных-node-tools-из-каталога) |
 | §210 | [Python debug: холодный handshake в смешанном проекте](../nvim_forge/FIXLOG.md#210-python-debug-холодный-handshake-в-смешанном-проекте) |
+| §211 | [Mixed project: финальная Ubuntu проверка](../nvim_forge/FIXLOG.md#211-mixed-project-финальная-ubuntu-проверка) |
+| §212 | [Interactive rebase: отмена todo без ложного конфликта](../nvim_forge/FIXLOG.md#212-interactive-rebase-отмена-todo-без-ложного-конфликта) |
 
 ## Как читать и дополнять
 

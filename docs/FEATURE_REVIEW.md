@@ -21,7 +21,15 @@ fallback различает directory/file через native fs_stat; новый
 Python executable adapter использует public initialize_timeout_sec=30 для cold
 initialize+launch вместо native4s; failure/exit handling остаётся штатным.
 Новых plugins/SDK/backports/кэшей нет. Mixed Windows9 PASS; Node helper Ubuntu17
-PASS до Python budget, финальный Ubuntu нового budget pending. Mac отдельно.
+PASS до Python budget; final Ubuntu mixed+Python8 также9 PASS (§211). Mac отдельно.
+
+2026-11-13, §212: existing Neogit manifest получил один local companion
+rebase.lua, без смены pin. Native output classification объединяет строки и
+сравнивает ASCII-регистр; Git stdout не изменяется. Source false conflict при
+Abort воспроизведён, latest upstream blobed8aa001 сохраняет прежний pattern.
+Цена:6 dependencies/14 files, у Neogit3. Windows/Ubuntu по18 PASS:3 настоящих
+sequence workflows и15 preparation guards. Удалить только этот companion после
+готового upstream эквивалента и тех же submit/abort/true-conflict cases.
 
 ## Актуальный выбор после Files, Logs и frame pilot — 2026-11-11
 
@@ -73,7 +81,7 @@ Raw summaries: .tests/review-after-pilot-{windows,ubuntu}.json (Ubuntu под
 .tests/ubuntu), агрегат .tests/review-after-pilot-summary.json.
 
 Фактический plugin backport manifest и prepared manifest совпадают:
-**6 dependencies /13 files** (5 прежних плюс Neo-tree2 файла). Старое5/11
+**6 dependencies /14 files** (прежние5/11, Neo-tree2 и Neogit sequence1). Старое5/11
 ниже обновлено; число4 в §182–183 не является корректным числом plugin
 backports. Windows SDK/SQLS source patch учитываются отдельно. Runtime и pins
 в этом проходе обзора не менялись. Следующий шаг — выбранное UI сокращение
@@ -214,7 +222,7 @@ forge:22/2610; сумма13567 строк включает комментари�
 |---|---|---|
 | Windows Neovim SDK | IDE-027, native ConPTY lifecycle bug | Подтверждённый upstream fix и тот же core/buffer regression на официальном SDK |
 | Gitsigns, 2 patch files | IDE-035/038, стабильный cwd Git jobs/worktree | Проверить upstream на закреплённом кандидате, прежние race/worktree E2E |
-| Neogit, 2 | IDE-034/043, worktree scheduling и ANSI/title output | Upstream equivalent + worktree/Unicode/error regression |
+| Neogit, 3 | IDE-034/043/123, worktree scheduling, ANSI/title и sequence abort | Upstream equivalent + worktree/Unicode/error и submit/abort/true-conflict regression |
 | Neotest, 4 | IDE-051/070, native/canonical path identity | Upstream equivalent + Node/Python/Rust/SQL discovery/nearest/all |
 | nvim-dap, 1 | IDE-053, expected adapter close | Upstream equivalent + normal stop и настоящий unexpected exit |
 | neotest-rust, 2 | IDE-054, Cargo workspace/native paths/results | Upstream equivalent + workspace/nearest/integration/debug tests |
@@ -224,7 +232,7 @@ forge:22/2610; сумма13567 строк включает комментари�
 | SQLLogicTest SDK/glue | Отдельный SQLite assertion runner и Tests UI | Нужен ли этот workflow в работе; можно ли штатно использовать готовый CLI |
 
 Реестр plugin patches: `nvim_forge/patches/plugins.json` —6 dependencies,
-13 изменяемых файлов. Source review выполнен ниже по exact SHA; native
+14 изменяемых файлов. Source review выполнен ниже по exact SHA; native
 compatibility regression новых версий ещё нужен. Ни один patch здесь
 не объявляется готовым к удалению.
 

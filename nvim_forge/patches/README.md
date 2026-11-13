@@ -10,7 +10,19 @@ IDE-043 добавляет на том же pin companion `lua/neogit/lib/util.l
 Исключение byte 155 из CSI взято из [upstream](https://github.com/NeogitOrg/neogit/blob/697ad3ee86a73cf6b6758b838d7a7d76cf3b9f86/lua/neogit/lib/util.lua):
 этот byte бывает продолжением UTF-8. Обычные пути не фильтруются.
 Worktree primary и его SHA не менялись. ID декларации теперь
-`IDE-034-043-neogit-cwd-output`; prepared manifest хранит hashes обоих файлов.
+`IDE-034-043-neogit-cwd-output`; этот этап затрагивал два файла.
+
+IDE-123/IDE-GIT-13 добавляет companion `lua/neogit/lib/git/rebase.lua` на том
+же pin. Native Abort sequence editor возвращал Git error в двух строках;
+Git Windows пишет `there was`, Ubuntu — `There was`. Прежняя проверка только
+stdout[1] принимала отмену за конфликт. Classification-copy объединяет строки
+и сравнивает ASCII-регистр; настоящий stdout/настоящие conflicts не подавляются.
+Это local fix: [upstream](https://github.com/NeogitOrg/neogit/blob/master/lua/neogit/lib/git/rebase.lua)
+проверен 2026-11-13, blobed8aa001577a31ada0ae76e8342d6db0e314bfd8 содержит тот же
+старый pattern. Новый ID `IDE-034-043-123-neogit-cwd-output-sequence`, у Neogit
+теперь3 hash-guarded files, у всех plugins6 dependencies/14 files. Source RED,
+Windows/Ubuntu3 native sequence cases и15 preparation checks сохранены (§212).
+После готового upstream fix убрать только этот companion с теми же cases.
 
 `plugins.json` содержит ревизию, точную замену и SHA256 файла до/после.
 `ide/backports.lua` — общий applier для Lazy и явной подготовки тестов.
@@ -23,7 +35,7 @@ Hash нормализует CRLF→LF; запись сохраняет исхо�
 готовность и подсказывает эту команду, если требуется подготовка.
 После обновления IDE-043 build повторить и для уже подготовленной IDE-034
 установки: primary-after/util-before обновляется явно, primary не переписывается.
-Повторный apply/check не пишет оба файла. Неизвестный companion отклоняется
+Повторный apply/check не пишет подготовленные файлы. Неизвестный companion отклоняется
 до любой записи; каждый подготовленный файл заменяется атомарно.
 Если установлена другая ревизия Neogit, сначала восстановить её из lock
 командой `:Lazy restore neogit`, затем выполнить build.
@@ -53,7 +65,7 @@ nvim -l nvim_forge/scripts/prepare-plugins.lua --plugin-root /absolute/path/to/l
 После подтверждённого upstream исправления отдельным шагом обновить pin,
 удалить декларацию/build guard и прогнать `tests/e2e/active-worktree.test.lua`
 и `tests/e2e/git-errors.test.lua` на Windows/Ubuntu/macOS. До этого патчи
-остаются временной частью подготовки. Отмена Neogit возвращает оба его
+остаются временной частью подготовки. Отмена Neogit возвращает все три его
 известных файла; выбранный плагин задаётся через `--plugin neogit`.
 Он не устраняет удержание cwd сторонним процессом и IDE-035 (Gitsigns attach).
 

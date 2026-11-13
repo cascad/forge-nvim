@@ -7,14 +7,15 @@ IDE-001 параллельно ждёт диагностических данн�
 
 ## Текущая очередь продукта — решение владельца 2026-11-12
 
-**Текущая точка 2026-11-13:** mixed context Windows проверен (§209–210):
-6 language roots/Node script cancel/select/cwd/Python venv/debug/output/Go return.
-Конечная версия Windows9 PASS: mixed1 и Python8 (6 до паузы +2 после, без повторов).
-Node helper также Ubuntu17 PASS до изменения Python budget; финальный Ubuntu
-mixed+Python8 ждёт включённого Linux engine Docker. Mac/physical отдельно.
-Прежние Windows Node7/1 и Bash7/1 с native quit FAIL IDE-121 остаются открытыми;
-общий Windows full PASS не заявлен. Дальше — native interactive rebase editor,
-`verify-interactive-rebase-editor`, без нового Git backend.
+**Текущая точка 2026-11-13:** mixed context завершён Windows9 PASS/Ubuntu9
+PASS (§209–211):6 language roots, Node script, Python venv/debug/output/Go return.
+Native interactive rebase также проверен (§212): reorder/fixup/submit, отмена
+изменённого todo и настоящий конфликт/abort; Windows18 PASS/Ubuntu18 PASS с
+preparation guards. Исправлен ложный ERROR при отмене редактора, для установленной
+сборки нужен `:Lazy build neogit` и перезапуск. Следующая очередь4 — credentials.
+Отдельные Windows native quit IDE-121 и старый rebase-start timeout IDE-124
+остаются открытыми; полный Windows regression PASS не заявлен. Mac/physical
+и полная mixed матрица отдельно. Docker engine использован без lifecycle изменений.
 
 Один ограниченный пункт → изменения → один прогон нужных тестов → отчёт и
 commit при успехе. Затем самостоятельно следующий пункт. Остановка — по
@@ -32,8 +33,8 @@ E2E используются для защиты изменений продук
 |---|---|---|
 | 1. Этап 6: упрощение панелей/DAP | Сократить доказанные дубли по готовому review | Итерация §197 готова: общая подготовка восьми navigation-команд; Windows24 PASS, этап 6 целиком открыт |
 | 2. Оформление Termide | Довести Code/Locals pilot до решения для повседневной работы, затем остальные панели | Общий цветной zoom готов на Windows (§199); постоянные рамки split и physical review открыты |
-| 3. Реальные проекты | Go/Cargo workspace, Python venv, Node scripts, выбор цели и launch.json/default | Go.work §206–208; mixed context/Node script/Python venv debug Windows9 PASS (§209–210), финальный Ubuntu и остальная mixed матрица открыты |
-| 4. Git | Credentials, interactive rebase и оставшиеся ошибки worktree | Основной сценарий есть; остаток открыт |
+| 3. Реальные проекты | Go/Cargo workspace, Python venv, Node scripts, выбор цели и launch.json/default | Go.work §206–208 и mixed context/Node script/Python venv debug Windows/Ubuntu9 PASS (§209–211); остальная mixed матрица открыта |
+| 4. Git | Credentials, interactive rebase и оставшиеся ошибки worktree | Native sequence submit/abort/true-conflict Windows/Ubuntu (§212); credentials/IDE-124 открыты |
 | 5. Языковые пробелы | Bash debug с готовым backend; SQL references при наличии подходящего provider | Открыто; собственный LSP не создаём |
 | 6. Переносимость | Чистый setup Windows/Ubuntu/macOS, terminal/SSH; Mac startup/Go и Cmd+C | Частично; native Mac и физические клавиши не проверены |
 
@@ -49,8 +50,8 @@ Ubuntu1 PASS (§206), без изменений runtime. Go.work Tests такж�
 исправлен backend infinite walk без новых зависимостей. Следующий конкретный
 шаг Go.work LSP выполнен (§208): Windows1 PASS/Ubuntu1 PASS, gd/back/gi type/
 gi method/gr/выбор через один настоящий gopls, runtime не менялся. Теперь —
-mixed context Windows9 PASS (§209–210); финальный Ubuntu budget и остальная
-mixed матрица/Mac/physical открыты. Далее — очередь4, interactive rebase.
+mixed context Windows/Ubuntu9 PASS (§209–211); остальная mixed матрица/Mac/physical
+открыты. Очередь4: interactive rebase готов (§212), далее credentials.
 
 Последняя итерация пункта 1: `deduplicate-panel-navigation`, FIXLOG §197.
 Повторная подготовка заменена одной локальной функцией, net−8 строк runtime.
@@ -82,7 +83,7 @@ Windows/macOS/Ubuntu — целевые ОС; натурные проверки 
 | WF-02 | Перейти в другой репозиторий и вернуться | Per-tab Files A→B→A проверен Windows (§205); Ubuntu scope gate/Mac и остальные панели WF-01 открыты |
 | WF-03 | Управлять файлами через дерево | Create/rename/move/copy/delete/filter проверялись; единый цикл и сохранение вида дерева входят в приёмку |
 | WF-04 | Работать в проекте со смесью языков | 6 native roots/cwd + Node script/Python venv debug Windows (§209–210); полная mixed matrix/Mac открыты |
-| WF-05 | Запустить файл или конкретный debug-кейс | Cargo/Go.work есть; mixed Node script и Python default из nested venv Windows (§209–210), финальный Ubuntu budget ждёт engine |
+| WF-05 | Запустить файл или конкретный debug-кейс | Cargo/Go.work есть; mixed Node script и Python default из nested venv Windows/Ubuntu (§209–211) |
 | WF-06 | Отлаживать с Output, консолью, переменными и стеком | Основные панели/пауза/output есть; полный цикл и реальные клавиши на всех ОС остаются проверкой |
 | WF-07 | Исправить код и перезапустить тот же кейс | Go.work dependency edit→F5→42/43 проверен Windows/Ubuntu (§206); смешанный workflow целиком открыт |
 | WF-08 | Посмотреть цветной diff и выбрать изменения для коммита | Hunk/stage/unstage/diff/history есть; выбор отдельных строк обязателен в полном кейсе |
@@ -803,8 +804,10 @@ Normal mode, прежние aliases сохранены:
   возврат файла/раскладки; real Git gate и естественное раннее закрытие (§89).
 - [x] IDE-GIT-11/IDE-044: merge/rebase resolve/continue и abort, Alt+e в
   writable result diff3 из дерева и версии; 4 real editor E2E Windows/Ubuntu (§103).
-- [ ] Credentials, interactive sequence editor и остальные ошибки Git;
-  отдельные сценарии ещё открыты.
+- [x] Interactive sequence editor: reorder/fixup/submit, edited todo cancel и
+  настоящий conflict/native abort, Windows/Ubuntu по18 PASS с CLI guards (§212).
+- [ ] Credentials и остальные ошибки Git; native authentication flow и
+  Windows old rebase-start timeout IDE-124 отдельно.
 - [x] IDE-GIT-12/IDE-043: полный OSC title/hyperlink удаляется до CSI,
   видимый UTF-8/обычные пути сохранены; 3 UI + matrix 10, подготовка 9 (§104).
 - [x] IDE-028: быстрые visit между worktree с разными HEAD во время обновления

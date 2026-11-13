@@ -81,7 +81,7 @@ Output/continue и возврат к прежнему gopls. Исправлен�
 Node tools (IDE-120) и cold Python handshake budget30s вместо4s (IDE-122).
 Конечная Windows версия9 PASS: mixed1+Python8, включая реальный adapter exit.
 Ubuntu Node helper17 PASS (mixed1/Node8/Bash8) до изменения Python budget;
-финальная mixed+Python8 проверка нового budget ждёт Docker Linux engine.
+финальная mixed+Python8 проверка нового budget дала9 PASS (§211).
 Прежние Windows Node7 PASS/1 FAIL и Bash7 PASS/1 FAIL — native quit IDE-121,
 их source результаты сохранены, полный Windows PASS не заявлен. Mac/physical,
 полная mixed Tests/debug/rename/format матрица отдельно. Нет новых SDK/pins.

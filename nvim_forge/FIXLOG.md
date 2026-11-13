@@ -11270,3 +11270,91 @@ IDE-121 других Windows случаев и IDE-117 POSIX cleanup не зак
 **Файлы.** plugins/dap.lua, mixed E2E/timing, python-cold-debug delta, Python
 workflow/matrix/review/roadmap и history. Windows срез можно commit с явным
 pending Ubuntu gate; task1.2 остаётся открытым, push не выполняется.
+
+
+### 211. Mixed project: финальная Ubuntu проверка
+
+**Связь:** продолжение §209–210, change `verify-mixed-project-context`, task1.2.
+Спека: IDE-NODE-5/IDE-DAP-8 (FIX, подтверждение). **Статус:** финальные Windows9/
+Ubuntu9 PASS, Mac/physical и полная mixed matrix открыты.
+
+**Проблема.** В commit704044e Windows mixed1+Python8 проверены, но финальная
+Ubuntu нового Python budget ждала engine. Прежний Ubuntu17 до budget не мог
+служить подтверждением конечного Python поведения.
+
+**Причина.** Отсутствовал dockerDesktopLinuxEngine; владелец включил его
+2026-11-13. Готовый imagef63a05ca использован без build/network/lifecycle Desktop.
+
+**Изменение.** Только закрытие platform gate/документация, Node/DAP runtime
+не менялся. Для соседнего Git change приватная копия Neogit и links остальных
+SDK plugins подготовлены в container /tmp (6/14), исходный image SDK сохранён.
+
+**Проверка/e2e.** По одному final Ubuntu mixed-project и python-language:
+1+8 PASS, profiles165377278508 и172404999344/178421438467/183972486640/
+189301809230/194465187763/203114926106/208784464094/215653556525. Node/DAP
+copies exact,6 roots/cwd/Node cancel/select/Python venv/pause/output/continue/
+Go return, budget30, installs0. Native exit0/signal0/APIerrors[]/scope ok всех9.
+.tests/mixed-rebase-final-ubuntu/run.txt и mixed-project-audit.json. В том же
+combined прогоне отдельный Git v1 abort FAIL из-за There/there — §212; полный
+combined PASS не заявлен. Последняя Git variant2 не меняет Node/DAP ветки.
+
+**Вывод.** Pending Ubuntu task1.2 закрыт результатом применимого workflow,
+а не наличием Docker. IDE-117/121/124 и натурный Mac не закрываются этим PASS.
+Журналы §209–210/commands120 сохранены, уточнение дописано этой записью.
+
+**Файлы.** Mixed tasks/verification, Python workflow/matrix/review/roadmap,
+PROBLEMS/HISTORY/commands. SDK/pins прежние, повторов mixed ради зелёного нет.
+
+### 212. Interactive rebase: отмена todo без ложного конфликта
+
+**Связь:** IDE-123/WF-08–09, change `verify-interactive-rebase-editor`.
+Спека: IDE-GIT-13 (ADDED). **Статус:** Git3+preparation15, Windows18 PASS и
+Ubuntu18 PASS конечной версии. Старый Windows gate IDE-124 и Mac/physical открыты.
+
+**Проблема.** Source submit1923603547100 PASS. Native Abort изменённого todo
+1972523353100 оставил HEAD/refs/tree/clean state и удалил rebase progress,
+но Neogit показал ERROR «Resolve conflicts before continuing» вместо отмены.
+
+**Причина.** Neogit rebase_interactive проверяет только stdout[1] и ожидает
+hint+editor error в одной строке. Git выдаёт раздельные строки. Read-only GitHub
+fetch upstream default rebase.lua, blobed8aa001577a31ada0ae76e8342d6db0e314bfd8,
+показал тот же pattern. После narrow v1 Windows submit/abort прошли; Ubuntu
+abort222708347331 FAIL выявил Git wording «There was», тогда как Windows
+пишет «there was». Причина установлена, новая версия нормализует ASCII-регистр.
+
+**Изменение.** Один companion в существующем Neogit manifest на прежнем pin:
+classification-copy объединяет stdout и проверяет обе editor-message строки
+без учёта регистра. Видимый stdout/ERROR других веток не перехватываются.
+Before SHA f110b2cb7e6cb9d3d679c4429ef673c0a5d84de3bc9e36b10cd3441c04007391,
+after acfa813fd5c2d1db0edd2a78bfecfaf53f249ffe2160ef09b2290a420a35360b.
+Neogit3 files, всего6 dependencies/14 files; новых plugins/SDK/pins нет.
+Prepared SDK обновлён явно общим CLI, ordinary startup только проверяет.
+Существующей установке: :Lazy build neogit и перезапуск.
+
+**Проверка/e2e.** Постоянный git-sequence: native selector→todo, C перед B,
+fixup C в A, Submit даёт2 commits с прежним tree; edited todo Abort сохраняет
+HEAD/refs/tree. Третий case переставляет зависимый B перед A, получает настоящий
+ERROR/unmerged index, затем native rebase Abort возвращает исходную историю.
+Windows final profiles3265078000200/3272008775000/3278388845200, Ubuntu
+703356536773/705399890672/707227988790. По3 PASS; plugin-backports по15 PASS
+(LF/CRLF/apply/check/repeat/revert/unknown payload/real Lazy build). Native exits0,
+APIerrors[], scope ok; source copies/manifest exact, git-sequence-final-audit.json.
+
+Первый target conflict2542895048900 дошёл до настоящего ERROR/unmerged, но
+тест открыл r popup до обновления native status и ждал отсутствующий Abort.
+Исправлено только ожидание видимых Rebasing/unmerged/Abort. Source1/1,
+intermediate2/1 и Ubuntu variant1 failure не удалены; финальные версии по одному
+прогону на ОС, без unchanged green retry. Old Git conflicts Ubuntu4 PASS;
+Windows3/1: rebase-abort2633297634000 не дошёл до запуска, notifications пусты,
+HEAD/refs/tree не изменились. IDE-124 открыт, причина не установлена. Новый
+parser меняет только rebase_interactive, onto_branch не менялся.
+
+**Вывод.** Реальная отмена и настоящий conflict различаются по native результату;
+парсер должен учитывать строки и варианты Git, а не ветвиться по ОС. Это
+local patch до готового upstream эквивалента, не новый Git backend. Удалить
+только этот companion после upstream fix и тех же трёх cases на целевых ОС.
+Credentials остаются следующей частью очереди4. Полный Windows PASS не заявлен.
+
+**Файлы.** patches/plugins.json/README, Git sequence E2E/registry, change,
+QUICKSTART/PANEL_KEYS/FEATURE_REVIEW/roadmap/PROBLEMS/HISTORY/commands. Pins/SDK
+и прежние journals/frozen drafts сохранены; stage registry только новая Git row.

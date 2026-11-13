@@ -94,6 +94,11 @@ Trouble: `Space xx` — diagnostics, `Space xQ` — Quickfix; `zo/zc` — рас
 имеют свою штатную справку `g?`; конкретные действия — в общей `?` и
 [полном руководстве](../nvim_forge/QUICKSTART.md).
 
+Git sequence editor: status `r i` → commit диапазона → Enter; `gk/gj` —
+перестановка, `f` — fixup, `Ctrl-c Ctrl-c` — применить, `Ctrl-c Ctrl-k` —
+отменить todo. Штатная отмена сохраняет HEAD/ветки/файлы. Настоящий конфликт
+остаётся ошибкой; обычный rebase abort — status `r a`/Yes (§212).
+
 Files `y/p`, `c`, `d` и защита несохранённых правок —
 [краткий workflow](FILES_WORKFLOW.md).
 

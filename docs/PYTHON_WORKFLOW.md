@@ -66,7 +66,7 @@ pytest debug не должен перекрываться ложным adapter e
 прежний native budget4s вызывал Press ENTER до завершения handshake.
 Использована штатная настройка nvim-dap, одинаковая на ОС. Настоящий exit
 адаптера сообщается сразу, независимо от этого бюджета (IDE-122/IDE-DAP-8, §210).
-Windows mixed+Python8 проверены; финальный Ubuntu budget и Mac ещё открыты.
+Windows/Ubuntu mixed+Python8 проверены (§210–211); Mac/physical ещё открыты.
 
 Отдельные adapter overrides `forge_debugpy_adapter`/FORGE_DEBUGPY_ADAPTER и
 `forge_debugpy_python`/FORGE_DEBUGPY_PYTHON задавайте до загрузки DAP конфигурации

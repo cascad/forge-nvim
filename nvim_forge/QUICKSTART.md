@@ -374,6 +374,14 @@ commit editor подтверждается `Esc`, `ZZ`. `m a`/`r a` и Yes от�
 переносимый commit; это [семантика Git](https://git-scm.com/docs/git-rebase),
 а не постоянные подписи «моё/чужое».
 
+Interactive rebase: из status `r i`, в native списке commits выбери нижний
+commit диапазона и Enter. В todo `j/k` выбирают строку, `gk/gj` переставляют,
+`f` делает fixup в предыдущий commit. `Ctrl-c Ctrl-c` применяет список,
+`Ctrl-c Ctrl-k` отменяет изменения todo и сохраняет исходную историю.
+Штатная отмена теперь сообщает `Rebase aborted`; настоящий conflict остаётся
+ERROR с обычным `r a`/Yes. Проверено Windows/Ubuntu (§212); после обновления
+повтори `:Lazy build neogit` и перезапусти редактор.
+
 Worktree: `w W` → путь → исходный ref → имя ветки; `w g` — список/посещение;
 `w D` — выбор и подтверждение удаления. На dirty worktree второй вопрос
 предлагает force: ответ No сохраняет данные. При удалении текущего worktree
@@ -381,7 +389,8 @@ Neogit сначала возвращается в основной, даже е�
 
 После обновления существующей установки один раз выполнить `:Lazy build neogit`
 и `:Lazy build gitsigns.nvim`, затем перезапустить редактор. Первая команда
-готовит исправления удаления текущей папки и очистки Git output (IDE-034/043),
+готовит исправления удаления текущей папки, очистки Git output и sequence
+abort classification (IDE-034/043/123),
 вторая — фоновых Git
 запросов, если worktree исчез до завершения initial signs (IDE-035),
 и ненужного cwd живого object read (IDE-038). После обновления этого
