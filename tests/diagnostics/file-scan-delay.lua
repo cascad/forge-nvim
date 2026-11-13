@@ -11,10 +11,17 @@ function M.arm(project, relative)
   local opendir,readdir=uv.fs_opendir,uv.fs_readdir
   local target_dir
   local held
-  local report={root=root,target=target,held=false,released=false,drained=false,entries={},batches=0}
+  local report={root=root,target=target,held=false,released=false,drained=false,entries={},batches=0,
+    sync_opens=0,async_opens=0}
   local function same(path) return uv.fs_realpath(path)==target end
   uv.fs_opendir=function(path,callback,entries)
-    if type(callback)~='function' or not same(path) then return opendir(path,callback,entries) end
+    if not same(path) then return opendir(path,callback,entries) end
+    if type(callback)~='function' then
+      report.sync_opens=report.sync_opens+1
+      report.sync_stack=report.sync_stack or debug.traceback('Native synchronous directory request',2)
+      return opendir(path,callback,entries)
+    end
+    report.async_opens=report.async_opens+1
     return opendir(path,function(err,dir)
       if dir and not target_dir then target_dir=dir end
       callback(err,dir)

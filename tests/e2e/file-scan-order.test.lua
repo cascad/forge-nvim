@@ -1,4 +1,4 @@
--- spec: IDE-FILE-5. Настоящие native Files, IO и ввод; helper меняет только порядок ответа.
+-- spec: IDE-FILE-5, IDE-FILE-6. Native Files, IO и ввод; helper задерживает только реальный ответ.
 local root=vim.fn.fnamemodify(debug.getinfo(1,'S').source:sub(2),':p:h:h:h'):gsub('\\','/')
 package.path=root..'/tests/lib/?.lua;'..package.path
 local T=require('check')
@@ -57,7 +57,9 @@ local function arm(relative)
   e:lua([[local source,relative=...;_G.forge_scan_delay=dofile(source).arm(vim.fn.getcwd(),relative~='' and relative or nil)]],{helper,relative or ''})
 end
 local function held()
-  e:wait('actual native final readdir held',function() return e:lua('return _G.forge_scan_delay.report().held') end)
+  e:wait('actual native final readdir held',function()
+    report.io=e:lua('return _G.forge_scan_delay.report()');return report.io.held
+  end)
   report.held=e:lua('return _G.forge_scan_delay.report()')
   assert(report.held.request_stack:find('fs_scan.lua',1,true),'Wrong native IO producer')
 end
@@ -140,7 +142,7 @@ check('IDE-FILE-5 old full root cannot erase newer child and subsequent updates'
   T.eq(vim.fn.readfile(e.project..'/создано space/новый файл.txt'),{'ORDER_WRITE'})
 end)
 local function independent_partials()
-  -- Публичная policy always только в этом control делает normal l асинхронным.
+  -- Явная native policy сохраняет назначение прежнего freshness control.
   e:lua('require("neo-tree.sources.manager").get_state_for_window().async_directory_scan="always"')
   choose('folder-A');arm('folder-A');e:input('l');held()
   choose('folder-B');e:input('l');e:wait('second folder rendered first',function() return visible('beta.txt') end)
@@ -189,4 +191,29 @@ check('IDE-FILE-5 newer partial survives completion of a pending full snapshot',
   checkpoint('after-both-native-delays');report.watches=watches()
   for _,w in ipairs(report.watches) do assert(w.references>=0,'negative watcher references') end
 end)
+check('IDE-FILE-6 manual folder scan allows code input before native IO completion',function()
+  choose('folder-A');arm('folder-A');e:input('l')
+  e:wait('manual expansion processed',function() return node('folder-A').expanded end)
+  report.io=e:lua('return _G.forge_scan_delay.report()')
+  T.eq(report.io.sync_opens,0,'manual expansion used synchronous native opendir')
+  held();assert(report.held.async_opens>0,'No native asynchronous directory request')
+  local started=vim.uv.hrtime()
+  e:input(' w0');e:wait('code focus while directory IO pending',function() return e:current_ft()=='text' end)
+  e:input('gg0iWHILE_SCAN_<Esc>')
+  e:wait('real input before directory IO completed',function()
+    return e:lua('return vim.api.nvim_get_current_line()'):find('WHILE_SCAN_',1,true)~=nil
+  end)
+  report.input_ms=(vim.uv.hrtime()-started)/1e6
+  T.eq(e:lua('return _G.forge_scan_delay.report().released'),false)
+  assert(report.input_ms<300,'Reference input exceeded 300ms: '..report.input_ms)
+  tree();release();e:wait('real directory children visible',function() return visible('alpha.txt') end)
+  choose('alpha.txt');e:input('<CR>')
+  e:wait('native child opened',function()
+    return e:lua('return vim.api.nvim_buf_get_name(0)'):gsub('\\','/'):sub(-19)=='/folder-A/alpha.txt'
+  end)
+  e:input('ggSASYNC_WRITE<Esc>:write<CR>')
+  e:wait('native write reached existing child',function()
+    return vim.fn.readfile(e.project..'/folder-A/alpha.txt')[1]=='ASYNC_WRITE'
+  end)
+end,true)
 T.finish()

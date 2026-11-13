@@ -37,15 +37,19 @@ retry не запускался. Native gate1.2 остаётся открыты�
 сразу. Требование: ввод/фокус/отрисовка без заметной блокировки; фоновые Git,
 scan/LSP/компиляция не удерживают UI. Нужны измерения именно рабочего проекта:
 key→первая перерисовка, main-loop gap, scan/Git/decorations и FileType/LspAttach.
-Раскрытие Files пока не измерено/не исправлено. Для первого открытия файла
+Для первого открытия файла
 §224 дал native repro451ms, instrumented445ms: Gitsigns147ms + BufReadPost235ms
 холодной загрузки общего оформления. Шесть existing plugins теперь VeryLazy;
 Windows first txt262ms/input56ms/Rust221ms, Ubuntu35/4/49ms вreference fixture.
 Startup cold private profile отдельно: Windows1153ms/Ubuntu88ms (Lazy stats),
 не считать перенос загрузки устранением её стоимости. Native Rust root имеет
 отдельный sync sysroot probe; это кандидат, не доказанная причина Files.
-Следующий шаг — ручное раскрытие дерева и sync/async filesystem scan на реальной
-вложенности; пользовательский большой проект/physical ещё не принят.
+§225 подтвердил sync opendir при ручном раскрытии в native auto и включил
+штатный always. Windows/Ubuntu source1 RED → scan-order8 + filter2 PASS на ОС;
+Code/input при настоящем held IO113/12ms. Без нового scanner/cache/backport.
+Большой рабочий проект/physical/Mac ещё не принят: стоимость Git/render этим
+узким исправлением не закрыта. Raw и границы — verification change
+make-manual-tree-scans-asynchronous.
 
 ## IDE-131 — Rust readiness запаздывает и check использует отсутствующий Clippy
 

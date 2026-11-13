@@ -12007,3 +12007,50 @@ Raw .tests/rust-warmup-*, .tests/rust-open-trace*, .tests/ubuntu/rust-warmup-*;
 audit .tests/rust-warmup-audit.json.67 pins/6 patches16 files/SDK прежние,
 Docker ready f63a05ca/network none без build/download/lifecycle, temp F.
 Journals append-only, old startup/infra drafts не включаются в commit.
+
+
+## 225. Files: асинхронное ручное раскрытие каталога
+
+2026-11-13. Спека: IDE-FILE-6 (ADDED). Продолжение IDE-132.
+
+**Проблема.** Владелец наблюдает задержку раскрытия Files до секунды.
+Штатный Neo-tree auto делает refresh async, но ручной l/Enter — sync.
+
+**Причина.** Native toggle_directory передаёт false в get_items; auto оставляет
+sync_scan → uv.fs_opendir без callback. Source dc23a30 на Windows/Ubuntu
+показал sync_opens1 с настоящим fs_scan.lua stack. Длительность именно большого
+пользовательского дерева пока не измерена; это подтверждённый блокирующий путь,
+а не доказательство единственной причины всех задержек.
+
+**Изменение.** Единственная runtime настройка filesystem.async_directory_scan
+переведена в поддерживаемый Neo-tree always. Нового scanner/cache/renderer,
+патча плагина или backend нет. Existing test-only observer считает native
+sync/async opendir и удерживает один настоящий readdir EOF callback, не меняя
+данные/ошибки IO. Permanent IDE-FILE-6: l → actual expanded node → held IO →
+Space w 0/input → release → open existing child/replace/write.
+
+**Проверка/e2e.** Final source1 RED → target scan-order8 + filter2 PASS на
+каждой ОС. Ввод до окончания чтения112.849ms Windows/11.980ms Ubuntu при
+пределе300ms. Target sync_opens0/async_opens1, child реально записан на диск.
+Прежние7 freshness cases и2 filter controls сохранены.22 final profiles:
+exit0/signal0/APIerrors[]/hard_kill=false/scope empty. Config/test/helper bytes,
+SDK/lock/frozen drafts и append-only prefixes сверены audit.
+
+Первый Windows draft39026721516800 не годится как source regression: counter
+читался до обработки клавиши; затем save ожидал ASYNC_WRITE вместо фактической
+вставки ASYNC_WRITEalpha. Сохранён raw, native exit штатный. Исправлены ожидание
+реального раскрытия и штатная замена строки; финальный source с теми же test
+bytes, что target, отказал именно на sync_opens1. Deadline не повышался.
+
+**Вывод/границы.** Устранён подтверждённый sync IO путь ручного раскрытия;
+ввод во время незавершённого чтения проверен. Mac/physical, большой рабочий
+проект, стоимость Git/render остаются открыты. Full suite не запускался,
+IDE-130/133 startup gate не закрыт. Ready Docker28.5.1/imagef63a05ca, private
+Neogit overlay/network none, serial Win/Linux без build/download/Desktop/WSL
+lifecycle. Host temp только F;67 pins/6 backports16 files/SDK прежние.
+
+**Файлы.** neo-tree.lua, existing file-scan-order E2E и file-scan-delay helper,
+OpenSpec delta/verification, Files guide/tests README/PROBLEMS/roadmap/HISTORY/
+commands. Raw .tests/tree-async-*, guest .tests/ubuntu/tree-async-*;
+audit .tests/tree-async-audit.json, draft tree-async-source-observer-error.txt.
+Отложенные startup/infra drafts не включаются в commit.

@@ -20,8 +20,10 @@ IDE-001 параллельно ждёт диагностических данн�
    PASS на ОС. Стандартный Cargo cache, без своего storage. Mac/large cold и
    принудительный pending metadata cancel gate остаются открытыми.
 3. IDE-132 — cold first-file нагрузка разобрана §224:451→262ms Windows,
-   общие UI plugins подготовлены на VeryLazy. Раскрытие Files и большой
-   рабочий проект ещё открыты; следующий bounded пункт — native async scan.
+   общие UI plugins подготовлены на VeryLazy. §225 убрал подтверждённый sync
+   scan ручного раскрытия через native always: source RED → target10 PASS/ОС,
+   Code/input при held IO113/12ms Windows/Ubuntu. Большой рабочий проект,
+   native Mac/physical и возможная стоимость Git/render ещё открыты.
    Отклик UI измеряется отдельно от LSP ready, startup cost не скрывается.
 4. Затем вернуться к оставшейся очереди ниже. IDE-048 probe остановился раньше
    remove: RPC timeout/forced native cleanup класса IDE-047, raw26364912087090
@@ -30,12 +32,18 @@ IDE-001 параллельно ждёт диагностических данн�
 Пока владелец работает в IDE, тяжёлые language/container suites не запускаем.
 Одно короткое plain-text native E2E подготовки допустимо без Cargo/LSP builds.
 
-**Последний результат — §224:** Cargo workspace готовится до первого .rs;
+**Последний результат — §225:** ручное раскрытие Files теперь читает каталог
+асинхронно средствами Neo-tree. Source dc23a30 RED на sync opendir, target
+scan-order8 + filter2 PASS на Windows и Ubuntu; ввод до окончания чтения
+113/12ms.22 final native profiles штатно завершены, SDK/pins/backports прежние.
+Mac/большой проект остаются открыты; IDE-133 этим исправлением не закрыт.
+
+**Предыдущий результат — §224:** Cargo workspace готовится до первого .rs;
 native async metadata и rust-analyzer, input56ms/first txt262ms/Rust221ms
 Windows,35/4/49ms Ubuntu. Compiler build script реально занят во время UI
 проверки, client ID переиспользуется. После cold-load fix общие6 UI plugins
 VeryLazy, функции сохранены. Selected16 PASS на каждой ОС/16 profiles всего,
-source без warmup RED. Mac/large cold/pending cancel и Files expansion открыты.
+source без warmup RED. Mac/large cold/pending cancel открыты; Files scan — §225.
 
 **Предыдущий результат — §223:** compiler diagnostics Rust больше не требуют
 Clippy. Native source отказал с no such command clippy; target показывает

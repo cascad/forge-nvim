@@ -97,7 +97,14 @@ late Problems focus RED сохранены. [Пользовательские к
 Выбранные source/tail профили не заменяют full suite или Mac/physical GUI;
 итоговые результаты — verification change add-ide-log-console.
 
-IDE-FILE-5: `nvim -l tests/e2e/file-scan-order.test.lua`,7 native cases.
+IDE-FILE-5/6: `nvim -l tests/e2e/file-scan-order.test.lua`,8 native cases.
+§225 добавляет manual expansion → native async IO held → Code/input →
+release/open/write. Source dc23a30 использует sync opendir и RED; target
+использует штатный always. Прежние7 freshness и2 filter controls сохранены;
+Windows/Ubuntu10 PASS на ОС. Observer передаёт реальные IO данные без замены.
+Первый Windows draft ошибся с ожиданием обработки клавиши и содержимого
+существующего файла; raw сохранён, test исправлен до финального source/target.
+Reference input <300ms не означает гарантию времени отрисовки большого проекта.
 §180: Windows/Ubuntu current7/7 после source RED, включая old root, old
 partial/new root, pending folder/full refresh и newer partial/pending full
 snapshot. Ordinary A/a/Enter/write, independent folders и initial-file/reveal

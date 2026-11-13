@@ -8288,3 +8288,45 @@ Linux shell UTF-8/LF, ready image f63a05ca/private overlay/network none, Windows
 Ubuntu serial без build/download/Desktop/WSL lifecycle. Forced pending cancel,
 Mac/large real project/Files expansion/IDE-133 ещё open. SDK/lock/frozen startup
 и infra drafts сверены по .tests/rust-warmup-prefix.json; только allowlist в index.
+
+
+## 133. Files: штатный always и ввод до завершения native IO
+
+2026-11-13; FIXLOG225, change make-manual-tree-scans-asynchronous.
+Все команды из F:/repo/forge-nvim, PowerShell -NoProfile; TEMP/TMP/TMPDIR и
+NVIM_LOG_FILE в .tests/tmp на F, npm cache F:/forge-nvim-tmp/npm-cache.
+Чтение: git status/diff, rg по mappings/Neo-tree get_items/toggle_directory/
+defaults, Get-Content сохранённых native stack и shutdown. Никакого доступа
+к чужому исходному проекту или системным настройкам.
+
+```powershell
+npx.cmd --yes @fission-ai/openspec@1.13.2 list --json
+npx.cmd --yes @fission-ai/openspec@1.13.2 new change make-manual-tree-scans-asynchronous
+# instructions proposal/specs/design/tasks/apply --change ... --json
+git archive --format=zip --output=.tests/tree-async-source.zip dc23a30 nvim_forge
+# Python ZipFile извлекает только этот snapshot в .tests/tree-async-source
+# и .tests/ubuntu/tree-async-source; пути проверены внутри .tests.
+$env:FORGE_TEST_ID='IDE-FILE-6'
+$env:FORGE_E2E_CONFIG_SOURCE='F:/repo/forge-nvim/.tests/tree-async-source/nvim_forge'
+& .tools/neovim/windows-x64/bin/nvim.exe -l tests/e2e/file-scan-order.test.lua
+# Source final: tree-async-source-final.txt. Первый ошибочный observer отдельно
+# tree-async-source-observer-error.txt; исправление теста описано в FIXLOG.
+$env:FORGE_TEST_ID=$null; $env:FORGE_E2E_CONFIG_SOURCE=$null
+& .tools/neovim/windows-x64/bin/nvim.exe -l tests/e2e/file-scan-order.test.lua
+& .tools/neovim/windows-x64/bin/nvim.exe -l tests/e2e/file-filter.test.lua
+docker version --format '{{.Server.Version}}'
+docker image inspect forge-nvim-tests:ubuntu24.04-nvim0.12.2 --format '{{.Id}}'
+docker compose -f tests/containers/compose.yaml run --rm --no-deps --pull never --entrypoint bash ubuntu /workspace/.tests/tree-async.sh > .tests/tree-async-ubuntu.txt 2>&1
+python -B .tests/audit-tree-async.py
+python -B .tests/record-tree-async.py
+npx.cmd --yes @fission-ai/openspec@1.13.2 validate make-manual-tree-scans-asynchronous --type change --strict --no-interactive
+git diff --check
+git diff --cached --check
+```
+
+Один final source1 RED и target10 PASS/ОС.22 final native profiles штатны;
+ещё один Windows observer draft сохранён. Audit проверяет copied config/test/
+helper, native exit0/signal0/API[]/scope0 и frozen .tests/tree-async-prefix.json.
+Guest script UTF-8/LF, ready engine/image прежние, network none/private overlay,
+без lifecycle/build/download. Никаких новых SDK/pins/backports. Mac/большой
+проект и IDE-133 остаются открыты. Exact allowlist/prefix guards перед commit.

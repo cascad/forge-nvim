@@ -431,6 +431,8 @@ return {
                 }),
             },
             filesystem = {
+                -- spec: IDE-FILE-6. Штатный auto читает вручную раскрытые каталоги синхронно.
+                async_directory_scan = "always",
                 commands = vim.tbl_extend("force", guarded_open_commands("filesystem"), {
                     open_folder_as_project = open_node_as_project,
                     rename = safe_rename,
