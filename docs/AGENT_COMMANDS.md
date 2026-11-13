@@ -7899,3 +7899,11 @@ activities.lua обнаружили уже выполненный §185, а не
 Roadmap/FEATURE_REVIEW исправлены; runtime/tests/SDK/pins не менялись,
 повтор tests не выполнялся. Prefix .tests/roadmap-review-prefix.json.
 Запрошен реальный UI выбор navic+barbecue/Satellite; execution approval нет.
+
+## 124. Сохранить breadcrumbs и Satellite
+
+2026-11-13: явный выбор владельца после native UI preview. rg/Get-Content
+FEATURE_REVIEW/IDE_ROADMAP, обновление решений и HISTORY; FIXLOG §216.
+Runtime/pins/tests не менялись, E2E не повторялись. Guard baseline
+.tests/keep-secondary-ui-prefix.json: append-only journals и frozen drafts,
+lock exact; stage только5 документальных файлов, diff check и commit без push.

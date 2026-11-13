@@ -22,8 +22,9 @@ F9/F5/evaluate/output/edit-repeat/launch.json/Stop, missing Node/adapter;
 Очередь4 worktree IDE-038/048 остаётся открытым расследованием: прежних logs
 недостаточно для нового причинного исправления. Проверка следующего кандидата
 показала: passive window lookup уже объединён в §185, повтор этого refactor
-не нужен. Следующий выбор из FEATURE_REVIEW — navic+barbecue/Satellite;
-ответ владельца ожидается. SQL references ждут готовый provider.
+не нужен. Выбор владельца 2026-11-13 (§216): breadcrumbs (navic+barbecue)
+и Satellite нужны и сохраняются; удаление исключено из очереди. Дальнейший
+refactor сохраняет эти функции. SQL references ждут готовый provider.
 Отдельные Windows native quit IDE-121 и старый rebase-start timeout IDE-124
 не закрыты исторически; old rebase-abort на новой версии PASS (§214), причина
 исходного timeout без лога не установлена. Полный Windows regression PASS не заявлен. Mac/physical
@@ -43,7 +44,7 @@ E2E используются для защиты изменений продук
 
 | Очередь | Результат | Статус |
 |---|---|---|
-| 1. Этап 6: упрощение панелей/DAP | Сократить доказанные дубли по готовому review | §185: два window lookup цикла объединены; §197: общая подготовка восьми navigation-команд. Следующее сокращение вторичного UI требует выбора владельца |
+| 1. Этап 6: упрощение панелей/DAP | Сократить доказанные дубли по готовому review | §185: два window lookup цикла объединены; §197: общая подготовка восьми navigation-команд. Breadcrumbs/Satellite сохранены по выбору владельца (§216), их удаление исключено |
 | 2. Оформление Termide | Довести Code/Locals pilot до решения для повседневной работы, затем остальные панели | Общий цветной zoom готов на Windows (§199); постоянные рамки split и physical review открыты |
 | 3. Реальные проекты | Go/Cargo workspace, Python venv, Node scripts, выбор цели и launch.json/default | Go.work §206–208 и mixed context/Node script/Python venv debug Windows/Ubuntu9 PASS (§209–211); остальная mixed матрица открыта |
 | 4. Git | Credentials, interactive rebase и оставшиеся ошибки worktree | Sequence и HTTP credentials Windows/Ubuntu (§212–214); worktree IDE-038/048 и real OAuth/SSH/Mac открыты |
@@ -295,7 +296,7 @@ Desktop/WSL агент не запускает и не перезапускае�
 | Проверено Windows/Ubuntu | Надёжное Files: создание/раскрытие/обновление и native filter | IDE-104/105: по44 editor +15 CLI PASS, история §180–181; Mac/GUI отдельно |
 | Проверено Windows/Ubuntu | Общая консоль состояния и логов IDE | IDE-106/107: Space w i/:ForgeLogs, source/status/history/filters/report, native restart и late focus; по46 различных editor checks, §182; Mac/GUI отдельно |
 | Рабочий opt-in пилот | Аккуратные рамки как в Termide | IDE-076: :ForgeFramePilot, настоящие Code/Locals, шаги/цвет/resize/Space w/session; [команды, цена и ограничения](PANEL_FRAME_PILOT.md), §183. Default/physical gate открыт |
-| Обзор актуализирован; следующий выбор | Конкретные сокращения | IDE-080: [решения после Files/Logs/pilot](FEATURE_REVIEW.md), §184;67 pins/6 patched dependencies. Первый UI кандидат — breadcrumbs/ruler, выбор владельца открыт; отдельно пассивный window lookup |
+| Обзор: выбор UI получен | Сохранить выбранные функции при упрощении | IDE-080/§216: breadcrumbs и Satellite остаются,67 pins/6 patched dependencies прежние; passive lookup уже выполнен (§185) |
 | Первый небольшой refactor | Общий пассивный поиск окон | §185: два повторных цикла заменены существующим finder, net−16 строк; FT/source/window-order/tab/custom callbacks сохраняются, main/create/guard отдельны |
 | Остаток функциональности | Bash debug, сложные проекты/окружения, оставшиеся Git ошибки | Готовые backend; SQL references отложен до подходящего provider, собственный LSP не разрабатываем |
 | Отдельный платформенный gate | Mac startup/zsh/Go, Cmd+C, реальные клавиши, чистый setup Windows/macOS/Ubuntu | Нужны actual запуски на целевых машинах; Mint отложен |
@@ -490,8 +491,8 @@ Git/workspace/tools/save разобраны в [WORKSPACE_TOOL_REVIEW](WORKSPACE
 Фактическая часть большого review сведена в FEATURE_REVIEW (§147): coverage
 всего ядра/явные gaps, 3 project/focus/idle samples на Windows и Ubuntu.
 Исходный Peek q был RED 6/6 (IDE-083); fix §149 вернул готовые Glance defaults
-и прошёл постоянный regression. Решение об удалении breadcrumbs/ruler/Peek
-остаётся открытым. IDE-081/082/083/084 завершены на Windows/Ubuntu; далее
+и прошёл постоянный regression. Breadcrumbs/ruler сохранены по решению
+владельца 2026-11-13 (§216); готовый Peek также остаётся в текущей сборке. IDE-081/082/083/084 завершены на Windows/Ubuntu; далее
 IDE-086 Output policy проверен на Windows/Ubuntu;
 IDE-085 остаётся наблюдаемым открытым расследованием.
 Mac/GUI gates открыты.

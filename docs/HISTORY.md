@@ -352,6 +352,7 @@ Python реализован и проверен 2026-11-03; после возо�
 | §213 | [Быстрый Git Push до первого repo refresh](../nvim_forge/FIXLOG.md#213-быстрый-git-push-до-первого-repo-refresh) |
 | §214 | [Git credentials: один Enter вместо пустого пароля](../nvim_forge/FIXLOG.md#214-git-credentials-один-enter-вместо-пустого-пароля) |
 | §215 | [Bash debug: native WSL2 и общий PTY](../nvim_forge/FIXLOG.md#215-bash-debug-native-wsl2-и-общий-pty) |
+| §216 | [Breadcrumbs и Satellite: сохранить по выбору владельца](../nvim_forge/FIXLOG.md#216-breadcrumbs-и-satellite-сохранить-по-выбору-владельца) |
 
 ## Как читать и дополнять
 

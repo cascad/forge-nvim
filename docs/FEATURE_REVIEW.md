@@ -1,10 +1,15 @@
 # IDE-080 — обзор фич и стоимости поддержки перед рефакторингом
 
+**Решение владельца 2026-11-13:** breadcrumbs (navic + barbecue) и Satellite
+сохраняются: оба элемента признаны нужными и удобными после просмотра примера.
+Удаление этих трёх plugins исключено из очереди. Дальнейшее упрощение сохраняет
+строку контекста и обзор файла; прежние варианты удаления ниже — история обзора.
+
 2026-11-12, source3d0e6b7: выполнен следующий read-only проход
 [tools/OS boundaries](WORKSPACE_TOOL_REVIEW.md#актуальный-проход-инструментов--2026-11-12).
 Общий resolver framework не нужен: порядок и отказ override различаются по
 языкам. Найден статический кандидат IDE-119 — Windows layout в managed
-debugpy fallback; native reproduction ещё требуется. UX-удаления не выбраны,
+debugpy fallback; native reproduction ещё требуется. Breadcrumbs/Satellite сохранены решением владельца 2026-11-13,
 готовые backend/67 pins/6 patched dependencies сохраняются.
 
 2026-11-12, §207: добавлена узкая public Adapter boundary `forge/go_tests.lua`:
@@ -46,7 +51,7 @@ stdin warning console transport; explicit console warning IDE-127 остаётс
 SDK prepare явный, startup не запускает WSL.17 distinct Windows/Ubuntu PASS,
 Mac/cold/interactive stdin отдельно. Повторный read-only review подтвердил:
 passive lookup уже объединён в §185; старую формулировку следующего шага
-не следует читать как новую работу. Следующий выбор — три secondary UI plugins.
+не следует читать как новую работу. Выбор по трём UI plugins закрыт: сохранить breadcrumbs и Satellite.
 
 ## Актуальный выбор после Files, Logs и frame pilot — 2026-11-11
 
@@ -64,12 +69,12 @@ opt-in Code/Locals pilot §183. Ниже прежние исследования
 | Панели | Сохранить default state/registry + Edgy и Space w | Open/close/focus/zoom/help/output; новый общий window manager не вводить |
 | Рамки | Оставить ForgeFramePilot opt-in до физического review | 164 строки layout +21 net glue; backend data прежние. Перенос всех панелей требует решения по owner, а не отдельных shadow overlay |
 | Peek | Рекомендую оставить готовый Glance | Definition/references в контексте по запросу; gpd/gpr/gpt/gpi, Enter/q/Esc/native splits |
-| Breadcrumbs/ruler | Первый кандидат: убрать navic + barbecue + Satellite после выбора владельца | Теряется верхний путь символа и боковой обзор; сохраняются Outline, Problems, gd/gr и Peek. Это ровно3 plugins, не ранее проверенный вариант без4 UI |
+| Breadcrumbs/ruler | Сохранить navic + barbecue + Satellite — выбор владельца 2026-11-13 | Полезны строка текущего контекста и карта файла; дальнейший refactor сохраняет эти функции |
 | Dashboard/project/session | Оставить сейчас | Alpha/recents/open folder/restart/session имеют рабочие сценарии; не объединять выбранный workspace и language/test roots |
 | Autosave/Comment/прочие helpers | Оставить до отдельного доказанного выигрыша | Политика сохранения и line/block/context comments — поведение, не косметика |
 | Временные patches/Windows SDK | Сохранить до подходящего upstream + тех же E2E | У каждого причина/исходный regression/условие удаления; обновление SDK и UI не смешивать |
 
-Выбор владельца по трём UI plugins запрошен отдельно; без ответа они остаются.
+Выбор владельца по трём UI plugins получен 2026-11-13: все три остаются.
 Сравнение всех вариантов и потерь — раздел «Варианты для решения по фичам».
 Прежний private вариант без4 UI не доказывает новый точный вариант без3;
 при выборе понадобится свой clean profile с текущим lock и native E2E.
@@ -102,7 +107,7 @@ Raw summaries: .tests/review-after-pilot-{windows,ubuntu}.json (Ubuntu под
 ниже обновлено; число4 в §182–183 не является корректным числом plugin
 backports. Windows SDK/SQLS source patch учитываются отдельно. Runtime и pins
 в этом проходе обзора не менялись. Passive lookup уже сокращён в §185;
-следующий шаг — выбранное владельцем UI сокращение. Нового подтверждённого
+вариант удаления breadcrumbs/Satellite отклонён владельцем. Нового подтверждённого
 сокращения runtime этот повторный просмотр не дал.
 
 Дата: 2026-11-10. Статус: фактический обзор, coverage/ownership и bounded native
@@ -180,7 +185,7 @@ backend не умеет references, это ограничение, а не по�
 | Полные рамки Code/Locals | `forge.frame_pilot`, opt-in | Рабочий пилот §183; не default замена всех окон |
 | Outline/Problems | Aerial, Trouble | Outline явно запрошен. Проверить пересечение дополнительных symbol views |
 | Peek/references UI | Glance, Trouble, quickfix/Telescope routes | Кандидат сократить число способов и хоткеев, не language semantics |
-| Breadcrumbs | navic + barbecue | Дополнительная навигация; кандидат на отключение по итогам обзора |
+| Breadcrumbs | navic + barbecue | Сохранить: владелец подтвердил пользу и удобство 2026-11-13 |
 | Overview ruler/декор | Satellite, icons, indent guides, theme/statusline | Отдельная цена и ценность. Возможные упрощения, без предположения «всё лишнее» |
 | Dashboard/recents | Alpha + start/project/session glue | Дополнительный workflow; сверить с обычным открытием проекта/поиском файлов |
 | Autosave | auto-save + events + format guards | Политика редактирования. Нельзя удалять как косметику без оценки save/test/debug |
@@ -339,7 +344,7 @@ text fixture различие ограниченное и не объясняе�
 Сокращать UI стоит ради понятности и уменьшения hooks/ответственности, без
 обещания заметного ускорения работы на всех проектах.
 
-### Варианты для решения по фичам
+### Исторические варианты до решения владельца 2026-11-13
 
 | Вариант | Что теряется | Что сохраняется |
 |---|---|---|
@@ -347,13 +352,10 @@ text fixture различие ограниченное и не объясняе�
 | Минимальная вторичная навигация | То же плюс peek-окна gpd/gpr/gpt/gpi; минус 4 plugins | Outline/Problems и обычные LSP переходы/quickfix; этот точный private вариант проверен выше |
 | Сохранить весь UI | Фичи не удаляются | Можно сокращать внутренние overrides/дубли после отдельного плана |
 
-Предварительно разумно оставить Peek по запросу и оценить удаление breadcrumbs/
-ruler: Glance не создавал фоновой нагрузки в этих снимках, а первые три
-активируются при открытии файла и имеют отдельные hooks/ограничения. Это
-предложение для выбора UX, не уже выполненное удаление. Вариант из трёх
-удалений требует собственного regression перед применением; он не выдаётся
-за проверенный по одному сходству с четырьмя. Остальные DAP/Git/tool/root слои
-пересматриваются отдельно от этих дополнительных UI.
+Решение 2026-11-13: breadcrumbs и Satellite оставить. Прежняя рекомендация
+удалить их отменена; private сравнения выше сохраняют результаты исследования,
+но не являются заданием на удаление. DAP/Git/tool/root слои пересматриваются
+отдельно с сохранением выбранных пользователем функций.
 
 ## Исходный gap: native sorter Telescope — IDE-081
 
@@ -458,8 +460,8 @@ Ubuntu 9265858326624/9281597222561/9295146798511. В каждом source diagnos
 
 ## Рекомендуемый набор и порядок изменений
 
-Решений об удалении пользовательских фич пока нет. Это конкретные предложения
-по завершённому фактическому обзору; выбор дополнительных UI ещё открыт.
+Решение по breadcrumbs/Satellite принято: сохранить. Ниже остаются результаты
+обзора и другие направления упрощения; удаление этих трёх plugins не планируется.
 
 | Действие | Что сохранить | Что убрать / какой результат проверить |
 |---|---|---|
@@ -467,7 +469,7 @@ Ubuntu 9265858326624/9281597222561/9295146798511. В каждом source diagnos
 | IDE-083: вернуть готовые Glance defaults | Peek и его штатные keys | Удалить семь ошибочных overrides; q/Esc/Enter/navigation/splits через native regression |
 | IDE-084/086 выполнены Windows/Ubuntu | Первое открытие/focus, output history и PTY lifetime | Late tree cleanup не меняет окно (§150); Output resolver и passive reuse проверены на Windows/Ubuntu (§153), Mac открыт |
 | IDE-081 выполнен | Рабочий поиск и optional native/fallback | Реальный load result, explicit artifact preparation, health и regression (§151) |
-| Breadcrumbs/ruler | Outline, Problems, gd/gr; Peek по запросу | Рекомендуется убрать barbecue/navic/satellite после выбора UX; вариант без 4 UI уже проверен частно, удаления по 3 требуют своего regression |
+| Breadcrumbs/ruler | Сохранить navic + barbecue + Satellite — выбор владельца 2026-11-13 | Полезны строка текущего контекста и карта файла; дальнейший refactor сохраняет эти функции |
 | Git/DAP/panel ядро | Gitsigns + Neogit + Diffview, state/registry + DAP UI + Edgy, guard | Сокращать только дублирующие правила, не разные рабочие роли |
 | Alpha/project/persistence | Folder/recents/session workflows | Сначала native restart/restore coverage, затем оценка цены удаления/упрощения |
 | Comment.nvim и вторичные helpers | Line/block comments и RU/EN keys | Сравнение со штатным Nvim, без потери block/context действий ради минус одного plugin |
