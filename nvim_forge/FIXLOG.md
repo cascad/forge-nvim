@@ -11628,3 +11628,61 @@ imagef63a05ca без build/network/lifecycle; поздний metadata COPY до�
 **Файлы.** Bash module/SDK metadata, DAP lazy cmd, explicit preparer/Dockerfile,
 interactive fixture/E2E/registry, OpenSpec и продуктовые guides/roadmap/history.
 Append-only journals/frozen drafts сохранены, exact staging/commit без push.
+
+
+**Уточнение §217.** Явная связь с delta, без изменения прежней записи:
+Спека: IDE-SH-6 (ADDED).
+
+### 218. Logs: рабочий вид по вкладкам и проектам
+
+**Связь:** WF-01/02/13, change restore-logs-session-view.
+Спека: IDE-LOG-5 (ADDED).
+**Результат:** Windows10 distinct selected PASS/Ubuntu10 PASS, по10 native
+profiles exit0/signal0/APIerrors[]/hard_kill=false/scope empty; Mac/physical отдельно.
+
+**Что было.** Files-only sidecar (§205) не сохранял Logs. Native source
+22494463154400 воспроизвёл RED: после quit/relaunch обе консоли закрыты,
+source=events/minimum0/query='', вместо прежних source SessionPanel/WARN/filter
+и двух разных высот/scroll. Настоящая история при этом уже хранится log_store.
+
+**Причина/изменение.** SavePre намеренно закрывает tool windows перед mksession,
+поэтому их вид не входит в native session. Прежний module переименован из
+session_files в session_views: те же3 hooks, version1/hash/tab-order/JSON и
+прежний Files renderer. Добавлены optional tab.logs height/lines/winsaveview и
+одни общие data.logs source/minimum/query. False явно скрывает, nil оставляет
+прежние Files-only данные совместимыми; фильтры сохраняются и при всех скрытых
+окнах. Capture до cleanup, запись после mksession. Файлы логов заново не копируются.
+
+Restore проходит Files→Logs→следующий tab, затем возвращает прежний code focus.
+Logs использует public Edgy get_win/resize и native winrestview; меньший UI
+масштабирует высоту. Один schedule после native open, без timers/polling/нового
+layout owner. Refresh сохраняет виды существующих Logs окон при обновлении общего
+buffer. История и отсутствие источника остаются настоящими, позиция ограничена
+доступными строками. Никаких перезапусков завершённых процессов/новых plugins.
+
+**Проверка/e2e.** Один постоянный native PTY workflow: две вкладки с разными
+height/scroll, quit→новый PID→Space qs, hidden tab, A→B→A и свои filters,
+все Logs B скрыты→выбор filters всё равно возвращается, запись нового сообщения
+не сбрасывает читаемую строку. Затем новый backend с меньшим реальным UI42→29:
+Logs18→12, скрытый tab сохранён, code focus/installs0. Всего6 native backend PID,
+public recorder для сообщений, реальные клавиши и read-only наблюдение.
+
+Первый Windows target22642014015600 прошёл основные переходы, но весь E2E FAIL:
+фиксированный host45 строк не уменьшил child42. Это fixture error, не product
+PASS. Тест вычисляет меньший размер из actual saved.lines и сохраняет sidecar
+артефакты; runtime не менялся. Final22801368794900 PASS; controls Files1/project1/
+legacy4/Logs3 прежней версии уже9 PASS, не повторялись. Ubuntu10 одним script
+PASS. Raw .tests/session-logs-{source,target,resize}-windows и target-ubuntu;
+audit .tests/session-logs-audit.json проверяет source/shutdown/native host/JSON/
+шесть разных PID/actual views. Исходные RED/fixture FAIL не переписаны.
+
+**Вывод/границы.** Вид панели — данные рядом с существующей сессией, а не повод
+заменять Persistence или запускать процессы.67 pins/6 plugin dependencies16
+files и nvim SDK SHA прежние. Старые source IDE-117/121/124 не закрыты новым
+selected PASS. Docker existing image/network none, без build/download/lifecycle.
+Mac/physical, Outline/Tests/console/debug WF-01 ещё открыты. Документ §217
+verification приведён к русскому языку без смены технических фактов.
+
+**Файлы.** session_views rename, Logs view restore/refresh,3 Persistence require,
+native E2E/registry, OpenSpec, guides/review/roadmap/history/commands. Journals
+append-only, frozen drafts exact, isolated staging; commit без push.

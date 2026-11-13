@@ -69,9 +69,30 @@ function M.refresh()
     end
     if count==0 then lines[#lines+1]=(M.query~='' or M.minimum>0) and 'Нет совпадений по фильтру.' or 'Сообщений пока нет.' end
     -- Native logs не копируются в recorder. Report содержит только выбранный view.
+    local views={}
+    for _,win in ipairs(vim.fn.win_findbuf(M.buf)) do views[win]=vim.api.nvim_win_call(win,vim.fn.winsaveview) end
     vim.bo[M.buf].modifiable=true
     vim.api.nvim_buf_set_lines(M.buf,0,-1,false,lines)
     vim.bo[M.buf].modifiable=false
+    for win,view in pairs(views) do vim.api.nvim_win_call(win,function() vim.fn.winrestview(view) end) end
+end
+
+-- spec: IDE-LOG-5. Native open уже поставил Edgy update в очередь.
+function M.restore_view(view,done)
+    local win
+    for _,w in ipairs(vim.api.nvim_tabpage_list_wins(0)) do
+        if vim.api.nvim_win_get_buf(w)==M.buf then win=w;break end
+    end
+    vim.schedule(function()
+        local ok,err=pcall(function()
+            assert(win and vim.api.nvim_win_is_valid(win) and vim.api.nvim_win_get_buf(win)==M.buf,'Logs view window changed')
+            local edge=assert(require('edgy').get_win(win),'Logs view is not registered in Edgy')
+            local height=math.max(1,math.floor(view.height*math.min(1,vim.o.lines/view.lines)+0.5))
+            edge:resize('height',height-vim.api.nvim_win_get_height(win))
+            vim.api.nvim_win_call(win,function() vim.fn.winrestview(view.view) end)
+        end)
+        done(not ok and err or nil)
+    end)
 end
 
 function M.visible()

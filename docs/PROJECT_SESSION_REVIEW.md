@@ -1,5 +1,24 @@
 # Project/session: native baseline
 
+## Текущая граница — 2026-11-13
+
+Files реализован в §205, Logs — §218. Общий прежний sidecar module теперь
+называется forge.session_views: те же version1/session hash/SavePre→SavePost/
+LoadPost и один JSON. Для Logs добавлены optional fields, старые Files-only
+данные читаются без миграции. Capture до cleanup, Files render→Logs native
+Edgy resize/view→следующая вкладка, затем прежний code focus. Нового session
+backend/window manager/таймеров нет.
+
+Logs сохраняет видимость/высоту/scroll по tabs и общие source/minimum/query
+проекта, даже если все окна скрыты. Windows/Ubuntu по10 selected PASS:
+новый PTY Logs workflow, Files, project-session,4 legacy и3 Logs controls.
+По10 native profiles со штатным shutdown/scope; native A→B→A/quit использует
+новые PID. Меньший UI42→29 адаптирует высоту18→12. Только данные представления,
+процессы не возобновляются. Mac/physical и остальные панели WF-01 открыты.
+
+Следующий срез — Outline/Tests через готовые API, затем доступное сохраняемое
+состояние console/debug. Прежний обзор ниже — исходная точка до этих изменений.
+
 ## WF-01/02: текущая граница восстановления — 2026-11-12
 
 Новые пользовательские кейсы требуют точного вида Files и положения/размеров/

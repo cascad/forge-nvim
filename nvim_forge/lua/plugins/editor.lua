@@ -241,7 +241,7 @@ return {
                     if ev.match == 'PersistenceLoadPre' then
                         require('forge.neo_tree_lifecycle').session_loading(true)
                     else
-                        require('forge.session_files').save()
+                        require('forge.session_views').save()
                     end
                 end,
             })
@@ -270,7 +270,7 @@ return {
                             end
                             -- Вход в проект (restore) → дерево файлов
                             -- (ide/triggers.lua: project:open).
-                            local ok_view, restored = pcall(require('forge.session_files').restore, complete)
+                            local ok_view, restored = pcall(require('forge.session_views').restore, complete)
                             if not ok_view or not restored then
                                 pcall(function() ide.triggers.fire("project:open") end)
                                 complete(not ok_view and restored or nil)
@@ -286,7 +286,7 @@ return {
                 group = vim.api.nvim_create_augroup("UserPersistenceCleanSession", { clear = true }),
                 pattern = "PersistenceSavePre",
                 callback = function()
-                    local captured, err = pcall(require('forge.session_files').capture)
+                    local captured, err = pcall(require('forge.session_views').capture)
                     if not captured then vim.notify('Files session: ' .. tostring(err), vim.log.levels.WARN) end
                     local ok, ide = pcall(require, "ide")
                     if ok and type(ide.cleanup_for_session) == "function" then

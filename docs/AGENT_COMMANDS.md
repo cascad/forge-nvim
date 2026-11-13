@@ -7953,3 +7953,39 @@ lock/plugin manifest/SDK executable. Registry staged from HEAD6e74859 + only new
 interactive row, existing frozen2 rows retained in working copy. All Python
 read/write UTF-8; shell scripts write_bytes LF. Exact allowlist/index guards;
 no tests/run.lua/catalog work, user cache/other projects/system cleanup/push.
+
+
+## 126. Сохранение рабочего вида Logs
+
+2026-11-13, PowerShell login=false, F:/repo/forge-nvim. Все host TEMP/TMP/TMPDIR/
+NVIM_LOG_FILE — .tests/tmp на F, PythonUTF8/UTF-8, npm cache на F. OpenSpec
+restore-logs-session-view: root context/list-specs/proposal/spec/design/tasks/
+apply ready, IDE-LOG-5 delta до runtime; существующие session/Logs/Edgy API прочитаны.
+
+```powershell
+& .tools/neovim/windows-x64/bin/nvim.exe -l tests/e2e/session-logs-view.test.lua
+& .tools/neovim/windows-x64/bin/nvim.exe -l tests/e2e/session-files-view.test.lua
+& .tools/neovim/windows-x64/bin/nvim.exe -l tests/e2e/project-session.test.lua
+& .tools/neovim/windows-x64/bin/nvim.exe -l tests/e2e/session-legacy.test.lua
+& .tools/neovim/windows-x64/bin/nvim.exe -l tests/e2e/ide-logs.test.lua
+docker compose -f tests/containers/compose.yaml run --rm --no-deps --pull never --entrypoint bash -e GOMAXPROCS=2 -e GOFLAGS=-p=2 -e GOTOOLCHAIN=local -e CARGO_BUILD_JOBS=2 ubuntu /workspace/.tests/session-logs-20261113.sh
+python -B .tests/audit-session-logs.py
+npx.cmd --yes @fission-ai/openspec@1.13.2 validate restore-logs-session-view --type change --strict --no-interactive
+git diff --check
+```
+
+Source Windows0/1: Logs/filters отсутствуют после relaunch. Target main0/1 с
+UI fixture error после успешных restore/A→B→A/hidden/refresh; controls9 PASS.
+Новое вычисление меньшего host UI из saved.lines, один main resize1 PASS без
+runtime change; Windows10 distinct выбранных PASS. Ubuntu все10 одним script,
+готовый imagef63a05ca/private Neogit overlay/network none, без SDK/build/lifecycle.
+Никаких tests/run.lua/catalog edits. Mac/physical не запускались.
+
+Source profile22494463154400, target22642014015600, final22801368794900;
+raw .tests/session-logs-{source,target,resize}-windows, target-ubuntu и audit JSON.
+Конечный test сохраняет настоящие session Vimscript/sidecar JSON и lifecycle,
+6 child PID, native host0 и empty scope. Frozen5/source lock/patches/exe exact;
+raw journal prefixes .tests/logs-session-prefix.json. Registry index — HEAD +
+только session-logs-view row, frozen2 rows остаются working copy. Русская
+формулировка предыдущего Bash verification и append-only Speka уточнение217,
+новая история218; exact allowlist/index-prefix/diff/strict, no push.

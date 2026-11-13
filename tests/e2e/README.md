@@ -1516,3 +1516,19 @@ APIerrors[], scope empty. Source sentinel RED и все промежуточны
 сохранены; точные версии — change verify-bash-interactive-terminal/verification.md.
 Mac/physical/cold distro/UNC/custom mounts/полный Locals не заявлены проверенными.
 Image build не повторялся; поздний Dockerfile слой получил SDK patch metadata.
+
+
+## Сессия IDE Logs — IDE-LOG-5
+
+`<nvim> -l tests/e2e/session-logs-view.test.lua` использует прежний session_tui:
+настоящий TUI/PTY,6 native backend PID, quit/relaunch и A→B→A. Проверяются
+два tab views, скрытый Logs, общие filters даже при всех скрытых окнах,
+refresh старой строки и меньший реальный UI. Историю создаёт public recorder,
+никакие события restore/процессы/окна не подменяются. Сохраняются native session
+files, JSON sidecars, screen/state/lifecycle/config source/shutdown.
+
+Windows/Ubuntu по10 selected PASS (§218): новый1 + Files1/project1/legacy4/Logs3.
+Windows controls9 один раз на итоговом runtime, затем исправлен только UI
+fixture нового case и выполнен он один. Ubuntu10 одним script. Первый source
+RED и target fixture FAIL сохранены; Mac/physical отдельно. Готовых Editor deps
+достаточно; нет новых SDK/build/network/Docker lifecycle требований.

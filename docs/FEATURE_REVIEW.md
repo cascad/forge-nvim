@@ -64,6 +64,14 @@ native quit перед TerminatedEvent), общая JSON metadata Python/Lua и 
 на целевых ОС; неизвестные SDK не переписывать. IDE-127 explicit console и
 Mac остаются отдельными ограничениями. Точные source/target — §217.
 
+2026-11-13, §218: Files-only snapshot расширен Logs, module переименован
+в session_views. Те же native save/load hooks/version1/hash/JSON; optional
+поля сохраняют старые данные без второго backend. Logs использует native
+winrestview и public Edgy resize, refresh сохраняет виды существующих окон.
+Цена — данные представления и один completion в существующем per-tab restore;
+новых managers/timers/процессов/plugins/SDK/backports нет. Windows/Ubuntu по10
+selected PASS. Остальные панели WF-01 и Mac/physical открыты.
+
 ## Актуальный выбор после Files, Logs и frame pilot — 2026-11-11
 
 Source e00bcea. Выполнено: Files §180–181, обязательные Logs §182 и рабочий

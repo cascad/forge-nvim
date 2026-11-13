@@ -32,9 +32,11 @@ refactor сохраняет эти функции. SQL references ждут го�
 исходного timeout без лога не установлена. Полный Windows regression PASS не заявлен. Mac/physical
 и полная mixed матрица отдельно. Docker engine использован без lifecycle изменений.
 
-Ближайший продуктовый шаг: WF-01 — сохраняемое состояние панелей помимо Files,
-через события и API существующих компонентов. Без смены session backend и
-без восстановления завершённых процессов как живых.
+Продолжение WF-01 (§218): Logs возвращает открытость/высоту/scroll по tabs,
+источник и фильтры проекта, в том числе при всех скрытых окнах. Windows10
+selected PASS/Ubuntu10 PASS; прежние Files/project/legacy сохранены. Один
+sidecar/session backend, без возобновления процессов. Следующий срез —
+Outline/Tests, затем доступное сохраняемое состояние console/debug.
 
 Один ограниченный пункт → изменения → один прогон нужных тестов → отчёт и
 commit при успехе. Затем самостоятельно следующий пункт. Остановка — по
@@ -99,8 +101,8 @@ Windows/macOS/Ubuntu — целевые ОС; натурные проверки 
 
 | ID | Кейс | Текущая точка |
 |---|---|---|
-| WF-01 | Открыть проект и восстановить рабочее место | Files view проверен Windows, включая меньший UI/follow (§205); Ubuntu workflow ok, E2E cleanup FAIL IDE-117; другие панели/Mac открыты |
-| WF-02 | Перейти в другой репозиторий и вернуться | Per-tab Files A→B→A проверен Windows (§205); Ubuntu scope gate/Mac и остальные панели WF-01 открыты |
+| WF-01 | Открыть проект и восстановить рабочее место | Files и Logs Windows/Ubuntu selected10 PASS (§218), tabs/height/scroll/filters/меньший UI. Старый source IDE-117 не закрыт; Outline/Tests/console/debug и Mac открыты |
+| WF-02 | Перейти в другой репозиторий и вернуться | Files и Logs A→B→A Windows/Ubuntu PASS (§218), скрытая панель и filters проекта. Остальные панели/Mac открыты |
 | WF-03 | Управлять файлами через дерево | Create/rename/move/copy/delete/filter проверялись; единый цикл и сохранение вида дерева входят в приёмку |
 | WF-04 | Работать в проекте со смесью языков | 6 native roots/cwd + Node script/Python venv debug Windows (§209–210); полная mixed matrix/Mac открыты |
 | WF-05 | Запустить файл или конкретный debug-кейс | Cargo/Go.work есть; mixed Node script и Python default из nested venv Windows/Ubuntu (§209–211) |
