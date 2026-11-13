@@ -633,11 +633,14 @@ Space T t / T f / T d — nearest / file / debug. Подготовка, огра
 
 ### Bash debug
 
-После явной установки bash-debug adapter: `.sh` → F9 → F5. Windows использует
+`:MasonInstall bash-debug-adapter` → `:BashDebugPrepare` → `.sh` → F9 → F5.
+После обновления adapter подготовку повторить (IDE-128, безопасный Stop). Windows использует
 готовый default WSL2 Linux, Linux/Mac — Bash4+. Default Output — общий native
 PTY; F5 продолжает, Shift-F5/Space d q останавливают. Space d w добавляет Watch
 (`$answer`), Space d e — Evaluate, Space w c/d — Output/переменные и стек.
 Поддержан type=bashdb launch.json с args/env/cwd. [Подготовка, ограничения и
 проверенные сценарии](../docs/BASH_WORKFLOW.md): Windows/Ubuntu17 distinct PASS,
-Mac/physical/interactive stdin/cold отдельно. Полный список Locals готовый
+Interactive stdin/scrollback и изоляция Stop добавлены в §217: Space w c →
+Ctrl-\ Ctrl-n читает/ищет вывод, i возвращает ввод; Shift-F5 останавливает
+и из terminal-mode. Mac/physical/cold отдельно. Полный список Locals готовый
 bundle не предоставляет; native console warning описан IDE-127.

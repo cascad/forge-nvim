@@ -18,7 +18,9 @@ cancel/rejection/retry, masked input и реальный pre-push. Windows24 dis
 checks на конечном runtime, Ubuntu final24 PASS; полный regression не заявлен.
 Очередь5 Bash debug готова Windows+WSL2/Ubuntu (§215): default native PTY,
 F9/F5/evaluate/output/edit-repeat/launch.json/Stop, missing Node/adapter;
-по17 distinct selected PASS, Mac/physical/cold/interactive stdin отдельно.
+по17 distinct selected PASS. Продолжение §217: interactive stdin/scrollback/Stop,
+исправлен IDE-128 (Stop завершал чужие Editor jobs); Windows21 distinct selected
+PASS/Ubuntu21 PASS, явный :BashDebugPrepare. Mac/physical/cold отдельно.
 Очередь4 worktree IDE-038/048 остаётся открытым расследованием: прежних logs
 недостаточно для нового причинного исправления. Проверка следующего кандидата
 показала: passive window lookup уже объединён в §185, повтор этого refactor
@@ -29,6 +31,10 @@ refactor сохраняет эти функции. SQL references ждут го�
 не закрыты исторически; old rebase-abort на новой версии PASS (§214), причина
 исходного timeout без лога не установлена. Полный Windows regression PASS не заявлен. Mac/physical
 и полная mixed матрица отдельно. Docker engine использован без lifecycle изменений.
+
+Ближайший продуктовый шаг: WF-01 — сохраняемое состояние панелей помимо Files,
+через события и API существующих компонентов. Без смены session backend и
+без восстановления завершённых процессов как живых.
 
 Один ограниченный пункт → изменения → один прогон нужных тестов → отчёт и
 commit при успехе. Затем самостоятельно следующий пункт. Остановка — по
@@ -48,7 +54,7 @@ E2E используются для защиты изменений продук
 | 2. Оформление Termide | Довести Code/Locals pilot до решения для повседневной работы, затем остальные панели | Общий цветной zoom готов на Windows (§199); постоянные рамки split и physical review открыты |
 | 3. Реальные проекты | Go/Cargo workspace, Python venv, Node scripts, выбор цели и launch.json/default | Go.work §206–208 и mixed context/Node script/Python venv debug Windows/Ubuntu9 PASS (§209–211); остальная mixed матрица открыта |
 | 4. Git | Credentials, interactive rebase и оставшиеся ошибки worktree | Sequence и HTTP credentials Windows/Ubuntu (§212–214); worktree IDE-038/048 и real OAuth/SSH/Mac открыты |
-| 5. Языковые пробелы | Bash debug с готовым backend; SQL references при наличии подходящего provider | Bash default/launch.json Windows+WSL2 и Ubuntu17 distinct PASS (§215); Mac и explicit console IDE-127 отдельно. SQL references ждут готовый provider |
+| 5. Языковые пробелы | Bash debug с готовым backend; SQL references при наличии подходящего provider | Bash default/launch.json и interactive input/Stop Windows+WSL2 и Ubuntu21 selected PASS (§217); Mac и explicit console IDE-127 отдельно. SQL references ждут готовый provider |
 | 6. Переносимость | Чистый setup Windows/Ubuntu/macOS, terminal/SSH; Mac startup/Go и Cmd+C | Частично; native Mac и физические клавиши не проверены |
 
 Завершён Windows срез `restore-files-session-view` (§205): видимость/root,
@@ -98,14 +104,14 @@ Windows/macOS/Ubuntu — целевые ОС; натурные проверки 
 | WF-03 | Управлять файлами через дерево | Create/rename/move/copy/delete/filter проверялись; единый цикл и сохранение вида дерева входят в приёмку |
 | WF-04 | Работать в проекте со смесью языков | 6 native roots/cwd + Node script/Python venv debug Windows (§209–210); полная mixed matrix/Mac открыты |
 | WF-05 | Запустить файл или конкретный debug-кейс | Cargo/Go.work есть; mixed Node script и Python default из nested venv Windows/Ubuntu (§209–211) |
-| WF-06 | Отлаживать с Output, консолью, переменными и стеком | Основные панели/пауза/output есть; полный цикл и реальные клавиши на всех ОС остаются проверкой |
+| WF-06 | Отлаживать с Output, консолью, переменными и стеком | Основные панели/пауза/output есть; Bash stdin/scrollback/Stop с живым чужим job Windows/Ubuntu PASS (§217). Полный mixed цикл/Mac/physical открыты |
 | WF-07 | Исправить код и перезапустить тот же кейс | Go.work dependency edit→F5→42/43 проверен Windows/Ubuntu (§206); смешанный workflow целиком открыт |
 | WF-08 | Посмотреть цветной diff и выбрать изменения для коммита | Hunk/stage/unstage/diff/history есть; выбор отдельных строк обязателен в полном кейсе |
 | WF-09 | Commit и push с понятным результатом | HTTP Basic cancel/rejection/retry и pre-push Windows/Ubuntu (§213–214); real OAuth/SSH/Mac и оставшиеся ошибки отдельно |
 | WF-10 | Навигация по коду, включая реализации | Go.work gd/gi type+method/gr/back Windows/Ubuntu (§208); остальные языки имеют отдельные workflows, mixed/Mac открыты |
 | WF-11 | Поиск файлов/текста и палитра команд | Основные действия есть; единая проверка из кода и панелей входит в приёмку |
 | WF-12 | Тесты проекта в общей панели | Go.work discovery/nearest/file/all/fix/Output Windows/Ubuntu (§207); по языкам есть отдельные workflows, смешанный проект открыт |
-| WF-13 | Единая навигация внутри рабочих панелей и чтение вывода | Space w уже есть; localvox-light принят референсом, единый полный кейс/визуальное оформление ещё открыты |
+| WF-13 | Единая навигация внутри рабочих панелей и чтение вывода | Space w есть; native Bash Output scroll/search→stdin→Stop Windows/Ubuntu PASS (§217). localvox-light референс, общий кейс/оформление открыты |
 
 ### WF-01. Открытие и восстановление проекта
 

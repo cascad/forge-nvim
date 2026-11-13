@@ -353,6 +353,7 @@ Python реализован и проверен 2026-11-03; после возо�
 | §214 | [Git credentials: один Enter вместо пустого пароля](../nvim_forge/FIXLOG.md#214-git-credentials-один-enter-вместо-пустого-пароля) |
 | §215 | [Bash debug: native WSL2 и общий PTY](../nvim_forge/FIXLOG.md#215-bash-debug-native-wsl2-и-общий-pty) |
 | §216 | [Breadcrumbs и Satellite: сохранить по выбору владельца](../nvim_forge/FIXLOG.md#216-breadcrumbs-и-satellite-сохранить-по-выбору-владельца) |
+| §217 | [Bash Stop: изоляция процессов и интерактивный Output](../nvim_forge/FIXLOG.md#217-bash-stop-изоляция-процессов-и-интерактивный-output) |
 
 ## Как читать и дополнять
 

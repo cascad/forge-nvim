@@ -11565,3 +11565,66 @@ navic+barbecue/Satellite или оставить; он запрошен влад
 **Проверка/вывод.** Runtime, настройки и lock не менялись, новые E2E не нужны.
 Проверены diff, append-only журналы и сохранность прежних drafts. Это решение
 по составу продукта, не новый bugfix, ускорение или новый PASS.
+
+
+### 217. Bash Stop: изоляция процессов и интерактивный Output
+
+**Связь:** IDE-128/IDE-SH-6, WF-06/13; change verify-bash-interactive-terminal.
+**Результат:** Windows21 distinct selected PASS, Ubuntu21 PASS, по15 native
+profiles exit0/signal0/APIerrors[]/hard_kill=false/scope empty. Mac/physical отдельно.
+
+**Что было.** §215 не проверял interactive read и читал backend PID уже после
+закрытия Editor. Новый native Ubuntu sentinel15383345973860 доказал: Shift-F5
+завершает и независимый Editor job. Editor15, Bash54/PPID15, Node24 был live до
+debug и исчез после Stop (jobwait=-3). Это не диагноз прежних системных зависаний.
+
+**Причина.** Официальный adapter0.3.9 делает pkill -P по PPID Bash debugger.
+Native Bash -c может заменить последний command через exec, и PPID становится
+Neovim. Upstream src/bashDebug.ts blobb27ee925 сохраняет эту логику; новый
+backend не нужен. Первые Ubuntu0/2 содержали также ошибки наблюдателя: Frame
+нельзя целиком сериализовать через RPC, а Editor нельзя ждать как backend.
+Исправлены bool-result и список собственных PID; реальный sentinel RED сохранён.
+
+**Что сделали.** Один pinned JS SDK file, два точных fragments: newline/exit $?
+сохраняет отдельный родительский shell; normal completion ждёт штатное bashdb
+That's all, folks... после q, закрывает proxy children и посылает TerminatedEvent.
+Первый command-only Windows3/4 показал оставшийся normal backend; промежуточный
+teardown Windows21/21 убирал его, но печатал Killed при успешном exit. Это не
+принято как конечный UX; итог ждёт native quit без убийства нормального debugger.
+Новых protocol/proxy/process manager/polling/tree walker нет.
+
+Общая JSON metadata закрепляет два официальных payload0.3.9 (OpenVSX и Mason/
+GitHub), archive/before/after SHA. Lua :BashDebugPrepare и Python --patch-installed
+применяют только проверенную замену атомарно, сохраняют line endings/permissions;
+repeat read-only, unknown bytes не меняются. F5 проверяет готовность и сообщает
+подготовку. Startup/launch сами не пишут SDK и не устанавливают tools. Lazy cmd
+позволяет явную подготовку до первого F5. Пользовательский Mason cache не тронут.
+
+**Проверка/e2e.** Четыре постоянных bash-interactive checks:120 строк→breakpoint→
+Space w c/Ctrl-\ Ctrl-n→gg/search→Space w0/F5→i→Unicode stdin/Enter→exit и
+сохранённый scrollback; отдельный Stop из terminal-mode на read; native Lua
+prepare/guard/repeat/unknown; CLI LF/CRLF apply/repeat/unknown. Оба debug cases
+держат независимый Editor child live и проверяют отсутствие fixture PID **до**
+Editor stop. Normal output не содержит Killed. Нет private DAP state/backend mocks.
+
+Final Windows7 Bash PASS (.tests/bash-isolation-ack-windows) +14 неизменных
+controls из final-windows, Ubuntu21 одним ack-ubuntu script. На Ubuntu input
+17188896812659 Editor15/debug56/parent55/Node24; Stop17193691836694 Editor3080/
+debug3121/parent3120/Node3090. Node остаются live, backend pairs отсутствуют.
+Windows21635357162800/21646432086700 подтверждают то же через штатный WSL launcher.
+Extra official Mason payload LF/CRLF apply/repeat/unknown PASS; полный SDK269
+hashes проверен. Audit .tests/bash-isolation-audit.json, details change/verification.md.
+
+**Ограничения/вывод.** Чужие jobs защищены границей запуска; normal exit должен
+дождаться backend, а поздний Editor cleanup не доказывает корректность Stop.
+67 pins/6 plugin dependencies16 files и nvim SDK SHA прежние; это отдельная
+SDK поправка. Снять после upstream equivalent и тех же native regressions.
+Mac/physical/cold WSL/UNC/custom mounts/full Locals и explicit console IDE-127
+открыты. Старые117/121/124/038/048 этим PASS не закрыты. Docker использовал готовый
+imagef63a05ca без build/network/lifecycle; поздний metadata COPY добавлен,
+чистый image build не заявлен. Host scripts получили LF после сохранённой CRLF
+ошибки до Editor tests; неподдержанный compose flag также сохранён отдельно.
+
+**Файлы.** Bash module/SDK metadata, DAP lazy cmd, explicit preparer/Dockerfile,
+interactive fixture/E2E/registry, OpenSpec и продуктовые guides/roadmap/history.
+Append-only journals/frozen drafts сохранены, exact staging/commit без push.

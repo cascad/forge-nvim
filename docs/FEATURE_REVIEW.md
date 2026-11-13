@@ -53,6 +53,17 @@ Mac/cold/interactive stdin отдельно. Повторный read-only review
 passive lookup уже объединён в §185; старую формулировку следующего шага
 не следует читать как новую работу. Выбор по трём UI plugins закрыт: сохранить breadcrumbs и Satellite.
 
+2026-11-13, §217: native sentinel воспроизвёл IDE-128 в официальном Bash SDK:
+Stop завершал Editor children при shell exec-оптимизации. Цена исправления —
+один JS-файл SDK, два точных fragments (сохранить отдельного родителя; дождаться
+native quit перед TerminatedEvent), общая JSON metadata Python/Lua и явная
+:BashDebugPrepare. F5 read-only guard, startup ничего не исправляет/не ставит.
+Это отдельная SDK поправка, не седьмой plugin backport:67 pins/6 dependencies/
+16 plugin files прежние. Нового DAP backend/proxy/process manager нет.
+Удалить после upstream equivalent и native input/Stop/sentinel regressions
+на целевых ОС; неизвестные SDK не переписывать. IDE-127 explicit console и
+Mac остаются отдельными ограничениями. Точные source/target — §217.
+
 ## Актуальный выбор после Files, Logs и frame pilot — 2026-11-11
 
 Source e00bcea. Выполнено: Files §180–181, обязательные Logs §182 и рабочий

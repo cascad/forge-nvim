@@ -1,0 +1,30 @@
+{
+  "id": "IDE-128-bash-debug-terminal-parent",
+  "version": "0.3.9",
+  "entry": "extension/out/bashDebug.js",
+  "archive_sha256": "7fc154642bf3fcfa27a903fd44235bc902d93e737939c7b411ece6fe10f5f458",
+  "payloads": [
+    {
+      "source": "open-vsx-0.3.9",
+      "before_sha256": "259ce3e505840d44f7635deb27f18c94cd32333edf59c90151fa61f77b3f9a35",
+      "after_sha256": "f231e6118693fbc4b30763e7aa30431af9b0cd3d5e95fd8564ddc1eaca7b1b88"
+    },
+    {
+      "source": "mason-github-0.3.9",
+      "archive_sha256": "7605265eb3de643f0817d9b1870eec0d36a7de5a0d50628edb59937f1515fabc",
+      "url": "https://github.com/rogalmic/vscode-bash-debug/releases/download/untagged-438733f35feb8659d939/bash-debug-0.3.9.vsix",
+      "before_sha256": "5eb2d9b9ae505e87a7f79f598ecd15d725ad56aae8005b2eefb4ca2669ccac2d",
+      "after_sha256": "f85047f8c035d9ca1a89d9988f03ffd0cacec0abad25d897e1f89ca2e862ba7d"
+    }
+  ],
+  "replacements": [
+    {
+      "before": " ${args.argsString}`);",
+      "after": " ${args.argsString}\\nexit $?`);"
+    },
+    {
+      "before": "this.sendEvent(new vscode_debugadapter_1.TerminatedEvent());",
+      "after": "}\n                else if (line.endsWith(\"That's all, folks...\")) {\n                    spawnBash_1.spawnBashScript(`${this.launchArgs.pathPkill} -TERM -P \"${this.proxyData[\"PROXYID\"]}\"`, this.launchArgs.pathBash, data => this.sendEvent(new vscode_debugadapter_1.OutputEvent(`${data}`, 'console'))).on(\"exit\", () => this.sendEvent(new vscode_debugadapter_1.TerminatedEvent()));"
+    }
+  ]
+}

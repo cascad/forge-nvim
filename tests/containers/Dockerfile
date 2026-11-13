@@ -110,6 +110,7 @@ USER forge
 # Native bundle делает chmod при launch; payload принадлежит test user.
 USER root
 COPY tests/e2e/prepare_bash_dap.py /opt/forge/tests/e2e/
+COPY nvim_forge/lua/forge/bash_debug_patch.json /opt/forge/nvim_forge/lua/forge/bash_debug_patch.json
 RUN mkdir -p /opt/forge/bash-dap-deps && chown forge:forge /opt/forge/bash-dap-deps
 USER forge
 RUN python3 /opt/forge/tests/e2e/prepare_bash_dap.py --download --output /opt/forge/bash-dap-deps

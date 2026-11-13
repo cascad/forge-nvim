@@ -10,7 +10,22 @@
 
 Маршрут и приоритеты: [рабочий план nvim_forge](docs/IDE_ROADMAP.md).
 Для новых пунктов используем следующий свободный ID `IDE-xxx`; исходный
-симптом хранится здесь, этап и состояние — в плане. Следующий ID: `IDE-128`.
+симптом хранится здесь, этап и состояние — в плане. Следующий ID: `IDE-129`.
+
+## IDE-128 — Bash Stop завершал посторонние процессы редактора
+
+2026-11-13, native Ubuntu15383345973860: Editor15, Bash54/PPID15,
+независимый Node24 был live до debug и исчез после Shift-F5 (`jobwait=-3`).
+Официальный adapter0.3.9 делает pkill по PPID Bash; native Bash -c может
+заменить последний command через exec, поэтому родителем становится Neovim.
+Это доказанный дефект SDK, не общий диагноз прежних системных зависаний.
+
+Исправление §217: pinned JS сохраняет отдельный родительский shell и ждёт
+штатного bashdb quit перед TerminatedEvent. Явные :BashDebugPrepare/CLI
+применяют только известные bytes; F5 отклоняет непроверенный SDK. Обычный
+startup/launch ничего не записывает. Нормальный exit и Stop проверяют живой
+независимый job и отсутствие backend PID до закрытия IDE; stdin/scrollback
+входят в постоянный bash-interactive.test.lua. Mac/physical отдельно.
 
 ## IDE-127 — Bash debugConsole: native /dev/stdin warning в Linux
 

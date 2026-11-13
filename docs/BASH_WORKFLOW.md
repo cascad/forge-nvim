@@ -62,8 +62,17 @@ python -B tests/e2e/prepare_bash_dap.py
 ```
 
 SDK: `.tests/bash-dap-deps/extension/out/bashDebug.js`. Для обычной установки
-есть `:MasonInstall bash-debug-adapter`; для своего SDK задайте
+есть `:MasonInstall bash-debug-adapter`, затем `:BashDebugPrepare`. После
+переустановки/обновления Mason adapter подготовку повторить. Для своего SDK задайте
 `FORGE_BASH_DEBUG_ADAPTER` либо `vim.g.forge_bash_debug_adapter` на этот JS.
+Команда подготовки исправляет один проверенный JS-файл SDK0.3.9 (IDE-128):
+отдельный shell ограничивает Stop процессами debug, normal exit ждёт штатный
+quit. Известны payload OpenVSX и Mason/GitHub; неизвестный файл сохраняется
+и отклоняется. F5 только проверяет готовность, startup/launch исходник не
+меняют. CLI для установленного adapter: `python -B tests/e2e/prepare_bash_dap.py
+--patch-installed <extension/out/bashDebug.js>`. Это явное действие, без
+загрузок. Полный `--download` выше готовит сразу исправленный test SDK.
+
 Windows использует host Node и штатный WSL launcher adapter, Node внутри
 WSL не требуется. Distro/default/mounts сборка не меняет; поддержан native
 adapter layout `/mnt/<drive>`. Для нестандартных mounts пути bashdb задаются
@@ -74,7 +83,10 @@ adapter layout `/mnt/<drive>`. Для нестандартных mounts пути
 Явный case имеет `type: "bashdb"`; args/env/cwd/pathBash/terminalKind
 пользователя сохраняются. Default `terminalKind: "integrated"` и
 `console: "integratedTerminal"` используют общий DAP PTY; stdout остаётся
-видимым после завершения. Для Watch: `Space d w` → `$answer`, Evaluate — `Space d e`.
+видимым после завершения. `Space w c` → `Ctrl-\ Ctrl-n` позволяет читать
+и искать старый вывод (`gg`, `/текст`, `n`); `i` возвращает ввод в работающую
+программу. После `read` ввести строку и Enter. `Space w 0` возвращает код,
+Shift-F5 работает и из terminal-mode. Для Watch: `Space d w` → `$answer`, Evaluate — `Space d e`.
 Mac: `FORGE_BASH_DEBUG_BASH` или launch.json `pathBash` на Bash4+; системного
 Bash3.2 недостаточно, Brew Bash ищется по стандартным путям при debug.
 
@@ -83,7 +95,8 @@ Bash3.2 недостаточно, Brew Bash ищется по стандартн
 переменных не эмулируется. Runtime не устанавливает adapter и не запускает
 WSL до debug. Native workflow, missing adapter/Node и14 Bash/DAP controls —
 17 distinct PASS Windows+WSL2 и17 Ubuntu. Mac/physical/cold distro startup
-и interactive stdin отдельно. Opt-in `terminalKind: "debugConsole"` с
+отдельно. Interactive stdin/scrollback и Stop с изоляцией процессов проверяются
+новыми4 cases (§217); подробные результаты — change verify-bash-interactive-terminal. Opt-in `terminalKind: "debugConsole"` с
 `console: "internalConsole"` сохраняется; на Linux bundle0.3.9 пишет native
 `/dev/stdin` warning (IDE-127). Он не скрывается, default PTY не выдаёт его.
 
@@ -95,6 +108,9 @@ WSL до debug. Native workflow, missing adapter/Node и14 Bash/DAP controls —
 python -B tests/e2e/prepare_bash.py --download --nvim <nvim>
 python -B tests/e2e/prepare_bash.py --nvim <nvim>
 <nvim> -l tests/e2e/bash-language.test.lua
+python -B tests/e2e/prepare_bash_dap.py --download
+<nvim> -l tests/e2e/bash-debug.test.lua
+<nvim> -l tests/e2e/bash-interactive.test.lua
 ```
 
 На Ubuntu/macOS — `python3`. На Windows выбрать SDK через `Get-ForgeNvim`

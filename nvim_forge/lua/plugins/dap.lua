@@ -1103,6 +1103,7 @@ return {
     -- =====================================================================
     {
         "mfussenegger/nvim-dap",
+        cmd = { "BashDebugPrepare" },
         commit = require('ide.backports').revision('nvim-dap'),
         build = function(plugin) require('ide.backports').run('nvim-dap', plugin.dir, 'apply') end,
         dependencies = {

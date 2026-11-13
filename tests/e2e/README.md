@@ -1488,6 +1488,7 @@ user helper/real account отдельно. Существующий Docker image
 python -B tests/e2e/prepare_bash_dap.py --download
 python -B tests/e2e/prepare_bash_dap.py
 <nvim> -l tests/e2e/bash-debug.test.lua
+<nvim> -l tests/e2e/bash-interactive.test.lua
 ```
 
 Три случая: real debug current file/edit-repeat/launch.json/Stop, missing
@@ -1496,11 +1497,22 @@ mocks/private state writes. Windows — уже готовый default WSL2 Linux
 Bash4+/cat/mkfifo/rm/pkill, host Node; Linux/macOS — native Bash4+. Distro или
 системные tools preparer не устанавливает. VSIX0.3.9 закреплён SHA, повтор
 проверяет269 payload files; --archive позволяет готовый offline VSIX.
+IDE-128 patch входит в явную подготовку SDK; Mason installation требует
+:BashDebugPrepare. --patch-installed <JS> исправляет только два известных
+payload0.3.9 (OpenVSX/Mason), LF/CRLF сохраняются, unknown bytes отклоняются.
+Обычные startup/F5 не меняют SDK и ничего не скачивают.
 
 Default — integrated PTY, explicit args/env/cwd и optional debugConsole
 проверены; Linux warning optional console описан IDE-127, не скрывается.
-После штатного Stop/Editor stop проверяются записанные Unix PID/parent,
-включая WSL, дополнительно native scope. Windows/Ubuntu по17 distinct PASS
-с Bash8/DAP panels6 controls; подробные версии/raw failures — change
-add-bash-debug-workflow/verification.md. Mac/physical/interactive stdin,
-cold distro/UNC/custom mounts/полный Locals не заявлены проверенными.
+Новые4 bash-interactive cases (§217/IDE-SH-6): реальные stdin Unicode и
+scroll/search Output→i→Enter; Stop на read из terminal-mode; явная Lua SDK
+prepare/repeat/unknown/F5 guard; CLI LF/CRLF repeat/unknown. Отдельный Node job
+принадлежит Editor, но не debug: после Stop/exit он обязан остаться live.
+Fixture PID/parent проверяются **до** Editor stop, затем общий native scope.
+Обычный exit не должен печатать Killed. Только public API/настоящий backend.
+Windows21 distinct selected PASS (последние7 Bash + неизменные14 controls),
+Ubuntu21 PASS одним итоговым script. По15 native profiles: штатный exit0,
+APIerrors[], scope empty. Source sentinel RED и все промежуточные ошибки
+сохранены; точные версии — change verify-bash-interactive-terminal/verification.md.
+Mac/physical/cold distro/UNC/custom mounts/полный Locals не заявлены проверенными.
+Image build не повторялся; поздний Dockerfile слой получил SDK patch metadata.

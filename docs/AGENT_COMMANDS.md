@@ -7907,3 +7907,49 @@ FEATURE_REVIEW/IDE_ROADMAP, обновление решений и HISTORY; FIXL
 Runtime/pins/tests не менялись, E2E не повторялись. Guard baseline
 .tests/keep-secondary-ui-prefix.json: append-only journals и frozen drafts,
 lock exact; stage только5 документальных файлов, diff check и commit без push.
+
+
+## 125. Bash interactive Output и изоляция Stop
+
+2026-11-13, F:/repo/forge-nvim, PowerShell login=false. TEMP/TMP/TMPDIR/
+NVIM_LOG_FILE — .tests/tmp на F, Python UTF8, npm cacheF:/forge-nvim-tmp/npm-cache.
+Продолжен openspec-apply-change verify-bash-interactive-terminal; после source
+sentinel RED создан IDE-SH-6 delta до runtime fix. User execution approvals не нужны.
+
+```powershell
+python -B tests/e2e/prepare_bash_dap.py --archive .tests/bash-research/bash-debug-0.3.9.vsix
+python -B tests/e2e/prepare_bash_dap.py
+& .tools/neovim/windows-x64/bin/nvim.exe -l tests/e2e/bash-interactive.test.lua
+& .tools/neovim/windows-x64/bin/nvim.exe -l tests/e2e/bash-debug.test.lua
+& .tools/neovim/windows-x64/bin/nvim.exe -l tests/e2e/bash-language.test.lua
+& .tools/neovim/windows-x64/bin/nvim.exe -l tests/e2e/debug-panels.test.lua
+# Installed known SDK, explicit only (permanent E2E uses private files):
+python -B tests/e2e/prepare_bash_dap.py --patch-installed <extension/out/bashDebug.js>
+# Existing ready image, offline SDK, no Desktop/WSL lifecycle:
+docker compose -f tests/containers/compose.yaml run --rm --no-deps --pull never --entrypoint bash -e GOMAXPROCS=2 -e GOFLAGS=-p=2 -e GOTOOLCHAIN=local -e CARGO_BUILD_JOBS=2 ubuntu /workspace/.tests/bash-isolation-ack-20261113.sh
+python -B .tests/audit-bash-isolation.py
+npx.cmd --yes @fission-ai/openspec@1.13.2 validate verify-bash-interactive-terminal --type change --strict --no-interactive
+git diff --check
+```
+
+Source first Windows2 PASS; Ubuntu0/2 observer bugs corrected, then sentinel
+Ubuntu0/1 proved unrelated Editor child killed. SDK command-only Windows3/4+old3;
+intermediate teardown Windows21/21 but normal Killed text. Final ack Windows7 PASS
+plus unchanged controls14; Ubuntu final21 PASS. No unchanged green retry. Per15
+profiles normal native shutdown/scope; input/scrollback + own PID before Editor
+stop + live sentinel. Extra official Mason CLI LF/CRLF/apply/repeat/unknown PASS.
+
+Raw bash-isolation-ack-{windows,ubuntu}, controls bash-isolation-final-windows,
+source bash-interactive-{windows,ubuntu}, bash-interactive-sentinel-ubuntu and
+bash-isolation-windows; .tests/bash-isolation-audit.json. Compose --no-build was
+rejected before execution; private script CRLF then failed before Editor tests.
+Separate raw errors retained; corrected command/LF script are shown above.
+Shared SDK metadata covers both VSIX variants; Python and Lua source SHA/atomic
+writes/repeat/unknown behavior tested. Dockerfile metadata late COPY only, no build.
+GitHub read-only upstream src/bashDebug.ts blobb27ee925 still uses parent pkill.
+
+.tests/bash-interactive-prefix.json guards raw journal prefixes/frozen5/registry/
+lock/plugin manifest/SDK executable. Registry staged from HEAD6e74859 + only new
+interactive row, existing frozen2 rows retained in working copy. All Python
+read/write UTF-8; shell scripts write_bytes LF. Exact allowlist/index guards;
+no tests/run.lua/catalog work, user cache/other projects/system cleanup/push.
