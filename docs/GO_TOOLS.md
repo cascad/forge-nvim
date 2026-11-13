@@ -16,7 +16,7 @@ floating notifications информационное сообщение закр�
 Выбранное окружение применяется к текущему Neovim, версия уточняется явно,
 gopls перезапускается. Глобальный Go config команда не переписывает.
 
-Явные действия сохраняют обычное поведение Go: auto/заданная отсутствующая
+GoVersion/GoToolchain и настоящие build/debug сохраняют обычное поведение Go: auto/заданная отсутствующая
 версия могут потребовать загрузку SDK. Готовый gopls получает исходное
 окружение и использует Go для языка. Его SDK/readiness определяется обычными
 правилами сервера. Метаданные statusline и поиск debug adapter не запускают
@@ -28,6 +28,14 @@ Delve выбирается при запуске отладки. Если инс
 `vim.g.forge_dlv_path`, `FORGE_DLV_PATH`, `DLV_PATH`. Далее используются прежние
 GOBIN/GOPATH/bin/PATH/Mason candidates и приоритет версии. `:DapGoDlvInfo`
 явно показывает найденные варианты/выбранный путь.
+
+Чтение GOBIN/GOPATH и версий Delve асинхронно: пока ожидается ответ, можно
+переключаться между Files и кодом, печатать. Для metadata используется локальный
+Go, поэтому отсутствующий project toolchain не запускает его скачивание ради
+поиска инструмента. Глобальный GOTOOLCHAIN и SDK настоящей сборки/debug остаются
+выбранными пользователем. DapGoDlvInfo использует один список для вывода и
+Selected; повторного поиска нет. §229 проверен Windows/Ubuntu с настоящими
+Go/Delve, source1 RED → target/passive/debug по3 selected PASS на ОС.
 
 Для debug: F9 — breakpoint, F5 — launch/continue, Space w d — Locals,
 Space w c — Output, Space w 0 — код. Переключение панелей описано в

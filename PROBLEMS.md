@@ -10,7 +10,17 @@
 
 Маршрут и приоритеты: [рабочий план nvim_forge](docs/IDE_ROADMAP.md).
 Для новых пунктов используем следующий свободный ID `IDE-xxx`; исходный
-симптом хранится здесь, этап и состояние — в плане. Следующий ID: `IDE-135`.
+симптом хранится здесь, этап и состояние — в плане. Следующий ID: `IDE-136`.
+
+## IDE-135 — синхронный Go/Delve discovery при debug и явной информации
+
+2026-11-13, review DAP после Rust metadata. go_env/dlv version использовали
+vim.fn.system, DapGoDlvInfo повторял обход. §229: native coroutine/system,
+один env JSON и один список; metadata local без изменения global GOTOOLCHAIN.
+Source2b57b9a RED на реальном sync Go env, Windows/Ubuntu target + passive +
+actual first/repeat debug по3 PASS; input84/25ms. SDK/pins/backports прежние,
+Mac/physical и все source-selection permutations отдельно. Первая Ubuntu
+SDK-path ошибка теста сохранена, не считается source reproduction.
 
 ## IDE-134 — Rust F5 синхронно ожидает Cargo metadata
 

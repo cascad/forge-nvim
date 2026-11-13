@@ -617,3 +617,16 @@ Bash остаются line-only. Удаление потребовало бы с
 commentstring/operator и новой матрицы; такое усложнение не оправдано.
 Вывод из pinned runtime/defaults/_comment/doc и plugin ft/config, не из LOC.
 Runtime/lock не менялись; GUI и RU/EN behavioral результат не заявляется.
+
+
+## Go/Delve discovery — 2026-11-13
+
+§229 / IDE-135: оставшиеся sync Go env/Delve version заменены native async
+coroutine boundary. GOBIN/GOPATH объединены в JSON, info использует один список.
+Metadata local не изменяет global Go toolchain или actual build/debug; policies
+source/version/override прежние. Добавлен только local await, без framework,
+cache, отдельного module, shell shim или backend. Windows native .cmd smoke0.
+Windows/Ubuntu source RED → target/passive/actual debug3 distinct PASS на ОС,
+input84/25ms. Первая Linux SDK-path ошибка fixture сохранена, контролы не
+повторяли после правки лишь нового case. Native Mac/полная selection matrix
+отдельно. Общая отзывчивость прежней рабочей сборки подтверждена владельцем.

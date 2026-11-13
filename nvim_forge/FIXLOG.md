@@ -12176,3 +12176,53 @@ source/config/keymaps. GUI/RU/EN behavior не прогонялся и PASS не
 runtime/lock/SDK не менялись. Отдельного E2E для изменения нет: изменения нет.
 **Файлы.** FEATURE_REVIEW/roadmap/HISTORY/AGENT_COMMANDS; выбор кандидата закрыт,
 остальные конкретные направления обзора сохраняются. Натурные проверки позже.
+
+
+## 229. Go debug: асинхронные probes без повторного поиска
+
+2026-11-13. Спека: IDE-DAP-10 (ADDED). IDE-135, продолжение обзора IDE-080.
+Перед этим срезом владелец сообщил: «посмотрел, вроде все шустро двигается».
+Качественное наблюдение текущего места записано в roadmap, не заменяет Mac/
+холодный старт/полную матрицу и не выдаётся за проверку ещё нового Go runtime.
+
+**Проблема/причина.** После deferred discovery оставались sync go env и dlv
+version внутри DAP; explicit info делал unique candidates и resolve повторно.
+Source2b57b9a подтверждён реальным vim.fn.system/go_env stack, без protocol mocks.
+
+**Изменение.** Один local await вокруг vim.system в native dap.async.run,
+один go env -json GOBIN GOPATH и повторное использование списка в info.
+Metadata subprocess получает local, глобальный GOTOOLCHAIN/реальные build/debug
+прежние. Versions/overrides/GOBIN/GOPATH/PATH/Mason policy сохранены, unknown/
+missing probe fallback прежний. Нет cache/framework/backend/нового module.
+Native Windows cmd smoke с Unicode/space прошёл system/fn.system/jobstart0;
+собственный shell wrapper не требуется.
+
+**Проверка/e2e.** Windows/Ubuntu по final source1 RED → target1 + passive1 +
+actual first/repeat debug1 PASS, по3 distinct selected. Info fixture требует
+Go1.99 при локальном Go1.26.0: настоящий local env завершился0, global auto
+сохранён; реальный Delve1.26.3/Selected совпадают. Held callback/input84.027/
+25.483ms при300ms bound. После delivery ровно2 async commands, JSON и version
+реальные. Passive edit calls0. Debug control дал2 initialize/terminated с
+first/second stdout/stderr и настоящим Go/Delve. Target/controls exit0/signal0/
+APIerrors[]/scope0/hard_kill=false.8 final profiles и4 prior сверены audit.
+Source negative cleanup может иметь1/signal15; scope0, не объявляется PASS.
+
+Первый Ubuntu source/target не дошёл до probes: SDK был доступен в PATH,
+test искал только .tests/dap-tools. Плюс script ожидал отсутствующий
+FORGE_E2E_DAP_TOOLS, debug control ещё не запускался. Добавлен existing
+exepath fallback, script использует native PATH/GOPATH tmp. После этой правки
+source/target один раз на ОС; уже прошедшие passive/Windows debug не повторяли.
+Controls/common код прежний, разница test bytes только fallback нового case.
+Исходные fixture FAIL сохранены и не считаются воспроизведением продукта.
+
+**Вывод/границы.** Устранена оставшаяся sync metadata граница Go DAP и повторный
+поиск info. Native Mac/Mason install/большой проект и полная version-selection
+матрица отдельно; whole suite/старые плавающие quit не закрыты. Готовые SDK,
+jobs2, Win/Linux serial. Engine28.5.1/imagef63a05ca/private Neogit overlay,
+network none, без download/build image/Desktop/WSL lifecycle. Host temp F.
+
+**Файлы.** Existing dap.lua/go-passive E2E/observer, OpenSpec, Go guide,
+feature review/PROBLEMS/roadmap/tests README/HISTORY/commands. Raw .tests/go-
+discovery-* и guest equivalents, audit go-discovery-audit.json; первая Ubuntu
+ошибка go-discovery-ubuntu.txt, final go-discovery-ubuntu-final.txt. SDK/67 pins/
+6 backports16 files/frozen infra drafts прежние, journals append-only.

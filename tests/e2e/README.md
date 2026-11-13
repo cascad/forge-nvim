@@ -1607,6 +1607,16 @@ Windows/Ubuntu source1 RED → target1+прежний completion control1 PASS (
 Mac не запускался. Это не тест cold warmup или полного editor regression.
 
 
+## IDE-DAP-10: асинхронный поиск Go/Delve
+
+IDE-DAP-10 (§229) в existing go-passive: `FORGE_GO_PASSIVE_CASE=IDE-DAP-10 nvim -l
+tests/e2e/go-passive.test.lua`. На Windows задавать через `$env:FORGE_GO_PASSIVE_CASE`.
+Реальные local Go env/Delve version, held callback/input и один список info;
+global toolchain auto/проектGo1.99 сохраняются без установки SDK. Windows/Ubuntu
+source1 RED → target1 + passive1 + actual first/repeat debug1 PASS. Raw source/
+target test совпадают, controls не повторяли после SDK fallback только нового case.
+Mac/physical и полная selection matrix отдельно. SDK готовится явно заранее.
+
 ## IDE-DAP-9: асинхронное разрешение Cargo debug target
 
 IDE-DAP-9 (§227): `FORGE_RUST_CASE=IDE-DAP-9 nvim -l tests/e2e/rust-language.test.lua`

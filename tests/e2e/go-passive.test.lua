@@ -18,23 +18,28 @@ local cache=require('go_cache').path(root)
 local function observe(e)
   e:lua([[
     local log=...
-    _G.forge_go_calls={};_G.forge_go_held={};_G.forge_hold_go_version=false
-    local function record(cmd,api)
+    _G.forge_go_calls={};_G.forge_go_held={};_G.forge_hold_go_version=false;_G.forge_hold_go_env=false
+    local function record(cmd,api,opts)
       local name=type(cmd)=='table' and cmd[1] or cmd
-      if type(name)~='string' or not (name=='go' or name:match('^go%s')) then return end
+      if type(name)~='string' then return end
+      local base=vim.fs.basename(name):lower()
+      local delve=type(cmd)=='table' and cmd[2]=='version' and
+        (base=='dlv' or base=='dlv.exe' or base=='dlv.cmd' or base=='dlv.bat')
+      if not (name=='go' or name:match('^go%s') or delve) then return end
       local row={command=cmd,api=api,cwd=vim.fn.getcwd(),toolchain=vim.env.GOTOOLCHAIN,
-        stack=debug.traceback('',3)}
+        env=vim.deepcopy((opts or {}).env or {}),stack=debug.traceback('',3)}
       table.insert(_G.forge_go_calls,row)
       vim.fn.writefile({vim.json.encode(row)},log,'a')
       return row
     end
     local system=vim.system
     vim.system=function(cmd,opts,callback)
-      local row=record(cmd,'vim.system')
+      local row=record(cmd,'vim.system',opts)
       if row and type(callback)=='function' then
         return system(cmd,opts,function(result)
           row.result={code=result.code,signal=result.signal,stdout=result.stdout,stderr=result.stderr};row.done=true
-          if _G.forge_hold_go_version and type(cmd)=='table' and cmd[2]=='version' then
+          if (_G.forge_hold_go_version and type(cmd)=='table' and cmd[2]=='version') or
+            (_G.forge_hold_go_env and type(cmd)=='table' and cmd[2]=='env' and row.stack:find('plugins/dap.lua',1,true)) then
             -- Удерживаем только доставку настоящего завершённого CLI результата.
             table.insert(_G.forge_go_held,function() callback(result) end)
           else callback(result) end
@@ -101,7 +106,7 @@ local function open(e)
 end
 local function check(name,toolchain,fn)
   if vim.env.FORGE_GO_PASSIVE_CASE and not name:find(vim.env.FORGE_GO_PASSIVE_CASE,1,true) then return end
-  T.check('IDE-BOOT-4 '..name,function()
+  T.check((name:match('^IDE%-') and '' or 'IDE-BOOT-4 ')..name,function()
     local e
     local ok,err=pcall(function()
       e=require('editor').start(root,{timeout=180000,env={PATH=path,
@@ -131,6 +136,55 @@ local function check(name,toolchain,fn)
     assert(ok,err)
   end)
 end
+
+check('IDE-DAP-10 native Delve discovery keeps input and local metadata','auto',function(e)
+  local dlv=sdk..'/bin/dlv'..suffix
+  if vim.fn.filereadable(dlv)==0 then dlv=vim.fn.exepath('dlv') end
+  assert(vim.fn.filereadable(dlv)==1,'Нужен уже подготовленный Delve SDK')
+  local bin=e.runtime..'/discovery tools ü';vim.fn.mkdir(bin,'p')
+  local executable=bin..'/dlv'..suffix;assert(vim.uv.fs_copyfile(dlv,executable))
+  if not windows then assert(vim.uv.fs_chmod(executable,493)) end
+  T.eq(#calls(e),0,'FileType не должен запускать probes')
+  e:lua([[vim.env.GOBIN=...;_G.forge_hold_go_env=true]],{bin})
+  e:input(':DapGoDlvInfo<CR>')
+  local first
+  e:wait('native DAP Go env recorded',function()
+    if vim.fn.filereadable(e.dir..'/go-calls.jsonl')==0 then return false end
+    for _,line in ipairs(vim.fn.readfile(e.dir..'/go-calls.jsonl')) do
+      local row=vim.json.decode(line)
+      if row.command[2]=='env' and row.stack:find('plugins/dap.lua',1,true) then first=row;return true end
+    end
+  end)
+  vim.fn.writefile({vim.json.encode({first_probe=first})},e.dir..'/go-discovery.json')
+  T.eq(first.api,'vim.system','Delve discovery used synchronous Go env')
+  e:wait('real local Go env result held',function() return e:lua('return #_G.forge_go_held==1') end)
+  local env_call=calls(e)[1]
+  T.eq(env_call.result.code,0,'локальный Go env должен работать без project SDK1.99')
+  T.eq(env_call.env.GOTOOLCHAIN,'local')
+  T.eq(vim.json.decode(env_call.result.stdout).GOBIN:gsub('\\','/'),bin:gsub('\\','/'))
+  e:input(' we');e:wait('Files while Go metadata pending',function() return e:current_ft()=='neo-tree' end)
+  e:input(' w0');e:wait('Go code while metadata pending',function() return e:current_ft()=='go' end)
+  local started=vim.uv.hrtime();e:input('ggO// DISCOVERY_INPUT<Esc>')
+  e:wait('real input before Go metadata delivery',function()
+    return e:lua('return vim.api.nvim_get_current_line()'):find('DISCOVERY_INPUT',1,true)~=nil
+  end)
+  local elapsed=(vim.uv.hrtime()-started)/1e6
+  assert(elapsed<300,'Reference input exceeded300ms: '..elapsed)
+  T.eq(e:lua('return #_G.forge_go_held'),1)
+  e:lua([[local held=_G.forge_go_held;_G.forge_go_held={};_G.forge_hold_go_env=false;for _,send in ipairs(held) do send() end]])
+  wait_notice(e,'Delve candidates:')
+  local observed=calls(e);T.eq(#observed,2,'one Go env and one Delve version, no repeated discovery')
+  T.eq(observed[1].command,{'go','env','-json','GOBIN','GOPATH'})
+  T.eq(observed[2].result.code,0);assert(observed[2].result.stdout:find('Version: 1.26.3',1,true))
+  local message
+  for _,n in ipairs(e.rpc.notifications) do if n.message:find('Delve candidates:',1,true)==1 then message=n.message end end
+  assert(message and message:find('v1.26.3',1,true) and
+    message:gsub('\\','/'):find('Selected: '..executable:gsub('\\','/'),1,true),message)
+  T.eq(e:lua('return vim.env.GOTOOLCHAIN'),'auto','global toolchain unchanged')
+  T.eq(e:lua('return require("dap").session()==nil'),true)
+  vim.fn.writefile({vim.json.encode({ok=true,input_ms=elapsed,calls=observed,selected=executable,message=message,
+    toolchain='auto'})},e.dir..'/go-discovery.json')
+end)
 
 check('edit/label не запускают Go или Delve для отсутствующего SDK','auto',function(e)
   local observed=calls(e)

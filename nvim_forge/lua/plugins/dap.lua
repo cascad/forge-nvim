@@ -66,17 +66,29 @@ local function add_executable_variants(add, dir, name, source)
     end
 end
 
-local function go_env(name)
-    if vim.fn.executable("go") ~= 1 then return nil end
-    local out = vim.fn.system({ "go", "env", name })
-    if vim.v.shell_error ~= 0 then return nil end
-    return vim.trim(out)
+-- spec: IDE-DAP-10. Metadata ждём в native coroutine, UI остаётся доступным.
+local function probe_output(command)
+    local co = coroutine.running()
+    assert(co, "Tool probe requires a coroutine")
+    local ok = pcall(vim.system, command, { text = true, env = { GOTOOLCHAIN = "local" } }, function(result)
+        vim.schedule(function() coroutine.resume(co, result) end)
+    end)
+    if not ok then return nil end
+    local result = coroutine.yield()
+    return result.code == 0 and result.stdout or nil
+end
+
+local function go_paths()
+    if vim.fn.executable("go") ~= 1 then return {} end
+    local out = probe_output({ "go", "env", "-json", "GOBIN", "GOPATH" })
+    local ok, paths = pcall(vim.json.decode, out or "")
+    return ok and type(paths) == "table" and paths or {}
 end
 
 local function parse_dlv_version(path)
     if not executable_file(path) then return nil end
-    local out = vim.fn.system({ path, "version" })
-    if vim.v.shell_error ~= 0 then return nil end
+    local out = probe_output({ path, "version" })
+    if not out then return nil end
     local major, minor, patch = out:match("Version:%s*v?(%d+)%.(%d+)%.(%d+)")
     if not major then return nil end
     return {
@@ -117,12 +129,13 @@ local function unique_dlv_candidates()
         })
     end
 
-    local gobin = go_env("GOBIN")
+    local paths = go_paths()
+    local gobin = paths.GOBIN
     if gobin and gobin ~= "" then
         add_executable_variants(add, gobin, "dlv", "GOBIN")
     end
 
-    local gopath = go_env("GOPATH")
+    local gopath = paths.GOPATH
     if gopath and gopath ~= "" then
         local sep = vim.fn.has("win32") == 1 and ";" or ":"
         for dir in gopath:gmatch("([^" .. sep .. "]+)") do
@@ -149,30 +162,33 @@ local function unique_dlv_candidates()
     return candidates
 end
 
-local function resolve_dlv_path()
+local function resolve_dlv_path(candidates)
     local override = vim.g.forge_dlv_path or vim.env.FORGE_DLV_PATH or vim.env.DLV_PATH
     if override and override ~= "" then
         if executable_file(override) then return override end
         vim.notify("Configured dlv path is not executable: " .. override, vim.log.levels.WARN, { title = "DAP Go" })
     end
 
-    local candidates = unique_dlv_candidates()
+    candidates = candidates or unique_dlv_candidates()
     if #candidates > 0 then return candidates[1].path end
     return "dlv"
 end
 
 local function show_dlv_info()
-    local lines = { "Delve candidates:" }
-    for _, candidate in ipairs(unique_dlv_candidates()) do
-        table.insert(lines, ("  %s  %s  (%s)"):format(
-            candidate.version and candidate.version.text or "unknown",
-            candidate.path,
-            candidate.source
-        ))
-    end
-    if #lines == 1 then table.insert(lines, "  <none found>") end
-    table.insert(lines, "Selected: " .. resolve_dlv_path())
-    vim.notify(table.concat(lines, "\n"), vim.log.levels.INFO, { title = "DAP Go" })
+    require("dap.async").run(function()
+        local candidates = unique_dlv_candidates()
+        local lines = { "Delve candidates:" }
+        for _, candidate in ipairs(candidates) do
+            table.insert(lines, ("  %s  %s  (%s)"):format(
+                candidate.version and candidate.version.text or "unknown",
+                candidate.path,
+                candidate.source
+            ))
+        end
+        if #lines == 1 then table.insert(lines, "  <none found>") end
+        table.insert(lines, "Selected: " .. resolve_dlv_path(candidates))
+        vim.notify(table.concat(lines, "\n"), vim.log.levels.INFO, { title = "DAP Go" })
+    end)
 end
 
 local function codelldb_path()
@@ -1574,8 +1590,10 @@ return {
             dap.adapters.go = function(callback, launch)
                 original(function(adapter)
                     local resolved = vim.deepcopy(adapter)
-                    if resolved.executable then resolved.executable.command = resolve_dlv_path() end
-                    callback(resolved)
+                    require("dap.async").run(function()
+                        if resolved.executable then resolved.executable.command = resolve_dlv_path() end
+                        callback(resolved)
+                    end)
                 end, launch)
             end
         end,

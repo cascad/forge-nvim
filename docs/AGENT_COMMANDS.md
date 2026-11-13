@@ -8423,3 +8423,50 @@ Comment.nvim e30b7f2008e52442154b66f7c519bfd2f1e32acb; SDK74aff15b, оба пр�
 Никаких новых SDK/plugin installs, containers, поведенческих тестов или изменений
 live IDE. Python проверил frozen hashes, appended journals, staged exact docs;
 git diff --check / git diff --cached --check и commit. Temp/Python UTF-8 на F.
+
+
+## 137. Go/Delve async metadata и реальный debug
+
+2026-11-13, FIXLOG229, make-go-debug-discovery-asynchronous. PowerShell
+-NoProfile из F:/repo/forge-nvim; TEMP/TMP/TMPDIR/NVIM_LOG_FILE в .tests/tmp,
+npm cache F:/forge-nvim-tmp/npm-cache, Python UTF-8. Чтение rg/Get-Content:
+Go/Delve functions, native dap.async/dap-go callback, SDK system.lua,
+existing go-passive/dap-output, Dockerfile SDK paths. Показания владельца
+об общей отзывчивости записаны как наблюдение, без выдуманной матрицы.
+
+```powershell
+& .tools/neovim/windows-x64/bin/nvim.exe -u NONE -i NONE -l .tests/tmp/go-discovery-probe/probe.lua
+# Own .cmd/Unicode/space smoke: system/fn.system/jobstart0. JSON в
+# .tests/go-discovery-cmd-probe.txt; это не fake Delve adapter.
+# Python subprocess: готовый go.exe env -json GOBIN GOPATH с local/GOENV off,
+# cwd с go.mod1.99.0; native code0 подтвердил policy перед реализацией.
+npx.cmd --yes @fission-ai/openspec@1.13.2 context --json
+npx.cmd --yes @fission-ai/openspec@1.13.2 new change make-go-debug-discovery-asynchronous
+# status/instructions proposal/specs/design/tasks/apply --change ... --json
+git archive --format=zip --output=.tests/go-discovery-source.zip 2b57b9a nvim_forge
+$env:FORGE_GO_PASSIVE_CASE='IDE-DAP-10'
+# Source только FORGE_E2E_CONFIG_SOURCE=...source; затем очистить.
+& .tools/neovim/windows-x64/bin/nvim.exe -l tests/e2e/go-passive.test.lua
+$env:FORGE_GO_PASSIVE_CASE='edit/label'
+& .tools/neovim/windows-x64/bin/nvim.exe -l tests/e2e/go-passive.test.lua
+$env:FORGE_GO_PASSIVE_CASE=$null
+$env:FORGE_TEST_ID='IDE-DAP-1 первый и повторный запуск: stdout/stderr и сохранение после выхода'
+& .tools/neovim/windows-x64/bin/nvim.exe -l tests/e2e/dap-output.test.lua
+docker version --format '{{.Server.Version}}'
+docker compose -f tests/containers/compose.yaml run --rm --no-deps --pull never --entrypoint bash ubuntu /workspace/.tests/go-discovery-final.sh > .tests/go-discovery-ubuntu-final.txt 2>&1
+python -B .tests/audit-go-discovery.py
+python -B .tests/record-go-discovery.py
+npx.cmd --yes @fission-ai/openspec@1.13.2 validate make-go-debug-discovery-asynchronous --type change --strict --no-interactive
+git diff --check
+git diff --cached --check
+```
+
+Windows final source-final/target-final/passive/debug-control logs, Ubuntu
+такие же. Первый Ubuntu script go-discovery.sh/лог go-discovery-ubuntu.txt
+ошибся с SDK path и unset env; native exepath fallback/explicit shell PATH
+исправлены, successful passive/Windows debug не повторялись. Ни один FAIL не
+переименован.8 final profiles,4 prior; native source/target test bytes равны,
+controls отличаются только неисполненным SDK fallback нового case. Audit
+сверяет native events/data/config/SDK/lock/frozen/prefix. Ready engine/image,
+UTF-8/LF guest script/network none, serial Win/Linux без lifecycle/install/
+image build. Перед commit exact staging и staged journal prefixes.
