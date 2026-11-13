@@ -20,8 +20,10 @@ checks на конечном runtime, Ubuntu final24 PASS; полный regressi
 F9/F5/evaluate/output/edit-repeat/launch.json/Stop, missing Node/adapter;
 по17 distinct selected PASS, Mac/physical/cold/interactive stdin отдельно.
 Очередь4 worktree IDE-038/048 остаётся открытым расследованием: прежних logs
-недостаточно для нового причинного исправления. Следующее — малый refactor
-пассивного поиска окон из FEATURE_REVIEW; SQL references ждут готовый provider.
+недостаточно для нового причинного исправления. Проверка следующего кандидата
+показала: passive window lookup уже объединён в §185, повтор этого refactor
+не нужен. Следующий выбор из FEATURE_REVIEW — navic+barbecue/Satellite;
+ответ владельца ожидается. SQL references ждут готовый provider.
 Отдельные Windows native quit IDE-121 и старый rebase-start timeout IDE-124
 не закрыты исторически; old rebase-abort на новой версии PASS (§214), причина
 исходного timeout без лога не установлена. Полный Windows regression PASS не заявлен. Mac/physical
@@ -41,7 +43,7 @@ E2E используются для защиты изменений продук
 
 | Очередь | Результат | Статус |
 |---|---|---|
-| 1. Этап 6: упрощение панелей/DAP | Сократить доказанные дубли по готовому review | Итерация §197 готова: общая подготовка восьми navigation-команд; Windows24 PASS, этап 6 целиком открыт |
+| 1. Этап 6: упрощение панелей/DAP | Сократить доказанные дубли по готовому review | §185: два window lookup цикла объединены; §197: общая подготовка восьми navigation-команд. Следующее сокращение вторичного UI требует выбора владельца |
 | 2. Оформление Termide | Довести Code/Locals pilot до решения для повседневной работы, затем остальные панели | Общий цветной zoom готов на Windows (§199); постоянные рамки split и physical review открыты |
 | 3. Реальные проекты | Go/Cargo workspace, Python venv, Node scripts, выбор цели и launch.json/default | Go.work §206–208 и mixed context/Node script/Python venv debug Windows/Ubuntu9 PASS (§209–211); остальная mixed матрица открыта |
 | 4. Git | Credentials, interactive rebase и оставшиеся ошибки worktree | Sequence и HTTP credentials Windows/Ubuntu (§212–214); worktree IDE-038/048 и real OAuth/SSH/Mac открыты |

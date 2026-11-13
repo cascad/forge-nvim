@@ -11540,3 +11540,11 @@ Dockerfile layer выполняет эту подготовку как forge и 
 FORGE_E2E_BASH_DAP_DEPS; полный image build не запускался и не объявлен
 проверенным. Добавлены только Dockerfile SDK строки и единый E2E env selector,
 нет нового runner/инфраструктурного этапа. CLI raw .tests/bash-sdk-owner-probe.txt.
+
+**Уточнение указателя плана после commit.** Read-only init/registry/activities
+подтвердил: passive window lookup уже объединён в §185 (два цикла/net−16),
+а navigation preparation — §197. Строка «следующий passive lookup refactor»
+была устаревшим повтором; roadmap/review исправлены. Runtime не менялся,
+новый refactor/ускорение/PASS не заявлены. Следующий UI выбор — удалить
+navic+barbecue/Satellite или оставить; он запрошен владельцу как предпочтение,
+не разрешение на команды. Mac и старые причинно неразобранные incidents открыты.

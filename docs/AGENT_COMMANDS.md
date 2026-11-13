@@ -7893,3 +7893,9 @@ prepare/check/chmod PASS. Node child stdin stat=socket, exec3</dev/stdin даё�
 code1/ENXIO. Raw .tests/bash-sdk-owner-probe.txt. Dockerfile получил поздний
 слой того же user-owned SDK и FORGE_E2E_BASH_DAP_DEPS, чистый build не выполнялся.
 SDK E2E env name согласован с остальными языками, default host path прежний.
+
+После Bash commit read-only rg/Get-Content ide/init.lua, registry.lua и
+activities.lua обнаружили уже выполненный §185, а не новый duplicate loop.
+Roadmap/FEATURE_REVIEW исправлены; runtime/tests/SDK/pins не менялись,
+повтор tests не выполнялся. Prefix .tests/roadmap-review-prefix.json.
+Запрошен реальный UI выбор navic+barbecue/Satellite; execution approval нет.

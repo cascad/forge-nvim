@@ -44,7 +44,9 @@ Windows Node→native WSL launcher, Linux/Mac native Bash4+. Малый Bash mod
 backend/WSL bridge/plugin pins/backports. Default integrated PTY убрал native
 stdin warning console transport; explicit console warning IDE-127 остаётся.
 SDK prepare явный, startup не запускает WSL.17 distinct Windows/Ubuntu PASS,
-Mac/cold/interactive stdin отдельно. После этого — passive window lookup review.
+Mac/cold/interactive stdin отдельно. Повторный read-only review подтвердил:
+passive lookup уже объединён в §185; старую формулировку следующего шага
+не следует читать как новую работу. Следующий выбор — три secondary UI plugins.
 
 ## Актуальный выбор после Files, Logs и frame pilot — 2026-11-11
 
@@ -99,8 +101,9 @@ Raw summaries: .tests/review-after-pilot-{windows,ubuntu}.json (Ubuntu под
 **6 dependencies /16 files** (прежние5/11, Neo-tree2, Neogit sequence1 и auth2). Старое5/11
 ниже обновлено; число4 в §182–183 не является корректным числом plugin
 backports. Windows SDK/SQLS source patch учитываются отдельно. Runtime и pins
-в этом проходе обзора не менялись. Следующий шаг — выбранное UI сокращение
-или отдельная проверенная дедупликация пассивного window lookup.
+в этом проходе обзора не менялись. Passive lookup уже сокращён в §185;
+следующий шаг — выбранное владельцем UI сокращение. Нового подтверждённого
+сокращения runtime этот повторный просмотр не дал.
 
 Дата: 2026-11-10. Статус: фактический обзор, coverage/ownership и bounded native
 baseline готовы; выбор удаления фич открыт, IDE-082 реализован отдельным change.
