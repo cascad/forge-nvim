@@ -115,3 +115,22 @@ completion/diagnostic control по2 PASS (§223). Mac ещё не запуска
 Реальный Cargo копируется в private directory, Clippy исключён из PATH и
 CARGO_HOME. Compiler/RA остаются настоящими; diagnostic source rustc, gl и
 исправление на save обязательны. Системный SDK не изменяется.
+
+
+## Подготовка при выборе проекта
+
+Если текущий каталог содержит Cargo.toml и инструменты готовы, после штатного
+старта или global cd запускаются асинхронные cargo metadata и rust-analyzer.
+Первый .rs подключается к тому же клиенту; Cargo build scripts/proc macros
+готовятся до открытия файла. RUSTUP_AUTO_INSTALL=0 исключает фоновую установку
+toolchain. Состояние/ошибки — Space w i, source Rust project; native progress
+показывает Fidget. Используются обычные Cargo artifacts, отдельного cache нет.
+Каталог без верхнего Cargo.toml не сканируется рекурсивно: для вложенных Rust
+подпроектов прежний file-triggered LSP сохраняется. Клиентами владеет Neovim.
+
+Регресс: FORGE_RUST_CASE=IDE-RUST-2 nvim -l tests/e2e/rust-language.test.lua.
+Real held build.rs подтверждает раннюю работу, UI input/open и один client.
+Windows/Ubuntu selected16 PASS (§224). Reference cold profile: first txt262/
+35ms, input56/4ms, Rust221/49ms; startup1153/88ms отдельно. Это не обещание
+такого времени на большом рабочем проекте. Mac и forced pending cancel ещё
+не проверены; готовность анализа не равна готовности UI.

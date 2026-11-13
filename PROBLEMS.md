@@ -37,9 +37,15 @@ retry не запускался. Native gate1.2 остаётся открыты�
 сразу. Требование: ввод/фокус/отрисовка без заметной блокировки; фоновые Git,
 scan/LSP/компиляция не удерживают UI. Нужны измерения именно рабочего проекта:
 key→первая перерисовка, main-loop gap, scan/Git/decorations и FileType/LspAttach.
-Причина пока неизвестна; Rust readiness IDE-131 не объявлен причиной Files.
-Следующий шаг после готовности запуска IDE-130 — ограниченный профиль этой
-операции; E2E с реальной вложенностью и native UI, не только маленький fixture.
+Раскрытие Files пока не измерено/не исправлено. Для первого открытия файла
+§224 дал native repro451ms, instrumented445ms: Gitsigns147ms + BufReadPost235ms
+холодной загрузки общего оформления. Шесть existing plugins теперь VeryLazy;
+Windows first txt262ms/input56ms/Rust221ms, Ubuntu35/4/49ms вreference fixture.
+Startup cold private profile отдельно: Windows1153ms/Ubuntu88ms (Lazy stats),
+не считать перенос загрузки устранением её стоимости. Native Rust root имеет
+отдельный sync sysroot probe; это кандидат, не доказанная причина Files.
+Следующий шаг — ручное раскрытие дерева и sync/async filesystem scan на реальной
+вложенности; пользовательский большой проект/physical ещё не принят.
 
 ## IDE-131 — Rust readiness запаздывает и check использует отсутствующий Clippy
 
@@ -59,8 +65,11 @@ Windows toolchain1.99.1; check завершается exit1. Также FetchBui
 командой. Windows/Ubuntu: source1 RED на native missing Clippy → target1 PASS
 (настоящая rustc error, gl, correction/save) + прежний completion control1 PASS.
 По3 native profiles/OS exit0/signal0/APIerrors[]/scope empty. Это не закрывает
-задержку подготовки/ошибку build script целиком. Открыты project warmup/cancel/
-root/cache, время first/reopen и native Mac; следующая отдельная итерация.
+задержку подготовки/ошибку build script целиком. §224 добавляет native warmup
+при выборе каталога с Cargo.toml: async metadata → vim.lsp.start attach=false,
+первый Rust-файл использует тот же client. Windows/Ubuntu selected16 PASS,
+real held build.rs, ввод/first-open замерены. Собственного cache нет. Открыты
+native Mac/большой cold project и принудительный pending-metadata cancel gate.
 
 ## IDE-130 — установленный профиль не прошёл первый native запуск
 

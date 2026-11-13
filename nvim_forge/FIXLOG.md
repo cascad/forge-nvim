@@ -11958,3 +11958,52 @@ Rust guide/tests README, PROBLEMS/roadmap/HISTORY/commands. Raw .tests/rust-chec
 и .tests/ubuntu/rust-check-*, audit .tests/rust-check-audit.json. Предшествующая
 документация установленного профиля сохранена отдельным a9758ed, её невыясненный
 native smoke остаётся рабочим draft. Journals append-only, exact staging.
+
+
+## 224. Ранний Rust workspace и холодная загрузка первого файла
+
+2026-11-13. Спека: IDE-RUST-2 (ADDED). Спека: IDE-BOOT-7 (ADDED).
+Продолжение IDE-131/132 после cargo check §223.
+
+**Проблема.** Rust preparation начинался с первого .rs; во время compile-time
+deps владелец ожидал отзывчивый редактор. Отдельно первое открытие задерживалось.
+Frozen349cfbb native source без Rust buffers не запускал RA; source case RED.
+
+**Причина.** LSP активировался только по file event. Первый prototype уже
+готовил workspace, но test ошибочно требовал Rust ft у README.txt; observer
+исправлен. Следующий target дал real first txt451ms (input53/Rust220ms).
+Один native Lazy measurement445ms: Gitsigns147ms BufReadPre, общий BufReadPost
+235.7ms (barbecue/navic, indent, comments, search, illuminate, Satellite).
+Это cold Lua loading cost, не ожидание compiler build script. Профиль сохранён.
+
+**Изменение.** Малый forge.rust_project: User VeryLazy/global DirChanged,
+верхний Cargo.toml, async native metadata, workspace_root, vim.lsp.start
+attach=false. Нет нового backend/parser/cache. Первый .rs использует тот же
+native client. Собственный pending metadata handle/generation отменяет/отбрасывает
+устаревший результат; существующие clients не завершаются. RUSTUP_AUTO_INSTALL=0,
+ошибки в существующий IDE Logs. Шесть общих UI plugins переведены на VeryLazy;
+первый файл не оплачивает их загрузку. Gitsigns event и все функции сохранены.
+
+**Проверка/e2e.** Final same normalized test/helper: source349cfbb1 RED на
+Windows/Ubuntu до первого Rust-файла, target1 + no-Clippy1 + completion1 +
+references3 + editor10 =16 PASS/OS. Во время настоящего held build.rs известен
+native PID; txt/input/.rs отвечают, client ID1 повторно используется, auto
+install0. Windows txt261.983ms/input55.513ms/Rust221.335ms; Ubuntu34.919/
+4.390/49.103ms. Предел300ms не повышался. Native cold startup Lazy stats
+1153.223/88.105ms отдельно: стоимость подготовки сдвинута к startup, не исчезла.
+16 profiles exit0/signal0/APIerrors[]/hard_kill=false/scope empty:
+37249347215900, 37261051253100, 37279727870300, 37288886732100, 37298122521500, 37312399412300, 37325304164300, 37333604702400, 31566432733695, 31575298025720, 31579597960133, 31583122801036, 31586835019248, 31594534117944, 31599900995679, 31604989346305. Final test/source/module/SDK/frozen guards — audit JSON.
+
+**Вывод/границы.** Основной warmup/first-open срез подтверждён Windows/Ubuntu.
+Native Mac/physical, большой cold проект, forced pending-metadata cancel branch
+ещё не проверены; в tasks отдельные gates. Каталог без Cargo.toml не сканируется
+рекурсивно, обычный file-triggered LSP остаётся. Pinned lspconfig имеет отдельный
+sync sysroot probe — кандидат, не доказанный источник Files latency. Раскрытие
+Files и IDE-130/133 не закрыты этим PASS. Full regression не заявлен.
+
+**Файлы.** rust_project/init,6 event policies в3 plugin files, existing Rust
+helper/E2E, measured diagnostic, OpenSpec/docs/PROBLEMS/roadmap/HISTORY/commands.
+Raw .tests/rust-warmup-*, .tests/rust-open-trace*, .tests/ubuntu/rust-warmup-*;
+audit .tests/rust-warmup-audit.json.67 pins/6 patches16 files/SDK прежние,
+Docker ready f63a05ca/network none без build/download/lifecycle, temp F.
+Journals append-only, old startup/infra drafts не включаются в commit.

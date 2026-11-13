@@ -43,3 +43,4 @@ vim.api.nvim_create_user_command('ForgeFramePilot',function() require('forge.fra
 -- edgy-панелях (они строго для tool-окон) и лечит уже сохранённые
 -- сломанные сессии, где файл «прилип» к панели. См. forge/panel_guard.lua.
 require("forge.panel_guard").setup()
+require('forge.rust_project').setup()

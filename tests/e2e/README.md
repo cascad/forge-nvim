@@ -1582,3 +1582,17 @@ code101. Проверяется именно source=rustc/severity ERROR, тек
 удаление diagnostic после сохранения исправления, startup installs0.
 Windows/Ubuntu source1 RED → target1+прежний completion control1 PASS (§223),
 Mac не запускался. Это не тест cold warmup или полного editor regression.
+
+
+## IDE-RUST-2 / IDE-BOOT-7: ранняя подготовка и первое открытие
+
+FORGE_RUST_CASE=IDE-RUST-2 nvim -l tests/e2e/rust-language.test.lua после
+обычной подготовки Rust SDK. Native build.rs пишет свой PID и ждёт release;
+Rust-клиент должен появиться до первого .rs. Пока Cargo занят, проверяются
+открытие txt, ввод, открытие Rust (<300ms вreference case), reuse client ID
+и готовность6 общих UI plugins. Gate освобождается и на FAIL. SDK не меняется.
+Windows/Ubuntu selected16 PASS §224: новый1, no-Clippy1, completion1,
+references3/editor10; это не whole regression. Native processes/scopes проверены.
+Для нового latency incident: nvim -l tests/diagnostics/rust-open-latency.lua
+сохраняет native Lazy profile + key/BufRead/FileType/LspAttach events. Script
+измерительный; результат его workflow не заменяет исходный FAIL.

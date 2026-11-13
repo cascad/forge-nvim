@@ -26,7 +26,7 @@ return {
     -- =====================================================================
     {
         "kevinhwang91/nvim-hlslens",
-        event = { "BufReadPost", "BufNewFile" },
+        event = "VeryLazy", -- IDE-BOOT-7: поиск не ждёт первой загрузки оформления
         config = function()
             require("hlslens").setup({
                 -- Держим подсветку и счётчик до явного :noh (не гасим при

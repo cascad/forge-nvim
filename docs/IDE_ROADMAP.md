@@ -15,11 +15,14 @@ IDE-001 параллельно ждёт диагностических данн�
    Tests, но полный case FAIL при открытии Locals (IDE-133, общий60s watchdog).
    Native gate остаётся открытым; воспроизведение и артефакты — FIXLOG222.
 2. IDE-131 — Rust: cargo check без обязательного Clippy исправлен §223,
-   Windows/Ubuntu source1 RED → target1 + control1 PASS. Далее — асинхронная
-   подготовка при входе в проект, штатный cache и время first/reopen. Этот
-   следующий срез ещё не реализован; Mac также открыт.
-3. IDE-132 — убрать0.5–1s задержки раскрытия Files/открытия файла после
-   профилирования реального проекта. Проверять отклик UI отдельно от LSP ready.
+   Windows/Ubuntu source1 RED → target1 + control1 PASS. Ранний native warmup
+   теперь реализован §224: до первого Rust-файла, тот же client ID; selected16
+   PASS на ОС. Стандартный Cargo cache, без своего storage. Mac/large cold и
+   принудительный pending metadata cancel gate остаются открытыми.
+3. IDE-132 — cold first-file нагрузка разобрана §224:451→262ms Windows,
+   общие UI plugins подготовлены на VeryLazy. Раскрытие Files и большой
+   рабочий проект ещё открыты; следующий bounded пункт — native async scan.
+   Отклик UI измеряется отдельно от LSP ready, startup cost не скрывается.
 4. Затем вернуться к оставшейся очереди ниже. IDE-048 probe остановился раньше
    remove: RPC timeout/forced native cleanup класса IDE-047, raw26364912087090
    сохранён; отмена Gitsigns этим запуском не подтверждена, условие не ослаблено.
@@ -27,7 +30,14 @@ IDE-001 параллельно ждёт диагностических данн�
 Пока владелец работает в IDE, тяжёлые language/container suites не запускаем.
 Одно короткое plain-text native E2E подготовки допустимо без Cargo/LSP builds.
 
-**Последний результат — §223:** compiler diagnostics Rust больше не требуют
+**Последний результат — §224:** Cargo workspace готовится до первого .rs;
+native async metadata и rust-analyzer, input56ms/first txt262ms/Rust221ms
+Windows,35/4/49ms Ubuntu. Compiler build script реально занят во время UI
+проверки, client ID переиспользуется. После cold-load fix общие6 UI plugins
+VeryLazy, функции сохранены. Selected16 PASS на каждой ОС/16 profiles всего,
+source без warmup RED. Mac/large cold/pending cancel и Files expansion открыты.
+
+**Предыдущий результат — §223:** compiler diagnostics Rust больше не требуют
 Clippy. Native source отказал с no such command clippy; target показывает
 rustc error через gl и убирает её после correction/save. Windows/Ubuntu по2
 selected PASS, по3 native profiles со штатным выходом. Новых SDK/plugins/

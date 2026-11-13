@@ -579,3 +579,15 @@ Popup/Layout добавляет владение окнами; это не бе�
 После этого source review выполнен рабочий пилот §183:
 [Code/Locals, команды и цена](PANEL_FRAME_PILOT.md). Его явное включение —
 новый ограниченный layout; default всей IDE и прочие панели прежние.
+
+
+2026-11-13, §224: native Lazy profiler выявил cold-load235ms на BufReadPost
+для общего оформления, отдельно Gitsigns147ms на BufReadPre. Comment/indent/
+illuminate/barbecue/Satellite/hlslens используют штатный VeryLazy. Все функции
+и67 pins/6 backports16 files сохранены; нового loader/cache/window manager нет.
+First txt Windows451→262ms, input56/Rust221ms; startup cold profile1153ms
+отдельно, перенос стоимости не объявлен её исчезновением. Ubuntu35/4/49ms,
+startup88ms. Existing references3 и editor10 плюс Rust3 PASS на каждой ОС.
+Rust project boundary — async native metadata → LSP start attach=false; own
+pending metadata handle/generation, клиентами владеет Neovim. Mac/large project/
+forced pending cancel и Files expansion ещё открыты.

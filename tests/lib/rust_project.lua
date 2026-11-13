@@ -10,7 +10,7 @@ local function copy(from,to)
     else error('Неожиданный тип Rust fixture '..name) end
   end
 end
-function M.start(root,on_create)
+function M.start(root,on_create,before_enter)
   if vim.env.FORGE_RUST_LEGACY then
     assert(vim.env.FORGE_RUST_CASE=='nextest' or vim.env.FORGE_RUST_CASE=='debug nearest','Legacy replay только для Rust test regressions')
   end
@@ -88,13 +88,14 @@ function M.start(root,on_create)
   vim.fn.writefile(vim.split(prepare_output,'\n',{plain=true}),e.dir..'/cargo-metadata.json')
   vim.fn.writefile({vim.json.encode(manifest)},e.dir..'/rust-dependencies.json')
   assert(uv.fs_copyfile(root..'/tests/e2e/rust-tools/sources.json',e.dir..'/rust-sources.json'))
-  e:input(':cd '..vim.fn.fnameescape(e.rust_project)..'<CR>')
   e:lua([[vim.lsp.log.set_level('debug')]])
   e:lua([[local original=vim.lsp.handlers['experimental/serverStatus'];
     vim.lsp.handlers['experimental/serverStatus']=function(err,result,ctx,config)
       _G.forge_rust_server_status=result
       if original then return original(err,result,ctx,config) end
     end]])
+  if before_enter then before_enter(e) end
+  e:input(':cd '..vim.fn.fnameescape(e.rust_project)..'<CR>')
   return e
 end
 return M

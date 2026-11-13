@@ -8236,3 +8236,55 @@ https://doc.rust-lang.org/cargo/commands/cargo-check.html
 https://doc.rust-lang.org/cargo/reference/external-tools.html
 Новых LSP, собственного cargo resolver/cache и deadline increases нет.
 Изолированный Rust commit не включает старые startup/infra drafts.
+
+
+## 132. Ранний Rust backend и native first-open profile
+
+2026-11-13, cwd F:/repo/forge-nvim, login=false, temp/TMP/TMPDIR/NVIM_LOG_FILE
+на F, Python UTF-8, npm cache F:/forge-nvim-tmp/npm-cache. Новый bounded change
+warm-rust-project-before-file, artifacts/provided instructions/context прочитаны.
+Native SDK LSP attach=false и local pinned/upstream Rust root прочитаны; своего
+root parser/cache нет. Git archive349cfbb заморожен до runtime patch, extraction
+с resolved boundary check. Rust helper ставит status observer/optional fixture
+до global cd, чтобы видеть early client; no-Clippy env тоже до warmup.
+
+```powershell
+git archive --format=zip --output=.tests/rust-warmup-source.zip HEAD nvim_forge
+$env:FORGE_RUST_CASE='IDE-RUST-2'
+$env:FORGE_E2E_CONFIG_SOURCE='F:/repo/forge-nvim/.tests/rust-warmup-source/nvim_forge'
+& .tools/neovim/windows-x64/bin/nvim.exe -l tests/e2e/rust-language.test.lua > .tests/rust-warmup-source.txt 2>&1
+$env:FORGE_E2E_CONFIG_SOURCE=$null
+& .tools/neovim/windows-x64/bin/nvim.exe -l tests/e2e/rust-language.test.lua > .tests/rust-warmup-target.txt 2>&1
+# Исправлен observer txt ft, новая версия:
+& .tools/neovim/windows-x64/bin/nvim.exe -l tests/e2e/rust-language.test.lua > .tests/rust-warmup-target-v2.txt 2>&1
+& .tools/neovim/windows-x64/bin/nvim.exe -l .tests/rust-open-trace.lua > .tests/rust-open-trace.txt 2>&1
+```
+
+Первый target — fixture ожидал ft rust для README.txt. Следующий — real451ms
+при300ms threshold. Один measurement445ms без смены runtime: native Lazy.track
+и key/BufRead/FileType/LspAttach events. Hook только измеряет, return semantics
+сохранены; copy SHA5467625d сохранён в tests/diagnostics/rust-open-latency.lua.
+После cause-based изменения6 event policies выполнен final source1 RED и
+target/check/completion/reference/editor по одному разу, разные logs:
+
+```powershell
+# FORGE_E2E_CONFIG_SOURCE=...source только для source-final; затем очищен.
+# FORGE_RUST_CASE последовательно IDE-RUST-2, IDE-RUST-1, Rust LSP completion diagnostics correction.
+& .tools/neovim/windows-x64/bin/nvim.exe -l tests/e2e/rust-language.test.lua
+& .tools/neovim/windows-x64/bin/nvim.exe -l tests/e2e/reference-highlighting.test.lua
+& .tools/neovim/windows-x64/bin/nvim.exe -l tests/e2e/editor.test.lua
+docker compose -f tests/containers/compose.yaml run --rm --no-deps --pull never --entrypoint bash ubuntu /workspace/.tests/rust-warmup-final.sh > .tests/rust-warmup-ubuntu.txt 2>&1
+python -B .tests/audit-rust-warmup.py
+python -B .tests/record-rust-warmup.py
+npx.cmd --yes @fission-ai/openspec@1.13.2 validate warm-rust-project-before-file --type change --strict --no-interactive
+git diff --check
+git diff --cached --check
+```
+
+Финальные логи .tests/rust-warmup-source-final.txt/final-*.txt и такие же в
+.tests/ubuntu. По16 PASS +1 expected source RED,16 native profiles всего0/0/
+scope empty, raw latency в rust-warmup.json. Cold startup отдельно1153/88ms.
+Linux shell UTF-8/LF, ready image f63a05ca/private overlay/network none, Windows/
+Ubuntu serial без build/download/Desktop/WSL lifecycle. Forced pending cancel,
+Mac/large real project/Files expansion/IDE-133 ещё open. SDK/lock/frozen startup
+и infra drafts сверены по .tests/rust-warmup-prefix.json; только allowlist в index.

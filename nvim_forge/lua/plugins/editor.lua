@@ -57,7 +57,7 @@ return {
     -- =========================================================
     {
         "numToStr/Comment.nvim",
-        event = { "BufReadPost", "BufNewFile" },
+        event = "VeryLazy", -- IDE-BOOT-7: готов до первого чтения файла
         opts = {
             padding = true,
             sticky = true,
@@ -327,7 +327,7 @@ return {
     {
         "lukas-reineke/indent-blankline.nvim",
         main = "ibl",
-        event = { "BufReadPost", "BufNewFile" },
+        event = "VeryLazy", -- IDE-BOOT-7: не блокировать первое чтение
         opts = {
             indent = { char = "▏" },
             scope = { enabled = true, show_start = false, show_end = false },

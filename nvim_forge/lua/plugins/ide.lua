@@ -100,7 +100,7 @@ return {
     -- =========================================================
     {
         "RRethy/vim-illuminate",
-        event = { "BufReadPost", "BufNewFile" },
+        event = "VeryLazy", -- IDE-BOOT-7: regex provider готов и без LSP
         config = function()
             local rust_external = require("config.rust_external")
             rust_external.mark(0)
@@ -160,7 +160,7 @@ return {
     },
     {
         "utilyre/barbecue.nvim",
-        event = { "BufReadPost", "BufNewFile" },
+        event = "VeryLazy", -- IDE-BOOT-7: breadcrumbs до первого LspAttach
         dependencies = {
             "SmiteshP/nvim-navic",
             "nvim-tree/nvim-web-devicons",
@@ -210,7 +210,7 @@ return {
     -- =========================================================
     {
         "lewis6991/satellite.nvim",
-        event = { "BufReadPost", "BufNewFile" },
+        event = "VeryLazy", -- IDE-BOOT-7: ruler готов до первого файла
         opts = {
             -- false = показывать ruler во всех окнах, не только в активном.
             -- Для split-режима (3-way merge, side-by-side) полезно видеть

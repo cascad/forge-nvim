@@ -29,12 +29,12 @@ local function state(e)
     adapters=n and n.state.adapter_ids() or {},positions=positions,statuses=statuses,server_status=_G.forge_rust_server_status,
     session=s and {type=s.config.type,program=s.config.program,cwd=s.config.cwd,paused=s.stopped_thread_id} or false} ]])
 end
-local function check(name,fn)
+local function check(name,fn,before_enter)
   if vim.env.FORGE_RUST_CASE and not name:find(vim.env.FORGE_RUST_CASE,1,true) then return end
   T.check((name:match('^IDE%-') and '' or 'SELF: RUST-LANGUAGE ')..name,function()
     local e
     local ok,err=pcall(function()
-      require('rust_project').start(root,function(child) e=child end)
+      require('rust_project').start(root,function(child) e=child end,before_enter)
       vim.fn.writefile(vim.fn.readfile(root..'/tests/e2e/rust-language.test.lua'),e.dir..'/rust-language.test.lua')
       assert(vim.uv.fs_copyfile(root..'/tests/lib/rust_project.lua',e.dir..'/rust_project.lua'))
       fn(e)
@@ -60,7 +60,7 @@ local function check(name,fn)
     assert(ok,err)
   end)
 end
-check('IDE-RUST-1 Cargo diagnostics без Clippy',function(e)
+local function without_clippy(e)
   local manifest=vim.json.decode(table.concat(vim.fn.readfile(e.rust_deps..'/manifest.json'),'\n'))
   local sdk=manifest.sysroot:gsub('\\','/')..'/bin/'
   local suffix=e.rust_suffix
@@ -87,6 +87,8 @@ check('IDE-RUST-1 Cargo diagnostics без Clippy',function(e)
   e:lua([[local env,ra=...;vim.env.PATH=env.PATH;vim.env.CARGO=env.CARGO;vim.env.RUSTC=env.RUSTC
     require('lazy').load({plugins={'nvim-lspconfig'}})
     vim.lsp.config('rust_analyzer',{cmd={ra}});vim.lsp.enable('rust_analyzer')]],{env,sdk..'rust-analyzer'..suffix})
+end
+check('IDE-RUST-1 Cargo diagnostics без Clippy',function(e)
   local file=e.rust_project..'/app/src/lib.rs'
   vim.fn.writefile({'#[deprecated(note = "FORGE_CARGO_DIAGNOSTIC")]','pub fn old_api() {}',
     '#[deny(deprecated)]','pub fn call_api() {','    old_api();','}'},file)
@@ -114,7 +116,72 @@ check('IDE-RUST-1 Cargo diagnostics без Clippy',function(e)
   e:input('<Esc>5Gcc    // corrected<Esc>:write<CR>')
   e:wait('compiler diagnostic убрана после save',function() return compiler_error()==false end,30000)
   T.eq(e:lua('return vim.g.forge_e2e_installs'),0)
-end)
+end,without_clippy)
+local function held_build_script(e)
+  local before=e:lua([[return {clients=#vim.lsp.get_clients({name='rust_analyzer'}),spawns=_G.forge_e2e_spawns}]])
+  T.eq(before.clients,0,'Без Cargo.toml в initial cwd Rust не запускается')
+  for _,spawn in ipairs(before.spawns) do
+    assert(not vim.fs.basename(spawn.cmd):find('rust-analyzer',1,true),'Rust backend до выбора Cargo project')
+  end
+  e.warmup_gate=e.runtime..'/warmup-build-gate';vim.fn.mkdir(e.warmup_gate,'p')
+  e:lua('vim.env.FORGE_E2E_WARMUP_GATE=...',{e.warmup_gate})
+  vim.fn.writefile({'native UI during Cargo preparation'},e.rust_project..'/README.txt')
+  vim.fn.writefile({
+    'fn main() {',
+    '    println!("cargo:rerun-if-changed=build.rs");',
+    '    let gate = std::path::PathBuf::from(std::env::var("FORGE_E2E_WARMUP_GATE").unwrap());',
+    '    std::fs::write(gate.join("started"), std::process::id().to_string()).unwrap();',
+    '    let until = std::time::Instant::now() + std::time::Duration::from_secs(20);',
+    '    while !gate.join("release").exists() {',
+    '        assert!(std::time::Instant::now() < until, "native build gate timed out");',
+    '        std::thread::sleep(std::time::Duration::from_millis(10));',
+    '    }',
+    '}'},e.rust_project..'/app/build.rs')
+end
+check('IDE-RUST-2 IDE-BOOT-7 prepare до первого Rust файла сохраняет UI и reuse',function(e)
+  local evidence={}
+  local ok,err=xpcall(function()
+    evidence.before=e:lua([[local rust=0;for _,b in ipairs(vim.api.nvim_list_bufs()) do if vim.bo[b].filetype=='rust' then rust=rust+1 end end
+      return {rust_buffers=rust,clients=#vim.lsp.get_clients({name='rust_analyzer'}),cwd=vim.fn.getcwd()}]])
+    T.eq(evidence.before.rust_buffers,0)
+    local id
+    e:wait('Rust client запущен до первого файла',function() return e:lua([[for _,c in ipairs(vim.lsp.get_clients({name='rust_analyzer'})) do
+      if c.initialized then return c.id end end;return false]])~=false end,5000)
+    id=e:lua([[return vim.lsp.get_clients({name='rust_analyzer'})[1].id]])
+    e:wait('реальный build script выполняется',function() return vim.fn.filereadable(e.warmup_gate..'/started')==1 end,15000)
+    evidence.build_pid=tonumber(vim.fn.readfile(e.warmup_gate..'/started')[1])
+    assert(evidence.build_pid and evidence.build_pid>0)
+    T.eq(vim.fn.filereadable(e.warmup_gate..'/release'),0)
+    evidence.prepared=e:lua([[local out={};for _,name in ipairs({'Comment.nvim','indent-blankline.nvim',
+      'vim-illuminate','barbecue.nvim','satellite.nvim','nvim-hlslens'}) do
+      out[name]=not not require('lazy.core.config').plugins[name]._.loaded end;return out]])
+    for name,ready in pairs(evidence.prepared) do T.eq(ready,true,name..' не подготовлен до первого файла') end
+    evidence.startup_ms=e:lua([[return require('lazy').stats().startuptime]])
+    local began=vim.uv.hrtime()
+    e:input(':edit '..vim.fn.fnameescape(e.rust_project..'/README.txt')..'<CR>')
+    e:wait('обычный текст во время Cargo preparation',function()
+      return e:current_file():sub(-10)=='README.txt' and e:current_ft()=='text'
+    end)
+    evidence.text_open_ms=(vim.uv.hrtime()-began)/1e6
+    began=vim.uv.hrtime();e:input('A_FORGE_WARMUP_UI<Esc>')
+    e:wait('ввод во время compile-time deps',function() return e:lua('return vim.api.nvim_get_current_line()'):find('FORGE_WARMUP_UI',1,true)~=nil end)
+    evidence.input_ms=(vim.uv.hrtime()-began)/1e6
+    T.eq(e:lua([[return #vim.lsp.get_clients({bufnr=0,name='rust_analyzer'})]]),0,'RA не attach к txt')
+    began=vim.uv.hrtime();open(e,'app/src/lib.rs')
+    evidence.rust_open_ms=(vim.uv.hrtime()-began)/1e6
+    e:wait('Rust file использует подготовленный client',function() return e:lua([[local id=...;for _,c in ipairs(vim.lsp.get_clients({bufnr=0,name='rust_analyzer'})) do
+      if c.id==id then return true end end;return false]],{id}) end)
+    evidence.client_id=id;evidence.clients=e:lua([[local out={};for _,c in ipairs(vim.lsp.get_clients({name='rust_analyzer'})) do out[#out+1]={id=c.id,root=c.config.root_dir} end;return out]])
+    T.eq(#evidence.clients,1)
+    for _,key in ipairs({'text_open_ms','input_ms','rust_open_ms'}) do assert(evidence[key]<300,key..': '..evidence[key]..'ms >=300ms') end
+  end,debug.traceback)
+  vim.fn.writefile({'release'},e.warmup_gate..'/release')
+  evidence.ok=ok;evidence.error=not ok and tostring(err) or nil
+  vim.fn.writefile({vim.json.encode(evidence)},e.dir..'/rust-warmup.json')
+  assert(ok,err)
+  e:wait('Cargo preparation завершена',function() return e:lua([[return _G.forge_rust_server_status and _G.forge_rust_server_status.quiescent or false]]) end,30000)
+  T.eq(e:lua('return vim.g.forge_e2e_installs'),0)
+end,held_build_script)
 check('Rust LSP definition references rename между workspace crates',function(e)
   language(e,'app/src/use_math.rs');seek(e,'calculate_answer');e:input('gd')
   e:wait('definition в local crate',function() return e:current_file():sub(-15)=='math/src/lib.rs' end,30000)
