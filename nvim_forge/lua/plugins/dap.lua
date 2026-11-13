@@ -796,6 +796,8 @@ local function keep_debugpy_adapter_inside_nvim(adapter_command)
             end
             adapter.options = adapter.options or {}
             adapter.options.detached = false
+            -- spec: IDE-DAP-8. Native budget включает cold initialize и launch debugpy.
+            adapter.options.initialize_timeout_sec = 30
         end
         return adapter
     end

@@ -28,6 +28,12 @@ npm install --save-dev typescript@5.9.3 typescript-language-server@5.1.3 prettie
 приоритет. Сам процесс запускает Node с JS entrypoint списком argv, без
 зависимости от Windows .cmd или POSIX shell для CLI.
 
+Если package.json не найден, уже выбранный каталог сохраняется как корень
+поиска. Поэтому Bash LSP в repo/node_modules работает рядом с вложенным JS
+package; путь файла по-прежнему использует свой родительский каталог.
+IDE-120/IDE-NODE-5, §209: mixed context Windows проверен, Node helper Ubuntu17
+PASS; SDK/pins прежние. [Границы общей проверки](LANGUAGE_MATRIX.md).
+
 Необязательные явные границы: `FORGE_NODE_EXECUTABLE` — путь к native Node,
 `FORGE_NODE_TOOLS` — каталог с node_modules, `FORGE_JS_DEBUG_SERVER` — полный
 путь к `js-debug/src/dapDebugServer.js`. Их `vim.g` аналоги:

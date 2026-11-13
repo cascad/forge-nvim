@@ -61,6 +61,13 @@ python/debugpy, program/cwd/args. Stdout/stderr остаются в Debug Output
 pytest debug не должен перекрываться ложным adapter exit WARN; настоящий
 отказ adapter до client close остаётся видимым.
 
+Готовому Python adapter отводится30 секунд на initialize+launch до предупреждения
+об отсутствии ответа. Холодный запуск в смешанном проекте занимал6,7 секунды;
+прежний native budget4s вызывал Press ENTER до завершения handshake.
+Использована штатная настройка nvim-dap, одинаковая на ОС. Настоящий exit
+адаптера сообщается сразу, независимо от этого бюджета (IDE-122/IDE-DAP-8, §210).
+Windows mixed+Python8 проверены; финальный Ubuntu budget и Mac ещё открыты.
+
 Отдельные adapter overrides `forge_debugpy_adapter`/FORGE_DEBUGPY_ADAPTER и
 `forge_debugpy_python`/FORGE_DEBUGPY_PYTHON задавайте до загрузки DAP конфигурации
 или перед запуском редактора. Выбор backend и Python отлаживаемой программы —

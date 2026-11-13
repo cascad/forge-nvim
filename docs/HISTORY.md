@@ -345,6 +345,8 @@ Python реализован и проверен 2026-11-03; после возо�
 | §207 | [Go workspace: Run all без зависания редактора](../nvim_forge/FIXLOG.md#207-go-workspace-run-all-без-зависания-редактора) |
 
 | §208 | [Go workspace: переходы к определениям и реализациям](../nvim_forge/FIXLOG.md#208-go-workspace-переходы-к-определениям-и-реализациям) |
+| §209 | [Смешанный проект: поиск локальных Node tools из каталога](../nvim_forge/FIXLOG.md#209-смешанный-проект-поиск-локальных-node-tools-из-каталога) |
+| §210 | [Python debug: холодный handshake в смешанном проекте](../nvim_forge/FIXLOG.md#210-python-debug-холодный-handshake-в-смешанном-проекте) |
 
 ## Как читать и дополнять
 

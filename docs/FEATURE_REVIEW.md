@@ -16,6 +16,13 @@ dependencies прежние. Цена — per-file suite вместо module bat
 helper после готового upstream workspace builder + тех же nearest/file/all
 E2E на целевых ОС. Windows/Ubuntu selected по12 PASS; Mac ещё не проверен.
 
+2026-11-13, §209–210: исправлены две узкие существующие границы. Node root
+fallback различает directory/file через native fs_stat; новый resolver не нужен.
+Python executable adapter использует public initialize_timeout_sec=30 для cold
+initialize+launch вместо native4s; failure/exit handling остаётся штатным.
+Новых plugins/SDK/backports/кэшей нет. Mixed Windows9 PASS; Node helper Ubuntu17
+PASS до Python budget, финальный Ubuntu нового budget pending. Mac отдельно.
+
 ## Актуальный выбор после Files, Logs и frame pilot — 2026-11-11
 
 Source e00bcea. Выполнено: Files §180–181, обязательные Logs §182 и рабочий

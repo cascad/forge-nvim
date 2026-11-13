@@ -11184,3 +11184,89 @@ textDocument/implementation, definition/references; installs0. Source copies
 change artifacts, GO_TOOLS/LANGUAGE_MATRIX/IDE_ROADMAP/HISTORY/commands.
 Append-only/frozen drafts/partial registry allowlist проверяются перед commit,
 SDK/lock не меняются, push не выполняется.
+
+
+## 2026-11-13
+
+### 209. Смешанный проект: поиск локальных Node tools из каталога
+
+**Связь:** IDE-120/WF-04/05, change `verify-mixed-project-context`.
+Спека: IDE-NODE-5 (ADDED). **Статус:** common directory fix проверен Windows/
+Ubuntu; финальный Ubuntu второго Python исправления pending, Mac/physical открыты.
+
+**Проблема.** Один Git repo содержит Go/Rust/Python/JS/Bash/SQL. Source
+23787689169800 подключил первые4 LSP, но Bash language server в root/node_modules
+не запустился: bash.lua:38 «Bash Language Server не найден». Package.json лежит
+во вложенном web, а Bash language root — общий repo.
+
+**Причина.** forge.node.root(file) сначала находит tools при parent walk.
+Повторный вызов с config.root_dir без package marker считает каталог файлом
+и возвращает dirname(root), пропуская сам root/node_modules. Наличие готового
+language server не спасает от неверного directory context.
+
+**Изменение.** Существующий helper сохраняет directory input по native fs_stat,
+для файла fallback прежний, ближайший package.json сохраняет приоритет. Нет
+нового root resolver/parser/private backend. Постоянный mixed E2E/9 fixtures:
+6 filetypes/настоящие LSP roots/стабильный Git cwd, Node picker cancel/select,
+реальный script cwd, Python venv debug и возврат к прежнему gopls. SDK67 pins/
+6 patched dependencies прежние, local npm deps через directory links/junctions,
+парсеры из prepared SDK; native owned cleanup не обходит link targets.
+
+**Проверка/e2e.** 2026-11-12 source FAIL сохранён, затем Windows6 roots/Node task
+подтверждены; Ubuntu mixed1+Node8+Bash8 =17 PASS, native exits/scopes ok,
+Node source exact. Ubuntu mixed16137869042836 был до Python budget §210.
+Current Windows mixed24822402791700 PASS + Python8 PASS (6 до паузы, последние
+2 profiles1242887837200/1280423674900 выполнены 2026-11-13). Runtime copies exact,
+exit0/signal0/APIerrors[]/scope ok. Audit .tests/mixed-project-audit.json.
+Прежние Windows Node7/1 и Bash7/1 имеют отдельный native quit IDE-121:
+24015434532700/24391104731200; functional flows завершены, controller SIGTERM
+после VimLeave. Причина не установлена, полный Windows PASS не заявлен.
+
+**Вывод.** Directory и file context различаются на существующей Node границе,
+а workspace owner остаётся общим. Полная mixed Tests/rename/format/debug матрица
+не закрывается этим context case. Следующий продуктовый пункт — interactive rebase.
+
+**Файлы.** forge/node.lua, mixed-project fixture/E2E/registry, change, NODE/BASH/
+PYTHON_WORKFLOW, LANGUAGE_MATRIX/FEATURE_REVIEW/roadmap/PROBLEMS/HISTORY/commands.
+Два прежних OpenSpec tasks восстановлены из cp1251 roundtrip в UTF-8; дальнейшие
+Python reads/writes явно UTF-8. Старые journal bytes/frozen drafts сохранены.
+
+### 210. Python debug: холодный handshake в смешанном проекте
+
+**Связь:** IDE-122/WF-05, тот же change `verify-mixed-project-context`.
+Спека: IDE-DAP-8 (ADDED). **Статус:** Windows9 distinct checks PASS; final Ubuntu
+нового budget pending Linux engine, Mac/physical не проверены.
+
+**Проблема.** После6 LSP и успешного Node script Python default debug выдавал
+«Debug adapter didn't respond» и Press ENTER; breakpoint/Output не достигались.
+Source23950668148100 сохранён. Диагностическая версия24472874457100 заранее
+запоминает log paths, чтобы blocking RPC не лишал нас DAP/debugpy logs.
+
+**Причина.** Native nvim-dap timer4s включает initialize и launch response
+(adapter_responded только после config.request callback). Cold debugpy sends
+initialized на adapter D+4.136; Nvim уже блокирован warning до обработки события.
+Standalone stdio initialize того же SDK PASS. После фикса Windows handshake
+занял6716.4057ms. Это не доказательство дефекта pipes/ConPTY или SDK.
+
+**Изменение.** Только public Python executable adapter option
+initialize_timeout_sec=30, общая для ОС. Реальные exit/error handling остаются
+native, test deadlines прежние. В E2E public event_initialized timing и actual
+adapter budget, project venv/program/cwd/pause/Output/continue/Go return.
+
+**Проверка/e2e.** Current mixed24822402791700 PASS/native0/signal0/APIerrors[]/
+scope ok, elapsed6.716s > прежних4s; до/после pause MIX_PY_BEFORE/AFTER42.
+Python8 PASS на том же runtime:6 сохранённых до owner pause +2 оставшихся после
+resume (debug nearest и настоящий unexpected adapter exit). Повтор already PASS
+не выполнялся. Прерванный 2026-11-12 driver отмечен INTERRUPTED, не product FAIL.
+Logs .tests/mixed-project-cold-python-windows и mixed-project-python-remaining-
+windows, общий audit. Ubuntu17 до budget сохраняется, но не выдаётся за final
+Ubuntu нового Python option: 2026-11-13 engine channel отсутствует, запрос
+владельцу отправлен, Desktop/WSL lifecycle не менялся. Native Mac открыт.
+
+**Вывод.** Cold initialize+launch нуждается в ограниченном native adapter budget.
+Он не меняет обязательность backend и не задерживает уже сообщённый error/exit.
+IDE-121 других Windows случаев и IDE-117 POSIX cleanup не закрываются этим fix.
+
+**Файлы.** plugins/dap.lua, mixed E2E/timing, python-cold-debug delta, Python
+workflow/matrix/review/roadmap и history. Windows срез можно commit с явным
+pending Ubuntu gate; task1.2 остаётся открытым, push не выполняется.

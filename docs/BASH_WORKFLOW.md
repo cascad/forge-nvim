@@ -2,6 +2,8 @@
 
 Общий workflow Windows/macOS/Ubuntu использует native Bash, Bash Language
 Server, shfmt, ShellCheck и Bats. Открытие файла ничего не скачивает.
+Bash LSP можно держать в node_modules корня смешанного repo без package.json:
+переданный language root сохраняется при поиске tools (IDE-120/§209).
 
 Инструменты готовятся явно: например, `:MasonInstall bash-language-server
 shfmt shellcheck` и `:TSInstall bash`. Language server требует Node.js 20+.

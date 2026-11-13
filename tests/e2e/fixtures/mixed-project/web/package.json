@@ -1,0 +1,1 @@
+{"name":"forge-mixed-web","private":true,"scripts":{"start":"node app.js nested-script"}}

@@ -7696,3 +7696,48 @@ runtime/test bytes; .tests/go-workspace-language-audit.json. Никаких по
 raw journal prefixes,5 frozen drafts, working registry minus new row.
 Partial registry index из HEAD + только Go.work language row; точный allowlist,
 diff --check/strict/SDK SHA. Самостоятельный commit, push не выполняется.
+
+
+## 120. Mixed repo: directory tools и cold Python launch, продолжение после паузы
+
+2026-11-12–13, F:/repo/forge-nvim, PowerShell login=false. OpenSpec apply
+verify-mixed-project-context, root nearest подтверждён, context/proposal/specs/
+design/tasks прочитаны. Test-only change до runtime правок получил IDE-NODE-5
+и IDE-DAP-8 ADDED. Никаких новых backend/SDK/private fork.
+
+```powershell
+$env:TEMP='F:/repo/forge-nvim/.tests/tmp'
+$env:TMP=$env:TEMP; $env:TMPDIR=$env:TEMP
+$env:NVIM_LOG_FILE="$env:TEMP/mixed-project.log"
+$env:PYTHONUTF8='1'; $env:PYTHONIOENCODING='utf-8'
+$env:npm_config_cache='F:/forge-nvim-tmp/npm-cache'
+$env:GOMAXPROCS='2'; $env:GOFLAGS='-p=2'; $env:GOTOOLCHAIN='local'
+$env:CARGO_BUILD_JOBS='2'
+& ./.tools/neovim/windows-x64/bin/nvim.exe -l tests/e2e/mixed-project.test.lua
+# Selected Windows loop: mixed-project/node-language/bash-language, по разу на версии.
+# Ubuntu до изменения Python budget, готовый image, no build/network:
+docker compose -f tests/containers/compose.yaml run --rm --no-deps --entrypoint bash -e GOMAXPROCS=2 -e GOFLAGS=-p=2 -e GOTOOLCHAIN=local -e CARGO_BUILD_JOBS=2 ubuntu -c $script
+# Cold budget target: mixed-project и python-language;6 Python PASS до owner pause.
+$env:FORGE_PYTHON_CASE='IDE-DAP-5'
+& ./.tools/neovim/windows-x64/bin/nvim.exe -l tests/e2e/python-language.test.lua > .tests/mixed-project-python-remaining-windows/run.txt 2>&1
+npx.cmd --yes @fission-ai/openspec@1.13.2 validate verify-mixed-project-context --type change --strict --no-interactive
+```
+
+Source/target/diagnostic outputs раздельны: .tests/mixed-project-windows,
+mixed-project-target-windows, mixed-project-logs-windows, mixed-project-ubuntu,
+mixed-project-cold-python-windows и python-remaining-windows. Source freeze и
+cold4s warnings сохранены; последнее2 PASS не повторяет первые6. Native job
+32948 tree остановлен 2026-11-12 только по явной owner pause; результаты
+незавершённых cases помечены INTERRUPTED. После daemon restart проверены
+HEAD/status/results до любых повторов. Current Windows9 PASS; previous Ubuntu17
+PASS до Python budget; финальный Ubuntu pending engine. Read-only docker info
+вернул отсутствующий dockerDesktopLinuxEngine; Desktop не запускался.
+
+Read-only rg/Get-Content: native root/DAP timer/CLI paths, logs/quit traces.
+Отдельная stdio initialize probe debugpy-adapter.exe получила настоящий response,
+result .tests/mixed-debugpy-stdio/result.json; SDK help/import также проверены.
+Python -B - audits snapshots/source hashes/root/timing/shutdown/scope, не печатает
+raw debugpy access tokens; .tests/mixed-project-audit.json. Prefix guards
+.tests/mixed-project-prefix.json; raw append-only bytes/5 frozen drafts/registry
+minus only mixed row/SDK SHA. Exact allowlist staging, partial registry из HEAD,
+UTF-8 recovery двух completed tasks отдельно от журналов, push нет.

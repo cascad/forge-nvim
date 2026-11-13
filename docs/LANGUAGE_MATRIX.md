@@ -73,7 +73,18 @@ native commands последовательны, SDK/pins прежние. Windows
 настоящий gopls — gd/назад/gi типа/gi метода/gr/Enter между app/shared.
 Один root/client, cwd не меняется, installs0. Runtime/SDK/pins прежние.
 Это закрывает конкретный Go.work navigation case WF-10; Mac/physical и весь
-mixed project ещё не проверены.
+mixed project этим Go.work сценарием не проверены.
+
+2026-11-12–13, mixed context (§209–210): один Git cwd и6 готовых LSP roots,
+Node script cancel/select с cwd web, Python default из nested venv, breakpoint/
+Output/continue и возврат к прежнему gopls. Исправлены directory fallback
+Node tools (IDE-120) и cold Python handshake budget30s вместо4s (IDE-122).
+Конечная Windows версия9 PASS: mixed1+Python8, включая реальный adapter exit.
+Ubuntu Node helper17 PASS (mixed1/Node8/Bash8) до изменения Python budget;
+финальная mixed+Python8 проверка нового budget ждёт Docker Linux engine.
+Прежние Windows Node7 PASS/1 FAIL и Bash7 PASS/1 FAIL — native quit IDE-121,
+их source результаты сохранены, полный Windows PASS не заявлен. Mac/physical,
+полная mixed Tests/debug/rename/format матрица отдельно. Нет новых SDK/pins.
 
 1. Go language Windows/Ubuntu проверен после явного build образа.
    Windows/Ubuntu: по 6 UI PASS — настоящий gopls, completion, definition/references,

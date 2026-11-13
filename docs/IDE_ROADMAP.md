@@ -1,11 +1,20 @@
 # nvim_forge — рабочий план мини-IDE
 
-Обновлено: 2026-11-12. Основная сборка: **nvim_forge**.
+Обновлено: 2026-11-13. Основная сборка: **nvim_forge**.
 Статус: базовые e2e настоящего nvim_forge работают на Windows и Ubuntu;
 фоновые установки инструментов редактора перенесены в явный setup.
 IDE-001 параллельно ждёт диагностических данных с Mac.
 
 ## Текущая очередь продукта — решение владельца 2026-11-12
+
+**Текущая точка 2026-11-13:** mixed context Windows проверен (§209–210):
+6 language roots/Node script cancel/select/cwd/Python venv/debug/output/Go return.
+Конечная версия Windows9 PASS: mixed1 и Python8 (6 до паузы +2 после, без повторов).
+Node helper также Ubuntu17 PASS до изменения Python budget; финальный Ubuntu
+mixed+Python8 ждёт включённого Linux engine Docker. Mac/physical отдельно.
+Прежние Windows Node7/1 и Bash7/1 с native quit FAIL IDE-121 остаются открытыми;
+общий Windows full PASS не заявлен. Дальше — native interactive rebase editor,
+`verify-interactive-rebase-editor`, без нового Git backend.
 
 Один ограниченный пункт → изменения → один прогон нужных тестов → отчёт и
 commit при успехе. Затем самостоятельно следующий пункт. Остановка — по
@@ -23,7 +32,7 @@ E2E используются для защиты изменений продук
 |---|---|---|
 | 1. Этап 6: упрощение панелей/DAP | Сократить доказанные дубли по готовому review | Итерация §197 готова: общая подготовка восьми navigation-команд; Windows24 PASS, этап 6 целиком открыт |
 | 2. Оформление Termide | Довести Code/Locals pilot до решения для повседневной работы, затем остальные панели | Общий цветной zoom готов на Windows (§199); постоянные рамки split и physical review открыты |
-| 3. Реальные проекты | Go/Cargo workspace, Python venv, Node scripts, выбор цели и launch.json/default | Cargo picker Windows (§200), Go.work debug/Tests/navigation Windows/Ubuntu (§206–208); смешанный проект открыт |
+| 3. Реальные проекты | Go/Cargo workspace, Python venv, Node scripts, выбор цели и launch.json/default | Go.work §206–208; mixed context/Node script/Python venv debug Windows9 PASS (§209–210), финальный Ubuntu и остальная mixed матрица открыты |
 | 4. Git | Credentials, interactive rebase и оставшиеся ошибки worktree | Основной сценарий есть; остаток открыт |
 | 5. Языковые пробелы | Bash debug с готовым backend; SQL references при наличии подходящего provider | Открыто; собственный LSP не создаём |
 | 6. Переносимость | Чистый setup Windows/Ubuntu/macOS, terminal/SSH; Mac startup/Go и Cmd+C | Частично; native Mac и физические клавиши не проверены |
@@ -40,7 +49,8 @@ Ubuntu1 PASS (§206), без изменений runtime. Go.work Tests такж�
 исправлен backend infinite walk без новых зависимостей. Следующий конкретный
 шаг Go.work LSP выполнен (§208): Windows1 PASS/Ubuntu1 PASS, gd/back/gi type/
 gi method/gr/выбор через один настоящий gopls, runtime не менялся. Теперь —
-единый смешанный проект; Mac/physical остаются отдельно.
+mixed context Windows9 PASS (§209–210); финальный Ubuntu budget и остальная
+mixed матрица/Mac/physical открыты. Далее — очередь4, interactive rebase.
 
 Последняя итерация пункта 1: `deduplicate-panel-navigation`, FIXLOG §197.
 Повторная подготовка заменена одной локальной функцией, net−8 строк runtime.
@@ -71,8 +81,8 @@ Windows/macOS/Ubuntu — целевые ОС; натурные проверки 
 | WF-01 | Открыть проект и восстановить рабочее место | Files view проверен Windows, включая меньший UI/follow (§205); Ubuntu workflow ok, E2E cleanup FAIL IDE-117; другие панели/Mac открыты |
 | WF-02 | Перейти в другой репозиторий и вернуться | Per-tab Files A→B→A проверен Windows (§205); Ubuntu scope gate/Mac и остальные панели WF-01 открыты |
 | WF-03 | Управлять файлами через дерево | Create/rename/move/copy/delete/filter проверялись; единый цикл и сохранение вида дерева входят в приёмку |
-| WF-04 | Работать в проекте со смесью языков | Отдельные language workflows есть; единый смешанный проект целиком не объявлен проверенным |
-| WF-05 | Запустить файл или конкретный debug-кейс | Default/launch.json есть; Cargo target Windows (§200), native Go.work package Windows/Ubuntu (§206); смешанный проект открыт |
+| WF-04 | Работать в проекте со смесью языков | 6 native roots/cwd + Node script/Python venv debug Windows (§209–210); полная mixed matrix/Mac открыты |
+| WF-05 | Запустить файл или конкретный debug-кейс | Cargo/Go.work есть; mixed Node script и Python default из nested venv Windows (§209–210), финальный Ubuntu budget ждёт engine |
 | WF-06 | Отлаживать с Output, консолью, переменными и стеком | Основные панели/пауза/output есть; полный цикл и реальные клавиши на всех ОС остаются проверкой |
 | WF-07 | Исправить код и перезапустить тот же кейс | Go.work dependency edit→F5→42/43 проверен Windows/Ubuntu (§206); смешанный workflow целиком открыт |
 | WF-08 | Посмотреть цветной diff и выбрать изменения для коммита | Hunk/stage/unstage/diff/history есть; выбор отдельных строк обязателен в полном кейсе |

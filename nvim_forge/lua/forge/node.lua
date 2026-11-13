@@ -8,7 +8,11 @@ local function warn(text) vim.notify(text, vim.log.levels.WARN, { title = 'Node'
 function M.root(path)
     path = path and path ~= '' and path or vim.api.nvim_buf_get_name(0)
     if path == '' then return vim.fn.getcwd() end
-    return vim.fs.root(path, { 'package.json' }) or vim.fs.dirname(path) or vim.fn.getcwd()
+    local package_root = vim.fs.root(path, { 'package.json' })
+    if package_root then return package_root end
+    -- spec: IDE-NODE-5. Language root уже каталог, его node_modules нельзя пропускать.
+    local stat = vim.uv.fs_stat(path)
+    return stat and stat.type == 'directory' and path or vim.fs.dirname(path) or vim.fn.getcwd()
 end
 
 function M.executable()

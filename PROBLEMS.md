@@ -10,7 +10,20 @@
 
 Маршрут и приоритеты: [рабочий план nvim_forge](docs/IDE_ROADMAP.md).
 Для новых пунктов используем следующий свободный ID `IDE-xxx`; исходный
-симптом хранится здесь, этап и состояние — в плане. Следующий ID: `IDE-120`.
+симптом хранится здесь, этап и состояние — в плане. Следующий ID: `IDE-123`.
+
+## IDE-121 — Windows Node/Bash: native exit после успешного workflow
+
+2026-11-12, profile24015434532700, selected Node language после IDE-120.
+Definition/references/rename/local format завершились, primary_error отсутствует,
+но весь E2E FAIL: native code1/signal15. Quit trace: QuitPre23746ms,
+VimLeavePre23764ms, VimLeave25471ms; controller stdout EOF25474ms и SIGTERM25811ms,
+process_complete26086ms. Это отдельный cleanup failure, причина не установлена;
+не выдаётся за Node semantic failure или доказанный ConPTY assertion.
+Raw .tests/mixed-project-target-windows/node-language.txt и native profile.
+Повтор неизменённого case ради зелёного не выполнялся. Тот же класс native
+quit code1/signal15 зафиксирован Bash missing-tools profile24391104731200;
+Node7/1 и Bash7/1 сохраняются FAIL, source SDK/deadline не менялись.
 
 ## IDE-119 — managed debugpy fallback использует Windows venv layout
 
@@ -1096,6 +1109,16 @@ native выбор из zoom и штатная help;9 native E2E/source8 RED на
 остаются отдельными проверками.
 
 ## Ранее зарегистрированные проблемы
+
+IDE-120 → [FIXLOG §209](nvim_forge/FIXLOG.md#209-смешанный-проект-поиск-локальных-node-tools-из-каталога):
+существующий каталог без package.json сохраняется в fallback, локальный Bash
+LSP больше не пропускается. Mixed Windows и Node helper Ubuntu проверены; Mac открыт.
+
+IDE-122 → [FIXLOG §210](nvim_forge/FIXLOG.md#210-python-debug-холодный-handshake-в-смешанном-проекте):
+холодный debugpy отвечал после native4s и warning блокировал UI на Press ENTER.
+Public Python adapter budget30s; Windows mixed1+Python8 PASS. Финальный Ubuntu
+нового budget ждёт engine, Mac открыт; исходные отказы сохранены.
+
 
 ### IDE-010 — универсальная поддержка Windows/macOS/Ubuntu, Mint позже
 
