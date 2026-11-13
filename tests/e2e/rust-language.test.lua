@@ -60,6 +60,61 @@ local function check(name,fn)
     assert(ok,err)
   end)
 end
+check('IDE-RUST-1 Cargo diagnostics без Clippy',function(e)
+  local manifest=vim.json.decode(table.concat(vim.fn.readfile(e.rust_deps..'/manifest.json'),'\n'))
+  local sdk=manifest.sysroot:gsub('\\','/')..'/bin/'
+  local suffix=e.rust_suffix
+  local tools=e.runtime..'/cargo-only';vim.fn.mkdir(tools,'p')
+  local cargo=tools..'/cargo'..suffix
+  assert(vim.uv.fs_copyfile(sdk..'cargo'..suffix,cargo))
+  if suffix=='' then assert(vim.uv.fs_chmod(cargo,448)) end
+  local copied=assert(io.open(cargo,'rb'));local raw=copied:read('*a');copied:close()
+  local original=assert(io.open(sdk..'cargo'..suffix,'rb'));local expected=original:read('*a');original:close()
+  T.eq(vim.fn.sha256(raw),vim.fn.sha256(expected),'Cargo binary не изменяется')
+  local env=e:lua('return vim.fn.environ()')
+  local sep=suffix=='.exe' and ';' or ':'
+  local path={tools}
+  for _,dir in ipairs(vim.split(env.PATH,sep,{plain=true,trimempty=true})) do
+    if vim.fn.filereadable(dir..'/cargo-clippy'..suffix)==0 and vim.fn.filereadable(dir..'/clippy-driver'..suffix)==0
+      and vim.fn.filereadable(dir..'/rustup'..suffix)==0 then path[#path+1]=dir end
+  end
+  env.PATH=table.concat(path,sep);env.CARGO=cargo;env.RUSTC=sdk..'rustc'..suffix
+  local missing=vim.system({cargo,'clippy','--version'},{cwd=e.rust_project,env=env,clear_env=true,text=true,timeout=10000}):wait()
+  vim.fn.writefile({vim.json.encode({argv={cargo,'clippy','--version'},result=missing,
+    cargo_sha256=vim.fn.sha256(raw),path=env.PATH,rustc=env.RUSTC})},e.dir..'/no-clippy.json')
+  assert(missing.code~=0 and missing.signal==0 and (missing.stderr or ''):find('clippy',1,true),
+    'Fixture должна реально исключить cargo-clippy: '..vim.inspect(missing))
+  e:lua([[local env,ra=...;vim.env.PATH=env.PATH;vim.env.CARGO=env.CARGO;vim.env.RUSTC=env.RUSTC
+    require('lazy').load({plugins={'nvim-lspconfig'}})
+    vim.lsp.config('rust_analyzer',{cmd={ra}});vim.lsp.enable('rust_analyzer')]],{env,sdk..'rust-analyzer'..suffix})
+  local file=e.rust_project..'/app/src/lib.rs'
+  vim.fn.writefile({'#[deprecated(note = "FORGE_CARGO_DIAGNOSTIC")]','pub fn old_api() {}',
+    '#[deny(deprecated)]','pub fn call_api() {','    old_api();','}'},file)
+  open(e,'app/src/lib.rs');e:input(':write<CR>')
+  local function compiler_error()
+    return e:lua([[for _,d in ipairs(vim.diagnostic.get(0)) do
+      if d.source=='rustc' and tostring(d.code)=='deprecated' and d.message:find('FORGE_CARGO_DIAGNOSTIC',1,true) then return d end
+    end;return false]])
+  end
+  local diagnostic
+  e:wait('настоящая rustc diagnostic без Clippy',function()
+    if vim.fn.filereadable(e.log_lsp)==1 then
+      local log=table.concat(vim.fn.readfile(e.log_lsp),'\n')
+      assert(not (log:find('Flycheck failed',1,true) and log:find('no such command',1,true) and log:find('clippy',1,true)),
+        'Native flycheck выбрал отсутствующий Clippy; смотри lsp.log')
+    end
+    diagnostic=compiler_error();return diagnostic~=false
+  end,30000)
+  T.eq(diagnostic.severity,1)
+  vim.fn.writefile({vim.json.encode(diagnostic)},e.dir..'/compiler-diagnostic.json')
+  e:input('5Ggl')
+  e:wait('gl показывает compiler diagnostic',function() return e:lua([[for _,w in ipairs(vim.api.nvim_list_wins()) do
+    if vim.api.nvim_win_get_config(w).relative~='' and table.concat(vim.api.nvim_buf_get_lines(vim.api.nvim_win_get_buf(w),0,-1,false),'\n'):find('FORGE_CARGO_DIAGNOSTIC',1,true) then return true end
+  end;return false]]) end)
+  e:input('<Esc>5Gcc    // corrected<Esc>:write<CR>')
+  e:wait('compiler diagnostic убрана после save',function() return compiler_error()==false end,30000)
+  T.eq(e:lua('return vim.g.forge_e2e_installs'),0)
+end)
 check('Rust LSP definition references rename между workspace crates',function(e)
   language(e,'app/src/use_math.rs');seek(e,'calculate_answer');e:input('gd')
   e:wait('definition в local crate',function() return e:current_file():sub(-15)=='math/src/lib.rs' end,30000)

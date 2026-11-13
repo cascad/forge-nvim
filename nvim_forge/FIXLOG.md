@@ -11915,3 +11915,46 @@ verify-plugin-profile-preparation artifacts. Raw .tests/installed-plugin-repair-
 source-v2,target}.txt. Тест пока рабочий draft, законченный commit не заявлен.
 Предшествующий IDE-048 probe26364912087090 остановился раньше remove на RPC
 класса IDE-047/forced cleanup; артефакты сохранены, условие не ослаблялось.
+
+
+## 223. Rust: compiler diagnostics без обязательного Clippy
+
+2026-11-13. Спека: IDE-RUST-1 (ADDED), первый срез IDE-131.
+
+**Проблема.** В рабочем custom toolchain нет cargo-clippy. В user LSP log
+Flycheck уже завершился exit1, однако владелец ожидал compiler diagnostic.
+Прежняя конфигурация всегда запускала clippy --no-deps на save.
+
+**Причина.** Необязательный linter стал обязательным backend compiler check.
+Native source a9758ed в настоящем окружении без Clippy дал тот же класс отказа:
+Cargo code101/no such command clippy, Flycheck failed, compiler diagnostic нет.
+Это отдельная причина от времени compile-time deps/project readiness.
+
+**Изменение.** Existing lsp.lua возвращает штатный cargo check и убирает
+Clippy-specific --no-deps. CheckOnSave, workspace/features/proc macros и
+остальной backend прежние. Clippy доступен явно в Terminal/Tasks. Нового
+resolver/cache/LSP/SDK нет,67 pins/6 patched plugins16 files прежние.
+
+**Проверка/e2e.** Один source и один target+completion control на каждой ОС:
+Windows source1 RED, target1 PASS, прежний control1 PASS; Ubuntu так же.
+Fixture копирует неизменённый native Cargo, исключает Clippy из private PATH/
+CARGO_HOME; реальный cargo clippy --version code101. Native RUSTC/RA явно
+указывают прежний SDK. Никаких protocol mocks/SDK patches. Target получил
+source rustc/code deprecated/severity1 с FORGE_CARGO_DIAGNOSTIC; gl показал
+текст, correction/save удалили diagnostic, startup install0.
+Все6 native profiles exit0/signal0/APIerrors[]/hard_kill=false/scope empty:
+34625956139600, 34680059025000, 34692119943200, 29116943899212, 29151099488661, 29154760143194. Нормализованный test SHA4bd1eacf61db45b8f3e97d005403ada32c6a3e715d335bdd64aeef10eae4296e; saved config/test/SDK и frozen WIP
+сверены audit. Native source отказал именно на missing Clippy, а не timeout.
+
+**Вывод/границы.** Обязательная compiler diagnostic подтверждена Windows/Ubuntu.
+Mac, ранний project warmup/cache, большие compile-time deps и Files latency
+остаются открытыми. IDE-130/133 startup gate не подменён этим PASS. Whole
+regression не запускался; selected cases по одному на версию, Win/Linux serial.
+Ready imagef63a05ca/network none/private plugin overlay, без build/download/
+Desktop/WSL lifecycle. Tools/SDK не установлены, host temp только F.
+
+**Файлы.** lsp.lua, existing rust-language E2E, OpenSpec delta/context prefix,
+Rust guide/tests README, PROBLEMS/roadmap/HISTORY/commands. Raw .tests/rust-check-*
+и .tests/ubuntu/rust-check-*, audit .tests/rust-check-audit.json. Предшествующая
+документация установленного профиля сохранена отдельным a9758ed, её невыясненный
+native smoke остаётся рабочим draft. Journals append-only, exact staging.

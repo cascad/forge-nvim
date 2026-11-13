@@ -14,9 +14,10 @@ IDE-001 параллельно ждёт диагностических данн�
    User cache исправлен offline, инструкция исправлена. Target открывает Files/
    Tests, но полный case FAIL при открытии Locals (IDE-133, общий60s watchdog).
    Native gate остаётся открытым; воспроизведение и артефакты — FIXLOG222.
-2. IDE-131 — Rust: обязательная диагностика через готовый cargo check вместо
-   безусловного Clippy; отдельно асинхронная подготовка при входе в проект,
-   штатный cache и время first/reopen. Actual custom toolchain не имеет Clippy.
+2. IDE-131 — Rust: cargo check без обязательного Clippy исправлен §223,
+   Windows/Ubuntu source1 RED → target1 + control1 PASS. Далее — асинхронная
+   подготовка при входе в проект, штатный cache и время first/reopen. Этот
+   следующий срез ещё не реализован; Mac также открыт.
 3. IDE-132 — убрать0.5–1s задержки раскрытия Files/открытия файла после
    профилирования реального проекта. Проверять отклик UI отдельно от LSP ready.
 4. Затем вернуться к оставшейся очереди ниже. IDE-048 probe остановился раньше
@@ -26,7 +27,15 @@ IDE-001 параллельно ждёт диагностических данн�
 Пока владелец работает в IDE, тяжёлые language/container suites не запускаем.
 Одно короткое plain-text native E2E подготовки допустимо без Cargo/LSP builds.
 
-**Последний результат — §221:** подтверждён Linux fix managed Python debug
+**Последний результат — §223:** compiler diagnostics Rust больше не требуют
+Clippy. Native source отказал с no such command clippy; target показывает
+rustc error через gl и убирает её после correction/save. Windows/Ubuntu по2
+selected PASS, по3 native profiles со штатным выходом. Новых SDK/plugins/
+backports нет. Срез установки §222 и его IDE-133 gate остаются открытыми;
+документация подготовки сохранена отдельно в a9758ed. Project warmup и Files
+latency — следующие продуктовые пункты, не объявляются исправленными.
+
+**Прежний результат — §221:** подтверждён Linux fix managed Python debug
 (IDE-119): старая версия2 RED/2 explicit PASS → текущая4 PASS, ещё15 соседних
 language/debug checks PASS. Native adapter и debuggee используют разные venv;
 startup install0, все16 target profiles вышли штатно. Runtime уже исправлен

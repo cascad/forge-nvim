@@ -1,15 +1,23 @@
 # Rust: Cargo workspace, язык, debug и Tests
 
 Используется общая конфигурация Windows/macOS/Ubuntu. Нужен установленный
-Rust SDK с rust-analyzer, rustfmt, clippy и rust-src; редактор сам его не ставит.
-Компоненты можно подготовить явно в shell:
+Rust SDK с rust-analyzer, rustfmt и rust-src; редактор сам его не ставит.
+Для обычного Rustup toolchain компоненты можно подготовить явно в shell:
 
 ```sh
-rustup component add rust-analyzer rustfmt clippy rust-src
+rustup component add rust-analyzer rustfmt rust-src
 ```
 
+Clippy необязателен для диагностики компилятора. Его можно установить отдельно
+в подходящий toolchain и явно запускать `cargo clippy` во встроенном Terminal
+(`Space w T`) или через Tasks.
+
 Rust formatter использует rustfmt, затем LSP fallback. Navigation/rename/
-completion/diagnostics обслуживает rust-analyzer; на save запускается clippy.
+completion/diagnostics обслуживает rust-analyzer; на save асинхронно запускается
+штатный `cargo check`, без Clippy-specific `--no-deps`. Native defaults описаны
+в [rust-analyzer configuration](https://rust-analyzer.github.io/book/configuration#rust-analyzer.check.command).
+Это исправляет отказ при отсутствующем cargo-clippy (IDE-131/§223). Cold
+workspace preparation, ранний project warmup и UI latency — отдельные пункты.
 `gd`/`gr`/`F2` — definition/references/rename, `gl` — диагностика строки,
 `Space l f`/`Shift Alt f`/`:Format` — форматирование.
 
@@ -92,3 +100,18 @@ output: FORGE_RUST_CASE='debug nearest', FORGE_RUST_OUTPUT_LEGACY=1. Replay
 [rust-analyzer installation](https://rust-analyzer.github.io/book/installation.html),
 [neotest-rust](https://github.com/rouge8/neotest-rust),
 [CodeLLDB 1.12.2](https://github.com/vadimcn/codelldb/releases/tag/v1.12.2).
+
+
+Для отдельного регресса без Clippy после обычной подготовки Rust test SDK:
+
+```powershell
+$env:FORGE_RUST_CASE='IDE-RUST-1'
+& .tools/neovim/windows-x64/bin/nvim.exe -l tests/e2e/rust-language.test.lua
+```
+
+На Linux/macOS: `FORGE_RUST_CASE=IDE-RUST-1 nvim -l tests/e2e/rust-language.test.lua`.
+Windows/Ubuntu source отказал на native flycheck Clippy; target и прежний
+completion/diagnostic control по2 PASS (§223). Mac ещё не запускался.
+Реальный Cargo копируется в private directory, Clippy исключён из PATH и
+CARGO_HOME. Compiler/RA остаются настоящими; diagnostic source rustc, gl и
+исправление на save обязательны. Системный SDK не изменяется.

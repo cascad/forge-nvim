@@ -1570,3 +1570,15 @@ Windows21 PASS/1 FAIL — Logs quit SavePre→SavePost13.9s (IDE-129), host/fron
 имел прежний runtime/deadline,6 быстрых saves и PASS; это не замена исходному
 FAIL. Скрипт только измеряет capture/cleanup/save в private TUI fixture.
 Полный Windows gate/Mac/physical остаются открытыми, timeouts не увеличивались.
+
+
+## IDE-131: Cargo diagnostics без обязательного Clippy
+
+`FORGE_RUST_CASE=IDE-RUST-1 nvim -l tests/e2e/rust-language.test.lua`
+(PowerShell: `$env:FORGE_RUST_CASE='IDE-RUST-1'`, затем выбранный nvim -l).
+Нужны прежние prepared Rust deps. Case использует настоящий Cargo/compiler/RA,
+private PATH/CARGO_HOME без Clippy; native cargo clippy --version должен дать
+code101. Проверяется именно source=rustc/severity ERROR, текст через gl и
+удаление diagnostic после сохранения исправления, startup installs0.
+Windows/Ubuntu source1 RED → target1+прежний completion control1 PASS (§223),
+Mac не запускался. Это не тест cold warmup или полного editor regression.

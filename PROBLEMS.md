@@ -55,11 +55,12 @@ procMacro.enable=true, check.command=clippy. В user lsp.log19:07–19:09 ест
 actual Flycheck error: cargo-clippy.exe отсутствует для выбранного custom
 Windows toolchain1.99.1; check завершается exit1. Также FetchBuildDataError
 показывает actual syntax error build.rs7:14. Исходники проекта/SDK не менялись.
-Это доказанный отказ текущего check; задержка полной подготовки и ошибка
-build script — отдельные наблюдения. План: штатный cargo check для обязательной
-компиляторной диагностики; Clippy только при явном выборе/готовом toolchain;
-затем отдельно project warmup/cancel/root/cache и замеры первого/повторного входа.
-Любые изменения runtime — отдельный bounded change + real Rust E2E.
+Отказ check исправлен §223: cargo check без --no-deps, Clippy остаётся явной
+командой. Windows/Ubuntu: source1 RED на native missing Clippy → target1 PASS
+(настоящая rustc error, gl, correction/save) + прежний completion control1 PASS.
+По3 native profiles/OS exit0/signal0/APIerrors[]/scope empty. Это не закрывает
+задержку подготовки/ошибку build script целиком. Открыты project warmup/cancel/
+root/cache, время first/reopen и native Mac; следующая отдельная итерация.
 
 ## IDE-130 — установленный профиль не прошёл первый native запуск
 

@@ -8192,3 +8192,47 @@ skip_specs:true; инструкции proposal/design/tasks/apply прочита
 не менялся. В tasks1.2 остаётся FAIL. История222 append-only; frozen old
 runner/trace/registry/catalog и lazy-lock bytes проверяются по
 .tests/plugin-first-open-prefix.json. Коммит шага до готовности gate не сделан.
+
+
+## 131. IDE-131: native Cargo check вместо обязательного Clippy
+
+2026-11-13, cwd F:/repo/forge-nvim, login=false, TEMP/TMP/TMPDIR/NVIM_LOG_FILE
+на F; npm cache F:/forge-nvim-tmp/npm-cache, Python UTF-8. Сначала отдельным
+allowlist commit a9758ed сохранены13 файлов документации installed profile и
+OpenSpec planning; незавершённый plugin-first-open E2E остался рабочим draft.
+.tests/rust-check-prefix.json фиксирует его/frozen infra/lock/SDK и journals.
+
+```powershell
+git archive --format=zip --output=.tests/rust-check-source.zip HEAD nvim_forge
+$env:FORGE_RUST_CASE='IDE-RUST-1'
+$env:FORGE_E2E_CONFIG_SOURCE='F:/repo/forge-nvim/.tests/rust-check-source/nvim_forge'
+& .tools/neovim/windows-x64/bin/nvim.exe -l tests/e2e/rust-language.test.lua > .tests/rust-check-source.txt 2>&1
+$env:FORGE_E2E_CONFIG_SOURCE=$null
+& .tools/neovim/windows-x64/bin/nvim.exe -l tests/e2e/rust-language.test.lua > .tests/rust-check-target.txt 2>&1
+$env:FORGE_RUST_CASE='Rust LSP completion diagnostics correction'
+& .tools/neovim/windows-x64/bin/nvim.exe -l tests/e2e/rust-language.test.lua > .tests/rust-check-control.txt 2>&1
+docker version --format '{{.Server.Version}}'
+docker compose -f tests/containers/compose.yaml run --rm --no-deps --pull never --entrypoint bash ubuntu /workspace/.tests/rust-check-native.sh > .tests/rust-check-ubuntu.txt 2>&1
+python -B .tests/audit-rust-check.py
+python -B .tests/record-rust-check.py
+npx.cmd --yes @fission-ai/openspec@1.13.2 validate fix-rust-default-check --type change --strict --no-interactive
+git diff --check
+git diff --cached --check
+```
+
+Archive extracted with resolved boundary check; same source copied into
+.tests/ubuntu before runtime patch. Linux script LF via write_bytes; ready
+imagef63a05ca/network none/private Neogit overlay, без build/download/lifecycle.
+Source/target config заморожены; same native test bytes. По1 source RED и
+target1+control1 PASS на ОС,6 profiles native0/0/scopes0/APIerrors[]. Нативный
+Cargo не подменялся wrapper: private copy/hash, CARGO/RUSTC/RA указывают реальные
+SDK binaries, PATH/CARGO_HOME исключают Clippy. Compiler rustc diagnostic/gl/
+correction обязательны. SDK user/custom не менялся. Audit не перезапускает E2E.
+
+Прочитаны local nvim-lspconfig Rust root и SDK LSP attach=false API для следующего
+project warmup; эти чтения не являются реализацией/проверкой warmup. Primary docs:
+https://rust-analyzer.github.io/book/configuration#rust-analyzer.check.command
+https://doc.rust-lang.org/cargo/commands/cargo-check.html
+https://doc.rust-lang.org/cargo/reference/external-tools.html
+Новых LSP, собственного cargo resolver/cache и deadline increases нет.
+Изолированный Rust commit не включает старые startup/infra drafts.

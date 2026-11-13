@@ -576,16 +576,12 @@ return {
                             experimental = { enable = true },
                             disabled = { "unlinked-file" },
                         },
-                        -- clippy на каждый save, включая фоновый Rust autosave
-                        -- через 500мс (см. editor.lua). Это НЕ фризит набор:
-                        -- ra гоняет cargo clippy в ОТДЕЛЬНОМ процессе и шлёт
-                        -- диагностики асинхронно — главный цикл nvim его не
-                        -- ждёт («линтер в фоне»). conform тоже не блокирует:
-                        -- format_after_save асинхронный и autosave не форматит.
+                        -- spec: IDE-RUST-1. Базовая проверка не требует Clippy:
+                        -- rust-analyzer запускает штатный cargo check в фоне.
+                        -- Clippy остаётся явной командой в Terminal/Tasks.
                         checkOnSave = true,
                         check = {
-                            command = "clippy",
-                            extraArgs = { "--no-deps" },
+                            command = "check",
                         },
                         files = {
                             -- "client" решает hang на Roots Scanned под Windows:

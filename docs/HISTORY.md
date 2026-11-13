@@ -359,6 +359,7 @@ Python реализован и проверен 2026-11-03; после возо�
 | §220 | [Tests и сохранённые размеры Terminal/Debug](../nvim_forge/FIXLOG.md#220-tests-и-сохранённые-размеры-terminaldebug) |
 | §221 | [Managed Python debug: подтверждение native Linux fallback](../nvim_forge/FIXLOG.md#221-managed-python-debug-подтверждение-native-linux-fallback) |
 | §222 | [Первый запуск: неподготовленные plugins и неполная инструкция](../nvim_forge/FIXLOG.md#222-первый-запуск-неподготовленные-plugins-и-неполная-инструкция) |
+| §223 | [Rust: compiler diagnostics без обязательного Clippy](../nvim_forge/FIXLOG.md#223-rust-compiler-diagnostics-без-обязательного-clippy) |
 
 ## Как читать и дополнять
 
