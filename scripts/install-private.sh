@@ -3,6 +3,7 @@
 set -euo pipefail
 source_dir="$1"; install_dir="$2"; runtime="${3:-}"
 url="${4:-}"; expected="${5:-}"
+command_dir="${6:-}"
 hash_file() {
   if command -v sha256sum >/dev/null 2>&1; then sha256sum "$1" | cut -d ' ' -f 1
   else shasum -a 256 "$1" | cut -d ' ' -f 1; fi
@@ -46,6 +47,7 @@ runtime="$(cd "$runtime" && pwd -P)"
 [ -f "$runtime/nvim.sha256" ] && [ "$(hash_file "$runtime/bin/nvim")" = "$(cat "$runtime/nvim.sha256")" ] || { printf 'Runtime Neovim SHA256 mismatch.\n' >&2; exit 1; }
 unset VIM VIMRUNTIME VIMINIT EXINIT LUA_INIT LUA_PATH LUA_CPATH
 export FORGE_INSTALL_SOURCE="$source_dir" FORGE_INSTALL_TARGET="$install_dir" FORGE_INSTALL_RUNTIME="$runtime"
+export FORGE_INSTALL_COMMAND_DIR="$command_dir"
 work="$(mktemp -d "$(dirname "$source_dir")/.installer.XXXXXX")"
 mkdir "$work/tmp"
 export XDG_CONFIG_HOME="$work/config" XDG_DATA_HOME="$work/data"

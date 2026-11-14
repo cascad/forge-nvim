@@ -16,6 +16,16 @@ local job=lua([[local command=...;_G.install_profile_exit=nil
 assert(job>0,'PTY child failed to start')
 local function send(keys) lua('return vim.fn.chansend(_G.install_profile_job,...)',{keys}) end
 local ok,err=xpcall(function()
+    if action=='launch' then
+        assert(vim.wait(15000,function() return vim.uv.fs_stat(vim.env.FORGE_PROBE_OUTPUT)~=nil or exitcode()~=nil end,10),'Editor startup timeout')
+        assert(exitcode()==nil,'Launcher exited before editor input: '..text())
+        events[#events+1]='editor ready'
+        send(':cquit 7\r')
+        assert(vim.wait(15000,function() return exitcode()~=nil end,10),'Editor input/exit timeout')
+        assert(exitcode()==7,'Launcher did not preserve interactive exit: '..tostring(exitcode())..': '..text())
+        events[#events+1]='native input accepted'
+        return
+    end
     assert(vim.wait(15000,function() return text():find('Select components:',1,true) or exitcode()~=nil end,10),'Menu timeout')
     assert(exitcode()==nil,'Menu exited before input: '..text())
     events[#events+1]='menu ready'

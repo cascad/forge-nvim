@@ -9,13 +9,14 @@ install_dir=""
 runtime_path=""
 runtime_url=""
 runtime_sha=""
+command_dir=""
 skip_dependencies=0
 profile=default
 components=''
 components_explicit=0
 while [ "$#" -gt 0 ]; do
   case "$1" in
-    --ref|--archive-url|--source-root|--install-dir|--profile|--components|--runtime-path|--runtime-archive-url|--runtime-sha256)
+    --ref|--archive-url|--source-root|--install-dir|--profile|--components|--runtime-path|--runtime-archive-url|--runtime-sha256|--command-dir)
       [ "$#" -ge 2 ] || { printf 'Missing value: %s\n' "$1" >&2; exit 1; }
       case "$1" in
         --ref) ref="$2";;
@@ -25,6 +26,7 @@ while [ "$#" -gt 0 ]; do
         --runtime-path) runtime_path="$2";;
         --runtime-archive-url) runtime_url="$2";;
         --runtime-sha256) runtime_sha="$2";;
+        --command-dir) command_dir="$2";;
         --profile) profile="$2";;
         --components) components="$2"; components_explicit=1;;
       esac
@@ -35,6 +37,7 @@ while [ "$#" -gt 0 ]; do
         '--ref REF --archive-url URL --source-root DIR --install-dir DIR --skip-dependencies' \
         '--profile default|custom --components core,go,rust,python,node,bash,sql,terminal'
       printf '%s\n' '--runtime-path DIR (development: prepared native bundle)'
+      printf '%s\n' '--command-dir DIR (optional: create fride launcher here; PATH stays unchanged)'
       exit 0;;
     *) printf 'Unknown option: %s\n' "$1" >&2; exit 1;;
   esac
@@ -102,4 +105,4 @@ FORGE_NVIM_COMPONENTS="$(forge_select_profile "$profile" "$components" "$compone
 export FORGE_NVIM_COMPONENTS
 printf 'Selected components: %s\nStarting isolated Forge installer (%s).\n' "$FORGE_NVIM_COMPONENTS" "$platform"
 install_dir="${install_dir:-${XDG_DATA_HOME:-$HOME/.local/share}/forge-nvim/installation}"
-bash "$source_dir/scripts/install-private.sh" "$source_dir" "$install_dir" "$runtime_path" "$runtime_url" "$runtime_sha"
+bash "$source_dir/scripts/install-private.sh" "$source_dir" "$install_dir" "$runtime_path" "$runtime_url" "$runtime_sha" "$command_dir"

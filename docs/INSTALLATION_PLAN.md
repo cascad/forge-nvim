@@ -45,7 +45,8 @@ Linux/macOS: ${XDG_DATA_HOME:-~/.local/share}/forge-nvim/installation
   data/state/cache/ независимые stdpath
   tmp/log/          временные файлы и логи установки/редактора
   sdk-state/        данные инструментов комплекта
-  bin/forge        POSIX launcher; Windows: forge.cmd / forge.ps1
+  bin/fride        POSIX launcher; Windows: fride.cmd / fride.ps1
+  bin/forge-nvim   полное имя; прежний bin/forge сохранён
   backups/          прежние config/runtime/bin после успешного обновления
 ```
 
@@ -56,10 +57,11 @@ Source cache по умолчанию лежит рядом в forge-nvim/sources
 полного rollback; это не данные обычного nvim. Ошибочный staging сохраняется
 для диагностики. Удаление комплекта не требует удаления чужих программ.
 
-Launcher применяет PATH/stdpath/temp/cache только к своему процессу. Он не
-регистрирует глобальную команду и не изменяет существующий nvim. При желании
-пользователь может сам добавить отдельный bin в PATH; обязательной правки shell
-для запуска по полному пути нет. Интеграция Terminal должна следовать той же
+Launcher применяет PATH/stdpath/temp/cache только к своему процессу. По умолчанию
+команда вне комплекта не регистрируется, обычный nvim не изменяется. Явный
+CommandDir создаёт fride launcher в выбранном каталоге, не меняя PATH/profile.
+Если этот каталог уже доступен в PATH, fride вызывается по имени; в остальных
+случаях доступен полный путь. Интеграция Terminal должна следовать той же
 границе: собственный binary и явный --config-file, без замены .wezterm.lua.
 
 ### Runtime artifact и текущий gate
@@ -113,11 +115,12 @@ nvim; относительный custom path становится абсолют
 ### Имя и доступность команды
 
 Выбор владельца2026-11-14: короткая команда **`fride`** — Forge IDE.
-Примеры будущего запуска: `fride .`, `fride main.go`; полное резервное имя —
-`forge-nvim`. Прежние варианты fnvim/fvim/tide/fide больше не рассматриваются
-как выбранное имя. Нынешний локальный launcher `bin/forge` пока сохраняется:
-переименование/совместимость и регистрация `fride` — следующий implementation
-change с native regression argv/cwd/TTY/exit и проверкой конфликтов.
+В установленном комплекте: `bin/fride .`, `bin/fride main.go` (Windows:
+bin/fride.cmd или bin/fride.ps1). Полное имя bin/forge-nvim и старое bin/forge
+используют тот же launch-managed source, конфиг и данные. NVIM_APPNAME=forge
+не меняется: переименование команды не переносит plugin data или сессии.
+В checkout: `.\fride.cmd .` / `./fride .`, через прежние launch helpers и
+профиль nvim_forge. Прежние nvim_forge.cmd/nvim_forge.sh сохранены.
 
 `forge` не стоит безусловно занимать в PATH: одноимённая команда есть у
 [Foundry](https://www.getfoundry.sh/forge). На текущем Windows-хосте Get-Command
@@ -130,12 +133,44 @@ change с native regression argv/cwd/TTY/exit и проверкой конфли
 exit code сохраняются. Ни nvim, ни vi/vim не переназначаются. Никакой подготовки
 SDK или source-работы при открытии новой shell-вкладки.
 
-Регистрация короткой команды — отдельный явно видимый пункт мастера. Без неё
-работает launcher по полному пути. Текущая политика portable/no PATH mutation
-сохраняется; вариант регистрации и изменения user PATH, если они нужны,
-должны быть отдельно выбраны пользователем и описаны в implementation change.
-При конфликте предложить другое имя или полный путь, а не перезаписать команду.
-Обновление/удаление затрагивают только собственную зарегистрированную обёртку.
+Явная регистрация: -CommandDir DIR в install.ps1/private PS backend,
+--command-dir DIR в install.sh (private POSIX backend принимает шестой аргумент).
+Режим по умолчанию portable, с пустым CommandDir. Каталог и недостающие родители
+создаются автоматически; если он уже в PATH, fride доступен из любой папки.
+Ни registry PATH, ни shell profiles/aliases/functions не меняются. При отсутствии
+каталога в PATH installer показывает полный путь, не обещает bare-name lookup.
+
+Регистрация создаёт fride (POSIX) или fride.cmd/.fride-command.ps1 (Windows) и собственный
+.fride-command.json. Receipt привязан к kit и SHA256 wrapper bytes. Повтор не
+перезаписывает файлы, недостающий собственный wrapper восстанавливается; файл,
+поправленный пользователем, или другой kit дают конфликт. Чужой одноимённый
+файл в выбранном каталоге/PATH отклоняется с указанием пути до изменения kit.
+Проверка повторяется после setup, а files создаются exclusively. Неудачный
+setup ничего не регистрирует; конфликт после setup возвращает прежние launchers.
+Aliases/functions родительской shell дочерний процесс полностью обнаружить не
+может: они сохраняют приоритет, проверять `Get-Command fride -All` / `command -v
+fride` нужно в своей shell. Ни чужая команда, ни пользовательские файлы не
+перезаписываются ради освобождения имени.
+Служебный PS1 намеренно не называется fride.ps1: bare-name lookup должен выбрать
+CMD launcher и работать без смены пользовательской ExecutionPolicy на Windows.
+
+Пример development API с уже подготовленным runtime (не public one-liner):
+
+```powershell
+.\install.ps1 -Components core -RuntimePath F:\prepared-runtime -CommandDir "$HOME\.local\bin"
+```
+
+```bash
+bash install.sh --components core --runtime-path /path/to/prepared-runtime --command-dir "$HOME/.local/bin"
+```
+
+Полная доставка Default SDK всё ещё открыта. Эти флаги не требуют ручной
+подготовки от обычного пользователя будущего one-liner: это текущий developer
+stand API. Шаг выбора команды в будущем LocalVox UI использует тот же backend.
+Проверка §239: Windows23 PASS плюс7 affected policy/registration PASS после
+исправления Restricted; Ubuntu22 PASS/2 Windows-only skip. Shared menu controls
+по2 PASS. Это native command/PTY/isolation checks с fixture init/setup, не
+подтверждение full Default SDK. Native Mac acceptance остаётся открытым.
 
 ### Референс LocalVox
 

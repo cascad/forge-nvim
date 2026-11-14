@@ -1,4 +1,4 @@
--- spec: IDE-BOOT-11. Общая граница файлов и процессов независимой установки.
+-- spec: IDE-BOOT-11 IDE-BOOT-12. Общая граница независимой установки.
 local uv = vim.uv
 local join = vim.fs.joinpath
 local windows = uv.os_uname().sysname == 'Windows_NT'
@@ -104,6 +104,8 @@ local function install()
     end
     check_owned(target)
   end
+  local commands=dofile(join(source,'scripts/register-command.lua'))
+  local registration=commands.plan(target,vim.env.FORGE_INSTALL_COMMAND_DIR)
   local manifest = vim.json.decode(read(join(runtime,'forge-runtime.json')))
   local sys = uv.os_uname()
   local osname = windows and 'windows' or (sys.sysname == 'Darwin' and 'macos' or 'linux')
@@ -154,11 +156,12 @@ local function install()
   copy_tree(runtime,join(stage,'runtime'))
   mkdir(join(stage,'config')); copy_tree(join(source,'nvim_forge'),join(stage,'config/forge'))
   mkdir(join(stage,'bin'))
-  for _, name in ipairs({'launch-managed.sh','launch-managed.ps1'}) do
-    assert(uv.fs_copyfile(join(source,'scripts',name),join(stage,'bin',name == 'launch-managed.sh' and 'forge' or 'forge.ps1')))
+  for _, name in ipairs({'fride','forge-nvim','forge'}) do
+    assert(uv.fs_copyfile(join(source,'scripts/launch-managed.sh'),join(stage,'bin',name)))
+    assert(uv.fs_chmod(join(stage,'bin',name),493))
+    assert(uv.fs_copyfile(join(source,'scripts/launch-managed.ps1'),join(stage,'bin',name..'.ps1')))
+    write(join(stage,'bin',name..'.cmd'),'@echo off\r\npowershell.exe -NoProfile -ExecutionPolicy Bypass -File "%~dp0'..name..'.ps1" %*\r\nexit /b %errorlevel%\r\n')
   end
-  assert(uv.fs_chmod(join(stage,'bin/forge'),493))
-  write(join(stage,'bin/forge.cmd'),'@echo off\r\npowershell.exe -NoProfile -ExecutionPolicy Bypass -File "%~dp0forge.ps1" %*\r\nexit /b %errorlevel%\r\n')
   write(join(stage,'bin/runtime-paths.txt'),table.concat(manifest.paths,'\n') .. '\n')
   -- Setup использует staged config/runtime, а постоянные data/state принадлежат только Forge.
   local env = environment(target,join(stage,'runtime'),manifest.paths)
@@ -180,15 +183,18 @@ local function install()
       if uv.fs_stat(join(target,dir)) then assert(uv.fs_rename(join(target,dir),join(backup,dir))); moved[#moved+1]=dir end
       assert(uv.fs_rename(join(stage,dir),join(target,dir))); committed[#committed+1]=dir
     end
+    if registration then registration.apply() end
     write(owner_path,vim.json.encode({schema=1,product='forge-nvim',ready=true,components=manifest.components,backup=backup}))
   end)
   if not ok then
+    if registration then registration.rollback() end
     for _, dir in ipairs(committed) do assert(uv.fs_rename(join(target,dir),join(stage,dir))) end
     for _, dir in ipairs(moved) do assert(uv.fs_rename(join(backup,dir),join(target,dir))) end
     fail(err)
   end
   assert(uv.fs_rmdir(stage))
-  io.stdout:write('Forge installed: ' .. target .. '\nLaunch: ' .. join(target,windows and 'bin/forge.cmd' or 'bin/forge') .. '\n')
+  io.stdout:write('Forge installed: ' .. target .. '\nLaunch: ' .. join(target,windows and 'bin/fride.cmd' or 'bin/fride') .. '\n')
+  if registration then io.stdout:write('Registered launcher: '..join(registration.directory,windows and 'fride.cmd' or 'fride')..'\n') end
 end
 local ok, err = xpcall(install,debug.traceback)
 if not ok then io.stderr:write(tostring(err) .. '\n'); vim.cmd('cquit 1') end

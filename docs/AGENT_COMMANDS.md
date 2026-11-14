@@ -8793,3 +8793,50 @@ SHA256 прежнего raw prefix FIXLOG/AGENT_COMMANDS и prefix staged blobs
 относительно HEAD; frozen code/SDK/lock и deferred WIP сверены с сохранённым
 baseline. E2E и installers не запускались, PATH/profile не менялись.
 Локальный docs commit разрешён ранее, push не выполнялся.
+
+
+## 147. Fride: launchers, CommandDir и native regressions
+
+Дата: 2026-11-14. IDE-141, IDE-BOOT-12, FIXLOG §239.
+
+Windows TEMP/TMP/TMPDIR=F:/repo/forge-nvim/.tests/tmp, Python UTF8/IOENCODING
+utf-8; npm cache F:/forge-nvim-tmp/npm-cache. Тяжёлые среды последовательно.
+
+```powershell
+npx.cmd --yes @fission-ai/openspec@1.13.2 context --json
+npx.cmd --yes @fission-ai/openspec@1.13.2 list --json
+npx.cmd --yes @fission-ai/openspec@1.13.2 new change add-fride-command
+# status/instructions proposal/specs/design/tasks/apply --change ... --json
+python -B tests/install-isolation.test.py
+# fride-windows-v1.txt:23/2FAIL/2ERROR; v2:23/3FAIL/1ERROR; v3:23 PASS.
+python -B .tests/profile-ui-only.py
+# fride-ui-controls-windows.txt:2 PASS.
+Get-ExecutionPolicy -List
+# Read-only subprocess probe: Restricted + bare fride, result policy-before.json.
+python -B tests/install-isolation.test.py Isolation.test_16_register_repeat_and_repair Isolation.test_17_foreign_command_conflict Isolation.test_18_path_conflict Isolation.test_19_modified_command_preserved Isolation.test_20_failed_setup_does_not_register Isolation.test_21_late_conflict_rolls_back Isolation.test_24_restricted_policy_command
+# fride-windows-policy.txt:7 PASS, including Restricted Application/exit7.
+docker version --format '{{.Server.Version}}'
+docker compose -f tests/containers/compose.yaml run --rm --no-deps --pull never -e FORGE_INSTALL_STAND_ROOT=/tmp/fride-install-isolation --entrypoint python3 ubuntu -B tests/install-isolation.test.py
+Copy-Item -LiteralPath .tests/profile-ui-only.py -Destination .tests/ubuntu/fride-ui-controls.py
+docker compose -f tests/containers/compose.yaml run --rm --no-deps --pull never --entrypoint python3 ubuntu -B /workspace/.tests/fride-ui-controls.py
+npx.cmd --yes @fission-ai/openspec@1.13.2 validate add-fride-command --type change --strict --no-interactive
+python -B .tests/record-fride.py
+python -B .tests/audit-fride.py
+git diff --check
+git diff --cached --check
+```
+
+Native summary/raw/case JSON показывают stdout/stderr/exit, SDK/command receipt,
+stdpath/progpath/cwd/stdin kind, actor argv. PTY observer реально вводит :cquit7,
+его report отделён от driver report. В policy-before probe имя разрешилось как
+ExternalScript, child Restricted exit1; новый regression ждёт Application/exit7.
+Никаких Set-ExecutionPolicy/setx/редактирования profiles не было. Регистрация
+тестировалась только в private stand directories, не настоящем user bin.
+
+Первый Ubuntu UI controls использовал /workspace/.tests/profile-ui-only.py,
+который отсутствовал в overlay: exit2, raw сохранён. Driver скопирован по
+правильному host .tests/ubuntu/guest .tests пути и запущен2 PASS. Full Ubuntu
+suite22 PASS/2skip, не повторялся ради controls. Docker Desktop/WSL не управлялись.
+Fride aliases не мигрируют NVIM_APPNAME/config/data или SDK. Mac gate открыт,
+полные SDK/LocalVox UI не объявляются готовыми. Exact staging исключает unrelated
+drafts/WIP, journal prefixes и frozen SDK/lock/backports сверяются до commit.

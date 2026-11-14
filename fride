@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+# spec: IDE-BOOT-12. Checkout использует прежний launch helper и профиль.
+set -euo pipefail
+exec bash "$(cd -P "$(dirname "${BASH_SOURCE[0]}")" && pwd)/nvim_forge.sh" "$@"

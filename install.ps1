@@ -9,6 +9,7 @@ param(
     [string]$RuntimePath = '',
     [string]$RuntimeArchiveUrl = '',
     [string]$RuntimeSHA256 = '',
+    [string]$CommandDir = '',
     [switch]$SkipDependencies,
     [Alias('Profile')][ValidateSet('Default','Custom')][string]$InstallProfile = 'Default',
     [AllowEmptyString()][string]$Components = ''
@@ -77,6 +78,7 @@ try {
     $backendArgs = @('-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', $backend,
         '-Source', $source, '-InstallPath', $InstallPath)
     if ($RuntimePath) { $backendArgs += @('-RuntimePath',$RuntimePath) }
+    if ($CommandDir) { $backendArgs += @('-CommandDir',$CommandDir) }
     if ($RuntimeArchiveUrl) { $backendArgs += @('-RuntimeArchiveUrl',$RuntimeArchiveUrl,'-RuntimeSHA256',$RuntimeSHA256) }
     & $shell @backendArgs
     $backendExit = $LASTEXITCODE

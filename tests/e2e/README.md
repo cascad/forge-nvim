@@ -1702,6 +1702,14 @@ Windows11 PASS+targeted2; Ubuntu11 PASS/1 Windows-only skip. Native Mac откр
 FS контейнера, маленькие доказательства экспортируются в .tests/install-isolation.
 Это не readiness всех языковых компонентов и не full Default acceptance.
 
+IDE-BOOT-12/§239: тот же tests/install-isolation.test.py проверяет fride,
+forge-nvim и совместимый forge, checkout launchers, реальный PTY/input/exit,
+CommandDir ownership/repair/conflict/late conflict rollback и bare-name lookup.
+Windows23 PASS+7 affected cases после policy fix; Ubuntu22 PASS/2 skip.
+Case24 проверяет bare fride при Restricted, без изменения user/system policy.
+Shared observer keyboard controls по2 PASS. Mac не запускался. Стенд не
+регистрирует команду в настоящем user bin и не меняет host PATH/profile.
+
 ## IDE-BOOT-10: выбор компонентов
 
 `python -B tests/install-profile.test.py` (Windows/temp F), `python3 -B

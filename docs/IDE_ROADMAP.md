@@ -17,14 +17,15 @@ supported SDK delivery и native Mac остаются следующими ср�
 
 Уточнение владельца2026-11-14, IDE-140: комплект ставится отдельно и не ломает
 существующие Neovim/SDK/WezTerm. Source entry переведён на private installer:
-свой runtime/config/data/state/cache/temp, launcher forge, target ownership,
+свой runtime/config/data/state/cache/temp, launcher fride (forge совместим), target ownership,
 staging/backup. Глобальные package managers из entry исключены. Default bundles
 ещё не подготовлены; без runtime явная ошибка, не замена системным nvim.
 
 IDE-141: оформить installer как актуальный localvox-light (cliclack, шаги,
 галочки, подсказки/возврат/итог) и выбрать постоянную команду запуска.
-Владелец выбрал fride (Forge IDE), резервное полное имя — forge-nvim. Runtime
-пока не переименован, глобальная команда не зарегистрирована. Детали и safety граница —
+Владелец выбрал fride (Forge IDE), полное имя — forge-nvim. Kit/checkout launchers
+и явный CommandDir реализованы; PATH/profile автоматически не меняются. UI
+LocalVox ещё впереди. Детали и safety граница —
 [INSTALLATION_PLAN](INSTALLATION_PLAN.md#команда-запуска-и-оформление--ide-141).
 
 ## Текущая очередь продукта — решение владельца 2026-11-12

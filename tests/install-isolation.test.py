@@ -38,13 +38,15 @@ INIT=r'''
 if vim.env.FORGE_PROBE_OUTPUT then
   local result={argv=vim.v.argv,exe=vim.v.progpath,config=vim.fn.stdpath('config'),data=vim.fn.stdpath('data'),
     state=vim.fn.stdpath('state'),cache=vim.fn.stdpath('cache'),app=vim.env.NVIM_APPNAME,
-    tmp=vim.env.TEMP,path=vim.env.PATH,mask=vim.env.FORGE_NVIM_COMPONENTS}
+    tmp=vim.env.TEMP,path=vim.env.PATH,mask=vim.env.FORGE_NVIM_COMPONENTS,
+    cwd=vim.uv.cwd(),stdin=vim.uv.guess_handle(0)}
   vim.fn.writefile({vim.json.encode(result)},vim.env.FORGE_PROBE_OUTPUT)
 end
 '''
 STAGE=r'''
 vim.fn.writefile({arg[1]},vim.env.FORGE_STAGE_TRACE,'a')
 if vim.env.FORGE_FAIL_STAGE==arg[1] then vim.cmd('cquit 13') end
+if vim.env.FORGE_RACE_COMMAND and arg[1]=='tools' then vim.fn.writefile({'user-owned command'},vim.env.FORGE_RACE_COMMAND) end
 '''
 
 
@@ -71,7 +73,8 @@ class Isolation(unittest.TestCase):
         for name in ['components.tsv','lib/install-profile.ps1','lib/install-profile.sh']:
             path=cls.source/'nvim_forge/scripts'/name;path.parent.mkdir(parents=True,exist_ok=True)
             shutil.copyfile(ROOT/'nvim_forge/scripts'/name,path)
-        (cls.source/'nvim_forge.sh').write_text('#!/bin/sh\n')
+        for name in ['fride','fride.cmd','fride.ps1','nvim_forge.sh','nvim_forge.cmd']:
+            shutil.copyfile(ROOT/name,cls.source/name)
         (cls.source/'wezterm.lua').write_text('-- fixture\n')
         recipe={'schema':1,'platform':PLATFORM,'nvim':'bin/nvim.exe' if WINDOWS else 'bin/nvim',
                 'components':['core'],'paths':['bin'],'probes':[['bin/nvim.exe' if WINDOWS else 'bin/nvim','--version']]}
@@ -120,7 +123,7 @@ class Isolation(unittest.TestCase):
         (base/(label+'.json')).write_text(json.dumps({'args':args,'exit':result.returncode,'out':result.stdout,'err':result.stderr},ensure_ascii=False,indent=2),encoding='utf-8')
         return result
 
-    def install(self,base,env,target,root=False,download=False,runtime=True,sha=None,default=False):
+    def install(self,base,env,target,root=False,download=False,runtime=True,sha=None,default=False,command_dir=None):
         if WINDOWS:
             args=[SHELL,'-NoProfile','-ExecutionPolicy','Bypass','-File',str(ROOT/('install.ps1' if root else 'scripts/install-private.ps1'))]
             if not default:args+=['-InstallPath',str(target)]
@@ -128,21 +131,30 @@ class Isolation(unittest.TestCase):
             else:args+=['-Source',str(self.source)]
             if download:args+=['-RuntimeArchiveUrl',self.url+'/runtime','-RuntimeSHA256',sha or self.receipt['sha256']]
             elif runtime:args+=['-RuntimePath',str(self.runtime)]
+            if command_dir:args+=['-CommandDir',str(command_dir)]
         else:
             if root:
                 args=[SHELL,str(ROOT/'install.sh'),'--archive-url',self.url+'/isolation-source','--source-root',str(base/'sources'),'--components','core']
                 if not default:args+=['--install-dir',str(target)]
                 if download:args+=['--runtime-archive-url',self.url+'/runtime','--runtime-sha256',sha or self.receipt['sha256']]
                 elif runtime:args+=['--runtime-path',str(self.runtime)]
-            else:args=[SHELL,str(ROOT/'scripts/install-private.sh'),str(self.source),str(target),str(self.runtime) if runtime else '',self.url+'/runtime' if download else '',sha or self.receipt['sha256'] if download else '']
+                if command_dir:args+=['--command-dir',str(command_dir)]
+            else:args=[SHELL,str(ROOT/'scripts/install-private.sh'),str(self.source),str(target),str(self.runtime) if runtime else '',self.url+'/runtime' if download else '',sha or self.receipt['sha256'] if download else '',str(command_dir) if command_dir else '']
         return self.run_process(args,env,base,'install-'+str(time.time_ns()))
 
     def assert_ok(self,result):self.assertEqual(result.returncode,0,result.stdout+result.stderr)
 
-    def launch(self,base,env,target,exitcode=0):
+    def launch(self,base,env,target,exitcode=0,name='fride',command_dir=None):
         tail=['--headless','-i','NONE',str(base/'file with spaces.go'),'-c','cquit '+str(exitcode) if exitcode else 'qa!']
-        args=([SHELL,'-NoProfile','-ExecutionPolicy','Bypass','-File',str(target/'bin/forge.ps1')] if WINDOWS else [SHELL,str(target/'bin/forge')])+tail
+        directory=command_dir or target/'bin'
+        ps_name='.fride-command.ps1' if command_dir else name+'.ps1'
+        args=([SHELL,'-NoProfile','-ExecutionPolicy','Bypass','-File',str(directory/ps_name)] if WINDOWS else [SHELL,str(directory/name)])+tail
         return self.run_process(args,env,base,'launch-'+str(time.time_ns()))
+
+    def launch_cmd(self,base,env,launcher):
+        wrapper=base/'run-cmd.ps1'
+        wrapper.write_text("param([string]$Launcher)\n& $Launcher --headless -i NONE -c 'cquit 7'\nexit $LASTEXITCODE\n",encoding='utf-8')
+        return self.run_process([SHELL,'-NoProfile','-ExecutionPolicy','Bypass','-File',str(wrapper),'-Launcher',str(launcher)],env,base,'cmd-'+str(time.time_ns()))
 
     def test_01_install_launch_and_repeat(self):
         base,env,target=self.prepare('repeat');self.assert_ok(self.install(base,env,target))
@@ -223,7 +235,7 @@ $after=@{};foreach($key in $keys){$after[$key]=[Environment]::GetEnvironmentVari
 [IO.File]::WriteAllText($Report,(@{before=$before;after=$after}|ConvertTo-Json -Depth 4))
 exit $code
 ''',encoding='utf-8')
-        report=base/'environment.json';self.assert_ok(self.run_process([SHELL,'-NoProfile','-File',str(wrapper),'-Launcher',str(target/'bin/forge.ps1'),'-Report',str(report)],env,base,'caller'))
+        report=base/'environment.json';self.assert_ok(self.run_process([SHELL,'-NoProfile','-File',str(wrapper),'-Launcher',str(target/'bin/fride.ps1'),'-Report',str(report)],env,base,'caller'))
         value=json.loads(report.read_text(encoding='utf-8-sig'));self.assertEqual(value['before'],value['after'])
 
     def test_12_external_link_in_owned_target(self):
@@ -247,6 +259,113 @@ exit $code
         self.assert_ok(self.launch(base,env,target))
         probe=json.loads((base/'probe.json').read_text(encoding='utf-8'))
         self.assertTrue(Path(probe['data']).is_relative_to(target))
+
+    def test_15_launcher_names(self):
+        base,env,target=self.prepare('names');self.assert_ok(self.install(base,env,target))
+        probes=[]
+        for name in ['fride','forge-nvim','forge']:
+            self.assert_ok(self.launch(base,env,target,name=name))
+            probes.append(json.loads((base/'probe.json').read_text(encoding='utf-8')))
+        for probe in probes[1:]:
+            for key in ['exe','config','data','state','cache','app','cwd','stdin']:self.assertEqual(probe[key],probes[0][key])
+        self.assertEqual(Path(probes[0]['cwd']),Path.cwd())
+        if WINDOWS:
+            self.assertEqual(self.launch_cmd(base,env,target/'bin/fride.cmd').returncode,7)
+
+    def test_16_register_repeat_and_repair(self):
+        base,env,target=self.prepare('register');directory=base/"command parents/фриде ü 'quoted' $name/bin"
+        target=base/"kit parents/фриде ü 'quoted' $name/kit"
+        env['PATH']=str(directory)+os.pathsep+env['PATH']
+        self.assert_ok(self.install(base,env,target,root=True,command_dir=directory))
+        self.assertEqual(self.launch(base,env,target,7,command_dir=directory).returncode,7)
+        if WINDOWS:
+            self.assertEqual(self.launch_cmd(base,env,directory/'fride.cmd').returncode,7)
+            self.assertEqual(self.launch_cmd(base,env,'fride').returncode,7)
+        else:
+            result=self.run_process(['fride','--headless','-i','NONE','-c','cquit 7'],env,base,'path-launch')
+            self.assertEqual(result.returncode,7,result.stderr)
+        before=snapshot(directory);self.assert_ok(self.install(base,env,target,root=True,command_dir=directory))
+        self.assertEqual(snapshot(directory),before)
+        wrapper=directory/('.fride-command.ps1' if WINDOWS else 'fride');wrapper.unlink()
+        self.assert_ok(self.install(base,env,target,command_dir=directory));self.assertEqual(snapshot(directory),before)
+        self.assertEqual(self.launch(base,env,target,7,command_dir=directory).returncode,7)
+
+    def test_17_foreign_command_conflict(self):
+        base,env,target=self.prepare('command-conflict');directory=base/'commands';directory.mkdir()
+        foreign=directory/('fride.cmd' if WINDOWS else 'fride');foreign.write_text('user command')
+        before=snapshot(directory);result=self.install(base,env,target,root=True,command_dir=directory)
+        self.assertNotEqual(result.returncode,0);self.assertIn('Command conflict',result.stderr)
+        self.assertFalse(target.exists());self.assertEqual(snapshot(directory),before)
+
+    def test_18_path_conflict(self):
+        base,env,target=self.prepare('path-conflict');directory=base/'commands';other=base/'other-bin';other.mkdir()
+        foreign=other/('fride.exe' if WINDOWS else 'fride');foreign.write_text('foreign binary');foreign.chmod(0o755)
+        env['PATH']=str(other)+os.pathsep+env['PATH'];before=snapshot(other)
+        result=self.install(base,env,target,command_dir=directory)
+        self.assertNotEqual(result.returncode,0);self.assertIn('Command conflict',result.stderr)
+        self.assertFalse(target.exists());self.assertFalse(directory.exists());self.assertEqual(snapshot(other),before)
+
+    def test_19_modified_command_preserved(self):
+        base,env,target=self.prepare('modified-command');directory=base/'commands'
+        self.assert_ok(self.install(base,env,target,command_dir=directory))
+        marker=(target/'.forge-install.json').read_bytes();wrapper=directory/('.fride-command.ps1' if WINDOWS else 'fride')
+        wrapper.write_text('user modification');before=snapshot(directory)
+        result=self.install(base,env,target,command_dir=directory)
+        self.assertNotEqual(result.returncode,0);self.assertEqual(snapshot(directory),before)
+        self.assertEqual((target/'.forge-install.json').read_bytes(),marker)
+
+    def test_20_failed_setup_does_not_register(self):
+        base,env,target=self.prepare('setup-no-command');directory=base/'commands';env['FORGE_FAIL_STAGE']='tools'
+        result=self.install(base,env,target,command_dir=directory)
+        self.assertNotEqual(result.returncode,0);self.assertIn('Command failed',result.stderr);self.assertFalse(directory.exists())
+        self.assertEqual((base/'stages.txt').read_text().splitlines(),['plugins','parsers','tools'])
+
+    def test_21_late_conflict_rolls_back(self):
+        base,env,target=self.prepare('late-conflict');directory=base/'commands';directory.mkdir()
+        self.assert_ok(self.install(base,env,target));before=snapshot(target/'bin');marker=(target/'.forge-install.json').read_bytes()
+        foreign=directory/('fride.cmd' if WINDOWS else 'fride');env['FORGE_RACE_COMMAND']=str(foreign)
+        result=self.install(base,env,target,command_dir=directory)
+        self.assertNotEqual(result.returncode,0);self.assertIn('Command conflict',result.stderr)
+        self.assertEqual(foreign.read_text().strip(),'user-owned command')
+        self.assertEqual(snapshot(target/'bin'),before);self.assertEqual((target/'.forge-install.json').read_bytes(),marker)
+        self.assert_ok(self.launch(base,env,target))
+
+    def test_22_native_terminal_input(self):
+        base,env,target=self.prepare('native-terminal');self.assert_ok(self.install(base,env,target))
+        (base/'probe.json').unlink(missing_ok=True)
+        command=([SHELL,'-NoProfile','-ExecutionPolicy','Bypass','-File',str(target/'bin/fride.ps1')] if WINDOWS else [SHELL,str(target/'bin/fride')])+['-i','NONE',str(base/'interactive file.go')]
+        env.update(FORGE_INSTALL_UI_COMMAND=json.dumps(command),FORGE_INSTALL_UI_ACTION='launch',FORGE_INSTALL_UI_REPORT=str(base/'terminal.json'))
+        self.assert_ok(self.run_process([str(NVIM),'-u','NONE','-i','NONE','-l',str(ROOT/'tests/diagnostics/install-profile-ui.lua')],env,base,'terminal-driver'))
+        report=json.loads((base/'terminal.json').read_text(encoding='utf-8'))
+        self.assertTrue(report['ok']);self.assertEqual(report['exit'],7);self.assertIn('native input accepted',report['events'])
+        probe=json.loads((base/'probe.json').read_text(encoding='utf-8'));self.assertEqual(probe['stdin'],'tty')
+
+    def test_23_checkout_command(self):
+        base,env,_=self.prepare('checkout')
+        env.update(XDG_DATA_HOME=str(base/'data'),XDG_STATE_HOME=str(base/'state'),XDG_CACHE_HOME=str(base/'cache'))
+        env['PATH']=str(SDK/'bin')+os.pathsep+env['PATH']
+        if WINDOWS:
+            link=self.source/'.tools/neovim/windows-x64';link.parent.mkdir(parents=True,exist_ok=True)
+            result=subprocess.run(['cmd.exe','/c','mklink','/J',str(link),str(SDK)],capture_output=True)
+            self.assertEqual(result.returncode,0,result.stderr)
+            self.addCleanup(lambda:link.rmdir())
+            command=[SHELL,'-NoProfile','-ExecutionPolicy','Bypass','-File',str(self.source/'fride.ps1')]
+        else:command=[SHELL,str(self.source/'fride')]
+        result=self.run_process(command+['--headless','-i','NONE','-c','cquit 7'],env,base,'checkout')
+        self.assertEqual(result.returncode,7,result.stderr)
+        probe=json.loads((base/'probe.json').read_text(encoding='utf-8'))
+        self.assertEqual(Path(probe['config']),self.source/'nvim_forge');self.assertEqual(probe['app'],'nvim_forge')
+        if WINDOWS:self.assertEqual(self.launch_cmd(base,env,self.source/'fride.cmd').returncode,7)
+
+    @unittest.skipUnless(WINDOWS,'Windows PowerShell policy')
+    def test_24_restricted_policy_command(self):
+        base,env,target=self.prepare('restricted-policy');directory=base/'commands'
+        env['PATH']=str(directory)+os.pathsep+env['PATH']
+        self.assert_ok(self.install(base,env,target,command_dir=directory))
+        script="$ErrorActionPreference='Stop'; (Get-Command fride).CommandType; fride --headless -i NONE -c 'cquit 7'; exit $LASTEXITCODE"
+        result=self.run_process([SHELL,'-NoProfile','-ExecutionPolicy','Restricted','-Command',script],env,base,'restricted')
+        self.assertEqual(result.returncode,7,result.stderr);self.assertIn('Application',result.stdout)
+        self.assertFalse((directory/'fride.ps1').exists())
 
 
 if __name__=='__main__':

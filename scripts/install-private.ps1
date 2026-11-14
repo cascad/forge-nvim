@@ -3,7 +3,7 @@
 [CmdletBinding()]
 param([Parameter(Mandatory=$true)][string]$Source,
       [Parameter(Mandatory=$true)][string]$InstallPath,
-      [string]$RuntimePath = '', [string]$RuntimeArchiveUrl = '', [string]$RuntimeSHA256 = '')
+      [string]$RuntimePath = '', [string]$RuntimeArchiveUrl = '', [string]$RuntimeSHA256 = '', [string]$CommandDir = '')
 $ErrorActionPreference='Stop'
 function Get-RuntimeHash([string]$Path) {
     $algorithm=[Security.Cryptography.SHA256]::Create(); $stream=[IO.File]::OpenRead($Path)
@@ -54,7 +54,7 @@ if (-not $binary.StartsWith($runtime.TrimEnd('\','/')+'\',[StringComparison]::Or
 $expected=$manifest.files.PSObject.Properties[$manifest.nvim].Value
 if (-not $expected -or (Get-RuntimeHash $binary) -ne $expected) { throw 'Runtime Neovim SHA256 mismatch.' }
 # -u NONE и очищенное окружение: даже bootstrap не читает init.lua пользователя.
-$keys=@('FORGE_INSTALL_SOURCE','FORGE_INSTALL_TARGET','FORGE_INSTALL_RUNTIME','VIM','VIMRUNTIME','VIMINIT','EXINIT','LUA_INIT','LUA_PATH','LUA_CPATH',
+$keys=@('FORGE_INSTALL_SOURCE','FORGE_INSTALL_TARGET','FORGE_INSTALL_RUNTIME','FORGE_INSTALL_COMMAND_DIR','VIM','VIMRUNTIME','VIMINIT','EXINIT','LUA_INIT','LUA_PATH','LUA_CPATH',
     'XDG_CONFIG_HOME','XDG_DATA_HOME','XDG_STATE_HOME','XDG_CACHE_HOME','NVIM_APPNAME','NVIM_LOG_FILE','TEMP','TMP','TMPDIR')
 $saved=@{}
 foreach ($key in $keys) { $saved[$key]=[Environment]::GetEnvironmentVariable($key,'Process') }
@@ -63,6 +63,7 @@ try {
     $env:FORGE_INSTALL_SOURCE=[IO.Path]::GetFullPath($Source)
     $env:FORGE_INSTALL_TARGET=[IO.Path]::GetFullPath($InstallPath)
     $env:FORGE_INSTALL_RUNTIME=$runtime
+    if ($CommandDir) { $env:FORGE_INSTALL_COMMAND_DIR=[IO.Path]::GetFullPath($CommandDir) }
     $work=Join-Path (Split-Path -Parent $Source) ('.installer-'+[Guid]::NewGuid().ToString('N'))
     New-Item -ItemType Directory -Path (Join-Path $work 'tmp') -Force | Out-Null
     $env:XDG_CONFIG_HOME=Join-Path $work 'config';$env:XDG_DATA_HOME=Join-Path $work 'data'

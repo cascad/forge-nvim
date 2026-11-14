@@ -12615,3 +12615,72 @@ unrelated test infrastructure/drafts не включены в commit.
 
 **Файлы.** INSTALLATION_PLAN, IDE_ROADMAP, PROBLEMS, HISTORY, FIXLOG,
 AGENT_COMMANDS. Unrelated test infrastructure/drafts не затрагивались.
+
+
+## 239. Fride: launchers и явная регистрация команды
+
+Дата: 2026-11-14. IDE-141, продолжение выбора §238.
+Спека: IDE-BOOT-12 (ADDED), add-fride-command; IDE-BOOT-11 сохранён.
+
+**Проблема.** Выбранное fride существовало только в плане. Private kit создавал
+forge, checkout запускался через nvim_forge.cmd/.sh. Не было явного безопасного
+способа сделать короткую команду доступной в уже выбранном user bin.
+
+**Причина.** Изоляция runtime была реализована до выбора имени. Shell alias
+в профиле дал бы разные правила ОС и побочные действия startup; автоматическая
+замена существующей команды нарушила бы требование владельца не ломать софт.
+
+**Изменение.** Kit создаёт fride/forge-nvim/forge из одного launch-managed
+source на ОС. NVIM_APPNAME=forge, данные и SDK прежние. Checkout fride,
+fride.cmd/fride.ps1 делегируют старым helpers; нового resolver/download нет.
+Root fride закреплён с LF и executable bit для POSIX.
+
+Явный -CommandDir/--command-dir создаёт launcher и .fride-command.json в
+выбранном каталоге с родителями; default portable не пишет команд вне kit.
+PATH/registry/profile не меняются. Проверка чужих файлов/имён в PATH идёт до
+изменения kit и после setup. Receipt привязан к kit/hash. Exclusive writes,
+валидный повтор без перезаписи, repair missing wrapper, отказ на user edits/
+другой kit. Неудачный setup не регистрирует команду, late conflict возвращает
+прежние config/runtime/bin. Rollback снимает только созданные этим вызовом files.
+
+Windows: глобальный fride.cmd вызывает служебный .fride-command.ps1 с UTF8 BOM,
+kit path — PS literal; POSIX — shell-quoted path и "$@", без eval. Имя внешнего
+PS1 скрыто от bare fride lookup: иначе чистый PowerShell выбирал fride.ps1
+и блокировал запуск при Restricted. User/system policy не меняется; CMD использует
+прежний process-scoped способ запуска PS. Aliases/functions родительской shell
+не переписываются и могут иметь свой приоритет, полного discovery не обещаем.
+
+**Проверка/e2e.** Windows23 PASS (73.447s), после policy fix7 affected cases
+PASS (32.095s), включая новый Restricted case24. Ubuntu22 PASS/2 Windows-only
+skip (10.664s). Shared menu/keyboard controls по2 PASS Windows/Ubuntu. Настоящие
+native SDK/hash/HTTP/install/argv/cwd/exit/environment, Unicode/apostrophe/$
+в kit/command paths, bare command из PATH, CMD/PS/checkout aliases; native
+UI-attached PTY принял :cquit7 и передал exit7. Foreign snapshots неизменны.
+Init/setup — fixture, это не full editor/plugin/Default SDK acceptance.
+
+Сохранены неудачи: Windows v1 23cases/2FAIL/2ERROR — ложный conflict текущему
+checkout из empty PATH entry и перезапись observer terminal.json driver JSON.
+v2 23cases/3FAIL/1ERROR — vim.split trimempty убирал только края, internal
+empty segment42 оставался; explicit cwd PATH entry отсутствовал. Windows
+пустые segments теперь пропускаются, POSIX empty сохраняет cwd semantics.
+Дополнительно setup-failure assertion потребовал настоящий stage failure,
+чтобы early conflict не считался успехом. Observer/driver reports разделены.
+Read-only policy-before probe дал exit1/ExternalScript; исправлен внешний
+helper name и добавлен native regression24. Прежние unaffected cases не
+повторялись после этого ради зелёного. Первый Ubuntu control path не существовал
+из-за bind overlay (exit2 до tests), driver перенесён в .tests/ubuntu, правильный
+guest path выполнил2 controls. Raw/artifacts сохранены.
+
+**Вывод/границы.** Реальная fride готова в kit и checkout, регистрация opt-in.
+Native Mac не запускался; команда owner stand та же. UI LocalVox и полная
+доставка SDK/actual readiness остаются IDE-138/141. Host user bin/PATH/profile,
+Docker Desktop/WSL lifecycle, SDK/67 pins/16 backport files и deferred test
+infrastructure не менялись. Windows и Ubuntu последовательно, ready image без
+build/pull; temp на F или native /tmp контейнера с evidence export.
+
+**Файлы.** Root fride launchers/.gitattributes; root/private installer flags;
+scripts/register-command.lua и kit aliases; isolated stand/PTY observer;
+add-fride-command; README/installation plan/roadmap/PROBLEMS/tests README,
+HISTORY/commands. Raw .tests/fride-*.txt, policy-before.json и native artifacts.
+Heavy stand runtime copies/archives удаляются после audit, receipts/logs/config
+сохраняются. Local commit без push/release.
