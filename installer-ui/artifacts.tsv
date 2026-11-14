@@ -1,0 +1,2 @@
+# platform<TAB>HTTPS artifact URL<TAB>SHA256; заполняется после native release builds.
+# Пустой catalog не является опубликованным frontend. Для developer preview используется .tools receipt.

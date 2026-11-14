@@ -5,6 +5,10 @@ param([Parameter(Mandatory=$true)][string]$Source,
       [Parameter(Mandatory=$true)][string]$InstallPath,
       [string]$RuntimePath = '', [string]$RuntimeArchiveUrl = '', [string]$RuntimeSHA256 = '', [string]$CommandDir = '')
 $ErrorActionPreference='Stop'
+if ($env:FRIDE_INSTALL_UI -eq '1') {
+    [Console]::OutputEncoding=New-Object Text.UTF8Encoding($false)
+    [Console]::Out.WriteLine('FRIDE_EVENT'+[char]9+'{"stage":"runtime","status":"start"}')
+}
 function Get-RuntimeHash([string]$Path) {
     $algorithm=[Security.Cryptography.SHA256]::Create(); $stream=[IO.File]::OpenRead($Path)
     try { return [BitConverter]::ToString($algorithm.ComputeHash($stream)).Replace('-','').ToLowerInvariant() }

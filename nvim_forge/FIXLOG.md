@@ -12684,3 +12684,94 @@ add-fride-command; README/installation plan/roadmap/PROBLEMS/tests README,
 HISTORY/commands. Raw .tests/fride-*.txt, policy-before.json и native artifacts.
 Heavy stand runtime copies/archives удаляются после audit, receipts/logs/config
 сохраняются. Local commit без push/release.
+
+
+## 240. Native установщик Fride в стиле LocalVox
+
+**Дата:** 2026-11-14. **Пункты:** IDE-138/141; IDE-BOOT-13.
+
+**Было/причина.** После §239 fride запускался из kit/checkout, но Custom UI
+оставался разным в PS/Bash и вывод подготовки был необработанным. Для общего
+оформления LocalVox нужен готовый frontend до доставки Neovim; сборка Rust на
+машине устанавливающего пользователя этому требованию не соответствует.
+Reference read-only: D:/rust_repo/localvox-light4514678, localvox-setup-ui.
+
+**Сделано.** Отдельный небольшой fride-setup: cliclack0.5.6/console0.16.6 и
+Cargo.lock, MIT notice для темы/Back pattern. Одна components.tsv/closure,
+Core отдельно, галочки, каталоги и opt-in команда, итог. Esc возвращает с
+подтверждёнными ответами/продолжает/отменяет; preview останавливается до backend.
+Default/explicit CSV автоматические, Custom без TTY даёт ошибку до установки.
+NO_COLOR/--no-color и plain pipe вывод поддержаны; штатный ASCII fallback
+библиотеки сохранён. Developer preview запускает тот же native frontend.
+
+Root PS/Bash получает готовый frontend из checkout/явного пути либо artifact
+URL+SHA256; плохой SHA не допускается к запуску. Cargo/Neovim/Python для этого
+пользователю не нужны. Старый source без UI marker сохраняет advanced dispatch.
+Backend остаётся scripts/install-private.*: opt-in stage events, один spinner
+или plain этапы, полный log, настоящий exit и фактический launcher из backend.
+Новые флаги не изменяют PATH/profile/host Neovim. Developer build использует
+готовый SDK, private Cargo/target/temp; Windows CRT статический. Готовые binary,
+SHA и receipt хранятся вне Git. Установка Cargo не вызывает.
+
+**Проверка.** Все13 новых UI сценариев покрыты native Windows и Ubuntu.
+Настоящий UI-attached PTY: Default, Custom/Back/Cancel, Unicode/пробел/апостроф
+в пути, narrow/no-color и полный Custom→native setup→launch. Настоящий HTTP
+source/UI download+repeat+SHA, native private Neovim с fixture init/setup,
+backend failure/log/exit, component closure и foreign snapshots. Ubuntu первые
+12 PASS9.667s; изменённые presentation5 PASS3.413s, Custom install1 PASS3.380s.
+Windows конечные новые проверки PASS по затронутым срезам: v2 сохранил11 PASS,
+paths-v3 исправил case4, presentation-v4 дал4 PASS, no-color-v5 исправил case12,
+Custom install1 PASS16.408s. Это не один скрыто повторенный full green run.
+
+Совместимость: Windows legacy root delivery/repeat, caller environment и failed
+setup/no registration3 PASS34.868s, прежние keyboard menu2 PASS1.756s. Ubuntu
+legacy2 PASS/1 Windows-only skip4.749s и menu2 PASS0.763s. Полный редакторский
+регресс не повторялся: editor behavior не менялся. OpenSpec strict validation
+PASS. Снимки actual raw PTY отрендерены/осмотрены: Windows preview и Linux
+preview-linux в .tests/installer-ui; внешний браузерный frame — оформление
+снимка, сам мастер остаётся terminal UI. Разработческий builder проверил
+исходники Windows/Linux receipts; frozen SDK/67 pins/backports/WIP без изменений.
+
+**Сохранённые неудачи.** Первый offline Cargo directory source из старого C cache
+имел ab_glyph без .cargo-checksum.json; чужой cache не исправлялся. Зависимости
+получены в private F cache, Linux собран offline из pinned vendor в native /tmp.
+Build1 имел unused import, Build2 warning-free. Диагностический rustc probe
+с release rlib сначала дал LNK1107 без согласованного LTO; после thin LTO probe
+запустился. Отдельный вывод Python в console cp1251 дал UnicodeEncodeError,
+после этого явный PYTHONIOENCODING=utf-8; это не отказ installer.
+
+Windows UI v1:11 PASS/1 FAIL, сырой UTF8 апостроф в ConPTY превратился в
+Alt/Unknown. Независимый console::read_key probe воспроизвёл это без мастера;
+native Win32 input record вернул Char(apostrophe). v2 попытка посылать все
+символы такими записями портилась на длинном ConPTY потоке (exit130); driver
+использует запись только для отсутствующего в раскладке апострофа, остальной
+ввод остаётся обычным PTY. Paths-v3 PASS, product не получил private fork
+keyboard library. Физический paste/раскладки WezTerm остаются native проверкой,
+этот синтетический input не доказывает все способы ввода Windows.
+
+Presentation-v4: у agent inherited NO_COLOR=1/TERM=dumb, поэтому тест теперь
+моделирует capable terminal отдельно от no-color. Case12 сначала ошибочно
+считал ConPTY завершающий SGR reset цветом; native color assertion исключает
+только empty/0 reset, остальные SGR по-прежнему проверяет. No-color-v5 PASS.
+Неудачные suite/raw/reports сохранены, результаты задним числом не заменялись.
+
+**Вывод/границы.** Общий мастер готов как продуктовый срез. Native Mac не
+запускался; artifacts.tsv ещё без опубликованных строк. Public one-liner и
+полный Default SDK/actual package readiness НЕ готовы. Следующий IDE-138 срез —
+приватные platform runtime bundles и реальная готовность выбранных инструментов.
+Нет Ollama/моделей/новых LSP. Docker использован готовым без build/pull/network,
+Desktop/WSL не управлялись; тяжёлые Windows/Linux проверки последовательно.
+Temp/build/cache на F, контейнерные build/stands в /tmp с evidence export.
+Heavy собственные stand runtime/archive copies очищаются после audit;
+готовые UI binaries/receipts, полезный Cargo cache и диагностика сохраняются.
+
+**Файлы.** installer-ui; UI delivery helpers/preview/builder; root/private entry;
+native stand/PTY driver; add-localvox-installer-ui; README/plan/roadmap/problems,
+tests README/HISTORY/commands. Raw: .tests/installer-ui-*.txt и отдельные native
+.test artifacts. Локальный commit без push/release; unrelated test drafts/WIP
+не включены.
+
+**Cleanup после audit.** .tests/installer-ui-cleanup.json: удалены28 собственных
+runtime/prepared/archive объектов из7 Windows stand roots, 1,147,798,960bytes
+(1.07GiB). Boundaries resolve внутри F:/repo/forge-nvim/.tests/install-isolation,
+foreign files/логи/receipts/ready SDK/UI и исходники сохранены.

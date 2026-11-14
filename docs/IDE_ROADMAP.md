@@ -24,8 +24,11 @@ staging/backup. Глобальные package managers из entry исключе�
 IDE-141: оформить installer как актуальный localvox-light (cliclack, шаги,
 галочки, подсказки/возврат/итог) и выбрать постоянную команду запуска.
 Владелец выбрал fride (Forge IDE), полное имя — forge-nvim. Kit/checkout launchers
-и явный CommandDir реализованы; PATH/profile автоматически не меняются. UI
-LocalVox ещё впереди. Детали и safety граница —
+и явный CommandDir реализованы; PATH/profile автоматически не меняются. §240:
+общий native мастер LocalVox реализован: Custom/Back/Cancel, preview, stages/log,
+проверяемая доставка UI. Windows/Ubuntu проверены; native Mac и публикация
+platform UI/полных SDK ещё открыты. Следующий срез IDE-138 — состав и доставка
+приватных runtime bundles, затем actual readiness инструментов. Детали —
 [INSTALLATION_PLAN](INSTALLATION_PLAN.md#команда-запуска-и-оформление--ide-141).
 
 ## Текущая очередь продукта — решение владельца 2026-11-12

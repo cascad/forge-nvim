@@ -8840,3 +8840,80 @@ suite22 PASS/2skip, не повторялся ради controls. Docker Desktop/
 Fride aliases не мигрируют NVIM_APPNAME/config/data или SDK. Mac gate открыт,
 полные SDK/LocalVox UI не объявляются готовыми. Exact staging исключает unrelated
 drafts/WIP, journal prefixes и frozen SDK/lock/backports сверяются до commit.
+
+
+## 148. Native installer UI: сборка, preview и реальные terminal/HTTP проверки
+
+2026-11-14, IDE-BOOT-13/IDE-141, FIXLOG§240. Работа только F:/repo/forge-nvim.
+Reference D:/rust_repo/localvox-light читался без изменений. Это общий native
+frontend, существующий private backend и fixture install/launch stand; не
+полная установка всех language SDK и не публикация release.
+
+```powershell
+$env:TEMP='F:/repo/forge-nvim/.tests/tmp'; $env:TMP=$env:TEMP; $env:TMPDIR=$env:TEMP
+$env:PYTHONUTF8='1'; $env:PYTHONIOENCODING='utf-8'
+$env:NVIM_LOG_FILE='F:/repo/forge-nvim/.tests/tmp/installer-ui-windows.log'
+$env:npm_config_cache='F:/forge-nvim-tmp/npm-cache'
+python -B scripts/build-installer-ui.py --rustc C:/Users/cascad/.rustup/toolchains/stable-x86_64-pc-windows-msvc/bin/rustc.exe --download
+powershell -NoProfile -ExecutionPolicy Bypass -File scripts/preview-installer.ps1
+powershell -NoProfile -ExecutionPolicy Bypass -File scripts/preview-installer.ps1 -Profile Custom
+python -B tests/install-ui.test.py > .tests/installer-ui-windows-v1.txt 2>&1
+python -B tests/install-ui.test.py > .tests/installer-ui-windows-v2.txt 2>&1
+python -B tests/install-ui.test.py test_ui_04_custom_paths > .tests/installer-ui-windows-paths-v3.txt 2>&1
+python -B tests/install-ui.test.py test_ui_01_preview_recommended test_ui_02_preview_custom_back test_ui_03_cancel test_ui_04_custom_paths test_ui_12_narrow_no_color > .tests/installer-ui-windows-presentation-v4.txt 2>&1
+python -B tests/install-ui.test.py test_ui_12_narrow_no_color > .tests/installer-ui-windows-no-color-v5.txt 2>&1
+python -B tests/install-ui.test.py test_ui_13_custom_native_install > .tests/installer-ui-windows-custom.txt 2>&1
+python -B tests/install-isolation.test.py Isolation.test_05_root_download_and_repeat Isolation.test_11_caller_environment Isolation.test_20_failed_setup_does_not_register > .tests/installer-ui-legacy-windows.txt 2>&1
+python -B .tests/profile-ui-only.py > .tests/installer-ui-legacy-menu-windows.txt 2>&1
+# Готовый Docker engine/image; этот вызов не запускает Desktop/WSL/build/pull:
+docker version --format '{{.Server.Version}}'
+docker compose -f tests/containers/compose.yaml run --rm --no-deps --pull never --entrypoint bash ubuntu /workspace/.tests/installer-ui/run.sh > .tests/installer-ui-ubuntu-v1.txt 2>&1
+docker compose -f tests/containers/compose.yaml run --rm --no-deps --pull never -e FORGE_INSTALL_UI_BINARY=/workspace/.tests/installer-ui/linux-x64/fride-setup -e FORGE_INSTALL_STAND_ROOT=/tmp/fride-ui-presentation --entrypoint python3 ubuntu -B tests/install-ui.test.py test_ui_01_preview_recommended test_ui_02_preview_custom_back test_ui_03_cancel test_ui_04_custom_paths test_ui_12_narrow_no_color > .tests/installer-ui-ubuntu-presentation-v2.txt 2>&1
+npx.cmd --yes @fission-ai/openspec@1.13.2 validate add-localvox-installer-ui --type change --strict --no-interactive
+git diff --check
+git diff --cached --check
+```
+
+Linux developer build получил Cargo vendor из private F cache: direct cargo
+vendor --locked --versioned-dirs --manifest-path installer-ui/Cargo.toml
+.tests/installer-ui/vendor; Cargo env/private cache такие же, как в builder.
+66 pinned crates/lock, без Rust install. Vendor archive доставлен через host
+.tests/ubuntu/installer-ui (guest /workspace/.tests/installer-ui), извлечён в
+mktemp /tmp/fride-ui-build.*, private Cargo config directory source. run.sh
+вызывает builder --work <tmp>/build --output <guest overlay>/linux-x64, затем
+UI suite с FORGE_INSTALL_STAND_ROOT=/tmp/fride-installer-ui. Native tmp удалён
+trap после экспорта; host source readonly, сеть контейнера выключена.
+
+Ubuntu final command в .tests/installer-ui-ubuntu-controls.txt: тот же compose
+с --entrypoint bash ubuntu -c, последовательно UI case13, legacy cases05/11/20
+и /workspace/.tests/fride-ui-controls.py (копия profile-ui-only.py в overlay).
+Windows/Linux шли последовательно. Другие тесты не запускались.
+
+Что видно: suite stdout содержит cases/PASS/FAIL, work/artifact path и exit;
+<case>/ui.json содержит настоящие screen lines/raw ANSI/exit/events, driver JSON
+отдельно; backend native argv/stdout/stderr/logs, staged fixture files, source/UI
+archive SHA и foreign snapshots. Custom case13 реально устанавливает Core и
+запускает private nvim. Backend errors не заменяются mock success. После новых
+assertions запускались только изменённые presentation cases/новый case13,
+предыдущие11 результаты сохраняются, целый suite ради зелёного не повторялся.
+
+Независимый Windows console key probe сохранён в .tests/installer-ui/key-probe.*,
+Win32 variant рядом. Это developer read_key diagnostic, не editor test и не
+изменение системы/раскладки. Первое ручное rustc link без thin LTO дало LNK1107;
+исправленный диагностический build прошёл. ConPTY Alt/Unknown и path assertions
+описаны в FIXLOG. Physical paste не выдаётся за проверенный.
+
+Visual capture: .tests/installer-ui/render.mjs и render-linux.mjs читают actual
+raw frames, read-only reference xterm/fonts/Playwright dependencies; локальный
+HTTP server/browser закрываются в finally. node .../render.mjs сохраняет PNG/
+rendered text под .tests/installer-ui/preview; Linux — preview-linux. Изображения
+просмотрены view_image. Installer UI внутри native, рамка браузера только в PNG.
+Сборка/preview не редактируют личный nvim, registration в user bin не выполнялась.
+Frozen23 paths и SDK/lock/backports, build receipt source hashes, raw journal
+prefixes/staged prefixes проверяются перед exact commit. Mac/full SDK/public
+artifact gates остаются явно открытыми; бинарей и .tests в commit нет.
+
+Финал: python -B .tests/installer-ui/cleanup.py; JSON report в
+.tests/installer-ui-cleanup.json. Exact run roots извлечены из installer-ui
+logs, resolved boundary проверен до recursive удаления. Удалено1.07GiB своих
+SDK copies/archives, native /tmp Docker исчез с --rm; диагностика сохранена.

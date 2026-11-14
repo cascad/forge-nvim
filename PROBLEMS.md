@@ -21,7 +21,9 @@ D:/rust_repo/localvox-light, commit4514678; мастер на cliclack с бир
 Имя выбрано владельцем: fride (Forge IDE), резервное полное — forge-nvim.
 Чужие команды/aliases/functions и обычный nvim не заменять. Реализованы kit
 fride/forge-nvim с прежним bin/forge, checkout fride и opt-in CommandDir с receipt/
-проверкой конфликтов. Перенос UI LocalVox остаётся открытой частью IDE-141.
+проверкой конфликтов. §240 перенёс тему/навигацию LocalVox в общий native
+мастер fride-setup: Custom, Back/Cancel, preview, stages и лог. Проверено на
+Windows/Ubuntu; native Mac и опубликованные UI artifacts ещё не готовы.
 Подробности — [INSTALLATION_PLAN](docs/INSTALLATION_PLAN.md#команда-запуска-и-оформление--ide-141).
 
 ## IDE-140 — комплект не должен менять существующие программы пользователя

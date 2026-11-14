@@ -2,6 +2,9 @@
 local uv = vim.uv
 local join = vim.fs.joinpath
 local windows = uv.os_uname().sysname == 'Windows_NT'
+local function event(stage,status)
+  if vim.env.FRIDE_INSTALL_UI=='1' then io.stdout:write('FRIDE_EVENT\t'..vim.json.encode({stage=stage,status=status})..'\n');io.stdout:flush() end
+end
 local function fail(message) error(message, 0) end
 local function read(path)
   local file = assert(io.open(path, 'rb'), path); local bytes = file:read('*a'); file:close(); return bytes
@@ -148,6 +151,7 @@ local function install()
     end
   end
   check_tree(runtime)
+  event('runtime','ready')
   mkdir(target)
   if not existing or not uv.fs_stat(owner_path) then write(owner_path,vim.json.encode({schema=1,product='forge-nvim',ready=false})) end
   for _, dir in ipairs({'data','state','cache','tmp','log','sdk-state','backups'}) do mkdir(join(target,dir)) end
@@ -173,8 +177,10 @@ local function install()
     execute(argv,env,target,join(target,'log','probe-' .. index .. '.log'))
   end
   for _, task in ipairs({'plugins','parsers','tools'}) do
+    event(task,'start')
     execute({exe,'--headless','-i','NONE','-u',join(stage,'config/forge/init.lua'),
       '-l',join(stage,'config/forge/scripts/setup-stage.lua'),task},env,target,join(target,'log','setup-' .. task .. '.log'))
+    event(task,'ready')
   end
   local backup = join(target,'backups',stamp); mkdir(backup)
   local moved, committed = {}, {}

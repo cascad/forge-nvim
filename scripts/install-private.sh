@@ -4,6 +4,7 @@ set -euo pipefail
 source_dir="$1"; install_dir="$2"; runtime="${3:-}"
 url="${4:-}"; expected="${5:-}"
 command_dir="${6:-}"
+if [ "${FRIDE_INSTALL_UI:-}" = 1 ]; then printf 'FRIDE_EVENT\t{"stage":"runtime","status":"start"}\n';fi
 hash_file() {
   if command -v sha256sum >/dev/null 2>&1; then sha256sum "$1" | cut -d ' ' -f 1
   else shasum -a 256 "$1" | cut -d ' ' -f 1; fi

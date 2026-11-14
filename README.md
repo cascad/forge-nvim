@@ -14,6 +14,10 @@
 он не обновляет обычный `nvim`, не заменяет его конфиг и не меняет системный PATH.
 Из этого checkout: Windows — `.\fride.cmd .`, Linux/macOS — `./fride .`.
 Полное имя внутри установленного bin — `forge-nvim`, прежний `forge` сохранён.
+Предпросмотр нового установщика без установки: Windows —
+`powershell -NoProfile -ExecutionPolicy Bypass -File scripts/preview-installer.ps1`;
+Linux/macOS — `bash scripts/preview-installer.sh`. Нужен подготовленный native
+frontend; [сборка/проверки и текущая готовность](docs/INSTALLATION_PLAN.md#предпросмотр-и-native-ui--240).
 [Команды агента и формат получаемых результатов](docs/AGENT_COMMANDS.md).
 [Клавиши рабочих панелей Space w](nvim_forge/QUICKSTART.md#общий-маршрут-рабочих-панелей--space-w).
 [Общая консоль логов IDE](docs/IDE_LOGS.md): `Space w i` / `:ForgeLogs`.

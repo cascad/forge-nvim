@@ -166,7 +166,7 @@ bash install.sh --components core --runtime-path /path/to/prepared-runtime --com
 
 Полная доставка Default SDK всё ещё открыта. Эти флаги не требуют ручной
 подготовки от обычного пользователя будущего one-liner: это текущий developer
-stand API. Шаг выбора команды в будущем LocalVox UI использует тот же backend.
+stand API. Шаг выбора команды в native LocalVox UI (§240) использует тот же backend.
 Проверка §239: Windows23 PASS плюс7 affected policy/registration PASS после
 исправления Restricted; Ubuntu22 PASS/2 Windows-only skip. Shared menu controls
 по2 PASS. Это native command/PTY/isolation checks с fixture init/setup, не
@@ -184,7 +184,8 @@ docs/installer-preview.md, docs/release-installation.md. Просмотрены 
 custom-paths-review.png. Там один presentation frontend на cliclack0.5.6,
 с темой InstallerTheme и готовым безопасным preview.
 
-Перенести в Forge:
+Требования к переносу в Forge (presentation реализован §240; actual package
+readiness остаётся следующим этапом IDE-138):
 
 - Бирюзовый акцент, компактный заголовок, вертикальный маршрут шагов и тонкие
   рамки заметок; приглушённые подтверждённые ответы/подсказки. Фон наследовать
@@ -201,11 +202,11 @@ custom-paths-review.png. Там один presentation frontend на cliclack0.5.
 - Безопасный preview с тем же frontend, который ничего не скачивает/не пишет
   в пользовательскую систему; узкий терминал и plain/no-color вывод учитываются.
 
-Рекомендуемый способ — один небольшой общий native frontend в том же стиле
-cliclack, поставляемый готовым artifact. Не требовать Rust/Cargo у пользователя,
-не привязывать UI к checkout LocalVox и не делать три независимо расходящихся
-мастера на PS/Bash. Конкретный перенос presentation-кода и зависимостей —
-следующий implementation change; install backend/изоляция остаются границей.
+Реализован §240: один небольшой общий native frontend на cliclack,
+поставляемый готовым artifact. Rust/Cargo у пользователя не требуется, runtime
+не привязан к checkout LocalVox. Presentation-код/закреплённые зависимости
+перенесены в installer-ui; private install backend/изоляция сохранены. Native
+Mac, публикация artifacts и actual package readiness остаются открытыми.
 Одинаковое оформление не означает перенос OS package-manager логики LocalVox.
 Ollama/модели по-прежнему исключены из комплекта Forge.
 
@@ -365,3 +366,57 @@ Bootstrap принимает Ref/ArchiveUrl/SourceRoot/InstallPath (POSIX: --ref
 stand/advanced local workflow. Полученный source постоянный: конфиг macOS и
 WezTerm могут на него ссылаться. Одинаковые bytes архива используют один SHA256
 directory; старые версии здесь автоматически не удаляются.
+
+## Предпросмотр и native UI — §240
+
+Один `fride-setup` использует закреплённые cliclack/console и тему/навигацию
+LocalVox (MIT notice — installer-ui/LOCALVOX-LICENSE.txt). Core обязателен,
+остальные компоненты выбираются галочками из прежней components.tsv.
+Default/явный Components работают автоматически; Custom показывает компоненты,
+папку комплекта, необязательную команду в своём bin и итог. Стрелки — выбор,
+Пробел — галочка, Enter — дальше, Esc — назад/продолжить/отмена. Подтверждённые
+ответы сохраняются. Несозданные каталоги создаёт существующий private backend.
+
+Предпросмотр из checkout не запускает backend и не создаёт выбранные каталоги:
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File scripts/preview-installer.ps1
+# Сразу галочки; для fallback без цвета добавить -NoColor:
+powershell -NoProfile -ExecutionPolicy Bypass -File scripts/preview-installer.ps1 -Profile Custom
+```
+
+```sh
+bash scripts/preview-installer.sh
+bash scripts/preview-installer.sh --profile custom
+```
+
+Native frontend должен быть подготовлен. В текущем Windows checkout он уже
+лежит в `.tools/installer-ui/windows-x64`; в Git бинарь не входит. Developer/CI
+сборка на любой из трёх ОС: `python3 -B scripts/build-installer-ui.py --download`
+(Windows: `python -B ...`). Нужен готовый Rust SDK; --rustc задаёт его явно.
+`--download` разрешает только crates из Cargo.lock, не установку/обновление Rust.
+Cargo/target/temp изолированы в .tests/installer-ui, результат и SHA/receipt —
+.tools/installer-ui/<platform>. Это команда разработчика, установщик Cargo
+не запускает. На Windows перед сборкой TEMP/TMP/TMPDIR направлять на F.
+
+Source entry берёт готовый frontend из developer checkout, явного
+-InstallerUIPath/--installer-ui-path либо скачивает native binary по URL/SHA256
+из installer-ui/artifacts.tsv. Неверный SHA запрещает запуск. Каталог пока
+не содержит опубликованных платформ: публичный one-liner ещё не готов.
+Legacy source без UI marker сохраняет прежний advanced путь.
+
+UI вызывает тот же private backend. Видны этапы runtime/plugins/parsers/tools;
+полный вывод записывается в source cache/.ui-logs, подробные stage logs остаются
+в kit/log. Ошибка сохраняет nonzero exit и показывает путь к логу. Без TTY
+автоматический режим даёт обычные строки; Custom без explicit Components
+отклоняется до установки. --no-color/NO_COLOR отключают цвет. Рамки/checkboxes
+cliclack используют штатный ASCII fallback там, где console не распознал Unicode.
+Снимки реального PTY — .tests/installer-ui/preview, без нарисованной симуляции.
+
+Stand: `python -B tests/install-ui.test.py` на Windows; `python3 -B ...` на
+Linux/macOS. Нужны готовый native frontend и native Neovim; переопределения
+FORGE_INSTALL_UI_BINARY и FORGE_INSTALL_TEST_NVIM. Проверяются настоящий PTY,
+localhost доставка UI/source, SHA, install/launch/repeat, failure/log/exit и
+foreign snapshots. Init/setup — fixture; это не full SDK/package acceptance.
+Для Docker готовый Linux UI помещается в .tests/ubuntu/installer-ui/linux-x64;
+команда в tests/README.md. macOS запускается владельцем нативно, gate открыт.

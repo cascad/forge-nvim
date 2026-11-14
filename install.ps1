@@ -10,6 +10,7 @@ param(
     [string]$RuntimeArchiveUrl = '',
     [string]$RuntimeSHA256 = '',
     [string]$CommandDir = '',
+    [string]$InstallerUIPath = '',
     [switch]$SkipDependencies,
     [Alias('Profile')][ValidateSet('Default','Custom')][string]$InstallProfile = 'Default',
     [AllowEmptyString()][string]$Components = ''
@@ -17,6 +18,7 @@ param(
 $ErrorActionPreference = 'Stop'
 Set-StrictMode -Version Latest
 $componentsExplicit = $PSBoundParameters.ContainsKey('Components')
+$originalCheckout=$PSScriptRoot
 if (-not $ArchiveUrl) {
     $ArchiveUrl = 'https://codeload.github.com/cascad/forge-nvim/zip/' + [Uri]::EscapeDataString($Ref)
 }
@@ -69,6 +71,20 @@ try {
         Move-Item -LiteralPath $candidate -Destination $source
     }
     Write-Host "Source ready: $source"
+    if ($InstallerUIPath -or (Test-Path -LiteralPath (Join-Path $source 'installer-ui/Cargo.toml') -PathType Leaf)) {
+        . (Join-Path $source 'scripts/lib/installer-ui.ps1')
+        $frontend=Get-ForgeInstallerUI -Source $source -CacheRoot $sourceRootFull -Checkout $originalCheckout -ExplicitPath $InstallerUIPath
+        $uiArgs=@('--source',$source,'--install-dir',$InstallPath,'--profile',$InstallProfile.ToLowerInvariant(),
+            '--powershell',(Get-Process -Id $PID).Path,'--log-dir',(Join-Path $sourceRootFull '.ui-logs'))
+        if ($componentsExplicit) { $uiArgs+=@('--components='+$Components) }
+        if ($CommandDir) { $uiArgs+=@('--command-dir',$CommandDir) }
+        if ($RuntimePath) { $uiArgs+=@('--runtime-path',$RuntimePath) }
+        if ($RuntimeArchiveUrl) { $uiArgs+=@('--runtime-archive-url',$RuntimeArchiveUrl,'--runtime-sha256',$RuntimeSHA256) }
+        & $frontend @uiArgs
+        $uiExit=$LASTEXITCODE
+        if ($uiExit -ne 0) { exit $uiExit }
+        return
+    }
     . (Join-Path $source 'nvim_forge\scripts\lib\install-profile.ps1')
     $env:FORGE_NVIM_COMPONENTS = Resolve-ForgeProfile -Profile $InstallProfile -Components $Components -Explicit $componentsExplicit
     Write-Host "Selected components: $env:FORGE_NVIM_COMPONENTS"

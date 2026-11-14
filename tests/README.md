@@ -660,3 +660,23 @@ git commit --no-verify                   # разовый обход
   самом WezTerm (сломанный конфиг, нет файла, нет основного шрифта) и
   самопроверку обёртки. Запуск бинарника общий для двух файлов набора —
   `tests/wezterm/real_wezterm.lua`.
+
+
+### Native installer UI — IDE-BOOT-13
+
+Готовые frontend и Neovim, без host installs: Windows
+`python -B tests/install-ui.test.py`, Linux/macOS `python3 -B tests/install-ui.test.py`.
+Команды подготовки frontend/preview — [INSTALLATION_PLAN](../docs/INSTALLATION_PLAN.md#предпросмотр-и-native-ui--240).
+Stand сохраняет UI frames/raw ANSI, argv/exit, localhost download/SHA, backend
+stages/log и foreign snapshots в .tests/install-isolation/<id>. UI suite включает
+13 сценариев; fixture config/setup не доказывает готовность настоящих packages.
+
+Готовый Ubuntu image и Linux frontend, без build/pull/сети:
+
+```sh
+docker compose -f tests/containers/compose.yaml run --rm --no-deps --pull never -e FORGE_INSTALL_UI_BINARY=/workspace/.tests/installer-ui/linux-x64/fride-setup -e FORGE_INSTALL_STAND_ROOT=/tmp/fride-installer-ui --entrypoint python3 ubuntu -B tests/install-ui.test.py
+```
+
+Host .tests/ubuntu монтируется как guest /workspace/.tests. Native Mac запускается
+отдельно; Linux contract не заменяет Mac acceptance. Только developer build
+может вызывать Cargo; installer получает готовый проверенный binary.

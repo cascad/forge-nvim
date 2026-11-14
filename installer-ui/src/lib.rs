@@ -1,0 +1,445 @@
+// spec: IDE-BOOT-13. Presentation без установки SDK/пакетов в пользовательскую ОС.
+mod wizard;
+use serde::{Deserialize, Serialize};
+use std::collections::HashSet;
+use std::fs::{self, OpenOptions};
+use std::io::{self, BufRead, BufReader, IsTerminal, Read, Write};
+use std::path::PathBuf;
+use std::process::{Command, Stdio};
+use std::sync::mpsc;
+use std::time::{Duration, SystemTime, UNIX_EPOCH};
+
+type Result<T> = io::Result<T>;
+pub(crate) fn invalid(message: impl ToString) -> io::Error {
+    io::Error::new(io::ErrorKind::InvalidInput, message.to_string())
+}
+
+#[derive(Default)]
+pub struct Options {
+    pub source: PathBuf,
+    pub install_dir: String,
+    pub command_dir: String,
+    pub profile: String,
+    pub components: Option<String>,
+    pub runtime: String,
+    pub runtime_url: String,
+    pub runtime_sha: String,
+    pub powershell: String,
+    pub log_dir: PathBuf,
+    pub result_file: Option<PathBuf>,
+    pub preview: bool,
+    pub plain: bool,
+    pub print_plan: bool,
+}
+
+impl Options {
+    pub fn parse(arguments: impl IntoIterator<Item = String>) -> Result<Self> {
+        let mut result = Self {
+            source: std::env::current_dir()?,
+            powershell: "powershell.exe".into(),
+            ..Default::default()
+        };
+        let mut arguments = arguments.into_iter();
+        while let Some(argument) = arguments.next() {
+            match argument.as_str() {
+                "--preview" => {
+                    result.preview = true;
+                    continue;
+                }
+                "--plain" | "--no-color" => {
+                    result.plain = true;
+                    continue;
+                }
+                "--print-plan" => {
+                    result.print_plan = true;
+                    continue;
+                }
+                "--help" => {
+                    println!("fride-setup --source DIR --profile default|custom [--components CSV] --install-dir DIR\n--command-dir DIR --runtime-path DIR --runtime-archive-url URL --runtime-sha256 SHA\n--preview --no-color --print-plan --result FILE --log-dir DIR");
+                    std::process::exit(0);
+                }
+                _ => {}
+            }
+            let (key, value) = if let Some((key, value)) = argument.split_once('=') {
+                (key.to_owned(), value.to_owned())
+            } else {
+                let value = arguments
+                    .next()
+                    .ok_or_else(|| invalid(format!("Нет значения: {argument}")))?;
+                (argument, value)
+            };
+            match key.as_str() {
+                "--source" => result.source = value.into(),
+                "--install-dir" => result.install_dir = value,
+                "--command-dir" => result.command_dir = value,
+                "--profile" => result.profile = value.to_ascii_lowercase(),
+                "--components" => result.components = Some(value),
+                "--runtime-path" => result.runtime = value,
+                "--runtime-archive-url" => result.runtime_url = value,
+                "--runtime-sha256" => result.runtime_sha = value,
+                "--powershell" => result.powershell = value,
+                "--log-dir" => result.log_dir = value.into(),
+                "--result" => result.result_file = Some(value.into()),
+                _ => return Err(invalid(format!("Неизвестный параметр: {key}"))),
+            }
+        }
+        if !matches!(result.profile.as_str(), "" | "default" | "custom") {
+            return Err(invalid("Профиль: default или custom"));
+        }
+        if result.install_dir.is_empty() {
+            let base = if cfg!(windows) {
+                std::env::var_os("LOCALAPPDATA").map(PathBuf::from)
+            } else {
+                std::env::var_os("XDG_DATA_HOME")
+                    .map(PathBuf::from)
+                    .or_else(|| {
+                        std::env::var_os("HOME")
+                            .map(|home| PathBuf::from(home).join(".local/share"))
+                    })
+            }
+            .ok_or_else(|| invalid("Не найдена домашняя папка"))?;
+            result.install_dir = base
+                .join("forge-nvim/installation")
+                .to_string_lossy()
+                .into();
+        }
+        if result.log_dir.as_os_str().is_empty() {
+            result.log_dir = result.source.join(".tests/installer-ui/logs");
+        }
+        Ok(result)
+    }
+}
+
+#[derive(Clone)]
+pub(crate) struct Row {
+    pub id: String,
+    pub label: String,
+    pub dependencies: Vec<String>,
+}
+
+pub(crate) fn table(source: &std::path::Path) -> Result<Vec<Row>> {
+    let content = fs::read_to_string(source.join("nvim_forge/scripts/components.tsv"))?;
+    let mut rows = Vec::new();
+    let mut ids = HashSet::new();
+    for line in content.lines() {
+        let parts: Vec<_> = line.split('\t').collect();
+        if parts.len() != 5 || !ids.insert(parts[0].to_owned()) {
+            return Err(invalid("Некорректная таблица компонентов"));
+        }
+        rows.push(Row {
+            id: parts[0].into(),
+            label: parts[1].into(),
+            dependencies: if parts[2] == "-" {
+                vec![]
+            } else {
+                parts[2].split(',').map(str::to_owned).collect()
+            },
+        });
+    }
+    if !ids.contains("core")
+        || rows
+            .iter()
+            .any(|r| r.dependencies.iter().any(|id| !ids.contains(id)))
+    {
+        return Err(invalid("Некорректные зависимости компонентов"));
+    }
+    Ok(rows)
+}
+
+pub(crate) fn resolve(
+    rows: &[Row],
+    selected: impl IntoIterator<Item = String>,
+) -> Result<Vec<String>> {
+    let mut selected: HashSet<_> = selected
+        .into_iter()
+        .filter(|v| !v.trim().is_empty())
+        .map(|v| v.trim().to_ascii_lowercase())
+        .collect();
+    selected.insert("core".into());
+    for id in &selected {
+        if !rows.iter().any(|row| row.id == *id) {
+            return Err(invalid(format!("Unknown component: {id}")));
+        }
+    }
+    loop {
+        let before = selected.len();
+        for row in rows {
+            if selected.contains(&row.id) {
+                selected.extend(row.dependencies.iter().cloned());
+            }
+        }
+        if selected.len() == before {
+            break;
+        }
+    }
+    Ok(rows
+        .iter()
+        .filter(|r| selected.contains(&r.id))
+        .map(|r| r.id.clone())
+        .collect())
+}
+
+#[derive(Clone, Serialize)]
+pub(crate) struct Plan {
+    pub schema: u8,
+    pub components: Vec<String>,
+    pub install_dir: String,
+    pub command_dir: String,
+}
+
+fn review(rows: &[Row], plan: &Plan) -> String {
+    let mut lines = vec![];
+    for row in rows.iter().filter(|r| plan.components.contains(&r.id)) {
+        let label = match row.id.as_str() {
+            "core" => "Редактор, поиск и базовые инструменты",
+            "node-runtime" => "Среда Node.js для выбранных инструментов",
+            "go-runtime" => "Среда Go для выбранных инструментов",
+            _ => &row.label,
+        };
+        lines.push(format!("✓ {label}"));
+    }
+    lines.extend([
+        String::new(),
+        format!("Комплект: {}", plan.install_dir),
+        if plan.command_dir.is_empty() {
+            "Запуск: полный путь к bin/fride; PATH не меняется".into()
+        } else {
+            format!("Команда fride: {} (без изменения PATH)", plan.command_dir)
+        },
+    ]);
+    lines.join("\n")
+}
+
+pub fn run(options: Options) -> Result<i32> {
+    let rows = table(&options.source)?;
+    let selected = options
+        .components
+        .as_deref()
+        .map(|csv| csv.split(',').map(str::to_owned).collect())
+        .unwrap_or_else(|| {
+            rows.iter()
+                .filter(|r| r.label != "-")
+                .map(|r| r.id.clone())
+                .collect::<Vec<_>>()
+        });
+    let mut plan = Plan {
+        schema: 1,
+        components: resolve(&rows, selected)?,
+        install_dir: options.install_dir.clone(),
+        command_dir: options.command_dir.clone(),
+    };
+    if options.print_plan {
+        println!("{}", serde_json::to_string(&plan)?);
+        return Ok(0);
+    }
+    let automatic = options.components.is_some() || options.profile == "default";
+    let plain = options.plain || !io::stderr().is_terminal();
+    let color = !plain && std::env::var_os("NO_COLOR").is_none();
+    console::set_colors_enabled(color);
+    console::set_colors_enabled_stderr(color);
+    if !automatic {
+        if !io::stdin().is_terminal() || !io::stderr().is_terminal() {
+            return Err(invalid(
+                "Custom требует интерактивный терминал; для автоматизации укажите --components",
+            ));
+        }
+        match wizard::choose(&options, &rows, plan)? {
+            Some(value) => plan = value,
+            None => {
+                cliclack::outro_cancel("Отменено. Установка не запускалась.")?;
+                return Ok(130);
+            }
+        }
+    } else if plain {
+        eprintln!("Fride · установка\n{}", review(&rows, &plan));
+    } else {
+        wizard::intro(options.preview)?;
+        cliclack::note("План установки", review(&rows, &plan))?;
+    }
+    if let Some(path) = &options.result_file {
+        let mut file = OpenOptions::new().create_new(true).write(true).open(path)?;
+        serde_json::to_writer(&mut file, &plan)?;
+    }
+    if options.preview {
+        let message = "Предпросмотр завершён. Установка не запускалась.";
+        if plain {
+            eprintln!("{message}");
+        } else {
+            cliclack::outro(message)?;
+        }
+        return Ok(0);
+    }
+    execute(&options, &plan, plain)
+}
+
+#[derive(Deserialize)]
+struct Event {
+    stage: String,
+    status: String,
+}
+
+fn stage_title(stage: &str) -> &str {
+    match stage {
+        "runtime" => "Среда редактора и инструменты",
+        "plugins" => "Плагины редактора",
+        "parsers" => "Подсветка языков",
+        "tools" => "Языковые инструменты",
+        _ => "Подготовка комплекта",
+    }
+}
+
+fn execute(options: &Options, plan: &Plan, plain: bool) -> Result<i32> {
+    fs::create_dir_all(&options.log_dir)?;
+    let timestamp = SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .map_err(invalid)?
+        .as_nanos();
+    let log_path = options
+        .log_dir
+        .join(format!("install-{timestamp}-{}.log", std::process::id()));
+    let mut log = OpenOptions::new()
+        .create_new(true)
+        .write(true)
+        .open(&log_path)?;
+    let mut command = if cfg!(windows) {
+        let mut command = Command::new(&options.powershell);
+        command
+            .args(["-NoProfile", "-ExecutionPolicy", "Bypass", "-File"])
+            .arg(options.source.join("scripts/install-private.ps1"))
+            .arg("-Source")
+            .arg(&options.source)
+            .arg("-InstallPath")
+            .arg(&plan.install_dir);
+        for (flag, value) in [
+            ("-RuntimePath", &options.runtime),
+            ("-RuntimeArchiveUrl", &options.runtime_url),
+            ("-RuntimeSHA256", &options.runtime_sha),
+            ("-CommandDir", &plan.command_dir),
+        ] {
+            if !value.is_empty() {
+                command.arg(flag).arg(value);
+            }
+        }
+        command
+    } else {
+        let mut command = Command::new("bash");
+        command
+            .arg(options.source.join("scripts/install-private.sh"))
+            .arg(&options.source)
+            .arg(&plan.install_dir)
+            .args([
+                &options.runtime,
+                &options.runtime_url,
+                &options.runtime_sha,
+                &plan.command_dir,
+            ]);
+        command
+    };
+    command
+        .env("FORGE_NVIM_COMPONENTS", plan.components.join(","))
+        .env("FRIDE_INSTALL_UI", "1")
+        .stdout(Stdio::piped())
+        .stderr(Stdio::piped())
+        .stdin(Stdio::null());
+    let mut child = command.spawn()?;
+    let (sender, receiver) = mpsc::channel();
+    fn reader(
+        pipe: impl Read + Send + 'static,
+        sender: mpsc::Sender<(bool, Vec<u8>)>,
+        stderr: bool,
+    ) -> std::thread::JoinHandle<()> {
+        std::thread::spawn(move || {
+            let mut reader = BufReader::new(pipe);
+            loop {
+                let mut line = vec![];
+                match reader.read_until(b'\n', &mut line) {
+                    Ok(0) | Err(_) => break,
+                    Ok(_) => {
+                        if sender.send((stderr, line)).is_err() {
+                            break;
+                        }
+                    }
+                }
+            }
+        })
+    }
+    let out = reader(child.stdout.take().unwrap(), sender.clone(), false);
+    let err = reader(child.stderr.take().unwrap(), sender.clone(), true);
+    drop(sender);
+    let spinner = cliclack::spinner();
+    if plain {
+        eprintln!("Подготовка комплекта · лог: {}", log_path.display());
+    } else {
+        cliclack::log::info(format!("Подробный лог: {}", log_path.display()))?;
+        spinner.start("Подготовка комплекта");
+    }
+    let mut launch = String::new();
+    let mut last_stage = String::new();
+    let mut first_error = String::new();
+    loop {
+        match receiver.recv_timeout(Duration::from_millis(100)) {
+            Ok((stderr, line)) => {
+                log.write_all(&line)?;
+                let text = String::from_utf8_lossy(&line);
+                if stderr && first_error.is_empty() && !text.trim().is_empty() {
+                    first_error = text
+                        .trim()
+                        .chars()
+                        .filter(|c| !c.is_control())
+                        .take(220)
+                        .collect();
+                }
+                if let Some(data) = text.trim().strip_prefix("FRIDE_EVENT\t") {
+                    if let Ok(event) = serde_json::from_str::<Event>(data) {
+                        last_stage = event.stage;
+                        let title = stage_title(&last_stage);
+                        let status = match event.status.as_str() {
+                            "start" => "подготовка",
+                            "ready" => "готово",
+                            "error" => "ошибка",
+                            other => other,
+                        };
+                        if plain {
+                            eprintln!("{title}: {status}");
+                        } else {
+                            spinner.set_message(title);
+                        }
+                    }
+                }
+                if let Some(path) = text.trim().strip_prefix("Launch: ") {
+                    launch = path.into();
+                }
+                if let Some(path) = text.trim().strip_prefix("Registered launcher: ") {
+                    launch = path.into();
+                }
+            }
+            Err(mpsc::RecvTimeoutError::Disconnected) => break,
+            Err(mpsc::RecvTimeoutError::Timeout) => {}
+        }
+    }
+    out.join().map_err(|_| invalid("Ошибка чтения stdout"))?;
+    err.join().map_err(|_| invalid("Ошибка чтения stderr"))?;
+    let code = child.wait()?.code().unwrap_or(1);
+    log.flush()?;
+    if code != 0 {
+        let message = format!(
+            "{}: ошибка. {}\nЛог: {}",
+            stage_title(&last_stage),
+            first_error,
+            log_path.display()
+        );
+        if plain {
+            eprintln!("{message}");
+        } else {
+            spinner.error(message);
+        }
+    } else {
+        if plain {
+            eprintln!("Подготовка завершена. Запуск: {launch}");
+        } else {
+            spinner.stop("Подготовка завершена");
+            cliclack::outro(format!("Запуск: {launch}"))?;
+        }
+    }
+    Ok(code)
+}
