@@ -138,7 +138,7 @@ class Bootstrap(unittest.TestCase):
         for key in ['local', 'languages', 'skip']:
             self.assertIn(received[key].lower(), ('1', 'true'))
         self.assertEqual(Path(received['target']), target)
-        self.assertEqual((target / 'installed-marker.txt').read_text(), 'fixture backend')
+        self.assertEqual((target / 'installed-marker.txt').read_text().splitlines(), ['fixture backend'])
         sentinel = expected / 'keep-repeat.txt'; sentinel.write_text('existing source')
         second, _, _, _ = self.run_entry('repeat')
         self.assertEqual(second.returncode, 0, second.stdout + second.stderr)

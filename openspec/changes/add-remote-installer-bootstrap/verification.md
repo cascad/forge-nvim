@@ -40,3 +40,16 @@ lock/backports/parsers/tools setup и actual installed editor acceptance
 не изменялись; их direct remote clone/preparation gaps описаны в inventory.
 Нового Neovim запуска, SDK downloads/builds, Docker lifecycle, OS changes
 или проверки whole suite здесь не было. Host temp и артефакты на F.
+
+## Продолжение §233 — native Ubuntu
+
+Владелец включил Docker. Готовый engine28.5.1/image без build/pull/lifecycle,
+native Ubuntu transport выполнен. Первый run1794643832580166972:5 PASS/1 FAIL —
+fixture shell marker заканчивается LF, Windows WriteAllText без LF; проверка
+ошибочно сравнивала bytes строки. splitlines сохраняет точный текст маркера
+и устраняет различие fixture формата. Runtime entry не менялся.
+Новая версия один раз Windows6 PASS (1794643865293023100), затем Ubuntu6 PASS
+(1794643877233531803). Текущие test SHA совпадают; entries соответствуют HEAD.
+Одинаковые7 HTTP invocations/stand, staging0. Полная native установка пакетов
+этим transport не заявлена; Mac gate остаётся открытым. Raw first Ubuntu FAIL,
+final Windows/Linux и frozen/prefix audit сохранены. tasks1.3 закрыт.

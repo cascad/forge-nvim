@@ -7,8 +7,8 @@ IDE-001 параллельно ждёт диагностических данн�
 
 2026-11-14 начат IDE-138: полная установка одной командой, Default/Custom
 на Windows/Linux/macOS (подробный пункт ниже). Состав зафиксирован;
-source entry написан и имеет6 transport PASS Windows. Ubuntu engine недоступен,
-Mac не запускался. Полный Default/Custom ещё не готов. Ollama/модели исключены.
+source entry имеет по6 transport PASS Windows/Ubuntu (§232–233), Mac не
+запускался. Полный Default/Custom ещё не готов. Ollama/модели исключены.
 
 ## Текущая очередь продукта — решение владельца 2026-11-12
 
@@ -210,7 +210,7 @@ E2E используются для защиты изменений продук
 | 3. Реальные проекты | Go/Cargo workspace, Python venv, Node scripts, выбор цели и launch.json/default | Go.work §206–208 и mixed context/Node script/Python venv debug Windows/Ubuntu9 PASS (§209–211); остальная mixed матрица открыта |
 | 4. Git | Credentials, interactive rebase и оставшиеся ошибки worktree | Sequence и HTTP credentials Windows/Ubuntu (§212–214); worktree IDE-038/048 и real OAuth/SSH/Mac открыты |
 | 5. Языковые пробелы | Bash debug с готовым backend; SQL references при наличии подходящего provider | Bash default/launch.json и interactive input/Stop Windows+WSL2 и Ubuntu21 selected PASS (§217); Mac и explicit console IDE-127 отдельно. SQL references ждут готовый provider |
-| 6. Переносимость | IDE-138: полная установка одной командой, Default/Custom на Windows/Linux/macOS; terminal/SSH, Mac startup/Go и Cmd+C | Состав и source entry §232: Windows transport6 PASS; Ubuntu/Mac и полный Default/Custom открыты |
+| 6. Переносимость | IDE-138: полная установка одной командой, Default/Custom на Windows/Linux/macOS; terminal/SSH, Mac startup/Go и Cmd+C | Состав/source entry §232–233: Windows/Ubuntu transport6 PASS на ОС; Mac и полный Default/Custom открыты |
 
 Завершён Windows срез `restore-files-session-view` (§205): видимость/root,
 раскрытия/выбор/scroll/width Files по вкладкам и проектам.16 distinct checks
@@ -1034,8 +1034,8 @@ Normal mode, прежние aliases сохранены:
 одна строка скачивает скрипт, скрипт сам скачивает и устанавливает всё нужное.
 Это пункт очереди переносимости. Состав и gaps — [INSTALLATION_PLAN](INSTALLATION_PLAN.md).
 §232: root install.ps1/install.sh получают source без Git и вызывают local
-platform installer. Windows transport6 PASS; это не полная установка IDE.
-Ubuntu engine отсутствует, Mac не запускался. Следующий срез — общий профиль
+platform installer. Windows/Ubuntu transport6 PASS на ОС (§233), это не полная
+установка IDE. Mac не запускался. Следующий срез — общий профиль
 Default/Custom и подготовка поддерживаемого runtime/инструментов.
 
 **Результат для пользователя:**

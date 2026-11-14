@@ -1675,6 +1675,6 @@ download entry/archive, native shell, extraction/cache и fixture backend.
 Шесть случаев: receive/repeat, HTTP404, incomplete/broken archive, backend
 exit7, incomplete cache. Это transport E2E, не установка SDK/Neovim/plugins.
 На Windows temp задавать на F, артефакты .tests/install-bootstrap/<id>.
-Native Windows PowerShell5.1:6 PASS §232; Git Bash только syntax check.
-Ubuntu engine отсутствовал, native Mac не запускался. Полная установка и
+Native Windows PowerShell5.1/Ubuntu Bash: по6 PASS (§232–233).
+Первый Ubuntu fixture newline FAIL сохранён; native Mac не запускался. Полная установка и
 Default/Custom остаются отдельными gates, [команды стенда](../../docs/INSTALLATION_PLAN.md).

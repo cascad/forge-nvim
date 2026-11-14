@@ -6,10 +6,10 @@
   review по runtime/tools/SDK, без заявления полной установки.
 - [x] 1.2 Реализовать Windows/POSIX entry: download/validate/cache/dispatch,
   без Git; existing backend local source и languages default.
-- [ ] 1.3 Один E2E transport stand Windows/Ubuntu: HTTP entry+archive, повтор,
+- [x] 1.3 Один E2E transport stand Windows/Ubuntu: HTTP entry+archive, повтор,
   download/structure/backend failure; native shells, private paths, без host
   package operations. Mac — runnable команда, native результат отдельно.
-  Windows6 PASS; Ubuntu не запускался: отсутствует dockerDesktopLinuxEngine.
+  Windows6/Ubuntu6 PASS (§233); первая Ubuntu fixture newline ошибка сохранена.
 - [x] 1.4 FIXLOG232 со Спека: IDE-BOOT-8 (ADDED), PROBLEMS/roadmap/README,
   HISTORY/commands; strict/frozen/prefix/exact staging и local commit.
 

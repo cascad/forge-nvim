@@ -27,8 +27,8 @@ Ollama и модели к этому поручению не относятся 
 из репозитория на каждой ОС, владелец готов прогнать их на своих машинах.
 Начат §232: состав Default/Custom и gaps зафиксированы в
 [INSTALLATION_PLAN](docs/INSTALLATION_PLAN.md); source entry получает архив
-без Git и вызывает local installer. Windows transport6 PASS, Ubuntu engine
-недоступен, Mac не запускался. Полный Default/Custom ещё не реализован;
+без Git и вызывает local installer. Windows/Ubuntu transport6 PASS на ОС
+(§233), Mac не запускался. Полный Default/Custom ещё не реализован;
 настоящая установка всех SDK не подменяется transport fixture. Этапы — roadmap.
 
 ## IDE-137 — выбор POSIX root отвергается как пустой путь

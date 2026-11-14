@@ -13,6 +13,7 @@ Custom menu и настоящее развёртывание всех инстр
 для чистой машины. Они получают полный source и вызывают прежний platform
 installer в local-source mode, обходя неправильный monorepo clone в config.
 Полная готовность IDE-138 определяется этапами ниже, а не одним exit0 bootstrap.
+§233: transport по6 PASS на Windows/Ubuntu; native Mac пока не запускался.
 
 ## Состав Default и галочки Custom
 

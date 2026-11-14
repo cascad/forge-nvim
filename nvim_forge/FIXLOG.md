@@ -12357,3 +12357,21 @@ add-remote-installer-bootstrap, INSTALLATION_PLAN/roadmap/PROBLEMS/README/
 tests README/HISTORY/commands. Raw .tests/install-bootstrap-windows*.txt,
 .tests/install-bootstrap/<id>/summary.json/run-*.json; baseline/audit/staging
 guard сохраняют frozen bytes и append-only prefixes. Старые инциденты не закрыты.
+
+
+## 233. Bootstrap: native Ubuntu и формат тестового маркера
+
+2026-11-14. Спека: IDE-BOOT-8 (FIX теста). IDE-138, продолжение §232.
+**Проблема/причина.** Первый Ubuntu transport дал5 PASS/1 FAIL: shell fixture
+пишет marker с LF, PowerShell WriteAllText без LF. Проверка ошибочно требовала
+точный формат, хотя контракт — текстовый marker/dispatch. Runtime entry не менялся.
+**Изменение.** splitlines сравнивается с единственной точной ожидаемой строкой.
+**Проверка/e2e.** Исходный Ubuntu1794643832580166972 сохранён. Новая версия один
+раз Windows6 PASS (1794643865293023100), затем Ubuntu6 PASS (1794643877233531803).
+Настоящие HTTP/ZIP/tar/shell, fixture backend; test/entry SHA и staging0 сверены.
+**Вывод.** Ubuntu transport gate закрыт, native Mac/полный Default всё ещё
+открыты. Готовый Docker28.5.1 без build/pull/Desktop/WSL lifecycle, только loopback
+HTTP в network-none контейнере. SDK/legacy installers/lock/backports/frozen
+drafts прежние; host temp F. **Файлы:** existing bootstrap test, change verification/
+tasks, INSTALLATION_PLAN/roadmap/PROBLEMS/tests README/HISTORY/commands. Raw logs
+и audit bootstrap-linux-audit.json сохранены, journals append-only.

@@ -8593,3 +8593,18 @@ Entry SHA/test SHA/request/child exit records сохранены в артефа
 runtime не запускает Neovim, готовые SDK не изменялись. Exact staging включает
 только текущие entry/test/docs/change; install.sh executable, WIP runner/drafts
 исключены. Raw working и staged journal prefixes сверены перед commit.
+
+
+## 141. Bootstrap: включённый Docker и native Ubuntu
+
+2026-11-14, FIXLOG233. PowerShell -NoProfile/cwd F:/repo/forge-nvim; temp F,
+Python UTF-8. docker version28.5.1 после сообщения владельца «докер врубил».
+docker compose -f tests/containers/compose.yaml run --rm --no-deps --pull never
+--entrypoint python3 ubuntu -B tests/install-bootstrap.test.py: первый лог
+.tests/install-bootstrap-ubuntu-host.txt, fixture LF FAIL сохранён. После
+splitlines одна новая версия: python -B tests/install-bootstrap.test.py →
+install-bootstrap-windows-lineendings.txt6 PASS, затем та же Compose команда
+→ install-bootstrap-ubuntu-final.txt6 PASS. Никакого Desktop/WSL lifecycle.
+python -B .tests/bootstrap-linux-record.py: test/entry SHA/staging/frozen/prefix,
+история и exact staging. OpenSpec strict, diff checks, local commit; full native
+package install этими transport cases не проверяется. Mac gate открыт.
