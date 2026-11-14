@@ -1666,3 +1666,15 @@ IDE-DAP-9 сохраняет native picker ABORT. Mac/physical отдельно.
 Первый Windows prototype FAIL из-за преждевременной проверки ввода сохранён;
 ожидание реального native input исправлено до source сравнения. Mac/physical
 отдельно. Семь host profiles завершены0/0, scopes пусты, force kill не требовался.
+
+## IDE-BOOT-8: доставка установщика без Git
+
+`python -B tests/install-bootstrap.test.py` на Windows; `python3 -B
+tests/install-bootstrap.test.py` на Linux/macOS. Настоящий localhost HTTP,
+download entry/archive, native shell, extraction/cache и fixture backend.
+Шесть случаев: receive/repeat, HTTP404, incomplete/broken archive, backend
+exit7, incomplete cache. Это transport E2E, не установка SDK/Neovim/plugins.
+На Windows temp задавать на F, артефакты .tests/install-bootstrap/<id>.
+Native Windows PowerShell5.1:6 PASS §232; Git Bash только syntax check.
+Ubuntu engine отсутствовал, native Mac не запускался. Полная установка и
+Default/Custom остаются отдельными gates, [команды стенда](../../docs/INSTALLATION_PLAN.md).

@@ -12308,3 +12308,52 @@ preserve-filesystem-project-roots, PROJECT_SESSION_REVIEW/FEATURE_REVIEW,
 PROBLEMS/roadmap/tests README/HISTORY/commands. Raw .tests/project-root-* и
 guest equivalents; audit-project-root.py проверяет native/data/bytes/frozen/
 journal prefixes. Прежние записи журналов сохранены байт-в-байт.
+
+
+## 232. Установка: состав Default и доставка source без Git
+
+2026-11-14. Спека: IDE-BOOT-8 (ADDED). IDE-138, первый ограниченный срез.
+
+**Проблема/причина.** Полная установка одной командой ещё отсутствует.
+Старые Windows/Linux remote paths кладут весь monorepo в config directory;
+языки opt-in, Node/часть debug/tests отсутствуют, prerequisites/SDK versions
+и обязательные setup failures не сведены. Mac требует готовые Git/Brew/CLT.
+Inventory Default/Custom и конкретные gaps записаны до дальнейшей реализации.
+
+**Изменение.** Root install.ps1/install.sh получают ZIP/tar.gz без Git,
+проверяют структуру, хранят source по SHA256 bytes архива и вызывают platform
+installer в local-source mode с languages default. Повтор одинаковых bytes
+не плодит деревья; временная доставка очищается, ошибка backend сохраняется.
+Source постоянный для symlink config/WezTerm. Windows recursive cleanup
+проверяет абсолютную границу и собственное имя staging. Полный Default/Custom
+menu, supported SDK delivery и финальный native setup этим шагом не реализованы.
+
+**Проверка/e2e.** Новый tests/install-bootstrap.test.py скачивает сам entry
+через настоящий localhost HTTP, исполняет Windows PowerShell5.1, получает
+настоящий архив/распаковывает/dispatch fixture backend. По6 distinct cases:
+receive/repeat, HTTP404, incomplete/broken archive, backend7, incomplete cache.
+Это transport E2E; native package installation не подменяется этим результатом.
+Финальный Windows6 PASS,7 invocation records; source cache reuse/private paths
+с Unicode/space, staging0. Все дочерние foreground процессы дождались exit.
+
+Первый Windows run дал2 FAIL: Get-FileHash недоступен в данном native shell.
+Заменён встроенным .NET SHA256. Negative assertions уточнены по первичной
+ошибке: посторонний nonzero больше не считается достаточным. Следующая версия
+дала6 PASS. При code review исправлена обработка SourceRoot drive root:
+separator сохраняется, TrimEnd только при построении cleanup prefix.
+Новая версия один раз6 PASS; предыдущие logs/summary сохранены, не считаются
+дополнительными distinct cases. Git Bash только bash -n, не Linux/Mac runtime.
+
+**Вывод/границы.** Первый source entry готов на проверенной Windows transport
+границе. Docker Linux engine отсутствовал при docker version, контейнер не
+запускался; Desktop/WSL не трогались, владельцу отправлен вопрос. Native Ubuntu
+и Mac остаются открытыми. Full Default/Custom, supported binaries, readiness
+установленной IDE и recovery — дальнейшая очередь, не готовая публичная команда.
+Ollama/модели исключены. Не менялись legacy backends/SDK/67 pins/6 backports16
+files/frozen infra drafts; host temp/стенд на F, никаких package installs.
+
+**Файлы.** install.ps1/install.sh, permanent stand, OpenSpec
+add-remote-installer-bootstrap, INSTALLATION_PLAN/roadmap/PROBLEMS/README/
+tests README/HISTORY/commands. Raw .tests/install-bootstrap-windows*.txt,
+.tests/install-bootstrap/<id>/summary.json/run-*.json; baseline/audit/staging
+guard сохраняют frozen bytes и append-only prefixes. Старые инциденты не закрыты.

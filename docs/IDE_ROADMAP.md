@@ -5,9 +5,10 @@
 фоновые установки инструментов редактора перенесены в явный setup.
 IDE-001 параллельно ждёт диагностических данных с Mac.
 
-2026-11-14 добавлен IDE-138: полная установка одной командой, Default/Custom
-на Windows/Linux/macOS (подробный пункт ниже). Ollama/модели исключены по
-уточнению владельца. Работа приостановлена; сейчас записан только план.
+2026-11-14 начат IDE-138: полная установка одной командой, Default/Custom
+на Windows/Linux/macOS (подробный пункт ниже). Состав зафиксирован;
+source entry написан и имеет6 transport PASS Windows. Ubuntu engine недоступен,
+Mac не запускался. Полный Default/Custom ещё не готов. Ollama/модели исключены.
 
 ## Текущая очередь продукта — решение владельца 2026-11-12
 
@@ -209,7 +210,7 @@ E2E используются для защиты изменений продук
 | 3. Реальные проекты | Go/Cargo workspace, Python venv, Node scripts, выбор цели и launch.json/default | Go.work §206–208 и mixed context/Node script/Python venv debug Windows/Ubuntu9 PASS (§209–211); остальная mixed матрица открыта |
 | 4. Git | Credentials, interactive rebase и оставшиеся ошибки worktree | Sequence и HTTP credentials Windows/Ubuntu (§212–214); worktree IDE-038/048 и real OAuth/SSH/Mac открыты |
 | 5. Языковые пробелы | Bash debug с готовым backend; SQL references при наличии подходящего provider | Bash default/launch.json и interactive input/Stop Windows+WSL2 и Ubuntu21 selected PASS (§217); Mac и explicit console IDE-127 отдельно. SQL references ждут готовый provider |
-| 6. Переносимость | IDE-138: полная установка одной командой, Default/Custom на Windows/Linux/macOS; terminal/SSH, Mac startup/Go и Cmd+C | Установщик запланирован 2026-11-14, не реализован; native Mac и физические клавиши не проверены |
+| 6. Переносимость | IDE-138: полная установка одной командой, Default/Custom на Windows/Linux/macOS; terminal/SSH, Mac startup/Go и Cmd+C | Состав и source entry §232: Windows transport6 PASS; Ubuntu/Mac и полный Default/Custom открыты |
 
 Завершён Windows срез `restore-files-session-view` (§205): видимость/root,
 раскрытия/выбор/scroll/width Files по вкладкам и проектам.16 distinct checks
@@ -1031,7 +1032,11 @@ Normal mode, прежние aliases сохранены:
 
 Требование владельца2026-11-14. UX-референс — понравившаяся установка Termide:
 одна строка скачивает скрипт, скрипт сам скачивает и устанавливает всё нужное.
-Это новый пункт очереди переносимости; сейчас только план, без реализации.
+Это пункт очереди переносимости. Состав и gaps — [INSTALLATION_PLAN](INSTALLATION_PLAN.md).
+§232: root install.ps1/install.sh получают source без Git и вызывают local
+platform installer. Windows transport6 PASS; это не полная установка IDE.
+Ubuntu engine отсутствует, Mac не запускался. Следующий срез — общий профиль
+Default/Custom и подготовка поддерживаемого runtime/инструментов.
 
 **Результат для пользователя:**
 
@@ -1053,10 +1058,12 @@ Normal mode, прежние aliases сохранены:
 
 **Этапы с проверяемым результатом:**
 
-1. [ ] Зафиксировать полный состав Default/Custom и зависимости каждого
+1. [x] Зафиксировать полный состав Default/Custom и зависимости каждого
    компонента на трёх ОС; сверить существующие install scripts и реальные gaps.
 2. [ ] Сделать удалённую точку входа одной строкой: скрипт сам получает
    исходники/готовые бинарники нужной архитектуры и запускает установку.
+   Source delivery/dispatch реализован §232; native Ubuntu/Mac и доставка
+   поддерживаемых binaries/prerequisites ещё открыты, весь пункт не закрыт.
 3. [ ] Реализовать общий выбор Default/Custom и автоматическую подготовку
    выбранного профиля через существующие платформенные механизмы установки.
 4. [ ] Проверить повторный запуск: доставляет недостающее, сохраняет backup

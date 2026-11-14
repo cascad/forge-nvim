@@ -8553,3 +8553,43 @@ Control wrapper хранит test-copy в controller directory; audit path ис�
 без повторного E2E. LF guest scripts/ready image private overlay/no network,
 serial, без Desktop/WSL lifecycle/install/image build. Перед commit exact16
 files staging, staged journal prefixes и frozen guard; общий WIP runner не шёл.
+
+
+## 140. IDE-138: inventory и remote source entry
+
+2026-11-14, FIXLOG232. PowerShell -NoProfile, cwd F:/repo/forge-nvim.
+TEMP/TMP/TMPDIR .tests/tmp; npm cache F:/forge-nvim-tmp/npm-cache; Python UTF-8.
+rg/Get-Content: три installers, tool catalogs/LSP/format/tests/Bash/SQL/SDK,
+существующие install scenario tests и OpenSpec rules. git remote get-url origin
+подтвердил repository URL. Некоторые первоначальные wildcard/предполагаемые
+пути не совпали с реальными файлами; использованы rg --files/точные пути.
+
+```powershell
+npx.cmd --yes @fission-ai/openspec@1.13.2 context --json
+npx.cmd --yes @fission-ai/openspec@1.13.2 new change add-remote-installer-bootstrap
+# status/instructions proposal/specs/design/tasks/apply --change ... --json
+python -B .tests/install-baseline.py
+python -B tests/install-bootstrap.test.py
+# Первый run: install-bootstrap-windows.txt (2 FAIL), затем новая версия
+# install-bootstrap-windows-final.txt (6 PASS); review cleanup boundary →
+# install-bootstrap-windows-verified.txt (6 PASS), только финальные6 distinct.
+docker version --format '{{.Server.Version}}'
+# FAIL: канал dockerDesktopLinuxEngine отсутствует. Compose НЕ выполнялся;
+# воспроизводимая команда при ready engine:
+docker compose -f tests/containers/compose.yaml run --rm --no-deps --pull never --entrypoint python3 ubuntu -B tests/install-bootstrap.test.py
+& 'C:/Program Files/Git/bin/bash.exe' -n install.sh
+git check-attr text eol -- install.sh install.ps1
+python -B .tests/audit-install.py
+python -B .tests/record-install.py
+npx.cmd --yes @fission-ai/openspec@1.13.2 validate add-remote-installer-bootstrap --type change --strict --no-interactive
+git diff --check
+git diff --cached --check
+```
+
+Stand использует HTTP/ZIP/tar.gz/native shell и fixture backend, не host package
+manager. Windows PowerShell5.1; Ubuntu/Mac не запускались. Исходный FAIL и
+успешные разные версии сохранены; unchanged green retries не выполнялись.
+Entry SHA/test SHA/request/child exit records сохранены в артефактах. Новый
+runtime не запускает Neovim, готовые SDK не изменялись. Exact staging включает
+только текущие entry/test/docs/change; install.sh executable, WIP runner/drafts
+исключены. Raw working и staged journal prefixes сверены перед commit.
