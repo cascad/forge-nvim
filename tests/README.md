@@ -698,3 +698,18 @@ docker compose -f tests/containers/compose.yaml run --rm --no-deps --pull never 
 
 Это проверка доставки/композиции готовых parts; полный SDK inventory и package
 readiness не подменяются exit0 этого stand.
+
+
+### Setup postconditions — IDE-BOOT-15
+
+`python -B tests/install-readiness.test.py` (Windows) / `python3 -B ...`
+(Linux/macOS). Нужны native Neovim и подготовленный Mason plugin из
+FORGE_E2E_DEPS/.tests/editor-deps; глобальные packages/сеть не используются.
+Настоящие registry/receipt/InstallLocation и native parser loader, controlled
+install callbacks/fixture package. Шестнадцать cases (Windows POSIX mode skip)
+проверяют nonthrowing failure, receipts/bin/share/opt, host fallback, parser
+missing/invalid и готовый selected результат. Сохраняются result/summary JSON,
+command trace и source SHA в .tests/install-readiness/<id>.
+Legacy orchestration `tests/install-setup.test.py` использует согласованный
+минимальный Core fixture и те же native APIs, сохраняет прежние failure gates.
+Это не полный SDK функциональный acceptance. Native Mac прогон отдельно.

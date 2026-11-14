@@ -7,20 +7,7 @@
 -- The normal path is the rewritten `main` branch. The legacy branch below is a
 -- compatibility bridge for machines that have not run Lazy sync yet.
 
-local languages = {
-    "rust", "go", "gomod", "gosum", "gowork",
-    "python",
-    "lua", "luadoc", "luap",
-    "vim", "vimdoc", "query",
-    "markdown", "markdown_inline",
-    "json", "yaml", "toml",
-    "bash", "regex", "sql",
-    "c", "cpp", "cmake",
-    "html", "css", "javascript", "typescript",
-    "diff", "git_config", "gitcommit", "gitignore", "gitattributes",
-    "dockerfile",
-}
-languages = require('forge.install_profile').filter(languages, 5)
+local languages = require('forge.tool_catalog').parsers()
 
 local ignored_filetypes = {
     [""] = true,

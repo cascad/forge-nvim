@@ -26,6 +26,7 @@ BASE=ROOT/'.tests/install-setup'/(str(time.time_ns())+' ü space')
 BASE.mkdir(parents=True)
 
 INIT=r'''
+dofile(assert(vim.env.FORGE_READINESS_FIXTURE))
 local function record(kind,args)
   vim.fn.writefile({vim.json.encode({kind=kind,args=args,profile=PROFILE,
     config=vim.fn.stdpath('config'),pid=vim.uv.os_getpid(),argv=vim.v.argv})},vim.env.FORGE_SETUP_TRACE,'a')
@@ -57,7 +58,11 @@ class Setup(unittest.TestCase):
         base=BASE/name;base.mkdir()
         checkout=base/'checkout';profile=checkout/'nvim_forge'
         (profile/'lua/ide').mkdir(parents=True)
+        (profile/'lua/forge').mkdir()
+        for module in ['tool_catalog','setup_readiness','install_profile']:
+            shutil.copyfile(SOURCE/('lua/forge/'+module+'.lua'),profile/('lua/forge/'+module+'.lua'))
         shutil.copytree(SOURCE/'scripts',profile/'scripts')
+        (profile/'scripts/components.tsv').write_text('core\tFixture\t-\tfixture-native\tlua\n',encoding='utf-8')
         shutil.copytree(SOURCE/'patches',profile/'patches')
         shutil.copyfile(SOURCE/'lua/ide/backports.lua',profile/'lua/ide/backports.lua')
         shutil.copyfile(SOURCE/'lazy-lock.json',profile/'lazy-lock.json')
@@ -73,6 +78,8 @@ class Setup(unittest.TestCase):
         env=os.environ.copy()
         env.update(HOME=str(home),LOCALAPPDATA=str(base/'localapp'),XDG_CONFIG_HOME=str(ambient),
             XDG_DATA_HOME=str(base/'data'),XDG_STATE_HOME=str(base/'state'),XDG_CACHE_HOME=str(base/'cache'),
+            FORGE_NVIM_COMPONENTS='core',FORGE_READINESS_CASE='ready',FORGE_READINESS_ROOT=str(base/'mason'),
+            FORGE_READINESS_DEPS=str(DEPS),FORGE_READINESS_FIXTURE=str(ROOT/'tests/diagnostics/setup-readiness-fixture.lua'),
             NVIM_APPNAME='other',FORGE_SETUP_TRACE=str(base/'trace.jsonl'),FORGE_SETUP_CASE=name,
             FORGE_NVIM_SKIP_DEPS='1',FORGE_NVIM_SKIP_WEZTERM='1',FORGE_NVIM_USE_LOCAL_SOURCE='1',
             FORGE_NVIM_DEPS_ONLY='0',FORGE_INSTALL_TEST_NVIM=NVIM,NVIM_LOG_FILE=str(base/'nvim.log'))

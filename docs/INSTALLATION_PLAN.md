@@ -465,3 +465,31 @@ selected downloads/cache, private launch Node/npm, проверки повреж
 Дальше IDE-138: подготовить проверенные release Core/языковые модули и их
 инвентарь, изолировать persistent state каждого SDK, проверять actual package
 readiness после setup; native Mac и публикация assets отдельно.
+
+## Проверка результата setup — §242
+
+Setup проверяет результат после установки, используя те же каталоги, что
+lsp/treesitter config (forge.tool_catalog, состав не изменён). Mason package
+должен иметь receipt с правильным именем; объявленные bin/share/opt source и
+exports должны существовать. Bin export проверяется через native executable
+API, включая POSIX mode. Одного каталога пакета либо команды из host PATH
+недостаточно. Старый Windows receipt schema1.0 учитывается штатным .cmd правилом.
+
+После установки parsers проверяются их runtime libraries и native Neovim
+language loader. Отсутствующий/непригодный parser или incomplete package даёт
+nonzero с именем и причиной; следующие stages и публикация kit не выполняются.
+Проверка сама не обновляет registry и не скачивает данные. Startup ничего
+дополнительного не устанавливает. Success reports записываются в setup logs.
+
+Это postconditions установки. Receipt/файлы не доказывают всю функциональность
+LSP/DAP и совместимость SDK: release inventory/языковые E2E/private SDK state
+и native Mac остаются отдельными пунктами. Не добавлялись LSP/provider/новые
+пакеты и второй mechanism установки.
+
+Команды: Windows `python -B tests/install-readiness.test.py`, POSIX
+`python3 -B tests/install-readiness.test.py`. Нужны готовый native Neovim и
+Mason plugin из .tests/editor-deps (FORGE_E2E_DEPS). FORGE_INSTALL_TEST_NVIM
+задаёт native бинарь явно. Stand использует настоящий Mason Lua registry
+provider/receipt/location и parser loader, controlled install callbacks и
+fixtures package files, без сетевой установки. Артефакты —
+.tests/install-readiness/<id>. Native Mac команда та же, здесь не запускалась.

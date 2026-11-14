@@ -12866,3 +12866,81 @@ Native manifest/SDK receipts/nvim SHA сохранены отдельно пер
 Удаление ограничено resolved F:/repo/forge-nvim/.tests/install-isolation;
 source/scripts/runtime не удаляется вместе с payload runtime. Audit/cleanup
 reports — .tests/runtime-delivery-audit.json и runtime-delivery-cleanup.json.
+
+
+## 242. Проверка готовности после setup
+
+**Дата:** 2026-11-14. **Пункт:** IDE-139/138. Спека: IDE-BOOT-15 (ADDED).
+
+**Было/причина.** setup-stage проверял только Lua/Vim exceptions после команды.
+Native Mason is_installed проверяет directory, не receipt/экспорт, а успешный
+возврат команды parser install не означает, что parser существует и грузится.
+В контролируемом native случае команда вернула success without install и
+старый stage завершился0/tools done при отсутствующем обязательном пакете.
+
+**Изменение.** Существующие fallback Mason/parser lists перенесены в общий
+forge.tool_catalog; lsp/treesitter и явный validator читают один источник,
+прежний install_profile/filter/Windows CodeLLDB exception сохранены. Никаких
+новых LSP/пакетов/installer engines и startup downloads/checks не добавлено.
+
+После MasonToolsInstallSync: native registry package, installed directory,
+receipt с правильным именем, каждый объявленный bin/share/opt source/export.
+Bin export проверяется native executable API; schema1.0 Windows .cmd правило
+совпадает с Mason. Host PATH и пустой directory не подтверждают установку.
+После ForgeTreesitterInstall: runtime library присутствует, selected language
+принимается native vim.treesitter.language.add. Ошибки агрегированы с именами,
+попадают в прежний stage xpcall/nonzero; следующие stages/kit publication
+останавливаются. Успешные readiness reports идут в stdout/setup log. Сам
+validator не вызывает refresh/install/download и не запускает каждый adapter
+с выдуманным --version. Fresh process на stage сохранён.
+
+**Native E2E.** tests/install-readiness.test.py использует настоящий Mason Lua
+registry provider/package/receipt/InstallLocation и native Neovim loader.
+Callbacks установки контролируемые и возвращают успех без работы; package
+payload/export — fixtures. Checks покрывают missing directory/receipt/source/
+export, corrupt/wrong receipt, host fallback, selected result, share/opt,
+legacy receipt, missing parser и непригодную библиотеку (копия настоящего Lua
+parser под другим language/symbol), POSIX executable mode. Реальный источник
+старого stage сохранён в .tests/setup-readiness-source/setup-stage.lua.
+
+Source RED: Windows case01 после исправления driver даёт assertion0==0,
+команда действительно выполнилась, старый stage пишет done. Ubuntu тот же RED
+0.231s, script дополнительно проверяет raw actor exit0/done и callback trace.
+Target Windows11 PASS0.704s; новые share/opt/legacy4 PASS0.217s; после native
+executable check затронутые ready cases3 PASS/1 POSIX-only skip0.157s. Всего15
+различных Windows checks и1 platform skip, без повторного full suite ради green.
+Ubuntu current16 PASS3.814s, один native прогон. Source RED не скрыт.
+
+Compatibility: прежний orchestration stand согласован с минимальным native
+Core fixture и реальным Mason. Windows7 PASS3.192s; Ubuntu7 PASS8.737s — missing
+custom/default parents, parser/tool/missing-command/plugin/backport failure,
+остановка stages и installed profile/3 processes. Policy Core/Python/SQL/legacy
+Windows4 PASS2.054s, Ubuntu4 PASS0.923s. Кроме того, actual before/after catalogs
+сверены нативно для5 masks (без env/Core/Python/SQL/all) на каждой ОС: набор и
+порядок и Mason, и parser IDs совпали. SDK/67 pins/backport metadata/WIP frozen.
+
+**Неудачи стенда сохранены.** Source RED v1 ошибочно не дошёл до callback:
+JSON ensure_ascii создал недопустимый Lua escape в пути с ü. Driver теперь
+пишет Unicode напрямую и требует callback trace до оценки ошибки; proper
+Source RED v20==0 зафиксирован отдельно. В orchestration v1 добавленный цикл
+copy modules затёр case argument name значением install_profile;5 negative
+callbacks не сработали (2 PASS/5 FAIL3.762s). Loop variable переименован module,
+получены7 PASS. Это исправления fixtures, не замена product ошибки успехом.
+Native parser mismatch не вызывает Python/LLDB executable и не устанавливает
+SDK; postcondition tests не запускают сторонние installer processes.
+
+**Вывод/границы.** Успех команды теперь не подменяет проверяемый результат
+установки. Receipt/существование/executable/library loader — postconditions,
+не доказательство всей функциональности LSP/DAP или всех зависимых DLL/SDK.
+Полный release inventory/private SDK persistent state, functional language E2E,
+native Mac и публикация assets остаются открытыми. Mac здесь не запускался.
+Docker готовый, без build/pull/network/управления Desktop/WSL; тяжёлые Windows/
+Ubuntu команды последовательно. Temp/cache/diagnostics на F, fixtures private.
+
+**Файлы.** forge/tool_catalog.lua и setup_readiness.lua, lsp/treesitter specs
+только через общий catalog, setup-stage, native fixture/stand, orchestration
+fixture; verify-setup-readiness; installation plan/roadmap/problems/tests README,
+HISTORY/commands. Raw .tests/setup-readiness-*.txt, catalogs JSON, native
+.tests/install-readiness/install-setup и Ubuntu overlay. Baseline source SHA,
+callbacks/argv/stdout/stderr/exit, receipt/parser state сохранены. Journals только
+append, exact commit без unrelated deferred tests и без push/release.

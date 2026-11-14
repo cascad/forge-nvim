@@ -9,6 +9,10 @@ IDE-001 параллельно ждёт диагностических данн�
 на Windows/Linux/macOS (подробный пункт ниже). Состав зафиксирован;
 source entry имеет по6 transport PASS Windows/Ubuntu (§232–233), Mac не
 запускался. Полный Default/Custom ещё не готов. Ollama/модели исключены.
+§242: explicit setup теперь проверяет Mason receipts/declared exports и native
+загрузку parsers. Команда с exit0 без готовых файлов больше не даёт done.
+Состав инструментов/языков сохранён; полный SDK inventory/state/функциональная
+матрица и Mac остаются следующими, публичный one-liner ещё не готов.
 §234: общий setup обрабатывает Lua/Vim exceptions и missing commands как отказ;
 по7 stand PASS Windows/Ubuntu. Default/Custom каталоги и родители создаются
 автоматически. §235: выбор Default/Custom и его применение реализованы:

@@ -8995,3 +8995,69 @@ runtime исключён из payload names. Core/component manifests и SDK rec
 сохранены в .tests/runtime-delivery-metadata по content SHA, mapping/report в
 runtime-delivery-cleanup.json. Логи/native proofs/исходники не удалялись;
 canonical .tools SDK и .tests/node-deps не затрагивались.
+
+
+## 150. Native postconditions setup: receipts/links и parser loader
+
+2026-11-14, IDE-BOOT-15/IDE-139, FIXLOG§242; change verify-setup-readiness.
+Команды выполнялись в F:/repo/forge-nvim, без permissions вопросов. Это Native
+Mason/Neovim E2E с local Lua registry provider/fixture callbacks, не полный
+SDK download/функциональный acceptance.
+
+```powershell
+$env:TEMP='F:/repo/forge-nvim/.tests/tmp'; $env:TMP=$env:TEMP; $env:TMPDIR=$env:TEMP
+$env:PYTHONUTF8='1'; $env:PYTHONIOENCODING='utf-8'
+$env:npm_config_cache='F:/forge-nvim-tmp/npm-cache'
+$env:FORGE_INSTALL_READINESS_STAGE='F:/repo/forge-nvim/.tests/setup-readiness-source/setup-stage.lua'
+python -B tests/install-readiness.test.py Readiness.test_01_missing_package > .tests/setup-readiness-source-red-windows-v2.txt 2>&1
+Remove-Item Env:FORGE_INSTALL_READINESS_STAGE
+python -B tests/install-readiness.test.py > .tests/setup-readiness-windows-v1.txt 2>&1
+python -B tests/install-readiness.test.py Readiness.test_12_share_opt_ready Readiness.test_13_missing_share Readiness.test_14_missing_opt Readiness.test_15_legacy_receipt > .tests/setup-readiness-links-windows.txt 2>&1
+python -B tests/install-readiness.test.py Readiness.test_08_tools_ready_selected Readiness.test_12_share_opt_ready Readiness.test_15_legacy_receipt Readiness.test_16_nonexecutable_export > .tests/setup-readiness-executable-windows.txt 2>&1
+python -B tests/install-setup.test.py > .tests/setup-readiness-orchestration-windows-v1.txt 2>&1
+python -B tests/install-setup.test.py > .tests/setup-readiness-orchestration-windows-v2.txt 2>&1
+python -B .tests/setup-readiness-policy.py > .tests/setup-readiness-policy-windows.txt 2>&1
+$env:FORGE_CATALOG_ROOT='F:/repo/forge-nvim'
+$env:FORGE_CATALOG_BEFORE='F:/repo/forge-nvim/.tests/setup-readiness-source'
+$env:NVIM_LOG_FILE='F:/repo/forge-nvim/.tests/tmp/catalog-equivalence.log'
+.tools/neovim/windows-x64/bin/nvim.exe --headless -u NONE -i NONE -l .tests/setup-readiness-catalog.lua > .tests/setup-readiness-catalog-windows.json 2>&1
+docker compose -f tests/containers/compose.yaml run --rm --no-deps --pull never --entrypoint bash ubuntu /workspace/.tests/setup-readiness-run.sh > .tests/setup-readiness-ubuntu-v1.txt 2>&1
+npx.cmd --yes @fission-ai/openspec@1.13.2 validate verify-setup-readiness --type change --strict --no-interactive
+git diff --check
+git diff --cached --check
+```
+
+Source snapshot setup-stage.lua взят до изменения, old lsp/treesitter — git show
+HEAD:<path> (31a038a) для equality audit. Первоначальный source-red-windows.txt
+содержит driver precondition failure invalid Lua escape ü; правильный v2 обязан
+содержать0==0 и callback trace. Не считать init error доказательством product
+регресса. Native case result.json хранит source SHA, stdout/stderr/exit/stage,
+command.txt доказывает выполненную install callback; summary отдельно.
+
+Docker run.sh копируется в host .tests/ubuntu (guest /workspace/.tests). Source
+RED сохраняется отдельно в .tests/ubuntu/setup-readiness-source-red-ubuntu.txt;
+script требует expected test exit1 и raw actor exit0/tools done/command trace,
+затем снимает source override и запускает current16 checks,7 orchestration,
+4 policy controls и native catalog equality. Код не игнорирует неожиданный
+source init failure. Native SDK/плагины уже в image, network_mode none. Docker
+Desktop/WSL/start/stop/build/pull не выполнялись.
+
+Policy driver выбирает прежние Core/Python/SQL/legacy cases без полного suite.
+Catalog equality Lua загружает old opts и old languages literal, сравнивает
+current lists/native profile filter для5 masks. Никаких installs/registry
+refresh в equality нет. Native after check сам refresh не делает; controlled
+fixture использует реальный local Lua registry refresh, без GitHub/network.
+Fixture exports/bin/share/opt и parser library находятся только в private
+stand; clone настоящего Lua parser под другим именем проверяет loader rejection.
+Нет вызова Python DLL/LLDB или новых компиляторов.
+
+Orchestration v1:5 negatives не включились из-за copy-loop variable name,
+перекрывшего case name. Переименование module сохранило прежние injections,
+v2 все7 PASS. Native target suite не повторялся целиком: новые link/exec
+сценарии запускались отдельными subsets. Windows POSIX mode явно skip,
+Ubuntu настоящий mode проверен. Последнее изменение setup-stage после checks
+только добавило IDE-BOOT-15 в комментарий spec; логика не менялась.
+
+Хеши frozen23 путей/SDK/lock/backport metadata/deferred WIP, append-only journal
+prefixes и exact staged filenames проверяются перед commit. Actual SDK inventory/
+DLL dependencies/вся функциональность/native Mac/publication по-прежнему gates.

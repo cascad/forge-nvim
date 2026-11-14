@@ -38,6 +38,11 @@ launcher forge и guard чужих targets. Глобальные package manager
 
 ## IDE-139 — setup сообщает успех после ошибки обязательной команды
 
+§242: после commands добавлены postconditions: native Mason receipt/links/
+executable exports и native parser loader. Missing/повреждённый результат даёт
+nonzero. Windows/Ubuntu Source RED → target coverage; полная функциональность
+SDK и native Mac отдельно. Обычный startup не получил install/check tasks.
+
 2026-11-14: native Neovim +lua error(...) +qa возвращал0; pcall/warnings в
 install scripts скрывали ошибки. Windows/Linux также могли готовить чужой
 NVIM_APPNAME. §234: общий Lua stage с explicit cquit1, lock restore, все
