@@ -6,6 +6,9 @@ IDE-138: [состав Default/Custom и прогресс установки о�
 Root install.ps1/install.sh поддерживают Default/Custom с клавиатуры, но пока
 остаются development entry; полный автоматический
 setup на чистой системе ещё не завершён. Существующие способы запуска ниже.
+Root entry ставит независимый комплект с командой forge и отдельными данными;
+он не запускает global package managers и не заменяет существующий nvim.
+Старые direct platform installers ниже — legacy system API, не новый safe entry.
 
 Debug Output: `Space w c` / `Space D c` возвращают последний канал с историей;
 `Space m d` открывает Debug View. F5 использует канал конфигурации, повторное

@@ -8683,3 +8683,57 @@ Mac3/setup7/legacy153. Windows setup7 отдельно, тяжёлые сред�
 Standalone source/fixture/provider contracts не подменяют полную установку
 пакетов. Exact staging исключает deferred runner/drafts, SDK/lock/payloads и
 staged journal prefixes проверяются. Root entry пока development, push не делался.
+
+
+## 144. Независимая установка Forge: runtime, процессы и файлы
+
+Дата: 2026-11-14. IDE-140/IDE-138, FIXLOG §236. Не читать эти команды как
+готовый public one-liner: полный Default bundle ещё не доставлен.
+
+Все Windows temp — F:/repo/forge-nvim/.tests/tmp; Python UTF8/IOENCODING utf-8,
+npm cache F:/forge-nvim-tmp/npm-cache. Перед native SDK не вызываются WinGet,
+apt/Homebrew; прежние system recipes остаются только legacy advanced API.
+
+```powershell
+npx.cmd --yes @fission-ai/openspec@1.13.2 context --json
+npx.cmd --yes @fission-ai/openspec@1.13.2 new change isolate-managed-installation
+# status/instructions proposal/specs/design/tasks/apply --change ... --json
+python -B tests/install-isolation.test.py
+# Windows v1/v2/v3:8/11 FAIL,8/5 FAIL,11 PASS; logs сохранены.
+python -B tests/install-isolation.test.py Isolation.test_01_install_launch_and_repeat Isolation.test_12_external_link_in_owned_target
+python -B tests/install-isolation.test.py Isolation.test_13_bootstrap_without_log_override
+python -B tests/install-profile.test.py
+docker compose -f tests/containers/compose.yaml run --rm --no-deps --pull never -e FORGE_INSTALL_STAND_ROOT=/tmp/forge-install-isolation --entrypoint python3 ubuntu -B tests/install-isolation.test.py
+# Ubuntu native FS v2:1 FAIL/1 skip; исправлен trailing slash, v3:11 PASS/1skip.
+docker compose -f tests/containers/compose.yaml run --rm --no-deps --pull never -e FORGE_INSTALL_STAND_ROOT=/tmp/forge-install-isolation --entrypoint python3 ubuntu -B tests/install-isolation.test.py Isolation.test_13_bootstrap_without_log_override
+docker compose -f tests/containers/compose.yaml run --rm --no-deps --pull never --entrypoint python3 ubuntu -B tests/install-profile.test.py
+python -B .tests/record-isolation.py
+npx.cmd --yes @fission-ai/openspec@1.13.2 validate isolate-managed-installation --type change --strict --no-interactive
+git diff --check
+git diff --cached --check
+```
+
+Видим настоящий stdout/stderr/exit каждого child в case JSON и raw driver
+logs. Summary фиксирует tests/failures/errors/skips. Full work runtime
+нужен только стенду; в Docker logs/config/receipts/trace экспортируются из
+native /tmp в .tests, тяжёлые SDK copies не экспортируются повторно. Source
+entry HTTP/dispatch controls используют backend fixture; isolation stand —
+настоящий Neovim/runtime с fixture init/setup callbacks. Не выдаём их за
+готовность всех языков или67 plugins на чистой машине.
+
+Read-only диагностика: git status/diff, rg/Get-Content, docker version/ps/top,
+docker exec конкретного test container ps. Первый медленный bind-mount прогон
+остановлен docker exec <observed test-container> kill -TERM 7; Desktop/WSL
+не запускались/не останавливались. Сначала host PID из docker top не нашёлся
+внутри namespace. Native временные каталоги удалились с --rm container.
+Exact staging исключает unrelated drafts; staged journal prefixes/frozen
+SDK/lock/backports сверяются с HEAD, новый code source не пушился.
+
+
+Review relative custom target: `python -B tests/install-isolation.test.py
+Isolation.test_14_relative_custom_path` и тот же selector в Ubuntu compose
+с FORGE_INSTALL_STAND_ROOT=/tmp/forge-install-isolation: по1 PASS.
+Первый driver SyntaxError (лишняя скобка) сохранён отдельно, до запуска SDK.
+После evidence audit удаляются только тяжёлые runtime copies/архивы этого
+стенда под .tests, со сверкой абсолютной границы; логи/receipts/config остаются.
+Другие проекты, SDK cache .tools и содержимое диска C не затрагиваются.

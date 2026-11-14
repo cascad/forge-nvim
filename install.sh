@@ -6,19 +6,25 @@ ref="${FORGE_NVIM_BRANCH:-main}"
 source_root="${XDG_DATA_HOME:-$HOME/.local/share}/forge-nvim/sources"
 archive_url=""
 install_dir=""
+runtime_path=""
+runtime_url=""
+runtime_sha=""
 skip_dependencies=0
 profile=default
 components=''
 components_explicit=0
 while [ "$#" -gt 0 ]; do
   case "$1" in
-    --ref|--archive-url|--source-root|--install-dir|--profile|--components)
+    --ref|--archive-url|--source-root|--install-dir|--profile|--components|--runtime-path|--runtime-archive-url|--runtime-sha256)
       [ "$#" -ge 2 ] || { printf 'Missing value: %s\n' "$1" >&2; exit 1; }
       case "$1" in
         --ref) ref="$2";;
         --archive-url) archive_url="$2";;
         --source-root) source_root="$2";;
         --install-dir) install_dir="$2";;
+        --runtime-path) runtime_path="$2";;
+        --runtime-archive-url) runtime_url="$2";;
+        --runtime-sha256) runtime_sha="$2";;
         --profile) profile="$2";;
         --components) components="$2"; components_explicit=1;;
       esac
@@ -28,6 +34,7 @@ while [ "$#" -gt 0 ]; do
       printf '%s\n' 'forge-nvim source bootstrap (development entry)' \
         '--ref REF --archive-url URL --source-root DIR --install-dir DIR --skip-dependencies' \
         '--profile default|custom --components core,go,rust,python,node,bash,sql,terminal'
+      printf '%s\n' '--runtime-path DIR (development: prepared native bundle)'
       exit 0;;
     *) printf 'Unknown option: %s\n' "$1" >&2; exit 1;;
   esac
@@ -79,7 +86,7 @@ mkdir "$staging/tree"
 tar -xzf "$archive" -C "$staging/tree" --strip-components=1
 validate_source() {
   [ -f "$1/nvim_forge/init.lua" ] &&
-    [ -f "$1/nvim_forge/scripts/install-$platform.sh" ] &&
+    [ -f "$1/scripts/install-private.sh" ] && [ -f "$1/scripts/install-private.lua" ] &&
     [ -f "$1/nvim_forge.sh" ] && [ -f "$1/wezterm.lua" ]
 }
 validate_source "$staging/tree" || { printf 'Archive has no complete forge-nvim source.\n' >&2; exit 1; }
@@ -93,9 +100,6 @@ printf 'Source ready: %s\n' "$source_dir"
 . "$source_dir/nvim_forge/scripts/lib/install-profile.sh"
 FORGE_NVIM_COMPONENTS="$(forge_select_profile "$profile" "$components" "$components_explicit")"
 export FORGE_NVIM_COMPONENTS
-printf 'Selected components: %s\nStarting %s installer.\n' "$FORGE_NVIM_COMPONENTS" "$platform"
-export FORGE_NVIM_USE_LOCAL_SOURCE=1
-export FORGE_NVIM_WITH_LANGUAGES="${FORGE_NVIM_WITH_LANGUAGES:-1}"
-if [ -n "$install_dir" ]; then export FORGE_NVIM_INSTALL_DIR="$install_dir"; fi
-if [ "$skip_dependencies" = 1 ]; then export FORGE_NVIM_SKIP_DEPS=1; fi
-bash "$source_dir/nvim_forge/scripts/install-$platform.sh"
+printf 'Selected components: %s\nStarting isolated Forge installer (%s).\n' "$FORGE_NVIM_COMPONENTS" "$platform"
+install_dir="${install_dir:-${XDG_DATA_HOME:-$HOME/.local/share}/forge-nvim/installation}"
+bash "$source_dir/scripts/install-private.sh" "$source_dir" "$install_dir" "$runtime_path" "$runtime_url" "$runtime_sha"

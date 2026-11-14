@@ -15,6 +15,12 @@ source entry имеет по6 transport PASS Windows/Ubuntu (§232–233), Mac �
 Windows19 PASS, Ubuntu18 PASS/1 platform skip. Полная package readiness,
 supported SDK delivery и native Mac остаются следующими срезами.
 
+Уточнение владельца2026-11-14, IDE-140: комплект ставится отдельно и не ломает
+существующие Neovim/SDK/WezTerm. Source entry переведён на private installer:
+свой runtime/config/data/state/cache/temp, launcher forge, target ownership,
+staging/backup. Глобальные package managers из entry исключены. Default bundles
+ещё не подготовлены; без runtime явная ошибка, не замена системным nvim.
+
 ## Текущая очередь продукта — решение владельца 2026-11-12
 
 Натурная обратная связь владельца2026-11-13 после §228: «посмотрел, вроде все
@@ -1042,6 +1048,12 @@ Normal mode, прежние aliases сохранены:
 platform installer. Windows/Ubuntu transport6 PASS на ОС (§233), это не полная
 установка IDE. Mac не запускался. Следующий срез — общий профиль
 Default/Custom и подготовка поддерживаемого runtime/инструментов.
+
+Актуальное уточнение IDE-140: source entry больше не вызывает прежние platform
+installers. InstallPath — корень отдельного комплекта, запуск — bin/forge,
+глобальные packages/обычный nvim/config/profile не меняются. Runtime bundle
+с manifest/SHA/probes подготавливается отдельно; полная Default доставка пока
+открыта. Это заменяет ранее намеченный bootstrap глобальных package managers.
 
 **Результат для пользователя:**
 

@@ -7,11 +7,12 @@ macOS. Пользователь не ищет binaries, не клонирует 
 
 ## Текущая готовность
 
-Состав, source entry и выбор Default/Custom реализованы. Полная доставка
-совместимых SDK и настоящее развёртывание всех инструментов ещё не готовы.
+Состав, source entry, выбор Default/Custom и независимая установка комплекта
+реализованы. Полная доставка совместимых SDK и настоящее развёртывание всех
+инструментов ещё не готовы.
 `install.ps1`/`install.sh` — development entry, пока не публичная инструкция
-для чистой машины. Они получают полный source и вызывают прежний platform
-installer в local-source mode, обходя неправильный monorepo clone в config.
+для чистой машины. Они получают полный source и вызывают private installer;
+прежние global platform installers больше не вызываются из source entry.
 Полная готовность IDE-138 определяется этапами ниже, а не одним exit0 bootstrap.
 §233: transport по6 PASS на Windows/Ubuntu; native Mac пока не запускался.
 §234: общий strict command setup — по7 native stand PASS Windows/Ubuntu;
@@ -23,6 +24,85 @@ macOS backend7 contract PASS в Ubuntu. Это не полная установ�
 Путь по умолчанию и пользовательский путь создаются автоматически, включая
 отсутствующие родительские каталоги (уточнение владельца2026-11-14).
 Отдельные регрессы проверяют оба варианта до существования каталога.
+
+## Независимый комплект — уточнение владельца2026-11-14
+
+Комплект не обновляет и не заменяет пользовательские Neovim, SDK или WezTerm.
+Корневой installer не запускает WinGet/apt/Homebrew, не пишет в registry PATH,
+shell profile, ~/.config/nvim и обычный конфиг терминала. Ранее описанные ниже
+package recipes относятся к legacy scripts, а не к текущему source entry.
+Прямые старые nvim_forge/scripts/install-{windows,linux,macos} остаются legacy
+system API; они могут менять host packages и не являются безопасной установкой
+нового комплекта. Для IDE-138 использовать только root entry.
+
+InstallPath/--install-dir теперь обозначает **корень комплекта**:
+
+```text
+Windows: %LOCALAPPDATA%/forge-nvim/installation
+Linux/macOS: ${XDG_DATA_HOME:-~/.local/share}/forge-nvim/installation
+  config/forge/     конфигурация
+  runtime/          собственный Neovim и подготовленные инструменты
+  data/state/cache/ независимые stdpath
+  tmp/log/          временные файлы и логи установки/редактора
+  sdk-state/        данные инструментов комплекта
+  bin/forge        POSIX launcher; Windows: forge.cmd / forge.ps1
+  backups/          прежние config/runtime/bin после успешного обновления
+```
+
+Source cache по умолчанию лежит рядом в forge-nvim/sources. Каталог с чужими
+файлами, symlink/junction target или linked parent отклоняется. Подготовка идёт
+в staging; прежний launcher/config/runtime сохраняются до успешного setup.
+Данные Forge не удаляются. Обновления plugin data самого Forge пока не имеют
+полного rollback; это не данные обычного nvim. Ошибочный staging сохраняется
+для диагностики. Удаление комплекта не требует удаления чужих программ.
+
+Launcher применяет PATH/stdpath/temp/cache только к своему процессу. Он не
+регистрирует глобальную команду и не изменяет существующий nvim. При желании
+пользователь может сам добавить отдельный bin в PATH; обязательной правки shell
+для запуска по полному пути нет. Интеграция Terminal должна следовать той же
+границе: собственный binary и явный --config-file, без замены .wezterm.lua.
+
+### Runtime artifact и текущий gate
+
+Подготовленный bundle: forge-runtime.json с schema1/platform/components/nvim,
+относительными paths, probes и SHA256 каждого файла. Windows дополнительно
+проверяет receipt готового patched SDK против scripts/sdk/windows.json;
+обычный системный nvim не подхватывается. POSIX требует native v0.12.2.
+Ссылки publisher материализует внутри bundle. files/probes — контракт доставки,
+не замена native языковым E2E и реальной готовности каждого компонента.
+
+Development API: -RuntimePath DIR / --runtime-path DIR или
+-RuntimeArchiveUrl URL -RuntimeSHA256 SHA / --runtime-archive-url URL
+--runtime-sha256 SHA. Поддерживаются ZIP Windows и tar.gz POSIX. Download
+проверяет SHA256 до extraction; полный manifest/component mask проверяются
+до изменения target. -SkipDependencies/--skip-dependencies сохранены как
+совместимые неактивные параметры: private entry никогда не ставит host packages.
+
+Пакет готового SDK собирается scripts/package-runtime.py --source DIR
+--recipe RECIPE.json --output ARCHIVE.zip (или .tar.gz); рядом сохраняется
+JSON receipt архива. Это developer/publisher API, не ручная подготовка обычным
+пользователем. Recipe должен описывать реально подготовленные инструменты.
+Без runtime entry сейчас даёт явную ошибку: проверенные полные Default bundles
+ещё не подготовлены/не опубликованы. Публичный one-liner пока не обещается.
+
+### Проверка границы
+
+`python -B tests/install-isolation.test.py` на Windows или `python3 -B
+tests/install-isolation.test.py` на Linux/macOS. Нужен уже готовый native SDK;
+стенд не ставит host packages. Настоящие package/download/hash/native Neovim,
+файлы чужого редактора и запуск; init/setup callbacks — fixture. Это isolation
+E2E, не полная установка67 plugins и всех языковых инструментов.
+Артефакты .tests/install-isolation/<id>, raw .tests/isolation-*.txt.
+Windows PowerShell startup-cache, создаваемый до выполнения скрипта, выделен
+наблюдателем отдельно; пользовательские конфиги/SDK сравниваются по SHA256.
+Итог §236: Windows11 PASS и targeted2 PASS после добавления guard внутренних
+links; Ubuntu11 PASS/1 Windows-only skip. Source/profile controls Windows19
+PASS, Ubuntu18 PASS/1 skip. На Docker стенд использует native /tmp и экспортирует
+доказательства в .tests; первый bind-mount прогон остановлен после timeout.
+macOS и настоящий полный Default install пока не проверены.
+Дополнительные native regressions bootstrap log и relative custom target:
+по2 PASS Windows/Ubuntu. Даже первый bootstrap не использует log/stdpath обычного
+nvim; относительный custom path становится абсолютным до запуска setup.
 
 ## Состав Default и галочки Custom
 

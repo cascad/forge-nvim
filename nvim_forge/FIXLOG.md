@@ -12475,3 +12475,76 @@ install docs/roadmap/PROBLEMS/README/tests README/HISTORY/commands. Raw
 .tests/profile-* и guest equivalents/install-bootstrap/<id>, profile-audit.json
 сверяет native outcomes/cached module bytes/controls/frozen/prefix. Journals
 append-only; deferred test infrastructure не менялась.
+
+
+## 236. Установка: независимый комплект без замены системного Neovim
+
+Дата: 2026-11-14. IDE-140, уточнение IDE-138.
+Спека: IDE-BOOT-11 (ADDED), change isolate-managed-installation.
+
+**Проблема.** Владелец потребовал не ломать существующие Neovim, SDK и
+настройки. Source entry вызывал global WinGet/apt/Homebrew recipes, а default
+target совпадал с обычным nvim. NVIM_APPNAME без собственных stdpath также
+не гарантировал отдельные данные; даже первый -uNONE bootstrap мог писать
+стандартный лог чужого nvim.
+
+**Причина.** Прежний installer предназначался для установки редактора вместо
+обычного nvim, а не отдельного комплекта. Граница была только config, не
+runtime/data/cache/temp. Успешные transport/profile fixtures не доказывали
+отсутствие записи в host при настоящем native запуске.
+
+**Изменение.** Root entry вызывает private backend, без global package
+managers. InstallPath обозначает kit root: свой runtime, config/forge,
+data/state/cache/tmp/log/sdk-state и bin/forge. Launcher изменяет только
+process environment и передаёт argv/exit. Уже bootstrap имеет отдельные
+stdpath/log/temp. Каталоги с чужими файлами, linked targets/parents и внешние
+links внутри owned installation отклоняются до подготовки. Staging config,
+runtime и bin переключаются после успешного setup; прежние сохраняются в
+backup, данные Forge остаются. Setup failure сохраняет прежний запуск и логи.
+
+Runtime packaging contract: schema/platform/components, SHA256 всех файлов,
+относительные paths/probes; Windows проверяет receipt patched SDK. Ссылки
+материализуются publisher, bundle может скачиваться по HTTP(S) с обязательным
+SHA256 до extraction. Нет runtime — явный nonzero, без fallback на host nvim.
+Legacy direct platform scripts остались system API и не вызываются новым entry.
+
+**Проверка/e2e.** Native Windows11 PASS, после guard owned-data junction
+targeted2 PASS; bootstrap-log regression1 PASS. Вместе13 разных сценариев.
+Ubuntu11 PASS/1 Windows skip плюс bootstrap-log1 PASS. Profile/source controls
+Windows19 PASS, Ubuntu18 PASS/1 skip. Настоящие native executable, HTTP/archive,
+hash/probes, install/launch, чужие config/SDK snapshots, default/custom missing
+parents, repeat/backup/failure/codes/argv/environment. Init/setup callbacks —
+fixture: это isolation regression, не readiness полного Default SDK.
+
+Сохранённые неудачи: Windows v1 8cases/11failures — Get-FileHash отсутствовал
+в изолированном PS host, empty optional argv терялись; заменено .NET SHA256,
+optional args передаются только непустые. v2 8cases/5failures — observer
+startup-cache самого PowerShell и переносы stderr; пользовательские файлы
+сравниваются полностью, отдельно исключён только StartupProfileData-NonInteractive.
+Ubuntu bind-mount v1 получил timeout90s и был остановлен TERM только test Python
+в контейнере; host PID из docker top сначала не существовал в namespace и никого
+не завершил. Native /tmp stand v2 12cases/1fail/1skip выявил ошибочный отказ
+обычному tar directory trailing slash; guard исправлен, v3 прошёл за8.495s.
+Доказательства экспортируются на host без дублирования SDK binaries.
+
+**Вывод/границы.** Изоляция entry/установки/запуска проверена Windows/Ubuntu;
+macOS не запускался. Полные selected SDK bundles, actual package readiness,
+Terminal integration, recovery plugin data и опубликованный one-liner ещё
+не готовы — IDE-138 не закрыт. Никаких новых host installations/push/release,
+изменения Docker Desktop/WSL или frozen test infrastructure. Все temp на F,
+либо private native FS уже разрешённого контейнера.
+
+**Файлы.** Root install entries; scripts/install-private/launch-managed и
+package-runtime.py; tests/install-isolation.test.py и transport fixture;
+isolate-managed-installation; INSTALLATION_PLAN/roadmap/README/PROBLEMS,
+HISTORY/tests README и commands. Raw .tests/isolation-*.txt и
+.tests/install-isolation/<id>, Ubuntu equivalents; frozen/prefix audit.
+
+
+**Дополнение review §236.** Все source/target/runtime пути приводятся к
+абсолютным до установки: relative custom target не должен превращать XDG
+переменные в относительные пути с fallback на обычный nvim. Native case14
+Windows1/Ubuntu1 PASS. Первый запуск нового driver завершился SyntaxError
+до каких-либо процессов/установки; исправлена лишняя скобка, raw сохранён.
+Это ещё один сценарий IDE-BOOT-11, общее число разных native cases Windows14,
+Ubuntu13 PASS/1 Windows-only skip с учётом дополнительных targeted regressions.

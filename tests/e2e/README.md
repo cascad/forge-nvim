@@ -1691,6 +1691,17 @@ Source7 RED → target7 PASS Windows/Ubuntu; macOS backend также7 contract 
 checks PASS в Ubuntu. Target bootstrapping67 plugins, package readiness и
 Default/Custom menu не подменяются этим regression stand. Подробности — §234.
 
+IDE-BOOT-11/§236: `python -B tests/install-isolation.test.py` (POSIX python3).
+Нужен готовый native Neovim SDK, без downloads host packages. Настоящие
+packaging/HTTP/manifest/SHA/native install/launcher; init/setup fixtures.
+Проверяются чужой nvim/config/SDK, независимые stdpath, default/custom roots,
+backup/repeat, setup failure, codes/argv/environment, target/internal links.
+Windows11 PASS+targeted2; Ubuntu11 PASS/1 Windows-only skip. Native Mac открыт.
+В Docker: добавить `-e FORGE_INSTALL_STAND_ROOT=/tmp/forge-install-isolation`
+перед `--entrypoint python3` в обычном compose run. SDK worktree живёт на native
+FS контейнера, маленькие доказательства экспортируются в .tests/install-isolation.
+Это не readiness всех языковых компонентов и не full Default acceptance.
+
 ## IDE-BOOT-10: выбор компонентов
 
 `python -B tests/install-profile.test.py` (Windows/temp F), `python3 -B

@@ -25,22 +25,20 @@ SYSTEM = platform.system()
 SHELL = (shutil.which('powershell.exe') or shutil.which('pwsh')) if WINDOWS else shutil.which('bash')
 assert SHELL, 'Native PowerShell/Bash is required'
 
-PS_BACKEND = r'''param([switch]$UseLocalSource,[switch]$WithLanguages,[switch]$SkipDependencies,[string]$InstallPath)
-$source = Split-Path -Parent (Split-Path -Parent $PSScriptRoot)
+PS_BACKEND = r'''param([string]$Source,[string]$InstallPath,[string]$RuntimePath,[string]$RuntimeArchiveUrl,[string]$RuntimeSHA256)
 [IO.Directory]::CreateDirectory($InstallPath) | Out-Null
 [IO.File]::WriteAllText((Join-Path $InstallPath 'installed-marker.txt'), 'fixture backend')
 [IO.File]::WriteAllLines($env:BOOTSTRAP_FIXTURE_REPORT, @(
-  "source=$source", "local=$UseLocalSource", "languages=$WithLanguages", "skip=$SkipDependencies", "target=$InstallPath", "components=$env:FORGE_NVIM_COMPONENTS"
+  "source=$Source", "target=$InstallPath", "runtime=$RuntimePath", "components=$env:FORGE_NVIM_COMPONENTS"
 ), (New-Object Text.UTF8Encoding($false)))
 if ($env:BOOTSTRAP_FIXTURE_EXIT) { exit ([int]$env:BOOTSTRAP_FIXTURE_EXIT) }
 '''
 SH_BACKEND = r'''#!/usr/bin/env bash
 set -eu
-source_dir="$(cd "$(dirname "$0")/../.." && pwd -P)"
-mkdir -p "$FORGE_NVIM_INSTALL_DIR"
-printf '%s\n' 'fixture backend' > "$FORGE_NVIM_INSTALL_DIR/installed-marker.txt"
-printf 'source=%s\nlocal=%s\nlanguages=%s\nskip=%s\ntarget=%s\n' \
- "$source_dir" "$FORGE_NVIM_USE_LOCAL_SOURCE" "$FORGE_NVIM_WITH_LANGUAGES" "$FORGE_NVIM_SKIP_DEPS" "$FORGE_NVIM_INSTALL_DIR" > "$BOOTSTRAP_FIXTURE_REPORT"
+source_dir="$1"; target="$2"; runtime="${3:-}"
+mkdir -p "$target"
+printf '%s\n' 'fixture backend' > "$target/installed-marker.txt"
+printf 'source=%s\ntarget=%s\nruntime=%s\n' "$source_dir" "$target" "$runtime" > "$BOOTSTRAP_FIXTURE_REPORT"
 printf 'components=%s\n' "${FORGE_NVIM_COMPONENTS:-}" >> "$BOOTSTRAP_FIXTURE_REPORT"
 exit "${BOOTSTRAP_FIXTURE_EXIT:-0}"
 '''
@@ -52,9 +50,9 @@ def archive(kind, complete=True):
     if complete:
         for name in ['components.tsv','lib/install-profile.ps1','lib/install-profile.sh']:
             files['nvim_forge/scripts/'+name]=(ROOT/'nvim_forge/scripts'/name).read_bytes()
-        files.update({'nvim_forge/scripts/install-windows.ps1': PS_BACKEND.encode(),
-                      'nvim_forge/scripts/install-linux.sh': SH_BACKEND.encode(),
-                      'nvim_forge/scripts/install-macos.sh': SH_BACKEND.encode()})
+        files.update({'scripts/install-private.ps1': PS_BACKEND.encode(),
+                      'scripts/install-private.sh': SH_BACKEND.encode(),
+                      'scripts/install-private.lua': b'-- dispatch fixture\n'})
     output = io.BytesIO()
     if kind == 'zip':
         with zipfile.ZipFile(output, 'w') as stream:
@@ -146,8 +144,7 @@ class Bootstrap(unittest.TestCase):
         received = dict(line.split('=', 1) for line in report.read_text(encoding='utf-8-sig').splitlines())
         expected = source / hashlib.sha256(self.routes['/source']).hexdigest()
         self.assertEqual(Path(received['source']), expected)
-        for key in ['local', 'languages', 'skip']:
-            self.assertIn(received[key].lower(), ('1', 'true'))
+        self.assertEqual(received['runtime'], '')
         self.assertEqual(Path(received['target']), target)
         self.assertEqual((target / 'installed-marker.txt').read_text().splitlines(), ['fixture backend'])
         sentinel = expected / 'keep-repeat.txt'; sentinel.write_text('existing source')

@@ -1,11 +1,14 @@
 #Requires -Version 5.1
-# spec: IDE-BOOT-8. Source bootstrap без Git; packages остаются в platform script.
+# spec: IDE-BOOT-8, IDE-BOOT-11. Source bootstrap и независимый комплект Forge.
 [CmdletBinding()]
 param(
     [ValidatePattern('^[a-zA-Z0-9][a-zA-Z0-9._/-]*$')][string]$Ref = 'main',
     [string]$ArchiveUrl = '',
     [string]$SourceRoot = (Join-Path $env:LOCALAPPDATA 'forge-nvim\sources'),
-    [string]$InstallPath = (Join-Path $env:LOCALAPPDATA 'nvim'),
+    [string]$InstallPath = (Join-Path $env:LOCALAPPDATA 'forge-nvim\installation'),
+    [string]$RuntimePath = '',
+    [string]$RuntimeArchiveUrl = '',
+    [string]$RuntimeSHA256 = '',
     [switch]$SkipDependencies,
     [Alias('Profile')][ValidateSet('Default','Custom')][string]$InstallProfile = 'Default',
     [AllowEmptyString()][string]$Components = ''
@@ -24,7 +27,7 @@ $staging = Join-Path $sourceRootFull ('.bootstrap-' + [Guid]::NewGuid().ToString
 $oldComponents = $env:FORGE_NVIM_COMPONENTS
 New-Item -ItemType Directory -Path $staging | Out-Null
 function Test-Source([string]$Directory) {
-    foreach ($name in @('nvim_forge\init.lua', 'nvim_forge\scripts\install-windows.ps1', 'nvim_forge.sh', 'wezterm.lua')) {
+    foreach ($name in @('nvim_forge\init.lua', 'scripts\install-private.ps1', 'scripts\install-private.lua', 'nvim_forge.sh', 'wezterm.lua')) {
         if (-not (Test-Path -LiteralPath (Join-Path $Directory $name) -PathType Leaf)) { return $false }
     }
     return $true
@@ -68,12 +71,13 @@ try {
     . (Join-Path $source 'nvim_forge\scripts\lib\install-profile.ps1')
     $env:FORGE_NVIM_COMPONENTS = Resolve-ForgeProfile -Profile $InstallProfile -Components $Components -Explicit $componentsExplicit
     Write-Host "Selected components: $env:FORGE_NVIM_COMPONENTS"
-    Write-Host 'Starting Windows installer.'
-    $backend = Join-Path $source 'nvim_forge\scripts\install-windows.ps1'
+    Write-Host 'Starting isolated Forge installer.'
+    $backend = Join-Path $source 'scripts\install-private.ps1'
     $shell = (Get-Process -Id $PID).Path
     $backendArgs = @('-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', $backend,
-        '-UseLocalSource', '-WithLanguages', '-InstallPath', $InstallPath)
-    if ($SkipDependencies) { $backendArgs += '-SkipDependencies' }
+        '-Source', $source, '-InstallPath', $InstallPath)
+    if ($RuntimePath) { $backendArgs += @('-RuntimePath',$RuntimePath) }
+    if ($RuntimeArchiveUrl) { $backendArgs += @('-RuntimeArchiveUrl',$RuntimeArchiveUrl,'-RuntimeSHA256',$RuntimeSHA256) }
     & $shell @backendArgs
     $backendExit = $LASTEXITCODE
     if ($backendExit -ne 0) { exit $backendExit }
