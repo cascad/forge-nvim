@@ -12592,3 +12592,26 @@ Cargo.toml. Сведения о forge сверены по official Foundry docs 
 **Файлы.** PROBLEMS, docs/INSTALLATION_PLAN, IDE_ROADMAP, HISTORY,
 FIXLOG и AGENT_COMMANDS. Append-only journal prefixes/frozen files проверены;
 unrelated test infrastructure/drafts не включены в commit.
+
+
+## 238. Выбрана команда запуска fride
+
+Дата: 2026-11-14. IDE-141, уточнение плана §237.
+
+**Проблема/контекст.** Короткое имя запуска оставалось открытым. После
+обсуждения вариантов владелец явно выбрал fride — Forge IDE.
+
+**Изменение.** Выбор закреплён в INSTALLATION_PLAN, IDE_ROADMAP и PROBLEMS.
+Резервное полное имя forge-nvim сохраняется. Следующий implementation change
+должен дать native launchers fride с прежними argv/cwd/TTY/exit semantics,
+проверкой конфликта имени и сохранением чужих программ/настроек.
+
+**Проверка.** Согласованность трёх текущих плановых документов, git diff
+--check, exact staging и append-only prefixes. E2E не запускались: изменены
+только документы, существующий bin/forge и runtime остаются прежними.
+
+**Вывод.** Имя утверждено; перенос UI LocalVox и реализация/регистрация
+команды ещё впереди. Сам выбор имени не означает готовый launcher в PATH.
+
+**Файлы.** INSTALLATION_PLAN, IDE_ROADMAP, PROBLEMS, HISTORY, FIXLOG,
+AGENT_COMMANDS. Unrelated test infrastructure/drafts не затрагивались.

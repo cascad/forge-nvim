@@ -8779,3 +8779,17 @@ PowerShell-флаг -ErrorAction и отказал без каких-либо з
 Вопрос предпочтения задан пользователю; отсутствие ответа не является выбором.
 Коммит только шести документов; E2E для docs не запускались. Будущий UI и
 регистрация команды требуют своих native keyboard/conflict regressions.
+
+
+## 146. Выбор команды fride
+
+Дата: 2026-11-14. IDE-141, FIXLOG §238. Владелец выбрал fride (Forge IDE).
+Прочитаны git status, актуальные пункты INSTALLATION_PLAN/IDE_ROADMAP/PROBLEMS
+и хвосты журналов; rg нашёл прежние формулировки о невыбранном имени.
+Обновлены только плановые документы, исходный runtime не переименовывался.
+
+Проверки: git diff --check; точный список шести staged документов;
+SHA256 прежнего raw prefix FIXLOG/AGENT_COMMANDS и prefix staged blobs
+относительно HEAD; frozen code/SDK/lock и deferred WIP сверены с сохранённым
+baseline. E2E и installers не запускались, PATH/profile не менялись.
+Локальный docs commit разрешён ранее, push не выполнялся.
