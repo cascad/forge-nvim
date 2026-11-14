@@ -1,4 +1,5 @@
 // spec: IDE-BOOT-13. Presentation без установки SDK/пакетов в пользовательскую ОС.
+mod runtime;
 mod wizard;
 use serde::{Deserialize, Serialize};
 use std::collections::HashSet;
@@ -289,6 +290,7 @@ fn stage_title(stage: &str) -> &str {
 }
 
 fn execute(options: &Options, plan: &Plan, plain: bool) -> Result<i32> {
+    let runtime_plan = runtime::selected(options, plan)?;
     fs::create_dir_all(&options.log_dir)?;
     let timestamp = SystemTime::now()
         .duration_since(UNIX_EPOCH)
@@ -301,6 +303,17 @@ fn execute(options: &Options, plan: &Plan, plain: bool) -> Result<i32> {
         .create_new(true)
         .write(true)
         .open(&log_path)?;
+    let runtime_plan_path = if let Some(rows) = runtime_plan {
+        let path = log_path.with_extension("runtime.tsv");
+        let mut file = OpenOptions::new()
+            .create_new(true)
+            .write(true)
+            .open(&path)?;
+        file.write_all(rows.as_bytes())?;
+        Some(path)
+    } else {
+        None
+    };
     let mut command = if cfg!(windows) {
         let mut command = Command::new(&options.powershell);
         command
@@ -310,6 +323,9 @@ fn execute(options: &Options, plan: &Plan, plain: bool) -> Result<i32> {
             .arg(&options.source)
             .arg("-InstallPath")
             .arg(&plan.install_dir);
+        if let Some(path) = &runtime_plan_path {
+            command.arg("-RuntimePlanPath").arg(path);
+        }
         for (flag, value) in [
             ("-RuntimePath", &options.runtime),
             ("-RuntimeArchiveUrl", &options.runtime_url),
@@ -332,7 +348,13 @@ fn execute(options: &Options, plan: &Plan, plain: bool) -> Result<i32> {
                 &options.runtime_url,
                 &options.runtime_sha,
                 &plan.command_dir,
-            ]);
+            ])
+            .arg(
+                runtime_plan_path
+                    .as_ref()
+                    .map(|p| p.as_os_str())
+                    .unwrap_or_default(),
+            );
         command
     };
     command

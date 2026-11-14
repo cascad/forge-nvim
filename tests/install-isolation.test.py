@@ -87,7 +87,7 @@ class Isolation(unittest.TestCase):
             with zipfile.ZipFile(cls.archive) as arc:arc.extractall(cls.runtime)
         else:
             with tarfile.open(cls.archive) as arc:arc.extractall(cls.runtime,filter='data')
-        cls.server=transport.serve();cls.url,cls.routes,_=cls.server.__enter__()
+        cls.server=transport.serve();cls.url,cls.routes,cls.requests=cls.server.__enter__()
         cls.routes['/runtime']=cls.archive.read_bytes()
         source_bytes=io.BytesIO()
         if WINDOWS:

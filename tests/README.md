@@ -680,3 +680,21 @@ docker compose -f tests/containers/compose.yaml run --rm --no-deps --pull never 
 Host .tests/ubuntu монтируется как guest /workspace/.tests. Native Mac запускается
 отдельно; Linux contract не заменяет Mac acceptance. Только developer build
 может вызывать Cargo; installer получает готовый проверенный binary.
+
+
+### Модульный runtime — IDE-BOOT-14
+
+`python -B tests/install-runtime.test.py` (Windows) / `python3 -B ...` (Linux/macOS).
+Нужны готовые private Neovim/UI и Node24.11.0 SDK, FORGE_INSTALL_NODE_SDK задаёт
+SDK directory явно. Stand использует localhost HTTP, настоящий private launch
+Node/npm, fixtures init/setup и feature marker. Артефакты —
+.tests/install-isolation/<id>/runtime-summary.json, http.json, node.json,
+backend logs/argv/exit. Повтор проверяет отсутствие повторного download частей.
+Mac acceptance — отдельный native запуск.
+
+```sh
+docker compose -f tests/containers/compose.yaml run --rm --no-deps --pull never -e FORGE_INSTALL_UI_BINARY=/workspace/.tests/installer-ui/linux-x64/fride-setup -e FORGE_INSTALL_STAND_ROOT=/tmp/fride-runtime --entrypoint python3 ubuntu -B tests/install-runtime.test.py
+```
+
+Это проверка доставки/композиции готовых parts; полный SDK inventory и package
+readiness не подменяются exit0 этого stand.

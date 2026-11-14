@@ -8917,3 +8917,81 @@ artifact gates остаются явно открытыми; бинарей и .
 .tests/installer-ui-cleanup.json. Exact run roots извлечены из installer-ui
 logs, resolved boundary проверен до recursive удаления. Удалено1.07GiB своих
 SDK copies/archives, native /tmp Docker исчез с --rm; диагностика сохранена.
+
+
+## 149. Автоматическая доставка частей SDK и native Node/npm из fride
+
+2026-11-14; IDE-BOOT-14/IDE-138, FIXLOG§241. OpenSpec
+add-modular-runtime-delivery (spec-driven), root F:/repo/forge-nvim. Установщик
+использует готовые части, сам Cargo/SDK compiler/global package managers не
+запускает. Developer UI rebuild использовал готовый Rust1.96.1 и pinned cache.
+
+```powershell
+$env:TEMP='F:/repo/forge-nvim/.tests/tmp'; $env:TMP=$env:TEMP; $env:TMPDIR=$env:TEMP
+$env:PYTHONUTF8='1'; $env:PYTHONIOENCODING='utf-8'
+$env:NVIM_LOG_FILE='F:/repo/forge-nvim/.tests/tmp/runtime-delivery-windows.log'
+$env:npm_config_cache='F:/forge-nvim-tmp/npm-cache'
+python -B scripts/build-installer-ui.py --rustc C:/Users/cascad/.rustup/toolchains/stable-x86_64-pc-windows-msvc/bin/rustc.exe > .tests/runtime-delivery-build-windows-v1.txt 2>&1
+python -B tests/install-runtime.test.py > .tests/runtime-delivery-windows-v1.txt 2>&1
+python -B tests/install-runtime.test.py test_runtime_02_dependency_install_repeat test_runtime_05_bad_archive_sha test_runtime_12_cached_file_corruption test_runtime_13_file_directory_conflict test_runtime_14_target_inside_part > .tests/runtime-delivery-windows-v2.txt 2>&1
+python -B tests/install-ui.test.py test_ui_05_core_native_install test_ui_06_backend_failure test_ui_13_custom_native_install > .tests/runtime-delivery-ui-controls-windows.txt 2>&1
+python -B tests/install-isolation.test.py Isolation.test_01_install_launch_and_repeat Isolation.test_05_root_download_and_repeat Isolation.test_06_wrong_archive_hash Isolation.test_11_caller_environment > .tests/runtime-delivery-legacy-controls-windows.txt 2>&1
+docker version --format '{{.Server.Version}}'
+docker compose -f tests/containers/compose.yaml run --rm --no-deps --pull never --entrypoint bash ubuntu /workspace/.tests/runtime-delivery-run.sh > .tests/runtime-delivery-ubuntu-v1.txt 2>&1
+docker compose -f tests/containers/compose.yaml run --rm --no-deps --pull never -e FORGE_INSTALL_UI_BINARY=/workspace/.tests/installer-ui/linux-x64/fride-setup -e FORGE_INSTALL_STAND_ROOT=/tmp/fride-runtime-controls --entrypoint bash ubuntu -c 'python3 -B tests/install-ui.test.py test_ui_05_core_native_install test_ui_06_backend_failure test_ui_13_custom_native_install && python3 -B tests/install-isolation.test.py Isolation.test_01_install_launch_and_repeat Isolation.test_05_root_download_and_repeat Isolation.test_06_wrong_archive_hash Isolation.test_11_caller_environment' > .tests/runtime-delivery-controls-ubuntu.txt 2>&1
+npx.cmd --yes @fission-ai/openspec@1.13.2 validate add-modular-runtime-delivery --type change --strict --no-interactive
+git diff --check
+git diff --cached --check
+```
+
+run.sh собирает текущий native UI offline из прежнего vendor.tar.gz в native
+/tmp/fride-runtime-build.*, CARGO_HOME/target/temp там же, export binary/receipt
+в guest .tests/installer-ui/linux-x64, затем14 runtime cases. Host overlay
+.tests/ubuntu соответствует guest /workspace/.tests. Готовый image/Node SDK,
+network_mode none, без build/pull/start/stop Docker/WSL. Windows/Linux тяжёлые
+команды выполнялись последовательно. Native temporary layer удаляется --rm.
+
+Доступный Node в host PATH был F:/nodejs/node.exe, но stand взял pinned готовый
+.tests/node-deps/sdk/node-v24.11.0-win-x64. В image обычного node в PATH не было,
+был SDK /opt/forge/node-deps/sdk/node-v24.11.0-linux-x64. Никаких новых Node/OS
+установок. Копия Node/npm упакована настоящим component packager; Node private
+path/version24.11.0 и npm native exit0 читаются из node.json. Feature-marker и
+init/setup — fixtures. Не выдавать delivery stand за full SDK acceptance.
+
+Структура артефактов: runtime-summary.json (cases/platform/failures/UI SHA),
+http.json (реальные пути HTTP; repeat не получает archive заново), node.json
+(native executable/npm/version/codes), UI log и runtime.tsv (selected URLs/SHA),
+root/launch/observe JSON (argv/out/err/exit), cached source со снимком scripts,
+component recipe/archive receipts. Failures v1/90s и stderr сохранены; после
+изменений выполнялся только затронутый/new subset, общий suite ради green не
+повторялся. Перед продолжением v2 readonly Win32_Process query по точному
+завершённому stand ID не нашёл orphan actors, Stop-Process не требовался.
+
+Rustfmt использован готовым direct SDK, Rust/Cargo update не было. Read-only
+context/list/specs/instructions/status и strict validate — OpenSpec1.13.2 с npm
+cache на F. MAC-INST legacy system installer не менялся. Package developer API:
+python -B scripts/package-runtime.py --source DIR --recipe RECIPE.json
+--component node-runtime --output node-runtime.zip (POSIX tar.gz). Это publisher
+команда, пользователь будущего one-liner её не выполняет. Catalog заполняется
+только проверенными опубликованными parts; сейчас release rows отсутствуют.
+
+Префиксы старых FIXLOG/commands проверяются по raw baseline и Git staged blobs;
+SDK/lock/backport metadata/WIP23 frozen paths, UI build receipts/source hashes
+и exact staging проверяются до commit. Рабочее дерево unrelated drafts/WIP
+не включается. Native Mac/полный inventory/actual readiness/publication открыты.
+
+Последний Default gate: python -B tests/install-runtime.test.py
+test_runtime_15_default_requires_complete_catalog >
+.tests/runtime-delivery-default-windows.txt 2>&1;1 PASS23.329s. Прерывание
+владельца остановило tool ожидание, сам test успел завершиться; повтор не
+потребовался. Тот же case15 через compose --entrypoint python3, ready Linux UI
+и native /tmp stand: .tests/runtime-delivery-default-ubuntu.txt,1 PASS12.813s.
+Python SDK path expression разбит на именованные os/arch variables; Windows/
+Linux значение не изменилось, Mac имеет явный darwin mapping.
+
+Cleanup: python -B .tests/runtime-delivery-cleanup.py. Exact roots только из
+runtime-delivery logs, resolved boundary проверен до удаления, source/scripts/
+runtime исключён из payload names. Core/component manifests и SDK receipts
+сохранены в .tests/runtime-delivery-metadata по content SHA, mapping/report в
+runtime-delivery-cleanup.json. Логи/native proofs/исходники не удалялись;
+canonical .tools SDK и .tests/node-deps не затрагивались.

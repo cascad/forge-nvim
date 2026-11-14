@@ -69,16 +69,20 @@ class UI(stand.Isolation):
         self.assertEqual(styled,'--no-color' not in command,'Native color/no-color presentation')
         return value
 
-    def root_entry(self,base,env,target,components='core'):
+    def root_entry(self,base,env,target,components='core',runtime=True):
         if stand.WINDOWS:
             quote=lambda value:"'"+str(value).replace("'","''")+"'"
             command='& ([scriptblock]::Create((Invoke-WebRequest -UseBasicParsing -Uri '+quote(self.url+'/entry')+').Content))'
-            for key,value in [('ArchiveUrl',self.url+'/ui-source'),('SourceRoot',base/'sources'),('InstallPath',target),('RuntimePath',self.runtime),('Components',components)]:
+            values=[('ArchiveUrl',self.url+'/ui-source'),('SourceRoot',base/'sources'),('InstallPath',target),('Components',components)]
+            if runtime:values.append(('RuntimePath',self.runtime))
+            for key,value in values:
                 command+=' -'+key+' '+quote(value)
             args=[stand.SHELL,'-NoProfile','-ExecutionPolicy','Bypass','-Command',command]
         else:
             command='bash -c "$(curl --fail --silent '+shlex.quote(self.url+'/entry')+')" --'
-            for key,value in [('archive-url',self.url+'/ui-source'),('source-root',base/'sources'),('install-dir',target),('runtime-path',self.runtime),('components',components)]:
+            values=[('archive-url',self.url+'/ui-source'),('source-root',base/'sources'),('install-dir',target),('components',components)]
+            if runtime:values.append(('runtime-path',self.runtime))
+            for key,value in values:
                 command+=' --'+key+' '+shlex.quote(str(value))
             args=[stand.SHELL,'-c',command]
         return self.run_process(args,env,base,'root-'+str(len(list(base.glob('root-*.json')))))

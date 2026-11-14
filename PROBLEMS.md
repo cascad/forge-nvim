@@ -50,6 +50,10 @@ PASS. Default/Custom пути и отсутствующие родители п�
 
 ## IDE-138 — полная установка IDE одной командой
 
+§241: реализована доставка Core и selected SDK modules по platform/URL/SHA,
+сборка в private staging и сохранение прежнего kit при отказе. Native stand
+проверяет Node/npm. Полный release inventory/actual readiness и Mac ещё открыты.
+
 2026-11-14, требование владельца: одна строка скачивает установщик, который
 сам скачивает и устанавливает всё необходимое для nvim_forge на Windows,
 Linux и macOS. Пользователь не скачивает бинарники с GitHub вручную и не

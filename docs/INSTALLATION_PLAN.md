@@ -84,8 +84,9 @@ Development API: -RuntimePath DIR / --runtime-path DIR или
 --recipe RECIPE.json --output ARCHIVE.zip (или .tar.gz); рядом сохраняется
 JSON receipt архива. Это developer/publisher API, не ручная подготовка обычным
 пользователем. Recipe должен описывать реально подготовленные инструменты.
-Без runtime entry сейчас даёт явную ошибку: проверенные полные Default bundles
-ещё не подготовлены/не опубликованы. Публичный one-liner пока не обещается.
+Без explicit runtime entry использует modular catalog (§241). Проверенные
+полные Default bundles ещё не подготовлены/не опубликованы: missing artifact
+даёт конкретный отказ. Публичный one-liner пока не обещается.
 
 ### Проверка границы
 
@@ -420,3 +421,47 @@ localhost доставка UI/source, SHA, install/launch/repeat, failure/log/ex
 foreign snapshots. Init/setup — fixture; это не full SDK/package acceptance.
 Для Docker готовый Linux UI помещается в .tests/ubuntu/installer-ui/linux-x64;
 команда в tests/README.md. macOS запускается владельцем нативно, gate открыт.
+
+## Модульная доставка SDK — §241
+
+Без RuntimePath/RuntimeArchiveUrl frontend выбирает готовые архивы из
+scripts/runtime/artifacts.tsv: platform, component, HTTP(S) URL, SHA256.
+Выбор — Core плюс прежняя canonical closure. Снятый в Custom компонент не
+скачивается; общая зависимость Node/Go скачивается один раз. Preview каталога
+не требует. Missing/duplicate/invalid entry останавливает установку до backend.
+Catalog пока без release rows: это готовый путь доставки, не опубликованный SDK.
+
+Core сохраняет прежний forge-runtime.json с supported Neovim; дополнительная
+часть содержит forge-component.json со schema1/kind component, native platform,
+единственным component ID, files/SHA256, executable paths и probes. Все архивы
+получаются существующим private downloader в cache по SHA. Общий Lua проверяет
+состав/платформу/каждый файл и конфликты, собирает runtime в staging, исполняет
+native probes и прежний setup. Итоговый manifest содержит все выбранные части.
+Старый kit до успешной подготовки сохраняется. Explicit full-runtime API
+продолжает работать и не требует component catalog.
+
+Developer/publisher готовит part из уже подготовленных файлов (обычный
+пользователь этого не делает):
+
+```sh
+python3 -B scripts/package-runtime.py --source /prepared/node-runtime --recipe node-runtime.json --component node-runtime --output node-runtime.tar.gz
+```
+
+Windows: `python -B ... --output node-runtime.zip`. Recipe содержит schema1,
+platform, components с единственным ID, paths/probes. Core упаковывается прежней
+командой без --component и должен содержать supported patched SDK на Windows.
+Упаковка не выдаётся за фактическую готовность инструментов: все команды и
+используемые data paths должны входить в настоящий release inventory.
+
+Native stand: Windows `python -B tests/install-runtime.test.py`, Linux/macOS
+`python3 -B tests/install-runtime.test.py`. Нужны готовые native Neovim/UI и
+Node SDK24.11.0 (FORGE_INSTALL_NODE_SDK, либо прежний .tests/node-deps/sdk
+stand cache; в Docker — готовый FORGE_E2E_NODE_DEPS). Ничего системного не
+ставится, сеть только localhost. Проверяются настоящий source/UI/parts HTTP,
+selected downloads/cache, private launch Node/npm, проверки повреждений,
+конфликта и сохранения готового kit. Init/setup и feature-marker part — fixtures;
+это delivery acceptance, не полная package readiness IDE.
+
+Дальше IDE-138: подготовить проверенные release Core/языковые модули и их
+инвентарь, изолировать persistent state каждого SDK, проверять actual package
+readiness после setup; native Mac и публикация assets отдельно.

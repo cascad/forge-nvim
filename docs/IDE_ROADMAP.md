@@ -28,7 +28,9 @@ IDE-141: оформить installer как актуальный localvox-light (
 общий native мастер LocalVox реализован: Custom/Back/Cancel, preview, stages/log,
 проверяемая доставка UI. Windows/Ubuntu проверены; native Mac и публикация
 platform UI/полных SDK ещё открыты. Следующий срез IDE-138 — состав и доставка
-приватных runtime bundles, затем actual readiness инструментов. Детали —
+приватных runtime bundles, затем actual readiness инструментов. §241 добавляет
+автоматическую модульную доставку Core/selected dependencies; release catalog
+пока пуст, native SDK inventory/actual readiness остаются следующими. Детали —
 [INSTALLATION_PLAN](INSTALLATION_PLAN.md#команда-запуска-и-оформление--ide-141).
 
 ## Текущая очередь продукта — решение владельца 2026-11-12

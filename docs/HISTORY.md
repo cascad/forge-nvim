@@ -377,6 +377,7 @@ Python реализован и проверен 2026-11-03; после возо�
 | §238 | [Выбрана команда запуска fride](../nvim_forge/FIXLOG.md#238-выбрана-команда-запуска-fride) |
 | §239 | [Fride: launchers и явная регистрация команды](../nvim_forge/FIXLOG.md#239-fride-launchers-и-явная-регистрация-команды) |
 | §240 | [Native установщик Fride в стиле LocalVox](../nvim_forge/FIXLOG.md#240-native-установщик-fride-в-стиле-localvox) |
+| §241 | [Модульная доставка приватного SDK](../nvim_forge/FIXLOG.md#241-модульная-доставка-приватного-sdk) |
 
 ## Как читать и дополнять
 

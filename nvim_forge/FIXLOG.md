@@ -12775,3 +12775,94 @@ tests README/HISTORY/commands. Raw: .tests/installer-ui-*.txt и отдельн�
 runtime/prepared/archive объектов из7 Windows stand roots, 1,147,798,960bytes
 (1.07GiB). Boundaries resolve внутри F:/repo/forge-nvim/.tests/install-isolation,
 foreign files/логи/receipts/ready SDK/UI и исходники сохранены.
+
+
+## 241. Модульная доставка приватного SDK
+
+**Дата:** 2026-11-14. **Пункт:** IDE-138. Спека: IDE-BOOT-14 (ADDED).
+
+**Было/причина.** UI§240 и private installer ещё требовали explicit RuntimePath
+или RuntimeArchiveUrl. Один общий архив всех языков заставил бы Custom качать
+лишнее, а готовить архив для каждой комбинации компонентов непрактично.
+
+**Сделано.** Общий native frontend выбирает Core и canonical selected closure
+по scripts/runtime/artifacts.tsv (platform/component/URL/SHA256). Missing,
+duplicate и invalid catalog отклоняются до backend/target. Preview не требует
+готовых SDK. После подтверждения plan сохраняется рядом с полным UI log.
+Explicit full-runtime API сохраняется без участия catalog.
+
+PS/Bash повторно используют прежние SHA/extraction/cache transport для каждой
+части. Только Core bootstrap запускает supported native Neovim. Дополнительный
+archive содержит forge-component.json schema1/kind component/один component,
+platform/files/paths/probes; package-runtime.py получил --component. Общий Lua
+проверяет весь состав, каждый hash и дерево до target, запрещает linked parts,
+файловые/case/file-directory конфликты и пересечение target с частью cache.
+Сборка выполняется в прежнем staging, итоговый manifest объединён, probes/setup
+и backup/publication прежние. Неиспользуемые части не скачиваются. Windows
+PowerShell byte progress отключён локально в downloader: этапами управляет UI.
+
+**Проверка.** Новый tests/install-runtime.test.py:14 native delivery cases.
+Настоящие source/UI/Core/modules HTTP, скачивание/check SHA, private Neovim,
+Node24.11.0/npm, повтор без повторного download частей. Node/npm запускаются
+из установленного fride, node.json фиксирует native path/version/exit; это
+не mock executable и не системный Node из PATH. Negative cases: missing и
+duplicate/invalid catalog, archive SHA, wrong platform/component, extra file,
+file SHA, collision и cache corruption, file-directory conflict, target внутри
+part. При отказе прежний kit/Node продолжают работать. Foreign snapshots PASS.
+
+Windows v1:10 PASS/1 ERROR,11 cases367.817s. Case05 записал ожидаемую ошибку
+Runtime archive SHA256 mismatch, но top command превысил90s. Raw suite и UI
+log сохранены; непосредственная причина timeout не доказана. После локального
+отключения PS progress и усиления composition guards выполнены только5
+затронутых/новых cases02/05/12/13/14:5 PASS66.857s. Это наблюдение не выдаётся
+за доказательство причины старого timeout. Следовательно Windows покрывает
+все14 cases суммарно, не одним заново переписанным full green run.
+
+Ubuntu: один current14 PASS54.956s. Native UI пересобран offline из прежних
+pinned vendor/crates на готовом image, без Cargo/Rust install; SDK берутся из
+готового image. В начале readonly inventory `node` в обычном PATH отсутствовал:
+использован подготовленный /opt/forge/node-deps/sdk, а не distro install.
+Windows source ready SDK .tests/node-deps/sdk тоже только читался.
+
+Совместимость Windows:3 UI PASS23.074s (explicit Core, backend error, Custom
+native install),4 legacy PASS36.151s (direct install/repeat, URL download/repeat,
+wrong SHA, caller env). Ubuntu3 UI PASS4.438s; legacy3 PASS/1 Windows-only skip
+5.444s. RuntimePath/URL, error propagation, full bundle API и Custom terminal
+flow сохранены. Editor behavior/67 plugin pins не менялись, общий IDE регресс
+ради этого среза не запускался. OpenSpec strict validate PASS.
+
+**Ограничения/вывод.** Готов путь модульной доставки, не весь Default inventory.
+Node/npm payload настоящий; init/setup callbacks и node feature-marker part —
+fixtures. Этот тест не подтверждает все Mason/parsers/языковые SDK. Catalog
+пока пуст: не опубликованы UI/полные native Core/language bundles. Native Mac
+не запускался, остаётся owner gate. Следующий срез — проверенный release
+inventory/Core/modules, private persistent SDK state и actual package readiness.
+Нет новых LSP/host package managers/Ollama/управления WSL. Runtime backend общий,
+только shell transport разделён по ОС; универсальность не заменяется Windows
+веткой. Тяжёлые прогоны Windows/Linux последовательно, Docker готовый без
+build/pull/network; Native tmp/export/--rm, host temp/cache на F.
+
+**Файлы/артефакты.** runtime catalog и native resolver; runtime-parts.lua;
+private backends, component packager; install-runtime stand и2 shared test
+helpers; add-modular-runtime-delivery; README/installation plan/roadmap/problems,
+HISTORY/commands. Raw .tests/runtime-delivery-*.txt, native .tests/install-isolation
+и .tests/ubuntu/install-isolation, runtime-summary/http/node JSON, UI logs/plans,
+source archives/scripts и hash receipts. Готовые UI binary/source receipts
+сверены; SDK/lock/backports/deferred test WIP сохраняются. Heavy собственные
+копии SDK/cache/archive очищаются после audit с resolved workspace guard.
+Commit локальный, без push/release.
+
+**Дополнительный Default gate.** После основной матрицы добавлен case15:
+неполный catalog не допускает частичный Default, выдаёт missing Go/Rust и
+останавливается без backend/target/log/network. Windows1 PASS23.329s,
+Ubuntu1 PASS12.813s; тест завершился во время прерывания владельцем и не
+повторялся. Всего15 разных runtime delivery сценариев на каждой ОС с учётом
+адресных прогонов. Непроверенные Mac/full SDK gates не закрыты.
+
+**Cleanup.** Удалено 3,957,756,774 bytes (3.69GiB)
+из 5 собственных Windows stand roots; 51 payload/archive объектов.
+Native manifest/SDK receipts/nvim SHA сохранены отдельно перед удалением
+(129 metadata references), raw/source scripts/catalogs/UI logs/JSON остаются.
+Удаление ограничено resolved F:/repo/forge-nvim/.tests/install-isolation;
+source/scripts/runtime не удаляется вместе с payload runtime. Audit/cleanup
+reports — .tests/runtime-delivery-audit.json и runtime-delivery-cleanup.json.

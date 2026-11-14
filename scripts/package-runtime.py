@@ -13,15 +13,22 @@ import tempfile
 import zipfile
 
 
-def package(source, recipe, output):
+def package(source, recipe, output, component=None):
     source, output = Path(source).resolve(), Path(output).resolve()
     if source == output or source in output.parents:
         raise ValueError('Output must be outside runtime source')
     meta = json.loads(Path(recipe).read_text(encoding='utf-8'))
-    if meta.get('schema') != 1 or not meta.get('components') or 'core' not in meta['components']:
-        raise ValueError('Recipe requires schema1 and core component')
+    if meta.get('schema') != 1 or not meta.get('components'):
+        raise ValueError('Recipe requires schema1 and components')
+    if component:
+        if component=='core' or not all(c in 'abcdefghijklmnopqrstuvwxyz-' for c in component) or meta['components'] != [component]:
+            raise ValueError('Component recipe must contain exactly its optional component')
+        meta['kind']='component'
+        if 'nvim' in meta or 'windows_sdk' in meta:raise ValueError('Only Core provides Neovim/SDK')
+    elif 'core' not in meta['components']:
+        raise ValueError('Recipe requires core component')
     expected = 'bin/nvim.exe' if meta['platform'] == 'windows-x64' else 'bin/nvim'
-    if meta.get('nvim') != expected or not (source/expected).is_file():
+    if not component and (meta.get('nvim') != expected or not (source/expected).is_file()):
         raise ValueError('Unsupported/missing native Neovim')
     for value in meta.get('paths', []) + [p[0] for p in meta.get('probes', [])]:
         if not value or '\\' in value or ':' in value or any(c in value for c in '\r\n\t') or value.startswith('/') or any(p in ('.','..') for p in value.split('/')):
@@ -40,10 +47,12 @@ def package(source, recipe, output):
             else: shutil.copy2(real,dst)
         copy_tree(source,stage)
         (stage/'forge-runtime.json').unlink(missing_ok=True)
-        (stage/'nvim.sha256').write_text(hashlib.sha256((stage/expected).read_bytes()).hexdigest()+'\n',encoding='ascii')
+        (stage/'forge-component.json').unlink(missing_ok=True)
+        if not component:
+            (stage/'nvim.sha256').write_text(hashlib.sha256((stage/expected).read_bytes()).hexdigest()+'\n',encoding='ascii')
         meta['files']={p.relative_to(stage).as_posix():hashlib.sha256(p.read_bytes()).hexdigest()
                        for p in sorted(stage.rglob('*')) if p.is_file()}
-        (stage/'forge-runtime.json').write_text(json.dumps(meta,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
+        (stage/('forge-component.json' if component else 'forge-runtime.json')).write_text(json.dumps(meta,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
         if output.suffix == '.zip':
             with zipfile.ZipFile(output,'w',compression=zipfile.ZIP_DEFLATED) as archive:
                 for path in sorted(stage.rglob('*')):
@@ -61,5 +70,6 @@ if __name__ == '__main__':
     parser=argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--source',required=True);parser.add_argument('--recipe',required=True)
     parser.add_argument('--output',required=True)
+    parser.add_argument('--component',help='Optional SDK component; Core keeps the full runtime format')
     options=parser.parse_args()
-    print(json.dumps(package(options.source,options.recipe,options.output),indent=2))
+    print(json.dumps(package(options.source,options.recipe,options.output,options.component),indent=2))

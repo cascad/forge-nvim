@@ -131,10 +131,6 @@ local function install()
   for path, sha in pairs(manifest.files) do
     if digest(join(runtime,relative(path))) ~= sha:lower() then fail('Runtime SHA256 mismatch: ' .. path) end
   end
-  local components = {}; for _, id in ipairs(manifest.components or {}) do components[id] = true end
-  for id in (vim.env.FORGE_NVIM_COMPONENTS or 'core'):gmatch('[^,]+') do
-    if not components[id] then fail('Runtime lacks selected component: ' .. id) end
-  end
   if type(manifest.paths) ~= 'table' or #manifest.paths == 0 then fail('Runtime has no executable paths') end
   for _, path in ipairs(manifest.paths) do relative(path) end
   -- Проверка всего дерева до создания target (включая неучтённые manifest links).
@@ -151,6 +147,15 @@ local function install()
     end
   end
   check_tree(runtime)
+  local parts
+  manifest,parts=dofile(join(source,'scripts/runtime-parts.lua')).plan(runtime,manifest,vim.env.FORGE_INSTALL_RUNTIME_PLAN)
+  for _,part in ipairs(parts) do
+    if within(target,part.root) or within(part.root,target) then fail('Install target overlaps component runtime') end
+  end
+  local components = {}; for _, id in ipairs(manifest.components or {}) do components[id] = true end
+  for id in (vim.env.FORGE_NVIM_COMPONENTS or 'core'):gmatch('[^,]+') do
+    if not components[id] then fail('Runtime lacks selected component: ' .. id) end
+  end
   event('runtime','ready')
   mkdir(target)
   if not existing or not uv.fs_stat(owner_path) then write(owner_path,vim.json.encode({schema=1,product='forge-nvim',ready=false})) end
@@ -158,6 +163,13 @@ local function install()
   local stamp = tostring(os.time()) .. '-' .. tostring(uv.hrtime())
   local stage = join(target,'.stage-' .. stamp); mkdir(stage)
   copy_tree(runtime,join(stage,'runtime'))
+  for _,part in ipairs(parts) do
+    for path in pairs(part.files) do
+      local destination=join(stage,'runtime',path)
+      mkdir(vim.fs.dirname(destination));copy_tree(join(part.root,path),destination)
+    end
+  end
+  write(join(stage,'runtime/forge-runtime.json'),vim.json.encode(manifest))
   mkdir(join(stage,'config')); copy_tree(join(source,'nvim_forge'),join(stage,'config/forge'))
   mkdir(join(stage,'bin'))
   for _, name in ipairs({'fride','forge-nvim','forge'}) do

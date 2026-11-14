@@ -3,14 +3,15 @@
 set -euo pipefail
 source_dir="$1"; install_dir="$2"; runtime="${3:-}"
 url="${4:-}"; expected="${5:-}"
-command_dir="${6:-}"
+command_dir="${6:-}"; runtime_plan="${7:-}"
 if [ "${FRIDE_INSTALL_UI:-}" = 1 ]; then printf 'FRIDE_EVENT\t{"stage":"runtime","status":"start"}\n';fi
 hash_file() {
   if command -v sha256sum >/dev/null 2>&1; then sha256sum "$1" | cut -d ' ' -f 1
   else shasum -a 256 "$1" | cut -d ' ' -f 1; fi
 }
-if [ -n "$runtime" ] && [ -n "$url" ]; then printf 'Choose runtime path or URL.\n' >&2; exit 1; fi
-if [ -n "$url" ]; then
+receive_runtime_archive() (
+  set -e
+  local url="$1" expected="$2" cache stage
   case "$url" in http://*|https://*) ;; *) printf 'Runtime URL must use HTTP(S).\n' >&2; exit 1;; esac
   [ "${#expected}" = 64 ] || { printf 'Runtime archive requires SHA256.\n' >&2; exit 1; }
   case "$expected" in *[!a-f0-9]*) printf 'Runtime SHA256 must use lowercase hex.\n' >&2; exit 1;; esac
@@ -36,8 +37,27 @@ if [ -n "$url" ]; then
     mv "$stage/unpacked" "$cache"
     rm -rf -- "$stage"; trap - EXIT
   fi
-  runtime="$cache"
-fi
+  printf '%s\n' "$cache"
+)
+if [ -n "$runtime" ] && [ -n "$url" ]; then printf 'Choose runtime path or archive URL.\n' >&2;exit 1;fi
+if [ -n "$runtime_plan" ]; then
+  [ -z "$runtime" ] && [ -z "$url" ] || { printf 'Runtime plan conflicts with explicit runtime.\n' >&2;exit 1; }
+  case "$(uname -s)" in Darwin) runtime_os=macos;; *) runtime_os=linux;; esac
+  case "$(uname -m)" in arm64|aarch64) runtime_arch=arm64;; *) runtime_arch=x64;; esac
+  runtime_seen=',';runtime_first=1
+  while IFS=$'\t' read -r part_platform part_id part_url part_sha part_extra; do
+    part_sha="${part_sha%$'\r'}"
+    [ "$part_platform" = "$runtime_os-$runtime_arch" ] && [ -z "$part_extra" ] && [ -n "$part_id" ] || { printf 'Invalid runtime delivery plan.\n' >&2;exit 1; }
+    case "$part_id" in *[!a-z-]*) printf 'Invalid runtime component.\n' >&2;exit 1;; esac
+    case "$runtime_seen" in *",$part_id,"*) printf 'Duplicate runtime component.\n' >&2;exit 1;; esac
+    [ "$runtime_first" != 1 ] || [ "$part_id" = core ] || { printf 'Runtime delivery plan requires Core first.\n' >&2;exit 1; }
+    runtime_seen="$runtime_seen$part_id,"
+    printf 'Runtime component: %s\n' "$part_id" >&2
+    part_path="$(receive_runtime_archive "$part_url" "$part_sha")"
+    if [ "$runtime_first" = 1 ]; then runtime="$part_path";runtime_first=0;fi
+  done < "$runtime_plan"
+  [ "$runtime_first" = 0 ] || { printf 'Empty runtime delivery plan.\n' >&2;exit 1; }
+elif [ -n "$url" ]; then runtime="$(receive_runtime_archive "$url" "$expected")";fi
 if [ -z "$runtime" ]; then
   printf '%s\n' 'Prepared private runtime is unavailable. IDE-138 release bundles are not published yet; development stand: --runtime-path <prepared bundle>. System Neovim and packages were not changed.' >&2
   exit 1
@@ -49,6 +69,8 @@ runtime="$(cd "$runtime" && pwd -P)"
 unset VIM VIMRUNTIME VIMINIT EXINIT LUA_INIT LUA_PATH LUA_CPATH
 export FORGE_INSTALL_SOURCE="$source_dir" FORGE_INSTALL_TARGET="$install_dir" FORGE_INSTALL_RUNTIME="$runtime"
 export FORGE_INSTALL_COMMAND_DIR="$command_dir"
+unset FORGE_INSTALL_RUNTIME_PLAN
+if [ -n "$runtime_plan" ]; then export FORGE_INSTALL_RUNTIME_PLAN="$runtime_plan";fi
 work="$(mktemp -d "$(dirname "$source_dir")/.installer.XXXXXX")"
 mkdir "$work/tmp"
 export XDG_CONFIG_HOME="$work/config" XDG_DATA_HOME="$work/data"
