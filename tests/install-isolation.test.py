@@ -59,6 +59,10 @@ def foreign_snapshot(path):
     # Windows PowerShell создаёт этот cache ДО выполнения любого -File, включая
     # пустой скрипт. Это side effect host, не конфиг/SDK и не запись installer.
     result.pop('AppData/Local/Microsoft/Windows/PowerShell/StartupProfileData-NonInteractive',None)
+    # Windows may create this empty bookkeeping file while loading native SDKs.
+    # Only the empty file is exempt; any content/change stays in the snapshot.
+    inet='AppData/Local/Microsoft/Windows/INetCache/IE/container.dat'
+    if WINDOWS and result.get(inet)==hashlib.sha256(b'').hexdigest():result.pop(inet)
     return result
 
 

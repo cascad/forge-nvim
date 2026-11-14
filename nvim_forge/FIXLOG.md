@@ -12944,3 +12944,84 @@ HISTORY/commands. Raw .tests/setup-readiness-*.txt, catalogs JSON, native
 .tests/install-readiness/install-setup и Ubuntu overlay. Baseline source SHA,
 callbacks/argv/stdout/stderr/exit, receipt/parser state сохранены. Journals только
 append, exact commit без unrelated deferred tests и без push/release.
+
+
+## 243. Private SDK state и окружение
+
+**Дата:** 2026-11-14—2026-11-15. **Пункт:** IDE-138/140.
+Спека: IDE-BOOT-16 (ADDED).
+
+**Было/причина.** Managed setup/PS/sh задавали только GOPATH/GOCACHE и npm/pip
+cache разными списками. Cargo/Rustup home/install root, GOBIN/GOMODCACHE/GOENV,
+npm prefix/config и Python user/config/bytecode могли оставаться inherited и
+уводить SDK state в прежние SDK пользователя. Source native probe/setup/launch
+показал унаследованный external-sdk/GOBIN вместо kit state; Source RED сохранён.
+
+**Сделано.** Одна scripts/sdk-environment.tsv, общий Lua reader/preparation/env
+для probes/setup и её копия kit/bin для PS/Bash launchers. SDK homes/config/
+cache/bin находятся в sdk-state/cache; Go/Cargo/npm mutable bins идут после
+runtime до caller PATH. Upper npm aliases очищаются, pip target/prefix/user
+redirects снимаются. GOENV/npm/pip пустые config files создаются только при
+отсутствии, старые state/config сохраняются при повторе. sdk-state/.gitignore
+защищает собственное состояние от случайного git add. Личные configs/tokens
+не импортируются. HOME/project venv/target/flags не заменяются; checkout
+launcher не менялся. Windows finally восстанавливает caller env после exit7;
+POSIX меняет только child. Startup читает policy без SDK discovery/preparation.
+Глобальные GOTOOLCHAIN/RUSTUP_AUTO_INSTALL policies не менялись.
+
+**Native E2E.** tests/install-sdk-state.test.py, actual supported Neovim install,
+probe/3 setup stages/launch env traces и реальные offline SDK операции.
+Go env -w пишет собственный GOENV; rustup show home/set profile — собственный
+RUSTUP_HOME; direct ready Cargo/Rust SDK компилирует/ставит локальный crate в
+private Cargo bin и найденный executable реально запускается. npm --global
+ставит локальный tarball в собственный prefix, команда находится в mutable bin
+и запускается. pip --user ставит локальный pure wheel, импорт из private userbase
+подтверждён. Caller/project context и чужие SDK config/state snapshots сохранены.
+Kit config/opaque state переживают повтор; credentials fixture не копируется
+из foreign SDK. SDK inputs только readonly, не выдаются за весь release runtime.
+
+Source Windows1 RED21.044s, настоящий успешный install/launch дошёл до env
+assertion, обнаружен inherited GOBIN; source акторы сохранены. Ubuntu тот же
+Source RED3.985s, driver проверил5 наблюдений и external-sdk/GOBIN до target.
+Windows v1 seven functional cases прошли, но cleanup snapshot Rust case нашёл
+Windows bookkeeping (suite1 FAIL44.210s). Exact файл
+AppData/Local/Microsoft/Windows/INetCache/IE/container.dat —0bytes; только empty
+hash добавлен к уже существующей OS startup-cache классификации. Непустое
+содержимое не исключается, metadata отдельно сохранена. Rust case после этого
+1 PASS17.958s. Остальные6 не повторялись ради green.
+
+Ubuntu v1:5 PASS/1 FAIL/1 Windows-only skip6.437s. Python case не нашёл pip в
+system Python image; SDK state не был причиной. Driver использует готовый
+pip module readonly из прежнего Python stand venv с base interpreter; никакого
+apt/pip bootstrap в систему. Case06 адресно1 PASS4.900s. Pip PEP668 exception
+в fixture с --user/private userbase не пишет в system packages. Real Go/Rustup/
+Cargo/Node inputs на Windows/Ubuntu — готовые SDK, compiler vars в actor задают
+готовый direct rustc, auto-install/network запрещены только в stand.
+
+Compatibility Windows:5 launcher/registration/TTY/Restricted/caller controls
+PASS30.140s; native Core+Node module install/repeat1 PASS35.973s. Ubuntu3
+launcher/registration/TTY controls PASS6.141s и module1 PASS17.859s. Полный
+mutable tests/run.lua и editor regressions не запускались; no editor code change.
+
+**Вывод/границы.** Это согласованный named SDK environment, не HOME/filesystem
+sandbox и не весь SDK inventory. Личный SDK config — отдельный profile, auth
+может задаваться project/env/штатными SDK-командами. RUSTUP_HOME пока пуст без
+Rust component provisioning; release probes обязаны проверять действующий
+toolchain, fallback в ~/.rustup не обещается. SDK bins/version-specific Python
+entrypoints/full functionality и native Mac/release остаются gates. No new LSP,
+registry/provider/SDK manager, host PATH/profile/global package updates. Готовый
+Docker без build/pull/network/управления Desktop/WSL, тяжёлые ОС последовательно.
+Temp/state/proofs на F или native /tmp с экспортом; no secret contents in reports.
+
+**Файлы.** scripts/sdk-environment.tsv/.lua, install-private.lua, managed PS/sh;
+sdk state stand/actor и exact OS bookkeeping snapshot exception; policy/docs/
+roadmap/problems/HISTORY/commands; isolate-managed-sdk-state. Raw
+.tests/sdk-state-*.txt, sdk-env.jsonl, operation/caller/sdk-state-summary JSON,
+foreign snapshots/marker files. SDK/lock/backports/deferred WIP frozen,
+append-only journals/exact local commit; без push/release.
+
+**Audit/cleanup.** Native PATH приоритет сверён по 76 Windows/Ubuntu
+observations. Удалено 1804582187bytes (1.68GiB) собственных
+stand payload/archive copies из5 Windows roots; manifests/SDK receipts сохранены
+по content SHA до удаления. .tests/sdk-state-cleanup.json/metadata; source/scripts/
+runtime и SDK state/proofs не удалены. Canonical SDK/cache не затрагивались.

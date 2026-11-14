@@ -493,3 +493,18 @@ Mason plugin из .tests/editor-deps (FORGE_E2E_DEPS). FORGE_INSTALL_TEST_NVIM
 provider/receipt/location и parser loader, controlled install callbacks и
 fixtures package files, без сетевой установки. Артефакты —
 .tests/install-readiness/<id>. Native Mac команда та же, здесь не запускалась.
+
+## Private SDK state — §243
+
+Единая scripts/sdk-environment.tsv теперь применяется к probes/setup/managed
+launchers. Cargo/Rustup, Go cache/module/config/bin, npm global prefix/config,
+Python user/cache/config расположены в kit; прежние SDK redirect env не уводят
+default установку в пользовательские homes. Config/state сохраняются при
+повторе, mutable Go/Cargo/npm bins доступны в PATH. PS caller env восстанавливается.
+Launcher только читает policy, не запускает SDK preparation на startup.
+
+[Пути, native контракты и команды](SDK_STATE.md). Личные config/tokens не
+импортируются. HOME/project context не переписываются. Пустой RUSTUP_HOME не
+выдаётся за готовый Rust: SDK module должен отдельно подготовить toolchain.
+Это завершённый state/env срез, полный runtime inventory и native Mac/publication
+остаются следующими.

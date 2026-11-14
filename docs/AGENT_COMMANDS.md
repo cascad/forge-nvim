@@ -9061,3 +9061,70 @@ Ubuntu настоящий mode проверен. Последнее измене
 Хеши frozen23 путей/SDK/lock/backport metadata/deferred WIP, append-only journal
 prefixes и exact staged filenames проверяются перед commit. Actual SDK inventory/
 DLL dependencies/вся функциональность/native Mac/publication по-прежнему gates.
+
+
+## 151. Managed SDK env/state: native scopes и offline операции
+
+2026-11-14—2026-11-15; IDE-BOOT-16/IDE-140, FIXLOG§243,
+change isolate-managed-sdk-state. Только F:/repo/forge-nvim, существующие SDK
+readonly. Shared TSV policy вместо раздельных path lists в Lua/PS/sh.
+
+```powershell
+$env:TEMP='F:/repo/forge-nvim/.tests/tmp'; $env:TMP=$env:TEMP; $env:TMPDIR=$env:TEMP
+$env:PYTHONUTF8='1'; $env:PYTHONIOENCODING='utf-8'
+$env:npm_config_cache='F:/forge-nvim-tmp/npm-cache'
+$env:FORGE_SDK_STATE_SOURCE='F:/repo/forge-nvim/.tests/sdk-state-before'
+python -B tests/install-sdk-state.test.py SDKState.test_01_probes_setup_launch_scope > .tests/sdk-state-source-red-windows.txt 2>&1
+Remove-Item Env:FORGE_SDK_STATE_SOURCE
+python -B tests/install-sdk-state.test.py > .tests/sdk-state-windows-v1.txt 2>&1
+python -B tests/install-sdk-state.test.py SDKState.test_04_cargo_rustup_state > .tests/sdk-state-rust-windows-v2.txt 2>&1
+docker compose -f tests/containers/compose.yaml run --rm --no-deps --pull never --entrypoint bash ubuntu /workspace/.tests/sdk-state-run.sh > .tests/sdk-state-ubuntu-v1.txt 2>&1
+docker compose -f tests/containers/compose.yaml run --rm --no-deps --pull never -e FORGE_INSTALL_STAND_ROOT=/tmp/fride-sdk-state-python --entrypoint python3 ubuntu -B tests/install-sdk-state.test.py SDKState.test_06_python_user_state > .tests/sdk-state-python-ubuntu-v2.txt 2>&1
+python -B tests/install-isolation.test.py Isolation.test_01_install_launch_and_repeat Isolation.test_11_caller_environment Isolation.test_16_register_repeat_and_repair Isolation.test_22_native_terminal_input Isolation.test_24_restricted_policy_command > .tests/sdk-state-launcher-controls-windows.txt 2>&1
+python -B tests/install-runtime.test.py test_runtime_02_dependency_install_repeat > .tests/sdk-state-module-control-windows.txt 2>&1
+npx.cmd --yes @fission-ai/openspec@1.13.2 validate isolate-managed-sdk-state --type change --strict --no-interactive
+git diff --check
+git diff --cached --check
+```
+
+Before snapshots пяти backend/launcher файлов сохранены до изменения в
+.tests/sdk-state-before. Source override подставляет их в private source, не
+изменяет checkout. Probe/3 setup stages/launch действительно пишут whitelisted
+SDK path/project context vars в sdk-env.jsonl; общая env с потенциальными
+секретами не выгружается. operation.json — actual argv/out/err/code; caller.json
+сравнивает whitelisted caller env до/после exit7. Snapshot чужих SDK state strict.
+OS bookkeeping0byte INetCache exact path отдельно записан в os-bookkeeping.json,
+непустой file остаётся под сравнением. Не исключаются Cargo/npm/pip/Go configs.
+
+SDK binaries Go (Windows E:/Go1.23), rustup и direct ready Rust SDK, Node24.11.0,
+base Python/pip — readonly inputs. Сетевые операции не нужны: local Cargo crate,
+local npm tarball, local wheel; actual installed bin/module запускается. Go
+GOTOOLCHAIN=local/GOPROXY=off, Rustup auto-install0 только в actor env. APPDATA/
+HOME/OS bookkeeping redirected в stand, не настоящий C user profile. Compiler
+project target и flags сохранены. В image base Python без pip; pip импортирован
+из готового stand venv readonly, не установлен в OS. Pycache пишет в kit cache.
+
+sdk-state-run.sh живёт host .tests/ubuntu (guest .tests), Source RED выделен в
+.tests/ubuntu/sdk-state-source-red-ubuntu.txt. Script проверяет expected exit1
+и реальный inherited GOBIN после5 native observations, затем current suite.
+FORGE_INSTALL_STAND_ROOT=/tmp/fride-sdk-state; evidence exported, SDK copies
+пропущены. Последний Ubuntu control через --entrypoint bash:3 launcher
+cases01/16/22 и1 module case02; raw sdk-state-controls-ubuntu.txt. Docker image
+готовый, без build/pull/network или lifecycle-команд Desktop/WSL.
+
+Первый Windows suite functional7 прошёл, foreign cleanup сравнил новый0byte
+Windows bookkeeping; после tight empty-only exception повторён только Rust.
+Ubuntu python failure No module named pip — исправлены inputs actor, повторён
+только case06. Не повторять весь suite ради green. Empty private Rustup home
+не означает готовность toolchain, native Rust module inventory остаётся gate.
+Доступность реальных SDK/private behavior на Mac здесь не проверена.
+
+Reference primary env docs перечислены в docs/SDK_STATE.md. Источники SDK paths
+не выводили credential/config content. Frozen23 paths, SDK/lock/backport metadata,
+raw/staged journal prefixes и exact filenames проверяются перед commit. Полная
+подготовка SDK artifacts и публикация не подменяются этим state/environment E2E.
+
+Финальный audit проверяет SDK PATH priority по actual env traces обеих ОС.
+Cleanup: python -B .tests/sdk-state-cleanup.py, report .tests/sdk-state-cleanup.json.
+Exact roots из sdk-state logs, resolved boundary до recursive удаления,
+manifest/receipt metadata сохранены отдельно; 1.68GiB освобождено на F.

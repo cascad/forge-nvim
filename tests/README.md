@@ -713,3 +713,19 @@ command trace и source SHA в .tests/install-readiness/<id>.
 Legacy orchestration `tests/install-setup.test.py` использует согласованный
 минимальный Core fixture и те же native APIs, сохраняет прежние failure gates.
 Это не полный SDK функциональный acceptance. Native Mac прогон отдельно.
+
+
+### SDK state/environment — IDE-BOOT-16
+
+`python -B tests/install-sdk-state.test.py` / `python3 -B ...`:7 selectors
+(Windows caller restoration, на POSIX skip). Готовые SDK только читаются;
+без downloads/установки в host SDK. Artifact paths/env/probe/stage/launch
+traces, native SDK argv/out/err/exit, foreign SDK snapshots и state persistence.
+[Пути и границы](../docs/SDK_STATE.md). В Docker native stand размещается в /tmp:
+
+```sh
+docker compose -f tests/containers/compose.yaml run --rm --no-deps --pull never -e FORGE_INSTALL_STAND_ROOT=/tmp/fride-sdk-state --entrypoint python3 ubuntu -B tests/install-sdk-state.test.py
+```
+
+Host .tests/ubuntu соответствует guest .tests; proofs экспортируются без
+runtime SDK copies. Native Mac — отдельный запуск с подготовленными inputs.

@@ -1,6 +1,6 @@
 # nvim_forge — рабочий план мини-IDE
 
-Обновлено: 2026-11-14. Основная сборка: **nvim_forge**.
+Обновлено: 2026-11-15. Основная сборка: **nvim_forge**.
 Статус: базовые e2e настоящего nvim_forge работают на Windows и Ubuntu;
 фоновые установки инструментов редактора перенесены в явный setup.
 IDE-001 параллельно ждёт диагностических данных с Mac.
@@ -13,6 +13,9 @@ source entry имеет по6 transport PASS Windows/Ubuntu (§232–233), Mac �
 загрузку parsers. Команда с exit0 без готовых файлов больше не даёт done.
 Состав инструментов/языков сохранён; полный SDK inventory/state/функциональная
 матрица и Mac остаются следующими, публичный one-liner ещё не готов.
+§243: private SDK env/state policy общая для setup/probes/launch. Native
+Go/Cargo/Rustup/npm/pip операции изолированы по named paths, caller context
+сохранён. Следующий самостоятельный срез — реальные SDK artifacts/inventory.
 §234: общий setup обрабатывает Lua/Vim exceptions и missing commands как отказ;
 по7 stand PASS Windows/Ubuntu. Default/Custom каталоги и родители создаются
 автоматически. §235: выбор Default/Custom и его применение реализованы:

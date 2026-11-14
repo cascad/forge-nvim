@@ -28,6 +28,11 @@ Windows/Ubuntu; native Mac и опубликованные UI artifacts ещё �
 
 ## IDE-140 — комплект не должен менять существующие программы пользователя
 
+§243: shared SDK env policy закрывает inherited Cargo/Rustup/Go/npm/pip
+state/cache/config/global-install paths; managed probes/setup/launch согласованы.
+Личные configs/tokens не мигрируются, project context сохраняется. Native
+Windows/Ubuntu SDK операции проверены; full inventory и Mac отдельно.
+
 2026-11-14, явное требование владельца: Neovim и остальные элементы Forge
 должны устанавливаться независимо от уже существующих программ и настроек.
 Root entry переведён на private installer, собственные runtime/stdpath/temp,

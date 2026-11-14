@@ -53,15 +53,15 @@ local function copy_tree(source, target, root, active)
   else fail('Unsupported runtime file: ' .. source) end
 end
 local function digest(path) return vim.fn.sha256(read(path)) end
-local function environment(root, runtime, paths)
+local function environment(root, runtime, paths, sdk, policy)
   local env = vim.fn.environ()
   env.XDG_CONFIG_HOME, env.XDG_DATA_HOME = join(root,'config'), join(root,'data')
   env.XDG_STATE_HOME, env.XDG_CACHE_HOME = join(root,'state'), join(root,'cache')
   env.NVIM_APPNAME, env.NVIM_LOG_FILE = 'forge', join(root,'log/nvim.log')
   env.TEMP, env.TMP, env.TMPDIR = join(root,'tmp'), join(root,'tmp'), join(root,'tmp')
-  env.GOPATH, env.GOCACHE = join(root,'sdk-state/go'), join(root,'cache/go-build')
-  env.npm_config_cache, env.PIP_CACHE_DIR = join(root,'cache/npm'), join(root,'cache/pip')
+  local state_bins=sdk.apply(env,root,policy,windows)
   local bins = {}; for _, path in ipairs(paths) do bins[#bins+1] = join(runtime, path) end
+  vim.list_extend(bins,state_bins)
   env.PATH = table.concat(bins, windows and ';' or ':') .. (windows and ';' or ':') .. (env.PATH or '')
   for _, key in ipairs({'VIM','VIMRUNTIME','VIMINIT','EXINIT','LUA_INIT','LUA_PATH','LUA_CPATH'}) do env[key] = nil end
   return env
@@ -160,6 +160,9 @@ local function install()
   mkdir(target)
   if not existing or not uv.fs_stat(owner_path) then write(owner_path,vim.json.encode({schema=1,product='forge-nvim',ready=false})) end
   for _, dir in ipairs({'data','state','cache','tmp','log','sdk-state','backups'}) do mkdir(join(target,dir)) end
+  local sdk=dofile(join(source,'scripts/sdk-environment.lua'))
+  local policy=sdk.load(join(source,'scripts/sdk-environment.tsv'))
+  sdk.prepare(target,policy,windows)
   local stamp = tostring(os.time()) .. '-' .. tostring(uv.hrtime())
   local stage = join(target,'.stage-' .. stamp); mkdir(stage)
   copy_tree(runtime,join(stage,'runtime'))
@@ -179,8 +182,9 @@ local function install()
     write(join(stage,'bin',name..'.cmd'),'@echo off\r\npowershell.exe -NoProfile -ExecutionPolicy Bypass -File "%~dp0'..name..'.ps1" %*\r\nexit /b %errorlevel%\r\n')
   end
   write(join(stage,'bin/runtime-paths.txt'),table.concat(manifest.paths,'\n') .. '\n')
+  assert(uv.fs_copyfile(join(source,'scripts/sdk-environment.tsv'),join(stage,'bin/sdk-environment.tsv')))
   -- Setup использует staged config/runtime, а постоянные data/state принадлежат только Forge.
-  local env = environment(target,join(stage,'runtime'),manifest.paths)
+  local env = environment(target,join(stage,'runtime'),manifest.paths,sdk,policy)
   env.XDG_CONFIG_HOME = join(stage,'config')
   local exe = join(stage,'runtime',nvim)
   for index, probe in ipairs(manifest.probes or {}) do
