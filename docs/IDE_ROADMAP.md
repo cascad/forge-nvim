@@ -11,7 +11,9 @@ source entry имеет по6 transport PASS Windows/Ubuntu (§232–233), Mac �
 запускался. Полный Default/Custom ещё не готов. Ollama/модели исключены.
 §234: общий setup обрабатывает Lua/Vim exceptions и missing commands как отказ;
 по7 stand PASS Windows/Ubuntu. Default/Custom каталоги и родители создаются
-автоматически. Меню и полная package readiness остаются следующими срезами.
+автоматически. §235: выбор Default/Custom и его применение реализованы:
+Windows19 PASS, Ubuntu18 PASS/1 platform skip. Полная package readiness,
+supported SDK delivery и native Mac остаются следующими срезами.
 
 ## Текущая очередь продукта — решение владельца 2026-11-12
 
@@ -1071,6 +1073,9 @@ Default/Custom и подготовка поддерживаемого runtime/и
    поддерживаемых binaries/prerequisites ещё открыты, весь пункт не закрыт.
 3. [ ] Реализовать общий выбор Default/Custom и автоматическую подготовку
    выбранного профиля через существующие платформенные механизмы установки.
+   §235 закрыл selection/UI/dependency closure и mask в OS SDK/Mason/parsers/
+   Terminal. Полная доставка и readiness выбранных binaries ещё открыта,
+   поэтому весь пункт не объявляется завершённым. Таблица — components.tsv.
 4. [ ] Проверить повторный запуск: доставляет недостающее, сохраняет backup
    пользовательских конфигов, не требует ручных :Lazy/:Mason/prepare шагов.
    Логи и итоговая проверка показывают, что установилось и что помешало.

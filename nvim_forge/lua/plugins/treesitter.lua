@@ -20,6 +20,7 @@ local languages = {
     "diff", "git_config", "gitcommit", "gitignore", "gitattributes",
     "dockerfile",
 }
+languages = require('forge.install_profile').filter(languages, 5)
 
 local ignored_filetypes = {
     [""] = true,

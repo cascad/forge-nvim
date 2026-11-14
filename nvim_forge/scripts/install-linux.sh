@@ -24,6 +24,7 @@
 #   FORGE_NVIM_SKIP_WEZTERM=1   не трогать WezTerm и его конфиг
 #   FORGE_NVIM_FORCE_WEZTERM=1  ставить WezTerm даже без $DISPLAY (headless)
 #   FORGE_NVIM_WITH_LANGUAGES=1 доставить go/rust тулчейны
+#   FORGE_NVIM_COMPONENTS=...  canonical профиль от общего entry (обычно не задаётся вручную)
 #   FORGE_NVIM_INSTALL_DIR=...  куда ставить конфиг (деф. ~/.config/nvim)
 #   FORGE_NVIM_NO_BACKUP=1      падать, если путь занят, вместо бэкапа
 #
@@ -56,6 +57,18 @@ fi
 MONOREPO_ROOT=""
 if [ -n "$SCRIPT_DIR" ] && [ -f "$SCRIPT_DIR/../../nvim_forge.sh" ]; then
   MONOREPO_ROOT="$(cd -- "$SCRIPT_DIR/../.." && pwd -P)"
+fi
+forge_component_enabled() {
+  case "$1" in core|terminal) return 0;; go|go-runtime|rust|python) [ "$WITH_LANGUAGES" = 1 ];; *) return 1;; esac
+}
+if [ -f "$SCRIPT_DIR/lib/install-profile.sh" ]; then
+  . "$SCRIPT_DIR/lib/install-profile.sh"
+  if [ -n "${FORGE_NVIM_COMPONENTS:-}" ]; then
+    FORGE_NVIM_COMPONENTS="$(forge_select_profile default "$FORGE_NVIM_COMPONENTS" 1)"; export FORGE_NVIM_COMPONENTS
+    if ! forge_component_enabled terminal; then SKIP_WEZTERM=1; fi
+  fi
+elif [ -n "${FORGE_NVIM_COMPONENTS:-}" ]; then
+  printf 'Component profile library missing.\n' >&2; exit 1
 fi
 # Общие функции подключения (resolve_path, path_within, link_wezterm_config)
 # — одна копия на macOS и Linux. Нет файла — шаг WezTerm пропускается.
@@ -97,31 +110,40 @@ install_deps() {
   # уже установленные пакеты пропускаются.
   if have apt-get; then
     run_sudo apt-get update
-    run_sudo apt-get install -y git neovim ripgrep fd-find cmake clang unzip curl gnupg build-essential python3 python3-venv python3-pip tree-sitter-cli
+    run_sudo apt-get install -y git neovim ripgrep fd-find cmake clang unzip curl gnupg build-essential tree-sitter-cli
+    if [ -z "${FORGE_NVIM_COMPONENTS:-}" ] || forge_component_enabled python; then run_sudo apt-get install -y python3 python3-venv python3-pip; fi
+    if forge_component_enabled node-runtime; then run_sudo apt-get install -y nodejs npm; fi
+    if forge_component_enabled sql; then run_sudo apt-get install -y sqlite3; fi
+    if forge_component_enabled bash && [ -n "${FORGE_NVIM_COMPONENTS:-}" ]; then run_sudo apt-get install -y bash bats; fi
     mkdir -p "$HOME/.local/bin"
     if ! have fd && have fdfind; then
       ln -sf "$(command -v fdfind)" "$HOME/.local/bin/fd"
       export PATH="$HOME/.local/bin:$PATH"
     fi
-    if [ "$WITH_LANGUAGES" = "1" ]; then
-      run_sudo apt-get install -y golang-go cargo rustc
+    if forge_component_enabled go-runtime; then run_sudo apt-get install -y golang-go; fi
+    if forge_component_enabled rust; then
+      run_sudo apt-get install -y cargo rustc
       info "For Rust stdlib navigation install rustup manually and run: rustup component add rust-src"
     fi
   elif have dnf; then
-    run_sudo dnf install -y git neovim ripgrep fd-find cmake clang unzip curl gcc gcc-c++ make python3 python3-pip tree-sitter-cli
-    if [ "$WITH_LANGUAGES" = "1" ]; then
-      run_sudo dnf install -y golang rust cargo
-    fi
+    run_sudo dnf install -y git neovim ripgrep fd-find cmake clang unzip curl gcc gcc-c++ make tree-sitter-cli
+    if [ -z "${FORGE_NVIM_COMPONENTS:-}" ] || forge_component_enabled python; then run_sudo dnf install -y python3 python3-pip; fi
+    if forge_component_enabled node-runtime; then run_sudo dnf install -y nodejs nodejs-npm; fi
+    if forge_component_enabled sql; then run_sudo dnf install -y sqlite; fi
+    if forge_component_enabled go-runtime; then run_sudo dnf install -y golang; fi
+    if forge_component_enabled rust; then run_sudo dnf install -y rust cargo; fi
   elif have pacman; then
-    run_sudo pacman -Sy --needed --noconfirm git neovim ripgrep fd cmake clang unzip curl base-devel python python-pip tree-sitter-cli
-    if [ "$WITH_LANGUAGES" = "1" ]; then
-      run_sudo pacman -Sy --needed --noconfirm go rustup
-    fi
+    run_sudo pacman -Sy --needed --noconfirm git neovim ripgrep fd cmake clang unzip curl base-devel tree-sitter-cli
+    if [ -z "${FORGE_NVIM_COMPONENTS:-}" ] || forge_component_enabled python; then run_sudo pacman -Sy --needed --noconfirm python python-pip; fi
+    if forge_component_enabled node-runtime; then run_sudo pacman -Sy --needed --noconfirm nodejs npm; fi
+    if forge_component_enabled sql; then run_sudo pacman -Sy --needed --noconfirm sqlite; fi
+    if forge_component_enabled go-runtime; then run_sudo pacman -Sy --needed --noconfirm go; fi
+    if forge_component_enabled rust; then run_sudo pacman -Sy --needed --noconfirm rustup; fi
   else
     info "No supported package manager found. Install git, nvim, rg, fd, cmake, clang manually."
   fi
 
-  if [ "$WITH_LANGUAGES" = "1" ] && have go; then
+  if forge_component_enabled go && have go; then
     # gopls — конвенция конфига: из Go-тулчейна (go install), НЕ через Mason
     # (см. nvim_forge/lua/plugins/lsp.lua и forge/health.lua).
     local gobin

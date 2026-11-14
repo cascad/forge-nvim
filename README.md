@@ -9,7 +9,7 @@
 Активные среды — Windows/macOS/Ubuntu; Mint пока отложен: [границы модулей](docs/PORTABLE_ARCHITECTURE.md).
 [E2E и команды прогонов внутри VM](tests/e2e/README.md).
 [Установка одной командой: состав Default/Custom и текущая готовность](docs/INSTALLATION_PLAN.md)
-— в разработке, полный автоматический setup ещё не завершён.
+— выбор компонентов реализован; полная доставка SDK/автоматический setup ещё в разработке.
 [Команды агента и формат получаемых результатов](docs/AGENT_COMMANDS.md).
 [Клавиши рабочих панелей Space w](nvim_forge/QUICKSTART.md#общий-маршрут-рабочих-панелей--space-w).
 [Общая консоль логов IDE](docs/IDE_LOGS.md): `Space w i` / `:ForgeLogs`.

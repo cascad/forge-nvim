@@ -6,10 +6,13 @@ param(
     [string]$ArchiveUrl = '',
     [string]$SourceRoot = (Join-Path $env:LOCALAPPDATA 'forge-nvim\sources'),
     [string]$InstallPath = (Join-Path $env:LOCALAPPDATA 'nvim'),
-    [switch]$SkipDependencies
+    [switch]$SkipDependencies,
+    [Alias('Profile')][ValidateSet('Default','Custom')][string]$InstallProfile = 'Default',
+    [AllowEmptyString()][string]$Components = ''
 )
 $ErrorActionPreference = 'Stop'
 Set-StrictMode -Version Latest
+$componentsExplicit = $PSBoundParameters.ContainsKey('Components')
 if (-not $ArchiveUrl) {
     $ArchiveUrl = 'https://codeload.github.com/cascad/forge-nvim/zip/' + [Uri]::EscapeDataString($Ref)
 }
@@ -18,6 +21,7 @@ if (-not $uri.IsAbsoluteUri -or $uri.Scheme -notin @('http', 'https')) { throw '
 New-Item -ItemType Directory -Force -Path $SourceRoot | Out-Null
 $sourceRootFull = [IO.Path]::GetFullPath($SourceRoot)
 $staging = Join-Path $sourceRootFull ('.bootstrap-' + [Guid]::NewGuid().ToString('N'))
+$oldComponents = $env:FORGE_NVIM_COMPONENTS
 New-Item -ItemType Directory -Path $staging | Out-Null
 function Test-Source([string]$Directory) {
     foreach ($name in @('nvim_forge\init.lua', 'nvim_forge\scripts\install-windows.ps1', 'nvim_forge.sh', 'wezterm.lua')) {
@@ -61,6 +65,9 @@ try {
         Move-Item -LiteralPath $candidate -Destination $source
     }
     Write-Host "Source ready: $source"
+    . (Join-Path $source 'nvim_forge\scripts\lib\install-profile.ps1')
+    $env:FORGE_NVIM_COMPONENTS = Resolve-ForgeProfile -Profile $InstallProfile -Components $Components -Explicit $componentsExplicit
+    Write-Host "Selected components: $env:FORGE_NVIM_COMPONENTS"
     Write-Host 'Starting Windows installer.'
     $backend = Join-Path $source 'nvim_forge\scripts\install-windows.ps1'
     $shell = (Get-Process -Id $PID).Path
@@ -71,6 +78,7 @@ try {
     $backendExit = $LASTEXITCODE
     if ($backendExit -ne 0) { exit $backendExit }
 } finally {
+    $env:FORGE_NVIM_COMPONENTS = $oldComponents
     # Проверить абсолютную границу перед recursive cleanup на Windows.
     $stageFull = [IO.Path]::GetFullPath($staging)
     $prefix = $sourceRootFull.TrimEnd('\', '/') + [IO.Path]::DirectorySeparatorChar

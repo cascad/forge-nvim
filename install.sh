@@ -7,25 +7,32 @@ source_root="${XDG_DATA_HOME:-$HOME/.local/share}/forge-nvim/sources"
 archive_url=""
 install_dir=""
 skip_dependencies=0
+profile=default
+components=''
+components_explicit=0
 while [ "$#" -gt 0 ]; do
   case "$1" in
-    --ref|--archive-url|--source-root|--install-dir)
+    --ref|--archive-url|--source-root|--install-dir|--profile|--components)
       [ "$#" -ge 2 ] || { printf 'Missing value: %s\n' "$1" >&2; exit 1; }
       case "$1" in
         --ref) ref="$2";;
         --archive-url) archive_url="$2";;
         --source-root) source_root="$2";;
         --install-dir) install_dir="$2";;
+        --profile) profile="$2";;
+        --components) components="$2"; components_explicit=1;;
       esac
       shift 2;;
     --skip-dependencies) skip_dependencies=1; shift;;
     --help)
       printf '%s\n' 'forge-nvim source bootstrap (development entry)' \
-        '--ref REF --archive-url URL --source-root DIR --install-dir DIR --skip-dependencies'
+        '--ref REF --archive-url URL --source-root DIR --install-dir DIR --skip-dependencies' \
+        '--profile default|custom --components core,go,rust,python,node,bash,sql,terminal'
       exit 0;;
     *) printf 'Unknown option: %s\n' "$1" >&2; exit 1;;
   esac
 done
+case "$profile" in default|custom) ;; *) printf 'Unknown profile: %s\n' "$profile" >&2; exit 1;; esac
 case "$(uname -s)" in
   Linux) platform=linux;;
   Darwin) platform=macos;;
@@ -82,7 +89,11 @@ if [ -e "$source_dir" ]; then
 else
   mv "$staging/tree" "$source_dir"
 fi
-printf 'Source ready: %s\nStarting %s installer.\n' "$source_dir" "$platform"
+printf 'Source ready: %s\n' "$source_dir"
+. "$source_dir/nvim_forge/scripts/lib/install-profile.sh"
+FORGE_NVIM_COMPONENTS="$(forge_select_profile "$profile" "$components" "$components_explicit")"
+export FORGE_NVIM_COMPONENTS
+printf 'Selected components: %s\nStarting %s installer.\n' "$FORGE_NVIM_COMPONENTS" "$platform"
 export FORGE_NVIM_USE_LOCAL_SOURCE=1
 export FORGE_NVIM_WITH_LANGUAGES="${FORGE_NVIM_WITH_LANGUAGES:-1}"
 if [ -n "$install_dir" ]; then export FORGE_NVIM_INSTALL_DIR="$install_dir"; fi

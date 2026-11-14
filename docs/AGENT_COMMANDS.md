@@ -8644,3 +8644,42 @@ Default/Custom path creation, profile/env/PATH/phase short circuit провер�
 Ready engine использован после сообщения владельца, без lifecycle/build/pull.
 Audit сверяет native argv/results/source/test/helper,6/16, frozen SDK/lock/
 payloads/drafts; exact staging и staged journal prefixes перед commit.
+
+
+## 143. Default/Custom: native меню и component policy
+
+2026-11-14, FIXLOG235. PowerShell -NoProfile/cwd F:/repo/forge-nvim, temp F,
+Python UTF-8, npm cache F:/forge-nvim-tmp/npm-cache. rg/Get-Content: existing
+entries/installers/LSP/TS/catalog/flags. Primary web: Winget Node LTS/SQLite/
+WezTerm и Mason TSLS/JS-DAP/Bash-DAP/sqls registry, ссылки в INSTALLATION_PLAN.
+Только package IDs/dependencies, не обещание latest binary compatibility.
+
+```powershell
+npx.cmd --yes @fission-ai/openspec@1.13.2 context --json
+npx.cmd --yes @fission-ai/openspec@1.13.2 new change select-installer-components
+# status/instructions proposal/specs/design/tasks/apply --change ... --json
+python -B tests/install-profile.test.py
+# Windows logs profile-windows.txt (14/6 FAIL), -v2 (14/2 FAIL), -v3 (19 PASS).
+python -B .tests/profile-ui-only.py
+# Native arrow/j/k check: profile-windows-arrows.txt,2 PASS.
+docker compose -f tests/containers/compose.yaml run --rm --no-deps --pull never --entrypoint python3 ubuntu -B tests/install-profile.test.py
+# profile-ubuntu.txt18 PASS/1 Windows skip.
+docker compose -f tests/containers/compose.yaml run --rm --no-deps --pull never --entrypoint bash ubuntu /workspace/.tests/profile-controls.sh
+python -B tests/install-setup.test.py
+python -B .tests/audit-profile.py
+python -B .tests/record-profile.py
+npx.cmd --yes @fission-ai/openspec@1.13.2 validate select-installer-components --type change --strict --no-interactive
+git diff --check
+git diff --cached --check
+```
+
+Initial profile-inspect.lua probe explained Neovim runtimepath priority over
+package.path; только read-only import, ни установка, ни запись чужого конфига.
+Final policy runtimepath явный. Menu uses real UI-attached Neovim/native PTY;
+observer ждёт child exit и host0. Forced timeout первых FAIL не green cancel.
+Первый controls path /workspace/.tests/ubuntu/... не существует из-за overlay:
+exit127 до tests, лог сохранён; правильный path /workspace/.tests/... выполнил
+Mac3/setup7/legacy153. Windows setup7 отдельно, тяжёлые среды по очереди.
+Standalone source/fixture/provider contracts не подменяют полную установку
+пакетов. Exact staging исключает deferred runner/drafts, SDK/lock/payloads и
+staged journal prefixes проверяются. Root entry пока development, push не делался.

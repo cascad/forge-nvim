@@ -49,6 +49,7 @@
 #   FORGE_NVIM_SKIP_DEPS=1      не ставить brew-пакеты
 #   FORGE_NVIM_SKIP_WEZTERM=1   не трогать WezTerm и его конфиг
 #   FORGE_NVIM_WITH_LANGUAGES=1 доставить go/python/rustup
+#   FORGE_NVIM_COMPONENTS=...  canonical профиль от общего entry (обычно не задаётся вручную)
 #   FORGE_NVIM_NO_BACKUP=1      падать, если путь занят, вместо бэкапа
 # ============================================================
 set -euo pipefail
@@ -68,6 +69,18 @@ SKIP_WEZTERM="${FORGE_NVIM_SKIP_WEZTERM:-0}"
 SCRIPT_DIR=""
 if [ -n "${BASH_SOURCE[0]:-}" ] && [ -f "${BASH_SOURCE[0]}" ]; then
   SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)"
+fi
+forge_component_enabled() {
+  case "$1" in core|terminal) return 0;; go|go-runtime|rust|python) [ "$WITH_LANGUAGES" = 1 ];; *) return 1;; esac
+}
+if [ -f "$SCRIPT_DIR/lib/install-profile.sh" ]; then
+  . "$SCRIPT_DIR/lib/install-profile.sh"
+  if [ -n "${FORGE_NVIM_COMPONENTS:-}" ]; then
+    FORGE_NVIM_COMPONENTS="$(forge_select_profile default "$FORGE_NVIM_COMPONENTS" 1)"; export FORGE_NVIM_COMPONENTS
+    if ! forge_component_enabled terminal; then SKIP_WEZTERM=1; fi
+  fi
+elif [ -n "${FORGE_NVIM_COMPONENTS:-}" ]; then
+  printf 'Component profile library missing.\n' >&2; exit 1
 fi
 
 # Общие функции подключения (resolve_path, path_within, link_with_backup,
@@ -220,6 +233,7 @@ install_deps() {
   # из Xcode CLT, без которого Homebrew и так не работает.
   ensure_formulas git neovim ripgrep fd cmake tree-sitter-cli
 
+  if forge_component_enabled terminal; then
   step "Installing Nerd Font (иконки в nvim/wezterm)"
   # Основной шрифт из wezterm.lua — CaskaydiaCove Nerd Font. Уже лежит в
   # Library/Fonts (ставили руками) — cask не трогаем: он упал бы на
@@ -230,10 +244,14 @@ install_deps() {
   elif ! ensure_casks font-caskaydia-cove-nerd-font; then
     info "!! Nerd Font не поставился — иконки могут быть пустыми (brew install --cask font-caskaydia-cove-nerd-font)"
   fi
+  fi
 
-  if [ "$WITH_LANGUAGES" = "1" ]; then
-    step "Installing optional language toolchains"
-    ensure_formulas go python rustup-init
+  if forge_component_enabled node-runtime; then ensure_formulas node; fi
+  if forge_component_enabled python; then ensure_formulas python; fi
+  if forge_component_enabled sql; then ensure_formulas sqlite; fi
+  if forge_component_enabled go-runtime; then ensure_formulas go; fi
+  if forge_component_enabled rust; then
+    ensure_formulas rustup-init
     # Rust стоит, если cargo в PATH или в ~/.cargo/bin (rustup-init ставим
     # с --no-modify-path, поэтому каталог может быть не в PATH) — MAC-INST-5.
     if have cargo; then
@@ -243,6 +261,8 @@ install_deps() {
     else
       rustup-init -y --no-modify-path
     fi
+  fi
+  if forge_component_enabled go; then
     # gopls — конвенция конфига: из Go-тулчейна (go install), НЕ через Mason
     # (см. nvim_forge/lua/plugins/lsp.lua и forge/health.lua).
     local gobin

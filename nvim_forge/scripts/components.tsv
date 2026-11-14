@@ -1,0 +1,10 @@
+core	Editor (required)	-	lua-language-server	lua,luadoc,luap,vim,vimdoc,query,markdown,markdown_inline,json,yaml,toml,regex,c,cpp,cmake,html,css,diff,git_config,gitcommit,gitignore,gitattributes,dockerfile
+go	Go	go-runtime	delve,golangci-lint,gotestsum	go,gomod,gosum,gowork
+rust	Rust	-	rust-analyzer,codelldb	rust
+python	Python	node-runtime	pyright,ruff,debugpy	python
+node	JS / Node.js	node-runtime	typescript-language-server,js-debug-adapter	javascript,typescript
+bash	Bash	node-runtime	bash-language-server,shfmt,shellcheck,bash-debug-adapter	bash
+sql	SQL	go-runtime	sqls,sqruff	sql
+terminal	WezTerm / Nerd Font	-	-	-
+node-runtime	-	-	-	-
+go-runtime	-	-	-	-

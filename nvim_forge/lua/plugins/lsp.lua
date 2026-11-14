@@ -98,7 +98,7 @@ return {
                 table.insert(tools, "codelldb")
             end
             return {
-                ensure_installed = tools,
+                ensure_installed = require('forge.install_profile').filter(tools, 4),
                 auto_update = false,
                 run_on_start = false,
                 -- Каталог уже содержит Mason package names. Не загружаем

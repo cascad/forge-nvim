@@ -7,8 +7,8 @@ macOS. Пользователь не ищет binaries, не клонирует 
 
 ## Текущая готовность
 
-Состав и remote source entry реализуются первым срезом. Полный Default,
-Custom menu и настоящее развёртывание всех инструментов ещё не готовы.
+Состав, source entry и выбор Default/Custom реализованы. Полная доставка
+совместимых SDK и настоящее развёртывание всех инструментов ещё не готовы.
 `install.ps1`/`install.sh` — development entry, пока не публичная инструкция
 для чистой машины. Они получают полный source и вызывают прежний platform
 installer в local-source mode, обходя неправильный monorepo clone в config.
@@ -16,6 +16,9 @@ installer в local-source mode, обходя неправильный monorepo c
 §233: transport по6 PASS на Windows/Ubuntu; native Mac пока не запускался.
 §234: общий strict command setup — по7 native stand PASS Windows/Ubuntu;
 macOS backend7 contract PASS в Ubuntu. Это не полная установка всех пакетов.
+§235: Default без меню, Custom с клавиатурными галочками, общий профиль и его
+применение к OS SDK steps/Mason/parsers/Terminal. Windows19 PASS, Ubuntu18 PASS/
+1 platform skip; native Mac ещё не запускался.
 
 Путь по умолчанию и пользовательский путь создаются автоматически, включая
 отсутствующие родительские каталоги (уточнение владельца2026-11-14).
@@ -44,20 +47,46 @@ Node runtime нужен также некоторым Python/Bash инструм
 Проектные пакеты/учётные данные/DB connections и приложения пользователя
 установщик не подменяет своими примерами. Это граница установки IDE, не ручная
 доустановка её обязательных компонентов.
+SQL/sqls использует Go build runtime: SQL без Go-набора добавляет go-runtime,
+но не Go parsers/Delve/gotestsum. Зависимости видны в canonical selected list.
+
+## Выбор профиля (§235)
+
+Default выбран по умолчанию и не требует меню. Custom: стрелки или j/k,
+Space переключает, Enter подтверждает, Esc/q отменяет до запуска backend.
+Core снять нельзя. Root entry принимает `-Profile Custom` на Windows и
+`--profile custom` на POSIX. `-Components 'python,sql'` / `--components python,sql`
+задают выбор без UI; пустой explicit список означает Core. Неизвестный ID —
+ошибка до package steps. Это API development entry, не готовый публичный
+one-liner для полной установки на чистую машину.
+
+Компоненты: core, go, rust, python, node, bash, sql, terminal. Node runtime
+и Go runtime добавляются зависимостями из общей scripts/components.tsv.
+PS/Bash используют эту таблицу без предварительной установки Python/Neovim;
+Lua читает те же tools/parsers при explicit setup. Mask временный; PowerShell
+восстанавливает caller env, обычный catalog без mask сохраняет прежний состав.
+Прежние direct WithLanguages/skip flags остаются advanced режимом.
+
+SDK handlers учитывают mask; Python/Bash/JS добавляют Node, SQL — Go и SQLite.
+Windows selected profile требует работающего WinGet и прекращает установку
+при CLI error. Автоматический bootstrap самого package manager, supported
+versions, Windows Nerd Font/config, WSL/Bats/JS/SQL SDK preparation и полноценная
+проверка установленного binary всё ещё в дальнейших этапах. Выбор галочки не
+выдаётся за уже подтверждённую полную доставку её runtime.
 
 ## Найденные пробелы прежних установщиков
 
 | Область | Текущее состояние → необходимая работа |
 |---|---|
 | Windows/Linux remote config | clone монорепо прямо в config даёт неверный уровень. Entry получает source отдельно и передаёт local-source, но прежние прямые remote пути ещё не исправлены |
-| Windows dependencies | winget отсутствует → warning/manual; языки opt-in, Node нет; не проверяются все package-manager command exits. Process SDK/PATH сохраняется §234 |
+| Windows dependencies | §235: component mask, Node/SQLite/WezTerm handlers и проверка Winget install exit; missing WinGet для профиля даёт nonzero. Сам bootstrap WinGet/supported versions ещё открыт. Legacy прямой запуск без mask сохраняет прежний fallback |
 | Windows SDK | У нас проверенный временный Neovim SDK74aff15b с двумя native patches; winget Neovim не является доказанным эквивалентом. Нужен автоматически получаемый готовый artifact и manifest, без ручной сборки пользователем |
-| Linux dependencies | distro Neovim/version и tree-sitter-cli availability не проверены; Go/Rust opt-in, Node/полная Rust preparation отсутствуют |
+| Linux dependencies | §235: SDK groups/Node/SQLite/Bats разделены по mask. Distro Neovim/version и tree-sitter-cli availability не проверены; полноценная Rust preparation и supported SDK delivery открыты |
 | macOS prerequisites | Требуются уже готовые Homebrew/CLT/Git; автоматический bootstrap этих prerequisites и продолжение после системного шага ещё не реализованы |
 | Plugins | §234: общий Lazy restore и all backports apply/check реализованы. Полная доставка67 plugins в чистую систему ещё ждёт native install acceptance |
 | Language/debug/tests | Mason catalog не покрывает весь runtime inventory; Windows CodeLLDB предполагается внешним, TSLS/js-debug/Bats/nextest/SQL SDK требуют явной доставки |
 | Preparation success | §234: Lua/Vim exceptions и missing commands дают nonzero и останавливают следующие stages. Нужна ещё проверка фактического результата каждого пакета при внутренних errors без exception |
-| Custom/repeat/recovery | Нет общего меню/профиля, полной проверки selected components, resume и отчёта фактической готовности |
+| Custom/repeat/recovery | §235: меню/профиль/dependency closure готовы. Полная проверка selected components, resume/отчёт фактической готовности ещё открыты |
 
 Наличие инструмента недостаточно: нужна совместимая версия и реальный запуск.
 SDK/source policies остаются существующими языковыми границами. Не переносим
@@ -66,8 +95,8 @@ download/install в startup shell или IDE и не запрещаем Go toolc
 ## Последовательность реализации
 
 1. Состав и remote source delivery: текущий change add-remote-installer-bootstrap.
-2. Единый Default/Custom: один набор компонентов и dependencies, native UI без
-   мыши, Default без интерактивного меню; общие решения и OS-specific install.
+2. Выбор Default/Custom реализован §235: один набор компонентов/dependencies,
+   native UI без мыши, Default без меню; mask управляет существующими handlers.
 3. Поддерживаемые Neovim/prerequisites и языковые runtime/SDK. Готовые artifacts
    и их manifests; не выдавать системный пакет другой версии за supported SDK.
 4. Общий явный setup: lock restore → все backports/check → selected parsers/
@@ -79,7 +108,29 @@ download/install в startup shell или IDE и не запрещаем Go toolc
 restore → existing backports apply/check → parsers → tools, отдельный native
 процесс на stage. Windows XDG_CONFIG_HOME/NVIM_APPNAME восстанавливаются после
 setup; POSIX изменения ограничены subshell. Native пакетная readiness/Custom
-policy и поддерживаемые SDK по-прежнему открыты, меню следующим срезом.
+readiness и поддерживаемые SDK по-прежнему открыты; меню реализовано §235.
+
+## Stand выбора компонентов
+
+Windows: `python -B tests/install-profile.test.py` (temp на F). Linux/macOS:
+`python3 -B tests/install-profile.test.py`. Нужны Python и готовый Neovim; SDK и
+системные packages стенд не скачивает/не устанавливает. Настоящие localhost
+HTTP/ZIP/tar, UI-attached Neovim PTY с PowerShell/Bash меню, native Lua catalogs,
+изолированные package-provider contracts. Артефакты .tests/install-bootstrap/<id>.
+
+Windows19 PASS; отдельно arrows/j/k/Space/Enter/q2 PASS. Ubuntu18 PASS/1 skip
+(Windows Winget CLI). macOS package recipe3 contract PASS в Ubuntu; это не
+native Mac acceptance. Setup controls по7 PASS Windows/Ubuntu, shell controls153
+PASS. Полные downloads/registry readiness после selection проверяются отдельно.
+
+Имена новых пакетов сверены с первичными источниками: [Winget Node LTS](https://github.com/microsoft/winget-pkgs/blob/master/manifests/o/OpenJS/NodeJS/LTS/24.17.0/OpenJS.NodeJS.LTS.installer.yaml),
+[SQLite](https://github.com/microsoft/winget-pkgs/blob/master/manifests/s/SQLite/SQLite/3.51.1/SQLite.SQLite.installer.yaml),
+[WezTerm](https://github.com/microsoft/winget-pkgs/blob/master/manifests/w/wez/wezterm/20230712-072601-f4abf8fd/wez.wezterm.installer.yaml).
+Tool IDs/dependencies — [Mason TSLS](https://raw.githubusercontent.com/mason-org/mason-registry/main/packages/typescript-language-server/package.yaml),
+[JS debug](https://raw.githubusercontent.com/mason-org/mason-registry/main/packages/js-debug-adapter/package.yaml),
+[Bash debug](https://raw.githubusercontent.com/mason-org/mason-registry/main/packages/bash-debug-adapter/package.yaml),
+[sqls/Go](https://raw.githubusercontent.com/mason-org/mason-registry/main/packages/sqls/package.yaml).
+Сверка имён не является pin/readiness конкретных latest binaries.
 
 ## Stand подготовки профиля
 

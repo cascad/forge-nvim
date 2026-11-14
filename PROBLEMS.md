@@ -42,6 +42,9 @@ Ollama и модели к этому поручению не относятся 
 без Git и вызывает local installer. Windows/Ubuntu transport6 PASS на ОС
 (§233), Mac не запускался. Полный Default/Custom ещё не реализован;
 настоящая установка всех SDK не подменяется transport fixture. Этапы — roadmap.
+§235: Default/Custom menu и unattended CSV, mandatory Core, Node/Go dependency
+closure и применение к SDK handlers/Mason/parsers/Terminal. Windows19 PASS,
+Ubuntu18 PASS/1 platform skip; native Mac/полная SDK delivery открыты.
 
 ## IDE-137 — выбор POSIX root отвергается как пустой путь
 

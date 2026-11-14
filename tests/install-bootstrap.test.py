@@ -30,7 +30,7 @@ $source = Split-Path -Parent (Split-Path -Parent $PSScriptRoot)
 [IO.Directory]::CreateDirectory($InstallPath) | Out-Null
 [IO.File]::WriteAllText((Join-Path $InstallPath 'installed-marker.txt'), 'fixture backend')
 [IO.File]::WriteAllLines($env:BOOTSTRAP_FIXTURE_REPORT, @(
-  "source=$source", "local=$UseLocalSource", "languages=$WithLanguages", "skip=$SkipDependencies", "target=$InstallPath"
+  "source=$source", "local=$UseLocalSource", "languages=$WithLanguages", "skip=$SkipDependencies", "target=$InstallPath", "components=$env:FORGE_NVIM_COMPONENTS"
 ), (New-Object Text.UTF8Encoding($false)))
 if ($env:BOOTSTRAP_FIXTURE_EXIT) { exit ([int]$env:BOOTSTRAP_FIXTURE_EXIT) }
 '''
@@ -41,6 +41,7 @@ mkdir -p "$FORGE_NVIM_INSTALL_DIR"
 printf '%s\n' 'fixture backend' > "$FORGE_NVIM_INSTALL_DIR/installed-marker.txt"
 printf 'source=%s\nlocal=%s\nlanguages=%s\nskip=%s\ntarget=%s\n' \
  "$source_dir" "$FORGE_NVIM_USE_LOCAL_SOURCE" "$FORGE_NVIM_WITH_LANGUAGES" "$FORGE_NVIM_SKIP_DEPS" "$FORGE_NVIM_INSTALL_DIR" > "$BOOTSTRAP_FIXTURE_REPORT"
+printf 'components=%s\n' "${FORGE_NVIM_COMPONENTS:-}" >> "$BOOTSTRAP_FIXTURE_REPORT"
 exit "${BOOTSTRAP_FIXTURE_EXIT:-0}"
 '''
 
@@ -49,6 +50,8 @@ def archive(kind, complete=True):
     files = {'nvim_forge/init.lua': b'-- private transport fixture\n',
              'nvim_forge.sh': b'#!/bin/sh\n', 'wezterm.lua': b'-- fixture\n'}
     if complete:
+        for name in ['components.tsv','lib/install-profile.ps1','lib/install-profile.sh']:
+            files['nvim_forge/scripts/'+name]=(ROOT/'nvim_forge/scripts'/name).read_bytes()
         files.update({'nvim_forge/scripts/install-windows.ps1': PS_BACKEND.encode(),
                       'nvim_forge/scripts/install-linux.sh': SH_BACKEND.encode(),
                       'nvim_forge/scripts/install-macos.sh': SH_BACKEND.encode()})
@@ -100,7 +103,7 @@ class Bootstrap(unittest.TestCase):
     @classmethod
     def tearDownClass(cls): cls.server.__exit__(None, None, None)
 
-    def run_entry(self, name, route='/source', failure=False):
+    def run_entry(self, name, route='/source', failure=False, options=None, ui_action=None):
         private = BASE / name
         private.mkdir(exist_ok=True)
         source = private / 'sources'; target = private / 'config ü'; report = private / 'backend.txt'
@@ -122,7 +125,15 @@ class Bootstrap(unittest.TestCase):
                 command += ' --' + key + ' ' + shlex.quote(str(value))
             command += ' --skip-dependencies'
             args = [SHELL, '-c', command]
-        result = subprocess.run(args, env=env, text=True, encoding='utf-8', errors='replace', capture_output=True, timeout=60)
+        for key,value in (options or {}).items():
+            if WINDOWS:command += ' -'+key+' '+quote(value)
+            else:command += ' --'+key+' '+shlex.quote(value)
+        args[-1]=command
+        if ui_action:
+            nvim=str(ROOT/'.tools/neovim/windows-x64/bin/nvim.exe') if WINDOWS else shutil.which('nvim')
+            env.update(FORGE_INSTALL_UI_COMMAND=json.dumps(args),FORGE_INSTALL_UI_ACTION=ui_action,FORGE_INSTALL_UI_REPORT=str(private/'ui.json'))
+            args=[nvim,'-u','NONE','-i','NONE','-l',str(ROOT/'tests/diagnostics/install-profile-ui.lua')]
+        result = subprocess.run(args, env=env, text=True, encoding='utf-8', errors='replace', capture_output=True, timeout=60,stdin=subprocess.DEVNULL)
         count = len(list(private.glob('run-*.json')))
         (private / f'run-{count}.json').write_text(json.dumps({'argv': args, 'exit': result.returncode,
             'stdout': result.stdout, 'stderr': result.stderr}, ensure_ascii=False, indent=2), encoding='utf-8')

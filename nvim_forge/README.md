@@ -3,7 +3,8 @@
 Portable Neovim IDE config for Rust, Go and Python.
 
 IDE-138: [состав Default/Custom и прогресс установки одной командой](../docs/INSTALLATION_PLAN.md).
-Новые root install.ps1/install.sh пока development entry; полный автоматический
+Root install.ps1/install.sh поддерживают Default/Custom с клавиатуры, но пока
+остаются development entry; полный автоматический
 setup на чистой системе ещё не завершён. Существующие способы запуска ниже.
 
 Debug Output: `Space w c` / `Space D c` возвращают последний канал с историей;

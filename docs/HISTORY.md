@@ -371,6 +371,7 @@ Python реализован и проверен 2026-11-03; после возо�
 | §232 | [Установка: состав Default и доставка source без Git](../nvim_forge/FIXLOG.md#232-установка-состав-default-и-доставка-source-без-git) |
 | §233 | [Bootstrap: native Ubuntu и формат тестового маркера](../nvim_forge/FIXLOG.md#233-bootstrap-native-ubuntu-и-формат-тестового-маркера) |
 | §234 | [Установка: строгий setup выбранного профиля](../nvim_forge/FIXLOG.md#234-установка-строгий-setup-выбранного-профиля) |
+| §235 | [Установка: Default и Custom с общим профилем](../nvim_forge/FIXLOG.md#235-установка-default-и-custom-с-общим-профилем) |
 
 ## Как читать и дополнять
 

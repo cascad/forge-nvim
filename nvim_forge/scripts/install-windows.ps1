@@ -12,6 +12,10 @@ param(
 
 $ErrorActionPreference = "Stop"
 Set-StrictMode -Version Latest
+. (Join-Path $PSScriptRoot 'lib\install-profile.ps1')
+if ($env:FORGE_NVIM_COMPONENTS) {
+    $env:FORGE_NVIM_COMPONENTS = Resolve-ForgeProfile -Components $env:FORGE_NVIM_COMPONENTS -Explicit $true
+}
 
 function Write-Step {
     param([string]$Message)
@@ -56,6 +60,7 @@ function Install-WingetPackage {
     )
 
     if (-not (Test-Command "winget")) {
+        if ($env:FORGE_NVIM_COMPONENTS) { throw 'winget is required for the selected component profile; package-manager bootstrap is not ready.' }
         Write-Warning "winget is not available; install $Name manually ($Id)."
         return
     }
@@ -75,6 +80,7 @@ function Install-WingetPackage {
 
     Write-Step "Installing $Name"
     winget install --id $Id -e --silent --accept-package-agreements --accept-source-agreements
+    if ($LASTEXITCODE -ne 0) { throw "Package install failed: $Id (exit $LASTEXITCODE)." }
 }
 
 function Install-Dependencies {
@@ -93,12 +99,18 @@ function Install-Dependencies {
     Install-WingetPackage -Id "LLVM.LLVM" -Name "LLVM"
     Install-WingetPackage -Id "tree-sitter.tree-sitter-cli" -Name "tree-sitter CLI"
 
-    if ($WithLanguages) {
-        Write-Step "Installing optional language toolchains"
+    if (Test-ForgeComponent 'rust') {
         Install-WingetPackage -Id "Rustlang.Rustup" -Name "rustup"
+    }
+    if (Test-ForgeComponent 'go-runtime') {
         Install-WingetPackage -Id "GoLang.Go" -Name "Go"
+    }
+    if (Test-ForgeComponent 'python') {
         Install-WingetPackage -Id "Python.Python.3.12" -Name "Python"
     }
+    if (Test-ForgeComponent 'node-runtime') { Install-WingetPackage -Id 'OpenJS.NodeJS.LTS' -Name 'Node.js LTS' }
+    if (Test-ForgeComponent 'sql') { Install-WingetPackage -Id 'SQLite.SQLite' -Name 'SQLite' }
+    if ($env:FORGE_NVIM_COMPONENTS -and (Test-ForgeComponent 'terminal')) { Install-WingetPackage -Id 'wez.wezterm' -Name 'WezTerm' }
 
     Update-CurrentPath
 }

@@ -1690,3 +1690,15 @@ Source7 RED → target7 PASS Windows/Ubuntu; macOS backend также7 contract 
 на Ubuntu, native Mac отдельно. Existing installer shells: Linux26/Mac127
 checks PASS в Ubuntu. Target bootstrapping67 plugins, package readiness и
 Default/Custom menu не подменяются этим regression stand. Подробности — §234.
+
+## IDE-BOOT-10: выбор компонентов
+
+`python -B tests/install-profile.test.py` (Windows/temp F), `python3 -B
+tests/install-profile.test.py` (Linux/macOS). Изолированный HTTP entry/archive,
+настоящий UI-attached Neovim PTY/native shell menu, dependency/catalog policy
+и package-provider contracts. Host package managers не запускаются, supported
+Neovim должен быть готов. Default/Core/CSV/invalid/Legacy, Python/SQL dependencies,
+keyboard toggle/cancel и selected SDK commands. Windows19 PASS, Ubuntu18 PASS/
+1 platform skip; Mac recipe3 contract на Ubuntu, native Mac открыт (§235).
+Windows arrows2 дополнительно проверены без повтора остальных unchanged cases.
+Полная установка всех SDK/registry readiness не объявляется PASS этого stand.

@@ -12423,3 +12423,55 @@ scenario fixtures, OpenSpec fail-incomplete-installer-setup, installation plan/
 roadmap/PROBLEMS/tests README/HISTORY/commands. Raw .tests/setup-*, guest
 equivalents/install-setup/<id>/native traces; setup-audit.json сверяет bytes,
 outcomes,6/16,153 legacy, frozen hashes и append-only prefixes.
+
+
+## 235. Установка: Default и Custom с общим профилем
+
+2026-11-14. Спека: IDE-BOOT-10 (ADDED). IDE-138, выбор компонентов.
+
+**Проблема/причина.** WithLanguages включает SDK группой, Mason/parsers и
+Terminal не следовали общему выбору. До Python/Neovim нельзя требовать JSON
+parser ради первой галочки. Полный Default всё ещё требует SDK delivery.
+
+**Изменение.** Одна TSV:8 visible компонентов + Node/Go runtime dependencies.
+PowerShell/Bash3.2 readers дают Default без UI, Custom с arrows/j/k/Space/Enter/
+Esc/q, mandatory Core, unattended CSV/empty/invalid validation. Entry передаёт
+canonical mask, Windows восстанавливает caller env. Existing OS SDK/Terminal
+steps, Mason и parsers учитывают mask; без него прежние advanced catalogs.
+Python/Bash/JS тянут Node runtime; SQL — Go runtime без Go IDE tools. Windows
+Node/SQLite/WezTerm handlers и строгий Winget install exit, missing manager
+для selected profile даёт nonzero. Сам bootstrap manager ещё впереди.
+
+**Проверка/e2e.** Windows19 PASS, Ubuntu18 PASS/1 Windows-only skip. Настоящие
+HTTP/archive/entry, UI-attached native Neovim PTY с PowerShell/Bash, actual
+keyboard toggle/cancel; native Lua catalogs. Package-provider contracts
+изолированы: host packages не ставились. Core/Default/CSV/dependency/invalid,
+Mason/parser selection, SDK handler gates и Winget failure проверены.
+После добавления стрелки к j/k-flow — targeted2 Windows PASS без повтора
+unchanged остальных cases. Mac package recipe3 contract PASS в Ubuntu;
+setup controls по7 PASS Windows/Ubuntu, legacy shell26+127 PASS Ubuntu.
+
+Первая версия Windows14/6 FAIL:4 policy fixture load взяли module через
+чужой runtimepath (-uNONE его не убирает);2 UI fail на Console precheck.
+Runtimepath probe явно изолирован, menu использует public PowerShell Host
+RawUI. Следующая версия14/2 FAIL: initial headless terminal не обновлял
+screen; observer переведён в UI-attached Neovim, как рабочий terminal. Timeout/
+forced-termination/staging artifacts не скрыты. Новая версия19 PASS. Первый
+controls launcher указал неверный overlay path, exit127 до tests; исправлен
+путь/копия private driver, затем выполнены3/7/153 controls. Raw сохранены.
+
+**Вывод/границы.** Выбор и применение профиля готовы; полный automatic install
+всех совместимых SDK ещё нет. Native Mac/Bash3.2, manager bootstrap, Windows
+font/config, WSL/Bats/JS/SQL SDK prep и registry/binary readiness открыты.
+Совместимость latest package versions не объявляется проверенной. IDs сверены
+по official Winget/Mason (INSTALLATION_PLAN sources); первый guessed old Node
+manifest URL404 заменён official search, production version не пиннился вслепую.
+Daily startup не устанавливает tools; SDK/67 pins/backport payloads/frozen
+infra прежние. Temp F, ready Docker28.5.1 без lifecycle/build/pull, serial.
+
+**Файлы.** Root entries, TSV/PS/Bash/Lua readers,3 OS installers, Mason/TS
+selection, permanent HTTP/PTY/policy/provider stand, select-installer-components,
+install docs/roadmap/PROBLEMS/README/tests README/HISTORY/commands. Raw
+.tests/profile-* и guest equivalents/install-bootstrap/<id>, profile-audit.json
+сверяет native outcomes/cached module bytes/controls/frozen/prefix. Journals
+append-only; deferred test infrastructure не менялась.
