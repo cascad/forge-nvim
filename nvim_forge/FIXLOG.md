@@ -12548,3 +12548,47 @@ Windows1/Ubuntu1 PASS. Первый запуск нового driver завер�
 до каких-либо процессов/установки; исправлена лишняя скобка, raw сохранён.
 Это ещё один сценарий IDE-BOOT-11, общее число разных native cases Windows14,
 Ubuntu13 PASS/1 Windows-only skip с учётом дополнительных targeted regressions.
+
+
+## 237. План: команда запуска и оформление установщика как в LocalVox
+
+Дата: 2026-11-14. IDE-141, уточнение IDE-138.
+
+**Проблема.** Владелец попросил продумать алиас и взять визуальное оформление
+installer из localvox-light для единообразия. Текущие native PS/Bash menus
+реализуют component selection, но не общий мастер с оформлением референса.
+Короткая команда forge также может конфликтовать с установленным софтом.
+
+**Причина/контекст.** Изоляция §236 определяет границу установки, но не
+окончательное имя запуска или presentation. В LocalVox актуальная реализация
+появилась в D:/rust_repo/localvox-light4514678; старая F: копия42db779
+не отражает текущий guided installer. В Foundry есть отдельная команда forge.
+На текущем хосте Get-Command кандидатов не нашёл; это не доказательство
+отсутствия конфликта на другой машине.
+
+**Изменение.** Только план: предложены полная команда forge-nvim и короткая
+fnvim (имя ещё выбирает владелец). Постоянный launcher передаёт args/cwd/TTY/
+exit code; nvim и пользовательские команды не подменяются. Регистрация
+команды должна быть отдельным видимым выбором, с проверкой конфликтов и
+portable fallback. Визуальный reference — cliclack: бирюзовый акцент,
+вертикальные шаги, Core отдельно, галочки, подсказки, сохранение подтверждённых
+ответов при Back, итог, статусы и лог. Рекомендован один небольшой native
+presentation frontend с готовым artifact, без Rust/Cargo на машине пользователя.
+Default остаётся автоматическим; новые обязательные вопросы не добавлены.
+Backend/изоляция не копируются из LocalVox; Ollama/модели исключены.
+
+**Проверка/исследование.** Read-only git log/status, docs/release-installation,
+docs/installer-preview, crates/localvox-setup-ui/{Cargo.toml,src/lib.rs,
+src/wizard.rs}, существующие снимки components-wide/custom-paths-review.
+Reference files чисты относительно4514678. Cliclack0.5.6 следует из локального
+Cargo.toml. Сведения о forge сверены по official Foundry docs (ссылка в плане).
+Не запускались installer/preview binaries, package managers или тестовые suites:
+это изменение документации, продуктовый runtime и чужой репозиторий не менялись.
+
+**Вывод.** Требование занесено в IDE-141 и INSTALLATION_PLAN, roadmap связана
+с ним. UI ещё не перенесён, имя не утверждено, bin/forge сохранён, PATH/profile
+не менялись. Полнота SDK и readiness остаются самостоятельными gates IDE-138.
+
+**Файлы.** PROBLEMS, docs/INSTALLATION_PLAN, IDE_ROADMAP, HISTORY,
+FIXLOG и AGENT_COMMANDS. Append-only journal prefixes/frozen files проверены;
+unrelated test infrastructure/drafts не включены в commit.

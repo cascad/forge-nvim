@@ -8737,3 +8737,45 @@ Isolation.test_14_relative_custom_path` и тот же selector в Ubuntu compos
 После evidence audit удаляются только тяжёлые runtime copies/архивы этого
 стенда под .tests, со сверкой абсолютной границы; логи/receipts/config остаются.
 Другие проекты, SDK cache .tools и содержимое диска C не затрагиваются.
+
+
+## 145. Reference установщика LocalVox и обсуждение команды запуска
+
+Дата: 2026-11-14. IDE-141, FIXLOG §237. Только read-only исследование и docs.
+
+```powershell
+git status --short
+Get-Content CLAUDE.md
+Get-Content docs/INSTALLATION_PLAN.md
+rg -n -i 'localvox|алиас|alias' docs PROBLEMS.md
+Get-ChildItem -LiteralPath F:/repo -Directory
+# Для поиска checkout также просмотрены только верхние каталоги F:/ и D:/.
+git -C D:/rust_repo/localvox-light log -1 --format='%h %cs %s'
+git -C F:/claude_code/localvox-light log -1 --format='%h %cs %s'
+git -C D:/rust_repo/localvox-light status --short -- crates/localvox-setup-ui docs/installer-preview.md docs/release-installation.md
+rg --files D:/rust_repo/localvox-light -g '*install*' -g '*setup*'
+Get-Content D:/rust_repo/localvox-light/docs/installer-preview.md
+Get-Content D:/rust_repo/localvox-light/docs/release-installation.md
+Get-Content D:/rust_repo/localvox-light/crates/localvox-setup-ui/Cargo.toml
+Get-Content D:/rust_repo/localvox-light/crates/localvox-setup-ui/src/lib.rs
+Get-Content D:/rust_repo/localvox-light/crates/localvox-setup-ui/src/wizard.rs
+Get-Command forge,forge-nvim,fnvim,fvim -All -ErrorAction SilentlyContinue
+npx.cmd --yes @fission-ai/openspec@1.13.2 list --json
+npx.cmd --yes @fission-ai/openspec@1.13.2 list --specs --json
+git diff --check
+git diff --cached --check
+```
+
+OpenSpec JSON сохранены в .tests/installer-ux-{changes,specs}.json, temp/cache
+на F. Читались openspec-explore/update инструкции; для обсуждения применён
+explore, runtime/spec requirements не редактировались. Существующие screenshot
+файлы просмотрены через view_image: components-wide.png и custom-paths-review.png
+в target/review/installer-preview. LocalVox installer/preview не запускались,
+ничего не собиралось/скачивалось из его scripts. Foundry official docs открыты
+через web: https://www.getfoundry.sh/forge. Один read-only rg получил ошибочный
+PowerShell-флаг -ErrorAction и отказал без каких-либо записей.
+
+Имена остаются кандидатами: fnvim плюс forge-nvim, forge сохраняется в runtime.
+Вопрос предпочтения задан пользователю; отсутствие ответа не является выбором.
+Коммит только шести документов; E2E для docs не запускались. Будущий UI и
+регистрация команды требуют своих native keyboard/conflict regressions.
