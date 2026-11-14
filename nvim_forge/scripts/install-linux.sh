@@ -335,17 +335,8 @@ sync_neovim() {
     exit 1
   fi
 
-  step "Syncing plugins"
-  (
-    cd "$INSTALL_DIR"
-    nvim --headless "+Lazy! sync" "+qa"
-    step "Installing Treesitter parsers"
-    nvim --headless "+ForgeTreesitterInstall" "+qa" || \
-      info "Treesitter parser install returned a non-zero status. Open :checkhealth nvim-treesitter inside nvim for details."
-    step "Installing Mason tools"
-    nvim --headless "+lua pcall(vim.cmd, 'Lazy load mason-tool-installer.nvim')" "+lua pcall(vim.cmd, 'MasonToolsInstallSync')" "+qa" || \
-      info "Mason tool install returned a non-zero status. Open :Mason inside nvim for details."
-  )
+  . "$SCRIPT_DIR/lib/setup-neovim.sh"
+  forge_setup_neovim "$INSTALL_DIR"
 }
 
 install_deps

@@ -14,6 +14,12 @@ Custom menu и настоящее развёртывание всех инстр
 installer в local-source mode, обходя неправильный monorepo clone в config.
 Полная готовность IDE-138 определяется этапами ниже, а не одним exit0 bootstrap.
 §233: transport по6 PASS на Windows/Ubuntu; native Mac пока не запускался.
+§234: общий strict command setup — по7 native stand PASS Windows/Ubuntu;
+macOS backend7 contract PASS в Ubuntu. Это не полная установка всех пакетов.
+
+Путь по умолчанию и пользовательский путь создаются автоматически, включая
+отсутствующие родительские каталоги (уточнение владельца2026-11-14).
+Отдельные регрессы проверяют оба варианта до существования каталога.
 
 ## Состав Default и галочки Custom
 
@@ -44,13 +50,13 @@ Node runtime нужен также некоторым Python/Bash инструм
 | Область | Текущее состояние → необходимая работа |
 |---|---|
 | Windows/Linux remote config | clone монорепо прямо в config даёт неверный уровень. Entry получает source отдельно и передаёт local-source, но прежние прямые remote пути ещё не исправлены |
-| Windows dependencies | winget отсутствует → warning/manual; языки opt-in, Node нет; после обновления PATH теряется process-only окружение. Не проверяются все native command exit codes |
+| Windows dependencies | winget отсутствует → warning/manual; языки opt-in, Node нет; не проверяются все package-manager command exits. Process SDK/PATH сохраняется §234 |
 | Windows SDK | У нас проверенный временный Neovim SDK74aff15b с двумя native patches; winget Neovim не является доказанным эквивалентом. Нужен автоматически получаемый готовый artifact и manifest, без ручной сборки пользователем |
 | Linux dependencies | distro Neovim/version и tree-sitter-cli availability не проверены; Go/Rust opt-in, Node/полная Rust preparation отсутствуют |
 | macOS prerequisites | Требуются уже готовые Homebrew/CLT/Git; автоматический bootstrap этих prerequisites и продолжение после системного шага ещё не реализованы |
-| Plugins | Windows/Linux используют Lazy sync вместо restore; all backports и их check не сведены в обязательный setup step |
+| Plugins | §234: общий Lazy restore и all backports apply/check реализованы. Полная доставка67 plugins в чистую систему ещё ждёт native install acceptance |
 | Language/debug/tests | Mason catalog не покрывает весь runtime inventory; Windows CodeLLDB предполагается внешним, TSLS/js-debug/Bats/nextest/SQL SDK требуют явной доставки |
-| Preparation success | Treesitter/Mason errors могут стать warning или подавляться pcall; exit0 не доказывает готовую IDE |
+| Preparation success | §234: Lua/Vim exceptions и missing commands дают nonzero и останавливают следующие stages. Нужна ещё проверка фактического результата каждого пакета при внутренних errors без exception |
 | Custom/repeat/recovery | Нет общего меню/профиля, полной проверки selected components, resume и отчёта фактической готовности |
 
 Наличие инструмента недостаточно: нужна совместимая версия и реальный запуск.
@@ -68,6 +74,28 @@ download/install в startup shell или IDE и не запрещаем Go toolc
    tools → actual readiness; ошибка обязательного компонента даёт nonzero exit.
 5. Repeat/backup/recovery и настоящий isolated install стенд на каждую ОС.
 6. Native Default/Custom acceptance; только затем публикуемые one-liners.
+
+Общий command setup уже реализован в рамках пункта4: installed profile,
+restore → existing backports apply/check → parsers → tools, отдельный native
+процесс на stage. Windows XDG_CONFIG_HOME/NVIM_APPNAME восстанавливаются после
+setup; POSIX изменения ограничены subshell. Native пакетная readiness/Custom
+policy и поддерживаемые SDK по-прежнему открыты, меню следующим срезом.
+
+## Stand подготовки профиля
+
+`python -B tests/install-setup.test.py` на Windows (TEMP/TMP/TMPDIR на F);
+`python3 -B tests/install-setup.test.py` на Linux/macOS. Используется готовый
+Neovim (.tools SDK на Windows, PATH на POSIX; --nvim задаёт явно), без downloads.
+Стенд исполняет настоящий installer/Neovim, маленький config с fixture
+Lazy/TS/Mason commands и public applier на16 private plugin files. Готовый
+plugin cache берётся из FORGE_E2E_DEPS или .tests/editor-deps; он не меняется.
+Это orchestration regression, не запуск настоящих package managers.
+
+Семь случаев: missing Custom parents, missing Default directory, parser/tool/
+missing-command/plugin failures, неизвестный backport. `--backend macos` в
+Ubuntu проверяет shell contract; только запуск на Mac проверяет native macOS.
+Raw cases/trace/native argv/exit — .tests/install-setup/<id>. Source snapshots
+выбираются FORGE_INSTALL_SETUP_SOURCE только для regression stand.
 
 ## Stand текущего source entry
 

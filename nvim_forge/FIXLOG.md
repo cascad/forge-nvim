@@ -12375,3 +12375,51 @@ HTTP в network-none контейнере. SDK/legacy installers/lock/backports/
 drafts прежние; host temp F. **Файлы:** existing bootstrap test, change verification/
 tasks, INSTALLATION_PLAN/roadmap/PROBLEMS/tests README/HISTORY/commands. Raw logs
 и audit bootstrap-linux-audit.json сохранены, journals append-only.
+
+
+## 234. Установка: строгий setup выбранного профиля
+
+2026-11-14. Спека: IDE-BOOT-9 (ADDED). IDE-139, продолжение IDE-138.
+
+**Проблема/причина.** Native nvim +lua error(...) +qa дал exit0. Shell checks
+и pcall/warnings скрывали ошибки подготовки; Windows/Linux могли выбирать
+ambient NVIM_APPNAME, не installed target. Source b1287c2 в permanent stand:
+7 RED Windows,7 RED Ubuntu/Linux и7 RED macOS backend contract на Ubuntu;
+старые installers возвращали0. Это controlled native command errors, не
+реальная установка всех пакетов.
+
+**Изменение.** Общий setup-stage.lua: Lazy restore → public all backports
+apply/check, parsers, tools; native Vim/Lua exception или missing command
+даёт cquit1. Fresh Neovim между stages; общий POSIX glue и PowerShell вызовы
+выбирают installed profile. Windows восстанавливает XDG/NVIM_APPNAME и не
+теряет process PATH/SDK. Пользователь уточнил: несуществующие Default/Custom
+пути создавать автоматически; это существующее создание подтверждено двумя
+отдельными positive cases, включая глубокие отсутствующие родители.
+
+**Проверка/e2e.** Новая финальная версия: по7 PASS на Windows/Ubuntu Linux,
+macOS backend7 contract PASS в Ubuntu. Actual installer/Neovim, fixture native
+Lazy/TS/Mason commands и настоящий public applier на16 private SDK files.
+Target context,3 PID, restore order,6 backports16 SHA, env restore/PATH,
+error short circuit и отсутствие installed проверены. SDK/cache originals
+не менялись. Existing shell scenarios: Linux26/Mac127 PASS в Ubuntu; их shim
+следует общему plugins stage, native semantics проверяет отдельный stand.
+
+Первый Windows stand без PATH postcondition source7 RED/target7 PASS.
+Добавленный post-env fixture неверно собрал WriteAllLines array (PowerShell
+operator precedence): target5 PASS/2 FAIL. Скобки fixture исправлены; новая
+версия source7 RED/target7 PASS один раз, затем Linux matrix. Raw предыдущие
+results сохранены, distinct counts не суммируются. Audit сначала ожидал files
+map у single-file nvim-dap; учтён scalar sha256, E2E из-за audit не повторяли.
+
+**Вывод/границы.** Lua/Vim exceptions и missing command больше не маскируются
+под успешный setup. Package failure, сообщённый native command без exception,
+ещё требует проверки registry/binary readiness; полный Default/Custom,67
+downloads, supported SDK delivery и native Mac/Bash3.2 не закрыты. Daily startup
+не менялся. Готовые SDK/67 pins/backport payloads/frozen infra прежние; Win/Linux
+serial, temp F, ready Docker28.5.1 без build/pull/Desktop/WSL lifecycle.
+
+**Файлы.** Три installers, общий Lua/POSIX stage, native setup stand/старые
+scenario fixtures, OpenSpec fail-incomplete-installer-setup, installation plan/
+roadmap/PROBLEMS/tests README/HISTORY/commands. Raw .tests/setup-*, guest
+equivalents/install-setup/<id>/native traces; setup-audit.json сверяет bytes,
+outcomes,6/16,153 legacy, frozen hashes и append-only prefixes.

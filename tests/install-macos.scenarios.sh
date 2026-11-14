@@ -27,6 +27,7 @@ mk_checkout() {
   cp "$REPO/wezterm.lua" "$c/wezterm.lua"
   cp "$REPO/nvim_forge.sh" "$c/nvim_forge.sh"
   cp "$REPO/nvim_forge/scripts/install-macos.sh" "$c/nvim_forge/scripts/install-macos.sh"
+  cp "$REPO/nvim_forge/scripts/setup-stage.lua" "$c/nvim_forge/scripts/setup-stage.lua"
   if [ -d "$REPO/nvim_forge/scripts/lib" ]; then cp -R "$REPO/nvim_forge/scripts/lib" "$c/nvim_forge/scripts/lib"; fi
   : > "$c/nvim_forge/init.lua"
 }
@@ -99,9 +100,9 @@ mk_optional_shims() {
 #!/bin/sh
 # Модель nvim для установщика: пишет в журнал аргументы и окружение, в
 # котором его запустили (NVIM_APPNAME, XDG_CONFIG_HOME), — так видно, какой
-# конфиг он читал бы. FAKE_NVIM_RC — код возврата на `Lazy! restore`.
+# конфиг он читал бы. FAKE_NVIM_RC — код возврата plugins stage.
 echo "nvim $* NVIM_APPNAME=${NVIM_APPNAME:-} XDG_CONFIG_HOME=${XDG_CONFIG_HOME:-}" >> "${FAKE_NVIM_LOG:-$HOME/.nvim.log}"
-case "$*" in *"Lazy! restore"*) exit "${FAKE_NVIM_RC:-0}" ;; esac
+case "$*" in *"setup-stage.lua plugins"*) exit "${FAKE_NVIM_RC:-0}" ;; esac
 exit 0
 EOF
   cat > "$ROOT/xcodebin/xcode-select" <<'EOF'
@@ -445,7 +446,7 @@ run s23 FORGE_NVIM_DEPS_ONLY=0 PATH="$(NVIM_PATH_OF)"
 check "exit 0" '[ "$RC" -eq 0 ]'
 check "~/.config/nvim -> <checkout>/nvim_forge" '[ -L "$H/.config/nvim" ] && [ "$(readlink "$H/.config/nvim")" = "$CFG" ]'
 check "installed message" 'grep -q "forge-nvim installed: $H/.config/nvim" "$OUT" && grep -q "Start with: nvim" "$OUT"'
-check "Lazy! restore for the installed config" 'grep -q "Lazy! restore.*NVIM_APPNAME=nvim XDG_CONFIG_HOME=$H/.config" "$H/.nvim.log"'
+check "plugins stage for the installed config" 'grep -q "setup-stage.lua plugins.*NVIM_APPNAME=nvim XDG_CONFIG_HOME=$H/.config" "$H/.nvim.log"'
 check "no Lazy! sync" '! grep -q "Lazy! sync" "$H/.nvim.log"'
 run s23b FORGE_NVIM_DEPS_ONLY=0 PATH="$(NVIM_PATH_OF)"
 check "rerun: already linked" '[ "$RC" -eq 0 ] && grep -q "forge-nvim config already linked: $H/.config/nvim" "$OUT"'
@@ -502,7 +503,7 @@ run s26 FORGE_NVIM_DEPS_ONLY=0 XDG_CONFIG_HOME="$C" NVIM_APPNAME=nvim_forge PATH
 check "exit 0" '[ "$RC" -eq 0 ]'
 check "install path is ~/.config/nvim" '[ -L "$H/.config/nvim" ]'
 check "nothing new inside the repo" '[ "$( cd "$C" && find . | sort )" = "$(cat "$ROOT/s26.before")" ]'
-check "nvim ran for the installed config" 'grep -q "Lazy! restore.*NVIM_APPNAME=nvim XDG_CONFIG_HOME=$H/.config" "$H/.nvim.log"'
+check "nvim ran for the installed config" 'grep -q "setup-stage.lua plugins.*NVIM_APPNAME=nvim XDG_CONFIG_HOME=$H/.config" "$H/.nvim.log"'
 mkdir -p "$C-other"
 run s26b FORGE_NVIM_DEPS_ONLY=0 XDG_CONFIG_HOME="$C-other" PATH="$(NVIM_PATH_OF)"
 check "sibling <checkout>-other is honoured" '[ "$RC" -eq 0 ] && [ -L "$C-other/nvim" ]'

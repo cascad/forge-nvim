@@ -652,20 +652,8 @@ install_config() {
 # его родитель, NVIM_APPNAME — его имя, а не то, что шелл унаследовал из
 # терминала nvim_forge.
 sync_neovim() {
-  step "Syncing plugins (Lazy! restore — lazy-lock.json чекаута)"
-  (
-    cd "$HOME"
-    XDG_CONFIG_HOME="$(dirname -- "$INSTALL_DIR")"
-    NVIM_APPNAME="$(basename -- "$INSTALL_DIR")"
-    export XDG_CONFIG_HOME NVIM_APPNAME
-    nvim --headless "+Lazy! restore" "+qa"
-    step "Installing Treesitter parsers"
-    nvim --headless "+ForgeTreesitterInstall" "+qa" || \
-      info "Treesitter parser install returned a non-zero status. Open :checkhealth nvim-treesitter inside nvim for details."
-    step "Installing Mason tools"
-    nvim --headless "+lua pcall(vim.cmd, 'Lazy load mason-tool-installer.nvim')" "+lua pcall(vim.cmd, 'MasonToolsInstallSync')" "+qa" || \
-      info "Mason tool install returned a non-zero status. Open :Mason inside nvim for details."
-  )
+  . "$SCRIPT_DIR/lib/setup-neovim.sh"
+  forge_setup_neovim "$INSTALL_DIR"
 }
 
 # Сломанный шаг WezTerm не прерывает остальную установку, но делает код

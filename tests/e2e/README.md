@@ -1678,3 +1678,15 @@ exit7, incomplete cache. Это transport E2E, не установка SDK/Neovi
 Native Windows PowerShell5.1/Ubuntu Bash: по6 PASS (§232–233).
 Первый Ubuntu fixture newline FAIL сохранён; native Mac не запускался. Полная установка и
 Default/Custom остаются отдельными gates, [команды стенда](../../docs/INSTALLATION_PLAN.md).
+
+## IDE-BOOT-9: строгая подготовка installed profile
+
+`python -B tests/install-setup.test.py` на Windows, `python3 -B
+tests/install-setup.test.py` на POSIX; нужен готовый Neovim и editor deps.
+Настоящий installer/Neovim, fixture Lazy/TS/Mason callbacks и public applier
+на16 private files. Нет host package operations/SDK downloads. Путь Default
+и глубокий Custom path создаются; foreign NVIM_APPNAME не определяет setup.
+Source7 RED → target7 PASS Windows/Ubuntu; macOS backend также7 contract PASS
+на Ubuntu, native Mac отдельно. Existing installer shells: Linux26/Mac127
+checks PASS в Ubuntu. Target bootstrapping67 plugins, package readiness и
+Default/Custom menu не подменяются этим regression stand. Подробности — §234.

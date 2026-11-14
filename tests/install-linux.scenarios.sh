@@ -25,6 +25,7 @@ mk_checkout() {
   cp "$REPO/wezterm.lua" "$c/wezterm.lua"
   cp "$REPO/nvim_forge.sh" "$c/nvim_forge.sh"
   cp "$REPO/nvim_forge/scripts/install-linux.sh" "$c/nvim_forge/scripts/install-linux.sh"
+  cp "$REPO/nvim_forge/scripts/setup-stage.lua" "$c/nvim_forge/scripts/setup-stage.lua"
   if [ -d "$REPO/nvim_forge/scripts/lib" ]; then cp -R "$REPO/nvim_forge/scripts/lib" "$c/nvim_forge/scripts/lib"; fi
   : > "$c/nvim_forge/init.lua"
 }

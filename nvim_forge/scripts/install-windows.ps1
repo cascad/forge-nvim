@@ -32,7 +32,10 @@ function Test-Command {
 function Update-CurrentPath {
     $machinePath = [Environment]::GetEnvironmentVariable("Path", "Machine")
     $userPath = [Environment]::GetEnvironmentVariable("Path", "User")
-    $env:Path = "$machinePath;$userPath"
+    # Сохранить явно заданный process SDK/PATH и добавить новые системные пути.
+    $paths = (($env:Path, $machinePath, $userPath) -join ';').Split(';') |
+        Where-Object { $_ } | Select-Object -Unique
+    $env:Path = $paths -join ';'
 
     $treeSitter = Get-ChildItem `
         -Path (Join-Path $env:LOCALAPPDATA "Microsoft\WinGet\Packages") `
@@ -207,27 +210,22 @@ function Sync-Neovim {
         throw "nvim is not available in PATH. Restart the terminal or install Neovim manually."
     }
 
-    Write-Step "Syncing plugins"
-    Push-Location $InstallPath
+    $installed = [IO.Path]::GetFullPath($InstallPath)
+    $stageScript = Join-Path $installed 'scripts\setup-stage.lua'
+    if (-not (Test-Path -LiteralPath $stageScript -PathType Leaf)) { throw "Installed setup stage not found: $stageScript" }
+    $oldConfig = $env:XDG_CONFIG_HOME
+    $oldApp = $env:NVIM_APPNAME
     try {
-        nvim --headless "+Lazy! sync" "+qa"
-        if ($LASTEXITCODE -ne 0) {
-            throw "Lazy sync failed."
-        }
-
-        Write-Step "Installing Treesitter parsers"
-        nvim --headless "+ForgeTreesitterInstall" "+qa"
-        if ($LASTEXITCODE -ne 0) {
-            Write-Warning "Treesitter parser install finished with a non-zero exit code. Open :checkhealth nvim-treesitter inside nvim for details."
-        }
-
-        Write-Step "Installing Mason tools"
-        nvim --headless "+lua pcall(vim.cmd, 'Lazy load mason-tool-installer.nvim')" "+lua pcall(vim.cmd, 'MasonToolsInstallSync')" "+qa"
-        if ($LASTEXITCODE -ne 0) {
-            Write-Warning "Mason tool install finished with a non-zero exit code. Open :Mason inside nvim for details."
+        $env:XDG_CONFIG_HOME = Split-Path -Parent $installed
+        $env:NVIM_APPNAME = Split-Path -Leaf $installed
+        foreach ($stage in @('plugins', 'parsers', 'tools')) {
+            Write-Step "Preparing $stage"
+            nvim --headless -i NONE -u (Join-Path $installed 'init.lua') -l $stageScript $stage
+            if ($LASTEXITCODE -ne 0) { throw "Setup stage $stage failed (exit $LASTEXITCODE)." }
         }
     } finally {
-        Pop-Location
+        $env:XDG_CONFIG_HOME = $oldConfig
+        $env:NVIM_APPNAME = $oldApp
     }
 }
 

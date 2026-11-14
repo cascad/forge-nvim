@@ -10,7 +10,19 @@
 
 Маршрут и приоритеты: [рабочий план nvim_forge](docs/IDE_ROADMAP.md).
 Для новых пунктов используем следующий свободный ID `IDE-xxx`; исходный
-симптом хранится здесь, этап и состояние — в плане. Следующий ID: `IDE-139`.
+симптом хранится здесь, этап и состояние — в плане. Следующий ID: `IDE-140`.
+
+## IDE-139 — setup сообщает успех после ошибки обязательной команды
+
+2026-11-14: native Neovim +lua error(...) +qa возвращал0; pcall/warnings в
+install scripts скрывали ошибки. Windows/Linux также могли готовить чужой
+NVIM_APPNAME. §234: общий Lua stage с explicit cquit1, lock restore, все
+backports apply/check, fresh processes и правильный target context. Windows
+сохраняет process SDK/PATH. Source7 RED → target7 PASS Windows/Ubuntu; Mac
+backend contract7 PASS в Ubuntu, не native Mac. Existing shell scenarios153
+PASS. Default/Custom пути и отсутствующие родители проверены; нужные каталоги
+создаются автоматически. Внутренние package failures без Lua/Vim exception
+ещё требуют readiness по пакетам; весь IDE-138 этим срезом не закрыт.
 
 ## IDE-138 — полная установка IDE одной командой
 

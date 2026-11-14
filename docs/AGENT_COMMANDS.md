@@ -8608,3 +8608,39 @@ install-bootstrap-windows-lineendings.txt6 PASS, затем та же Compose к
 python -B .tests/bootstrap-linux-record.py: test/entry SHA/staging/frozen/prefix,
 история и exact staging. OpenSpec strict, diff checks, local commit; full native
 package install этими transport cases не проверяется. Mac gate открыт.
+
+
+## 142. Native installed-profile setup и отсутствующие каталоги
+
+2026-11-14, FIXLOG234. PowerShell -NoProfile, cwd F:/repo/forge-nvim; temp и
+NVIM_LOG_FILE на F, Python UTF-8, npm cache F:/forge-nvim-tmp/npm-cache.
+rg/Get-Content:3 installers, public backports applier, legacy scenario contracts;
+SDK native error probe дал0 (setup-error-probe.txt), объяснив false success.
+
+```powershell
+npx.cmd --yes @fission-ai/openspec@1.13.2 context --json
+npx.cmd --yes @fission-ai/openspec@1.13.2 new change fail-incomplete-installer-setup
+# status/instructions proposal/specs/design/tasks/apply --change ... --json
+python -B .tests/setup-prepare.py
+$env:FORGE_INSTALL_SETUP_SOURCE='F:/repo/forge-nvim/.tests/setup-source/nvim_forge'
+python -B tests/install-setup.test.py
+$env:FORGE_INSTALL_SETUP_SOURCE=$null
+python -B tests/install-setup.test.py
+docker compose -f tests/containers/compose.yaml run --rm --no-deps --pull never --entrypoint bash ubuntu /workspace/.tests/setup-matrix.sh
+docker compose -f tests/containers/compose.yaml run --rm --no-deps --pull never --entrypoint bash ubuntu /workspace/.tests/setup-legacy.sh
+python -B .tests/audit-setup.py
+python -B .tests/record-setup.py
+npx.cmd --yes @fission-ai/openspec@1.13.2 validate fail-incomplete-installer-setup --type change --strict --no-interactive
+git diff --check
+git diff --cached --check
+```
+
+Windows source/target first logs, затем -final (post-env fixture FAIL), затем
+-checked (финальная новая версия7 RED→7 PASS) сохранены. Guest source/target
+для linux/macos по7; macOS здесь contract на Linux, не native Mac. Legacy
+stdout153 PASS сохранён, внутренние /tmp outputs удалены с owned container.
+Stand packages не ставит: реальные Neovim callbacks и16 private payload files.
+Default/Custom path creation, profile/env/PATH/phase short circuit проверены.
+Ready engine использован после сообщения владельца, без lifecycle/build/pull.
+Audit сверяет native argv/results/source/test/helper,6/16, frozen SDK/lock/
+payloads/drafts; exact staging и staged journal prefixes перед commit.
