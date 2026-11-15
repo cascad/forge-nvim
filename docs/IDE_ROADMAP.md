@@ -30,6 +30,9 @@ native handle E2E и сохранение прежнего kit. §249: отде�
 bootstrap WinGet/Homebrew, затем отдельный SDK confirm; Windows/Ubuntu stand
 проверен. Дальше — release inventory Core/IDE tools; native Mac, real manager/
 SDK installs и публичный one-liner пока открыты.
+§250: [release inventory и конкретная очередь](RELEASE_INVENTORY.md) записаны;
+первый срез — существующие внешние IDE tools, затем debug/test tools, Core/
+Terminal artifacts, actual Default/Custom и native Mac/publication.
 Упаковка Node отменена; native Mac и полный release остаются открытыми.
 §234: общий setup обрабатывает Lua/Vim exceptions и missing commands как отказ;
 по7 stand PASS Windows/Ubuntu. Default/Custom каталоги и родители создаются

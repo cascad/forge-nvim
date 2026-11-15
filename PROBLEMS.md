@@ -69,6 +69,10 @@ PASS. Default/Custom пути и отсутствующие родители п�
 discovery. Windows/Ubuntu controlled stand прошёл, реальные manager installs
 и native Mac не заявлены. Следующий пункт — release inventory Core/IDE tools
 и функциональная готовность Default, затем публикация one-liner.
+§250: [покрытие поставки по компонентам](docs/RELEASE_INVENTORY.md) разобрано.
+Не покрыты общим setup внешние gopls/часть форматтеров, Windows codelldb,
+подготовка Bash/SQL и SQL test runner. Это существующие возможности, не новые
+LSP. Следующий кодовый срез — private IDE tools с обычными пользовательскими SDK.
 
 §241: реализована доставка Core и selected SDK modules по platform/URL/SHA,
 сборка в private staging и сохранение прежнего kit при отказе. Native stand

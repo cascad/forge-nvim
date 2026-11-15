@@ -9441,3 +9441,33 @@ Cleanup: python -B .tests/sdk-bootstrap-cleanup.py; только roots из со
 bytes сохранены по SHA перед удалением runtime/prepared/archive payloads.
 Результат .tests/sdk-bootstrap-cleanup.json. Audit frozen SDK/lock/WIP, raw
 append-only journals и normalized staged prefixes перед точным local commit.
+
+
+## 158. Release inventory текущих возможностей
+
+2026-11-15, после694cd9e. Только чтение repository source: components.tsv,
+tool_catalog/install_profile/setup-stage/setup_readiness, LSP/format/DAP,
+Bash/SQL/Node consumers, runtime catalog/packager и Dockerfile. rg/rg --files,
+Get-Content с ограниченными диапазонами; без чтения личных SDK configs/auth.
+
+Native snapshot, без init/plugins и SDK queries:
+
+```powershell
+$env:FORGE_INVENTORY_ROOT='F:/repo/forge-nvim'
+$env:NVIM_LOG_FILE='F:/repo/forge-nvim/.tests/tmp/release-inventory.log'
+./.tools/neovim/windows-x64/bin/nvim.exe --headless -u NONE -i NONE -l .tests/release-inventory.lua
+```
+
+Временный Lua script добавляет config lua/?.lua в package.path, вызывает
+forge.tool_catalog.mason/parsers для core и core+каждый component; child env
+FORGE_NVIM_COMPONENTS задаётся только этому процессу. Читает lazy-lock и
+patches/plugins.json для counts, пишет .tests/release-inventory-windows.json.
+Никаких install/SDK commands/startup probes, сети или SDK environment writes.
+Snapshot — Windows, POSIX исключение codelldb рассмотрено чтением кода.
+Не заявлять native Mac PASS по этому snapshot.
+
+Python read-only audit сверяет таблицу/counts, относительные doc links,
+24 frozen hashes и raw/staged journal prefixes; git diff --cached --check.
+Точный allowlist local commit, runtime/Cargo/SDK/pins/backports/WIP неизменны.
+Behavioral code не менялся, новый e2e runner и повторный installer suite для
+документа не запускались. Native product cases остаются в SDK iteration §157.

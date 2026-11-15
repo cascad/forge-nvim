@@ -92,6 +92,11 @@ SDK preflight и меню реализованы (§246–247). Дальнейш
   artifacts и функциональная проверка полного Default. Затем публикация
   one-liner и native Mac acceptance; публичная установка ещё не готова.
 
+§250: [inventory существующих возможностей](RELEASE_INVENTORY.md) составлен.
+Обнаружены пропущенные внешние IDE tools и отдельные Bash/SQL/Windows debugger
+steps. Следующий кодовый срез — их штатная private подготовка, начиная с
+gopls/stylua/gofumpt/golines/prettier, без упаковки языковых SDK.
+
 ## Текущая готовность
 
 §246: `Plan.components` содержит только IDE parts, `native_sdks` — отдельный

@@ -13351,3 +13351,44 @@ change bootstrap-native-sdk-managers, install plan/SDK_STATE/roadmap/problems.
 Proof: .tests/sdk-bootstrap-{source-red-windows,windows-v1,targeted-windows-v2,
 cmdlets-windows-v3,actions-windows-v1}.txt; .tests/ubuntu/sdk-bootstrap-*-v1.txt;
 cleanup.json, upstream.json и audit.json.
+
+
+## 250. Release: inventory существующих инструментов IDE
+
+Дата: 2026-11-15. IDE-138. Поведение не изменялось; это обзор текущего кода,
+не новая LSP/SDK capability и не заявление готовности Default.
+
+**Проблема.** После SDK menu/bootstrap следующим пунктом оставался абстрактный
+release inventory. По tests delivery/readiness невозможно понять, какие
+реальные возможности вообще не входят в список setup, поэтому пользователь
+не видел конкретной очереди продукта.
+
+**Причина.** Общий setup проверяет только объявленные Mason packages/parsers.
+Часть существующих функций отдельно ожидает gopls/stylua/gofumpt/golines/
+prettier в PATH, Windows codelldb извне, подготовленные Bash/SQL adapters и
+forge-sqltest. SDK readiness --version этих IDE tools не покрывает. Docker
+содержит build/search tools заранее и не доказывает чистую пользовательскую ОС.
+
+**Изменение.** docs/RELEASE_INVENTORY.md: карта Core/языков/Terminal, existing
+SDK boundary, текущие Mason packages/parsers, фактические gaps и пять последовательных
+срезов. Первый — штатная private подготовка уже используемых внешних IDE tools,
+затем debug/test, Core/Terminal artifacts, actual Default/Custom, native Mac/
+publication. Не добавлены новые LSP или manager framework. Production catalog
+остаётся пустым, его нельзя выдавать за готовый one-liner.
+
+**Проверка/e2e.** Только read-only inspection код694cd9e: native Neovim
+-u NONE -i NONE -l вызывает тот же tool_catalog для core и core+язык, без
+SDK queries/plugins/setup/сети. .tests/release-inventory-windows.json содержит
+67 pins,6 backports,23 общих/33 различных parsers и точные Windows package
+sets. OS исключение codelldb подтверждено code inspection, native Mac не
+запускался. Числа/таблица, относительные doc links и неизменность runtime/WIP
+проверены локально. Поведенческих изменений нет, новые E2E/повторный прогон
+installer suite для этого документа не выполнялись.
+
+**Вывод.** Есть конкретная очередь выпуска, а не ещё один тестовый каталог.
+Следующий шаг доступен на Windows/Ubuntu без ожидания Mac. Реальные SDK installs,
+полные release artifacts, native Mac и публикация остаются открытыми.
+
+**Файлы.** docs/RELEASE_INVENTORY.md, INSTALLATION_PLAN.md, IDE_ROADMAP.md,
+PROBLEMS.md, HISTORY.md и append-only FIXLOG/AGENT_COMMANDS. Snapshot/audit:
+.tests/release-inventory-windows.json, release-inventory-audit.json.
