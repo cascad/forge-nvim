@@ -83,10 +83,14 @@ SDK preflight и меню реализованы (§246–247). Дальнейш
   выбран свой путь, отмена,
   отказ установки/повтор; Default и noninteractive не устанавливают SDK молча.
   native Mac/real package installation отдельно владельцем.
-- [ ] Clean-machine gap: при отсутствии winget/Homebrew/APT требуется отдельный
-  явный bootstrap менеджера либо официальный SDK installer. В текущем меню
-  предлагается использовать existing SDK/skip/cancel, менеджер автоматически
-  не устанавливается. Полный Default one-liner ещё не объявляется готовым.
+- [x] Clean-machine manager flow (§249): отсутствующий WinGet/Homebrew
+  предлагается установить официальным способом с отдельным ответом «Нет»
+  по умолчанию. Затем отдельно подтверждается SDK. APT — компонент Ubuntu;
+  его отсутствие не запускает ремонт ОС. Windows/Ubuntu stand проверен,
+  native Mac/настоящая установка менеджеров остаются owner acceptance.
+- [ ] Следующий срез: release inventory Core/IDE tools, совместимые native
+  artifacts и функциональная проверка полного Default. Затем публикация
+  one-liner и native Mac acceptance; публичная установка ещё не готова.
 
 ## Текущая готовность
 
@@ -647,8 +651,8 @@ Exit0 без работающего SDK оставляет меню доступ
 Named SDK upgrade не запрашивается (--no-upgrade/HOMEBREW_NO_INSTALL_UPGRADE),
 зависимости обрабатываются менеджером. Windows IDs проверены по
 [Microsoft WindowsDeveloperConfig](https://github.com/microsoft/WindowsDeveloperConfig/blob/main/windows-dev-config/steps/packages.ps1).
-При отсутствующем менеджере SDK menu сообщает причину; bootstrap остаётся
-следующим clean-machine пунктом. Real package install на машине агента не
+При отсутствующем менеджере SDK menu предлагает отдельный bootstrap (§249).
+Real package install на машине агента не
 делался: native fixture manager в E2E проверяет flow/argv/logs/recheck/cancel.
 
 ## Windows publication locks — §248
@@ -660,3 +664,27 @@ Named SDK upgrade не запрашивается (--no-upgrade/HOMEBREW_NO_INST
 lock сохраняет ошибку/rollback, чужие процессы/ACL не трогаются. Обычный startup
 и POSIX rename не замедлены. Tests/install-locks.test.py проверяет transient
 успех и сохранение прежнего runtime/bin/owner при постоянной блокировке.
+
+
+## Bootstrap менеджера SDK — §249
+
+Для отсутствующего WinGet/Homebrew: отдельный источник/команда/каталоги и
+confirm по умолчанию «Нет», затем discovery менеджера и отдельный SDK confirm.
+Microsoft.WinGet.Client/отсутствующий NuGet provider — CurrentUser, существующий
+модуль не переустанавливается. Официальный Homebrew/install закреплён commit
+ e5b3c5834e3932c8aaa42deef4794076c9b0cbf0; sudo/CLT обрабатывает его native UI.
+[WinGet bootstrap](https://learn.microsoft.com/windows/package-manager/winget/troubleshooting),
+[Homebrew installation](https://docs.brew.sh/Installation).
+Менеджер в стандартном каталоге вне PATH переиспользуется. Ни fride, ни этот
+bootstrap wrapper не правят global PATH/profiles. APT считается частью Ubuntu;
+его отсутствие оставляет existing SDK/skip/cancel, без ремонта ОС.
+
+Windows: `python -B tests/install-sdk-bootstrap.test.py`,
+`python -B tests/install-sdk-actions.test.py`; POSIX: python3 с теми же файлами.
+Нужны готовые native UI/Neovim, Rust для fixture и Node stand SDK. Bootstrap/
+package manager в E2E — локальный native fixture; host packages не ставятся.
+Default No, SDK No, retry/error/exit0-no-manager, Escape, old kit cancel,
+standard Windows alias и noninteractive проверены. Сам PowerShell recipe
+исполняется с локальными cmdlet doubles. Mac команды подготовлены, но здесь
+не выполнялись; для bootstrap нужен clean Mac без standard Homebrew.
+Полный Default release inventory/functional readiness остаётся следующим срезом.

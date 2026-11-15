@@ -26,8 +26,10 @@ report/preflight и прекращает setup до downloads при missing/una
 §247: SDK menu existing/install/skip/refresh/cancel и final plan реализованы,
 fallback locations сохраняются после PATH, upgrade и project venv проверены.
 §248: исправлен Windows sharing-lock при publish staging; transient/permanent
-native handle E2E и сохранение прежнего kit. Дальше — clean-machine manager
-bootstrap/release inventory; native Mac и real SDK installs пока owner gates.
+native handle E2E и сохранение прежнего kit. §249: отдельный подтверждаемый
+bootstrap WinGet/Homebrew, затем отдельный SDK confirm; Windows/Ubuntu stand
+проверен. Дальше — release inventory Core/IDE tools; native Mac, real manager/
+SDK installs и публичный one-liner пока открыты.
 Упаковка Node отменена; native Mac и полный release остаются открытыми.
 §234: общий setup обрабатывает Lua/Vim exceptions и missing commands как отказ;
 по7 stand PASS Windows/Ubuntu. Default/Custom каталоги и родители создаются

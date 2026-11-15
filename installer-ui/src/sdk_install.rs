@@ -19,6 +19,25 @@ impl Recipe {
             .join(" ")
     }
 }
+fn manager(name: &str, path: &std::ffi::OsStr) -> Option<PathBuf> {
+    sdks::find(name, path).or_else(|| {
+        let directories = if cfg!(windows) && name == "winget" {
+            std::env::var_os("LOCALAPPDATA")
+                .map(|p| vec![PathBuf::from(p).join("Microsoft/WindowsApps")])
+                .unwrap_or_default()
+        } else if cfg!(target_os = "macos") && name == "brew" {
+            vec![
+                PathBuf::from("/opt/homebrew/bin"),
+                PathBuf::from("/usr/local/bin"),
+            ]
+        } else {
+            vec![]
+        };
+        directories
+            .into_iter()
+            .find_map(|directory| sdks::find(name, directory.as_os_str()))
+    })
+}
 pub(crate) fn recipe(id: &str, paths: &[PathBuf]) -> Result<Recipe> {
     let path = sdks::effective_path(paths)?;
     let (manager, items, source) = if cfg!(windows) {
@@ -55,7 +74,7 @@ pub(crate) fn recipe(id: &str, paths: &[PathBuf]) -> Result<Recipe> {
         args.extend(packages);
         ("apt-get",args,"APT: версии из настроенных репозиториев; системные каталоги /usr и cache APT, возможен sudo")
     };
-    let program=sdks::find(manager,&path).ok_or_else(||invalid(format!("{manager} не найден. Выберите существующий SDK или установите штатный менеджер отдельно.")))?;
+    let program = manager_path(manager, &path)?;
     let mut recipe = Recipe {
         program,
         args: items.into_iter().map(OsString::from).collect(),
@@ -68,6 +87,16 @@ pub(crate) fn recipe(id: &str, paths: &[PathBuf]) -> Result<Recipe> {
         }
     }
     Ok(recipe)
+}
+fn manager_path(name: &str, path: &std::ffi::OsStr) -> Result<PathBuf> {
+    manager(name, path).ok_or_else(|| {
+        std::io::Error::new(
+            std::io::ErrorKind::NotFound,
+            format!(
+                "{name} не найден. Выберите существующий SDK; для Ubuntu необходим штатный APT."
+            ),
+        )
+    })
 }
 pub(crate) fn run(options: &Options, paths: &[PathBuf], recipe: &Recipe) -> Result<bool> {
     fs::create_dir_all(&options.log_dir)?;
@@ -131,6 +160,13 @@ pub(crate) fn run(options: &Options, paths: &[PathBuf], recipe: &Recipe) -> Resu
 
 // Read-only: native installers can register paths without changing this process.
 pub(crate) fn registered_paths() -> Result<Vec<PathBuf>> {
+    if cfg!(target_os = "macos") {
+        return Ok(["/opt/homebrew/bin", "/usr/local/bin"]
+            .into_iter()
+            .map(PathBuf::from)
+            .filter(|p| p.is_dir())
+            .collect());
+    }
     if !cfg!(windows) {
         return Ok(vec![]);
     }

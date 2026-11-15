@@ -1,6 +1,7 @@
 // spec: IDE-BOOT-13. Presentation без установки SDK/пакетов в пользовательскую ОС.
 mod runtime;
 mod sdk_actions;
+mod sdk_bootstrap;
 mod sdk_install;
 mod sdks;
 mod wizard;

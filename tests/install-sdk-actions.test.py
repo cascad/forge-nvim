@@ -29,7 +29,7 @@ class Actions(runtime.Runtime):
         if not stand.WINDOWS:
             for name in ['bash','sh','dirname','readlink','mktemp','mkdir','uname','cut','sha256sum','shasum','tar','gzip','curl','wget','mv','rm','cat']:
                 if source:=shutil.which(name):(toolkit/name).symlink_to(source)
-        if manager:shutil.copy2(self.fixture,toolkit/('winget.exe' if stand.WINDOWS else 'apt-get'))
+        if manager:shutil.copy2(self.fixture,toolkit/('winget.exe' if stand.WINDOWS else 'brew' if sys.platform=='darwin' else 'apt-get'))
         env.update(PATH=str(toolkit),SDK_PACKAGE_TRACE=str(base/'package.tsv'),SDK_PACKAGE_BIN=str(toolkit),SDK_PACKAGE_MODE='success')
         return base,env,target
 
@@ -98,7 +98,8 @@ class Actions(runtime.Runtime):
     def test_actions_06_confirmed_install(self):
         base,env,target=self.prepared('sdk-install');self.interact(base,env,target,'sdk-install')
         calls=(base/'package.tsv').read_text().splitlines();self.assertEqual(len(calls),1)
-        self.assertIn('OpenJS.NodeJS.LTS' if stand.WINDOWS else 'nodejs',calls[0]);self.assertIn('--no-upgrade',calls[0])
+        self.assertIn('OpenJS.NodeJS.LTS' if stand.WINDOWS else 'node' if sys.platform=='darwin' else 'nodejs',calls[0])
+        if sys.platform!='darwin':self.assertIn('--no-upgrade',calls[0])
         self.assertTrue(list((base/'logs').glob('sdk-install-*.log')));self.assertTrue((target/'bin/fride').exists())
 
     def test_actions_07_failed_install_retry(self):
@@ -110,6 +111,8 @@ class Actions(runtime.Runtime):
         self.interact(base,env,target,'sdk-noop',130);self.assertFalse(target.exists());self.assertFalse((base/'result.json').exists())
 
     def test_actions_09_missing_manager(self):
+        if sys.platform=='darwin' and any(Path(p).is_file() for p in ['/opt/homebrew/bin/brew','/usr/local/bin/brew']):
+            self.skipTest('Clean macOS stand required: standard Homebrew is deliberately reused')
         base,env,target=self.prepared('sdk-no-manager',False);self.interact(base,env,target,'sdk-no-manager',130)
         self.assertFalse((base/'package.tsv').exists());self.assertFalse(target.exists())
 

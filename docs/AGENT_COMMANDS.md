@@ -9374,3 +9374,70 @@ joined, handle CloseHandle в finally, lock.json сохраняет resource lif
 Product wait<=1.5s/25ms только Windows EPERM/EACCES/EBUSY, без ACL/process kills.
 Проверены rollback old bin/runtime/owner и обычный запуск. POSIX не менялся,
 его SDK/delivery/UI controls проверены в общем Ubuntu run. SDK binary frozen.
+
+
+## 157. IDE-BOOT-21: bootstrap штатного менеджера SDK
+
+2026-11-15. Все TEMP/TMP/TMPDIR — .tests/tmp на F, Python UTF-8/-B,
+NVIM_LOG_FILE — .tests/tmp/sdk-bootstrap-*.log, npm_config_cache —
+F:/forge-nvim-tmp/npm-cache. Никаких install/update SDK на host.
+
+OpenSpec1.13.2: context/list --specs/show macos-install --type spec,
+new change bootstrap-native-sdk-managers, status, instructions proposal/specs/
+design/tasks/apply, validate --type change --strict --no-interactive.
+CLI JSON — .tests/sdk-bootstrap-*.json. Main specs не менялись.
+
+Source/исправленная native сборка и целевой регресс:
+
+```powershell
+# После копирования прежнего UI в .tests/sdk-bootstrap-before:
+$env:FORGE_INSTALL_UI_BINARY='F:/repo/forge-nvim/.tests/sdk-bootstrap-before/fride-setup.exe'
+python -B tests/install-sdk-bootstrap.test.py test_bootstrap_02_confirmed_then_sdk
+# Source RED сохранён; затем убрать override только в текущем shell.
+Remove-Item Env:FORGE_INSTALL_UI_BINARY
+python -B scripts/build-installer-ui.py --rustc C:/Users/cascad/.rustup/toolchains/stable-x86_64-pc-windows-msvc/bin/rustc.exe
+python -B tests/install-sdk-bootstrap.test.py
+python -B tests/install-sdk-actions.test.py
+```
+
+После fixture snapshot исправления повторены ТОЛЬКО cases02/03/04/07/08;
+после добавления реального PowerShell/cmdlet execution — только02. Raw source
+RED/первый failed run сохранены отдельно, full green loop не делался.
+SDK bootstrap fixture (native Rust binary) моделирует missing/fail/noop/retry,
+пишет argv в bootstrap.tsv и создаёт fixture winget alias в own stand. Реальный
+PowerShell исполняет production recipe из этого trace с локальными функциями
+из tests/diagnostics/bootstrap-winget.test.ps1: проверки CurrentUser/PSGallery,
+reuse, stop после failure. Системные package cmdlets этим прогоном не вызываются.
+
+Ubuntu: готовый forge-nvim-tests:ubuntu24.04-nvim0.12.2, network none,
+исходники ro, host .tests/ubuntu = guest /workspace/.tests. Уже готовый vendor
+использован для offline UI build в /tmp. Heavy stand тоже /tmp, наружу только
+binary/receipts/логи. Команда этого прогона:
+
+```powershell
+docker compose -f tests/containers/compose.yaml run --rm --no-deps --pull never --entrypoint bash ubuntu .tests/sdk-bootstrap-run.sh
+```
+
+Для повторения готовым UI без сборки (native POSIX, включая Mac):
+
+```sh
+python3 -B tests/install-sdk-bootstrap.test.py
+python3 -B tests/install-sdk-actions.test.py
+```
+
+Mac требует native Neovim/UI/SDK fixtures из base install stand; здесь не
+запускался. При существующем standard Homebrew clean-machine bootstrap cases
+пропускаются — нужен отдельный clean Mac stand. Никаких production OS override
+flags ради теста не добавлено.
+
+Read-only upstream: official Microsoft Learn/Homebrew docs, git ls-remote
+Homebrew/install refs/heads/main (e5b3c5834e3932c8aaa42deef4794076c9b0cbf0),
+HTTPS download install.sh только в .tests для проверки source. GitHub API
+первоначально вернул403 rate limit; повторных API retries не было. Скрипт не
+исполнялся. Его SHA/source — .tests/sdk-bootstrap-upstream.json.
+
+Cleanup: python -B .tests/sdk-bootstrap-cleanup.py; только roots из собственных
+логов, resolve внутри .tests/install-isolation до удаления. Manifest/receipt
+bytes сохранены по SHA перед удалением runtime/prepared/archive payloads.
+Результат .tests/sdk-bootstrap-cleanup.json. Audit frozen SDK/lock/WIP, raw
+append-only journals и normalized staged prefixes перед точным local commit.

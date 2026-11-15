@@ -46,6 +46,12 @@ local ok,err=xpcall(function()
   local function install(accept)
    choose(1);fresh('Установить SDK node этой командой?');input(accept and '\27[D\r' or '\r')
   end
+  local function bootstrap(accept)
+   choose(1);fresh('Установить менеджер SDK этой командой?');input(accept and '\27[D\r' or '\r')
+  end
+  local function sdk_after_bootstrap(accept)
+   fresh('Установить SDK node этой командой?');input(accept and '\27[D\r' or '\r')
+  end
   menu()
   if scenario=='sdk-cancel' then input('\27')
   elseif scenario=='sdk-existing' then existing(assert(vim.env.FORGE_UI_SDK_INPUT));final()
@@ -57,7 +63,17 @@ local ok,err=xpcall(function()
   elseif scenario=='sdk-install-cancel' then install(true);fresh('Продолжить установку IDE с этим планом?');input('\27[D\r')
   elseif scenario=='sdk-retry' then install(true);menu();install(true);final()
   elseif scenario=='sdk-noop' then install(true);fresh('SDK пока не готов');menu();choose(4)
-  elseif scenario=='sdk-no-manager' then choose(1);fresh('не найден');menu();choose(4)
+  elseif scenario=='sdk-no-manager' then
+   choose(1)
+   if vim.fn.has('win32')==1 or vim.fn.has('macunix')==1 then fresh('Установить менеджер SDK этой командой?');input('\r') else fresh('не найден') end
+   menu();choose(4)
+  elseif scenario=='sdk-bootstrap-decline' then bootstrap(false);menu();choose(4)
+  elseif scenario=='sdk-bootstrap-install' then bootstrap(true);sdk_after_bootstrap(true);final()
+  elseif scenario=='sdk-bootstrap-sdk-decline' then bootstrap(true);sdk_after_bootstrap(false);menu();choose(4)
+  elseif scenario=='sdk-bootstrap-retry' then bootstrap(true);menu();bootstrap(true);sdk_after_bootstrap(true);final()
+  elseif scenario=='sdk-bootstrap-noop' then bootstrap(true);fresh('менеджер SDK не найден');menu();choose(4)
+  elseif scenario=='sdk-bootstrap-cancel' then choose(1);fresh('Установить менеджер SDK этой командой?');input('\27');menu();choose(4)
+  elseif scenario=='sdk-bootstrap-install-cancel' then bootstrap(true);sdk_after_bootstrap(true);fresh('Продолжить установку IDE с этим планом?');input('\27[D\r')
   elseif scenario=='sdk-inside-kit' then existing(assert(vim.env.FORGE_UI_BAD_SDK_INPUT));fresh('SDK должен находиться вне');menu();choose(4)
   else error('Unknown SDK scenario '..scenario) end
  elseif scenario=='default' then

@@ -64,6 +64,12 @@ PASS. Default/Custom пути и отсутствующие родители п�
 
 ## IDE-138 — полная установка IDE одной командой
 
+§249: добавлено отдельное предложение установки отсутствующего WinGet/Homebrew
+с ответом «Нет» по умолчанию; SDK подтверждается отдельно после повторного
+discovery. Windows/Ubuntu controlled stand прошёл, реальные manager installs
+и native Mac не заявлены. Следующий пункт — release inventory Core/IDE tools
+и функциональная готовность Default, затем публикация one-liner.
+
 §241: реализована доставка Core и selected SDK modules по platform/URL/SHA,
 сборка в private staging и сохранение прежнего kit при отказе. Native stand
 проверяет Node/npm. Полный release inventory/actual readiness и Mac ещё открыты.

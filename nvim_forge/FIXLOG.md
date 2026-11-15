@@ -13294,3 +13294,60 @@ failure остаётся неизвестным. Raw fail/diagnostic и source R
 managed-install-locks в configure-native-sdk-actions; .tests/sdk-actions-ui-
 windows.txt, lock-source-red-windows.txt, locks-windows-v1.txt, ui-root-windows-
 v2.txt, rename-diagnostic.json и native lock.json. SDK/pins/backports unchanged.
+
+
+## 249. Установщик: отдельный bootstrap менеджера SDK
+
+Дата: 2026-11-15. IDE-138/140. Спека: IDE-BOOT-21 (ADDED).
+
+**Проблема.** На чистой машине действие установки SDK останавливалось, если
+нет WinGet/Homebrew: требовалось отдельно искать/ставить менеджер. Existing SDK,
+skip и cancel были доступны, полный one-liner ещё не был готов.
+
+**Причина.** sdk_install::recipe искал менеджер только в PATH и возвращал
+общий InvalidInput. Отдельного bootstrap flow и повторного manager discovery
+не было. Это граница установки, не повод изолировать языковые SDK внутри IDE.
+
+**Изменение.** Отсутствующий WinGet/Homebrew предлагается отдельной командой,
+source/location/version policy и подтверждением по умолчанию «Нет». Windows:
+официальный Microsoft.WinGet.Client, отсутствующий NuGet provider/модуль в
+CurrentUser, существующий модуль переиспользуется, Repair без AllUsers/prerelease.
+macOS: официальный Homebrew/install по commit
+ e5b3c5834e3932c8aaa42deef4794076c9b0cbf0, curl HTTPS с остановкой при ошибке
+до bash. Штатная интерактивность sudo/CLT сохраняется. Затем повторный поиск
+менеджера и ОТДЕЛЬНОЕ SDK confirmation. Отказ/ошибка/exit0 без manager возвращают
+SDK menu; прежний kit и отсутствие успешного plan проверены при отмене.
+WindowsApps alias и стандартный Homebrew prefix учитываются без global PATH/
+profile writes. Mac discovery сохраняет только найденные SDK bin paths.
+Ubuntu использует штатный APT, при его отсутствии ОС не перестраивается.
+
+**Проверка/e2e.** Windows source RED: 1 FAIL30.454s, старый UI остаётся в SDK
+menu без bootstrap prompt. Новая версия: 9 native PTY cases; первый run4 PASS/
+5 FAIL18.998s из-за чрезмерного foreign snapshot теста — он запрещал создание
+явно подтверждённого fixture WinGet alias. Выделен отдельный fixture user
+LocalAppData, защита ordinary nvim/profile сохранена. Адресные5 PASS20.706s.
+Усиленный case02 PASS16.915s выполняет сам production PowerShell script с
+локальными cmdlet doubles: missing module/provider, existing module, existing
+provider и ошибка module download (repair не вызывается). SDK action controls
+12 PASS29.853s. Exit0 без manager, default No, Escape, retry, отдельный SDK No,
+standard alias вне PATH, cancel old kit и headless/preview/check покрыты.
+Ubuntu: bootstrap suite1 PASS/8 platform skips3.862s; SDK actions12 PASS7.070s,
+включая отсутствие APT и native install/launcher. Контейнер из готового образа,
+без build/pull/сети/изменений Desktop/WSL. Настоящие manager/SDK installs на
+компьютере агента не выполнялись. Mac код/команда подготовлены, native прогон
+НЕ выполнялся; bootstrap Mac case требует clean stand без standard Homebrew.
+
+**Вывод.** Clean-machine manager choice реализован; это не доказательство
+публичной установки полного Default. Следующий продуктовый срез — release
+inventory Core/IDE tools и их функциональная готовность. Native Mac, real
+package installation и publication отдельно открыты. Source RED и первоначальный
+неудачный тест сохранены. Удалено собственных тяжёлых payloads 1.13GiB;
+73 manifest/receipt references сохранены, SDK/pins/backports и чужой WIP не менялись.
+
+**Файлы.** installer-ui/src/{lib,sdk_actions,sdk_install,sdk_bootstrap}.rs,
+tests/install-sdk-bootstrap.test.py, install-sdk-actions.test.py,
+tests/diagnostics/{install-ui-pty.lua,sdk-probe-fixture.rs,bootstrap-winget.test.ps1},
+change bootstrap-native-sdk-managers, install plan/SDK_STATE/roadmap/problems.
+Proof: .tests/sdk-bootstrap-{source-red-windows,windows-v1,targeted-windows-v2,
+cmdlets-windows-v3,actions-windows-v1}.txt; .tests/ubuntu/sdk-bootstrap-*-v1.txt;
+cleanup.json, upstream.json и audit.json.

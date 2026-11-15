@@ -65,8 +65,13 @@ Root/bin/Scripts распознаются в TUI, locations внутри зам�
 WinGet использует exact IDs/no-upgrade; APT install --no-upgrade, brew
 HOMEBREW_NO_INSTALL_UPGRADE. Их зависимостями управляет штатный менеджер;
 версия — из его настроенного репозитория, не обещанная project version.
-При missing package manager меню сообщает причину и позволяет existing/skip/
-cancel. Автоматического bootstrap менеджера пока нет; это clean-machine gate.
+При missing package manager меню предлагает отдельную установку WinGet или
+Homebrew (§249), по умолчанию «Нет». SDK подтверждается после этого отдельно.
+Bootstrap, ошибка, retry и cancel логируются; exit0 без менеджера не даёт
+запустить SDK install. Уже имеющийся WindowsApps alias или Homebrew в
+стандартном prefix переиспользуется без изменения global PATH/profile.
+Отсутствие APT в Ubuntu требует исправления ОС владельцем; другой менеджер
+молча не ставится. Native Mac и настоящая установка менеджеров здесь не проверены.
 
 Проверка: Windows `python -B tests/install-sdk-state.test.py`, Linux/macOS
 `python3 -B tests/install-sdk-state.test.py`. Нужны готовые native Neovim,

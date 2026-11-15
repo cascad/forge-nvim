@@ -1,4 +1,4 @@
-use crate::{inspect_sdks, review, sdk_install, sdks, Options, Plan, Result, Row};
+use crate::{inspect_sdks, review, sdk_bootstrap, sdk_install, sdks, Options, Plan, Result, Row};
 use std::path::{Path, PathBuf};
 
 fn interrupted<T>(value: &Result<T>) -> bool {
@@ -124,7 +124,28 @@ pub(crate) fn configure(
                     Ok(Some(existing(options, plan, &id, PathBuf::from(input?))?))
                 }
                 1 => {
-                    let recipe = sdk_install::recipe(&id, &plan.sdk_paths)?;
+                    let recipe = match sdk_install::recipe(&id, &plan.sdk_paths) {
+                        Ok(recipe) => recipe,
+                        Err(error) if error.kind() == std::io::ErrorKind::NotFound => {
+                            let Some(bootstrap) = sdk_bootstrap::recipe(options, &plan.sdk_paths)?
+                            else {
+                                return Err(error);
+                            };
+                            cliclack::note("Менеджер SDK не найден", format!("{}\n{}\nМенеджер останется в системе при отмене IDE. Языковой SDK подтверждается отдельно.", bootstrap.source, bootstrap.display()))?;
+                            let confirm =
+                                cliclack::confirm("Установить менеджер SDK этой командой?")
+                                    .initial_value(false)
+                                    .interact();
+                            if interrupted(&confirm) || !confirm? {
+                                return Ok(None);
+                            }
+                            if !sdk_install::run(options, &plan.sdk_paths, &bootstrap)? {
+                                return Ok(None);
+                            }
+                            sdk_install::recipe(&id, &plan.sdk_paths).map_err(|_| crate::invalid("Команда завершилась, но менеджер SDK не найден. Проверьте лог, выберите существующий SDK или повторите."))?
+                        }
+                        Err(error) => return Err(error),
+                    };
                     cliclack::note("Штатная установка SDK",format!("{}\n{}\nНе запрашиваем upgrade выбранного SDK; зависимости обрабатывает штатный менеджер. SDK останется в системе при последующей отмене IDE.",recipe.source,recipe.display()))?;
                     let confirm = cliclack::confirm(format!("Установить SDK {id} этой командой?"))
                         .initial_value(false)

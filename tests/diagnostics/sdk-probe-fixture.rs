@@ -1,6 +1,21 @@
 // Native single-process fixture for version/error/timeout; never installs SDKs.
 fn main() {
     let name = std::env::current_exe().unwrap().file_stem().unwrap().to_string_lossy().to_string();
+    if ["powershell", "bash"].contains(&name.as_str()) {
+        use std::io::Write;
+        let trace = std::env::var("SDK_BOOTSTRAP_TRACE").expect("bootstrap fixture only");
+        let previous = std::fs::read_to_string(&trace).unwrap_or_default().lines().count();
+        let mut file = std::fs::OpenOptions::new().create(true).append(true).open(trace).unwrap();
+        writeln!(file, "{}\t{}", name, std::env::args().skip(1).collect::<Vec<_>>().join("\t")).unwrap();
+        println!("fixture manager bootstrap");
+        let mode = std::env::var("SDK_BOOTSTRAP_MODE").unwrap_or_default();
+        if mode == "fail" || (mode == "once-fail" && previous == 0) { std::process::exit(7); }
+        if mode == "noop" { return; }
+        let root = std::path::PathBuf::from(std::env::var("SDK_BOOTSTRAP_BIN").unwrap());
+        std::fs::create_dir_all(&root).unwrap();
+        std::fs::copy(std::env::current_exe().unwrap(), root.join(if cfg!(windows) {"winget.exe"} else {"brew"})).unwrap();
+        return;
+    }
     if ["winget","apt-get","sudo","brew"].contains(&name.as_str()) {
         use std::io::Write;
         let trace=std::env::var("SDK_PACKAGE_TRACE").unwrap();
