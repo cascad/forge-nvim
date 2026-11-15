@@ -28,10 +28,11 @@ Windows/Ubuntu; native Mac и опубликованные UI artifacts ещё �
 
 ## IDE-140 — комплект не должен менять существующие программы пользователя
 
-§243: shared SDK env policy закрывает inherited Cargo/Rustup/Go/npm/pip
-state/cache/config/global-install paths; managed probes/setup/launch согласованы.
-Личные configs/tokens не мигрируются, project context сохраняется. Native
-Windows/Ubuntu SDK операции проверены; full inventory и Mac отдельно.
+Уточнение владельца2026-11-15 отменяет излишнюю SDK isolation §243. Приватны
+только части IDE; обычные SDK/config/cache и project venv переиспользуются.
+Выбран штатный NVIM_APPNAME=fride без XDG override. Отсутствующие SDK сначала
+предлагаются пользователю, без автоматического решения. Следом — изучить
+VS Code/IntelliJ IDEA и переделать prerequisite closure; release и Mac открыты.
 
 2026-11-14, явное требование владельца: Neovim и остальные элементы Forge
 должны устанавливаться независимо от уже существующих программ и настроек.

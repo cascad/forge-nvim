@@ -13,9 +13,14 @@ source entry имеет по6 transport PASS Windows/Ubuntu (§232–233), Mac �
 загрузку parsers. Команда с exit0 без готовых файлов больше не даёт done.
 Состав инструментов/языков сохранён; полный SDK inventory/state/функциональная
 матрица и Mac остаются следующими, публичный one-liner ещё не готов.
-§243: private SDK env/state policy общая для setup/probes/launch. Native
-Go/Cargo/Rustup/npm/pip операции изолированы по named paths, caller context
-сохранён. Следующий самостоятельный срез — реальные SDK artifacts/inventory.
+§243 реализовал излишнюю изоляцию SDK; владелец отменил эту границу2026-11-15.
+Приватны только части IDE; Go/Rust/Node/npm/Python переиспользуются штатно.
+Недостающее предлагаем установить после выбора пользователя. Изучить подход
+VS Code и IntelliJ IDEA. [Уточнённый план и точка остановки](INSTALLATION_PLAN.md#уточнение-границы-и-установки-sdk--2026-11-15):
+§244: штатный NVIM_APPNAME=fride без подмены XDG/SDK; Windows7 cases и Ubuntu6
+PASS/1 Windows-only skip, launcher controls7/6 PASS. Native Lazy с kit lockfile/
+rtp проверен отдельно. Следом prerequisite delivery по VS Code/IntelliJ IDEA.
+Упаковка Node отменена; native Mac и полный release остаются открытыми.
 §234: общий setup обрабатывает Lua/Vim exceptions и missing commands как отказ;
 по7 stand PASS Windows/Ubuntu. Default/Custom каталоги и родители создаются
 автоматически. §235: выбор Default/Custom и его применение реализованы:

@@ -1,58 +1,64 @@
-# Состояние SDK установленного fride
+# Граница IDE и языковых SDK
 
-Установленный комплект использует scripts/sdk-environment.tsv как общую policy
-для подготовки/probes и PS/Bash launchers. Файл копируется в kit/bin. На старте
-launcher читает готовые значения; SDK discovery/install и миграция настроек
-не выполняются. Checkout fride продолжает прежний development workflow.
+Решение владельца2026-11-15: fride изолирует собственные компоненты, а Go,
+Rust/Cargo/Rustup, Node/npm и Python использует штатно. Исправление §244
+заменяет ошибочную общую SDK policy §243 / 6387a4b.
 
-| SDK | Собственные пути внутри kit |
+| Компонент | Расположение и выбор |
 |---|---|
-| Go | sdk-state/go (GOPATH), sdk-state/go/bin (GOBIN), cache/go-build, cache/go-mod, sdk-state/go/env (GOENV) |
-| Cargo/Rustup | sdk-state/cargo (CARGO_HOME/CARGO_INSTALL_ROOT), sdk-state/rustup (RUSTUP_HOME) |
-| npm | cache/npm, sdk-state/npm (global prefix), user.npmrc/global.npmrc в sdk-state/npm |
-| Python/pip | sdk-state/python/user (PYTHONUSERBASE), cache/python-bytecode, cache/pip, sdk-state/python/pip.conf |
+| Neovim, конфигурация, launchers | Выбранный InstallPath: runtime/, config/forge/, bin/ |
+| Plugins, Mason LSP/DAP и IDE tools | Штатный Neovim data приложения NVIM_APPNAME=fride |
+| IDE state, sessions, cache | Штатные каталоги приложения fride, отдельно от обычного nvim |
+| Core/install logs и temp | InstallPath/log и tmp; внутренние IDE logs — stdpath('state') |
+| Языковые SDK | Исходный PATH, настройки пользователя и проекта, активная venv |
 
-Go/Cargo/npm mutable bin directories добавляются после runtime и до caller PATH.
-Унаследованные npm uppercase aliases и pip target/prefix/user redirects не
-перенаправляют SDK install в прежние каталоги. HOME/USERPROFILE, VIRTUAL_ENV,
-CARGO_TARGET_DIR и project build flags сохраняются. При Windows exit/error все
-затронутые caller env values восстанавливаются; POSIX env живёт только в child.
-Это SDK defaults, не файловый sandbox: explicit project/CLI settings остаются
-пользовательским выбором.
+XDG_CONFIG_HOME/DATA_HOME/STATE_HOME/CACHE_HOME, HOME/USERPROFILE не меняются.
+Не задаются GOPATH/GOBIN/GOCACHE/GOMODCACHE/GOENV, CARGO_HOME/INSTALL_ROOT,
+RUSTUP_HOME, npm cache/prefix/config, pip cache/config/targets и Python userbase.
+Заданные значения сохраняются; незаданные остаются незаданными. Это сохраняет
+и native defaults SDK, зависящие от XDG. IDE runtime directories добавляются
+перед исходным PATH; каталогов sdk-state в PATH нет. На Windows сам Neovim
+дополнительно добавляет свой bin в конец PATH, порядок SDK не меняется.
 
-Каталоги/пустые native config files создаются только явной установкой. Повтор
-сохраняет уже существующие файлы; sdk-state/.gitignore исключает собственное
-состояние из случайного git add. Личные config/credentials не копируются.
-SDK config теперь отдельный профиль: настройки корпоративных registries/auth
-задаются проектом, окружением или штатными SDK-командами в этом профиле.
-Git/SSH HOME не меняется.
+Mason использует штатные private install locations своих providers. Установка
+IDE tool может явно выбрать destination/venv только для конкретной установки;
+это не новый глобальный профиль языка. Общие компиляторы, package managers,
+SDK registries/auth и caches не принадлежат fride.
 
-RUSTUP_HOME сам по себе не содержит toolchain. Release Rust module обязан
-подготовить проверенный compiler/toolchain для этого home; это отдельный
-inventory/provisioning gate, никакого fallback в ~/.rustup проверка не обещает.
-Правила Go toolchain/Rustup auto-install глобально не меняются. Python scripts
-могут использовать native version-specific user scheme; функциональный Python
-SDK должен проверять свои entrypoints, не угадывать номер версии в PATH.
+Конфигурация из kit выбирается явно через -u и runtimepath; FRIDE_CONFIG
+содержит её фактический путь. Lazy использует lockfile этой конфигурации и
+сохраняет её runtimepath. «Открыть конфиг» открывает kit/config/forge/init.lua,
+а не несуществующий init в стандартном config namespace.
 
-Native SDK env semantics: [Cargo](https://doc.rust-lang.org/cargo/reference/environment-variables.html),
-[Rustup](https://rust-lang.github.io/rustup/environment-variables.html),
-[Go](https://pkg.go.dev/cmd/go), [npm](https://docs.npmjs.com/using-npm/config/),
-[pip](https://pip.pypa.io/en/stable/topics/configuration/),
-[Python](https://docs.python.org/3/using/cmdline.html#environment-variables).
+Точные native пути: `:echo stdpath('data')`, `:echo stdpath('state')`.
+Имя каталога data — fride на Unix и fride-data на Windows. Несколько установок
+fride у одного пользователя используют общий стандартный namespace данных.
+Обычные nvim/nvim-data и checkout-профиль nvim_forge остаются отдельными.
 
-Проверки: Windows `python -B tests/install-sdk-state.test.py`, Linux/macOS
+При обновлении старые kit data/state/cache/sdk-state сохраняются на месте и
+не копируются в SDK пользователя. Новый launcher их не выбирает; явный setup
+готовит plugins/tools в штатном namespace fride. SDK credentials не мигрируются.
+При завершении Windows launcher восстанавливает caller environment и код
+выхода; POSIX изменения ограничены дочерним процессом. На запуске ничего не
+устанавливается. Недостающий SDK должен быть предложен пользователю с выбором
+действия: это следующий UX/prerequisite этап, см. [план](INSTALLATION_PLAN.md).
+
+Проверка: Windows `python -B tests/install-sdk-state.test.py`, Linux/macOS
 `python3 -B tests/install-sdk-state.test.py`. Нужны готовые native Neovim,
-Go/Rustup/Rust SDK и Node24.11.0 SDK из прежнего stand cache; SDK не скачиваются.
-В image системный Python без pip использует готовый pip module из Python stand
-venv readonly. Native операции: go env -w, rustup local settings, cargo install
---offline локального crate, npm global install локального tarball и pip --user
-локального wheel. Последний явно использует только private userbase; разрешение
-PEP668 в controlled stand не означает запись в system packages.
+Go/Rust SDK/Rustup, Node24.11.0 из прежнего stand cache и Python. Stand не
+скачивает SDK и не выполняет go env -w/cargo install/npm install/pip install.
+Настоящие SDK queries внутри fride сравниваются с теми же командами снаружи.
+Проверяются setup/probes/launch, явные и unset SDK values, XDG defaults,
+активная настоящая venv, repeat с прежним sdk-state и Windows caller restore.
+Init/setup callbacks — fixtures; это не полный release/языковой acceptance.
+Raw/env/argv/exit/summary сохраняются в .tests/install-isolation/<id>.
 
-Init/setup callbacks — fixtures; это state/launch E2E, не полный SDK inventory.
-Source RED доказывает inherited SDK redirects; env reports наблюдают native
-probe/все3 setup stages/launch, caller/project context и foreign SDK snapshots.
-Windows native SDK loader может создать пустой INetCache/IE/container.dat в
-тестовом user profile: только exact empty bookkeeping file исключён и отдельно
-записан; непустой файл не скрывается. Никакие личные SDK/config файлы не
-исключаются из snapshot. Native Mac остаётся отдельным запуском владельца.
+Готовый Docker image, без build/pull/сети и управления Desktop/WSL:
+
+```sh
+docker compose -f tests/containers/compose.yaml run --rm --no-deps --pull never -e FORGE_INSTALL_STAND_ROOT=/tmp/fride-native-sdk --entrypoint python3 ubuntu -B tests/install-sdk-state.test.py
+```
+
+Host .tests/ubuntu — guest /workspace/.tests; тяжёлые stand runtime copies
+остаются в /tmp и удаляются вместе с контейнером. Mac проверяется нативно
+владельцем. Результаты каждой ОС записываются отдельно, Ubuntu не заменяет Mac.

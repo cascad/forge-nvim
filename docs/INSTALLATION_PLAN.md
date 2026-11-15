@@ -5,6 +5,42 @@ Custom позволяет выбрать компоненты галочками
 macOS. Пользователь не ищет binaries, не клонирует репозиторий и не выполняет
 отдельные :Lazy/:Mason/prepare команды. Ollama/модели исключены.
 
+## Уточнение границы и установки SDK — 2026-11-15
+
+Решение владельца заменяет прежний план полной изоляции языковых SDK (§243):
+
+- Изолируем только комплект IDE: Neovim, плагины/библиотеки, LSP/DAP и другие
+  IDE-инструменты, настройки, данные и логи fride.
+- Владелец выбрал штатный `NVIM_APPNAME=fride`: бинарь и конфигурация остаются
+  в InstallPath, плагины/состояние/кэш — в стандартных каталогах отдельного
+  приложения. XDG окружение SDK не меняется.
+- Go, Rust/Cargo/Rustup, Node/npm и Python — обычные SDK пользователя/проекта.
+  Переиспользуем установленное, выбранные версии, venv, homes, настройки,
+  registries/auth и кэши. Не упаковываем их в отдельный профиль fride и не
+  переназначаем глобально SDK homes/prefixes/config.
+- Отсутствующее или несовместимое сначала показываем пользователю и предлагаем
+  подходящее действие. Языковой SDK не устанавливается и не обновляется без
+  его выбора, в том числе в Default. Автоматическая установка компонентов IDE
+  не означает автоматическое управление языковыми SDK.
+- [ ] Изучить **VS Code и IntelliJ IDEA**: обнаружение существующих SDK,
+  проектный выбор версии/интерпретатора, предложение установки недостающего,
+  явное действие пользователя и показ результата. Зафиксировать конкретный
+  UX для fride перед реализацией; референсы пока не исследованы.
+- [x] Удалить ошибочную общую SDK env/state policy из setup/launch, включая
+  скрытое влияние приватных XDG путей на defaults SDK. Сохранить старые
+  sdk-state файлы при обновлении, больше не выбирать их автоматически.
+- [x] Исправить native E2E под эту границу: Windows7 cases проверены,
+  Ubuntu6 PASS/1 Windows-only skip; launcher controls Windows7/Ubuntu6 PASS.
+  Mac — отдельный нативный запуск владельцем, пока не проверен.
+- [ ] Пересмотреть prerequisite/catalog delivery: языковым SDK не требуются
+  приватные runtime artifacts fride; недостающий SDK предлагается через
+  штатный механизм платформы после выбора пользователя.
+
+**Готово на Windows/Ubuntu (§244):** исправление
+[reuse-native-language-sdks](../openspec/changes/reuse-native-language-sdks/proposal.md).
+Пустая заготовка package-node-runtime отменена. После этого исправления
+следующий срез — UX native prerequisites по VS Code и IntelliJ IDEA.
+
 ## Текущая готовность
 
 Состав, source entry, выбор Default/Custom и независимая установка комплекта
@@ -42,13 +78,18 @@ Windows: %LOCALAPPDATA%/forge-nvim/installation
 Linux/macOS: ${XDG_DATA_HOME:-~/.local/share}/forge-nvim/installation
   config/forge/     конфигурация
   runtime/          собственный Neovim и подготовленные инструменты
-  data/state/cache/ независимые stdpath
   tmp/log/          временные файлы и логи установки/редактора
-  sdk-state/        данные инструментов комплекта
   bin/fride        POSIX launcher; Windows: fride.cmd / fride.ps1
   bin/forge-nvim   полное имя; прежний bin/forge сохранён
   backups/          прежние config/runtime/bin после успешного обновления
 ```
+
+Плагины/Mason/сессии/кэш находятся в стандартных Neovim-каталогах приложения
+`fride` (`fride-data` для data на Windows). Точные пути: `:echo stdpath('data')`
+и `:echo stdpath('state')`. Обычное приложение `nvim` не используется. Прежние
+kit data/state/cache/sdk-state сохраняются без автоматического переноса;
+явный setup готовит новое приложение. Несколько установок fride у одного
+пользователя используют общий штатный namespace данных.
 
 Source cache по умолчанию лежит рядом в forge-nvim/sources. Каталог с чужими
 файлами, symlink/junction target или linked parent отклоняется. Подготовка идёт
@@ -57,7 +98,8 @@ Source cache по умолчанию лежит рядом в forge-nvim/sources
 полного rollback; это не данные обычного nvim. Ошибочный staging сохраняется
 для диагностики. Удаление комплекта не требует удаления чужих программ.
 
-Launcher применяет PATH/stdpath/temp/cache только к своему процессу. По умолчанию
+Launcher применяет IDE PATH/NVIM_APPNAME/temp только к своему процессу. XDG и
+языковые SDK env/config/cache сохраняются. По умолчанию
 команда вне комплекта не регистрируется, обычный nvim не изменяется. Явный
 CommandDir создаёт fride launcher в выбранном каталоге, не меняя PATH/profile.
 Если этот каталог уже доступен в PATH, fride вызывается по имени; в остальных
@@ -118,8 +160,8 @@ nvim; относительный custom path становится абсолют
 Выбор владельца2026-11-14: короткая команда **`fride`** — Forge IDE.
 В установленном комплекте: `bin/fride .`, `bin/fride main.go` (Windows:
 bin/fride.cmd или bin/fride.ps1). Полное имя bin/forge-nvim и старое bin/forge
-используют тот же launch-managed source, конфиг и данные. NVIM_APPNAME=forge
-не меняется: переименование команды не переносит plugin data или сессии.
+используют тот же launch-managed source, конфиг и данные. Managed приложение
+использует NVIM_APPNAME=fride; checkout сохраняет профиль nvim_forge.
 В checkout: `.\fride.cmd .` / `./fride .`, через прежние launch helpers и
 профиль nvim_forge. Прежние nvim_forge.cmd/nvim_forge.sh сохранены.
 
@@ -422,12 +464,18 @@ foreign snapshots. Init/setup — fixture; это не full SDK/package acceptan
 Для Docker готовый Linux UI помещается в .tests/ubuntu/installer-ui/linux-x64;
 команда в tests/README.md. macOS запускается владельцем нативно, gate открыт.
 
-## Модульная доставка SDK — §241
+## Модульная доставка компонентов IDE — transport §241
+
+Уточнение2026-11-15: transport остаётся для Neovim/IDE tools/libs. Существующая
+closure ещё ошибочно считает node-runtime/go-runtime приватными parts; до
+release её надо заменить native prerequisite discovery/выбором пользователя.
+Catalog пуст, автоматической поставки языковых SDK сейчас нет. Описанный ниже
+Node stand сохраняет историческую проверку transport, не задаёт состав release.
 
 Без RuntimePath/RuntimeArchiveUrl frontend выбирает готовые архивы из
 scripts/runtime/artifacts.tsv: platform, component, HTTP(S) URL, SHA256.
 Выбор — Core плюс прежняя canonical closure. Снятый в Custom компонент не
-скачивается; общая зависимость Node/Go скачивается один раз. Preview каталога
+скачивается; общая часть скачивается один раз. Preview каталога
 не требует. Missing/duplicate/invalid entry останавливает установку до backend.
 Catalog пока без release rows: это готовый путь доставки, не опубликованный SDK.
 
@@ -444,10 +492,11 @@ Developer/publisher готовит part из уже подготовленных
 пользователь этого не делает):
 
 ```sh
-python3 -B scripts/package-runtime.py --source /prepared/node-runtime --recipe node-runtime.json --component node-runtime --output node-runtime.tar.gz
+python3 -B scripts/package-runtime.py --source /prepared/python-tools --recipe python-tools.json --component python --output python-tools.tar.gz
 ```
 
-Windows: `python -B ... --output node-runtime.zip`. Recipe содержит schema1,
+Windows: `python -B ... --output python-tools.zip`. Это IDE tools, не Python SDK.
+Recipe содержит schema1,
 platform, components с единственным ID, paths/probes. Core упаковывается прежней
 командой без --component и должен содержать supported patched SDK на Windows.
 Упаковка не выдаётся за фактическую готовность инструментов: все команды и
@@ -462,9 +511,9 @@ selected downloads/cache, private launch Node/npm, проверки повреж
 конфликта и сохранения готового kit. Init/setup и feature-marker part — fixtures;
 это delivery acceptance, не полная package readiness IDE.
 
-Дальше IDE-138: подготовить проверенные release Core/языковые модули и их
-инвентарь, изолировать persistent state каждого SDK, проверять actual package
-readiness после setup; native Mac и публикация assets отдельно.
+Дальше IDE-138: native prerequisites с предложением установки и выбором
+пользователя, затем release Core/IDE-tools inventory и функциональная проверка.
+Языковые SDK и их persistent state остаются штатными; Mac/publication открыты.
 
 ## Проверка результата setup — §242
 
@@ -482,7 +531,7 @@ nonzero с именем и причиной; следующие stages и пуб
 дополнительного не устанавливает. Success reports записываются в setup logs.
 
 Это postconditions установки. Receipt/файлы не доказывают всю функциональность
-LSP/DAP и совместимость SDK: release inventory/языковые E2E/private SDK state
+LSP/DAP и совместимость SDK: release inventory/языковые E2E/native SDK context
 и native Mac остаются отдельными пунктами. Не добавлялись LSP/provider/новые
 пакеты и второй mechanism установки.
 
@@ -494,17 +543,14 @@ provider/receipt/location и parser loader, controlled install callbacks и
 fixtures package files, без сетевой установки. Артефакты —
 .tests/install-readiness/<id>. Native Mac команда та же, здесь не запускалась.
 
-## Private SDK state — §243
+## Native SDK context — §244
 
-Единая scripts/sdk-environment.tsv теперь применяется к probes/setup/managed
-launchers. Cargo/Rustup, Go cache/module/config/bin, npm global prefix/config,
-Python user/cache/config расположены в kit; прежние SDK redirect env не уводят
-default установку в пользовательские homes. Config/state сохраняются при
-повторе, mutable Go/Cargo/npm bins доступны в PATH. PS caller env восстанавливается.
-Launcher только читает policy, не запускает SDK preparation на startup.
+Решение §243 об отдельном профиле каждого SDK отменено. Shared SDK policy и
+SDK bin paths удалены. XDG/HOME, SDK variables, caches, registries/auth и
+активная venv наследуются. Изоляция IDE штатная, через NVIM_APPNAME=fride;
+конфигурация из kit выбирается явно, включая lazy lockfile/rtp и открытие конфига.
+PS caller environment восстанавливается, старые kit data/sdk-state не удаляются.
 
-[Пути, native контракты и команды](SDK_STATE.md). Личные config/tokens не
-импортируются. HOME/project context не переписываются. Пустой RUSTUP_HOME не
-выдаётся за готовый Rust: SDK module должен отдельно подготовить toolchain.
-Это завершённый state/env срез, полный runtime inventory и native Mac/publication
-остаются следующими.
+[Границы и команды проверки](SDK_STATE.md). Native prerequisites требуют
+отдельного discovery/предложения установки с выбором пользователя; автоматическая
+упаковка языка как части fride отменена. Публикация полного one-liner ещё открыта.

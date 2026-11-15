@@ -13025,3 +13025,73 @@ observations. Удалено 1804582187bytes (1.68GiB) собственных
 stand payload/archive copies из5 Windows roots; manifests/SDK receipts сохранены
 по content SHA до удаления. .tests/sdk-state-cleanup.json/metadata; source/scripts/
 runtime и SDK state/proofs не удалены. Canonical SDK/cache не затрагивались.
+
+
+## 244. Fride: штатные SDK и отдельное приложение Neovim
+
+Дата: 2026-11-15. IDE-138/140. Спека: IDE-BOOT-17 (ADDED).
+
+**Проблема.** Владелец уточнил: изолировать Neovim/плагины/IDE tools, но
+переиспользовать обычные Go/Rust/Node/npm/Python. Коммит6387a4b / §243
+изолировал лишнее: переназначал SDK homes/config/prefix/cache. Простого удаления
+этих переменных недостаточно: подмена XDG также меняет defaults Go/pip.
+
+**Причина.** Граница компонентов IDE была ошибочно распространена на языковые
+SDK пользователя. Это меняет выбранный toolchain, registry/auth, install
+prefix и кэши, а не только защищает обычный Neovim. Владелец выбрал штатный
+NVIM_APPNAME=fride: бинарь/config в InstallPath, данные отдельного приложения
+в стандартных каталогах. Требование SDK policy §243 / IDE-BOOT-16 отменено;
+историческая запись остаётся без изменений.
+
+**Изменение.** Удалены sdk-environment.lua/tsv, SDK bin paths и их применение
+в setup/probes/launchers. Bootstrap/setup/launch больше не переназначают XDG.
+SDK и project env остаются inherited, unset значения остаются unset. Только
+проверенные IDE runtime paths добавляются перед исходным PATH. Neovim/config/
+logs/temp остаются собственными; plugins/Mason/state/cache — namespace fride.
+Config выбирается штатными -u/--cmd; Lazy получает фактические lockfile/rtp из
+пути своего Lua-файла, команда открытия config также использует реальный файл.
+Это защищает и от устаревшего FRIDE_CONFIG при вложенном запуске checkout.
+Прежние kit data/state/cache/sdk-state не удаляются и не мигрируются в SDK.
+Windows caller env/exit сохраняются. Никаких startup installs, SDK manager,
+новых LSP/provider или runtime monkey patches.
+
+**Проверка/e2e.** Native Windows source RED1,18.994s: установка и запуск
+успешны, затем обнаружена подмена GOPATH. Ubuntu source RED1,6.953s с тем же
+GOPATH assertion. Исправление: Windows6 PASS35.585s, плюс native Lazy case07
+PASS17.824s после окончательного выбора config по actual source path. Ubuntu
+suite6 PASS/1 Windows-only skip9.579s, latest Lazy case07 PASS3.373s.
+Настоящие SDK queries (Go env, Rustup home, compiler version, npm prefix/config,
+Python prefix/userbase) сравниваются внутри/вне fride; настоящая project venv
+используется. Setup/probe/3 stages/init/launch наблюдаются отдельно, исходный
+PATH сохраняет порядок. Repeat сохраняет прежние SDK/IDE файлы. Настоящий Lazy
+reset сохраняет kit config/lockfile и доступ к Lua module даже при stale env.
+Init/setup/plugin inventory — controlled fixtures, это не full release acceptance.
+Launcher controls: Windows7 PASS34.530s (repeat, bootstrap, relative path,
+aliases, registration, TTY, Restricted policy), Ubuntu6 PASS6.551s.
+
+Сохранены и промежуточные FAIL: v1 fixture ожидал PATH suffix, хотя сам Neovim
+на Windows добавляет свой bin; v2 fixture повторно создавал native-profile.
+Lazy fixture с -u NONE сначала не включал loadplugins, native API сделал ранний
+return; включено только в fixture, продукт не обходится. Перезапускались только
+проверки после исправления fixtures/изменения config logic. Ubuntu outer driver
+вернул1 после всех PASS из-за CR в последнем cat filename; raw controls OK
+прочитан отдельно, script нормализован в LF без повторного прогона тестов.
+
+**Вывод/границы.** Общие SDK — часть окружения пользователя/проекта, а не
+приватный SDK fride. Недостающее сначала предлагается пользователю; установка
+SDK без его выбора не планируется даже в Default. Следующий отдельный срез:
+изучить VS Code/IntelliJ IDEA и переделать prerequisite/catalog closure. В ней
+ещё есть исторические node-runtime/go-runtime parts, catalog пуст; полный
+Default release/публикация не объявляются готовыми. Несколько установок fride
+используют общий стандартный namespace приложения. Mac — native проверка
+владельцем, здесь не выполнена. Готовый Docker использован без build/pull/сети
+и управления Desktop/WSL. SDK inputs readonly, global installs не выполнялись.
+
+**Файлы.** install-private PS/sh/Lua, managed launchers, config/lazy/keymaps,
+SDK context/native Lazy actors и isolation fixtures; installation/SDK docs,
+roadmap/problems/HISTORY/commands; reuse-native-language-sdks. Raw
+.tests/native-sdk-reuse-*.txt и .tests/ubuntu/native-sdk-reuse-*.txt, env/SDK
+operation/lazy/caller/summary JSON сохранены. SDK/pins/backports/чужой WIP
+проверяются audit перед exact local commit; без push/release.
+
+**Cleanup.** Удалено 1848780458bytes (1.72GiB) собственных stand runtime/archive copies из8 Windows roots; 105 manifests/SDK receipts сохранены по content SHA. .tests/native-sdk-reuse-cleanup.json/metadata; raw/proofs/source/legacy data оставлены, canonical SDK/cache не затронуты.

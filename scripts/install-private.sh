@@ -73,7 +73,6 @@ unset FORGE_INSTALL_RUNTIME_PLAN
 if [ -n "$runtime_plan" ]; then export FORGE_INSTALL_RUNTIME_PLAN="$runtime_plan";fi
 work="$(mktemp -d "$(dirname "$source_dir")/.installer.XXXXXX")"
 mkdir "$work/tmp"
-export XDG_CONFIG_HOME="$work/config" XDG_DATA_HOME="$work/data"
-export XDG_STATE_HOME="$work/state" XDG_CACHE_HOME="$work/cache" NVIM_APPNAME=forge-bootstrap
+export NVIM_APPNAME=fride
 export NVIM_LOG_FILE="$work/nvim.log" TEMP="$work/tmp" TMP="$work/tmp" TMPDIR="$work/tmp"
 exec "$runtime/bin/nvim" --headless -u NONE -i NONE -l "$source_dir/scripts/install-private.lua"

@@ -715,12 +715,15 @@ Legacy orchestration `tests/install-setup.test.py` использует согл
 Это не полный SDK функциональный acceptance. Native Mac прогон отдельно.
 
 
-### SDK state/environment — IDE-BOOT-16
+### Native SDK context — IDE-BOOT-17
 
 `python -B tests/install-sdk-state.test.py` / `python3 -B ...`:7 selectors
-(Windows caller restoration, на POSIX skip). Готовые SDK только читаются;
-без downloads/установки в host SDK. Artifact paths/env/probe/stage/launch
-traces, native SDK argv/out/err/exit, foreign SDK snapshots и state persistence.
+(Windows caller restoration, на POSIX skip). Готовые SDK только запрашиваются;
+нет SDK/global installs/downloads. Проверяются inherited/unset SDK и XDG,
+native queries внутри/вне fride, настоящая project venv, repeat с прежним
+sdk-state и native Lazy reset с kit config/lockfile. Нужен также готовый Lazy
+из FORGE_E2E_DEPS/.tests/editor-deps. Plugins/setup inventory — fixtures.
+Сохраняются env/probe/stage/launch traces, SDK argv/out/err/exit и snapshots.
 [Пути и границы](../docs/SDK_STATE.md). В Docker native stand размещается в /tmp:
 
 ```sh

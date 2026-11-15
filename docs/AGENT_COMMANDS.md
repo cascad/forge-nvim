@@ -9128,3 +9128,73 @@ raw/staged journal prefixes и exact filenames проверяются перед
 Cleanup: python -B .tests/sdk-state-cleanup.py, report .tests/sdk-state-cleanup.json.
 Exact roots из sdk-state logs, resolved boundary до recursive удаления,
 manifest/receipt metadata сохранены отдельно; 1.68GiB освобождено на F.
+
+
+## 152. Штатные SDK и native namespace fride — §244
+
+Рабочий каталог F:/repo/forge-nvim; PowerShell -NoProfile. TEMP/TMP/TMPDIR=
+F:/repo/forge-nvim/.tests/tmp, PYTHONUTF8=1, PYTHONIOENCODING=utf-8,
+NVIM_LOG_FILE в .tests/tmp, npm_config_cache=F:/forge-nvim-tmp/npm-cache.
+Это окружение stand/агента; пользовательские SDK так не перенастраиваются.
+
+Чтение: git status --short; git log -3 --oneline; rg -n / Get-Content с ограниченным
+контекстом для install-private.*, launch-managed.*, config/lazy/keymaps,
+install-isolation/sdk-state tests и текущих installation/OpenSpec artifacts.
+Get-Content raw JSON baseline не применять: journals хранятся отдельно, не
+выводить их bytes/hex и полное окружение. SDK env reports — только whitelist.
+
+OpenSpec CLI: npx.cmd --yes @fission-ai/openspec@1.13.2 list --json;
+status --change reuse-native-language-sdks --json;
+instructions apply --change reuse-native-language-sdks --json;
+validate reuse-native-language-sdks --type change --strict --no-interactive.
+JSON instructions/context сохраняются в .tests/native-sdk-reuse-*.json.
+
+Source RED: FORGE_SDK_STATE_SOURCE=.tests/native-sdk-reuse-before
+python -B tests/install-sdk-state.test.py SDKState.test_01_probes_setup_launch_scope
+> .tests/native-sdk-reuse-red-windows.txt 2>&1. Пять исходных scripts из6387a4b
+сохранены до правок; после команды env override снимается. Ожидаемый exit1
+именно на GOPATH, а не startup/setup failure. Тот же RED Ubuntu в готовом image.
+
+Исправленная версия: python -B tests/install-sdk-state.test.py
+> .tests/native-sdk-reuse-windows-v3.txt 2>&1. Earlier v1/v2 FAIL оставлены.
+Native Lazy: python -B tests/install-sdk-state.test.py
+SDKState.test_07_native_lazy_keeps_kit_config
+> .tests/native-sdk-reuse-lazy-windows-v3.txt 2>&1. Ранее v1/v2 сохранены;
+последний targeted запуск проверяет actual config root при stale FRIDE_CONFIG.
+SDK commands только queries, native actor tests/diagnostics/sdk-state-actor.lua;
+нет go env -w/cargo/npm/pip install. venv создаётся --without-pip в stand.
+Lazy actor uses actual prepared Lazy, controlled empty inventory, missing/pkg/
+checker installation выключены; lockfile bytes сравниваются до/после.
+
+Windows controls: python -B tests/install-isolation.test.py
+Isolation.test_01_install_launch_and_repeat
+Isolation.test_13_bootstrap_without_log_override Isolation.test_14_relative_custom_path
+Isolation.test_15_launcher_names Isolation.test_16_register_repeat_and_repair
+Isolation.test_22_native_terminal_input Isolation.test_24_restricted_policy_command
+> .tests/native-sdk-reuse-controls-windows.txt 2>&1.
+
+Docker только read/query/run: docker version --format '{{.Server.Version}}'.
+После включения владельцем:
+docker compose -f tests/containers/compose.yaml run --rm --no-deps --pull never
+--entrypoint bash ubuntu /workspace/.tests/native-sdk-reuse-run.sh
+> .tests/native-sdk-reuse-ubuntu-driver.txt 2>&1.
+Script host .tests/ubuntu: source RED -> current7 cases -> six launcher controls
+без Windows Restricted. Native stand в /tmp/fride-native-sdk, proofs экспортированы
+в guest .tests (host .tests/ubuntu); SDK copies при экспорте пропущены.
+Driver exit1 относится к финальному cat с CR, не к тестам: оба raw suite OK
+прочитаны с host, script приведён к LF; неизменные тесты повторно не запускались.
+После actual config-root change адресно:
+docker compose -f tests/containers/compose.yaml run --rm --no-deps --pull never
+-e FORGE_INSTALL_STAND_ROOT=/tmp/fride-native-sdk-lazy --entrypoint python3 ubuntu
+-B tests/install-sdk-state.test.py SDKState.test_07_native_lazy_keeps_kit_config
+> .tests/native-sdk-reuse-lazy-ubuntu-v2.txt 2>&1.
+Не используются build/pull, запуск/остановка/настройка Docker Desktop/WSL.
+
+Audit: .tests/native-sdk-reuse-baseline.json содержит SHA256 frozen23 paths,
+HEAD и пути raw-prefix копий FIXLOG/AGENT_COMMANDS. Проверяются точный staged
+allowlist, staged normalized journal prefix, SDK/pins/backports/чужой WIP.
+Cleanup: python -B .tests/native-sdk-reuse-cleanup.py; exact roots получены
+из work: header только native-sdk-reuse logs, resolved boundary внутри
+.tests/install-isolation до удаления; metadata отдельно сохранена по SHA.
+Удалены только own stand payload/archive copies; source/proofs/SDK states и
+canonical tool caches остаются. Native Mac и full public release не проверены.

@@ -36,7 +36,7 @@ transport=module('forge_install_transport',ROOT/'tests/install-bootstrap.test.py
 
 INIT=r'''
 if vim.env.FORGE_PROBE_OUTPUT then
-  local result={argv=vim.v.argv,exe=vim.v.progpath,config=vim.fn.stdpath('config'),data=vim.fn.stdpath('data'),
+  local result={argv=vim.v.argv,exe=vim.v.progpath,config=vim.env.FRIDE_CONFIG or vim.fn.stdpath('config'),data=vim.fn.stdpath('data'),
     state=vim.fn.stdpath('state'),cache=vim.fn.stdpath('cache'),app=vim.env.NVIM_APPNAME,
     tmp=vim.env.TEMP,path=vim.env.PATH,mask=vim.env.FORGE_NVIM_COMPONENTS,
     cwd=vim.uv.cwd(),stdin=vim.uv.guess_handle(0)}
@@ -118,6 +118,15 @@ class Isolation(unittest.TestCase):
             NVIM_LOG_FILE=str(base/'bootstrap.log'),FORGE_PROBE_OUTPUT=str(base/'probe.json'),
             PSModuleAnalysisCachePath=str(base/'powershell-module-cache'))
         env['PATH']=str(foreign/'bin')+os.pathsep+env.get('PATH','')
+        # NVIM_APPNAME owns a standard native namespace; protect ordinary nvim
+        # separately instead of treating fride's own new state as foreign writes.
+        for kind in ['config','data','state','cache']:
+            location=base/'native-profile'/kind
+            native_nvim=location/('nvim-data' if WINDOWS and kind=='data' else 'nvim')
+            native_nvim.mkdir(parents=True);(native_nvim/'keep').write_text('existing nvim')
+            expected=snapshot(native_nvim)
+            self.addCleanup(lambda path=native_nvim,before=expected:self.assertEqual(snapshot(path),before,'Ordinary nvim state changed'))
+            env['XDG_'+kind.upper()+'_HOME']=str(location)
         self.addCleanup(lambda:self.assertEqual(foreign_snapshot(foreign),before,'Foreign files changed'))
         before=foreign_snapshot(foreign)
         return base,env,base/'missing parents ü/kit'
@@ -164,13 +173,17 @@ class Isolation(unittest.TestCase):
         base,env,target=self.prepare('repeat');self.assert_ok(self.install(base,env,target))
         self.assert_ok(self.launch(base,env,target))
         probe=json.loads((base/'probe.json').read_text(encoding='utf-8'))
-        for key in ['config','data','state','cache','tmp']:
+        for key in ['config','tmp']:
             self.assertTrue(Path(probe[key]).is_relative_to(target),(key,probe[key]))
+        self.assertEqual(probe['app'],'fride')
+        for key in ['data','state','cache']:
+            self.assertTrue(Path(probe[key]).is_relative_to(base/'native-profile'),(key,probe[key]))
         self.assertTrue(Path(probe['exe']).is_relative_to(target/'runtime'))
         self.assertIn(str(base/'file with spaces.go'),probe['argv']);self.assertNotIn('mask',probe)
-        (target/'data/keep.txt').write_text('keep');(target/'config/forge/local.lua').write_text('-- local')
+        data=Path(probe['data']);data.mkdir(parents=True,exist_ok=True)
+        (data/'keep.txt').write_text('keep');(target/'config/forge/local.lua').write_text('-- local')
         self.assert_ok(self.install(base,env,target))
-        self.assertEqual((target/'data/keep.txt').read_text(),'keep')
+        self.assertEqual((data/'keep.txt').read_text(),'keep')
         self.assertEqual(len(list((target/'backups').glob('*/config/forge/local.lua'))),1)
         self.assertEqual(self.launch(base,env,target,7).returncode,7)
 
@@ -262,7 +275,7 @@ exit $code
         self.assert_ok(self.install(base,env,relative))
         self.assert_ok(self.launch(base,env,target))
         probe=json.loads((base/'probe.json').read_text(encoding='utf-8'))
-        self.assertTrue(Path(probe['data']).is_relative_to(target))
+        self.assertTrue(Path(probe['data']).is_relative_to(base/'native-profile'))
 
     def test_15_launcher_names(self):
         base,env,target=self.prepare('names');self.assert_ok(self.install(base,env,target))

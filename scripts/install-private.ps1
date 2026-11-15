@@ -75,7 +75,7 @@ $expected=$manifest.files.PSObject.Properties[$manifest.nvim].Value
 if (-not $expected -or (Get-RuntimeHash $binary) -ne $expected) { throw 'Runtime Neovim SHA256 mismatch.' }
 # -u NONE и очищенное окружение: даже bootstrap не читает init.lua пользователя.
 $keys=@('FORGE_INSTALL_SOURCE','FORGE_INSTALL_TARGET','FORGE_INSTALL_RUNTIME','FORGE_INSTALL_COMMAND_DIR','FORGE_INSTALL_RUNTIME_PLAN','VIM','VIMRUNTIME','VIMINIT','EXINIT','LUA_INIT','LUA_PATH','LUA_CPATH',
-    'XDG_CONFIG_HOME','XDG_DATA_HOME','XDG_STATE_HOME','XDG_CACHE_HOME','NVIM_APPNAME','NVIM_LOG_FILE','TEMP','TMP','TMPDIR')
+    'NVIM_APPNAME','NVIM_LOG_FILE','TEMP','TMP','TMPDIR')
 $saved=@{}
 foreach ($key in $keys) { $saved[$key]=[Environment]::GetEnvironmentVariable($key,'Process') }
 try {
@@ -87,9 +87,7 @@ try {
     if ($CommandDir) { $env:FORGE_INSTALL_COMMAND_DIR=[IO.Path]::GetFullPath($CommandDir) }
     $work=Join-Path (Split-Path -Parent $Source) ('.installer-'+[Guid]::NewGuid().ToString('N'))
     New-Item -ItemType Directory -Path (Join-Path $work 'tmp') -Force | Out-Null
-    $env:XDG_CONFIG_HOME=Join-Path $work 'config';$env:XDG_DATA_HOME=Join-Path $work 'data'
-    $env:XDG_STATE_HOME=Join-Path $work 'state';$env:XDG_CACHE_HOME=Join-Path $work 'cache'
-    $env:NVIM_APPNAME='forge-bootstrap';$env:NVIM_LOG_FILE=Join-Path $work 'nvim.log'
+    $env:NVIM_APPNAME='fride';$env:NVIM_LOG_FILE=Join-Path $work 'nvim.log'
     $env:TEMP=Join-Path $work 'tmp';$env:TMP=$env:TEMP;$env:TMPDIR=$env:TEMP
     & $binary --headless -u NONE -i NONE -l (Join-Path $Source 'scripts/install-private.lua')
     if ($LASTEXITCODE -ne 0) { throw "Private installation failed (exit $LASTEXITCODE)." }

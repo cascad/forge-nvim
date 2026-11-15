@@ -746,7 +746,8 @@ nm("<leader>qw", "<cmd>wqa<CR>",  "Save & quit all")
 
 -- Открыть конфиг быстро (одиночный маппинг, не группа)
 nm("<leader>oC", function()
-    vim.cmd("edit " .. vim.fn.stdpath("config") .. "/init.lua")
+    local root = vim.fn.fnamemodify(debug.getinfo(1, 'S').source:sub(2), ':p:h:h:h')
+    vim.cmd.edit(vim.fs.joinpath(root, 'init.lua'))
 end, "Open config")
 
 -- Toggle terminal — handled by toggleterm.nvim (plugins/terminal.lua):

@@ -1,6 +1,7 @@
 -- Bootstrap lazy.nvim. Канонический сниппет из docs.
 -- https://lazy.folke.io/installation
 
+local config_root = vim.fn.fnamemodify(debug.getinfo(1, 'S').source:sub(2), ':p:h:h:h')
 local lazypath = vim.fn.stdpath("data") .. "/lazy/lazy.nvim"
 if not (vim.uv or vim.loop).fs_stat(lazypath) then
     local lazyrepo = "https://github.com/folke/lazy.nvim.git"
@@ -20,6 +21,7 @@ end
 vim.opt.rtp:prepend(lazypath)
 
 require("lazy").setup({
+    lockfile = config_root .. '/lazy-lock.json',
     spec = {
         { import = "plugins" },
     },
@@ -41,6 +43,8 @@ require("lazy").setup({
     },
     performance = {
         rtp = {
+            -- Managed config is explicit (-u); keep it when lazy resets runtimepath.
+            paths = vim.fs.normalize(config_root) ~= vim.fs.normalize(vim.fn.stdpath('config')) and { config_root } or {},
             -- Глобально дисейблим встроенные плагины, которые мы не используем.
             -- Стартап ускоряется на 10–20мс, и в :checkhealth тише.
             -- matchparen НЕ отключаем: он подсвечивает парную скобку,
