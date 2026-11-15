@@ -23,7 +23,11 @@ rtp проверен отдельно. §245: официальные VS Code/Int
 SDK discovery/выбор существующего/установка/пропуск/отмена записаны как следующий
 сценарий. §246 отделяет native prerequisites от artifacts, добавляет read-only
 report/preflight и прекращает setup до downloads при missing/unavailable.
-Далее — SDK menu: existing path / штатная установка / skip / cancel.
+§247: SDK menu existing/install/skip/refresh/cancel и final plan реализованы,
+fallback locations сохраняются после PATH, upgrade и project venv проверены.
+§248: исправлен Windows sharing-lock при publish staging; transient/permanent
+native handle E2E и сохранение прежнего kit. Дальше — clean-machine manager
+bootstrap/release inventory; native Mac и real SDK installs пока owner gates.
 Упаковка Node отменена; native Mac и полный release остаются открытыми.
 §234: общий setup обрабатывает Lua/Vim exceptions и missing commands как отказ;
 по7 stand PASS Windows/Ubuntu. Default/Custom каталоги и родители создаются

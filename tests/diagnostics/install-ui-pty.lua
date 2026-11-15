@@ -30,7 +30,37 @@ local function type_text(value)
  send(value)
 end
 local ok,err=xpcall(function()
- if scenario=='default' then
+ if scenario:sub(1,4)=='sdk-' then
+  local marker=0
+  local function fresh(text)
+   assert(vim.wait(20000,function() return lua('return _G.ui_raw'):sub(marker+1):find(text,1,true) or exitcode()~=nil end,10),'SDK timeout '..text..'\n'..screen())
+   assert(exitcode()==nil,'SDK early exit '..tostring(exitcode())..'\n'..screen());frame(text)
+  end
+  local function input(keys) marker=#lua('return _G.ui_raw');send(keys) end
+  local function choose(index) input(string.rep('\27[B',index)..'\r') end
+  local function menu() fresh('SDK node: действие') end
+  local function final() fresh('Продолжить установку IDE с этим планом?');input('\r') end
+  local function existing(path)
+   choose(0);fresh('Каталог SDK node');type_text(path);input('\r')
+  end
+  local function install(accept)
+   choose(1);fresh('Установить SDK node этой командой?');input(accept and '\27[D\r' or '\r')
+  end
+  menu()
+  if scenario=='sdk-cancel' then input('\27')
+  elseif scenario=='sdk-existing' then existing(assert(vim.env.FORGE_UI_SDK_INPUT));final()
+  elseif scenario=='sdk-invalid-existing' then
+   existing(assert(vim.env.FORGE_UI_BAD_SDK_INPUT));fresh('SDK из каталога не готов');menu();existing(assert(vim.env.FORGE_UI_SDK_INPUT));final()
+  elseif scenario=='sdk-skip' then choose(2);fresh('Убрать компоненты:');input('\27[D\r');final()
+  elseif scenario=='sdk-decline' then install(false);menu();choose(4)
+  elseif scenario=='sdk-install' then install(true);final()
+  elseif scenario=='sdk-install-cancel' then install(true);fresh('Продолжить установку IDE с этим планом?');input('\27[D\r')
+  elseif scenario=='sdk-retry' then install(true);menu();install(true);final()
+  elseif scenario=='sdk-noop' then install(true);fresh('SDK пока не готов');menu();choose(4)
+  elseif scenario=='sdk-no-manager' then choose(1);fresh('не найден');menu();choose(4)
+  elseif scenario=='sdk-inside-kit' then existing(assert(vim.env.FORGE_UI_BAD_SDK_INPUT));fresh('SDK должен находиться вне');menu();choose(4)
+  else error('Unknown SDK scenario '..scenario) end
+ elseif scenario=='default' then
   waitfor('Как установить Fride?');frame('welcome');send('\r')
   waitfor('Завершить предпросмотр?');frame('review');send('\r')
  elseif scenario=='cancel' then
@@ -57,7 +87,7 @@ local ok,err=xpcall(function()
   waitfor('Завершить предпросмотр?');frame('custom-paths-review');send('\r')
  else error('Unknown scenario '..scenario) end
  assert(vim.wait(30000,function() return exitcode()~=nil end,10),'UI exit timeout\n'..screen())
- assert(exitcode()==(scenario=='cancel' and 130 or 0),'UI exit '..tostring(exitcode())..'\n'..screen())
+ assert(exitcode()==(tonumber(vim.env.FORGE_UI_EXPECTED_EXIT) or (scenario=='cancel' and 130 or 0)),'UI exit '..tostring(exitcode())..'\n'..screen())
  frame('done')
 end,debug.traceback)
 vim.fn.writefile({vim.json.encode({ok=ok,error=not ok and err or nil,exit=exitcode(),events=events,frames=frames})},assert(vim.env.FORGE_INSTALL_UI_REPORT))

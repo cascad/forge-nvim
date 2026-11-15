@@ -49,8 +49,24 @@ fride у одного пользователя используют общий �
 готовит plugins/tools в штатном namespace fride. SDK credentials не мигрируются.
 При завершении Windows launcher восстанавливает caller environment и код
 выхода; POSIX изменения ограничены дочерним процессом. На запуске ничего не
-устанавливается. Недостающий SDK должен быть предложен пользователю с выбором
-действия: это следующий UX/prerequisite этап, см. [план](INSTALLATION_PLAN.md).
+устанавливается. §247: недостающий SDK предлагается через native TUI, включая
+Default. Existing path/install/skip/refresh/cancel доступны с клавиатуры;
+install требует отдельного подтверждения команды. SDK живёт отдельно и не
+удаляется при отмене IDE. См. [план](INSTALLATION_PLAN.md).
+
+Выбранные existing locations — только metadata в bin/sdk-paths.txt, после
+успешного IDE commit. Они добавляются после caller PATH и сохраняются на upgrade;
+project venv имеет приоритет. Установщик не пишет global PATH сам. Windows
+после explicit install/refresh читает registered PATH/CPython InstallPath,
+сохраняя лишь найденные SDK bin directories. Неисправный SDK раньше в PATH
+не маскируется fallback. --sdk-path DIR поддерживается frontend для automation.
+Root/bin/Scripts распознаются в TUI, locations внутри заменяемого kit запрещены.
+
+WinGet использует exact IDs/no-upgrade; APT install --no-upgrade, brew
+HOMEBREW_NO_INSTALL_UPGRADE. Их зависимостями управляет штатный менеджер;
+версия — из его настроенного репозитория, не обещанная project version.
+При missing package manager меню сообщает причину и позволяет existing/skip/
+cancel. Автоматического bootstrap менеджера пока нет; это clean-machine gate.
 
 Проверка: Windows `python -B tests/install-sdk-state.test.py`, Linux/macOS
 `python3 -B tests/install-sdk-state.test.py`. Нужны готовые native Neovim,

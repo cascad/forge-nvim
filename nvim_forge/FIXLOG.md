@@ -13185,3 +13185,112 @@ check-native-sdk-prerequisites. Raw .tests/native-prereqs-*.txt и host
 .tests/ubuntu/native-prereqs-*.txt, env/JSON/logs/HTTP/frames сохраняются.
 
 **Cleanup.** Удалены own stand payload/archive copies 1521127860bytes (1.42GiB) из6 Windows roots; metadata98 refs сохранены по SHA. .tests/native-prereqs-cleanup.json/metadata; canonical SDK/cache, source и proofs оставлены. Frozen24 SDK/pins/backports/чужой WIP и raw/staged journal prefixes проверяются перед exact local commit, без push.
+
+
+## 247. SDK: явные действия пользователя в установщике
+
+Дата: 2026-11-15. IDE-138/140. Спека: IDE-BOOT-19 (ADDED).
+
+**Проблема.** §246 показывал неготовый SDK и останавливал setup; выполнить
+existing/install/skip/cancel из native UI было невозможно. Это второй срез §245.
+
+**Причина.** Plan/report были read-only, результат записывался до SDK decisions,
+а report с PID-only create_new не подходил для повторных checks одного процесса.
+Выбранные внешние SDK locations не сохранялись для обычного запуска/upgrade.
+
+**Изменение.** TTY (включая Default) предлагает existing root/bin/Scripts,
+штатный install, shared dependent skip, refresh и cancel. Ready SDK переиспользуется.
+Install показывает native command/source/repository version policy и требует
+отдельного confirm по умолчанию «Нет». WinGet exact IDs/no-upgrade; APT через
+доступный sudo с --no-upgrade; brew без install-upgrade. Зависимостями управляет
+штатный менеджер. stdout/stderr tee в log, stdin штатный. Ошибка/exit0-no-SDK
+не считаются ready, есть retry. До confirm команды не вызываются. Нет TTY —
+прежний отказ без установки; preview/check-sdks без actions.
+
+Plan после skip пересчитывается, final review подтверждается до backend,
+--result появляется после SDK decisions. Cancel130 сохраняет old kit, отдельно
+подтверждённые standalone SDK не удаляются. Retry snapshots уникальны, final
+report записывается один раз. Windows explicit refresh/install может read-only
+прочитать registered PATH/CPython InstallPath, сохраняя только найденные SDK dirs.
+
+Plan.sdk_paths / --sdk-path — locations metadata, не SDK profile: fallback
+после caller PATH, без SDK home/config/cache/credentials и global PATH edits
+самим fride. Bin/sdk-paths.txt публикуется атомарно с kit, сохранённые locations
+подхватываются на upgrade. Active venv/version-manager имеет приоритет. Broken
+SDK раньше в PATH не маскируется; каталог внутри заменяемого kit отклоняется.
+Launcher только читает файл, startup не запускает SDK/package checks.
+
+**Проверка/e2e.** Old UI source RED Windows1 FAIL12.252s, Ubuntu аналогичный
+native SDK early exit2 вместо меню. Windows SDK11 PASS27.891s; после усиления
+shared skip/WinGet alias и добавления cancel-after-install адресные3 PASS14.840s
+(12 уникальных selectors). Ubuntu12 PASS7.872s. Cases включают typed Unicode/
+quoted SDK path, upgrade без повторного меню, project venv/Node priority,
+invalid path retry, shared Python/JS/Bash skip, cancel old kit, declined install,
+fixture manager success/failure/retry/exit0-no-SDK/missing manager, own-kit reject,
+headless --sdk-path и cancel после SDK install. WinGet execution alias допускается,
+Python Store alias по-прежнему не запускается.
+
+Controls Windows: readiness11 PASS19.090s, delivery16 PASS69.416s. UI13:12 PASS/
+1 Windows rename EPERM FAIL27.995s; отдельное исправление и native handle proof
+в §248, case10 затем PASS18.254s. Ubuntu readiness10 PASS/1 Windows-only skip
+6.480s, delivery16 PASS14.599s, UI13 PASS5.855s. Не повторялись неизменные full
+suites ради green; адресные повторы привязаны к новым cases/найденному сбою.
+
+**Вывод/границы.** SDK action workflow реализован на native Windows/Ubuntu.
+Real package managers на машине агента НЕ вызывались: tests используют маленький
+native fixture manager, который меняет только stand. Это не acceptance реальных
+SDK packages/UAC/sudo и не full release inventory. Package manager должен уже
+существовать; missing manager выдаёт действие existing/skip/cancel. Bootstrap
+менеджера/официальный installer без него — следующий clean-machine пункт.
+Mac/real installs и public release catalog открыты. Не появился SDK manager,
+новый LSP/provider или перенос SDK/credentials в fride.
+
+**Файлы.** Native sdk_actions/sdk_install/sdks/lib, private Lua/PS/sh launch
+metadata, SDK fixture/PTY driver/12 E2E; installation/SDK docs/roadmap/problems/
+HISTORY/commands и configure-native-sdk-actions. Raw .tests/sdk-actions-*.txt,
+host .tests/ubuntu/sdk-actions-*.txt, UI frames, package.tsv, SDK snapshots/
+install/final reports, sdk-paths.txt, priority.json, build receipts сохранены.
+
+**Cleanup.** Own stand runtime/archive copies 2452601181bytes (2.28GiB) удалены из9 Windows roots; metadata153 refs сохранены по SHA. .tests/sdk-actions-cleanup.json/metadata. Source/proofs/fixture SDKs и canonical SDK/cache не удалены. Frozen24 inputs и append-only journals проверяются exact audit перед локальным commit, без push.
+
+
+## 248. Windows: временная блокировка публикации staging
+
+Дата: 2026-11-15. IDE-138. Спека: IDE-BOOT-20 (ADDED).
+
+**Проблема.** В SDK control test_ui_10_root_automatic_delivery все preparation
+stages завершились, но первый uv.fs_rename staged runtime вернул EPERM. Root
+entry сообщил ошибку, staging сохранился. Нельзя объявлять полный UI control PASS.
+
+**Причина/границы знания.** Временный отказ Windows в rename: после прогона
+ТОТ ЖЕ staging runtime успешно переименовался туда/обратно, наших live nvim
+процессов уже не было. Исходный holder/источник задержки не снят; AV/другой
+процесс/момент освобождения executable не выдаются за установленный факт.
+Настоящий CreateFileW handle без FILE_SHARE_DELETE воспроизвёл тот же класс
+EPERM детерминированно в финальной tools stage. Это file-sharing boundary,
+не повод менять SDK binary или процессные scopes.
+
+**Изменение.** Shared installer rename helper: первая попытка обычная; только
+Windows EPERM/EACCES/EBUSY ожидаются максимум1.5s с проверкой каждые25ms через
+event loop. Иные ошибки немедленны. Forward commit и rollback используют один
+helper. Никакого закрытия чужих процессов, ACL changes, unbounded retries или
+sleep на обычном startup/POSIX. Постоянная блокировка сохраняет nonzero.
+
+**Проверка/e2e.** tests/install-locks.test.py: native source transient1 FAIL
+15.285s; после исправления2 PASS21.236s. Parent thread держит именно staged
+nvim.exe read/share-write без delete; gate синхронизирован с fixture tools stage.
+Transient отпускается и install/launch успешны. Persistent держится до выхода
+installer, проверяются old bin snapshot, runtime binary hash, owner bytes и
+работающий old launcher после rollback. lock.json сохраняет acquire/release;
+helper не трогает другие файлы/процессы. Исходный UI case10 адресно PASS18.254s.
+Остальные12 Windows UI cases не повторялись. Ubuntu ordinary rename сохранился,
+12 SDK actions/16 delivery/13 UI прошли на финальном Lua, Mac не запускался.
+
+**Вывод.** Временная Windows sharing-lock теперь ожидается ограниченно; постоянная
+ошибка не скрывается и не даёт false ready. Фактический holder исходного UI
+failure остаётся неизвестным. Raw fail/diagnostic и source RED сохранены.
+
+**Файлы.** scripts/install-private.lua, tests/install-locks.test.py, new delta
+managed-install-locks в configure-native-sdk-actions; .tests/sdk-actions-ui-
+windows.txt, lock-source-red-windows.txt, locks-windows-v1.txt, ui-root-windows-
+v2.txt, rename-diagnostic.json и native lock.json. SDK/pins/backports unchanged.

@@ -1,5 +1,7 @@
 // spec: IDE-BOOT-13. Presentation без установки SDK/пакетов в пользовательскую ОС.
 mod runtime;
+mod sdk_actions;
+mod sdk_install;
 mod sdks;
 mod wizard;
 use serde::{Deserialize, Serialize};
@@ -34,6 +36,7 @@ pub struct Options {
     pub print_plan: bool,
     pub check_sdks: bool,
     pub sdk_report: Option<PathBuf>,
+    pub sdk_paths: Vec<PathBuf>,
 }
 
 impl Options {
@@ -63,7 +66,7 @@ impl Options {
                     continue;
                 }
                 "--help" => {
-                    println!("fride-setup --source DIR --profile default|custom [--components CSV] --install-dir DIR\n--command-dir DIR --runtime-path DIR --runtime-archive-url URL --runtime-sha256 SHA\n--preview --no-color --print-plan --result FILE --log-dir DIR\n--check-sdks --sdk-report FILE");
+                    println!("fride-setup --source DIR --profile default|custom [--components CSV] --install-dir DIR\n--command-dir DIR --runtime-path DIR --runtime-archive-url URL --runtime-sha256 SHA\n--preview --no-color --print-plan --result FILE --log-dir DIR\n--check-sdks --sdk-report FILE --sdk-path DIR (repeatable fallback bin)");
                     std::process::exit(0);
                 }
                 _ => {}
@@ -89,6 +92,7 @@ impl Options {
                 "--log-dir" => result.log_dir = value.into(),
                 "--result" => result.result_file = Some(value.into()),
                 "--sdk-report" => result.sdk_report = Some(value.into()),
+                "--sdk-path" => result.sdk_paths.push(value.into()),
                 _ => return Err(invalid(format!("Неизвестный параметр: {key}"))),
             }
         }
@@ -193,6 +197,8 @@ pub(crate) struct Plan {
     pub schema: u8,
     pub components: Vec<String>,
     pub native_sdks: Vec<String>,
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub sdk_paths: Vec<PathBuf>,
     pub install_dir: String,
     pub command_dir: String,
 }
@@ -237,6 +243,9 @@ fn review(rows: &[Row], plan: &Plan) -> String {
             plan.native_sdks.join(", ")
         ));
     }
+    for path in &plan.sdk_paths {
+        lines.push(format!("SDK fallback (после PATH): {}", path.display()));
+    }
     lines.join("\n")
 }
 
@@ -256,16 +265,36 @@ pub fn run(options: Options) -> Result<i32> {
         schema: 1,
         components: vec![],
         native_sdks: vec![],
+        sdk_paths: vec![],
         install_dir: options.install_dir.clone(),
         command_dir: options.command_dir.clone(),
     };
     plan.select(&rows, selected)?;
+    // Upgrade reuses only locations recorded by an owned fride installation.
+    let marker = PathBuf::from(&plan.install_dir).join(".forge-install.json");
+    if let Ok(bytes) = fs::read(&marker) {
+        if let Ok(owner) = serde_json::from_slice::<serde_json::Value>(&bytes) {
+            if owner["product"] == "forge-nvim" && owner["schema"] == 1 {
+                if let Ok(text) =
+                    fs::read_to_string(PathBuf::from(&plan.install_dir).join("bin/sdk-paths.txt"))
+                {
+                    for line in text.lines().filter(|line| !line.is_empty()) {
+                        let _ = sdks::add_path(&mut plan, PathBuf::from(line));
+                    }
+                }
+            }
+        }
+    }
+    for path in &options.sdk_paths {
+        sdks::add_path(&mut plan, path.clone())?;
+    }
     if options.print_plan {
         println!("{}", serde_json::to_string(&plan)?);
         return Ok(0);
     }
     if options.check_sdks {
-        let report = check_sdks(&options, &plan)?;
+        let report = inspect_sdks(&options, &plan)?;
+        write_sdk_report(&options, &report)?;
         println!("{}", serde_json::to_string(&report)?);
         return Ok(if report.ready() { 0 } else { 2 });
     }
@@ -292,6 +321,32 @@ pub fn run(options: Options) -> Result<i32> {
     } else {
         wizard::intro(options.preview)?;
         cliclack::note("План установки", review(&rows, &plan))?;
+    }
+    if !options.preview && !plan.native_sdks.is_empty() {
+        let report = inspect_sdks(&options, &plan)?;
+        let interactive = io::stdin().is_terminal() && io::stderr().is_terminal();
+        let report = if !report.ready() && interactive {
+            match sdk_actions::configure(&options, &rows, &mut plan, report)? {
+                Some(report) => report,
+                None => {
+                    cliclack::outro_cancel("Отмена IDE. Прежний комплект сохранён; явно установленные SDK остаются в системе.")?;
+                    return Ok(130);
+                }
+            }
+        } else {
+            report
+        };
+        let file = write_sdk_report(&options, &report)?;
+        if !report.sdks.is_empty() {
+            if plain {
+                eprintln!("Языковые SDK\n{}", report.summary());
+            } else {
+                cliclack::note("Языковые SDK", report.summary())?;
+            }
+        }
+        if !report.ready() {
+            return Err(invalid(format!("SDK prerequisites не готовы. Выберите существующий SDK в PATH/--sdk-path, установите его штатно или снимите зависимый компонент. SDK и IDE artifacts не устанавливались. Отчёт: {}",file.display())));
+        }
     }
     if let Some(path) = &options.result_file {
         let mut file = OpenOptions::new().create_new(true).write(true).open(path)?;
@@ -326,17 +381,6 @@ fn stage_title(stage: &str) -> &str {
 }
 
 fn execute(options: &Options, plan: &Plan, plain: bool) -> Result<i32> {
-    if !plan.native_sdks.is_empty() {
-        let report = check_sdks(options, plan)?;
-        if plain {
-            eprintln!("Языковые SDK\n{}", report.summary());
-        } else {
-            cliclack::note("Языковые SDK", report.summary())?;
-        }
-        if !report.ready() {
-            return Err(invalid(format!("SDK prerequisites не готовы. Выберите существующий SDK в PATH, установите его штатно или снимите зависимый компонент и повторите. SDK и IDE artifacts не устанавливались. Отчёт: {}",sdk_report_path(options).display())));
-        }
-    }
     let runtime_plan = runtime::selected(options, plan)?;
     fs::create_dir_all(&options.log_dir)?;
     let timestamp = SystemTime::now()
@@ -405,6 +449,8 @@ fn execute(options: &Options, plan: &Plan, plain: bool) -> Result<i32> {
         command
     };
     command
+        .env("PATH", sdks::effective_path(&plan.sdk_paths)?)
+        .env("FORGE_SDK_PATHS", serde_json::to_string(&plan.sdk_paths)?)
         .env("FORGE_NVIM_COMPONENTS", plan.components.join(","))
         .env("FRIDE_INSTALL_UI", "1")
         // Installation must not turn a missing toolchain into an implicit SDK download.
@@ -518,19 +564,45 @@ fn execute(options: &Options, plan: &Plan, plain: bool) -> Result<i32> {
 
 fn sdk_report_path(options: &Options) -> PathBuf {
     options.sdk_report.clone().unwrap_or_else(|| {
-        options
-            .log_dir
-            .join(format!("sdks-{}.json", std::process::id()))
+        options.log_dir.join(format!(
+            "sdks-{}-{}.json",
+            SystemTime::now()
+                .duration_since(UNIX_EPOCH)
+                .unwrap_or_default()
+                .as_nanos(),
+            std::process::id()
+        ))
     })
 }
 
-fn check_sdks(options: &Options, plan: &Plan) -> Result<sdks::Report> {
-    let report = sdks::inspect(&plan.native_sdks, &options.log_dir)?;
+pub(crate) fn inspect_sdks(options: &Options, plan: &Plan) -> Result<sdks::Report> {
+    let report = sdks::inspect(&plan.native_sdks, &options.log_dir, &plan.sdk_paths)?;
+    if !plan.native_sdks.is_empty() {
+        fs::create_dir_all(&options.log_dir)?;
+        let path = options.log_dir.join(format!(
+            "sdk-check-{}.json",
+            SystemTime::now()
+                .duration_since(UNIX_EPOCH)
+                .map_err(invalid)?
+                .as_nanos()
+        ));
+        serde_json::to_writer_pretty(
+            OpenOptions::new().create_new(true).write(true).open(path)?,
+            &report,
+        )?;
+    }
+    Ok(report)
+}
+
+fn write_sdk_report(options: &Options, report: &sdks::Report) -> Result<PathBuf> {
     let path = sdk_report_path(options);
     if let Some(parent) = path.parent().filter(|p| !p.as_os_str().is_empty()) {
         fs::create_dir_all(parent)?;
     }
-    let mut file = OpenOptions::new().create_new(true).write(true).open(path)?;
+    let mut file = OpenOptions::new()
+        .create_new(true)
+        .write(true)
+        .open(&path)?;
     serde_json::to_writer_pretty(&mut file, &report)?;
-    Ok(report)
+    Ok(path)
 }

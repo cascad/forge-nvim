@@ -73,15 +73,20 @@ JDK. Это референс разделения ответственности
    credentials. Редактор не блокируется проверками/установками на startup.
 
 Это проектный сценарий fride, не заявление о точном поведении всех референсов.
-Первый срез реализован (§246). Дальнейшие конкретные срезы:
+SDK preflight и меню реализованы (§246–247). Дальнейшие конкретные срезы:
 
 - [x] Отделить native SDK prerequisites от private artifact closure; passive
   discovery без скачивания toolchains и без полного сканирования диска.
-- [ ] Подключить выбор существующего пути/штатной установки/пропуска/отмены
+- [x] Подключить выбор существующего пути/штатной установки/пропуска/отмены
   к native UI. Обновить итоговый component selection и логи.
-- [ ] E2E: SDK уже есть, отсутствует, несовместим, выбран свой путь, отмена,
+- [x] E2E Windows/Ubuntu: SDK уже есть, отсутствует, CLI не отвечает/не подходит,
+  выбран свой путь, отмена,
   отказ установки/повтор; Default и noninteractive не устанавливают SDK молча.
-  Windows/Ubuntu; native Mac отдельно владельцем.
+  native Mac/real package installation отдельно владельцем.
+- [ ] Clean-machine gap: при отсутствии winget/Homebrew/APT требуется отдельный
+  явный bootstrap менеджера либо официальный SDK installer. В текущем меню
+  предлагается использовать existing SDK/skip/cancel, менеджер автоматически
+  не устанавливается. Полный Default one-liner ещё не объявляется готовым.
 
 ## Текущая готовность
 
@@ -91,7 +96,8 @@ ready/missing/unavailable, путь/версия/причина и probe logs с
 nonready останавливает actual setup. Timeout2s/CLI, Windows Store aliases не
 запускаются; Python3/активная venv поддерживаются. npm проверяется как доступный
 entrypoint, без shell invocation. Это базовая CLI readiness, не полная package
-совместимость. SDK install/path/skip menu ещё не реализовано.
+совместимость. §247 добавляет SDK action menu в TTY (в том числе Default).
+Без TTY прежний отказ сохраняется; SDK package install без confirm не вызывается.
 
 Отдельная read-only команда после developer build frontend (никаких installs):
 
@@ -104,7 +110,8 @@ POSIX: тот же `fride-setup` для своей платформы с тем�
 report должен быть новым; по умолчанию report/probe logs в --log-dir. Preview
 и print-plan SDK не запускают. Для actual setup неготовый SDK нужно выбрать
 через PATH/штатно установить либо снять зависимые компоненты и повторить;
-предстоящее меню выполнит эти действия явно из UI.
+эти действия доступны из SDK menu в TTY. Для автоматизации existing bin можно
+передать frontend через повторяемый `--sdk-path DIR` (fallback после PATH).
 
 Состав, source entry, выбор Default/Custom и независимая установка комплекта
 реализованы. Полная доставка совместимых SDK и настоящее развёртывание всех
@@ -126,10 +133,11 @@ macOS backend7 contract PASS в Ubuntu. Это не полная установ�
 
 ## Независимый комплект — уточнение владельца2026-11-14
 
-Комплект не обновляет и не заменяет пользовательские Neovim, SDK или WezTerm.
-Корневой installer не запускает WinGet/apt/Homebrew, не пишет в registry PATH,
-shell profile, ~/.config/nvim и обычный конфиг терминала. Ранее описанные ниже
-package recipes относятся к legacy scripts, а не к текущему source entry.
+IDE не заменяет пользовательские Neovim/WezTerm, не пишет в registry PATH,
+shell profile, ~/.config/nvim и обычный конфиг терминала. Для отдельно
+подтверждённой установки SDK source entry может вызвать штатный WinGet/brew/APT;
+этот менеджер управляет SDK и зависимостями в обычных каталогах системы.
+Здоровый SDK переиспользуется, отдельный SDK profile fride не создаётся.
 Прямые старые nvim_forge/scripts/install-{windows,linux,macos} остаются legacy
 system API; они могут менять host packages и не являются безопасной установкой
 нового комплекта. Для IDE-138 использовать только root entry.
@@ -617,3 +625,38 @@ PS caller environment восстанавливается, старые kit data/
 [Границы и команды проверки](SDK_STATE.md). Native prerequisites требуют
 отдельного discovery/предложения установки с выбором пользователя; автоматическая
 упаковка языка как части fride отменена. Публикация полного one-liner ещё открыта.
+
+
+## SDK menu — §247
+
+Если SDK не готов и есть TTY: existing root/bin/Scripts, install, skip зависимых
+компонентов, refresh, cancel. После изменения план подтверждается ещё раз.
+--result создаётся после SDK decisions; cancel130 оставляет прежний kit и
+не создаёт успешный plan. Уже подтверждённые SDK остаются standalone.
+
+Install показывает конкретную команду/source/version policy, confirm по
+умолчанию «Нет». Tee stdout/stderr сохраняется в sdk-install-*.log, повторные
+checks в уникальных sdk-check-*.json; final --sdk-report не конфликтует с retry.
+Exit0 без работающего SDK оставляет меню доступным. Fallback paths сохраняются
+только при успешном SDK/IDE setup в kit/bin/sdk-paths.txt; после caller PATH,
+без копирования SDK/config/credentials. Они переиспользуются на upgrade.
+
+Методы штатные: [WinGet install](https://learn.microsoft.com/en-us/windows/package-manager/winget/install),
+[brew install](https://docs.brew.sh/Manpage#install-options-formulacask-),
+[APT install](https://manpages.ubuntu.com/manpages/noble/man8/apt-get.8.html).
+Named SDK upgrade не запрашивается (--no-upgrade/HOMEBREW_NO_INSTALL_UPGRADE),
+зависимости обрабатываются менеджером. Windows IDs проверены по
+[Microsoft WindowsDeveloperConfig](https://github.com/microsoft/WindowsDeveloperConfig/blob/main/windows-dev-config/steps/packages.ps1).
+При отсутствующем менеджере SDK menu сообщает причину; bootstrap остаётся
+следующим clean-machine пунктом. Real package install на машине агента не
+делался: native fixture manager в E2E проверяет flow/argv/logs/recheck/cancel.
+
+## Windows publication locks — §248
+
+Пойман EPERM при rename подготовленного runtime в UI control. Тот же staging
+позже переименовался; исходный holder не снят. Native deny-delete handle
+воспроизвёл этот класс ошибки. Только Windows EPERM/EACCES/EBUSY ожидаются
+ограниченно1.5s перед повторным rename; прочие ошибки немедленны. Persistent
+lock сохраняет ошибку/rollback, чужие процессы/ACL не трогаются. Обычный startup
+и POSIX rename не замедлены. Tests/install-locks.test.py проверяет transient
+успех и сохранение прежнего runtime/bin/owner при постоянной блокировке.

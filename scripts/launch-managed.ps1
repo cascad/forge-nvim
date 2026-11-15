@@ -7,9 +7,12 @@ $forgeEnvironment=@{
     TEMP=(Join-Path $forgeKit 'tmp'); TMP=(Join-Path $forgeKit 'tmp'); TMPDIR=(Join-Path $forgeKit 'tmp')
     VIM=$null; VIMRUNTIME=$null; VIMINIT=$null; EXINIT=$null; LUA_INIT=$null; LUA_PATH=$null; LUA_CPATH=$null
     FORGE_NVIM_COMPONENTS=$null
+    FORGE_SDK_PATHS=$null
 }
 $forgePaths=@(Get-Content -LiteralPath (Join-Path $PSScriptRoot 'runtime-paths.txt'))
-$forgeEnvironment['PATH']=((@($forgePaths | ForEach-Object { Join-Path $forgeKit ('runtime/'+$_) }) + @($env:PATH)) -join ';')
+$forgeSDKPaths=@();$forgeSDKFile=Join-Path $PSScriptRoot 'sdk-paths.txt'
+if (Test-Path -LiteralPath $forgeSDKFile) { $forgeSDKPaths=@([IO.File]::ReadAllLines($forgeSDKFile,[Text.Encoding]::UTF8)) }
+$forgeEnvironment['PATH']=((@($forgePaths | ForEach-Object { Join-Path $forgeKit ('runtime/'+$_) }) + @($env:PATH) + $forgeSDKPaths) -join ';')
 $forgeSaved=@{}
 foreach ($forgeKey in $forgeEnvironment.Keys) { $forgeSaved[$forgeKey]=[Environment]::GetEnvironmentVariable($forgeKey,'Process') }
 try {

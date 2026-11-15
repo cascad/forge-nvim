@@ -9284,3 +9284,93 @@ prefix. Cleanup: python -B .tests/native-prereqs-cleanup.py; exact roots тол�
 из своих native-prereqs logs, resolved .tests/install-isolation boundary;
 metadata по content SHA сохранена до удаления own runtime/archive payloads.
 Source/proofs/canonical caches остаются. Commit локальный, без публикации.
+
+
+## 155. Native SDK actions/locations — §247
+
+PowerShell -NoProfile, F:/repo/forge-nvim; TEMP/TMP/TMPDIR=.tests/tmp на F,
+PYTHONUTF8=1/PYTHONIOENCODING=utf-8, NVIM_LOG_FILE=.tests/tmp/sdk-actions.log,
+npm_config_cache=F:/forge-nvim-tmp/npm-cache. Full env/credentials не выводились.
+Read: git status, rg/Get-Content bounded native SDK/frontend/wizard/PTY/lib,
+components and previous installer tests. Применены OpenSpec propose/apply по
+одобренному плану: context/new configure-native-sdk-actions/instructions
+proposal/design/specs/tasks/apply, JSON в .tests/sdk-actions-*.json; strict validate.
+
+Primary manager docs read-only web: learn.microsoft.com/en-us/windows/package-
+manager/winget/install ; docs.brew.sh/Manpage ; manpages.ubuntu.com/manpages/
+noble/man8/apt-get.8.html ; github.com/microsoft/WindowsDeveloperConfig/blob/
+main/windows-dev-config/steps/packages.ps1 . Это источники recipes/no-upgrade,
+не запуск настоящих manager install. Winget alias проверен Get-Command и
+Path.is_file (true), без исполнения реального winget. Cliclack confirm key API
+прочитан из pinned cargo-home source, стрелки переключают confirm.
+
+Source SDK RED: old UI copy .tests/sdk-actions-before/fride-setup.exe,
+FORGE_INSTALL_UI_BINARY на него; python -B tests/install-sdk-actions.test.py
+test_actions_04_cancel_preserves_kit > .tests/sdk-actions-source-red-windows.txt
+2>&1. Затем env override снят. Старый preflight exits2 вместо menu, target прежний.
+Native build: python -B scripts/build-installer-ui.py --rustc
+C:/Users/cascad/.rustup/toolchains/stable-x86_64-pc-windows-msvc/bin/rustc.exe
+> .tests/sdk-actions-build-windows-v3.txt 2>&1. Ранее v1/v2 сохраняются;
+rustfmt --edition2021 только own native modules, Cargo offline/locked/cache F.
+
+python -B tests/install-sdk-actions.test.py > .tests/sdk-actions-windows-v1.txt 2>&1
+После усиления shared skip/alias и добавления case12 адресно:
+python -B tests/install-sdk-actions.test.py test_actions_03_skip_dependencies
+test_actions_05_install_declined test_actions_12_cancel_after_sdk_install
+> .tests/sdk-actions-targeted-windows-v2.txt 2>&1
+Controls по одному прогону:
+python -B tests/install-prerequisites.test.py > .tests/sdk-actions-readiness-windows.txt 2>&1
+python -B tests/install-runtime.test.py > .tests/sdk-actions-runtime-windows.txt 2>&1
+python -B tests/install-ui.test.py > .tests/sdk-actions-ui-windows.txt 2>&1
+Только UI case10 упал на реальном Windows rename EPERM; диагностика/фикс §248.
+
+Docker version query; готовый image, без lifecycle Desktop/WSL:
+docker compose -f tests/containers/compose.yaml run --rm --no-deps --pull never
+--entrypoint bash ubuntu /workspace/.tests/sdk-actions-run.sh
+> .tests/sdk-actions-ubuntu-driver.txt 2>&1
+Script (host .tests/ubuntu, guest .tests) сохраняет old Linux UI/source RED,
+собирает current offline из vendor.tar.gz в /tmp/fride-sdk-actions-build.*,
+экспортирует binary/receipt в .tests/installer-ui/linux-x64, затем SDK12,
+readiness11, delivery16 и UI13. Native stands в /tmp, proof export без runtime
+copies; весь temporary container layer удалён --rm. Никаких build/pull/сети.
+
+SDK manager в E2E — compiled native fixture (direct ready rustc), PATH содержит
+только own fixture manager и essential OS helpers. Реальных SDK installs нет.
+package.tsv/tee SDK log доказывают argv и explicit confirm; mock успех создаёт
+SDK только в stand. Preview/nonTTY/declined/cancel не исполняют manager.
+
+SDK CLI: --sdk-path DIR repeatable fallback после caller PATH; --check-sdks
+read-only. Bin/sdk-paths.txt не содержит shell code/credentials, только selected
+absolute locations. Backend JSON/argv без eval; SDK snapshots уникальны.
+Audit .tests/sdk-actions-baseline.json: frozen24 SDK/pins/Cargo.lock/backports/
+чужой WIP и raw journal copies. Exact stage и staged normalized prefixes
+проверяются до local commit. Cleanup python -B .tests/sdk-actions-cleanup.py:
+только roots из sdk-actions logs, resolved boundary .tests/install-isolation,
+metadata сохранена по SHA до удаления runtime/archive payloads. Source/proofs/
+canonical caches оставлены. Нет публикации или push.
+
+
+## 156. Windows native rename lock — §248
+
+После FAIL прочитаны raw SDK/UI logs, текущая строка uv.fs_rename и tree stage/
+backups. Get-Process -Name nvim не показал наших live processes. Ровно own
+failed staging runtime переименован в runtime-rename-check и назад через
+Path.rename, absolute .tests/install-isolation boundary проверен заранее;
+оба rename успешны. .tests/sdk-actions-rename-diagnostic.json, original holder
+не зафиксирован. Никаких процессов не закрывали и системные настройки не меняли.
+
+Source native lock RED перед code fix:
+python -B tests/install-locks.test.py test_lock_01_transient_rename
+> .tests/sdk-actions-lock-source-red-windows.txt 2>&1
+После bounded helper:
+python -B tests/install-locks.test.py > .tests/sdk-actions-locks-windows-v1.txt 2>&1
+python -B tests/install-ui.test.py test_ui_10_root_automatic_delivery
+> .tests/sdk-actions-ui-root-windows-v2.txt 2>&1
+
+Windows ctypes CreateFileW GENERIC_READ, FILE_SHARE_READ|FILE_SHARE_WRITE (без
+DELETE), OPEN_EXISTING; строго staged nvim.exe из own fixture tools gate.
+Transient release через0.4s; persistent release после installer result. Thread
+joined, handle CloseHandle в finally, lock.json сохраняет resource lifetime.
+Product wait<=1.5s/25ms только Windows EPERM/EACCES/EBUSY, без ACL/process kills.
+Проверены rollback old bin/runtime/owner и обычный запуск. POSIX не менялся,
+его SDK/delivery/UI controls проверены в общем Ubuntu run. SDK binary frozen.

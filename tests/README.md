@@ -755,3 +755,31 @@ docker compose -f tests/containers/compose.yaml run --rm --no-deps --pull never 
 Host .tests/ubuntu — guest /workspace/.tests, тяжёлые copies в native /tmp.
 Ready означает CLI readiness, не полную совместимость всех language packages.
 Install/path/skip actions в UI — следующий срез. Native Mac запускает владелец.
+
+
+### SDK action menu и Windows install locks — IDE-BOOT-19/20
+
+Windows `python -B tests/install-sdk-actions.test.py`, Linux/macOS `python3 -B ...`:
+12 native PTY cases. Existing root/invalid retry, skip Python/Node/Bash together,
+SDK cancel, declined install, confirmed fixture manager, failed install/retry,
+exit0 without SDK, missing manager, own-kit rejection, headless --sdk-path,
+upgrade/project priority, cancel after standalone SDK installation.
+Package manager — native fixture, реальные winget/apt/brew не запускаются.
+Есть ready frontend/Neovim/Node stand SDK и Rust compiler как inputs, никаких
+SDK downloads. Артефакты sdk-actions-summary.json, raw frames, package.tsv,
+sdk-install/check/final reports и launch priority JSON в .tests/install-isolation.
+
+`python -B tests/install-locks.test.py` — Windows actual deny-delete handle,
+transient rename и persistent rollback. Сигналы test fixture stage/parent thread,
+другие процессы не закрываются; lock.json сохраняет acquire/release. Linux/Mac
+selectors пропускаются, обычный POSIX rename не менялся.
+
+Docker ready, без build/pull/network/Desktop lifecycle:
+
+```sh
+docker compose -f tests/containers/compose.yaml run --rm --no-deps --pull never -e FORGE_INSTALL_UI_BINARY=/workspace/.tests/installer-ui/linux-x64/fride-setup -e FORGE_INSTALL_STAND_ROOT=/tmp/fride-sdk-actions --entrypoint python3 ubuntu -B tests/install-sdk-actions.test.py
+```
+
+Host .tests/ubuntu — guest .tests, native stand /tmp, proof export без runtime
+copies. Native Mac и настоящая установка OS packages — отдельная проверка
+владельцем; fixture manager не выдаётся за package integration acceptance.

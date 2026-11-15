@@ -33,7 +33,9 @@ Windows/Ubuntu; native Mac и опубликованные UI artifacts ещё �
 Выбран штатный NVIM_APPNAME=fride без XDG override. Отсутствующие SDK сначала
 предлагаются пользователю, без автоматического решения. §246: prerequisites
 отделены от IDE artifacts, добавлены passive checks/JSON и отказ до downloads.
-Следом — existing-path/install/skip/cancel UI; release и Mac открыты.
+§247: SDK menu existing/install/skip/refresh/cancel и fallback locations готовы
+Windows/Ubuntu; §248: Windows publish lock bounded retry/rollback. Следом —
+clean-machine manager bootstrap/release inventory; Mac/real installs открыты.
 
 2026-11-14, явное требование владельца: Neovim и остальные элементы Forge
 должны устанавливаться независимо от уже существующих программ и настроек.

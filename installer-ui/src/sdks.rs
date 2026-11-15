@@ -1,6 +1,7 @@
 // spec: IDE-BOOT-18. Native SDK discovery, never provisioning.
 use crate::{invalid, Result};
 use serde::Serialize;
+use std::ffi::{OsStr, OsString};
 use std::fs::{self, OpenOptions};
 use std::io::Read;
 use std::path::{Path, PathBuf};
@@ -27,7 +28,7 @@ pub(crate) fn required(components: &[String]) -> Vec<String> {
 #[derive(Serialize)]
 pub(crate) struct Tool {
     command: String,
-    path: Option<PathBuf>,
+    pub path: Option<PathBuf>,
     status: String,
     version: Option<String>,
     detail: Option<String>,
@@ -36,9 +37,9 @@ pub(crate) struct Tool {
 
 #[derive(Serialize)]
 pub(crate) struct Sdk {
-    id: String,
+    pub id: String,
     pub status: String,
-    tools: Vec<Tool>,
+    pub tools: Vec<Tool>,
 }
 
 #[derive(Serialize)]
@@ -85,8 +86,7 @@ impl Report {
     }
 }
 
-fn find(name: &str) -> Option<PathBuf> {
-    let path = std::env::var_os("PATH")?;
+pub(crate) fn find(name: &str, path: &OsStr) -> Option<PathBuf> {
     for directory in std::env::split_paths(&path) {
         let extensions = if cfg!(windows) {
             if name == "npm" {
@@ -104,6 +104,7 @@ fn find(name: &str) -> Option<PathBuf> {
             }
             // Store execution aliases can open an installer instead of Python.
             if cfg!(windows)
+                && matches!(name, "python" | "python3" | "py")
                 && candidate
                     .to_string_lossy()
                     .replace('\\', "/")
@@ -130,10 +131,10 @@ fn find(name: &str) -> Option<PathBuf> {
     None
 }
 
-fn probe(name: &str, directory: &Path, stamp: u128) -> Result<Tool> {
+fn probe(name: &str, directory: &Path, stamp: u128, search_path: &OsStr) -> Result<Tool> {
     let mut tool = Tool {
         command: name.into(),
-        path: find(name),
+        path: find(name, search_path),
         status: "missing".into(),
         version: None,
         detail: None,
@@ -158,6 +159,7 @@ fn probe(name: &str, directory: &Path, stamp: u128) -> Result<Tool> {
         command.arg("-3");
     }
     command
+        .env("PATH", search_path)
         .arg(if name == "go" { "version" } else { "--version" })
         .env("GOTOOLCHAIN", "local")
         .env("RUSTUP_AUTO_INSTALL", "0")
@@ -221,7 +223,8 @@ fn probe(name: &str, directory: &Path, stamp: u128) -> Result<Tool> {
     Ok(tool)
 }
 
-pub(crate) fn inspect(ids: &[String], directory: &Path) -> Result<Report> {
+pub(crate) fn inspect(ids: &[String], directory: &Path, paths: &[PathBuf]) -> Result<Report> {
+    let path = effective_path(paths)?;
     let stamp = SystemTime::now()
         .duration_since(UNIX_EPOCH)
         .map_err(invalid)?
@@ -246,7 +249,7 @@ pub(crate) fn inspect(ids: &[String], directory: &Path) -> Result<Report> {
         for alternatives in groups {
             let mut chosen = None;
             for name in alternatives {
-                let candidate = probe(name, directory, stamp)?;
+                let candidate = probe(name, directory, stamp, &path)?;
                 let ready = candidate.status == "ready";
                 if chosen
                     .as_ref()
@@ -275,4 +278,47 @@ pub(crate) fn inspect(ids: &[String], directory: &Path) -> Result<Report> {
         });
     }
     Ok(report)
+}
+
+pub(crate) fn effective_path(paths: &[PathBuf]) -> Result<OsString> {
+    let mut entries =
+        std::env::split_paths(&std::env::var_os("PATH").unwrap_or_default()).collect::<Vec<_>>();
+    entries.extend(paths.iter().cloned());
+    std::env::join_paths(entries).map_err(invalid)
+}
+
+pub(crate) fn directory(path: &Path) -> Result<PathBuf> {
+    if path.as_os_str().is_empty() || path.to_string_lossy().chars().any(|c| c.is_control()) {
+        return Err(invalid("Введите каталог SDK без управляющих символов"));
+    }
+    let path = if path.is_absolute() {
+        path.to_owned()
+    } else {
+        std::env::current_dir()?.join(path)
+    };
+    if !path.is_dir() {
+        return Err(invalid("Каталог SDK не найден"));
+    }
+    std::env::join_paths([&path]).map_err(invalid)?;
+    Ok(path)
+}
+
+pub(crate) fn add_path(plan: &mut crate::Plan, path: PathBuf) -> Result<()> {
+    let path = directory(&path)?;
+    let target = PathBuf::from(&plan.install_dir);
+    let target = if target.is_absolute() {
+        target
+    } else {
+        std::env::current_dir()?.join(target)
+    };
+    let real = fs::canonicalize(&path)?;
+    if path.starts_with(&target) || real.starts_with(fs::canonicalize(&target).unwrap_or(target)) {
+        return Err(invalid(
+            "SDK должен находиться вне заменяемого комплекта IDE",
+        ));
+    }
+    if !plan.sdk_paths.contains(&path) {
+        plan.sdk_paths.push(path);
+    }
+    Ok(())
 }

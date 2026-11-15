@@ -29,6 +29,19 @@ local function relative(path)
   return path
 end
 local function mkdir(path) assert(vim.fn.mkdir(path, 'p') == 1 or uv.fs_stat(path), path) end
+-- Windows can deny a directory move while a file is briefly opened without
+-- FILE_SHARE_DELETE. Keep the wait bounded and retain the same rollback path.
+local function rename(source,target)
+  local function locked(code) return code=='EPERM' or code=='EACCES' or code=='EBUSY' end
+  local ok,err,code=uv.fs_rename(source,target)
+  if not ok and windows and locked(code) then
+    vim.wait(1500,function()
+      ok,err,code=uv.fs_rename(source,target)
+      return ok or not locked(code)
+    end,25)
+  end
+  assert(ok,err)
+end
 local function no_links(path)
   local current = vim.fn.fnamemodify(path, ':p')
   while current and current ~= '' do
@@ -53,7 +66,7 @@ local function copy_tree(source, target, root, active)
   else fail('Unsupported runtime file: ' .. source) end
 end
 local function digest(path) return vim.fn.sha256(read(path)) end
-local function environment(root, runtime, paths)
+local function environment(root, runtime, paths, sdk_paths)
   local env = vim.fn.environ()
   env.NVIM_APPNAME, env.NVIM_LOG_FILE = 'fride', join(root,'log/nvim.log')
   env.TEMP, env.TMP, env.TMPDIR = join(root,'tmp'), join(root,'tmp'), join(root,'tmp')
@@ -61,6 +74,10 @@ local function environment(root, runtime, paths)
   env.GOTOOLCHAIN, env.RUSTUP_AUTO_INSTALL = 'local', '0'
   local bins = {}; for _, path in ipairs(paths) do bins[#bins+1] = join(runtime, path) end
   env.PATH = table.concat(bins, windows and ';' or ':') .. (windows and ';' or ':') .. (env.PATH or '')
+  local separator=windows and ';' or ':'
+  local present={};for entry in (env.PATH..separator):gmatch('(.-)'..separator) do present[normalize(entry)]=true end
+  for _,path in ipairs(sdk_paths) do if not present[normalize(path)] then env.PATH=env.PATH..separator..path;present[normalize(path)]=true end end
+  env.FORGE_SDK_PATHS=nil
   for _, key in ipairs({'VIM','VIMRUNTIME','VIMINIT','EXINIT','LUA_INIT','LUA_PATH','LUA_CPATH'}) do env[key] = nil end
   return env
 end
@@ -76,6 +93,12 @@ local function install()
   local source = absolute(vim.env.FORGE_INSTALL_SOURCE, 'Missing source')
   local target = absolute(vim.env.FORGE_INSTALL_TARGET, 'Missing target')
   local runtime = absolute(vim.env.FORGE_INSTALL_RUNTIME, 'Missing private runtime')
+  local sdk_paths=vim.json.decode(vim.env.FORGE_SDK_PATHS or '[]')
+  if not vim.islist(sdk_paths) then fail('Invalid SDK locations') end
+  for _,path in ipairs(sdk_paths) do
+    if type(path)~='string' or path:find('[\r\n]') or path:find(windows and ';' or ':',1,true)
+      or not vim.uv.fs_stat(path) or vim.uv.fs_stat(path).type~='directory' or within(path,target) then fail('Invalid SDK location') end
+  end
   no_links(target)
   if within(source, target) or within(runtime, target) or within(target, source) or within(target, runtime) then
     fail('Install target overlaps source/runtime')
@@ -178,8 +201,9 @@ local function install()
     write(join(stage,'bin',name..'.cmd'),'@echo off\r\npowershell.exe -NoProfile -ExecutionPolicy Bypass -File "%~dp0'..name..'.ps1" %*\r\nexit /b %errorlevel%\r\n')
   end
   write(join(stage,'bin/runtime-paths.txt'),table.concat(manifest.paths,'\n') .. '\n')
+  write(join(stage,'bin/sdk-paths.txt'),#sdk_paths>0 and (table.concat(sdk_paths,'\n')..'\n') or '')
   -- Setup использует staged config/runtime, а постоянные data/state принадлежат только Forge.
-  local env = environment(target,join(stage,'runtime'),manifest.paths)
+  local env = environment(target,join(stage,'runtime'),manifest.paths,sdk_paths)
   env.FRIDE_CONFIG = join(stage,'config/forge')
   local exe = join(stage,'runtime',nvim)
   for index, probe in ipairs(manifest.probes or {}) do
@@ -197,16 +221,16 @@ local function install()
   local moved, committed = {}, {}
   local ok, err = pcall(function()
     for _, dir in ipairs({'runtime','config','bin'}) do
-      if uv.fs_stat(join(target,dir)) then assert(uv.fs_rename(join(target,dir),join(backup,dir))); moved[#moved+1]=dir end
-      assert(uv.fs_rename(join(stage,dir),join(target,dir))); committed[#committed+1]=dir
+      if uv.fs_stat(join(target,dir)) then rename(join(target,dir),join(backup,dir)); moved[#moved+1]=dir end
+      rename(join(stage,dir),join(target,dir)); committed[#committed+1]=dir
     end
     if registration then registration.apply() end
     write(owner_path,vim.json.encode({schema=1,product='forge-nvim',ready=true,components=manifest.components,backup=backup}))
   end)
   if not ok then
     if registration then registration.rollback() end
-    for _, dir in ipairs(committed) do assert(uv.fs_rename(join(target,dir),join(stage,dir))) end
-    for _, dir in ipairs(moved) do assert(uv.fs_rename(join(backup,dir),join(target,dir))) end
+    for _, dir in ipairs(committed) do rename(join(target,dir),join(stage,dir)) end
+    for _, dir in ipairs(moved) do rename(join(backup,dir),join(target,dir)) end
     fail(err)
   end
   assert(uv.fs_rmdir(stage))

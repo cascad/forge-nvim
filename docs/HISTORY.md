@@ -383,6 +383,8 @@ Python реализован и проверен 2026-11-03; после возо�
 | §244 | [Fride: штатные SDK и отдельное приложение Neovim](../nvim_forge/FIXLOG.md#244-fride-штатные-sdk-и-отдельное-приложение-neovim) |
 | §245 | [План выбора SDK по VS Code и IntelliJ IDEA](../nvim_forge/FIXLOG.md#245-план-выбора-sdk-по-vs-code-и-intellij-idea) |
 | §246 | [Установщик: native SDK prerequisites вместо архивов языка](../nvim_forge/FIXLOG.md#246-установщик-native-sdk-prerequisites-вместо-архивов-языка) |
+| §247 | [SDK: явные действия пользователя в установщике](../nvim_forge/FIXLOG.md#247-sdk-явные-действия-пользователя-в-установщике) |
+| §248 | [Windows: временная блокировка публикации staging](../nvim_forge/FIXLOG.md#248-windows-временная-блокировка-публикации-staging) |
 
 ## Как читать и дополнять
 
