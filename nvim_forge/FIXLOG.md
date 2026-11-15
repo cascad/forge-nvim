@@ -13392,3 +13392,67 @@ installer suite для этого документа не выполнялись
 **Файлы.** docs/RELEASE_INVENTORY.md, INSTALLATION_PLAN.md, IDE_ROADMAP.md,
 PROBLEMS.md, HISTORY.md и append-only FIXLOG/AGENT_COMMANDS. Snapshot/audit:
 .tests/release-inventory-windows.json, release-inventory-audit.json.
+
+
+## 251. Setup: пять существующих IDE tools через Mason
+
+Дата: 2026-11-15. IDE-138. Спека: IDE-BOOT-22 (ADDED).
+
+**Проблема.** Общий setup не подготавливал gopls/stylua/gofumpt/golines/prettier,
+хотя Go LSP/Conform их использовали. На чистой машине receipt checks остальных
+packages могли пройти, а эти функции оставались без инструментов.
+
+**Причина.** Историческое разделение «Mason для LSP, system install для
+форматтеров/Go LSP» осталось в catalog и комментариях. Языковой SDK и инструмент
+IDE смешивались: инструкция требовала global go/cargo/npm install.
+
+**Изменение.** Тот же Mason, без нового provider/manager: Core stylua v2.6.0;
+Go gopls v0.23.0, gofumpt v0.12.0, golines v0.16.0; Node prettier3.9.10.
+Shared names API сохранён, install specs и readiness используют один pin map.
+Node checkbox явно включает JSON/YAML/Markdown formatting; Core-only не требует
+Node или Rust SDK для StyLua. Проверяются receipt version, нужный executable
+alias и Prettier JS entrypoint/обычный Node. Project Prettier имеет приоритет.
+
+При необходимости source build этих Go tools explicit setup проверяет обычный
+Go1.26.0+ до install; GOTOOLCHAIN=local/RUSTUP_AUTO_INSTALL=0 действуют только
+в setup process. Готовые pinned packages позволяют повторную подготовку без
+требования обновить build SDK. Go/Rust/Node/Python homes/config/auth/cache и
+launcher policy не переназначаются. Mason Go provider задаёт только GOBIN
+своего package, npm prefix также package-local; user global prefixes не меняются.
+run_on_start/auto_update false, обычное открытие файла не устанавливает tools.
+
+**Проверка/e2e.** Source policy RED на файлах52d630e в native Neovim показывает
+отсутствие всех5 tools. Настоящий Mason установил5 pinned packages на Windows
+и Ubuntu (Go compile, native StyLua release, npm Prettier), реальные receipts/
+файлы сохранены. Windows12 разных cases покрыты успешно суммарно по целевой
+итерации и адресным follow-ups; Ubuntu10 PASS/2 Windows-only skips6.120s.
+Реальные Conform Lua/Go/JSON, golines long-line, project Prettier, Go LSP
+cross-file definition, repeat, wrong-version/bin/JS/Node и false-success stage.
+Native Go1.23 на Windows: ранний отказ до callback при пустом tool cache и
+успешный reuse готовых tools. SDK env guard учитывает также unset values.
+Усиленные consumers2 PASS Windows1.680s / Ubuntu3.054s, install hooks/registry
+refresh во время format/LSP запрещены assertions. Policy5 PASS на ОС;
+старые receipt/share/opt controls Windows3/Ubuntu4 PASS. Mac НЕ запускался.
+
+Первый Windows smoke6 PASS/2 FAIL: stand указывал custom Mason root вне native
+fride data, а JSON sample попал под repo .gitignore/новое inline formatting.
+Исправлен layout stand, задан project cwd и достаточно длинный JSON; продукт
+не подгонялся под неверный oracle. Ubuntu первая prepare ошибка: GOPROXY=off
+не даёт Go проверить deprecation; использован штатный file proxy из проверенного
+локального cache. Следующие3 failures вызваны потерей executable mode после
+тестового unlink/restore Prettier; mode сохраняется, JS postcondition вынесен
+до проверки symlink exports для одинаковой причины на ОС. Исходные raw failures
+сохранены, green full loops не делались, повтор — после реальных изменений.
+
+**Вывод.** Первый кодовый срез inventory §250 закрыт через существующий Mason.
+Это не полный Default release: другие build minima/их выбор в SDK TUI,
+Windows codelldb, Bash/SQL preparation, forge-sqltest, Core/Terminal artifacts,
+native Mac и публикация остаются открытыми. Компиляторные кэши и project
+fixture copies удалены: 0.84GiB; готовые tools и metadata оставлены для повторения.
+
+**Файлы.** tool_catalog/setup_readiness, plugins/lsp.lua и format.lua,
+components.tsv/setup-stage.lua; tests/install-ide-tools.test.py и четыре native
+Lua diagnostics, install-profile.test.py. Change prepare-managed-ide-tools,
+install plan/RELEASE_INVENTORY/roadmap/problems. Proof .tests/ide-tools-*.txt,
+.tests/ubuntu/ide-tools-*.txt, ide-tools-native-metadata/{windows,ubuntu},
+ide-tools-source-red.json, cleanup.json и audit.json. SDK/pins/backports/WIP frozen.

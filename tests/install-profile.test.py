@@ -27,7 +27,8 @@ class Profile(bootstrap.Bootstrap):
         script.write_text("""local root=...;vim.opt.runtimepath={root..'/nvim_forge',vim.env.VIMRUNTIME};package.path=root..'/nvim_forge/lua/?.lua;'..package.path
 local options;for _,s in ipairs(require('plugins.lsp')) do if s[1]=='WhoIsSethDaniel/mason-tool-installer.nvim' then options=s.opts() end end
 local profile=require('forge.install_profile')
-io.stdout:write(vim.json.encode({tools=options.ensure_installed,parsers=profile.filter({'LEGACY_PARSER'},5)}))
+local names,versions={},{};for _,item in ipairs(options.ensure_installed) do local name=type(item)=='table' and item[1] or item;names[#names+1]=name;if type(item)=='table' then versions[name]=item.version end end
+io.stdout:write(vim.json.encode({tools=names,versions=versions,run_on_start=options.run_on_start,auto_update=options.auto_update,parsers=profile.filter({'LEGACY_PARSER'},5)}))
 """.replace('local root=...','local root=arg[1]'),encoding='utf-8')
         env=os.environ.copy()
         if mask is None:env.pop('FORGE_NVIM_COMPONENTS',None)
@@ -39,7 +40,8 @@ io.stdout:write(vim.json.encode({tools=options.ensure_installed,parsers=profile.
     def test_10_core_only(self):
         mask=self.selected('core-only','core',['core'])
         policy=self.policy(mask,'core-only')
-        self.assertEqual(policy['tools'],['lua-language-server'])
+        self.assertEqual(policy['tools'],['lua-language-server','stylua'])
+        self.assertEqual(policy['versions'],{'stylua':'v2.6.0'})
         self.assertFalse(set(policy['parsers']) & {'rust','go','python','javascript','typescript','bash','sql'})
     def test_11_python_dependency_without_js(self):
         mask=self.selected('python-only','python',['core','python','node-runtime'])
@@ -61,6 +63,11 @@ io.stdout:write(vim.json.encode({tools=options.ensure_installed,parsers=profile.
         policy=self.policy(None,'legacy')
         self.assertEqual(policy['parsers'],['LEGACY_PARSER'])
         self.assertIn('rust-analyzer',policy['tools']);self.assertNotIn('js-debug-adapter',policy['tools'])
+    def test_24_managed_tool_pins(self):
+        go=self.policy('core,go','go-pins');node=self.policy('core,node','node-pins')
+        self.assertEqual(go['versions'],{'stylua':'v2.6.0','gopls':'v0.23.0','gofumpt':'v0.12.0','golines':'v0.16.0'})
+        self.assertEqual(node['versions'],{'stylua':'v2.6.0','prettier':'3.9.10'})
+        for policy in [go,node]:self.assertFalse(policy['run_on_start']);self.assertFalse(policy['auto_update'])
     def test_16_keyboard_toggle(self):
         key='Profile' if bootstrap.WINDOWS else 'profile'
         result,_,_,report=self.run_entry('keyboard',options={key:'Custom' if bootstrap.WINDOWS else 'custom'},ui_action='toggle')

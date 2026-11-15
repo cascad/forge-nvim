@@ -8,12 +8,9 @@
 --   * Python → ruff format + ruff isort.
 --   * Lua    → stylua.
 --
--- ЕДИНЫЙ механизм для не-LSP-тулз — СИСТЕМНАЯ установка (mason-tool-installer
--- их больше НЕ держит, чтобы не было двух конкурирующих источников):
---   gofumpt  : go install mvdan.cc/gofumpt@latest      (в PATH)
---   golines  : go install github.com/segmentio/golines@latest
---   stylua   : cargo install stylua   |   winget install JohnnyMorganz.StyLua
---   prettier : npm i -g prettier      (или prettierd)
+-- IDE-BOOT-22: explicit setup/MasonToolsInstall готовит pinned tools внутри
+-- fride: stylua (Core), gofumpt/golines (Go), prettier (Node, также JSON/YAML/MD).
+-- Project Prettier имеет приоритет. Обычные языковые SDK не копируются в IDE.
 -- Если что-то unavailable, conform тихо пропустит этот форматтер и сделает
 -- lsp_format = "fallback" (если LSP-сервер прицеплен) — без ошибок и фризов.
 
@@ -101,8 +98,8 @@ return {
                 --     поэтому длинный fmt.Printf(...) официальные тулзы
                 --     оставляют как есть). golines ломает по аргументам/
                 --     цепочкам вызовов. Лимит = 100 (см. formatters.golines
-                --     ниже, совпадает с colorcolumn). Требует системной
-                --     установки: go install github.com/segmentio/golines@latest
+                --     ниже, совпадает с colorcolumn). Явный setup ставит
+                --     закреплённый Mason package внутри fride.
                 --     Если не установлен — conform тихо пропустит его,
                 --     gofumpt/gopls отработают как раньше (без переносов).
                 --   * gofumpt — строгий стиль поверх gofmt (убирает лишние

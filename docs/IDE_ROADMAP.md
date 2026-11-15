@@ -31,7 +31,8 @@ bootstrap WinGet/Homebrew, затем отдельный SDK confirm; Windows/Ub
 проверен. Дальше — release inventory Core/IDE tools; native Mac, real manager/
 SDK installs и публичный one-liner пока открыты.
 §250: [release inventory и конкретная очередь](RELEASE_INVENTORY.md) записаны;
-первый срез — существующие внешние IDE tools, затем debug/test tools, Core/
+§251 закрыл пять внешних IDE tools через pinned Mason, с настоящими format/LSP
+проверками Windows/Ubuntu. Следующий срез — debug/test tools, затем Core/
 Terminal artifacts, actual Default/Custom и native Mac/publication.
 Упаковка Node отменена; native Mac и полный release остаются открытыми.
 §234: общий setup обрабатывает Lua/Vim exceptions и missing commands как отказ;

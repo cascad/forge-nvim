@@ -72,7 +72,9 @@ discovery. Windows/Ubuntu controlled stand прошёл, реальные manage
 §250: [покрытие поставки по компонентам](docs/RELEASE_INVENTORY.md) разобрано.
 Не покрыты общим setup внешние gopls/часть форматтеров, Windows codelldb,
 подготовка Bash/SQL и SQL test runner. Это существующие возможности, не новые
-LSP. Следующий кодовый срез — private IDE tools с обычными пользовательскими SDK.
+LSP. §251: gopls/stylua/gofumpt/golines/prettier включены в pinned Mason setup,
+проверены реальные форматирование/навигация и reuse SDK на Windows/Ubuntu.
+Следующий срез — Windows codelldb, Bash/SQL preparation и forge-sqltest.
 
 §241: реализована доставка Core и selected SDK modules по platform/URL/SHA,
 сборка в private staging и сохранение прежнего kit при отказе. Native stand

@@ -1,6 +1,6 @@
 # Что ещё требуется для полной поставки fride
 
-Срез2026-11-15, код694cd9e. Это состав **существующих возможностей**, а не
+Исходный срез2026-11-15, код694cd9e, обновление §251. Это состав **существующих возможностей**, а не
 предложение новых LSP. Полного Default release пока нет: production
 [artifacts.tsv](../scripts/runtime/artifacts.tsv) не содержит ни одной строки.
 Готовность транспорта и отдельных стендов не равна готовности такой поставки.
@@ -27,16 +27,16 @@
 
 | Компонент | Обычные SDK | Mason в текущем managed setup | Пробел поставки |
 |---|---|---|---|
-| Core | Сам по себе не требует SDK языка | lua-language-server; 23 общих parsers | Git для plugins/backports, rg для текстового поиска, tree-sitter/подготовка native parsers; stylua для Lua. Prettier для JSON/YAML/Markdown требует отдельно учесть Node. |
-| Go | Go | delve, golangci-lint, gotestsum; ещё4 parsers | gopls, gofumpt, golines ожидаются в PATH, общий setup их не ставит. |
+| Core | Сам по себе не требует SDK языка | lua-language-server, stylua; 23 общих parsers | Git для plugins/backports, rg для текстового поиска, tree-sitter/подготовка native parsers. Prettier для JSON/YAML/Markdown принадлежит Node компоненту. |
+| Go | Go | delve, golangci-lint, gotestsum, gopls, gofumpt, golines; ещё4 parsers | При необходимости сборки новых tools требуется обычный Go1.26.0+; готовые packages переиспользуются со старым SDK. |
 | Rust | Rust/Cargo | rust-analyzer; ещё1 parser; codelldb только POSIX | Windows codelldb исключён из Mason и ожидается извне. Rustfmt — часть обычного Rust toolchain, не private IDE SDK. |
 | Python | Python + Node для pyright | pyright, ruff, debugpy; ещё1 parser | Версии SDK/venv и настоящий debug/test acceptance; наличие receipt этого не доказывает. |
-| JS/Node | Node/npm | typescript-language-server, js-debug-adapter; ещё2 parsers | Prettier не входит в текущую установку tools. Project node_modules сохраняет приоритет. |
+| JS/Node | Node/npm | typescript-language-server, js-debug-adapter, prettier; ещё2 parsers | Prettier3.9.10 включён §251, в том числе для JSON/YAML/Markdown. Project node_modules сохраняет приоритет. |
 | Bash | Node; Bash runtime/backend | bash-language-server, shfmt, shellcheck, bash-debug-adapter; ещё1 parser | Подготовка закреплённого adapter patch не включена в общий setup; на Windows нужен выбранный владельцем WSL2 backend. WSL установщик не трогает. |
 | SQL | Go требуется текущему sqls install recipe | sqls, sqruff; ещё1 parser | Нужны существующие patched sqls и forge-sqltest, а не один stock sqls receipt. Базы/credentials — пользовательские. |
 | Terminal | — | Mason/parsers нет | Нужен native WezTerm/font artifact и проверенная private интеграция с явным config, без замены пользовательского WezTerm. |
 
-Windows native read-only snapshot: .tests/release-inventory-windows.json,
+Исходный Windows read-only snapshot: .tests/release-inventory-windows.json,
 получен самим tool_catalog в Neovim `-u NONE`, без SDK queries/сети/setup.
 При полном выборе это33 различных parsers; Windows Rust строка не включает
 codelldb по текущему OS guard. POSIX guard проверен чтением кода, native Mac
@@ -47,9 +47,10 @@ codelldb по текущему OS guard. POSIX guard проверен чтени
 1. [setup-stage.lua](../nvim_forge/scripts/setup-stage.lua) подготавливает только
    выбранные plugins/parsers/Mason packages. Успешная проверка этого списка
    не обнаруживает инструмент, который вообще в него не включён.
-2. [lsp.lua](../nvim_forge/lua/plugins/lsp.lua) включает Go LSP только при
-   доступном gopls. [format.lua](../nvim_forge/lua/plugins/format.lua) ожидает
-   внешние stylua/gofumpt/golines/prettier. Это IDE tools, а не языковые SDK.
+2. §251 закрыл gopls/stylua/gofumpt/golines/prettier через тот же Mason;
+   [lsp.lua](../nvim_forge/lua/plugins/lsp.lua) и
+   [format.lua](../nvim_forge/lua/plugins/format.lua) используют готовые bin/JS.
+   Это IDE tools, а не языковые SDK. Их версии и postconditions теперь общие.
 3. [dap.lua](../nvim_forge/lua/plugins/dap.lua) ищет Windows codelldb через PATH,
    пользовательский LocalAppData и Mason fallback. Существующая подготовка
    debugger SDK проверялась отдельно, в published private kit её ещё нет.
@@ -64,12 +65,12 @@ codelldb по текущему OS guard. POSIX guard проверен чтени
 
 ## Следующая очередь реализации
 
-1. **Закрыть существующие внешние IDE tools:** явная подготовка в fride,
-   gopls/stylua/gofumpt/golines/prettier, повторно используя обычные SDK.
-   Без global npm/cargo/go install и без SDK homes внутри kit. Способ/версии
-   закрепить перед поставкой; не создавать второго менеджера поверх Mason.
-   Учитывать Node dependency Core formatting и готовность SDK, а не только
-   `--version`. Это следующий конкретный кодовый срез.
+1. **Готово §251 — пять существующих IDE tools:** pinned Mason packages в
+   штатном fride data, без установки в пользовательские global prefixes и без
+   SDK homes внутри kit. Core-only не требует Node; галочка Node включает
+   shared JSON/YAML/Markdown formatting. Сборка Go tools проверяет Go1.26.0+,
+   готовые packages этого SDK для повторной сборки не требуют. Реальные
+   format/LSP/repeat/failure cases прошли Windows/Ubuntu; native Mac открыт.
 2. **Доставить уже принятые debug/test components:** Windows codelldb, штатная
    подготовка существующих Bash/SQL patches, forge-sqltest. Не добавлять LSP
    и новые adapter implementations; использовать имеющиеся provider boundaries.
@@ -83,6 +84,11 @@ codelldb по текущему OS guard. POSIX guard проверен чтени
    только проверенные artifacts попадают в production catalog. Затем публичные
    one-liners, без ручного поиска/скачивания binaries пользователем.
 
-Этот список не меняет SDK policy и не объявляет пункты1–5 реализованными.
+Пункт1 реализован в указанной границе; пункты2–5 ещё не реализованы.
 Они пока не заблокированы целиком Mac-проверкой: общая подготовка и Windows/
 Ubuntu выполняются до неё. Публикация и непроверенные платформы отдельно открыты.
+
+Версии/команды/границы §251 — [managed IDE tools](INSTALLATION_PLAN.md#подготовка-существующих-ide-tools--251).
+Native SDK TUI пока не возвращает пользователя к выбору SDK по build minimum;
+backend выдаёт раннюю ошибку. Эту совместимость и все prerequisites надо закрыть
+до full Default acceptance, включая случай версии Go из штатного APT.

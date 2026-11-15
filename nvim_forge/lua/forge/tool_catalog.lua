@@ -1,9 +1,13 @@
 -- spec: IDE-BOOT-15. Existing catalogs, shared by config and explicit setup checks.
 local M = {}
+-- IDE-BOOT-22. Mason owns these IDE tools; language SDKs remain native.
+function M.versions()
+    return { gopls = 'v0.23.0', gofumpt = 'v0.12.0', golines = 'v0.16.0',
+        stylua = 'v2.6.0', prettier = '3.9.10' }
+end
 function M.mason()
     local tools = {
-        -- gopls из активного Go-тулчейна: go install
-        -- golang.org/x/tools/gopls@latest или setup WITH_LANGUAGES=1.
+        'gopls', 'gofumpt', 'golines', 'stylua', 'prettier',
         "pyright",
         "ruff",
         "lua-language-server",
@@ -19,13 +23,7 @@ function M.mason()
         "delve",
         "debugpy",
         --
-        -- Форматтеры здесь НЕ держим (единый механизм — системный):
-        --   stylua   : cargo install stylua  (см. format.lua)
-        --   prettier : npm i -g prettier
-        --   gofumpt/golines : go install ...  (уже в PATH)
-        -- Два конкурирующих механизма (mason + system) раньше давали
-        -- «на костылях»: stylua числился тут, но Mason его не ставил,
-        -- а system-установки не было → conform молча падал на lua/json.
+        -- Existing formatter consumers use the same Mason bin/JS entrypoints.
         -- Линтеры (если ruff/gopls/pyright чего-то не покрывают)
         "golangci-lint",
         "gotestsum",
@@ -37,6 +35,14 @@ function M.mason()
         table.insert(tools, "codelldb")
     end
     return require('forge.install_profile').filter(tools,4)
+end
+
+function M.mason_specs()
+    local versions, specs = M.versions(), {}
+    for _, name in ipairs(M.mason()) do
+        specs[#specs + 1] = versions[name] and { name, version = versions[name] } or name
+    end
+    return specs
 end
 
 function M.parsers()

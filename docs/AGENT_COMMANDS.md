@@ -9471,3 +9471,78 @@ Python read-only audit сверяет таблицу/counts, относител�
 Точный allowlist local commit, runtime/Cargo/SDK/pins/backports/WIP неизменны.
 Behavioral code не менялся, новый e2e runner и повторный installer suite для
 документа не запускались. Native product cases остаются в SDK iteration §157.
+
+
+## 159. IDE-BOOT-22: штатная подготовка пяти IDE tools
+
+2026-11-15, Windows/Ubuntu. TEMP/TMP/TMPDIR=.tests/tmp на F, Python -B/UTF-8,
+NVIM_LOG_FILE=.tests/tmp/ide-tools-*.log, npm_config_cache для npx —
+F:/forge-nvim-tmp/npm-cache. SDK/OS/Docker Desktop/WSL не устанавливались.
+OpenSpec1.13.2 context/new/instructions/status/apply/strict validate —
+prepare-managed-ide-tools; JSON сохранён в .tests/ide-tools-*.json.
+
+Первичные источники: official mason-registry package.yaml для пяти tools и
+upstream go.mod Go packages. Pins/SDK minimum записаны в plan/design, main
+specs не менялись. Source RED: git show HEAD:<path> из52d630e в собственный
+.tests/ide-tools-before (tool_catalog/install_profile/components), native
+Neovim -u NONE -l .tests/ide-tools-source-red.lua; expected failure5 missing tools,
+без установки/SDK queries. Результат ide-tools-source-red-windows.txt/json.
+
+Целевая подготовка/проверка (реальные Mason providers и native tools):
+
+```powershell
+python -B tests/install-ide-tools.test.py --prepare
+python -B tests/install-ide-tools.test.py
+```
+
+Standalone stand source/version definitions — tests/diagnostics/install-ide-
+tools-registry.lua; это controlled Lua registry с теми же official package
+sources/compilers, не production registry override. Native installer/prettier/
+Go LSP не подменяются. Go source build GOMAXPROCS=2, GOMEMLIMIT=512MiB,
+GOFLAGS=-p=2; Mason concurrency1. Windows готовые .tests/dap-tools/go1.26.0
+и Node24.11.0 из .tests/node-deps. Все test HOME/XDG/module/npm/compiler caches
+на F, SDK binary используется снаружи этих каталогов и не устанавливается.
+Fixture registry/GitHub download template не меняет product providers.
+
+Первоначальные prep failures (не загружен plugin command, отсутствует parent
+Mason log в -u NONE) сохранены v1/v2, исправлен stand. Настоящая подготовка v3
+успешна. Windows первый smoke8 cases имел2 fixture failures; последующие
+только адресные tests05/06, затем05, tests09/10, guards05/06/07/10/11,
+readiness04/09/10/11/12. Последние consumers05/07 усилены long-call/unset-env
+assertions и проверены Windows/Ubuntu. Full green loop не повторялся.
+Файлы ide-tools-{windows-v1,formatters-windows-v2,format-diagnostic-windows-v3,
+formatters-windows-v4,stage-windows-v1,guards-windows-v5,readiness-windows-v6,
+consumers-windows-v7}.txt сохраняют разные итерации.
+
+Ubuntu: готовый image forge-nvim-tests:ubuntu24.04-nvim0.12.2, без build/pull/
+сети. Windows cache Go modules/npm передан отдельным volume на /forge-ide-shared;
+GOPROXY=file:///forge-ide-shared/gomod/cache/download, npm offline. Native
+StyLua Linux zip получен заранее явной --fetch-linux-asset (official GitHub,
+URL/SHA в shared/assets source.json), в container передан через localhost HTTP.
+Mason GitHub compiler/распаковка/native binary настоящие. VERSION provider
+warnings при отсутствии сети сохранены; requested pinned versions проверены.
+
+```powershell
+python -B tests/install-ide-tools.test.py --fetch-linux-asset
+docker compose -f tests/containers/compose.yaml run --rm --no-deps --pull never --volume F:/repo/forge-nvim/.tests/ide-tools/shared:/forge-ide-shared --entrypoint bash ubuntu .tests/ide-tools-run.sh
+```
+
+Temporary .tests/ubuntu/ide-tools-run.sh: actual prepare → suite → selected
+readiness/profile controls → receipts. Первый GOPROXY=off failure сохранён
+в native base result.json/mason.log и ide-tools-prepare-cache-failure.txt.
+Следующая suite имела3 failures из-за fixture chmod; v3 suite10 PASS/2 skips.
+После усиления05/07 адресный native вызов с FORGE_IDE_CACHE=/workspace/.tests/
+ide-tools/linux-x64, FORGE_IDE_SHARED=/forge-ide-shared, FORGE_IDE_OFFLINE=1.
+Host .tests/ubuntu = guest /workspace/.tests. Desktop/engine не переключались.
+
+Policy: импорт tests/install-profile.test.py через importlib/unittest,
+только tests10/11/12/15/24. Readiness: tests08/12/15, плюс16 на POSIX.
+Новый umbrella runner не вводился, сторонние tests/run/registry WIP не трогались.
+Mac: python3 с теми же --prepare/test командами и native SDK/deps, здесь не запускался.
+
+Metadata: actual5 receipts и hashes72 Windows/69 Linux package files в
+.tests/ide-tools-native-metadata. Cleanup только собственных проверенных
+.tests paths: compiler caches и project/project/node_modules copies; absolute
+resolve boundary до rmtree, SDK/готовые Mason packages не удалялись. Report
+.tests/ide-tools-cleanup.json. Перед local commit —24 frozen hashes, append-only
+raw/staged journal prefixes, Python syntax, doc links, diff --check и allowlist.

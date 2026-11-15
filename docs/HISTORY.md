@@ -387,6 +387,7 @@ Python реализован и проверен 2026-11-03; после возо�
 | §248 | [Windows: временная блокировка публикации staging](../nvim_forge/FIXLOG.md#248-windows-временная-блокировка-публикации-staging) |
 | §249 | [Установщик: отдельный bootstrap менеджера SDK](../nvim_forge/FIXLOG.md#249-установщик-отдельный-bootstrap-менеджера-sdk) |
 | §250 | [Release: inventory существующих инструментов IDE](../nvim_forge/FIXLOG.md#250-release-inventory-существующих-инструментов-ide) |
+| §251 | [Setup: пять существующих IDE tools через Mason](../nvim_forge/FIXLOG.md#251-setup-пять-существующих-ide-tools-через-mason) |
 
 ## Как читать и дополнять
 

@@ -62,6 +62,12 @@ project venv имеет приоритет. Установщик не пишет
 не маскируется fallback. --sdk-path DIR поддерживается frontend для automation.
 Root/bin/Scripts распознаются в TUI, locations внутри заменяемого kit запрещены.
 
+§251: gopls/stylua/gofumpt/golines/prettier готовятся через Mason в штатном
+fride data, не в пользовательские global prefixes. Когда нужна сборка Go
+tools, tools stage проверяет обычный Go1.26.0+; готовые pinned packages
+переиспользуются без обновления build SDK. SDK homes/env не переносятся,
+normal launch сохраняет SDK policies. [Версии и границы](INSTALLATION_PLAN.md#подготовка-существующих-ide-tools--251).
+
 WinGet использует exact IDs/no-upgrade; APT install --no-upgrade, brew
 HOMEBREW_NO_INSTALL_UPGRADE. Их зависимостями управляет штатный менеджер;
 версия — из его настроенного репозитория, не обещанная project version.

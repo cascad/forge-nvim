@@ -15,9 +15,16 @@ local ok, err = xpcall(function()
         local report = require('forge.setup_readiness').parsers(require('forge.tool_catalog').parsers())
         io.stdout:write('Parser readiness: ' .. vim.json.encode(report) .. '\n')
     elseif stage == 'tools' then
+        -- Only this explicit setup process: never download a language SDK
+        -- while building IDE tools through Mason's native Go/Cargo providers.
+        vim.env.GOTOOLCHAIN = 'local'
+        vim.env.RUSTUP_AUTO_INSTALL = '0'
         vim.cmd('Lazy load mason-tool-installer.nvim')
+        local catalog = require('forge.tool_catalog')
+        local readiness = require('forge.setup_readiness')
+        readiness.build_sdks(catalog.mason(), catalog.versions())
         vim.cmd('MasonToolsInstallSync')
-        local report = require('forge.setup_readiness').tools(require('forge.tool_catalog').mason())
+        local report = readiness.tools(catalog.mason(), catalog.versions())
         io.stdout:write('Tool readiness: ' .. vim.json.encode(report) .. '\n')
     else
         error('Unknown setup stage: ' .. tostring(stage))

@@ -94,8 +94,9 @@ SDK preflight и меню реализованы (§246–247). Дальнейш
 
 §250: [inventory существующих возможностей](RELEASE_INVENTORY.md) составлен.
 Обнаружены пропущенные внешние IDE tools и отдельные Bash/SQL/Windows debugger
-steps. Следующий кодовый срез — их штатная private подготовка, начиная с
-gopls/stylua/gofumpt/golines/prettier, без упаковки языковых SDK.
+steps. §251 закрывает подготовку gopls/stylua/gofumpt/golines/prettier через
+Mason, без упаковки языковых SDK. Следующий срез — существующие debug/test
+tools: Windows codelldb, Bash/SQL preparation и forge-sqltest.
 
 ## Текущая готовность
 
@@ -693,3 +694,70 @@ standard Windows alias и noninteractive проверены. Сам PowerShell r
 исполняется с локальными cmdlet doubles. Mac команды подготовлены, но здесь
 не выполнялись; для bootstrap нужен clean Mac без standard Homebrew.
 Полный Default release inventory/functional readiness остаётся следующим срезом.
+
+## Подготовка существующих IDE tools — §251
+
+Пять уже используемых tools входят в тот же Mason setup, в штатные каталоги
+приложения fride. Отдельного менеджера/языкового SDK внутри kit нет:
+
+| Компонент | Tool | Закреплённая версия | Provider |
+|---|---|---|---|
+| Core | stylua | v2.6.0 | готовый native release |
+| Go | gopls | v0.23.0 | Go source build |
+| Go | gofumpt | v0.12.0 | Go source build |
+| Go | golines | v0.16.0 | Go source build |
+| Node | prettier | 3.9.10 | npm в каталоге Mason package |
+
+Источник/версии: official Mason registry
+[gopls](https://github.com/mason-org/mason-registry/blob/main/packages/gopls/package.yaml),
+[gofumpt](https://github.com/mason-org/mason-registry/blob/main/packages/gofumpt/package.yaml),
+[golines](https://github.com/mason-org/mason-registry/blob/main/packages/golines/package.yaml),
+[stylua](https://github.com/mason-org/mason-registry/blob/main/packages/stylua/package.yaml),
+[prettier](https://github.com/mason-org/mason-registry/blob/main/packages/prettier/package.yaml).
+Строки registry меняются; перечисленные pins задаёт tool_catalog. Source/hash/
+license inventory полного release этим не заменяется.
+
+Core-only не требует Node или Rust SDK для StyLua. Галочка Node теперь явно
+включает также JSON/YAML/Markdown formatting через Prettier. Project
+node_modules сохраняет приоритет над shared Mason copy. Rustfmt остаётся
+частью обычного Rust toolchain. Остальные language SDK/settings/auth/cache
+наследуются, новые инструменты не ставятся в пользовательские global prefixes.
+
+Если требуется собрать Go tools, explicit tools stage заранее проверяет
+обычный Go1.26.0+: source modules требуют его в go.mod. При старом SDK ошибка
+возникает до install, без скрытой загрузки Go. Готовые packages с правильной
+версией переиспользуются без этого build requirement. Только setup process
+выставляет GOTOOLCHAIN=local/RUSTUP_AUTO_INSTALL=0; launcher окружение SDK не
+переназначает. Native SDK TUI пока не учитывает все build minima заранее;
+backend сообщает причину. Полная compatibility matrix остаётся release gate.
+
+Требования Go source:
+[gopls](https://github.com/golang/tools/blob/gopls/v0.23.0/gopls/go.mod),
+[gofumpt](https://github.com/mvdan/gofumpt/blob/v0.12.0/go.mod),
+[golines](https://github.com/golangci/golines/blob/v0.16.0/go.mod).
+
+Postconditions проверяют receipt version и нужный bin alias; Prettier — также
+его JS entrypoint и доступный обычный Node. Одного success callback недостаточно.
+run_on_start/auto_update остаются false, открытие файла не запускает install.
+
+Проверка этого среза на отдельном stand (не инструкция публичной установки):
+
+```powershell
+python -B tests/install-ide-tools.test.py --prepare
+python -B tests/install-ide-tools.test.py
+```
+
+POSIX: `python3` с теми же аргументами. Требуются подготовленные native Neovim,
+Mason/Conform/LSP plugins из editor-deps, обычные Go1.26.0+/Node SDK. Windows
+stand использует уже подготовленные .tests/dap-tools/go и .tests/node-deps;
+POSIX — Go из PATH и Node stand из FORGE_E2E_NODE_DEPS. --prepare загружает/
+собирает только пять IDE tools в .tests, SDK не устанавливает. Последующий
+прогон использует готовые tools. Ни системные префиксы, ни обычный nvim не
+подготавливаются этим stand. Native Mac здесь не запускался.
+
+Windows/Ubuntu: настоящие Mason providers/receipts, Conform Lua/Go/JSON,
+golines long-line, project Prettier, Go LSP definition, repeat и partial/version
+failures проверены. Ubuntu — готовый container без сети с локальным Go/npm/
+asset cache. Удалены только собственные compiler caches/project fixture copies;
+готовые packages/receipts/logs оставлены для повторения. Дальше — debug/test
+delivery из [очереди](RELEASE_INVENTORY.md#следующая-очередь-реализации).

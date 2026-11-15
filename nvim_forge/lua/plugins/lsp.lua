@@ -63,7 +63,7 @@ return {
         event = "VeryLazy",
         opts = function()
             return {
-                ensure_installed = require('forge.tool_catalog').mason(),
+                ensure_installed = require('forge.tool_catalog').mason_specs(),
                 auto_update = false,
                 run_on_start = false,
                 -- Каталог уже содержит Mason package names. Не загружаем
@@ -436,8 +436,7 @@ return {
                     },
                 },
             })
-            -- gopls ставится НЕ через Mason (см. mason-lspconfig выше), поэтому
-            -- automatic_enable его не включит — включаем явно, бинарник из PATH
+            -- Включаем уже подготовленный gopls из PATH/Mason bin без установки.
             -- (тот, что собран активным Go-тулчейном).
             if vim.fn.executable("gopls") == 1 then
                 vim.lsp.enable("gopls")
@@ -451,9 +450,8 @@ return {
                         vim.schedule(function()
                             vim.notify(
                                 "gopls не найден в PATH — Go LSP выключен.\n"
-                                .. "Ставится из активного Go-тулчейна:\n"
-                                .. "  go install golang.org/x/tools/gopls@latest\n"
-                                .. "(или install-скрипт с FORGE_NVIM_WITH_LANGUAGES=1)",
+                                .. "Подготовь компонент Go установщиком fride\n"
+                                .. "или явно выполни :MasonToolsInstallSync.",
                                 vim.log.levels.WARN, { title = "LSP" }
                             )
                         end)
