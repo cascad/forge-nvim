@@ -31,8 +31,9 @@ Windows/Ubuntu; native Mac и опубликованные UI artifacts ещё �
 Уточнение владельца2026-11-15 отменяет излишнюю SDK isolation §243. Приватны
 только части IDE; обычные SDK/config/cache и project venv переиспользуются.
 Выбран штатный NVIM_APPNAME=fride без XDG override. Отсутствующие SDK сначала
-предлагаются пользователю, без автоматического решения. Следом — изучить
-VS Code/IntelliJ IDEA и переделать prerequisite closure; release и Mac открыты.
+предлагаются пользователю, без автоматического решения. §246: prerequisites
+отделены от IDE artifacts, добавлены passive checks/JSON и отказ до downloads.
+Следом — existing-path/install/skip/cancel UI; release и Mac открыты.
 
 2026-11-14, явное требование владельца: Neovim и остальные элементы Forge
 должны устанавливаться независимо от уже существующих программ и настроек.

@@ -21,7 +21,9 @@ VS Code и IntelliJ IDEA. [Уточнённый план и точка оста�
 PASS/1 Windows-only skip, launcher controls7/6 PASS. Native Lazy с kit lockfile/
 rtp проверен отдельно. §245: официальные VS Code/IntelliJ IDEA docs изучены,
 SDK discovery/выбор существующего/установка/пропуск/отмена записаны как следующий
-сценарий. Далее — отделить native prerequisites от artifact closure и связать с UI.
+сценарий. §246 отделяет native prerequisites от artifacts, добавляет read-only
+report/preflight и прекращает setup до downloads при missing/unavailable.
+Далее — SDK menu: existing path / штатная установка / skip / cancel.
 Упаковка Node отменена; native Mac и полный release остаются открытыми.
 §234: общий setup обрабатывает Lua/Vim exceptions и missing commands как отказ;
 по7 stand PASS Windows/Ubuntu. Default/Custom каталоги и родители создаются

@@ -36,6 +36,7 @@ function M.plan(core, original, plan_file)
     line=line:gsub('\r$','')
     local platform,id,url,sha=line:match('^([^\t]+)\t([a-z-]+)\t([^\t]+)\t([a-f0-9]+)$')
     if not id or #sha~=64 or platform~=manifest.platform or seen[id] then fail('Invalid runtime composition plan') end
+    if id=='node-runtime' or id=='go-runtime' then fail('Native SDK cannot be a private IDE artifact: '..id) end
     seen[id]=true
     local root=join(vim.fs.dirname(core),sha)
     if id=='core' then

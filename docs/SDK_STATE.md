@@ -25,6 +25,15 @@ IDE tool может явно выбрать destination/venv только для
 это не новый глобальный профиль языка. Общие компиляторы, package managers,
 SDK registries/auth и caches не принадлежат fride.
 
+§246: explicit SDK checks и подготовка IDE tools задают только своим subprocess
+GOTOOLCHAIN=local и RUSTUP_AUTO_INSTALL=0, чтобы отсутствие toolchain не вызывало
+скрытую загрузку языка. Обычный launcher эти политики пользователя сохраняет.
+Prerequisites проверяются по PATH: Go, rustc/cargo, Python3, Node; npm entrypoint
+проверяется на наличие, без shell запуска .cmd. Ready означает базовую CLI
+готовность, не совместимость всех packages/версий проекта. PATH symlinks
+сохраняются, в том числе активная venv. Проверки ограничены2s на CLI и не
+выполняются на обычном startup или в preview/print-plan.
+
 Конфигурация из kit выбирается явно через -u и runtimepath; FRIDE_CONFIG
 содержит её фактический путь. Lazy использует lockfile этой конфигурации и
 сохраняет её runtimepath. «Открыть конфиг» открывает kit/config/forge/init.lua,

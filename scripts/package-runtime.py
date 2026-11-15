@@ -20,7 +20,9 @@ def package(source, recipe, output, component=None):
     meta = json.loads(Path(recipe).read_text(encoding='utf-8'))
     if meta.get('schema') != 1 or not meta.get('components'):
         raise ValueError('Recipe requires schema1 and components')
+    if set(meta['components']) & {'node-runtime','go-runtime'}:raise ValueError('Native SDK cannot be a private IDE artifact')
     if component:
+        if component in ('node-runtime','go-runtime'):raise ValueError('Native SDK cannot be a private IDE artifact')
         if component=='core' or not all(c in 'abcdefghijklmnopqrstuvwxyz-' for c in component) or meta['components'] != [component]:
             raise ValueError('Component recipe must contain exactly its optional component')
         meta['kind']='component'
@@ -70,6 +72,6 @@ if __name__ == '__main__':
     parser=argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--source',required=True);parser.add_argument('--recipe',required=True)
     parser.add_argument('--output',required=True)
-    parser.add_argument('--component',help='Optional SDK component; Core keeps the full runtime format')
+    parser.add_argument('--component',help='Optional IDE component; Core keeps the full runtime format')
     options=parser.parse_args()
     print(json.dumps(package(options.source,options.recipe,options.output,options.component),indent=2))

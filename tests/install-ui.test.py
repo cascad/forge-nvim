@@ -91,14 +91,14 @@ class UI(stand.Isolation):
         base,env,target=self.prepare('ui-recommended')
         self.pty(base,env,self.binary_args(base,target),'default')
         plan=json.loads((base/'result.json').read_text(encoding='utf-8'))
-        self.assertIn('go',plan['components']);self.assertIn('node-runtime',plan['components'])
+        self.assertIn('go',plan['components']);self.assertIn('node',plan['native_sdks']);self.assertNotIn('node-runtime',plan['components'])
         self.assertFalse(target.exists());self.assertFalse((base/'stages.txt').exists());self.assertFalse((base/'logs').exists())
 
     def test_ui_02_preview_custom_back(self):
         base,env,target=self.prepare('ui-back')
         self.pty(base,env,self.binary_args(base,target,profile='custom'),'custom-back')
         plan=json.loads((base/'result.json').read_text(encoding='utf-8'))
-        self.assertNotIn('go',plan['components']);self.assertIn('go-runtime',plan['components']);self.assertFalse(target.exists())
+        self.assertNotIn('go',plan['components']);self.assertIn('go',plan['native_sdks']);self.assertFalse(target.exists())
 
     def test_ui_03_cancel(self):
         base,env,target=self.prepare('ui-cancel')
@@ -132,7 +132,7 @@ class UI(stand.Isolation):
         base,env,target=self.prepare('ui-csv')
         result=self.run_process(self.binary_args(base,target,components='python,sql')+['--print-plan'],env,base,'policy')
         self.assert_ok(result);plan=json.loads(result.stdout)
-        self.assertEqual(plan['components'],['core','python','sql','node-runtime','go-runtime']);self.assertFalse(target.exists())
+        self.assertEqual(plan['components'],['core','python','sql']);self.assertEqual(plan['native_sdks'],['go','python','node']);self.assertFalse(target.exists())
 
     def test_ui_08_unknown_component(self):
         base,env,target=self.prepare('ui-unknown')

@@ -1,5 +1,6 @@
 // spec: IDE-BOOT-13. Presentation без установки SDK/пакетов в пользовательскую ОС.
 mod runtime;
+mod sdks;
 mod wizard;
 use serde::{Deserialize, Serialize};
 use std::collections::HashSet;
@@ -31,6 +32,8 @@ pub struct Options {
     pub preview: bool,
     pub plain: bool,
     pub print_plan: bool,
+    pub check_sdks: bool,
+    pub sdk_report: Option<PathBuf>,
 }
 
 impl Options {
@@ -55,8 +58,12 @@ impl Options {
                     result.print_plan = true;
                     continue;
                 }
+                "--check-sdks" => {
+                    result.check_sdks = true;
+                    continue;
+                }
                 "--help" => {
-                    println!("fride-setup --source DIR --profile default|custom [--components CSV] --install-dir DIR\n--command-dir DIR --runtime-path DIR --runtime-archive-url URL --runtime-sha256 SHA\n--preview --no-color --print-plan --result FILE --log-dir DIR");
+                    println!("fride-setup --source DIR --profile default|custom [--components CSV] --install-dir DIR\n--command-dir DIR --runtime-path DIR --runtime-archive-url URL --runtime-sha256 SHA\n--preview --no-color --print-plan --result FILE --log-dir DIR\n--check-sdks --sdk-report FILE");
                     std::process::exit(0);
                 }
                 _ => {}
@@ -81,6 +88,7 @@ impl Options {
                 "--powershell" => result.powershell = value,
                 "--log-dir" => result.log_dir = value.into(),
                 "--result" => result.result_file = Some(value.into()),
+                "--sdk-report" => result.sdk_report = Some(value.into()),
                 _ => return Err(invalid(format!("Неизвестный параметр: {key}"))),
             }
         }
@@ -184,8 +192,25 @@ pub(crate) fn resolve(
 pub(crate) struct Plan {
     pub schema: u8,
     pub components: Vec<String>,
+    pub native_sdks: Vec<String>,
     pub install_dir: String,
     pub command_dir: String,
+}
+
+impl Plan {
+    pub(crate) fn select(
+        &mut self,
+        rows: &[Row],
+        selected: impl IntoIterator<Item = String>,
+    ) -> Result<()> {
+        let components = resolve(rows, selected)?;
+        self.native_sdks = sdks::required(&components);
+        self.components = components
+            .into_iter()
+            .filter(|id| !sdks::is_sdk_part(id))
+            .collect();
+        Ok(())
+    }
 }
 
 fn review(rows: &[Row], plan: &Plan) -> String {
@@ -193,8 +218,6 @@ fn review(rows: &[Row], plan: &Plan) -> String {
     for row in rows.iter().filter(|r| plan.components.contains(&r.id)) {
         let label = match row.id.as_str() {
             "core" => "Редактор, поиск и базовые инструменты",
-            "node-runtime" => "Среда Node.js для выбранных инструментов",
-            "go-runtime" => "Среда Go для выбранных инструментов",
             _ => &row.label,
         };
         lines.push(format!("✓ {label}"));
@@ -208,6 +231,12 @@ fn review(rows: &[Row], plan: &Plan) -> String {
             format!("Команда fride: {} (без изменения PATH)", plan.command_dir)
         },
     ]);
+    if !plan.native_sdks.is_empty() {
+        lines.push(format!(
+            "SDK из вашей системы: {}",
+            plan.native_sdks.join(", ")
+        ));
+    }
     lines.join("\n")
 }
 
@@ -225,13 +254,20 @@ pub fn run(options: Options) -> Result<i32> {
         });
     let mut plan = Plan {
         schema: 1,
-        components: resolve(&rows, selected)?,
+        components: vec![],
+        native_sdks: vec![],
         install_dir: options.install_dir.clone(),
         command_dir: options.command_dir.clone(),
     };
+    plan.select(&rows, selected)?;
     if options.print_plan {
         println!("{}", serde_json::to_string(&plan)?);
         return Ok(0);
+    }
+    if options.check_sdks {
+        let report = check_sdks(&options, &plan)?;
+        println!("{}", serde_json::to_string(&report)?);
+        return Ok(if report.ready() { 0 } else { 2 });
     }
     let automatic = options.components.is_some() || options.profile == "default";
     let plain = options.plain || !io::stderr().is_terminal();
@@ -290,6 +326,17 @@ fn stage_title(stage: &str) -> &str {
 }
 
 fn execute(options: &Options, plan: &Plan, plain: bool) -> Result<i32> {
+    if !plan.native_sdks.is_empty() {
+        let report = check_sdks(options, plan)?;
+        if plain {
+            eprintln!("Языковые SDK\n{}", report.summary());
+        } else {
+            cliclack::note("Языковые SDK", report.summary())?;
+        }
+        if !report.ready() {
+            return Err(invalid(format!("SDK prerequisites не готовы. Выберите существующий SDK в PATH, установите его штатно или снимите зависимый компонент и повторите. SDK и IDE artifacts не устанавливались. Отчёт: {}",sdk_report_path(options).display())));
+        }
+    }
     let runtime_plan = runtime::selected(options, plan)?;
     fs::create_dir_all(&options.log_dir)?;
     let timestamp = SystemTime::now()
@@ -360,6 +407,9 @@ fn execute(options: &Options, plan: &Plan, plain: bool) -> Result<i32> {
     command
         .env("FORGE_NVIM_COMPONENTS", plan.components.join(","))
         .env("FRIDE_INSTALL_UI", "1")
+        // Installation must not turn a missing toolchain into an implicit SDK download.
+        .env("GOTOOLCHAIN", "local")
+        .env("RUSTUP_AUTO_INSTALL", "0")
         .stdout(Stdio::piped())
         .stderr(Stdio::piped())
         .stdin(Stdio::null());
@@ -464,4 +514,23 @@ fn execute(options: &Options, plan: &Plan, plain: bool) -> Result<i32> {
         }
     }
     Ok(code)
+}
+
+fn sdk_report_path(options: &Options) -> PathBuf {
+    options.sdk_report.clone().unwrap_or_else(|| {
+        options
+            .log_dir
+            .join(format!("sdks-{}.json", std::process::id()))
+    })
+}
+
+fn check_sdks(options: &Options, plan: &Plan) -> Result<sdks::Report> {
+    let report = sdks::inspect(&plan.native_sdks, &options.log_dir)?;
+    let path = sdk_report_path(options);
+    if let Some(parent) = path.parent().filter(|p| !p.as_os_str().is_empty()) {
+        fs::create_dir_all(parent)?;
+    }
+    let mut file = OpenOptions::new().create_new(true).write(true).open(path)?;
+    serde_json::to_writer_pretty(&mut file, &report)?;
+    Ok(report)
 }

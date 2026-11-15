@@ -1,5 +1,5 @@
 // Тема и navigation pattern LocalVox; MIT notice в LOCALVOX-LICENSE.txt.
-use crate::{invalid, resolve, review, Options, Plan, Result, Row};
+use crate::{invalid, review, Options, Plan, Result, Row};
 use std::io;
 
 struct InstallerTheme {
@@ -157,7 +157,7 @@ pub(crate) fn choose(options: &Options, rows: &[Row], mut plan: Plan) -> Result<
                             .collect(),
                     )
                     .interact()?;
-                plan.components = resolve(rows, selected)?;
+                plan.select(rows, selected)?;
                 Ok(Move::Next(Step::Directories))
             }
             Step::Directories => {
@@ -219,15 +219,14 @@ pub(crate) fn choose(options: &Options, rows: &[Row], mut plan: Plan) -> Result<
                 let reviewed = if custom {
                     plan.clone()
                 } else {
-                    Plan {
-                        schema: 1,
-                        components: resolve(
-                            rows,
-                            rows.iter().filter(|r| r.label != "-").map(|r| r.id.clone()),
-                        )?,
-                        install_dir: options.install_dir.clone(),
-                        command_dir: options.command_dir.clone(),
-                    }
+                    let mut value = plan.clone();
+                    value.select(
+                        rows,
+                        rows.iter().filter(|r| r.label != "-").map(|r| r.id.clone()),
+                    )?;
+                    value.install_dir = options.install_dir.clone();
+                    value.command_dir = options.command_dir.clone();
+                    value
                 };
                 cliclack::note("Перед установкой", review(rows, &reviewed))?;
                 let answer = cliclack::select(if options.preview {

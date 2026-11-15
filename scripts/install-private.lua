@@ -57,6 +57,8 @@ local function environment(root, runtime, paths)
   local env = vim.fn.environ()
   env.NVIM_APPNAME, env.NVIM_LOG_FILE = 'fride', join(root,'log/nvim.log')
   env.TEMP, env.TMP, env.TMPDIR = join(root,'tmp'), join(root,'tmp'), join(root,'tmp')
+  -- Only explicit IDE setup: a missing SDK must not trigger a toolchain download.
+  env.GOTOOLCHAIN, env.RUSTUP_AUTO_INSTALL = 'local', '0'
   local bins = {}; for _, path in ipairs(paths) do bins[#bins+1] = join(runtime, path) end
   env.PATH = table.concat(bins, windows and ';' or ':') .. (windows and ';' or ':') .. (env.PATH or '')
   for _, key in ipairs({'VIM','VIMRUNTIME','VIMINIT','EXINIT','LUA_INIT','LUA_PATH','LUA_CPATH'}) do env[key] = nil end
@@ -149,8 +151,9 @@ local function install()
     if within(target,part.root) or within(part.root,target) then fail('Install target overlaps component runtime') end
   end
   local components = {}; for _, id in ipairs(manifest.components or {}) do components[id] = true end
+  if components['node-runtime'] or components['go-runtime'] then fail('Native SDK cannot be a private IDE artifact') end
   for id in (vim.env.FORGE_NVIM_COMPONENTS or 'core'):gmatch('[^,]+') do
-    if not components[id] then fail('Runtime lacks selected component: ' .. id) end
+    if id~='node-runtime' and id~='go-runtime' and not components[id] then fail('Runtime lacks selected component: ' .. id) end
   end
   event('runtime','ready')
   mkdir(target)

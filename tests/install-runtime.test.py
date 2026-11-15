@@ -1,4 +1,4 @@
-"""IDE-BOOT-14: HTTP selected parts -> private native Neovim/Node/npm.
+"""IDE-BOOT-14: HTTP selected parts -> private IDE parts + native Neovim/host Node/npm.
 
 Init/setup and the feature-marker module are fixtures; this is delivery E2E,
 not full language/plugin readiness. No downloads outside localhost/host installs.
@@ -31,27 +31,13 @@ class Runtime(ui.UI):
         node_deps=Path(os.environ.get('FORGE_E2E_NODE_DEPS',str(ROOT/'.tests/node-deps')))
         sdk=Path(os.environ.get('FORGE_INSTALL_NODE_SDK',str(node_deps/'sdk'/('node-v24.11.0-'+node_os+'-'+arch))))
         assert sdk.is_dir(),'Prepared Node SDK required; stand never installs/downloads it'
-        cls.module_source=stand.BASE/'node-runtime-source'
-        bin_dir=cls.module_source/'tools/node/bin';bin_dir.mkdir(parents=True)
-        if stand.WINDOWS:
-            for name in ['node.exe','npm.cmd','npx.cmd','npm','npx']:
-                shutil.copy2(sdk/name,bin_dir/name)
-            shutil.copytree(sdk/'node_modules/npm',bin_dir/'node_modules/npm')
-            cls.npm='tools/node/bin/node_modules/npm/bin/npm-cli.js'
-        else:
-            shutil.copytree(sdk/'bin',bin_dir,dirs_exist_ok=True,symlinks=True)
-            shutil.copytree(sdk/'lib',cls.module_source/'tools/node/lib',symlinks=True)
-            cls.npm='tools/node/lib/node_modules/npm/bin/npm-cli.js'
-        node='tools/node/bin/node'+('.exe' if stand.WINDOWS else '')
-        recipe={'schema':1,'platform':stand.PLATFORM,'components':['node-runtime'],
-                'paths':['tools/node/bin'],'probes':[[node,'--version']]}
-        cls.good_node=cls.component_archive('node-runtime',cls.module_source,recipe)
+        cls.node_sdk=sdk
         feature=stand.BASE/'node-feature-source';feature.mkdir()
-        (feature/'node-feature.txt').write_text('fixture feature, not the language SDK\n')
+        (feature/'node-feature.txt').write_text('fixture IDE library, not a language SDK\n')
+        (feature/'node-tool.js').write_text('console.log("fride IDE tool fixture")\n')
         cls.feature_recipe={'schema':1,'platform':stand.PLATFORM,'components':['node'],'paths':[],'probes':[]}
         cls.good_feature=cls.component_archive('node',feature,cls.feature_recipe)
         cls.routes['/runtime-node']=cls.good_feature
-        cls.routes['/runtime-node-runtime']=cls.good_node
         cls.catalog()
 
     @classmethod
@@ -64,7 +50,7 @@ class Runtime(ui.UI):
     @classmethod
     def catalog(cls,changes=None,extra='',omit=()):
         rows=[]
-        for id in ['core','node','node-runtime']:
+        for id in ['core','node']:
             if id in omit:continue
             payload=cls.routes['/runtime-'+id]
             fields=[stand.PLATFORM,id,cls.url+'/runtime-'+id,hashlib.sha256(payload).hexdigest()]
@@ -74,7 +60,6 @@ class Runtime(ui.UI):
         cls.publish_source(cls.ui_digest)
 
     def tearDown(self):
-        self.routes['/runtime-node-runtime']=self.good_node
         self.routes['/runtime-node']=self.good_feature
         self.catalog()
 
@@ -84,20 +69,27 @@ class Runtime(ui.UI):
         (base/'http.json').write_text(json.dumps(self.requests[start:],indent=2),encoding='utf-8')
         return result
 
+    def prepare(self,name):
+        base,env,target=super().prepare(name)
+        node_bin=self.node_sdk if stand.WINDOWS else self.node_sdk/'bin'
+        env['PATH']=str(node_bin)+os.pathsep+env['PATH']
+        return base,env,target
+
     def observe_node(self,base,env,target):
         observer=base/'observe.lua'
-        observer.write_text('''local node=vim.fn.exepath('node')
+        observer.write_text("""local node=vim.fn.exepath('node')
 local version=vim.system({node,'--version'},{text=true}):wait()
-local npm=vim.system({node,vim.env.FORGE_NPM_CLI,'--version'},{text=true}):wait()
-vim.fn.writefile({vim.json.encode({node=node,version=version.stdout,npm=npm.stdout,codes={version.code,npm.code}})},vim.env.FORGE_NODE_REPORT)
-assert(version.code==0 and npm.code==0)
-''',encoding='utf-8')
-        env.update(FORGE_NPM_CLI=str(target/'runtime'/self.npm),FORGE_NODE_REPORT=str(base/'node.json'))
+local tool=vim.system({node,vim.env.FORGE_NODE_TOOL},{text=true}):wait()
+vim.fn.writefile({vim.json.encode({node=node,version=version.stdout,tool=tool.stdout,codes={version.code,tool.code}})},vim.env.FORGE_NODE_REPORT)
+assert(version.code==0 and tool.code==0)
+""",encoding='utf-8')
+        env.update(FORGE_NODE_TOOL=str(target/'runtime/node-tool.js'),FORGE_NODE_REPORT=str(base/'node.json'))
         command=([stand.SHELL,'-NoProfile','-ExecutionPolicy','Bypass','-File',str(target/'bin/fride.ps1')] if stand.WINDOWS else [stand.SHELL,str(target/'bin/fride')])
         self.assert_ok(self.run_process(command+['--headless','-u','NONE','-i','NONE','-l',str(observer)],env,base,'observe'))
         proof=json.loads((base/'node.json').read_text(encoding='utf-8'))
-        self.assertTrue(Path(proof['node']).resolve().is_relative_to((target/'runtime').resolve()))
-        self.assertEqual(proof['version'].strip(),'v24.11.0');self.assertTrue(proof['npm'].strip());self.assertEqual(proof['codes'],[0,0])
+        self.assertTrue(Path(proof['node']).resolve().is_relative_to(self.node_sdk.resolve()))
+        self.assertFalse(Path(proof['node']).resolve().is_relative_to((target/'runtime').resolve()))
+        self.assertEqual(proof['version'].strip(),'v24.11.0');self.assertEqual(proof['tool'].strip(),'fride IDE tool fixture');self.assertEqual(proof['codes'],[0,0])
 
     @classmethod
     def mutate(cls,payload,edit,extra=None):
@@ -135,25 +127,25 @@ assert(version.code==0 and npm.code==0)
     def test_runtime_02_dependency_install_repeat(self):
         base,env,target=self.prepare('runtime-node')
         self.assert_ok(self.install_auto(base,env,target));self.observe_node(base,env,target)
-        paths=json.loads((base/'http.json').read_text());self.assertEqual([p for p in paths if p.startswith('/runtime-')],['/runtime-core','/runtime-node','/runtime-node-runtime'])
+        paths=json.loads((base/'http.json').read_text());self.assertEqual([p for p in paths if p.startswith('/runtime-')],['/runtime-core','/runtime-node'])
         self.assert_ok(self.install_auto(base,env,target));self.observe_node(base,env,target)
         self.assertFalse(any(p.startswith('/runtime-') for p in json.loads((base/'http.json').read_text())))
-        manifest=json.loads((target/'runtime/forge-runtime.json').read_text());self.assertEqual(manifest['components'],['core','node','node-runtime'])
+        manifest=json.loads((target/'runtime/forge-runtime.json').read_text());self.assertEqual(manifest['components'],['core','node'])
 
     def test_runtime_03_missing_selected(self):
-        base,env,target=self.prepare('runtime-missing');self.catalog(omit=('node-runtime',))
-        result=self.install_auto(base,env,target);self.assert_failed(result,base,target,'node-runtime')
-        self.assertFalse(target.exists());self.assertFalse((base/'sources/.ui-logs').exists())
+        base,env,target=self.prepare('runtime-missing');self.catalog(omit=('node',))
+        result=self.install_auto(base,env,target);self.assert_failed(result,base,target,'node')
+        self.assertFalse(target.exists())
         self.assertFalse(any(p.startswith('/runtime-') for p in json.loads((base/'http.json').read_text())))
 
     def test_runtime_04_duplicate_catalog(self):
         base,env,target=self.prepare('runtime-duplicate')
         line=(self.source/'scripts/runtime/artifacts.tsv').read_text().splitlines()[0]
-        self.catalog(extra=line+'\n');self.assert_failed(self.install_auto(base,env,target),base,target,'Duplicate private SDK')
+        self.catalog(extra=line+'\n');self.assert_failed(self.install_auto(base,env,target),base,target,'Duplicate IDE artifact')
         self.assertFalse(target.exists())
 
     def test_runtime_05_bad_archive_sha(self):
-        base,env,target=self.prepare('runtime-sha');self.catalog(changes={'node-runtime':{3:'0'*64}})
+        base,env,target=self.prepare('runtime-sha');self.catalog(changes={'node':{3:'0'*64}})
         self.assert_failed(self.install_auto(base,env,target),base,target,'Runtime archive SHA256 mismatch')
         self.assertFalse(target.exists())
 
@@ -186,8 +178,8 @@ assert(version.code==0 and npm.code==0)
         self.observe_node(base,env,target)
 
     def test_runtime_11_invalid_catalog_url(self):
-        base,env,target=self.prepare('runtime-url');self.catalog(changes={'node-runtime':{2:'file:///untrusted'}})
-        self.assert_failed(self.install_auto(base,env,target),base,target,'Invalid private SDK catalog')
+        base,env,target=self.prepare('runtime-url');self.catalog(changes={'node':{2:'file:///untrusted'}})
+        self.assert_failed(self.install_auto(base,env,target),base,target,'Invalid IDE artifact catalog')
         self.assertFalse(target.exists())
 
     def test_runtime_12_cached_file_corruption(self):
@@ -215,14 +207,28 @@ assert(version.code==0 and npm.code==0)
 
     def test_runtime_15_default_requires_complete_catalog(self):
         base,env,target=self.prepare('runtime-default-gate')
+        import subprocess
+        rustc=(Path(os.environ['USERPROFILE'])/'.rustup/toolchains/stable-x86_64-pc-windows-msvc/bin/rustc.exe') if stand.WINDOWS else 'rustc'
+        sdk=Path(subprocess.check_output([str(rustc),'--print','sysroot'],env=dict(os.environ,RUSTUP_AUTO_INSTALL='0'),text=True).strip())
+        env['PATH']=str(sdk/'bin')+os.pathsep+env['PATH']
         before=len(self.requests)
         result=self.run_process([str(ui.BINARY),'--source',str(self.source),'--install-dir',str(target),
             '--profile','default','--log-dir',str(base/'logs')],env,base,'default')
-        self.assertNotEqual(result.returncode,0);self.assertIn('Private SDK artifacts not published',result.stderr)
+        self.assertNotEqual(result.returncode,0);self.assertIn('IDE artifacts not published',result.stderr)
         self.assertIn('go',result.stderr);self.assertIn('rust',result.stderr)
-        self.assertFalse(target.exists());self.assertFalse((base/'logs').exists())
+        self.assertFalse(target.exists())
         self.assertFalse((base/'stages.txt').exists());self.assertEqual(self.requests[before:],[])
 
+
+    def test_runtime_16_no_sdk_artifacts(self):
+        base,env,target=self.prepare('obsolete-sdk-part')
+        self.catalog(extra=stand.PLATFORM+'\tnode-runtime\t'+self.url+'/must-not-download-sdk\t'+'f'*64+'\n')
+        start=len(self.requests)
+        self.assert_failed(self.install_auto(base,env,target),base,target,'cannot be a private IDE artifact')
+        self.assertFalse(any(p.startswith('/runtime-') or p=='/must-not-download-sdk' for p in self.requests[start:]))
+        recipe=base/'sdk-recipe.json';recipe.write_text(json.dumps(dict(self.feature_recipe,components=['node-runtime'])))
+        with self.assertRaisesRegex(ValueError,'Native SDK'):
+            stand.packager.package(stand.BASE/'node-feature-source',recipe,base/'forbidden.zip',component='node-runtime')
 
 if __name__=='__main__':
     print('work:',stand.BASE,'artifacts:',stand.ARTIFACTS,flush=True)

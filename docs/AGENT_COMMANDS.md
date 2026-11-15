@@ -9213,3 +9213,74 @@ https://marketplace.visualstudio.com/items?itemName=golang.go .
 roadmap/history обновлены. Git diff/check, точный5-file docs allowlist, raw и
 staged journal prefix проверяются перед локальным commit. SDK/product/tests
 не менялись, повторных прогонов нет. Это planning-only, не готовый installer UX.
+
+
+## 154. Native SDK preflight и разделённый delivery — §246
+
+PowerShell -NoProfile, F:/repo/forge-nvim. TEMP/TMP/TMPDIR=.tests/tmp на F,
+PYTHONUTF8=1/PYTHONIOENCODING=utf-8, NVIM_LOG_FILE=.tests/tmp/native-prereqs.log,
+npm_config_cache=F:/forge-nvim-tmp/npm-cache. Это stand/agent env, не profile SDK.
+
+Read: git status/log, rg/Get-Content bounded installer-ui lib/runtime/wizard,
+components.tsv, private wrappers/package/composition и installer tests. OpenSpec:
+npx.cmd --yes @fission-ai/openspec@1.13.2 context --json; new change
+check-native-sdk-prerequisites; instructions proposal/design/specs/tasks/apply
+--change check-native-sdk-prerequisites --json; strict validate. JSON в .tests.
+
+До правок UI binary скопирован в .tests/native-prereqs-before/fride-setup.exe.
+Source RED с FORGE_INSTALL_UI_BINARY на него:
+python -B tests/install-runtime.test.py test_runtime_02_dependency_install_repeat
+> .tests/native-prereqs-source-red-windows.txt 2>&1. Env override затем снят.
+Достигнут реальный catalog failure node-runtime при готовом host Node;
+дополнительный stale teardown AttributeError сохранён, не скрывался.
+
+Native build, существующий compiler readonly:
+rustfmt.exe --edition 2021 installer-ui/src/lib.rs installer-ui/src/sdks.rs
+installer-ui/src/runtime.rs installer-ui/src/wizard.rs;
+python -B scripts/build-installer-ui.py --rustc
+C:/Users/cascad/.rustup/toolchains/stable-x86_64-pc-windows-msvc/bin/rustc.exe
+> .tests/native-prereqs-build-windows-v1.txt 2>&1. Cargo offline/locked, caches
+на F; receipt в .tools/installer-ui/windows-x64, никаких host SDK installs.
+
+Windows, по одному прогону изменённой версии:
+python -B tests/install-prerequisites.test.py > .tests/native-prereqs-windows-v1.txt 2>&1
+python -B tests/install-runtime.test.py > .tests/native-prereqs-runtime-windows-v1.txt 2>&1
+python -B tests/install-ui.test.py > .tests/native-prereqs-ui-windows-v1.txt 2>&1
+После исправления единственного stale CSV assertion адресно:
+python -B tests/install-ui.test.py test_ui_07_explicit_csv_policy
+> .tests/native-prereqs-ui-csv-windows-v2.txt 2>&1
+Добавлен native venv corner-case (symlink нельзя canonicalize до запуска):
+python -B tests/install-prerequisites.test.py test_sdk_11_active_venv_path
+> .tests/native-prereqs-venv-windows.txt 2>&1. Остальное не повторяется.
+
+Docker version read-only; готовый image28.5.1 без build/pull/network:
+docker compose -f tests/containers/compose.yaml run --rm --no-deps --pull never
+--entrypoint bash ubuntu /workspace/.tests/native-prereqs-run.sh
+> .tests/native-prereqs-ubuntu-driver.txt 2>&1
+Script host .tests/ubuntu: старый Linux binary -> source RED -> native UI build
+из прежнего vendor.tar.gz offline в /tmp/fride-prereqs-build.* -> SDK/runtime/UI
+suites. Cargo source readonly, ready binary/receipt в guest .tests/installer-ui,
+host .tests/ubuntu/installer-ui. Native stands /tmp, proofs экспортированы без
+runtime copies. Весь temporary layer удаляется с --rm, lifecycle Docker/WSL нет.
+Последний адресный venv:
+docker compose -f tests/containers/compose.yaml run --rm --no-deps --pull never
+-e FORGE_INSTALL_UI_BINARY=/workspace/.tests/installer-ui/linux-x64/fride-setup
+-e FORGE_INSTALL_STAND_ROOT=/tmp/fride-prereqs-venv --entrypoint python3 ubuntu
+-B tests/install-prerequisites.test.py test_sdk_11_active_venv_path
+> .tests/native-prereqs-venv-ubuntu.txt 2>&1
+
+SDK calls только version (npm — наличие entrypoint), stdout/stderr в own
+probe logs, timeout2s, neutral tmp cwd; GOTOOLCHAIN=local/RUSTUP_AUTO_INSTALL=0.
+Никаких go install/npm/pip/cargo installs. Native Rust timeout/error fixture
+компилируется direct rustc в stand; единственный child убивается при timeout.
+Native Node/Python/venv и HTTP/Neovim/frontend настоящие; tool/setup inventory
+fixtures, release не готов. --check-sdks/--sdk-report дают JSON,0/2; preview
+не вызывает SDK. Default с missing SDK останавливается до backend.
+
+Audit baseline .tests/native-prereqs-baseline.json: frozen24 SHA, raw journal
+копии в отдельном каталоге, не печатать весь JSON/окружение. Проверяются staged
+exact allowlist, SDK/Cargo.lock/pins/backports/чужой WIP и journal raw/staged
+prefix. Cleanup: python -B .tests/native-prereqs-cleanup.py; exact roots только
+из своих native-prereqs logs, resolved .tests/install-isolation boundary;
+metadata по content SHA сохранена до удаления own runtime/archive payloads.
+Source/proofs/canonical caches остаются. Commit локальный, без публикации.

@@ -686,8 +686,8 @@ Host .tests/ubuntu монтируется как guest /workspace/.tests. Native
 
 `python -B tests/install-runtime.test.py` (Windows) / `python3 -B ...` (Linux/macOS).
 Нужны готовые private Neovim/UI и Node24.11.0 SDK, FORGE_INSTALL_NODE_SDK задаёт
-SDK directory явно. Stand использует localhost HTTP, настоящий private launch
-Node/npm, fixtures init/setup и feature marker. Артефакты —
+SDK directory явно. Stand использует localhost HTTP, запуск private IDE tool
+с host Node, fixtures init/setup и feature marker. Архивов языкового SDK нет. Артефакты —
 .tests/install-isolation/<id>/runtime-summary.json, http.json, node.json,
 backend logs/argv/exit. Повтор проверяет отсутствие повторного download частей.
 Mac acceptance — отдельный native запуск.
@@ -732,3 +732,26 @@ docker compose -f tests/containers/compose.yaml run --rm --no-deps --pull never 
 
 Host .tests/ubuntu соответствует guest .tests; proofs экспортируются без
 runtime SDK copies. Native Mac — отдельный запуск с подготовленными inputs.
+
+
+### Native SDK prerequisites — IDE-BOOT-18
+
+Windows: `python -B tests/install-prerequisites.test.py`; Linux/macOS:
+`python3 -B tests/install-prerequisites.test.py`. Готовые frontend/Neovim,
+Node24.11.0 stand SDK и Rust compiler нужны как inputs; никаких SDK downloads.
+11 selectors: plan/preview, настоящий Node, missing/nonzero/wrong version,
+timeout, Go/Rust auto-download suppression, Python3 fallback, active venv,
+Default refusal и Windows Store alias (на POSIX skip). Маленький native Rust
+fixture компилируется в stand для error/timeout cases, без Cargo packages.
+SDK commands не выполняют установок. JSON/logs/argv/exit сохраняются в
+.tests/install-isolation/<id>/prerequisites-summary.json и соседних файлах.
+
+Docker готовый, без build/pull/network/Desktop/WSL lifecycle:
+
+```sh
+docker compose -f tests/containers/compose.yaml run --rm --no-deps --pull never -e FORGE_INSTALL_UI_BINARY=/workspace/.tests/installer-ui/linux-x64/fride-setup -e FORGE_INSTALL_STAND_ROOT=/tmp/fride-prereqs --entrypoint python3 ubuntu -B tests/install-prerequisites.test.py
+```
+
+Host .tests/ubuntu — guest /workspace/.tests, тяжёлые copies в native /tmp.
+Ready означает CLI readiness, не полную совместимость всех language packages.
+Install/path/skip actions в UI — следующий срез. Native Mac запускает владелец.

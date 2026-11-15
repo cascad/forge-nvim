@@ -13122,3 +13122,66 @@ GUI референсов не запускался; слова «так выгл
 **Проверка/вывод.** Это сравнение и разработанный сценарий, ещё не новая фича.
 Product/tests не менялись, тесты не повторялись; §244 остаётся последним
 исполненным продуктовым срезом. Только docs/history/команды; local docs commit.
+
+
+## 246. Установщик: native SDK prerequisites вместо архивов языка
+
+Дата: 2026-11-15. IDE-138/140. Спека: IDE-BOOT-18 (ADDED).
+
+**Проблема.** После §244 окружение SDK штатное, но frontend всё ещё считал
+node-runtime/go-runtime скачиваемыми IDE parts. Даже готовому host Node нужен
+был архив Node внутри fride. Это следующий конкретный срез плана §245.
+
+**Причина.** Legacy component closure использовалась одновременно как список
+языковых prerequisites и список приватных артефактов. Проверка готовности SDK
+до установки отсутствовала; implicit Go/Rustup toolchain downloads могли
+возникнуть при explicit установке IDE tools.
+
+**Изменение.** Native Plan разделён на components и native_sdks. Legacy rows
+сохранены для прежних platform API; frontend исключает SDK IDs из artifacts.
+Catalog/package/PS/sh/Lua composition отклоняют node-runtime/go-runtime.
+SDK inspector ищет Go, rustc/cargo, Python3/Node в PATH, сохраняет выбранные
+пути (особенно venv symlinks), version/status/detail и raw probe logs. Windows
+Store aliases не запускаются. Npm проверяется как доступный entrypoint, без
+shell execution .cmd. CLI queries bounded2s, SDK не скачиваются/не ставятся.
+--check-sdks выдаёт JSON и0/2; --sdk-report сохраняет отдельный файл. Preview и
+print-plan не вызывают SDK. Actual setup при missing/unavailable прекращается
+до catalog/download/target writes, с понятной причиной и report. Probes и
+explicit setup задают GOTOOLCHAIN=local/RUSTUP_AUTO_INSTALL=0 только своим
+subprocess, обычный launcher сохраняет выбор пользователя.
+
+**Проверка/e2e.** Source Windows: host Node есть, старый frontend требует
+node-runtime archive — semantic FAIL31.305s; дополнительный teardown error
+был оставшимся good_node fixture, исправлен. Повтор RED ради green не делался.
+Ubuntu source тот же semantic FAIL4.720s без teardown error. Windows SDK10
+PASS18.372s; native venv1 PASS8.037s; delivery16 PASS69.051s. UI13 selectors:
+12 PASS/1 stale CSV expectation FAIL34.144s, только исправленный case07
+повторён1 PASS8.419s. Ubuntu SDK9 PASS/1 Windows-only skip5.939s, native venv1
+PASS6.176s, delivery16 PASS13.814s, UI13 PASS9.485s. В сумме по40 selectors
+проверено на ОС (Ubuntu1 platform skip), не единый повторный full suite.
+
+Cases: healthy native Node, missing SDK сохраняет прежний kit, bad version/
+nonzero, timeout/kill, installer-only download flags, Python3 fallback и
+настоящая venv, Default without SDK decision, preview no queries, Store alias
+skip, HTTP/cache/hash/platform/component/untracked/conflicts/rollback. Delivery
+stand теперь содержит маленький IDE JS tool и использует host Node из PATH,
+не архив полного языка. Native frontend builds offline по прежнему Cargo.lock;
+Windows9.39s/Linux12.26s. Product/package inventory init/setup — controlled
+fixtures, полного release acceptance нет. Docker готовый, без build/pull/сети
+и lifecycle Desktop/WSL; native temporary layer удалён --rm.
+
+**Вывод/границы.** Первый пункт §245 завершён: prerequisites и IDE artifacts
+разделены, есть пассивный report и явный отказ. Ready — базовый CLI, не полная
+совместимость всех tools/project SDK versions. Следующий пункт — меню existing
+path / штатная install / skip зависимых компонентов / cancel; в этом срезе
+эти действия не реализованы и SDK installs не выполнялись. Release catalog
+пока пуст; public one-liner и native Mac остаются gates. Никаких новых LSP,
+SDK manager или PATH/profile/registry изменений.
+
+**Файлы.** installer-ui sdks/lib/runtime/wizard; package-runtime и private
+PS/sh/Lua validation; SDK/native fixture/runtime/UI regressions; installation/
+SDK docs, tests README, roadmap/problems/HISTORY/commands; OpenSpec change
+check-native-sdk-prerequisites. Raw .tests/native-prereqs-*.txt и host
+.tests/ubuntu/native-prereqs-*.txt, env/JSON/logs/HTTP/frames сохраняются.
+
+**Cleanup.** Удалены own stand payload/archive copies 1521127860bytes (1.42GiB) из6 Windows roots; metadata98 refs сохранены по SHA. .tests/native-prereqs-cleanup.json/metadata; canonical SDK/cache, source и proofs оставлены. Frozen24 SDK/pins/backports/чужой WIP и raw/staged journal prefixes проверяются перед exact local commit, без push.

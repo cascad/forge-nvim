@@ -23,7 +23,7 @@ pub(crate) fn selected(options: &Options, plan: &Plan) -> Result<Option<String>>
     let file = options.source.join("scripts/runtime/artifacts.tsv");
     let text = std::fs::read_to_string(&file).map_err(|_| {
         invalid(format!(
-            "Private SDK catalog unavailable: {}",
+            "IDE artifact catalog unavailable: {}",
             file.display()
         ))
     })?;
@@ -45,10 +45,16 @@ pub(crate) fn selected(options: &Options, plan: &Plan) -> Result<Option<String>>
                 .bytes()
                 .all(|b| b.is_ascii_digit() || (b'a'..=b'f').contains(&b))
         {
-            return Err(invalid("Invalid private SDK catalog row"));
+            return Err(invalid("Invalid IDE artifact catalog row"));
         }
         if entries.insert((row[0], row[1]), line).is_some() {
-            return Err(invalid("Duplicate private SDK catalog entry"));
+            return Err(invalid("Duplicate IDE artifact catalog entry"));
+        }
+        if crate::sdks::is_sdk_part(row[1]) {
+            return Err(invalid(format!(
+                "Native SDK {} cannot be a private IDE artifact",
+                row[1]
+            )));
         }
     }
     let mut rows = Vec::new();
@@ -60,7 +66,10 @@ pub(crate) fn selected(options: &Options, plan: &Plan) -> Result<Option<String>>
         }
     }
     if !missing.is_empty() {
-        return Err(invalid(format!("Private SDK artifacts not published for {native}: {}. System packages were not changed.",missing.join(", "))));
+        return Err(invalid(format!(
+            "IDE artifacts not published for {native}: {}. System packages were not changed.",
+            missing.join(", ")
+        )));
     }
     if plan.components.first().map(String::as_str) != Some("core") {
         return Err(invalid("Core must be the first runtime component"));

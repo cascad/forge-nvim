@@ -49,6 +49,7 @@ if [ -n "$runtime_plan" ]; then
     part_sha="${part_sha%$'\r'}"
     [ "$part_platform" = "$runtime_os-$runtime_arch" ] && [ -z "$part_extra" ] && [ -n "$part_id" ] || { printf 'Invalid runtime delivery plan.\n' >&2;exit 1; }
     case "$part_id" in *[!a-z-]*) printf 'Invalid runtime component.\n' >&2;exit 1;; esac
+    case "$part_id" in node-runtime|go-runtime) printf 'Native SDK cannot be a private IDE artifact.\n' >&2;exit 1;; esac
     case "$runtime_seen" in *",$part_id,"*) printf 'Duplicate runtime component.\n' >&2;exit 1;; esac
     [ "$runtime_first" != 1 ] || [ "$part_id" = core ] || { printf 'Runtime delivery plan requires Core first.\n' >&2;exit 1; }
     runtime_seen="$runtime_seen$part_id,"

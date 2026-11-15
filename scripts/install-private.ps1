@@ -57,6 +57,7 @@ if ($RuntimePlanPath) {
     foreach ($line in [IO.File]::ReadAllLines([IO.Path]::GetFullPath($RuntimePlanPath),[Text.Encoding]::UTF8)) {
         $row=$line.Split("`t")
         if ($row.Count -ne 4 -or $row[0] -ne 'windows-x64' -or $row[1] -notmatch '^[a-z-]+$' -or $seen.ContainsKey($row[1])) { throw 'Invalid runtime delivery plan.' }
+        if ($row[1] -in @('node-runtime','go-runtime')) { throw 'Native SDK cannot be a private IDE artifact.' }
         if ($first -and $row[1] -ne 'core') { throw 'Runtime delivery plan requires Core first.' }
         $seen[$row[1]]=$true
         Write-Output ('Runtime component: '+$row[1])

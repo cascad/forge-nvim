@@ -1,2 +1,3 @@
 # platform<TAB>component<TAB>HTTPS archive URL<TAB>SHA256
 # Only native verified release artifacts belong here; none published yet.
+# Neovim/IDE tools/libs only; language SDKs are native prerequisites, not parts.

@@ -32,9 +32,9 @@ macOS. Пользователь не ищет binaries, не клонирует 
 - [x] Исправить native E2E под эту границу: Windows7 cases проверены,
   Ubuntu6 PASS/1 Windows-only skip; launcher controls Windows7/Ubuntu6 PASS.
   Mac — отдельный нативный запуск владельцем, пока не проверен.
-- [ ] Пересмотреть prerequisite/catalog delivery: языковым SDK не требуются
-  приватные runtime artifacts fride; недостающий SDK предлагается через
-  штатный механизм платформы после выбора пользователя.
+- [x] Отделить native SDK prerequisites от private runtime artifacts (§246).
+  SDK не скачивается вместе с IDE; passive preflight останавливает setup при
+  missing/unavailable. Меню выбора пути/штатной установки — следующий пункт.
 
 **Готово на Windows/Ubuntu (§244):** исправление
 [reuse-native-language-sdks](../openspec/changes/reuse-native-language-sdks/proposal.md).
@@ -73,9 +73,9 @@ JDK. Это референс разделения ответственности
    credentials. Редактор не блокируется проверками/установками на startup.
 
 Это проектный сценарий fride, не заявление о точном поведении всех референсов.
-Реализация ещё не начата. Следующие конкретные срезы:
+Первый срез реализован (§246). Дальнейшие конкретные срезы:
 
-- [ ] Отделить native SDK prerequisites от private artifact closure; passive
+- [x] Отделить native SDK prerequisites от private artifact closure; passive
   discovery без скачивания toolchains и без полного сканирования диска.
 - [ ] Подключить выбор существующего пути/штатной установки/пропуска/отмены
   к native UI. Обновить итоговый component selection и логи.
@@ -84,6 +84,27 @@ JDK. Это референс разделения ответственности
   Windows/Ubuntu; native Mac отдельно владельцем.
 
 ## Текущая готовность
+
+§246: `Plan.components` содержит только IDE parts, `native_sdks` — отдельный
+список. SDK preflight выполняется до catalog/download/target writes. Статусы
+ready/missing/unavailable, путь/версия/причина и probe logs сохраняются в JSON;
+nonready останавливает actual setup. Timeout2s/CLI, Windows Store aliases не
+запускаются; Python3/активная venv поддерживаются. npm проверяется как доступный
+entrypoint, без shell invocation. Это базовая CLI readiness, не полная package
+совместимость. SDK install/path/skip menu ещё не реализовано.
+
+Отдельная read-only команда после developer build frontend (никаких installs):
+
+```powershell
+.\.tools\installer-ui\windows-x64\fride-setup.exe --source . --components go,node --check-sdks --sdk-report .tests\my-sdk-report.json
+```
+
+POSIX: тот же `fride-setup` для своей платформы с теми же аргументами и `/` в
+пути report. stdout — JSON, exit0 ready/exit2 missing или unavailable. Путь
+report должен быть новым; по умолчанию report/probe logs в --log-dir. Preview
+и print-plan SDK не запускают. Для actual setup неготовый SDK нужно выбрать
+через PATH/штатно установить либо снять зависимые компоненты и повторить;
+предстоящее меню выполнит эти действия явно из UI.
 
 Состав, source entry, выбор Default/Custom и независимая установка комплекта
 реализованы. Полная доставка совместимых SDK и настоящее развёртывание всех
@@ -508,15 +529,15 @@ foreign snapshots. Init/setup — fixture; это не full SDK/package acceptan
 
 ## Модульная доставка компонентов IDE — transport §241
 
-Уточнение2026-11-15: transport остаётся для Neovim/IDE tools/libs. Существующая
-closure ещё ошибочно считает node-runtime/go-runtime приватными parts; до
-release её надо заменить native prerequisite discovery/выбором пользователя.
-Catalog пуст, автоматической поставки языковых SDK сейчас нет. Описанный ниже
-Node stand сохраняет историческую проверку transport, не задаёт состав release.
+Уточнение2026-11-15, §246: transport только для Neovim/IDE tools/libs. Native
+frontend проецирует legacy closure в components и native_sdks. node-runtime/
+go-runtime исключены из IDE parts и отклоняются catalog/package/composition
+API. Сами legacy component rows сохраняются для прежних platform scripts.
+Catalog пуст, полный release ещё не опубликован.
 
 Без RuntimePath/RuntimeArchiveUrl frontend выбирает готовые архивы из
 scripts/runtime/artifacts.tsv: platform, component, HTTP(S) URL, SHA256.
-Выбор — Core плюс прежняя canonical closure. Снятый в Custom компонент не
+Выбор — Core плюс IDE-часть canonical closure. Снятый в Custom компонент не
 скачивается; общая часть скачивается один раз. Preview каталога
 не требует. Missing/duplicate/invalid entry останавливает установку до backend.
 Catalog пока без release rows: это готовый путь доставки, не опубликованный SDK.
@@ -549,8 +570,8 @@ Native stand: Windows `python -B tests/install-runtime.test.py`, Linux/macOS
 Node SDK24.11.0 (FORGE_INSTALL_NODE_SDK, либо прежний .tests/node-deps/sdk
 stand cache; в Docker — готовый FORGE_E2E_NODE_DEPS). Ничего системного не
 ставится, сеть только localhost. Проверяются настоящий source/UI/parts HTTP,
-selected downloads/cache, private launch Node/npm, проверки повреждений,
-конфликта и сохранения готового kit. Init/setup и feature-marker part — fixtures;
+selected downloads/cache, host Node с маленьким private IDE JS tool, проверки
+повреждений, конфликта и сохранения готового kit. Init/setup/tool part — fixtures;
 это delivery acceptance, не полная package readiness IDE.
 
 Дальше IDE-138: native prerequisites с предложением установки и выбором
