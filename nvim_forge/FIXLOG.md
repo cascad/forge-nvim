@@ -13095,3 +13095,30 @@ operation/lazy/caller/summary JSON сохранены. SDK/pins/backports/чуж
 проверяются audit перед exact local commit; без push/release.
 
 **Cleanup.** Удалено 1848780458bytes (1.72GiB) собственных stand runtime/archive copies из8 Windows roots; 105 manifests/SDK receipts сохранены по content SHA. .tests/native-sdk-reuse-cleanup.json/metadata; raw/proofs/source/legacy data оставлены, canonical SDK/cache не затронуты.
+
+
+## 245. План выбора SDK по VS Code и IntelliJ IDEA
+
+Дата: 2026-11-15. IDE-138/140, planning-only после исправления §244.
+
+**Запрос.** Изучить, как референсы предлагают нужные SDK, сохранив выбор
+пользователя и штатные установки. Это следующий отдельный пункт плана.
+
+**Наблюдение.** Официальные VS Code Python docs описывают обнаружение окружений,
+выбор/смену interpreter и отдельное создание. IDEA SDK docs отделяют bundled
+runtime IDE от project SDK и предлагают detected SDK, путь с диска или Download
+JDK с параметрами пользователя. Go extension отдельно может устанавливать
+gopls автоматически: поведение IDE tools нельзя обобщать на языковой SDK.
+Ссылки на все3 primary sources записаны рядом с фактами в INSTALLATION_PLAN.
+GUI референсов не запускался; слова «так выглядит» не выдаются за observation.
+
+**План.** В fride: readiness rows SDK/path/version/dependencies; готовое reuse;
+для missing/incompatible — existing path/install/skip dependent features/cancel.
+Явный выбор до SDK downloads/install/update даже в Default; noninteractive без
+решения отказывает. Штатная установка с понятным воздействием, повторная
+проверка/лог; никаких startup installs/нового SDK manager. Дальше конкретно:
+разделить prerequisite/artifact closure, native UI и cross-platform regressions.
+
+**Проверка/вывод.** Это сравнение и разработанный сценарий, ещё не новая фича.
+Product/tests не менялись, тесты не повторялись; §244 остаётся последним
+исполненным продуктовым срезом. Только docs/history/команды; local docs commit.

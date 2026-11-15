@@ -9198,3 +9198,18 @@ Cleanup: python -B .tests/native-sdk-reuse-cleanup.py; exact roots получе�
 .tests/install-isolation до удаления; metadata отдельно сохранена по SHA.
 Удалены только own stand payload/archive copies; source/proofs/SDK states и
 canonical tool caches остаются. Native Mac и full public release не проверены.
+
+
+## 153. Референсы SDK UX — §245
+
+Read-only web search/open официальных источников: VS Code Python environments
+https://code.visualstudio.com/docs/python/environments ; IDEA SDKs
+https://www.jetbrains.com/help/idea/sdk.html ; Go extension publisher page
+https://marketplace.visualstudio.com/items?itemName=golang.go .
+Дополнительно просмотрен https://code.visualstudio.com/docs/languages/go .
+Использованы только primary docs; GUI не запускался, binaries не скачивались.
+
+Факты и собственный предложенный UX разделены в docs/INSTALLATION_PLAN.md;
+roadmap/history обновлены. Git diff/check, точный5-file docs allowlist, raw и
+staged journal prefix проверяются перед локальным commit. SDK/product/tests
+не менялись, повторных прогонов нет. Это planning-only, не готовый installer UX.

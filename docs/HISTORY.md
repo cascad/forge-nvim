@@ -381,6 +381,7 @@ Python реализован и проверен 2026-11-03; после возо�
 | §242 | [Проверка готовности после setup](../nvim_forge/FIXLOG.md#242-проверка-готовности-после-setup) |
 | §243 | [Private SDK state и окружение](../nvim_forge/FIXLOG.md#243-private-sdk-state-и-окружение) |
 | §244 | [Fride: штатные SDK и отдельное приложение Neovim](../nvim_forge/FIXLOG.md#244-fride-штатные-sdk-и-отдельное-приложение-neovim) |
+| §245 | [План выбора SDK по VS Code и IntelliJ IDEA](../nvim_forge/FIXLOG.md#245-план-выбора-sdk-по-vs-code-и-intellij-idea) |
 
 ## Как читать и дополнять
 

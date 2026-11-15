@@ -19,7 +19,9 @@ source entry имеет по6 transport PASS Windows/Ubuntu (§232–233), Mac �
 VS Code и IntelliJ IDEA. [Уточнённый план и точка остановки](INSTALLATION_PLAN.md#уточнение-границы-и-установки-sdk--2026-11-15):
 §244: штатный NVIM_APPNAME=fride без подмены XDG/SDK; Windows7 cases и Ubuntu6
 PASS/1 Windows-only skip, launcher controls7/6 PASS. Native Lazy с kit lockfile/
-rtp проверен отдельно. Следом prerequisite delivery по VS Code/IntelliJ IDEA.
+rtp проверен отдельно. §245: официальные VS Code/IntelliJ IDEA docs изучены,
+SDK discovery/выбор существующего/установка/пропуск/отмена записаны как следующий
+сценарий. Далее — отделить native prerequisites от artifact closure и связать с UI.
 Упаковка Node отменена; native Mac и полный release остаются открытыми.
 §234: общий setup обрабатывает Lua/Vim exceptions и missing commands как отказ;
 по7 stand PASS Windows/Ubuntu. Default/Custom каталоги и родители создаются
