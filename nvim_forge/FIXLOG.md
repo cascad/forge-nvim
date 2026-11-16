@@ -13862,3 +13862,61 @@ tests/install-terminal-runtime.test.py и diagnostics/install-terminal-stop.ps1;
 OpenSpec deliver-private-terminal, план/README/история/команды. Evidence:
 .tests/terminal-runtime/*windows*.txt,*ubuntu*.txt,state-windows.txt,
 prepared manifests/archive receipts/UI+GUI proof и cleanup.json.
+
+## 259. Release: единый source и license inventory
+
+2026-11-16. Спека: IDE-BOOT-29 (ADDED).
+
+**Проблема.** После native Core/Terminal оставались разрозненные pins,
+prepared manifests и Mason receipts. Они не давали единого точного перечня
+входов, source/version/SHA и license documents перед actual Default/Custom.
+
+**Причина.** Runtime transport проверял hash выбранных archives, setup —
+выбранные packages, но общего publisher inventory для всех слоёв не было.
+Отсутствующий в переданных roots package и непереданный archive надо отличать
+от неисправности и от произвольной пользовательской установки вне inputs.
+
+**Изменение.** release-inventory.py + read-only native catalog helper берут
+состав из current components/tool_catalog/frontend plan.67 plugin pins,
+6 backport patched SHA, selected parser revisions/library SHA, Mason receipts/
+версии/entrypoints/documents и runtime archives сведены в inventory.json и
+INVENTORY.md, exact license copies/THIRD_PARTY_NOTICES.txt. SDKs перечислены
+как внешние prerequisites без обхода SDK homes/venvs/исполнения binaries.
+Default mode offline; явный fetch parser docs идёт в тот же pinned GitHub
+source, cache проверяет source/revision/document SHA. Configured ref Python
+v0.25.0 поддержан без изменения pin и явно помечен как ref. Archives проверяют
+manifest/platform/все files SHA и current required runtime paths; legacy
+parser-only Core отмечается как неполный. Existing output не заменяется;
+strict exit2 при metadata gaps, full release acceptance отдельно.
+
+**Проверка/e2e.** Windows первые4 PASS2.258s; после runtime-path case05
+Windows5 PASS2.793s/Ubuntu5 PASS1.829s. После missing manifest/broken receipt
+case06 адресные01+06 Windows2 PASS1.320s/Ubuntu2 PASS0.829s.6 разных сценариев
+прошли на каждой ОС; green suites повторно не запускались. Проверены exact
+notices/determinism, profile/external SDK boundary при пустом SDK PATH, corrupt
+archive/existing output, revision/patch drift, missing runtime и metadata.
+Fixtures receipts/documents/archives явно metadata-only, не functional bundles.
+Prepared source/parser site snapshots сохранены. Real inputs проверены отдельно.
+
+Windows и Ubuntu final reports:141 items,121/134 provided license documents,
+67 plugin license sets и33 parser license sets. Gap sets совпали:14 packages
+не подготовлены в явных Mason roots,5 готовых Mason packages + SQL archive
+не содержат license documents,5 language archives не переданы. В каждом случае
+имя/причина конкретны; это не вывод о других установках пользователя.
+Native Core/SQL/Terminal archives проверены; source producer hashes актуальны.
+Ubuntu2CPU/2GiB/network none/existing image, heavy copies/package work в /tmp;
+Desktop/WSL/image build/pull/host installs отсутствовали. Mac не выполнялся.
+
+**Вывод.** Есть воспроизводимый список состава/материалов и точный остаток
+перед assembly. Direct-root inventory не является заключением о transitive
+licenses или native функциональности. Следующий продуктовый срез — настоящий
+Custom Core (Lua LSP/Files/search/edit/save/repeat), затем расширение до Default.
+Новых инструментов/LSP/pins или runtime изменений здесь нет. Frozen25 и
+append-only prefixes сохранены; own lightweight fixture copies убраны на F,
+reports/notices/raw evidence оставлены.
+
+**Файлы.** scripts/release-inventory.py, inspect-release-catalog.lua;
+tests/release-inventory.test.py; OpenSpec assemble-release-inventory;
+README/планы/PROBLEMS/история/команды. Evidence .tests/release-audit/
+default-windows-final, .tests/ubuntu/release-audit/default-ubuntu-final,
+e2e-*.txt и metadata/cleanup.json. Current report/archive data не коммитятся.

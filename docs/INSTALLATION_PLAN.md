@@ -1038,3 +1038,51 @@ Ubuntu01–04/06 PASS, GUI05 skip. Дополнительно legacy window-stat
 Readiness gate01/06 по2 PASS Windows/Ubuntu. Другие Core setup stages — fixtures;
 полный Default этим не заявлен. Следующий срез — единый source/version/SHA/license
 inventory, затем actual Default/Custom из архива и native Mac/publication.
+
+## Publisher inventory — §259
+
+Общий read-only inventory берёт состав из действующих tool_catalog и native
+frontend --print-plan, plugin revisions из lazy-lock, patches из текущего
+backport catalog; выполняет checksum-проверки явных prepared inputs и archives.
+Языковые SDK/host package managers/setup/GUI не запускаются. По умолчанию сети
+нет. Файлы создаются в новом output; существующий output не перезаписывается.
+
+Пример Windows publisher command (нужны готовые inputs, источники не меняются):
+
+```powershell
+python -B scripts/release-inventory.py --editor-deps .tests/editor-deps --site .tests/parser-runtime/windows-x64/site --frontend .tools/installer-ui/windows-x64/fride-setup.exe --components core --mason-root 'F:/publish/fride-data/mason' --archive 'core=F:/publish/core.zip' --output .tests/release-audit/new-report --strict
+```
+
+POSIX: python3, native --nvim и --frontend, свой site/.tar.gz. --components
+по умолчанию весь Default. --mason-root и --archive COMPONENT=FILE повторяются;
+Root означает Mason directory с packages/, не SDK home/venv. --nvim по умолчанию
+подготовленный Windows SDK либо nvim из PATH. Публичные end-user one-liners
+пока не опубликованы; эта команда предназначена publisher.
+
+Для первого сбора parser license есть явный --fetch-parser-licenses. Команда
+читает license из того же configured pinned GitHub source (commit или ref,
+например Python v0.25.0), сохраняет URL/revision/bytes SHA. Следующий offline
+run использует --license-cache <previous-report>, проверяя source/revision и
+cached document SHA. Конфиг parser pins и язык не обновляются. Plugin licenses
+берутся из prepared pinned sources; Mason notices — из указанных packages,
+включая вложенные документы. Native runtime files читаются из hash-checked
+archive. Core parser-only legacy archive явно отмечается как неполный текущему
+declared составу, если в нём нет search metadata/binary.
+
+Выходы inventory.json/INVENTORY.md/THIRD_PARTY_NOTICES.txt/licenses содержат
+relative evidence paths; пользовательские SDK homes в них не включаются.
+Metadata completeness отдельно от native acceptance/transitive coverage.
+Exit0: обычный отчёт либо strict без gaps; exit2: strict с конкретными gaps;
+exit1: ошибка producer inputs/невозможность создать новый output.
+
+Native E2E: `python -B tests/release-inventory.test.py` (POSIX python3).
+Нужны готовые Neovim/frontend/editor-deps/site, прежние FORGE_INSTALL_TEST_NVIM,
+FORGE_INSTALL_UI_BINARY/FORGE_E2E_DEPS/FORGE_PARSER_SITE. Тестовые receipts/
+archives/documents — явно controlled metadata fixtures, не functional bundles;
+сеть/установки отсутствуют. Реальные inputs проверены отдельными reports.
+6 сценариев Windows/Ubuntu прошли: deterministic notices/strict, profile/SDK
+boundary, corrupt archive/existing output, revision/patch drift, legacy missing
+runtime, missing manifest/invalid receipt. Native Mac здесь не выполнялся.
+
+Реальные отчёты Windows/Ubuntu: по141 позиции и одинаковые25 gaps. Точный
+список и следующий Custom Core срез — [inventory](RELEASE_INVENTORY.md#единый-проверяемый-inventory--259).

@@ -1,6 +1,6 @@
 # Что ещё требуется для полной поставки fride
 
-Исходный срез2026-11-15, код694cd9e, обновления §251–258. Это состав **существующих возможностей**, а не
+Исходный срез2026-11-15, код694cd9e, обновления §251–259. Это состав **существующих возможностей**, а не
 предложение новых LSP. Полного Default release пока нет: production
 [artifacts.tsv](../scripts/runtime/artifacts.tsv) не содержит ни одной строки.
 Готовность транспорта и отдельных стендов не равна готовности такой поставки.
@@ -84,8 +84,9 @@
    §257 закрывает Git как native Core prerequisite: reuse/config/launcher и явные
    manager decisions проверены Windows/Ubuntu; private Git не поставляется.
    §258 закрывает private WezTerm/font в границах Windows GUI и Ubuntu native
-   config/font/delivery. Остался общий source/license inventory, включая
-   зависимости upstream binaries; native Mac и Ubuntu GUI отдельно открыты.
+   config/font/delivery. §259 добавил общий inventory с явными25 gaps доступных
+   inputs. Закрытие этих входов и coverage зависимостей upstream binaries,
+   native Mac/Ubuntu GUI остаются открытыми.
 4. **Настоящий Default/Custom из архива:** отдельный чистый профиль, реальные
    config/plugins/tools, launch → open/search → LSP → debug/tests → format,
    затем repeat/cancel/upgrade. Одна целевая тестовая итерация на изменение.
@@ -101,3 +102,43 @@ Ubuntu выполняются до неё. Публикация и непров�
 Native SDK TUI пока не возвращает пользователя к выбору SDK по build minimum;
 backend выдаёт раннюю ошибку. Эту совместимость и все prerequisites надо закрыть
 до full Default acceptance, включая случай версии Go из штатного APT.
+
+## Единый проверяемый inventory — §259
+
+`scripts/release-inventory.py` сводит действующие components/tool_catalog,
+native frontend plan, lazy-lock,6 backports, prepared parser site, явные Mason
+roots и runtime archives. Выход: inventory.json, INVENTORY.md, точные license
+copies с SHA и THIRD_PARTY_NOTICES.txt. Это перечень declared direct roots и
+предоставленных документов; native workflows и transitive coverage отдельно.
+67 plugin entries обозначены как locked catalog, без утверждения, что все они
+уже доставлены в конкретном archive. SDK/venvs пользователя не сканируются.
+
+Срез доступных Windows/Ubuntu inputs2026-11-16: по141 позиции, по33 parser
+licenses и67 plugin license sets.121/134 предоставленных license documents
+соответственно. Общий список gaps совпал:25. Разница числа документов следует
+из native archives/package layouts. Все checksum/pins проверки этого среза
+прошли, недостающие материалы названы явно.
+
+| В переданных inputs | Что осталось | Следующее действие |
+|---|---|---|
+|21 Mason tools |14 packages не подготовлены | Подготовить текущий declared состав через существующий Mason |
+|7 готовых Mason packages | License documents отсутствуют у gopls/gofumpt/golines/stylua/codelldb | Добавить publisher notices из их закреплённых sources/assets |
+| Native SQL archive | License documents отсутствуют | Включить notices в SQL publisher |
+| Core/SQL/Terminal archives | Проверены manifest/files SHA и текущие обязательные runtime paths | Использовать для actual install acceptance |
+|5 language archives | Go/Rust/Python/Node/Bash не переданы | Уточнить реальный IDE payload и доставку штатных Mason tools при сборке профиля |
+
+14 package IDs: bash-language-server, debugpy, delve, golangci-lint, gotestsum,
+js-debug-adapter, lua-language-server, pyright, ruff, rust-analyzer, shellcheck,
+shfmt, sqruff, typescript-language-server. Это отсутствие в явных publisher
+roots этого среза; произвольные пользовательские установки не разыскивались.
+
+**Следующий продуктовый срез:** настоящий Custom Core: подготовить declared
+lua-language-server/stylua и notices, собрать source/frontend/Core, выполнить
+обычный first launch → Files/search → Lua LSP/diagnostics → edit/save → repeat.
+Затем на этой установке расширять Default, закрывая14 packages и выбранные
+language delivery paths. Native Mac/Ubuntu GUI/publication остаются отдельными.
+
+Команды/границы: [publisher inventory](INSTALLATION_PLAN.md#publisher-inventory--259).
+E2E `python -B tests/release-inventory.test.py` (POSIX python3):6 сценариев
+прошли Windows/Ubuntu. Strict mode проверяет полноту metadata; full release
+по одному inventory не объявляется готовым.

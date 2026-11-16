@@ -83,6 +83,11 @@ sqls/forge-sqltest без SDK компилятора. Реальные debug/que
 прошли; §254 Ubuntu4 PASS40.313s, native Mac не проверялся. Остальные Core/Terminal
 dependencies и полный source/license inventory пока открыты.
 
+§259: единый source/version/SHA/notices inventory реализован. Windows/Ubuntu
+по141 позиции с одинаковыми25 явными gaps; отчёт не запускает SDK/setup.
+Следующий продуктовый срез — настоящий Custom Core с Lua LSP/search/edit/save,
+затем Default. Точный остаток — docs/RELEASE_INVENTORY.md.
+
 §258: private Terminal доставляет pinned WezTerm/font и явный bin/fride-terminal.
 Shared config/private window state/font_dirs без замены пользовательского
 WezTerm; native config/font gate до publish. Windows GUI/input/save и Ubuntu

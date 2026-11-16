@@ -9793,3 +9793,40 @@ Raw font/version/probe outputs и metadata экспортированы в bind 
 cleanup с metadata/SHA, exact staging/git diff --cached --check и local commit.
 TEMP/TMP/TMPDIR/Nvim log на F. Native WezTerm OS IPC/log остаются штатными,
 HOME/SDK не подменяются; native Mac и Ubuntu GUI не заявлены PASS.
+
+## 167. IDE-BOOT-29: publisher inventory и notices
+
+2026-11-16. Read-only components/tool_catalog/lock/backports/prepared manifests,
+Mason receipts и archive inventory; pinned OpenSpec CLI list/status/instructions/
+strict validate. Языковые SDK/host package managers не запускались.
+
+python -B scripts/release-inventory.py --editor-deps <prepared editor-deps>
+--site <native parser site> --frontend <native fride-setup> [--nvim <native nvim>]
+--components <CSV> --mason-root <mason directory> --archive core=<archive>
+--archive sql=<archive> --archive terminal=<archive> --output <new report> [--strict]
+--mason-root/--archive повторяются. Default components — весь набор.
+Output JSON/MD/notices/license copies; strict exit2 с gaps, existing output
+сохраняется. Native Neovim -u NONE/helper и frontend --print-plan только читают
+project catalogs; версии SDK и tool binaries не исполняются. Output relative
+evidence не содержит user SDK homes. Raw source/license bytes имеют SHA.
+
+--fetch-parser-licenses явно разрешает bounded primary raw GitHub requests
+по configured source/revision. Первое чтение нашло32 commit licenses, Python
+ref обработан после уточнения collector. Дальше --license-cache <previous-report>
+даёт offline reuse с source/revision/SHA checks; pins не меняются.
+
+Tests: python -B tests/release-inventory.test.py (POSIX python3).
+После первых4 Windows добавлен case05 missing runtime, затем case06 metadata;
+native Windows/Ubuntu5 PASS и адресные01+06 по2 PASS. Повторных green loops нет.
+Controlled fixtures explicit metadata-only, реальные reports отдельно.
+
+Ubuntu existing compose run --rm --no-deps --pull never, network none2CPU/2GiB.
+В guest /tmp copied editor-deps подготовлен current existing prepare-plugins,
+Native Core/Terminal перепакованы из имеющихся source inputs без компиляции SDK.
+Reports/E2E evidence экспортированы на F; Desktop/WSL/build/pull не менялись.
+Final Windows --strict корректно exit2:141 items/25 gaps. Ubuntu gap set тот же.
+
+Финал: AST/Lua parse, strict OpenSpec, frozen25/raw+staged journal prefixes,
+exact staging/git diff --cached --check и local commit с gc.auto=0/maintenance.auto=false.
+TEMP/TMP/TMPDIR/Nvim log/npm cache на F. Cleanup только own fixture copies;
+reports/notices сохраняются. Native Mac и full release acceptance открыты.

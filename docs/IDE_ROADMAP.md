@@ -47,6 +47,11 @@ Nerd Font, bin/fride-terminal, общий config и отдельный window st
 Windows GUI/input/save проверены; Ubuntu delivery/font и отказ bad TTF также.
 Следом — общий source/license inventory, затем настоящий Default/Custom.
 Native Mac и GUI Ubuntu отдельно открыты.
+§259: единый publisher inventory реализован; Windows/Ubuntu дают141 позицию
+и одинаковые25 gaps (14 Mason packages,6 missing license documents sets,
+5 непереданных language archives).6 CLI/report regression сценариев прошли
+на каждой ОС. Следующий срез — настоящий Custom Core с Lua LSP/поиском/first
+launch, затем расширение до Default. [Конкретный остаток](RELEASE_INVENTORY.md#единый-проверяемый-inventory--259).
 См. [срез парсеров](INSTALLATION_PLAN.md#готовые-native-parsers-core--253).
 Упаковка Node отменена; native Mac и полный release остаются открытыми.
 §234: общий setup обрабатывает Lua/Vim exceptions и missing commands как отказ;

@@ -26,6 +26,8 @@ Core и выбранные зависимости, без скрытой уст�
 [Необязательный Terminal](docs/INSTALLATION_PLAN.md#private-terminal--258):
 `<kit>/bin/fride-terminal` открывает отдельный WezTerm с fride; на Windows —
 `fride-terminal.cmd`. Собственные config/font/window state, без font registration.
+[Состав поставки и конкретный остаток](docs/RELEASE_INVENTORY.md#единый-проверяемый-inventory--259):
+publisher inventory/notices и следующая проверка настоящего Custom Core.
 [Команды агента и формат получаемых результатов](docs/AGENT_COMMANDS.md).
 [Клавиши рабочих панелей Space w](nvim_forge/QUICKSTART.md#общий-маршрут-рабочих-панелей--space-w).
 [Общая консоль логов IDE](docs/IDE_LOGS.md): `Space w i` / `:ForgeLogs`.
