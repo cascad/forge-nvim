@@ -398,6 +398,7 @@ Python реализован и проверен 2026-11-03; после возо�
 | §259 | [Release: единый source и license inventory](../nvim_forge/FIXLOG.md#259-release-единый-source-и-license-inventory) |
 | §260 | [Core: готовность plugins вместо ложного success Lazy](../nvim_forge/FIXLOG.md#260-core-готовность-plugins-вместо-ложного-success-lazy) |
 | §261 | [Lua: диагностика проекта без preload всех plugins IDE](../nvim_forge/FIXLOG.md#261-lua-диагностика-проекта-без-preload-всех-plugins-ide) |
+| §262 | [Core publisher: фактические версии Mason и недостающие notices](../nvim_forge/FIXLOG.md#262-core-publisher-фактические-версии-mason-и-недостающие-notices) |
 
 ## Как читать и дополнять
 

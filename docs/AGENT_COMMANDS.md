@@ -9919,3 +9919,42 @@ none2CPU/2GiB; Desktop/WSL/image build/pull не менялись. Raw FAIL/meta
 OpenSpec bound-lua-workspace-library / IDE-BOOT-31, FIXLOG261. Final AST/Lua parse,
 strict validate, frozen25/raw+staged journal prefixes/exact index/commit no auto GC.
 Mac/full Ubuntu installer/GUI, notices и Default/publication остаются открытыми.
+
+
+## 170. 2026-11-16 — Core publisher versions/notices
+
+Read: existing roadmap/inventory/actual Mason receipts, native InstallReceipt
+version method, official pinned LuaLS/StyLua license source, package/linker APIs.
+Baseline actual Core CLI:101 items/2 gaps. No SDK/tool binaries executed by report.
+
+python -B tests/release-inventory.test.py
+FORGE_RELEASE_NETWORK_TEST=1 явно включает ninth source-fetch case; Windows9 PASS
+6.451s. Ubuntu offline8 PASS/1 network skip2.994s. Native helper использует Mason
+receipt API без setup, fixture включает настоящие pinned Mason Lua modules.
+Tests проверяют requested/null version, nested/source/version/SHA cache и fetch;
+controlled metadata fixtures не считаются native bundles. Старые6 cases сохранены.
+
+python -B scripts/release-inventory.py --editor-deps <prepared editor-deps>
+--site <native site> --frontend <native fride-setup> --components core
+--mason-root <actual Core mason> --archive core=<Core archive>
+--license-cache <previous report> --fetch-tool-licenses --output <new report> --strict
+POSIX python3. Actual .tests/core-notices/core-windows:101 items/0 gaps. Повтор
+без fetch с --license-cache core-windows: inventory/notices byte-identical.
+Перед/после SHA всех1256 tool files одинаковы, receipts не менялись. Documents
+сохраняют exact bytes из bundled source либо того же Github source/version.
+Report не означает full release/transitive/legal/native acceptance.
+
+Ubuntu existing compose --rm --no-deps --pull never, network none2CPU/2GiB.
+Current backports применены к own copied editor-deps, parsers взяты из готового
+native Core; тяжелые inputs на /tmp, экспорт metadata на F. Docker/WSL/образа не менялись.
+TEMP/TMP/TMPDIR/Nvim log/npm cache — F, no goal tools. First parallel metadata
+command raced on stand directory creation; повтор после создания succeeded.
+
+fride-setup --source . --components core,go,rust,python,node,bash,sql --check-sdks
+--sdk-report .tests/core-notices/native-sdks.json --log-dir .tests/core-notices/sdk-logs
+Read-only bounded runner: Go1.23.3/Rust1.96.1/Python3.14/Node24.11 доступны.
+Build minimum Go1.26 для3 IDE tools остаётся assembly вопросом; SDK/Go PATH не менялись.
+
+OpenSpec complete-core-tool-notices/IDE-BOOT-32, FIXLOG262. AST/Lua syntax,
+strict validate, frozen25, raw/staged append-only prefixes, exact allowlist index,
+local commit gc.auto=0/maintenance.auto=false. No baseline sync/archive/publication.

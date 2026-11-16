@@ -154,6 +154,17 @@ consumer5/5 прошёл Ubuntu на prepared full source config; full installer
 готовых Core tools в общий report, затем remaining Default tools/parts. Не
 публикуем старые141-position reports как обновлённую полную поставку.
 
+§262: actual Windows **Core** report теперь101 items/0 gaps, metadata_complete=true,
+full_release_ready=false. LuaLS3.19.2 определяется native Mason receipt API,
+а не install_options.version=null. Его2 bundled license documents сохранены,
+StyLuav2.6.0 получил LICENSE.md из того же source/tag через явный fetch.
+Offline повтор byte-identical,1256 source tool files не менялись. Это закрывает
+direct-root documents Core; native/transitive/full release acceptance отдельно.
+Windows9 PASS; Ubuntu8 PASS/1 explicit-network skip. Команды — [§262](INSTALLATION_PLAN.md#комплектность-core-publisher--262).
+Далее — Default tools/parts. Обычный Go Windows1.23.3 доступен, но source build
+трёх Go IDE tools требует1.26+: assembly должен учитывать этот build minimum,
+сохраняя пользовательский SDK. Другие publisher roots старых reports не менялись.
+
 Команды/границы: [publisher inventory](INSTALLATION_PLAN.md#publisher-inventory--259).
 E2E `python -B tests/release-inventory.test.py` (POSIX python3):6 сценариев
 прошли Windows/Ubuntu. Strict mode проверяет полноту metadata; full release

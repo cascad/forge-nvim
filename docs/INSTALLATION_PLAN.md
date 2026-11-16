@@ -1156,3 +1156,36 @@ native Mac запускается отдельно после подготовк
 затем реальные недостающие tools/parts Default. Production catalog/publication,
 native Mac/full Ubuntu install/GUI и проверка normal-exit/reinstall после LuaLS
 остаются открытыми; §260 socket observation не закрывается этим Lua fix.
+
+## Комплектность Core publisher — §262
+
+Inventory читает name/source/installed version/links штатным Mason InstallReceipt
+без setup/registry/исполнения tools. install_options.version — опция запроса,
+она может быть null; у actual LuaLS это не отсутствие версии. Его installed
+PURL даёт3.19.2, StyLua —v2.6.0. Receipts/tools не редактируются.
+
+Новый `--fetch-tool-licenses` явно разрешает bounded GitHub requests только
+для отсутствующего документа из source/version установленного пакета. Default
+offline; bundled docs имеют приоритет. `--license-cache <report>` поддерживает
+Mason documents с source/version/SHA checks и nested paths. Чужой source не
+закрывает gap, corrupt SHA отклоняется. Exact bytes сохраняются без вывода о
+transitive/native/legal completeness.
+
+```powershell
+python -B scripts/release-inventory.py --editor-deps <prepared-editor-deps> --site <native-parser-site> --frontend <native-fride-setup> --components core --mason-root <actual-mason-root> --archive core=<core-archive> --license-cache <previous-report> --fetch-tool-licenses --output <new-core-report> --strict
+```
+
+Actual Windows `.tests/core-notices/core-windows`:101 items/0 gaps,
+metadata_complete=true/full_release_ready=false. LuaLS2 bundled documents;
+StyLua LICENSE.md из [v2.6.0 source](https://raw.githubusercontent.com/JohnnyMorganz/StyLua/v2.6.0/LICENSE.md).
+Повтор `.tests/core-notices/core-windows-offline` без fetch byte-identical
+inventory/notices,1256 tool files SHA unchanged. Native workflow отдельно §261.
+
+`python -B tests/release-inventory.test.py` (POSIX python3):8 offline cases,
+1 explicit network case при FORGE_RELEASE_NETWORK_TEST=1. Windows9 PASS6.451s,
+Ubuntu8 PASS/1 network skip2.994s в existing offline container2CPU/2GiB. Mac открыт.
+
+Далее — Default. Read-only SDK check: обычный Windows Go1.23.3/Rust1.96.1/
+Python3.14/Node24.11 доступны; build gopls/gofumpt/golines требует Go1.26+.
+Доставка готовых IDE tools либо явный выбор SDK должны учитывать build minimum;
+SDK/Go PATH не менялись. Языковые parts, Mac/full Ubuntu delivery/publication открыты.

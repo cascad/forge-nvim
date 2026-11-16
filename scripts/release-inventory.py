@@ -80,14 +80,17 @@ def inspect(args, stage):
         path=stage/'inspection'/key;path.mkdir(parents=True,exist_ok=True);env[key]=str(path)
     env['NVIM_LOG_FILE']=str(stage/'inspection/nvim.log');env['NVIM_APPNAME']='fride'
     catalog=stage/'inspection/catalog.json'
+    receipt_paths=stage/'inspection/receipts.json'
+    receipt_paths.write_text(json.dumps([str(p.resolve()) for root in args.mason_root
+        for p in sorted((root/'packages').glob('*/mason-receipt.json'))]),encoding='utf-8')
     subprocess.run([str(args.nvim),'--headless','-u','NONE','-i','NONE','-l',str(ROOT/'scripts/inspect-release-catalog.lua'),
-        str(ROOT/'nvim_forge'),str(args.editor_deps/'lazy/nvim-treesitter'),str(catalog)],env=env,capture_output=True,check=True,timeout=30)
+        str(ROOT/'nvim_forge'),str(args.editor_deps/'lazy/nvim-treesitter'),str(catalog),str(receipt_paths)],env=env,capture_output=True,check=True,timeout=30)
     result=subprocess.run([str(args.frontend),'--source',str(ROOT),'--components',args.components,'--print-plan',
         '--install-dir',str(stage/'inspection/prospective-kit')],env=env,capture_output=True,check=True,timeout=10)
     return read_json(catalog),json.loads(result.stdout)
 
 
-def parser_license(source):
+def source_license(source):
     url=source['source'].removesuffix('.git')
     if not url.startswith('https://github.com/'):return []
     repo=url.removeprefix('https://github.com/')
@@ -130,7 +133,7 @@ def collect_parsers(report,args,catalog,names):
     fetched={}
     if args.fetch_parser_licenses:
         with ThreadPoolExecutor(max_workers=4) as pool:
-            jobs={name:pool.submit(parser_license,catalog['grammars'][name]) for name in names
+            jobs={name:pool.submit(source_license,catalog['grammars'][name]) for name in names
                 if not (cache.get('parser:'+name,{}).get('source')==catalog['grammars'][name]['source']
                     and cache.get('parser:'+name,{}).get('revision')==catalog['grammars'][name]['revision']
                     and cache.get('parser:'+name,{}).get('licenses'))}
@@ -158,6 +161,7 @@ def collect_parsers(report,args,catalog,names):
 
 
 def collect_mason(report,args,catalog,names):
+    cache={i['id']:i for i in read_json(args.license_cache/'inventory.json')['items'] if i['kind']=='mason'} if args.license_cache else {}
     for name in names:
         item=report.item('mason',name,expected_version=catalog['pins'].get(name))
         candidates=[]
@@ -165,17 +169,18 @@ def collect_mason(report,args,catalog,names):
             file=root/'packages'/name/'mason-receipt.json'
             if file.is_file():
                 try:
-                    data=read_json(file)
-                    if not isinstance(data,dict):raise ValueError('Receipt must be an object')
+                    data=catalog['receipts'][str(file.resolve())]
+                    if data.get('invalid'):raise ValueError('Invalid native receipt')
                     candidates.append((file,data))
                 except (ValueError,OSError):report.gap(item,'receipt_invalid')
         if not candidates:
             if not any(g['item']==item['id'] and g['code']=='receipt_invalid' for g in report.gaps):report.gap(item,'package_not_prepared')
             continue
-        identities={json.dumps({'source':d.get('source'),'links':d.get('links'),'version':d.get('install_options',{}).get('version')},sort_keys=True) for _,d in candidates}
+        identities={json.dumps(d,sort_keys=True) for _,d in candidates}
         if len(identities)>1:report.gap(item,'conflicting_receipts');continue
         path,data=candidates[0];package=path.parent
-        item.update(source=data.get('source',{}).get('id'),version=data.get('install_options',{}).get('version'),receipt_sha256=file_sha(path),entrypoints={})
+        item.update(source=data.get('source'),version=data.get('version'),receipt_sha256=file_sha(path),entrypoints={})
+        if data.get('name')!=name:report.gap(item,'receipt_name_mismatch')
         if not item['source']:report.gap(item,'source_id_missing')
         if not item['version']:report.gap(item,'version_missing')
         if item['expected_version'] and item['version']!=item['expected_version']:report.gap(item,'version_mismatch')
@@ -186,7 +191,23 @@ def collect_mason(report,args,catalog,names):
             item['entrypoints'][alias]={'path':target,'sha256':file_sha(file) if file.is_file() else None}
             if not file.is_file():report.gap(item,'entrypoint_missing',alias)
         if not item['entrypoints']:report.gap(item,'entrypoints_missing')
-        report.notices(item,documents(package,True))
+        docs=documents(package,True)
+        old=cache.get(item['id'])
+        if not docs and old and item.get('source') and old.get('source')==item['source'] and old.get('version')==item['version']:
+            prefix=PurePosixPath('licenses/mason')/name
+            for doc in old['licenses']:
+                rel=relative(doc['path']);nested=rel.relative_to(prefix)
+                file=args.license_cache/rel
+                if file.is_symlink() or not file.resolve().is_relative_to(args.license_cache.resolve()):raise ValueError('External license cache link')
+                raw=file.read_bytes()
+                if sha(raw)!=doc['sha256']:raise ValueError('License cache SHA mismatch: '+name)
+                docs.append((nested.as_posix(),raw))
+        if not docs and args.fetch_tool_licenses:
+            purl=re.fullmatch(r'pkg:github/([^/@]+/[^/@]+)@([^?/#]+)',item.get('source') or '')
+            if purl and urllib.parse.unquote(purl[2])==item.get('version'):
+                try:docs=source_license({'source':'https://github.com/'+purl[1],'revision':item['version']})
+                except (OSError,ValueError) as error:report.gap(item,'license_fetch_failed',str(error))
+        report.notices(item,docs,origin=item.get('source') or 'provided source')
 
 
 def collect_archive(report,path,item,platform):
@@ -297,6 +318,7 @@ if __name__=='__main__':
     parser.add_argument('--frontend',type=Path,required=True);parser.add_argument('--components',default='core,go,rust,python,node,bash,sql,terminal')
     parser.add_argument('--mason-root',type=Path,action='append',default=[]);parser.add_argument('--archive',action='append',default=[],metavar='COMPONENT=FILE')
     parser.add_argument('--license-cache',type=Path);parser.add_argument('--fetch-parser-licenses',action='store_true')
+    parser.add_argument('--fetch-tool-licenses',action='store_true')
     parser.add_argument('--output',required=True,type=Path);parser.add_argument('--strict',action='store_true')
     args=parser.parse_args()
     try:

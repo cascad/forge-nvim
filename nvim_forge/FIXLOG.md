@@ -14069,3 +14069,56 @@ diagnostics/install-core-observe.lua; OpenSpec bound-lua-workspace-library;
 .tests/core-acceptance/consumer-{1794852163999278500,1794852780837297000};
 Ubuntu .tests/ubuntu/core-acceptance/lua-evidence/consumer-{1794852585144321413,
 1794852796560907250}. Native Mac не запускался.
+
+
+### 262. Core publisher: фактические версии Mason и недостающие notices
+
+**Связь:** IDE-138; change `complete-core-tool-notices`.
+Спека: IDE-BOOT-32 (ADDED).
+**Статус:** исправлено; actual Windows Core101 items/0 gaps. Это publisher
+metadata, native workflow подтверждён отдельно §261; весь release не объявлен готовым.
+
+**Проблема.** Перед Default actual Core report имел2 gaps: version_missing для
+готового LuaLS и license_documents_missing у готового StyLua. У LuaLS реальная
+версия была в source PURL, install_options.version=null — обычная native установка.
+
+**Причина.** Collector трактовал опцию запрошенной версии как установленную.
+Сам Mason InstallReceipt читает version из PURL. StyLua release ZIP содержит
+binary, но не LICENSE.md; текст есть в том же закреплённом v2.6.0 source.
+
+**Изменение.** Existing native catalog helper читает explicit receipts через
+Mason InstallReceipt API без setup/registry/исполнения tools. Name/source/version/
+links приходят из native API; invalid receipt даёт named gap. Source/links/actual
+version используются для сравнения receipts. Явный --fetch-tool-licenses берёт
+отсутствующий документ из GitHub source/version; bundled docs приоритетны,
+default offline. Existing --license-cache поддерживает Mason source/version/SHA
+checks, nested paths; foreign cache не закрывает gap, corrupt SHA отклоняется.
+Новые SDK/LSP/pins не вводились, installed tools/receipts не редактировались.
+
+**Проверка/e2e.** Windows9 PASS6.451s, включая явный network case StyLua pinned
+source. Ubuntu8 PASS/1 explicit-network SKIP2.994s, existing container network
+none2CPU/2GiB, heavy copies в /tmp, metadata экспорт F. Прежние6 cases сохранены,
+добавлены actual/requested/null версии, nested cache/source mismatch/SHA и fetch.
+Native Mason Lua копируется в own fixture; данные controlled metadata-only,
+не доказательство runtime готовности. Registry/SDK/tool binaries не запускались.
+
+Actual Windows Core:101 items,0 gaps, metadata_complete=true,
+full_release_ready=false. LuaLS3.19.2 имеет2 bundled docs; StyLuav2.6.0 —1
+официальный LICENSE.md из source/tag. Online и offline reports/notices byte-identical;
+все1256 input tool files сохранили SHA. Старые Default reports141 items/25 gaps
+не переписывались: они описывают другие явно переданные publisher roots.
+Native Mac/full Ubuntu Core delivery и transitive coverage отдельно открыты.
+
+**Вывод.** Core publisher direct-root документы/версии собраны и воспроизводятся
+без сети. Дальше — настоящие Default IDE tools/parts. Read-only native SDK check
+показал Go1.23.3 в обычном PATH; source build pinned gopls/gofumpt/golines требует
+Go1.26+. Готовые IDE tools не требуют повторной сборки; assembly должен сохранять
+обычный SDK и учитывать разницу build/runtime prerequisites. Go/SDK/PATH не менялись.
+Frozen25 и raw/staged journal prefixes проверены, чужой WIP сохранён.
+
+**Файлы.** scripts/inspect-release-catalog.lua, release-inventory.py,
+tests/release-inventory.test.py; OpenSpec complete-core-tool-notices;
+планы/PROBLEMS/tests README/история/команды. Evidence .tests/core-notices/
+{baseline,core-windows,core-windows-offline,windows-e2e.txt,tools-before.json,
+native-sdks.json}; .tests/ubuntu/core-notices/{ubuntu-e2e.txt,e2e}. SDK check
+использовал GOTOOLCHAIN=local/RUSTUP_AUTO_INSTALL=0 и собственный TEMP на F.

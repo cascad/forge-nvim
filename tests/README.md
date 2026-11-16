@@ -738,6 +738,13 @@ prepared plugin copies, проверяет pins, вызывает тот же na
 проверяет installer/receipt/delivery; в output это явно указано. Heavy Linux work
 на FORGE_CORE_TEST_ROOT в /tmp, экспорт только metadata/screens. Mac не запускался.
 
+Publisher inventory §262: `tests/release-inventory.test.py` содержит9 cases.
+8 работают offline на Windows/Ubuntu; ninth требует явного
+`FORGE_RELEASE_NETWORK_TEST=1` и получает StyLua document из pinned source.
+Native Mason receipt API проверяется на null/requested версии; nested cache,
+source mismatch и SHA corruption — без установки tools/SDK. Actual Core report
+101 items/0 gaps и offline byte equality проверены отдельно от metadata fixtures.
+
 
 ### Native SDK context — IDE-BOOT-17
 

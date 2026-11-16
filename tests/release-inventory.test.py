@@ -1,7 +1,8 @@
-"""IDE-BOOT-29: native CLI/report/notices E2E, no SDK/network/package installation.
+"""spec: IDE-BOOT-29 IDE-BOOT-32. Native CLI/report/notices E2E, no SDK installs.
 
 Small source/receipt/archive fixtures test inventory evidence; they are explicitly
 not functional IDE bundles. The separate real-input report uses authentic notices.
+Network is opt-in only for the explicit source-fetch case.
 """
 import hashlib
 import json
@@ -40,6 +41,7 @@ class ReleaseInventory(unittest.TestCase):
         for name,entry in json.loads((ROOT/'nvim_forge/patches/plugins.json').read_text()).items():
             for patch in [entry,*entry.get('extra',[])]:
                 relative=Path('lazy')/name/patch['file'];target=cls.deps/relative;target.parent.mkdir(parents=True,exist_ok=True);shutil.copy2(DEPS/relative,target)
+        shutil.copytree(DEPS/'lazy/mason.nvim/lua',cls.deps/'lazy/mason.nvim/lua')
         shutil.copytree(DEPS/'lazy/nvim-treesitter/lua',cls.deps/'lazy/nvim-treesitter/lua')
         env=os.environ.copy();env.update(NVIM_LOG_FILE=str(BASE/'catalog.log'),NVIM_APPNAME='fride',TEMP=str(BASE),TMP=str(BASE),TMPDIR=str(BASE))
         cls.catalog=BASE/'catalog.json'
@@ -55,7 +57,7 @@ class ReleaseInventory(unittest.TestCase):
             (folder/'entry').write_text('not executable: inventory must never run tool binaries\n')
             (folder/'LICENSE').write_text('Controlled package document fixture\n')
             version=catalog['pins'].get(name,'fixture-version')
-            (folder/'mason-receipt.json').write_text(json.dumps({'source':{'id':'pkg:github/fixture/'+name+'@'+version},'install_options':{'version':version},'links':{'bin':{name:'entry'}}}))
+            (folder/'mason-receipt.json').write_text(json.dumps({'name':name,'schema_version':'2.0','source':{'id':'pkg:github/fixture/'+name+'@'+version},'install_options':{'version':version},'links':{'bin':{name:'entry'}}}))
         cls.archive=BASE/'core.zip';cls.write_archive(cls.archive)
         cls.before=snapshot(cls.deps);cls.site_before=snapshot(SITE)
 
@@ -140,6 +142,53 @@ class ReleaseInventory(unittest.TestCase):
             self.assertIn({'item':'mason:stylua','code':'receipt_invalid','detail':''},gaps)
             self.assertFalse(manifest.exists());self.assertEqual(receipt.read_text(),'{broken')
         finally:manifest.write_bytes(saved);receipt.write_bytes(original)
+
+    def test_07_installed_version_comes_from_native_receipt(self):
+        lua=self.mason/'packages/lua-language-server/mason-receipt.json';stylua=self.mason/'packages/stylua/mason-receipt.json'
+        saved={p:p.read_bytes() for p in [lua,stylua]}
+        try:
+            data=json.loads(saved[lua]);data['install_options']['version']=None;lua.write_text(json.dumps(data))
+            data=json.loads(saved[stylua]);data['install_options']['version']='requested-not-installed';stylua.write_text(json.dumps(data))
+            result,out=self.run_cli('installed-version',extra=['--strict']);self.assertEqual(result.returncode,0,result.stderr)
+            packages={i['name']:i for i in json.loads((out/'inventory.json').read_text())['items'] if i['kind']=='mason'}
+            self.assertEqual(packages['lua-language-server']['version'],'fixture-version')
+            self.assertEqual(packages['stylua']['version'],json.loads(saved[stylua])['source']['id'].rsplit('@',1)[1])
+        finally:
+            for p,data in saved.items():p.write_bytes(data)
+
+    def test_08_source_bound_nested_cache_and_corruption(self):
+        folder=self.mason/'packages/stylua';license=folder/'LICENSE';saved=license.read_bytes()
+        nested=folder/'third-party/NOTICE.txt';nested.parent.mkdir();nested.write_bytes(b'Controlled nested document\n')
+        try:
+            result,cache=self.run_cli('cache-seed',extra=['--strict']);self.assertEqual(result.returncode,0,result.stderr)
+            license.unlink();nested.unlink()
+            result,out=self.run_cli('tool-cache',extra=['--license-cache',str(cache),'--strict']);self.assertEqual(result.returncode,0,result.stderr)
+            data=json.loads((out/'inventory.json').read_text());item=next(i for i in data['items'] if i['id']=='mason:stylua')
+            self.assertEqual({d['path'] for d in item['licenses']},{'licenses/mason/stylua/LICENSE','licenses/mason/stylua/third-party/NOTICE.txt'})
+            metadata=cache/'inventory.json';original=metadata.read_bytes();old=json.loads(original)
+            next(i for i in old['items'] if i['id']=='mason:stylua')['source']='pkg:github/another/source@v2.6.0';metadata.write_text(json.dumps(old))
+            result,out=self.run_cli('stale-tool-cache',extra=['--license-cache',str(cache),'--strict']);self.assertEqual(result.returncode,2,result.stderr)
+            self.assertTrue(any(g['item']=='mason:stylua' and g['code']=='license_documents_missing' for g in json.loads((out/'inventory.json').read_text())['gaps']))
+            metadata.write_bytes(original);doc=cache/'licenses/mason/stylua/LICENSE';doc.write_bytes(b'changed')
+            result,_=self.run_cli('corrupt-tool-cache',extra=['--license-cache',str(cache),'--strict']);self.assertEqual(result.returncode,1,result.stderr)
+            self.assertIn('License cache SHA mismatch: stylua',result.stderr)
+        finally:
+            license.write_bytes(saved)
+            if nested.exists():nested.unlink()
+            nested.parent.rmdir()
+
+    @unittest.skipUnless(os.environ.get('FORGE_RELEASE_NETWORK_TEST')=='1','Explicit publisher network preparation only')
+    def test_09_explicit_pinned_tool_document_fetch(self):
+        folder=self.mason/'packages/stylua';receipt=folder/'mason-receipt.json';saved=receipt.read_bytes();license=folder/'LICENSE';original=license.read_bytes()
+        try:
+            data=json.loads(saved);data['source']['id']='pkg:github/johnnymorganz/stylua@v2.6.0';receipt.write_text(json.dumps(data));license.unlink()
+            offline,out=self.run_cli('fetch-disabled',extra=['--strict']);self.assertEqual(offline.returncode,2,offline.stderr)
+            result,out=self.run_cli('explicit-fetch',extra=['--fetch-tool-licenses','--strict']);self.assertEqual(result.returncode,0,result.stderr)
+            doc=out/'licenses/mason/stylua/LICENSE.md';self.assertTrue(doc.is_file())
+            self.assertIn(b'Mozilla Public License Version 2.0',doc.read_bytes())
+            item=next(i for i in json.loads((out/'inventory.json').read_text())['items'] if i['id']=='mason:stylua')
+            self.assertEqual(item['licenses'][0]['sha256'],digest(doc.read_bytes()));self.assertEqual(item['licenses'][0]['origin'],data['source']['id'])
+        finally:receipt.write_bytes(saved);license.write_bytes(original)
 
 
 if __name__=='__main__':

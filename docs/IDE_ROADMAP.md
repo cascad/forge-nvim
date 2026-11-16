@@ -68,6 +68,13 @@ workflow diagnostic получен за1.75s после открытия (пре
 Ubuntu full native config с реальным LuaLS3.19.2 тоже5/5 PASS; это не full
 installer acceptance Ubuntu. Далее — notices двух Core tools и publisher
 упаковка/actual Default; native Mac/full Ubuntu delivery/GUI остаются gates.
+§262: actual Windows Core publisher report закрыт:101 позиция/0 gaps,
+LuaLS3.19.2/StyLuav2.6.0 прочитаны штатным receipt API Mason; missing StyLua
+document получен по pinned source. Offline report/notices byte-identical,
+1256 файлов tools не изменены. Windows9 PASS; Ubuntu8 PASS/1 explicit-network
+skip. Далее — native Default и Go build compatibility: текущий обычный Go
+Windows1.23.3, source build gopls/gofumpt/golines требует1.26+. SDK автоматически
+не меняем; это нужно учесть в доставке готовых IDE tools/выборе SDK.
 См. [срез парсеров](INSTALLATION_PLAN.md#готовые-native-parsers-core--253).
 Упаковка Node отменена; native Mac и полный release остаются открытыми.
 §234: общий setup обрабатывает Lua/Vim exceptions и missing commands как отказ;

@@ -102,6 +102,12 @@ Windows actual installed Core5/5 PASS, Ubuntu native full config5/5 PASS,
 diagnostics/edit/save/restart подтверждены без fake LSP и увеличения deadline.
 Следующие открытые пункты — Core notices, Default, native Mac/full Ubuntu delivery.
 
+§262: Core notices/actual versions закрыты в publisher metadata:101 items/0 gaps
+на actual Windows inputs; offline repeat identical, tools не менялись.
+Default/native Mac/full Ubuntu delivery остаются открыты. Обычный Windows
+Go1.23.3 доступен, source build pinned gopls/gofumpt/golines требует1.26+.
+Автоматического обновления SDK не делали; это следующий assembly вопрос.
+
 §258: private Terminal доставляет pinned WezTerm/font и явный bin/fride-terminal.
 Shared config/private window state/font_dirs без замены пользовательского
 WezTerm; native config/font gate до publish. Windows GUI/input/save и Ubuntu
