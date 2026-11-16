@@ -390,8 +390,8 @@ Python реализован и проверен 2026-11-03; после возо�
 | §251 | [Setup: пять существующих IDE tools через Mason](../nvim_forge/FIXLOG.md#251-setup-пять-существующих-ide-tools-через-mason) |
 | §252 | [Setup: доставка существующих debug/test tools](../nvim_forge/FIXLOG.md#252-setup-доставка-существующих-debugtest-tools) |
 | §253 | [Core: готовые native parsers без компилятора пользователя](../nvim_forge/FIXLOG.md#253-core-готовые-native-parsers-без-компилятора-пользователя) |
-
 | §254 | [Core: native Ubuntu acceptance готовых parsers](../nvim_forge/FIXLOG.md#254-core-native-ubuntu-acceptance-готовых-parsers) |
+| §255 | [Запуск: длинные Unicode paths без падения Lua bytecode cache](../nvim_forge/FIXLOG.md#255-запуск-длинные-unicode-paths-без-падения-lua-bytecode-cache) |
 
 ## Как читать и дополнять
 

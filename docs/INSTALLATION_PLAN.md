@@ -858,10 +858,35 @@ install stands. Windows4 cases прошли с адресным исправле
 native load всех33 libraries/queries, HTTP delivery, настоящие Lua parse/captures,
 отказы и сохранение прежнего kit проверены. Ubuntu4 cases PASS40.313s (§254), native Mac открыт. Успешные suites повторно не запускались.
 
-**Граница:** другие plugins/Mason stages в parser stand контролируются. Только
-для parser stand отключён bytecode cache Lazy: v1 обнаружил настоящий сбой
-vim.loader при basename257 символов в длинном Unicode staged path. Production
-cache не изменён; исправление этого сбоя — блокер full Default. Для воспроизведения
-задать FORGE_PARSER_TEST_CACHE=1 и запустить только test_parser_01_native_delivery_and_captures.
+**Граница:** другие plugins/Mason stages в parser stand контролируются.
+§255 перевёл parser fixture на production cache policy; отдельного test-only
+отключения больше нет. Полный editor startup проверяется отдельным native E2E.
 Git/rg, Terminal, полный source/license inventory и публичный catalog остаются
 открытыми. Этот Core archive пока не является полной поставкой.
+
+## Безопасная загрузка Lua — §255
+
+Штатная настройка Lazy performance.cache.enabled=false отключает optional
+disk bytecode cache во всей сборке. Native vim.loader0.12.2 URI-encode полного
+source path создавал basename больше255, что прерывало init в длинном Unicode
+каталоге. Обычная загрузка Lua и lazy loading plugins сохранены; binary/runtime
+Neovim, SDK и plugin pins не меняются.
+
+Native regression команда из репозитория:
+
+```sh
+python3 -B tests/install-lua-cache.test.py
+```
+
+Windows: python; подготовленный Neovim0.12.2 и editor-deps с текущими backports.
+Overrides: FORGE_INSTALL_TEST_NVIM/FORGE_E2E_DEPS как в других native stands.
+Native Mac запускает владелец отдельно. Тест использует полный actual config,
+два отдельных Unicode profiles, require/reload изменённого Lua source и настоящее
+редактирование/сохранение файла. Background Mason installation отсутствует.
+Windows/Ubuntu по2 PASS; affected managed parser delivery по1 PASS с production
+policy. Другие green suites не повторяются.
+
+Lazy UIEnter timings в свежих profiles: Windows0.81–0.91s elapsed с начала Lazy,
+Ubuntu80–113ms process CPU. Разные методы напрямую не сравниваются; это не full
+Default benchmark. Native Mac, остальные Core/Terminal parts и полная языковая
+readiness matrix остаются release gates.

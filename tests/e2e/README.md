@@ -1721,3 +1721,18 @@ keyboard toggle/cancel и selected SDK commands. Windows19 PASS, Ubuntu18 PASS/
 1 platform skip; Mac recipe3 contract на Ubuntu, native Mac открыт (§235).
 Windows arrows2 дополнительно проверены без повтора остальных unchanged cases.
 Полная установка всех SDK/registry readiness не объявляется PASS этого stand.
+
+
+## IDE-BOOT-25: полный запуск из длинного Unicode пути
+
+`python -B tests/install-lua-cache.test.py` на Windows; `python3 -B
+tests/install-lua-cache.test.py` на Linux/macOS. Нужны готовые native Neovim0.12.2
+и editor-deps с текущими backports. Existing native editor harness запускает
+полный config с67 pinned plugins дважды, реально require/reload Lua module и
+сохраняет редактируемый файл. Source path URI-encoded basename превышает255,
+так что обычный короткий temp path не может скрыть regression.
+
+Native Windows2 PASS/Ubuntu2 PASS (§255). Timings/report — .tests/lua-cache,
+snapshots/config/project/native exit — .tests/editor-e2e; private runtime удаляет
+прежний harness. SDK/host installs отсутствуют. Native Mac отдельно владельцем;
+полная языковая Default readiness этим тестом не доказывается.

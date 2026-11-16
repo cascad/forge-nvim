@@ -42,6 +42,10 @@ require("lazy").setup({
         enabled = false,
     },
     performance = {
+        -- IDE-BOOT-25: vim.loader encodes full paths into cache filenames.
+        -- Long Unicode paths exceed filesystem basename limits. Use Lazy's
+        -- supported switch; ordinary Lua loading and plugin lazy loading stay.
+        cache = { enabled = false },
         rtp = {
             -- Managed config is explicit (-u); keep it when lazy resets runtimepath.
             paths = require('forge.parser_runtime').paths(config_root),

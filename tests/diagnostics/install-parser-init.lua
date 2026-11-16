@@ -2,14 +2,21 @@
 local config, deps = assert(vim.env.FRIDE_CONFIG), assert(vim.env.FORGE_E2E_DEPS)
 vim.opt.rtp:prepend(config)
 vim.opt.rtp:prepend(deps .. '/lazy/lazy.nvim')
-require('lazy').setup({
+local lazy, captured = require('lazy'), nil
+-- Read the real config's policy; only plugin/Mason provisioning is controlled.
+-- Seed the bootstrap directory to prevent a clone while capturing setup options.
+vim.fn.mkdir(vim.fn.stdpath('data') .. '/lazy/lazy.nvim', 'p')
+local setup = lazy.setup
+lazy.setup = function(options) captured = options end
+local configured, configure_error = pcall(dofile, config .. '/lua/config/lazy.lua')
+lazy.setup = setup
+assert(configured, configure_error)
+assert(captured, 'Production Lazy options were not read')
+lazy.setup({
     root = vim.fn.stdpath('data') .. '/lazy',
     spec = {}, rocks = {enabled = false}, checker = {enabled = false},
     change_detection = {enabled = false},
-    -- This stand intentionally creates deeply nested Unicode paths. Native
-    -- vim.loader currently exceeds the 255-byte cache filename limit there;
-    -- that separate full-Default blocker is recorded with the failed v1 log.
-    performance = {cache = {enabled = vim.env.FORGE_PARSER_TEST_CACHE == '1'}, rtp = {paths = require('forge.parser_runtime').paths(config)}},
+    performance = {cache = captured.performance.cache, rtp = {paths = require('forge.parser_runtime').paths(config)}},
 })
 vim.opt.rtp:prepend(deps .. '/lazy/nvim-treesitter')
 local treesitter = require('plugins.treesitter')[1]

@@ -9664,3 +9664,31 @@ sources/runtime copies удалён вместе с disposable container; на F
 native binaries/archives/metadata/raw evidence. SDK installation не выполнялась.
 Проверка raw/staged journal prefixes/frozen24 и strict OpenSpec validate перед
 точным локальным commit. Успешные Windows suites не повторялись.
+
+
+## 163. IDE-BOOT-25: полный editor E2E длинных Unicode paths
+
+2026-11-16. Read-only pinned loader/Lazy config/API и upstream issue29372;
+OpenSpec context/list/status/instructions/strict validate для fix-lua-loader-long-paths.
+Никаких правок SDK/loader или изменения pins. Штатный performance.cache.enabled=false.
+
+Windows: python -B tests/install-lua-cache.test.py; Ubuntu/macOS: python3 -B
+tests/install-lua-cache.test.py. Existing native editor harness, full config и
+67 prepared plugins, long Unicode profile,2 launches/source reload/save. Нужен
+готовый native Neovim/editor-deps; SDK installation/download отсутствуют.
+Raw before-в1 подтвердил cache error; after-в1/v2 сохранили ошибки нового oracle,
+после исправления native command/API after-v3: Windows2 PASS/Ubuntu2 PASS.
+Timings/paths/native stdout/exit — .tests/lua-cache, snapshots — editor-e2e.
+
+Affected parser delivery: python -B tests/install-parser-runtime.test.py
+test_parser_01_native_delivery_and_captures — Windows1 PASS31.143s;
+Ubuntu1 PASS11.978s. Fixture берёт production cache policy. Остальные green
+cases не повторялись. Ubuntu command — тот же compose run --rm --no-deps
+--pull never, network none,2 CPU/2GiB; cache-controls.sh обновлял backports
+только в disposable editor-deps copy через штатный prepare-plugins.lua.
+Image/Desktop/WSL lifecycle не менялись, build/pull/host installs не запускались.
+
+Собственные Windows runtime/archive payloads дополнительно удалены проверенным
+cleanup.py, metadata/raw logs сохранены. Финал: AST, frozen25/raw journal prefix,
+exact allowlist/staged HEAD prefixes/git diff --cached --check и local commit.
+Mac и полный Default не заявлены; TEMP/TMP/TMPDIR/NVIM log/npm cache на F.

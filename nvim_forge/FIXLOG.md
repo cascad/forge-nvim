@@ -13646,3 +13646,54 @@ INSTALLATION_PLAN/RELEASE_INVENTORY/IDE_ROADMAP/PROBLEMS/HISTORY.
 Evidence: .tests/parser-runtime/container-ubuntu-v*.txt,
 .tests/ubuntu/parser-runtime/prepare-ubuntu-v*.txt/e2e-ubuntu-v1.txt,
 linux-x64 и evidence-ubuntu-v1. Native SDK/user profiles не модифицированы.
+
+
+### 255. Запуск: длинные Unicode paths без падения Lua bytecode cache
+
+**Связь.** IDE-138, блокер §253; change fix-lua-loader-long-paths.
+Спека: IDE-BOOT-25 (ADDED).
+**Статус.** Native Windows/Ubuntu исправлено и проверено; Mac — owner gate.
+
+**Проблема/причина.** Lazy по умолчанию включает экспериментальный vim.loader.
+Native0.12.2 превращает полный URI-encoded source path в одно имя disk cache;
+на длинном Unicode пути basename превышает255 и fs_open/assert прерывает init.
+См. также upstream neovim/neovim#29372. Новый полный editor E2E на исходном
+config дважды сохранил E5113/ENOENT loader.lua:135 (snapshots6474268523600,
+6488626765400); это не failure только искусственного parser fixture.
+
+**Изменение.** Общий штатный Lazy performance.cache.enabled=false. Обычная
+загрузка Lua и plugin lazy loading остаются. Neovim binary/runtime/loader.lua,
+SDK,67 pins и6 backports не патчатся. Альтернативные loader/cache/fork/path
+подмены не нужны. Parser fixture читает policy настоящего config, его отдельный
+test-only cache workaround снят. Новая standalone команда использует прежний
+native editor harness с полной конфигурацией, не mock init/Lazy.
+
+**Проверка/e2e.** Windows2 PASS и Ubuntu2 PASS: настоящий полный запуск дважды
+в отдельных Unicode profiles,67 plugins registered/35 loaded, реальный require
+Lua module42→43 после изменения source/reload, редактирование/сохранение файла,
+без background Mason install. Encoded basenames359/323 гарантируют regression.
+Lazy UIEnter: Windows905.942/805.497ms elapsed, Ubuntu79.709/113.311ms process CPU;
+метрики разных ОС напрямую не сравниваются, это не полный performance benchmark.
+Affected installed fride parser delivery читает production policy: Windows1
+PASS31.143s / Ubuntu1 PASS11.978s. Остальные green suites не повторялись.
+
+Новые oracle ошибки сохранены: неверное имя NeoTree вместо Neotree, затем
+URI API master вместо pinned vim.uri_encode. Ubuntu cached deps остановились
+до editor из-за старого принятого neogit patch; prepare-plugins штатно обновил
+только disposable copy/manifest, image не менялся. После этих адресных исправлений
+оба native full editor tests и parser delivery зелёные. Native Mac/full Default
+language matrix/publication ещё открыты. Background SDK installs не выполнялись.
+
+**Вывод.** Optional code cache не должен делать IDE неработоспособной на
+допустимом пользовательском пути. Поддерживаемого параметра конфигурации
+достаточно; цена source compilation отражена native timings. Следующая очередь
+Core/Terminal: Git/rg, WezTerm/font, source/license inventory и полный Default.
+Дополнительные0.22GiB Windows stand runtime/archive copies удалены на F с
+manifest/SHA сохранением; native editor harness сам удалил свои private profiles.
+Журналы raw append, frozen25 (включая loader.lua/SDK/locks/чужой WIP) сохранены.
+
+**Файлы.** config/lazy.lua, diagnostics/install-parser-init.lua,
+tests/install-lua-cache.test.py, diagnostics/lua-cache-e2e.lua; планы/README/
+история и OpenSpec verification. Evidence .tests/parser-runtime/lua-cache-*.txt,
+.tests/ubuntu/parser-runtime/lua-cache-*.txt, .tests/lua-cache и editor-e2e;
+production-cache delivery logs и cleanup.json.

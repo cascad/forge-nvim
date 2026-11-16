@@ -1,6 +1,6 @@
 # Что ещё требуется для полной поставки fride
 
-Исходный срез2026-11-15, код694cd9e, обновления §251–254. Это состав **существующих возможностей**, а не
+Исходный срез2026-11-15, код694cd9e, обновления §251–255. Это состав **существующих возможностей**, а не
 предложение новых LSP. Полного Default release пока нет: production
 [artifacts.tsv](../scripts/runtime/artifacts.tsv) не содержит ни одной строки.
 Готовность транспорта и отдельных стендов не равна готовности такой поставки.
@@ -79,7 +79,7 @@
    WezTerm/font, platform manifests, source/version/SHA/license inventory.
    fd и native fzf — ускорители с существующим fallback, не скрытые обязательные SDK.
    §253–254 закрыли Windows/Ubuntu parser delivery в указанных границах.
-   Новый блокер full Default — native Lua cache filename на длинных Unicode paths.
+   §255 снял long-path Lua cache blocker штатной policy; полный editor E2E Windows/Ubuntu прошёл.
 4. **Настоящий Default/Custom из архива:** отдельный чистый профиль, реальные
    config/plugins/tools, launch → open/search → LSP → debug/tests → format,
    затем repeat/cancel/upgrade. Одна целевая тестовая итерация на изменение.
