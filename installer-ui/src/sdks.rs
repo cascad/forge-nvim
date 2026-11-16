@@ -14,7 +14,7 @@ pub(crate) fn is_sdk_part(id: &str) -> bool {
 
 pub(crate) fn required(components: &[String]) -> Vec<String> {
     [
-        ("go", &["go", "sql", "go-runtime"][..]),
+        ("go", &["go", "go-runtime"][..]),
         ("rust", &["rust"][..]),
         ("python", &["python"][..]),
         ("node", &["node", "python", "bash", "node-runtime"][..]),

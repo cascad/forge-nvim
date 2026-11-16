@@ -49,9 +49,9 @@ io.stdout:write(vim.json.encode({tools=names,versions=versions,run_on_start=opti
         self.assertIn('pyright',policy['tools']);self.assertIn('python',policy['parsers'])
         self.assertNotIn('typescript-language-server',policy['tools']);self.assertNotIn('javascript',policy['parsers'])
     def test_12_sql_dependency_without_go_tools(self):
-        mask=self.selected('sql-only','sql',['core','sql','go-runtime'])
+        mask=self.selected('sql-only','sql',['core','sql'])
         policy=self.policy(mask,'sql-only')
-        self.assertIn('sqls',policy['tools']);self.assertIn('sql',policy['parsers'])
+        self.assertIn('sqruff',policy['tools']);self.assertNotIn('sqls',policy['tools']);self.assertIn('sql',policy['parsers'])
         self.assertNotIn('delve',policy['tools']);self.assertNotIn('go',policy['parsers'])
     def test_13_empty_explicit_is_core(self):self.selected('empty','',['core'])
     def test_14_unknown_component(self):
@@ -68,6 +68,10 @@ io.stdout:write(vim.json.encode({tools=names,versions=versions,run_on_start=opti
         self.assertEqual(go['versions'],{'stylua':'v2.6.0','gopls':'v0.23.0','gofumpt':'v0.12.0','golines':'v0.16.0'})
         self.assertEqual(node['versions'],{'stylua':'v2.6.0','prettier':'3.9.10'})
         for policy in [go,node]:self.assertFalse(policy['run_on_start']);self.assertFalse(policy['auto_update'])
+    def test_25_debugger_pins_all_platforms(self):
+        rust=self.policy('core,rust','rust-debug-pin');bash=self.policy('core,bash','bash-debug-pin')
+        self.assertIn('codelldb',rust['tools']);self.assertEqual(rust['versions']['codelldb'],'v1.12.2')
+        self.assertEqual(bash['versions']['bash-debug-adapter'],'untagged-438733f35feb8659d939')
     def test_16_keyboard_toggle(self):
         key='Profile' if bootstrap.WINDOWS else 'profile'
         result,_,_,report=self.run_entry('keyboard',options={key:'Custom' if bootstrap.WINDOWS else 'custom'},ui_action='toggle')

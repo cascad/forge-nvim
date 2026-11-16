@@ -4,8 +4,7 @@ local function normalize(path) return vim.fs.normalize(path) end
 local function runner()
     local explicit=vim.g.forge_sqltest_executable or vim.env.FORGE_SQLTEST_EXECUTABLE
     if explicit and explicit~='' then return vim.fn.executable(explicit)==1 and vim.fn.exepath(explicit) or nil end
-    local found=vim.fn.exepath('forge-sqltest')
-    return found~='' and found or nil
+    return require('forge.native_tools').executable('forge-sqltest')
 end
 local function warn(message) vim.notify(message,vim.log.levels.WARN,{title='SQLLogicTest'}) end
 local function unavailable(pos,message)

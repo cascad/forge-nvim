@@ -26,9 +26,8 @@
 --   в std-буфер. Чистый nvim-lspconfig с теми же settings работает
 --   как раньше — мгновенно.
 --
--- codelldb: на Windows берётся из PATH (у пользователя стоит в
--- %LocalAppData%\codelldb\adapter\codelldb.exe), на macOS/Linux его
--- ставит Mason (mason-tool-installer в lsp.lua) → mason_bin-фолбэк ниже.
+-- codelldb готовится Mason на Windows/macOS/Linux. Существующий PATH и
+-- прежнее пользовательское Windows location остаются доступными.
 
 -- Resolve a tool installed by Mason. Returns absolute path or nil.
 -- Used to bypass $PATH lookup when there are multiple competing copies of
@@ -200,7 +199,7 @@ local function codelldb_path()
     local localappdata = vim.fn.expand("$LOCALAPPDATA")
     local guess = localappdata .. "/codelldb/adapter/codelldb.exe"
     if vim.fn.filereadable(guess) == 1 then return guess end
-    -- Mason — штатный путь на macOS/Linux (ставится mason-tool-installer'ом).
+    -- Mason — штатная подготовка на всех поддерживаемых ОС.
     local mason = mason_bin("codelldb")
     if mason then return mason end
     return nil

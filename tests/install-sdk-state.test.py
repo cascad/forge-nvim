@@ -133,7 +133,8 @@ class SDKState(stand.Isolation):
     @unittest.skipUnless(stand.WINDOWS,'PowerShell caller restoration')
     def test_06_caller_environment(self):
         base,env,target=self.installed('caller');wrapper=base/'caller.ps1'
-        keys=KEYS+['FRIDE_CONFIG','NVIM_APPNAME','NVIM_LOG_FILE','TEMP','TMP','TMPDIR']
+        env['FRIDE_RUNTIME']=str(base/'caller-runtime')
+        keys=KEYS+['FRIDE_CONFIG','FRIDE_RUNTIME','NVIM_APPNAME','NVIM_LOG_FILE','TEMP','TMP','TMPDIR']
         wrapper.write_text("param([string]$Launcher,[string]$Report)\n$keys=@("+','.join("'"+k+"'" for k in keys)+")\n$before=@{};foreach($k in $keys){$before[$k]=[Environment]::GetEnvironmentVariable($k,'Process')}\n& $Launcher --headless -i NONE -c 'cquit 7'\n$code=$LASTEXITCODE\n$after=@{};foreach($k in $keys){$after[$k]=[Environment]::GetEnvironmentVariable($k,'Process')}\n[IO.File]::WriteAllText($Report,(@{before=$before;after=$after;exit=$code}|ConvertTo-Json -Depth 4),[Text.UTF8Encoding]::new($false))\nif($code -ne 7){exit 1}\n",encoding='utf-8')
         self.assert_ok(self.run_process([stand.SHELL,'-NoProfile','-ExecutionPolicy','Bypass','-File',str(wrapper),'-Launcher',str(target/'bin/fride.ps1'),'-Report',str(base/'caller.json')],env,base,'caller-driver'))
         value=json.loads((base/'caller.json').read_text(encoding='utf-8'));self.assertEqual(value['exit'],7);self.assertEqual(value['before'],value['after'])

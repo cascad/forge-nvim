@@ -14,8 +14,7 @@ local function warn(message) vim.notify(message,vim.log.levels.WARN,{title='SQL'
 function M.tool(name)
     local explicit=vim.g['forge_'..name..'_executable'] or vim.env['FORGE_'..name:upper()..'_EXECUTABLE']
     if explicit and explicit~='' then return vim.fn.executable(explicit)==1 and vim.fn.exepath(explicit) or nil end
-    local path=vim.fn.exepath(name)
-    return path~='' and path or nil
+    return require('forge.native_tools').executable(name)
 end
 function M.root(path)
     path=path and path~='' and path or vim.api.nvim_buf_get_name(0)

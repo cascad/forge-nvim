@@ -74,7 +74,10 @@ discovery. Windows/Ubuntu controlled stand прошёл, реальные manage
 подготовка Bash/SQL и SQL test runner. Это существующие возможности, не новые
 LSP. §251: gopls/stylua/gofumpt/golines/prettier включены в pinned Mason setup,
 проверены реальные форматирование/навигация и reuse SDK на Windows/Ubuntu.
-Следующий срез — Windows codelldb, Bash/SQL preparation и forge-sqltest.
+§252: codelldb/Bash готовятся через Mason, SQL native part доставляет patched
+sqls/forge-sqltest без SDK компилятора. Реальные debug/query/test consumers
+проверены Windows/Ubuntu; native Mac/Windows Bash launch/publication открыты.
+Следующий срез — Core/Terminal artifacts и actual Default/Custom.
 
 §241: реализована доставка Core и selected SDK modules по platform/URL/SHA,
 сборка в private staging и сохранение прежнего kit при отказе. Native stand

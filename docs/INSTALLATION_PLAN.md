@@ -94,9 +94,9 @@ SDK preflight и меню реализованы (§246–247). Дальнейш
 
 §250: [inventory существующих возможностей](RELEASE_INVENTORY.md) составлен.
 Обнаружены пропущенные внешние IDE tools и отдельные Bash/SQL/Windows debugger
-steps. §251 закрывает подготовку gopls/stylua/gofumpt/golines/prettier через
-Mason, без упаковки языковых SDK. Следующий срез — существующие debug/test
-tools: Windows codelldb, Bash/SQL preparation и forge-sqltest.
+steps. §251 закрыл gopls/stylua/gofumpt/golines/prettier, §252 — codelldb/Bash
+через Mason и native SQL part. SDK компилятора для SQL не требуется. Следующий
+срез — Core/Terminal artifacts, затем actual Default/Custom и native Mac.
 
 ## Текущая готовность
 
@@ -761,3 +761,59 @@ failures проверены. Ubuntu — готовый container без сети
 asset cache. Удалены только собственные compiler caches/project fixture copies;
 готовые packages/receipts/logs оставлены для повторения. Дальше — debug/test
 delivery из [очереди](RELEASE_INVENTORY.md#следующая-очередь-реализации).
+
+## Доставка debug/test tools — §252
+
+Windows/POSIX codelldb v1.12.2 готовится тем же Mason. Историческое Windows
+исключение удалено; bundle содержит свои LLDB/Python libraries, чужой Python
+SDK не дополняется. Bash adapter закреплён существующим registry tag
+untagged-438733f35feb8659d939 (0.3.9). Tools stage применяет принятый patch
+только к своему Mason entrypoint; unknown hash даёт nonzero без изменения
+исходника. Повтор идемпотентен. Interactive :BashDebugPrepare остаётся доступным.
+На startup patch/install не выполняется. Источники:
+[codelldb](https://github.com/mason-org/mason-registry/blob/main/packages/codelldb/package.yaml),
+[Bash](https://github.com/mason-org/mason-registry/blob/main/packages/bash-debug-adapter/package.yaml).
+
+SQL component получает готовые sqls0.2.48+forge.1 и forge-sqltest0.1.0 из native
+part. Managed SQL больше не требует Go/Rust/CC или stock Mason sqls; sqruff
+остаётся Mason. Existing source builders нужны publisher, не пользователю.
+Пример упаковки уже проверенных native builds:
+
+```sh
+python -B scripts/package-sql-tools.py --sqls .tests/sql-deps --runner .tests/sql-test-deps --output .tests/sql-tools.zip
+```
+
+POSIX: python3, .tar.gz output. Wrapper использует existing package-runtime,
+проверяет platform/source/lock/patch/binary hashes и native versions, создаёт
+обычный sql component с sql/bin и probes. Готовые локальные Windows/Ubuntu
+archives/receipts — .tests/debug-tools/windows-x64 и
+.tests/ubuntu/debug-tools/linux-x64; production catalog пока пуст.
+
+IDE-only FRIDE_RUNTIME указывает staged/installed runtime. Runtime SQL lookup
+предпочитает свои binaries перед старым Mason/PATH copy, explicit overrides
+сохраняются. Перед ready проверяются именно доставленные native versions.
+PowerShell launcher восстанавливает caller FRIDE_RUNTIME даже при exit7.
+
+Команды целевого stand:
+
+```sh
+python -B tests/install-debug-tools.test.py --prepare
+python -B tests/install-debug-tools.test.py
+python -B tests/install-sql-delivery.test.py
+```
+
+POSIX: python3. Нужны native Neovim/UI/editor-deps, Node и готовые SQL builds;
+Rust нужен только тестовому publisher/probe stand. --prepare получает два IDE
+debugger payloads через Mason, языковые SDK не устанавливает. SQL delivery
+проверяется через реальный source/UI/parts HTTP и установленный launcher с
+Go/Rust скрытыми в PATH; query с комментарием, SQLite и existing Neotest adapter.
+Другие Core plugins/parsers/Mason installs в этом stand контролируются;
+это не full Default readiness. Нарушенные manifest/versions и сохранность
+прежнего kit проверены. Full green suite не повторяется без изменений.
+
+Windows: codelldb breakpoint/continue/output и Bash patch проверены; Bash
+launch требует предоставленного WSL2 и здесь не выполнялся. Ubuntu:
+codelldb/Bash launch и SQL consumers прошли в готовом offline container.
+Native Mac/publication остаются открытыми. Следующий срез — Core/Terminal
+artifacts и actual Default/Custom. Проверки этого этапа завершены15 ноября;
+16 ноября после возобновления выполняется аудит и локальный commit.

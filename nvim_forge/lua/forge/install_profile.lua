@@ -13,7 +13,7 @@ function M.filter(fallback, column)
         known[fields[1]] = true
         if selected[fields[1]] and fields[column] ~= '-' then
             for name in fields[column]:gmatch('[^,]+') do
-                if not seen[name] and not (column == 4 and name == 'codelldb' and vim.fn.has('win32') == 1) then
+                if not seen[name] then
                     result[#result + 1] = name; seen[name] = true
                 end
             end
@@ -22,5 +22,9 @@ function M.filter(fallback, column)
     assert(selected.core, 'Installer profile requires core')
     for id in pairs(selected) do assert(known[id], 'Unknown component: ' .. id) end
     return result
+end
+function M.selected(id)
+    for name in (vim.env.FORGE_NVIM_COMPONENTS or ''):gmatch('[^,]+') do if name == id then return true end end
+    return false
 end
 return M

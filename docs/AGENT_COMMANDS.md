@@ -9546,3 +9546,69 @@ Metadata: actual5 receipts и hashes72 Windows/69 Linux package files в
 resolve boundary до rmtree, SDK/готовые Mason packages не удалялись. Report
 .tests/ide-tools-cleanup.json. Перед local commit —24 frozen hashes, append-only
 raw/staged journal prefixes, Python syntax, doc links, diff --check и allowlist.
+
+
+## 160. IDE-BOOT-23: existing debugger/test delivery
+
+2026-11-15. TEMP/TMP/TMPDIR=.tests/tmp на F; Python -B/UTF-8, NVIM_LOG_FILE
+в .tests/tmp. OpenSpec1.13.2 context/new/instructions/apply/strict validate —
+deliver-existing-debug-test-tools. Root/JSON — .tests/debug-tools-*.json.
+Official Mason codelldb/Bash package.yaml проверены через web; версии из уже
+принятых SDK metadata, новый LSP/provider не добавлен.
+
+```powershell
+python -B tests/install-debug-tools.test.py --prepare
+python -B tests/install-debug-tools.test.py
+python -B scripts/package-sql-tools.py --sqls .tests/sql-deps --runner .tests/sql-test-deps --output .tests/debug-tools/windows-x64/sql.zip
+python -B tests/install-sql-delivery.test.py
+```
+
+Mason actual compilers/receipts, local registry с official source IDs и native
+payloads. Debugger test использует actual plugins.dap, DLL closure, breakpoint,
+focused frame, continue и terminal/repl marker. Тестовый Rust probe компилирует
+предоставленный rustc, SDK не устанавливает. Bash strict patch repeat/unknown/
+external override; Linux actual launch, Windows WSL runtime не вызывался.
+После stand failures повторялся только debugger case04, final v5. DLL/.pyc
+не берутся из чужого Python; PYTHONDONTWRITEBYTECODE=1 на debug run.
+
+Frontend Go/SQL dependency изменена, UI собран locked/offline:
+python -B scripts/build-installer-ui.py --rustc C:/Users/cascad/.rustup/toolchains/stable-x86_64-pc-windows-msvc/bin/rustc.exe
+SQL tests получают source/UI/Core+SQL по localhost, используют actual setup
+stage/native checks и installed launcher. Core plugin/parser callbacks и
+sqruff provisioning controlled; actual SQLS/SQLite/Neotest consumers настоящие.
+Go/Rust/Node SDK отсутствуют в PATH установки SQL. Windows raw v1/v2 failures
+(marker path/log oracle) сохранены; адресно03/04, затем04 и enhanced01.
+Native policy source RED с файлами87d6092 — .tests/debug-tools-before и
+source-red.lua/json/txt; не изменение настоящего checkout source.
+
+Ubuntu — готовый image, no build/pull/network/engine management. Существующий
+GitHub Bash VSIX передан readonly volume, SHA проверен; codelldb archive взят
+из готового /opt/forge/rust-deps. Mason скачивает реальные archive bytes с
+localhost HTTP, распаковка/links/native debugger не подменяются.
+
+```powershell
+docker compose -f tests/containers/compose.yaml run --rm --no-deps --pull never --volume F:/repo/forge-nvim/.tests/bash-debug-mason-release-0.3.9.vsix:/forge-assets/bash-debug-0.3.9.vsix:ro --entrypoint bash ubuntu .tests/debug-tools-run.sh
+docker compose -f tests/containers/compose.yaml run --rm --no-deps --pull never --entrypoint bash ubuntu .tests/debug-tools-controls.sh
+```
+
+Temporary scripts: native debugger prep/suite, offline vendored UI build в/tmp,
+SQL delivery suite в/tmp (наружу raw artifacts); затем enhanced Neotest01 и
+policy/readiness controls. Policy10/12/24/25, readiness08/12/15 (+16 POSIX).
+Windows SDKState.test_06_caller_environment дополнен FRIDE_RUNTIME sentinel,
+проверяет restore после exit7. Main mutable tests/run/registry не запускались
+и не редактировались. Native Mac команда python3 с теми же test files.
+
+Локальные SQL archives для дальнейшей публикации (не public release):
+Windows .tests/debug-tools/windows-x64/sql.zip + receipt;
+Ubuntu .tests/ubuntu/debug-tools/linux-x64/sql.tar.gz + receipt, собран тем же
+publisher из готовых native inputs. Native metadata — debug-tools-metadata.
+Cleanup только roots из своих debug-tools logs: absolute .tests/install-
+isolation boundary, сохранение manifest/SDK receipts по SHA перед rmtree.
+Удалены runtime/prepared/archive и synthetic sqruff fixture copies; готовые
+Mason debugger packages и SQL archives оставлены. Report debug-tools-cleanup.json.
+Перед local commit:24 frozen SHA, Python AST, doc links, raw/staged append-only
+journals, strict validate, diff --check, точный allowlist. По просьбе владельца
+следующий этап не начинается.
+
+
+2026-11-16, завершение §160 после остановки: git status, OpenSpec context/instructions apply и strict validate; Python read-only audit HEAD/frozen24/raw journal prefixes/AST/native receipts/Bash hashes/SQL archive SHA/doc links. После этого точный staging allowlist, normalized staged-prefix check и git diff --cached --check. Новые test runs и Docker commands не потребовались.

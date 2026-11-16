@@ -3,7 +3,8 @@ local M = {}
 -- IDE-BOOT-22. Mason owns these IDE tools; language SDKs remain native.
 function M.versions()
     return { gopls = 'v0.23.0', gofumpt = 'v0.12.0', golines = 'v0.16.0',
-        stylua = 'v2.6.0', prettier = '3.9.10' }
+        stylua = 'v2.6.0', prettier = '3.9.10', codelldb = 'v1.12.2',
+        ['bash-debug-adapter'] = 'untagged-438733f35feb8659d939' }
 end
 function M.mason()
     local tools = {
@@ -28,13 +29,13 @@ function M.mason()
         "golangci-lint",
         "gotestsum",
     }
-    -- codelldb: на Windows НЕ ставим — пользователь держит его в PATH
-    -- (%LocalAppData%\codelldb\adapter\codelldb.exe). На macOS/Linux
-    -- ставим через Mason — dap.lua найдёт его mason_bin-фолбэком.
-    if vim.fn.has("win32") == 0 then
-        table.insert(tools, "codelldb")
-    end
+    table.insert(tools, 'codelldb')
     return require('forge.install_profile').filter(tools,4)
+end
+
+function M.native_versions()
+    local root = vim.fn.fnamemodify(debug.getinfo(1, 'S').source:sub(2), ':p:h:h:h')
+    return vim.json.decode(table.concat(vim.fn.readfile(root..'/scripts/native-tools.json'),'\n'))
 end
 
 function M.mason_specs()

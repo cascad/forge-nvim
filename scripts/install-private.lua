@@ -69,6 +69,7 @@ local function digest(path) return vim.fn.sha256(read(path)) end
 local function environment(root, runtime, paths, sdk_paths)
   local env = vim.fn.environ()
   env.NVIM_APPNAME, env.NVIM_LOG_FILE = 'fride', join(root,'log/nvim.log')
+  env.FRIDE_RUNTIME = runtime
   env.TEMP, env.TMP, env.TMPDIR = join(root,'tmp'), join(root,'tmp'), join(root,'tmp')
   -- Only explicit IDE setup: a missing SDK must not trigger a toolchain download.
   env.GOTOOLCHAIN, env.RUSTUP_AUTO_INSTALL = 'local', '0'

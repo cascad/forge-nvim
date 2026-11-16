@@ -9,7 +9,7 @@ while [ -L "$script" ]; do
 done
 root="$(cd -P "$(dirname "$script")/.." && pwd)"
 unset VIM VIMRUNTIME VIMINIT EXINIT LUA_INIT LUA_PATH LUA_CPATH FORGE_NVIM_COMPONENTS FORGE_SDK_PATHS
-export NVIM_APPNAME=fride FRIDE_CONFIG="$root/config/forge"
+export NVIM_APPNAME=fride FRIDE_CONFIG="$root/config/forge" FRIDE_RUNTIME="$root/runtime"
 export NVIM_LOG_FILE="$root/log/nvim.log" TMPDIR="$root/tmp" TEMP="$root/tmp" TMP="$root/tmp"
 # Файл создаётся installer из проверенных относительных bin directories; без eval.
 forge_path=''

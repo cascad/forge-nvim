@@ -1,6 +1,6 @@
 # Что ещё требуется для полной поставки fride
 
-Исходный срез2026-11-15, код694cd9e, обновление §251. Это состав **существующих возможностей**, а не
+Исходный срез2026-11-15, код694cd9e, обновления §251–252. Это состав **существующих возможностей**, а не
 предложение новых LSP. Полного Default release пока нет: production
 [artifacts.tsv](../scripts/runtime/artifacts.tsv) не содержит ни одной строки.
 Готовность транспорта и отдельных стендов не равна готовности такой поставки.
@@ -29,11 +29,11 @@
 |---|---|---|---|
 | Core | Сам по себе не требует SDK языка | lua-language-server, stylua; 23 общих parsers | Git для plugins/backports, rg для текстового поиска, tree-sitter/подготовка native parsers. Prettier для JSON/YAML/Markdown принадлежит Node компоненту. |
 | Go | Go | delve, golangci-lint, gotestsum, gopls, gofumpt, golines; ещё4 parsers | При необходимости сборки новых tools требуется обычный Go1.26.0+; готовые packages переиспользуются со старым SDK. |
-| Rust | Rust/Cargo | rust-analyzer; ещё1 parser; codelldb только POSIX | Windows codelldb исключён из Mason и ожидается извне. Rustfmt — часть обычного Rust toolchain, не private IDE SDK. |
+| Rust | Rust/Cargo | rust-analyzer, codelldb1.12.2 на Windows/POSIX; ещё1 parser | §252: собственный LLDB/Python bundle; реальные breakpoint/continue/output проверены Windows/Ubuntu. Rustfmt — часть обычного Rust toolchain. |
 | Python | Python + Node для pyright | pyright, ruff, debugpy; ещё1 parser | Версии SDK/venv и настоящий debug/test acceptance; наличие receipt этого не доказывает. |
 | JS/Node | Node/npm | typescript-language-server, js-debug-adapter, prettier; ещё2 parsers | Prettier3.9.10 включён §251, в том числе для JSON/YAML/Markdown. Project node_modules сохраняет приоритет. |
-| Bash | Node; Bash runtime/backend | bash-language-server, shfmt, shellcheck, bash-debug-adapter; ещё1 parser | Подготовка закреплённого adapter patch не включена в общий setup; на Windows нужен выбранный владельцем WSL2 backend. WSL установщик не трогает. |
-| SQL | Go требуется текущему sqls install recipe | sqls, sqruff; ещё1 parser | Нужны существующие patched sqls и forge-sqltest, а не один stock sqls receipt. Базы/credentials — пользовательские. |
+| Bash | Node; Bash runtime/backend | bash-language-server, shfmt, shellcheck, pinned bash-debug-adapter; ещё1 parser | §252: принятый adapter patch применяется явным setup. Ubuntu launch проверен; Windows launch требует существующего WSL2 и здесь не проверен. |
+| SQL | Для готовых native tools SDK компилятора не нужен | sqruff; ещё1 parser; sqls/forge-sqltest из native SQL part | §252: publisher/delivery/query/Neotest проверены Windows/Ubuntu без Go/Rust в PATH. Базы/credentials пользовательские; опубликованных release URLs пока нет. |
 | Terminal | — | Mason/parsers нет | Нужен native WezTerm/font artifact и проверенная private интеграция с явным config, без замены пользовательского WezTerm. |
 
 Исходный Windows read-only snapshot: .tests/release-inventory-windows.json,
@@ -51,13 +51,14 @@ codelldb по текущему OS guard. POSIX guard проверен чтени
    [lsp.lua](../nvim_forge/lua/plugins/lsp.lua) и
    [format.lua](../nvim_forge/lua/plugins/format.lua) используют готовые bin/JS.
    Это IDE tools, а не языковые SDK. Их версии и postconditions теперь общие.
-3. [dap.lua](../nvim_forge/lua/plugins/dap.lua) ищет Windows codelldb через PATH,
-   пользовательский LocalAppData и Mason fallback. Существующая подготовка
-   debugger SDK проверялась отдельно, в published private kit её ещё нет.
-4. [bash_debug.lua](../nvim_forge/lua/forge/bash_debug.lua) требует подготовленный
-   patch; [sqls.json](../scripts/sdk/sqls.json) описывает уже существующий SQL
-   patch, [sql_tests.lua](../nvim_forge/lua/forge/sql_tests.lua) требует отдельный
-   forge-sqltest executable. Общий managed setup эти шаги не выполняет.
+3. §252: [dap.lua](../nvim_forge/lua/plugins/dap.lua) использует подготовленный
+   Mason codelldb на всех ОС. Native Win/Ubuntu приняли bundle без отдельного
+   пользовательского Python SDK. Mac и полный Default acceptance остаются.
+4. §252: [bash_debug.lua](../nvim_forge/lua/forge/bash_debug.lua) имеет строгую
+   owned подготовку в tools stage; SQL native part содержит принятые
+   [sqls](../scripts/sdk/sqls.json) и [forge-sqltest](../scripts/sdk/sql-test/README.md).
+   Runtime versions/выбор собственного бинарника проверяются; source builds
+   принадлежат publisher. WSL2 на Windows остаётся runtime prerequisite.
 5. [treesitter.lua](../nvim_forge/lua/plugins/treesitter.lua) вызывает native
    install API; необходима рабочая подготовка CLI/compiler либо готовых parser
    libraries для платформы. Docker image содержит инструменты сборки и потому
@@ -71,9 +72,10 @@ codelldb по текущему OS guard. POSIX guard проверен чтени
    shared JSON/YAML/Markdown formatting. Сборка Go tools проверяет Go1.26.0+,
    готовые packages этого SDK для повторной сборки не требуют. Реальные
    format/LSP/repeat/failure cases прошли Windows/Ubuntu; native Mac открыт.
-2. **Доставить уже принятые debug/test components:** Windows codelldb, штатная
-   подготовка существующих Bash/SQL patches, forge-sqltest. Не добавлять LSP
-   и новые adapter implementations; использовать имеющиеся provider boundaries.
+2. **Готово §252 — существующие debug/test tools:** codelldb/Bash через Mason,
+   owned hash-checked patch, native SQL artifact/publisher и проверки versions.
+   SDK компилятора для SQL убран из managed prerequisites. Реальные debug/query/
+   test consumers проверены Windows/Ubuntu; Mac, Windows Bash launch и publication открыты.
 3. **Собрать Core/Terminal artifacts:** Git/search/parser dependencies и
    WezTerm/font, platform manifests, source/version/SHA/license inventory.
    fd и native fzf — ускорители с существующим fallback, не скрытые обязательные SDK.
@@ -84,7 +86,7 @@ codelldb по текущему OS guard. POSIX guard проверен чтени
    только проверенные artifacts попадают в production catalog. Затем публичные
    one-liners, без ручного поиска/скачивания binaries пользователем.
 
-Пункт1 реализован в указанной границе; пункты2–5 ещё не реализованы.
+Пункты1–2 реализованы в указанных границах; пункты3–5 ещё не реализованы.
 Они пока не заблокированы целиком Mac-проверкой: общая подготовка и Windows/
 Ubuntu выполняются до неё. Публикация и непроверенные платформы отдельно открыты.
 

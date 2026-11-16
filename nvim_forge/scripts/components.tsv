@@ -4,7 +4,7 @@ rust	Rust	-	rust-analyzer,codelldb	rust
 python	Python	node-runtime	pyright,ruff,debugpy	python
 node	JS / Node.js + JSON/YAML/Markdown formatting	node-runtime	typescript-language-server,js-debug-adapter,prettier	javascript,typescript
 bash	Bash	node-runtime	bash-language-server,shfmt,shellcheck,bash-debug-adapter	bash
-sql	SQL	go-runtime	sqls,sqruff	sql
+sql	SQL	-	sqruff	sql
 terminal	WezTerm / Nerd Font	-	-	-
 node-runtime	-	-	-	-
 go-runtime	-	-	-	-

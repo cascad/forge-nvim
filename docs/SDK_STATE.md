@@ -68,6 +68,12 @@ tools, tools stage проверяет обычный Go1.26.0+; готовые p
 переиспользуются без обновления build SDK. SDK homes/env не переносятся,
 normal launch сохраняет SDK policies. [Версии и границы](INSTALLATION_PLAN.md#подготовка-существующих-ide-tools--251).
 
+§252: managed SQL получает готовые sqls/forge-sqltest из native runtime part,
+Go/Rust/C compiler у пользователя SQL не требуется. FRIDE_RUNTIME — только
+контекст собственных IDE tools; PowerShell caller value восстанавливается.
+Codelldb с его LLDB/Python bundle принадлежит Mason/fride, не Python SDK
+проекта. Bash setup патчит только свой Mason package; WSL2 не устанавливается.
+
 WinGet использует exact IDs/no-upgrade; APT install --no-upgrade, brew
 HOMEBREW_NO_INSTALL_UPGRADE. Их зависимостями управляет штатный менеджер;
 версия — из его настроенного репозитория, не обещанная project version.

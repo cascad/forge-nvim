@@ -4,6 +4,7 @@ $forgeKit=Split-Path -Parent $PSScriptRoot
 $forgeEnvironment=@{
     NVIM_APPNAME='fride'; NVIM_LOG_FILE=(Join-Path $forgeKit 'log/nvim.log')
     FRIDE_CONFIG=(Join-Path $forgeKit 'config/forge')
+    FRIDE_RUNTIME=(Join-Path $forgeKit 'runtime')
     TEMP=(Join-Path $forgeKit 'tmp'); TMP=(Join-Path $forgeKit 'tmp'); TMPDIR=(Join-Path $forgeKit 'tmp')
     VIM=$null; VIMRUNTIME=$null; VIMINIT=$null; EXINIT=$null; LUA_INIT=$null; LUA_PATH=$null; LUA_CPATH=$null
     FORGE_NVIM_COMPONENTS=$null

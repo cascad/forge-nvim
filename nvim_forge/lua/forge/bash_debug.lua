@@ -18,9 +18,7 @@ local function entrypoint()
     local path=vim.fs.joinpath(vim.fn.stdpath('data'),'mason/packages/bash-debug-adapter/extension/out/bashDebug.js')
     return file(path) and path or nil
 end
-function M.prepare()
-    local script=entrypoint()
-    if not script then warn('BashDebugPrepare: adapter не найден. Сначала :MasonInstall bash-debug-adapter.');return end
+local function prepare_script(script)
     local temporary
     local ok,why=pcall(function()
         local patch=sdk_patch();local raw,source,digest=sdk_source(script)
@@ -43,9 +41,22 @@ function M.prepare()
         return 'подготовлен'
     end)
     if temporary then vim.uv.fs_unlink(temporary) end
+    if not ok then error(why,0) end
+    return why
+end
+function M.prepare_installed()
+    local script=vim.fs.joinpath(vim.fn.stdpath('data'),'mason/packages/bash-debug-adapter/extension/out/bashDebug.js')
+    assert(file(script),'Mason bash-debug-adapter entrypoint missing: '..script)
+    return prepare_script(script)
+end
+function M.prepare()
+    local script=entrypoint()
+    if not script then warn('BashDebugPrepare: adapter не найден. Сначала :MasonInstall bash-debug-adapter.');return end
+    local ok,why=pcall(prepare_script,script)
     if not ok then warn('BashDebugPrepare: '..tostring(why));return end
     vim.notify('Bash debug SDK '..why..' (IDE-128)',vim.log.levels.INFO,{title='Bash debug'})
 end
+
 local function sdk_ready(script)
     local _,_,digest=sdk_source(script)
     for _,p in ipairs(sdk_patch().payloads) do if digest==p.after_sha256 then return true end end

@@ -13456,3 +13456,73 @@ Lua diagnostics, install-profile.test.py. Change prepare-managed-ide-tools,
 install plan/RELEASE_INVENTORY/roadmap/problems. Proof .tests/ide-tools-*.txt,
 .tests/ubuntu/ide-tools-*.txt, ide-tools-native-metadata/{windows,ubuntu},
 ide-tools-source-red.json, cleanup.json и audit.json. SDK/pins/backports/WIP frozen.
+
+
+## 252. Setup: доставка существующих debug/test tools
+
+Дата: 2026-11-15. IDE-138. Спека: IDE-BOOT-23 (ADDED).
+
+**Проблема.** Windows codelldb был исключён из managed Mason list; принятый
+Bash patch выполнялся вручную и сообщал warn вместо setup failure. SQL получал
+stock sqls через Go build, а patched sqls/forge-sqltest вообще не доставлялись.
+
+**Причина.** Исторические внешние SDK locations/отдельные test prepare steps
+не были включены в общую установку. Compiler SDK для publisher ошибочно
+считался prerequisite пользователя SQL. Старый Mason sqls мог заслонять private
+binary даже при наличии runtime part.
+
+**Изменение.** Pinned codelldb v1.12.2 на всех ОС через прежний Mason; Bash tag
+untagged-438733f35feb8659d939 (0.3.9). Общий hash/atomic patch engine имеет
+строгий owned API для setup; interactive command сохраняет warn UX. Unknown
+payload — nonzero без изменения исходника, repeat идемпотентен, explicit
+external adapter не патчится. CodeLLDB использует собственный LLDB/Python bundle.
+
+SQL native part содержит готовые sqls0.2.48+forge.1 и forge-sqltest0.1.0.
+Publisher package-sql-tools.py — wrapper существующего package-runtime;
+проверяет native build manifests/source/lock/patch/binary SHA/platform/version,
+сам SDK не ставит. Managed SQL исключает Go prerequisite и stock Mason sqls,
+sqruff остаётся Mason. IDE-only FRIDE_RUNTIME передаётся staged/installed
+process; owned SQL lookup идёт до stock PATH/Mason, explicit overrides сохранены.
+Native versions проверяются до kit ready; launcher восстанавливает caller env.
+Нового LSP/adapter/manager нет, accepted patches и SDK/locks не менялись.
+
+**Проверка/e2e.** Source policy87d6092 — expected Windows codelldb omission RED,
+old SQL row показывает Go dependency/stock sqls. Реальный Mason установил оба
+pinned debugger payloads на Windows/Ubuntu. Windows3 patch cases PASS + actual
+codelldb breakpoint/continue/terminal output PASS0.639s; Ubuntu5 PASS16.357s,
+включая настоящий Bash debug. Windows WSL2 launch НЕ проверялся/не запускался.
+Native Mac НЕ запускался. Проверен именно output terminal/repl, не source buffer.
+
+Native SQL part упакован Windows/Ubuntu, затем настоящий source/UI/parts HTTP,
+private install и launcher при Go/Rust скрытых в PATH. SQL comment query42,
+SQLite runner и existing Neotest build_spec/results прошли. Windows4 cases
+прошли суммарно с адресными исправлениями stand; Ubuntu4 PASS13.138s. Усиленный
+Neotest path Windows1 PASS17.125s / Ubuntu1 PASS8.194s. Manifest/source mismatch,
+corrupt archive и обе wrong native versions дают nonzero с причиной в
+log/setup-tools.log; marker/runtime старого kit не меняются. Policy4 PASS на ОС,
+старые receipt controls Win3/Ubuntu4 PASS, caller FRIDE_RUNTIME restore при
+exit7 PASS18.006s. Linux image готовый, --pull never, network none; Desktop/WSL
+не перенастраивались. SQL Rust/Go/CC нужны только предоставленным build inputs,
+не установке SQL пользователю.
+
+Первоначальные failures относились к stand: отсутствовал config root в RTP;
+продолжение до focused stack frame вызывало DAP select prompt; console mode
+не соответствовал штатному integrated output. Использованы breakpoint/focused
+frame/terminal+repl oracle. SQL old-kit test сначала читал неверное имя marker,
+wrong-version oracle смотрел UI summary вместо полного stage log. Исправлены
+только эти адресные проверки; raw failures сохранены, green full loop не делался.
+
+**Вывод.** Inventory пункт2 закрыт в указанных границах. Native Mac, Windows
+Bash backend acceptance и publication открыты. Следующий этап Core/Terminal/
+actual Default не начат: владелец попросил заканчивать. Удалено 2.14GiB own
+stand payloads, 78 metadata references сохранены; debugger cache/SQL archives
+и raw evidence оставлены. SDK/lazy-lock/backports/чужой WIP frozen.
+
+**Файлы.** Tool catalog/profile/Bash/SQL native lookup, setup-stage/native-tools
+policy, launcher/private env, frontend SDK prerequisites, package-sql-tools.py;
+новые native debug/SQL delivery tests и diagnostics, profile/caller controls.
+Proof .tests/debug-tools-*.txt, .tests/ubuntu/debug-tools-*.txt,
+debug-tools-metadata, cleanup/audit.json; change deliver-existing-debug-test-tools.
+
+
+**Дополнение2026-11-16 к §252.** Работа возобновлена после остановки перед commit. Сохранённые native результаты, debugger receipts/Bash hashes и SQL archives проверены;24 frozen inputs, raw journal prefixes, AST/doc links и strict OpenSpec validation прошли. Повторный прогон успешных suites не выполнялся.
