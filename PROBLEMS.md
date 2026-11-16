@@ -83,6 +83,11 @@ sqls/forge-sqltest без SDK компилятора. Реальные debug/que
 прошли; §254 Ubuntu4 PASS40.313s, native Mac не проверялся. Остальные Core/Terminal
 dependencies и полный source/license inventory пока открыты.
 
+§257: Core требует обычный Git до загрузки artifacts/setup. Existing/install/
+recheck/cancel и --check-tools/--tool-path реализованы; Git не пропускается и не
+копируется в kit. Windows/Ubuntu по8 Git E2E + по3 SDK controls PASS; Mac открыт.
+Следующий установочный срез — WezTerm/font, затем full Default/Custom.
+
 §256: Core доставляет pinned ripgrep15.2.0 и лицензии. Реальный Telescope
 поиск имени/текста и открытие результата, provenance/old-kit failures прошли
 Windows/Ubuntu; system rg/fd не нужны. Git/Terminal/общий inventory открыты.

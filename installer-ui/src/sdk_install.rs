@@ -46,6 +46,7 @@ pub(crate) fn recipe(id: &str, paths: &[PathBuf]) -> Result<Recipe> {
             "rust" => "Rustlang.Rustup",
             "node" => "OpenJS.NodeJS.LTS",
             "python" => "Python.Python.3.14",
+            "git" => "Git.Git",
             _ => return Err(invalid("Unknown SDK")),
         };
         ("winget",vec!["install","--exact","--id",package,"--source","winget","--no-upgrade","--accept-source-agreements","--accept-package-agreements","--disable-interactivity"],"WinGet: версия пакета из репозитория winget; штатные каталоги приложения, возможен UAC")
@@ -55,6 +56,7 @@ pub(crate) fn recipe(id: &str, paths: &[PathBuf]) -> Result<Recipe> {
             "rust" => "rust",
             "node" => "node",
             "python" => "python",
+            "git" => "git",
             _ => return Err(invalid("Unknown SDK")),
         };
         (
@@ -68,6 +70,7 @@ pub(crate) fn recipe(id: &str, paths: &[PathBuf]) -> Result<Recipe> {
             "rust" => vec!["rustc", "cargo"],
             "node" => vec!["nodejs", "npm"],
             "python" => vec!["python3", "python3-venv"],
+            "git" => vec!["git"],
             _ => return Err(invalid("Unknown SDK")),
         };
         let mut args = vec!["install", "--yes", "--no-upgrade"];
@@ -93,7 +96,7 @@ fn manager_path(name: &str, path: &std::ffi::OsStr) -> Result<PathBuf> {
         std::io::Error::new(
             std::io::ErrorKind::NotFound,
             format!(
-                "{name} не найден. Выберите существующий SDK; для Ubuntu необходим штатный APT."
+                "{name} не найден. Выберите существующий каталог программы; для Ubuntu необходим штатный APT."
             ),
         )
     })
@@ -109,7 +112,7 @@ pub(crate) fn run(options: &Options, paths: &[PathBuf], recipe: &Recipe) -> Resu
     ));
     let mut file = OpenOptions::new().create_new(true).write(true).open(&log)?;
     writeln!(file, "{}\n{}", recipe.source, recipe.display())?;
-    cliclack::log::info(format!("SDK installation · лог: {}", log.display()))?;
+    cliclack::log::info(format!("Штатная установка · лог: {}", log.display()))?;
     let mut child = Command::new(&recipe.program)
         .args(&recipe.args)
         .env("PATH", sdks::effective_path(paths)?)
@@ -151,7 +154,7 @@ pub(crate) fn run(options: &Options, paths: &[PathBuf], recipe: &Recipe) -> Resu
     writeln!(file, "\nExit: {status}")?;
     if !status.success() {
         cliclack::log::warning(format!(
-            "SDK installation завершилась с {status}; лог: {}",
+            "Штатная установка завершилась с {status}; лог: {}",
             log.display()
         ))?;
     }

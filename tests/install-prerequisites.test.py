@@ -62,6 +62,7 @@ class Prerequisites(ui.UI):
 
     def test_sdk_03_missing_does_not_touch_existing_kit(self):
         base,env,target=self.prepare('sdk-missing');env['PATH']=str(base/'no-SDK')
+        git=Path(env['PATH']);git.mkdir();shutil.copy2(self.fixture,git/('git.exe' if stand.WINDOWS else 'git'))
         target.mkdir(parents=True);(target/'keep').write_text('existing kit');before=stand.snapshot(target)
         start=len(self.requests);result,report=self.invoke(base,env,target,check=False)
         self.assertNotEqual(result.returncode,0);self.assertIn('SDK prerequisites',result.stderr)

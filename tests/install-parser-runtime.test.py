@@ -61,6 +61,7 @@ class Parsers(ui.UI):
         base, env, target = super().prepare(name)
         env.update(FORGE_E2E_DEPS=str(DEPS), FORGE_PARSER_TEST_INIT=str(ROOT / 'tests/diagnostics/install-parser-init.lua'))
         env['PATH'] = os.pathsep.join([str(Path(os.environ['SystemRoot']) / 'System32'), str(Path(os.environ['SystemRoot']) / 'System32/WindowsPowerShell/v1.0')]) if stand.WINDOWS else '/usr/bin:/bin'
+        if stand.WINDOWS: env['PATH'] += os.pathsep + str(Path(shutil.which('git')).parent)
         # A stale standard app parser must not shadow the delivered site after Lazy reset.
         shadow = Path(env['XDG_DATA_HOME']) / ('fride-data' if stand.WINDOWS else 'fride') / 'site/parser/lua.so'
         shadow.parent.mkdir(parents=True)

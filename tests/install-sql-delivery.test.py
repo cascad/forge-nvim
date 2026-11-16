@@ -43,6 +43,7 @@ class SQLDelivery(ui.UI):
         base,env,target=super().prepare(name)
         env.update(FORGE_E2E_DEPS=str(DEPS),FORGE_SQL_TEST_INIT=str(ROOT/'tests/diagnostics/install-sql-init.lua'),FORGE_SQRUFF_FIXTURE=str(SQL/'bin'/('sqruff.exe' if stand.WINDOWS else 'sqruff')))
         env['PATH']=os.pathsep.join([str(Path(os.environ['SystemRoot'])/'System32'),str(Path(os.environ['SystemRoot'])/'System32/WindowsPowerShell/v1.0')]) if stand.WINDOWS else '/usr/bin:/bin'
+        if stand.WINDOWS:env['PATH']+=os.pathsep+str(Path(shutil.which('git')).parent)
         return base,env,target
     def install_sql(self,base,env,target):return self.root_entry(base,env,target,'sql',runtime=False)
     def test_sql_01_native_delivery_without_sdk(self):

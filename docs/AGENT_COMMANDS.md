@@ -9720,3 +9720,42 @@ Cleanup.py проверил абсолютные own roots по3 raw logs, со�
 Core archive, удалил только собственные SDK/archive copies. TEMP/TMP/TMPDIR/
 NVIM log/npm cache на F. Финал: AST/frozen25/raw+staged journal prefixes,
 exact staging allowlist/git diff --cached --check и local commit без push.
+
+## 165. IDE-BOOT-27: обычный Git как prerequisite Core
+
+2026-11-16. Read-only installer discovery/actions/recipes и pinned OpenSpec CLI
+context/list/status/instructions/strict validate. Primary sources: git-scm.com
+install/windows и install/linux, formulae.brew.sh/formula/git, Apple TN2339
+(xcode-select --print-path и shims). Нового package manager/приватного Git нет.
+
+Native Windows frontend build:
+python -B scripts/build-installer-ui.py --rustc <existing native rustc.exe>
+Cargo --locked/offline, готовые crates, jobs2, TEMP/TMP/TMPDIR на F.
+Диагностика: fride-setup --source . --components core --check-tools
+--log-dir .tests/git-check [--tool-path <ordinary Git bin>]. JSON tools/path/
+version/detail/log; exit0 ready,2 missing/unavailable. --check-sdks отдельно.
+--preview/--print-plan не запускают probes/managers. --help описывает оба пути.
+
+Tests: python -B tests/install-git-prerequisite.test.py (POSIX python3).
+В целевой итерации Windows8/Ubuntu8 PASS; Mac-only case09 добавлен для владельца
+и здесь не выполнялся. Native PTY decisions + executable manager fixtures,
+настоящий Git/local init/add/commit через launcher, внешний config/SSH env.
+Никаких remote/credential requests/host installs. Контроли:
+python -B tests/install-sdk-actions.test.py test_actions_06_confirmed_install
+test_actions_11_headless_explicit_fallback
+python -B tests/install-prerequisites.test.py test_sdk_03_missing_does_not_touch_existing_kit
+На каждой ОС соответственно2 и1 PASS. Успешные suites не повторялись.
+
+Ubuntu: docker compose -f tests/containers/compose.yaml
+-f .tests/ubuntu/parser-runtime/limits.yaml run --rm --no-deps --pull never
+--entrypoint bash ubuntu /workspace/.tests/git-prerequisite/run.sh
+Стенд и build в guest /tmp, raw output/receipts экспортированы в bind на F.
+Готовые vendored crates, native Neovim/Rust/Node из existing image;
+network none,2CPU/2GiB. Docker Desktop/WSL/image lifecycle не менялись.
+После help/formatting и Mac-only canonical-path уточнения — rebuild/--help,
+без повтора зелёного E2E. Binaries/receipts игнорируются Git.
+
+Финал: Python AST, OpenSpec strict, frozen25/raw journal prefix SHA,
+resolved own-root cleanup payloads с сохранением metadata/SHA, exact allowlist,
+staged HEAD prefix и git diff --cached --check; local commit без push.
+Raw evidence/cleanup: .tests/git-prerequisite. SDK/Neovim/locks/чужой WIP прежние.

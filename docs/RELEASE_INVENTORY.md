@@ -27,7 +27,7 @@
 
 | Компонент | Обычные SDK | Mason в текущем managed setup | Пробел поставки |
 |---|---|---|---|
-| Core | Сам по себе не требует SDK языка | lua-language-server, stylua; 23 общих parsers | §253: готовый site с33 native libraries, выбранный каталог проверяется без сборки; Windows/Ubuntu PASS, native Mac открыт. §256: pinned rg15.2.0 с лицензиями/real picker PASS Windows/Ubuntu. Git и общий source/license inventory ещё нужны. Prettier для JSON/YAML/Markdown принадлежит Node компоненту. |
+| Core | Сам по себе не требует SDK языка; нужен обычный Git | lua-language-server, stylua; 23 общих parsers | §253: готовый site с33 native libraries, выбранный каталог проверяется без сборки; Windows/Ubuntu PASS, native Mac открыт. §256: pinned rg15.2.0 с лицензиями/real picker PASS Windows/Ubuntu. §257: native Git prerequisite с явным выбором/установкой. Общий source/license inventory ещё нужен. Prettier для JSON/YAML/Markdown принадлежит Node компоненту. |
 | Go | Go | delve, golangci-lint, gotestsum, gopls, gofumpt, golines; ещё4 parsers | При необходимости сборки новых tools требуется обычный Go1.26.0+; готовые packages переиспользуются со старым SDK. |
 | Rust | Rust/Cargo | rust-analyzer, codelldb1.12.2 на Windows/POSIX; ещё1 parser | §252: собственный LLDB/Python bundle; реальные breakpoint/continue/output проверены Windows/Ubuntu. Rustfmt — часть обычного Rust toolchain. |
 | Python | Python + Node для pyright | pyright, ruff, debugpy; ещё1 parser | Версии SDK/venv и настоящий debug/test acceptance; наличие receipt этого не доказывает. |
@@ -81,6 +81,9 @@
    §253–254 закрыли Windows/Ubuntu parser delivery в указанных границах.
    §255 снял long-path Lua cache blocker штатной policy; полный editor E2E Windows/Ubuntu прошёл.
    §256 доставляет native rg15.2.0/Core с лицензиями; real Telescope поиск/переход проверен Windows/Ubuntu.
+   §257 закрывает Git как native Core prerequisite: reuse/config/launcher и явные
+   manager decisions проверены Windows/Ubuntu; private Git не поставляется.
+   Следующий срез этого пункта — WezTerm/font, затем общий inventory.
 4. **Настоящий Default/Custom из архива:** отдельный чистый профиль, реальные
    config/plugins/tools, launch → open/search → LSP → debug/tests → format,
    затем repeat/cancel/upgrade. Одна целевая тестовая итерация на изменение.

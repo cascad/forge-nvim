@@ -28,6 +28,10 @@ fn main() {
         if mode=="noop" {return;}
         let root=std::path::PathBuf::from(std::env::var("SDK_PACKAGE_BIN").unwrap());
         std::fs::create_dir_all(&root).unwrap();
+        if std::env::args().any(|arg| arg == "Git.Git" || arg == "git") {
+            std::fs::copy(std::env::current_exe().unwrap(),root.join(if cfg!(windows) {"git.exe"} else {"git"})).unwrap();
+            return;
+        }
         std::fs::copy(std::env::current_exe().unwrap(),root.join(if cfg!(windows) {"node.exe"} else {"node"})).unwrap();
         let npm=root.join(if cfg!(windows) {"npm.cmd"} else {"npm"});std::fs::write(&npm,"fixture entrypoint\n").unwrap();
         #[cfg(unix)] {use std::os::unix::fs::PermissionsExt;std::fs::set_permissions(npm,std::fs::Permissions::from_mode(0o755)).unwrap();}
@@ -51,6 +55,7 @@ fn main() {
         "python" => "Python 2.7.18",
         "python3" => "Python 3.14.0",
         "node" => "v24.11.0",
+        "git" => "git version 2.51.0 fixture",
         _ => "unknown fixture",
     });
 }

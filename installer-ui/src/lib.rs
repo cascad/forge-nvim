@@ -36,6 +36,7 @@ pub struct Options {
     pub plain: bool,
     pub print_plan: bool,
     pub check_sdks: bool,
+    pub check_tools: bool,
     pub sdk_report: Option<PathBuf>,
     pub sdk_paths: Vec<PathBuf>,
 }
@@ -66,8 +67,12 @@ impl Options {
                     result.check_sdks = true;
                     continue;
                 }
+                "--check-tools" => {
+                    result.check_tools = true;
+                    continue;
+                }
                 "--help" => {
-                    println!("fride-setup --source DIR --profile default|custom [--components CSV] --install-dir DIR\n--command-dir DIR --runtime-path DIR --runtime-archive-url URL --runtime-sha256 SHA\n--preview --no-color --print-plan --result FILE --log-dir DIR\n--check-sdks --sdk-report FILE --sdk-path DIR (repeatable fallback bin)");
+                    println!("fride-setup --source DIR --profile default|custom [--components CSV] --install-dir DIR\n--command-dir DIR --runtime-path DIR --runtime-archive-url URL --runtime-sha256 SHA\n--preview --no-color --print-plan --result FILE --log-dir DIR\n--check-sdks --sdk-report FILE\n--check-tools (Git prerequisite) --tool-path DIR (repeatable fallback bin; alias --sdk-path)");
                     std::process::exit(0);
                 }
                 _ => {}
@@ -93,7 +98,7 @@ impl Options {
                 "--log-dir" => result.log_dir = value.into(),
                 "--result" => result.result_file = Some(value.into()),
                 "--sdk-report" => result.sdk_report = Some(value.into()),
-                "--sdk-path" => result.sdk_paths.push(value.into()),
+                "--sdk-path" | "--tool-path" => result.sdk_paths.push(value.into()),
                 _ => return Err(invalid(format!("Неизвестный параметр: {key}"))),
             }
         }
@@ -245,8 +250,9 @@ fn review(rows: &[Row], plan: &Plan) -> String {
         ));
     }
     for path in &plan.sdk_paths {
-        lines.push(format!("SDK fallback (после PATH): {}", path.display()));
+        lines.push(format!("Внешний fallback (после PATH): {}", path.display()));
     }
+    lines.push("Git из вашей системы (обязателен для Core)".into());
     lines.join("\n")
 }
 
@@ -299,6 +305,11 @@ pub fn run(options: Options) -> Result<i32> {
         println!("{}", serde_json::to_string(&report)?);
         return Ok(if report.ready() { 0 } else { 2 });
     }
+    if options.check_tools {
+        let report = inspect_tools(&options, &plan)?;
+        println!("{}", serde_json::to_string(&tool_report(&report))?);
+        return Ok(if report.ready() { 0 } else { 2 });
+    }
     let automatic = options.components.is_some() || options.profile == "default";
     let plain = options.plain || !io::stderr().is_terminal();
     let color = !plain && std::env::var_os("NO_COLOR").is_none();
@@ -322,6 +333,29 @@ pub fn run(options: Options) -> Result<i32> {
     } else {
         wizard::intro(options.preview)?;
         cliclack::note("План установки", review(&rows, &plan))?;
+    }
+    if !options.preview {
+        let report = inspect_tools(&options, &plan)?;
+        let interactive = io::stdin().is_terminal() && io::stderr().is_terminal();
+        let report = if !report.ready() && interactive {
+            match sdk_actions::configure_git(&options, &rows, &mut plan, report)? {
+                Some(report) => report,
+                None => {
+                    cliclack::outro_cancel("Отмена IDE. Прежний комплект сохранён; явно установленные программы остаются в системе.")?;
+                    return Ok(130);
+                }
+            }
+        } else {
+            report
+        };
+        if plain {
+            eprintln!("Git\n{}", report.summary());
+        } else {
+            cliclack::note("Git", report.summary())?;
+        }
+        if !report.ready() {
+            return Err(invalid(format!("Git prerequisite не готов. Выберите Git в PATH/--tool-path или установите его штатно. IDE artifacts не загружались; прежний комплект сохранён. Отчёты: {}", options.log_dir.display())));
+        }
     }
     if !options.preview && !plan.native_sdks.is_empty() {
         let report = inspect_sdks(&options, &plan)?;
@@ -592,6 +626,28 @@ pub(crate) fn inspect_sdks(options: &Options, plan: &Plan) -> Result<sdks::Repor
             &report,
         )?;
     }
+    Ok(report)
+}
+
+fn tool_report(report: &sdks::Report) -> serde_json::Value {
+    serde_json::json!({"schema": 1, "tools": report.sdks})
+}
+
+pub(crate) fn inspect_tools(options: &Options, plan: &Plan) -> Result<sdks::Report> {
+    let report = sdks::inspect(&["git".into()], &options.log_dir, &plan.sdk_paths)?;
+    fs::create_dir_all(&options.log_dir)?;
+    let path = options.log_dir.join(format!(
+        "tools-{}-{}.json",
+        SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .map_err(invalid)?
+            .as_nanos(),
+        std::process::id()
+    ));
+    serde_json::to_writer_pretty(
+        OpenOptions::new().create_new(true).write(true).open(path)?,
+        &tool_report(&report),
+    )?;
     Ok(report)
 }
 

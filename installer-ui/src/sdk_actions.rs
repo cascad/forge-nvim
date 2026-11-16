@@ -1,4 +1,7 @@
-use crate::{inspect_sdks, review, sdk_bootstrap, sdk_install, sdks, Options, Plan, Result, Row};
+use crate::{
+    inspect_sdks, inspect_tools, review, sdk_bootstrap, sdk_install, sdks, Options, Plan, Result,
+    Row,
+};
 use std::path::{Path, PathBuf};
 
 fn interrupted<T>(value: &Result<T>) -> bool {
@@ -7,8 +10,38 @@ fn interrupted<T>(value: &Result<T>) -> bool {
         .is_err_and(|e| e.kind() == std::io::ErrorKind::Interrupted)
 }
 
-fn discover(options: &Options, plan: &mut Plan, id: &str) -> Result<sdks::Report> {
-    let report = inspect_sdks(options, plan)?;
+#[derive(Clone, Copy)]
+enum Subject {
+    Sdks,
+    Git,
+}
+impl Subject {
+    fn git(self) -> bool {
+        matches!(self, Self::Git)
+    }
+    fn label(self, id: &str) -> String {
+        if self.git() {
+            "Git".into()
+        } else {
+            format!("SDK {id}")
+        }
+    }
+    fn inspect(self, options: &Options, plan: &Plan) -> Result<sdks::Report> {
+        if self.git() {
+            inspect_tools(options, plan)
+        } else {
+            inspect_sdks(options, plan)
+        }
+    }
+}
+
+fn discover(
+    subject: Subject,
+    options: &Options,
+    plan: &mut Plan,
+    id: &str,
+) -> Result<sdks::Report> {
+    let report = subject.inspect(options, plan)?;
     if report
         .sdks
         .iter()
@@ -20,7 +53,7 @@ fn discover(options: &Options, plan: &mut Plan, id: &str) -> Result<sdks::Report
     for path in sdk_install::registered_paths()? {
         let _ = sdks::add_path(&mut candidate, path);
     }
-    let found = inspect_sdks(options, &candidate)?;
+    let found = subject.inspect(options, &candidate)?;
     if let Some(sdk) = found
         .sdks
         .iter()
@@ -32,17 +65,27 @@ fn discover(options: &Options, plan: &mut Plan, id: &str) -> Result<sdks::Report
             }
         }
     }
-    inspect_sdks(options, plan)
+    subject.inspect(options, plan)
 }
 
-fn existing(options: &Options, plan: &mut Plan, id: &str, root: PathBuf) -> Result<sdks::Report> {
-    for directory in [root.clone(), root.join("bin"), root.join("Scripts")] {
+fn existing(
+    subject: Subject,
+    options: &Options,
+    plan: &mut Plan,
+    id: &str,
+    root: PathBuf,
+) -> Result<sdks::Report> {
+    for directory in [
+        root.clone(),
+        root.join("bin"),
+        root.join(if subject.git() { "cmd" } else { "Scripts" }),
+    ] {
         if !directory.is_dir() {
             continue;
         }
         let mut candidate = plan.clone();
         sdks::add_path(&mut candidate, directory)?;
-        let report = inspect_sdks(options, &candidate)?;
+        let report = subject.inspect(options, &candidate)?;
         if report
             .sdks
             .iter()
@@ -52,10 +95,29 @@ fn existing(options: &Options, plan: &mut Plan, id: &str, root: PathBuf) -> Resu
             return Ok(report);
         }
     }
-    Err(crate::invalid("SDK из каталога не готов. Проверьте root/bin и SDK раньше в PATH; приоритет PATH сохраняется."))
+    Err(crate::invalid(format!("{} из каталога не готов. Проверьте root/bin{} и программу раньше в PATH; приоритет PATH сохраняется.", if subject.git() { "Git" } else { "SDK" }, if subject.git() { "/cmd" } else { "" })))
 }
 
 pub(crate) fn configure(
+    options: &Options,
+    rows: &[Row],
+    plan: &mut Plan,
+    report: sdks::Report,
+) -> Result<Option<sdks::Report>> {
+    configure_for(Subject::Sdks, options, rows, plan, report)
+}
+
+pub(crate) fn configure_git(
+    options: &Options,
+    rows: &[Row],
+    plan: &mut Plan,
+    report: sdks::Report,
+) -> Result<Option<sdks::Report>> {
+    configure_for(Subject::Git, options, rows, plan, report)
+}
+
+fn configure_for(
+    subject: Subject,
     options: &Options,
     rows: &[Row],
     plan: &mut Plan,
@@ -77,23 +139,42 @@ pub(crate) fn configure(
             }
             return Ok(if proceed? { Some(report) } else { None });
         };
-        cliclack::note("Готовность SDK", report.summary())?;
-        let action = cliclack::select(format!("SDK {id}: действие"))
+        let label = subject.label(&id);
+        cliclack::note(
+            if subject.git() {
+                "Готовность Git"
+            } else {
+                "Готовность SDK"
+            },
+            report.summary(),
+        )?;
+        let mut menu = cliclack::select(format!("{label}: действие"))
             .item(
                 0,
-                "Выбрать существующий SDK",
-                "root/bin; fallback после вашего PATH",
+                if subject.git() {
+                    "Выбрать существующий Git"
+                } else {
+                    "Выбрать существующий SDK"
+                },
+                if subject.git() {
+                    "root/bin/cmd; fallback после вашего PATH"
+                } else {
+                    "root/bin; fallback после вашего PATH"
+                },
             )
             .item(
                 1,
                 "Установить штатным способом",
                 "Сначала команда и отдельное подтверждение",
-            )
-            .item(
+            );
+        if !subject.git() {
+            menu = menu.item(
                 2,
                 "Пропустить зависимые компоненты",
                 "Показать, какие функции будут сняты",
-            )
+            );
+        }
+        let action = menu
             .item(
                 3,
                 "Проверить снова",
@@ -111,7 +192,7 @@ pub(crate) fn configure(
         let result = (|| -> Result<Option<sdks::Report>> {
             match action {
                 0 => {
-                    let input: Result<String> = cliclack::input(format!("Каталог SDK {id}"))
+                    let input: Result<String> = cliclack::input(format!("Каталог {label}"))
                         .validate(|v: &String| {
                             sdks::directory(Path::new(v))
                                 .map(|_| ())
@@ -121,7 +202,13 @@ pub(crate) fn configure(
                     if interrupted(&input) {
                         return Ok(None);
                     }
-                    Ok(Some(existing(options, plan, &id, PathBuf::from(input?))?))
+                    Ok(Some(existing(
+                        subject,
+                        options,
+                        plan,
+                        &id,
+                        PathBuf::from(input?),
+                    )?))
                 }
                 1 => {
                     let recipe = match sdk_install::recipe(&id, &plan.sdk_paths) {
@@ -131,43 +218,46 @@ pub(crate) fn configure(
                             else {
                                 return Err(error);
                             };
-                            cliclack::note("Менеджер SDK не найден", format!("{}\n{}\nМенеджер останется в системе при отмене IDE. Языковой SDK подтверждается отдельно.", bootstrap.source, bootstrap.display()))?;
-                            let confirm =
-                                cliclack::confirm("Установить менеджер SDK этой командой?")
-                                    .initial_value(false)
-                                    .interact();
+                            cliclack::note(if subject.git() { "Менеджер для Git не найден" } else { "Менеджер SDK не найден" }, format!("{}\n{}\nМенеджер останется в системе при отмене IDE. Установка программы подтверждается отдельно.", bootstrap.source, bootstrap.display()))?;
+                            let confirm = cliclack::confirm(if subject.git() {
+                                "Установить менеджер для Git этой командой?"
+                            } else {
+                                "Установить менеджер SDK этой командой?"
+                            })
+                            .initial_value(false)
+                            .interact();
                             if interrupted(&confirm) || !confirm? {
                                 return Ok(None);
                             }
                             if !sdk_install::run(options, &plan.sdk_paths, &bootstrap)? {
                                 return Ok(None);
                             }
-                            sdk_install::recipe(&id, &plan.sdk_paths).map_err(|_| crate::invalid("Команда завершилась, но менеджер SDK не найден. Проверьте лог, выберите существующий SDK или повторите."))?
+                            sdk_install::recipe(&id, &plan.sdk_paths).map_err(|_| crate::invalid(format!("Команда завершилась, но менеджер {} не найден. Проверьте лог, выберите существующий каталог или повторите.", if subject.git() { "для Git" } else { "SDK" })))?
                         }
                         Err(error) => return Err(error),
                     };
-                    cliclack::note("Штатная установка SDK",format!("{}\n{}\nНе запрашиваем upgrade выбранного SDK; зависимости обрабатывает штатный менеджер. SDK останется в системе при последующей отмене IDE.",recipe.source,recipe.display()))?;
-                    let confirm = cliclack::confirm(format!("Установить SDK {id} этой командой?"))
+                    cliclack::note(if subject.git() { "Штатная установка Git" } else { "Штатная установка SDK" },format!("{}\n{}\nНе запрашиваем upgrade выбранной программы; зависимости обрабатывает штатный менеджер. Программа останется в системе при последующей отмене IDE.",recipe.source,recipe.display()))?;
+                    let confirm = cliclack::confirm(format!("Установить {label} этой командой?"))
                         .initial_value(false)
                         .interact();
                     if interrupted(&confirm) || !confirm? {
                         return Ok(None);
                     }
                     if sdk_install::run(options, &plan.sdk_paths, &recipe)? {
-                        let checked = discover(options, plan, &id)?;
+                        let checked = discover(subject, options, plan, &id)?;
                         if checked
                             .sdks
                             .iter()
                             .any(|s| s.id == id && s.status != "ready")
                         {
-                            cliclack::log::warning("Команда завершилась, но SDK пока не готов. Выберите каталог или исправьте PATH и повторите.")?;
+                            cliclack::log::warning(format!("Команда завершилась, но {} пока не готов. Выберите каталог или исправьте PATH и повторите.", if subject.git() { "Git" } else { "SDK" }))?;
                         }
                         Ok(Some(checked))
                     } else {
                         Ok(None)
                     }
                 }
-                2 => {
+                2 if !subject.git() => {
                     let affected = plan
                         .components
                         .iter()
@@ -196,7 +286,7 @@ pub(crate) fn configure(
                     )?;
                     Ok(Some(inspect_sdks(options, plan)?))
                 }
-                3 => Ok(Some(discover(options, plan, &id)?)),
+                3 => Ok(Some(discover(subject, options, plan, &id)?)),
                 _ => unreachable!("SDK action"),
             }
         })();

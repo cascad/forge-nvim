@@ -928,4 +928,52 @@ source/UI/Core/launcher → Telescope find_files/live_grep с keyboard input,
 Unicode path/ignore rules и переходом на строку; system rg/fd не нужны.
 Invalid binary/license/archive/version и old-kit probe failure проверены.
 Другие plugin/Mason stages в stand контролируются; full Default этим не заявлен.
-Git policy, Terminal, общий source/license inventory и native Mac открыты.
+Git policy закрыта §257 в границах native Windows/Ubuntu; Terminal, общий
+source/license inventory и native Mac открыты.
+
+## Обычный Git для Core — §257
+
+Core требует рабочий Git2+ до загрузки IDE artifacts/setup. Установщик использует
+Git из обычного PATH, сохраняя его приоритет, config/credentials/SSH environment.
+Private копии Git и изменений user/system PATH нет. Языковые SDK проверяются отдельно.
+Если Git отсутствует/не работает, мастер предлагает каталог существующего Git
+(root/bin/cmd), штатную установку, повторную проверку или отмену. Пропустить Git
+нельзя. Выбранный внешний bin сохраняется в owned kit как fallback после PATH;
+внутреннее имя sdk-paths.txt оставлено для совместимости.
+
+До установки показываются источник/команда и отдельное подтверждение.
+Windows: [официальный Git.Git через WinGet](https://git-scm.com/install/windows),
+macOS: [formula git через Homebrew](https://formulae.brew.sh/formula/git),
+Ubuntu: [git через APT](https://git-scm.com/install/linux). Используются прежние
+no-upgrade настройки менеджера, без автоматического обновления готового Git.
+Отсутствующий менеджер имеет прежний отдельный bootstrap/confirm. После команды
+Git проверяется снова: exit0 без готового Git не разрешает продолжить.
+Явно установленный Git/менеджер остаётся в системе при последующей отмене IDE.
+
+Read-only диагностика подготовленного frontend из репозитория:
+
+```powershell
+.tools/installer-ui/windows-x64/fride-setup.exe --source . --components core --check-tools --log-dir .tests/git-check
+.tools/installer-ui/windows-x64/fride-setup.exe --source . --components core --check-tools --tool-path 'C:/Program Files/Git/cmd' --log-dir .tests/git-check
+```
+
+POSIX: `.tools/installer-ui/<platform>/fride-setup`, внешний bin задаётся тем же
+--tool-path. Exit0 означает ready, exit2 — missing/unavailable; JSON содержит
+tools, version/path/detail/log. --check-sdks остаётся прежней проверкой языков.
+Обычные --preview/--print-plan не запускают version probes/менеджеры.
+На Mac перед Apple shim проверяется read-only xcode-select --print-path и
+наличие выбранного Git; Developer Tools установка не вызывается. Основание:
+[Apple TN2339](https://developer.apple.com/library/archive/technotes/tn2339/_index.html).
+
+Native regression: `python -B tests/install-git-prerequisite.test.py`
+(Ubuntu/macOS: python3). Как и другим install stands, нужны подготовленные
+native frontend/Neovim/Node и Rust для executable fixtures; тест их не ставит.
+Overrides FORGE_INSTALL_UI_BINARY/FORGE_INSTALL_TEST_NVIM/FORGE_E2E_NODE_DEPS
+прежние. Менеджеры в E2E — контролируемые executables. Настоящий Git проверен
+отдельно через fride launcher: local init/add/commit, тот же executable,
+обычный внешний Git config и SSH environment. Настоящие credentials/сеть не нужны.
+
+Windows8 PASS28.369s, Ubuntu8 PASS11.639s; по3 прежних SDK controls также PASS.
+Нативная проверка macOS, реальные manager installs и полный Default не заявлены.
+Следующий конкретный срез — private WezTerm/font для Terminal, затем общий
+inventory и actual Default/Custom из архива. Production catalog остаётся пустым.

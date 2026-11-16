@@ -39,7 +39,12 @@ artifacts, actual Default/Custom и native Mac/publication.
 delivery/подсветка/отказы проверены с33 native parsers. Ubuntu4 PASS40.313s (§254), Mac остаётся owner gate. §255 устранил сбой vim.loader на длинных
 Unicode paths штатной cache policy; full editor E2E Windows/Ubuntu прошли. Git/Terminal и
 source/license inventory ещё открыты. §256 добавил native ripgrep/Core и
-Telescope delivery E2E на Windows/Ubuntu; rg больше не внешний prerequisite. См. [срез парсеров](INSTALLATION_PLAN.md#готовые-native-parsers-core--253).
+Telescope delivery E2E на Windows/Ubuntu; rg больше не внешний prerequisite.
+§257: native Git стал обязательным prerequisite Core с existing/install/recheck/cancel,
+без private Git и изменений config/credentials. Windows/Ubuntu: по8 Git E2E и
+по3 SDK controls PASS. Следующий конкретный срез — Terminal (WezTerm/font),
+затем общий inventory и настоящий Default/Custom. Native Mac отдельно открыт.
+См. [срез парсеров](INSTALLATION_PLAN.md#готовые-native-parsers-core--253).
 Упаковка Node отменена; native Mac и полный release остаются открытыми.
 §234: общий setup обрабатывает Lua/Vim exceptions и missing commands как отказ;
 по7 stand PASS Windows/Ubuntu. Default/Custom каталоги и родители создаются

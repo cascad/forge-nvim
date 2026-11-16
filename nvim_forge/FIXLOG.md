@@ -13753,3 +13753,56 @@ append-only журналы сохранены. Production catalog остаётс
 package-core-runtime.py; install-search-runtime.test.py и install-search-observe.lua;
 план/README/история/OpenSpec verification. Evidence .tests/search-runtime/*v*.txt,
 .tests/ubuntu/search-runtime/*v*.txt, prepared.json, artifacts/metadata/cleanup.json.
+
+## 257. Core: обычный Git и явная установка prerequisite
+
+2026-11-16. Спека: IDE-BOOT-27 (ADDED).
+
+**Проблема.** Core мог перейти к plugins/setup без рабочего Git. В native
+prerequisites проверялись только языковые SDK; копировать отдельный Git в kit
+означало бы ненужный второй экземпляр и риск отличающихся config/credentials.
+
+**Причина.** Git не входил в readiness frontend и не имел action context.
+Механизмы PATH discovery/bounded probes/native managers уже существовали для
+SDK; отсутствие Git требовало раннего gate и отдельного понятного меню.
+
+**Изменение.** Git2+ обязателен для Core до IDE artifact downloads/setup.
+Используется обычный PATH либо явно выбранный root/bin/cmd как fallback после
+PATH. Общие discovery/version runner/action loop/package recipes сохранены:
+Git.Git WinGet, git Homebrew/APT, command/source и отдельное подтверждение,
+recheck после команды, cancel. У Git нет skip; готовый Git не обновляется.
+--check-tools отделён от языкового --check-sdks; --tool-path — alias прежнего
+fallback без изменений global PATH. Kit сохраняет только location, не Git.
+Mac Apple shim предварительно проверяется read-only xcode-select --print-path
+и наличием выбранного executable; Developer Tools installer не вызывается.
+Общая версия запуска ограничена2s, без shell и с bounded output read.
+
+**Проверка/e2e.** Windows8 PASS28.369s, Ubuntu8 PASS11.639s:
+missing/invalid/nonzero/timeout, preview без probes, fail до HTTP/setup с
+сохранением old kit; native PTY existing/root-cmd/repeat/no-skip/cancel/decline,
+confirmed controlled manager recipe, exit0 без Git не считается успехом.
+Настоящий Git через actual fride/Neovim launcher выполняет local init/add/commit,
+сохраняет executable, внешний обычный Git config и SSH environment. Реальные
+credentials/remote не использовались. Менеджеры — executable fixtures; host
+packages не ставились. Прежние SDK actions06/11 по2 PASS (18.934/5.222s),
+missing SDK03 по1 PASS (11.283/3.644s), Windows/Ubuntu соответственно.
+Добавлен отдельный native Mac case09, здесь не выполнялся. После suites только
+help/formatting и Mac-only canonical-path guard; итоговые binaries пересобраны.
+Общих зелёных suites повторно не запускали. Source/plugins/setup в delivery
+stand контролируются; это не full Default acceptance. Linux heavy stand/build
+в disposable /tmp; Docker existing image/network none/2CPU/2GiB/--rm, без
+Desktop/WSL lifecycle, image build/pull или host install.
+
+**Вывод.** Git остаётся штатным пользовательским инструментом; ранний gate
+предотвращает частично готовую Core установку. Private IDE isolation не должна
+изолировать Git auth/config. Следующий срез — WezTerm/font, общий inventory,
+actual Default/Custom. Native Mac/real manager installs/publication открыты.
+Frozen25 и raw/staged append-only prefixes проверены перед commit. Удалены
+только собственные Windows stand payloads; receipts/raw logs сохранены на F.
+
+**Файлы.** installer-ui/src/{lib,sdks,sdk_actions,sdk_install}.rs;
+tests/install-git-prerequisite.test.py, diagnostics/install-ui-pty.lua и
+sdk-probe-fixture.rs; SDK/parser/SQL stand prerequisites; план/README/история,
+OpenSpec reuse-native-git. Evidence .tests/git-prerequisite/*windows*.txt,
+e2e-ubuntu-v1.txt, install-isolation/*/{ui,git,git-summary}.json, cleanup.json.
+Neovim/SDK/locks и чужой E2E/catalog WIP сохранены.

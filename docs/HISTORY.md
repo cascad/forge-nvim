@@ -1,6 +1,6 @@
 # HISTORY — единая хронология проекта
 
-Обновлено: 2026-11-15. История разработки терминальной IDE от Helix и раннего
+Обновлено: 2026-11-16. История разработки терминальной IDE от Helix и раннего
 Neovim до нынешнего nvim_forge. Здесь одна последовательность и ссылки на
 подробности; новые исправления описываются в FIXLOG, затем добавляются сюда.
 
@@ -393,6 +393,7 @@ Python реализован и проверен 2026-11-03; после возо�
 | §254 | [Core: native Ubuntu acceptance готовых parsers](../nvim_forge/FIXLOG.md#254-core-native-ubuntu-acceptance-готовых-parsers) |
 | §255 | [Запуск: длинные Unicode paths без падения Lua bytecode cache](../nvim_forge/FIXLOG.md#255-запуск-длинные-unicode-paths-без-падения-lua-bytecode-cache) |
 | §256 | [Core: готовый ripgrep и настоящий поиск без системного rg](../nvim_forge/FIXLOG.md#256-core-готовый-ripgrep-и-настоящий-поиск-без-системного-rg) |
+| §257 | [Core: обычный Git и явная установка prerequisite](../nvim_forge/FIXLOG.md#257-core-обычный-git-и-явная-установка-prerequisite) |
 
 ## Как читать и дополнять
 

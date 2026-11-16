@@ -26,6 +26,7 @@ class Actions(runtime.Runtime):
     def prepared(self,name,manager=True):
         base,env,target=super().prepare(name)
         toolkit=base/'native tools';toolkit.mkdir()
+        shutil.copy2(self.fixture,toolkit/('git.exe' if stand.WINDOWS else 'git'))
         if not stand.WINDOWS:
             for name in ['bash','sh','dirname','readlink','mktemp','mkdir','uname','cut','sha256sum','shasum','tar','gzip','curl','wget','mv','rm','cat']:
                 if source:=shutil.which(name):(toolkit/name).symlink_to(source)

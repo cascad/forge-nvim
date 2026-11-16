@@ -76,6 +76,32 @@ local ok,err=xpcall(function()
   elseif scenario=='sdk-bootstrap-install-cancel' then bootstrap(true);sdk_after_bootstrap(true);fresh('Продолжить установку IDE с этим планом?');input('\27[D\r')
   elseif scenario=='sdk-inside-kit' then existing(assert(vim.env.FORGE_UI_BAD_SDK_INPUT));fresh('SDK должен находиться вне');menu();choose(4)
   else error('Unknown SDK scenario '..scenario) end
+ elseif scenario:sub(1,4)=='git-' then
+  local marker=0
+  local function fresh(text)
+   local deadline=vim.uv.hrtime()+20e9
+   repeat
+    if lua('return _G.ui_raw'):sub(marker+1):find(text,1,true) then frame(text);return end
+    assert(exitcode()==nil,'Git early exit '..tostring(exitcode())..'\n'..screen())
+    vim.wait(20)
+   until vim.uv.hrtime()>=deadline
+   error('Git timeout '..text..'\n'..screen())
+  end
+  local function input(keys) marker=#lua('return _G.ui_raw');send(keys) end
+  local function choose(index) input(string.rep('\27[B',index)..'\r') end
+  local function menu() fresh('Git: действие') end
+  local function install(accept)
+   choose(1);fresh('Установить Git этой командой?');input(accept and '\27[D\r' or '\r')
+  end
+  menu()
+  if scenario=='git-existing' then
+   choose(0);fresh('Каталог Git');type_text(assert(vim.env.FORGE_UI_GIT_INPUT));input('\r')
+   fresh('Продолжить установку IDE с этим планом?');input('\r')
+  elseif scenario=='git-cancel' then choose(3)
+  elseif scenario=='git-decline' then install(false);menu();choose(3)
+  elseif scenario=='git-install' then install(true);fresh('Продолжить установку IDE с этим планом?');input('\r')
+  elseif scenario=='git-noop' then install(true);fresh('Git пока не готов');menu();choose(3)
+  else error('Unknown Git scenario '..scenario) end
  elseif scenario=='default' then
   waitfor('Как установить Fride?');frame('welcome');send('\r')
   waitfor('Завершить предпросмотр?');frame('review');send('\r')

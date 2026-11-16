@@ -5,7 +5,7 @@ use std::ffi::{OsStr, OsString};
 use std::fs::{self, OpenOptions};
 use std::io::Read;
 use std::path::{Path, PathBuf};
-use std::process::{Command, Stdio};
+use std::process::{Command, ExitStatus, Stdio};
 use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
 
 pub(crate) fn is_sdk_part(id: &str) -> bool {
@@ -131,6 +131,37 @@ pub(crate) fn find(name: &str, path: &OsStr) -> Option<PathBuf> {
     None
 }
 
+// Shared bounded runner: no shell, no interactive installer, finite output read.
+fn version_output(mut command: Command, log_path: &Path) -> Result<(Option<ExitStatus>, String)> {
+    let log = OpenOptions::new()
+        .create_new(true)
+        .write(true)
+        .open(log_path)?;
+    command
+        .current_dir(std::env::temp_dir())
+        .stdin(Stdio::null())
+        .stdout(Stdio::from(log.try_clone()?))
+        .stderr(Stdio::from(log));
+    let mut child = command.spawn()?;
+    let start = Instant::now();
+    let code = loop {
+        if let Some(status) = child.try_wait()? {
+            break Some(status);
+        }
+        if start.elapsed() >= Duration::from_secs(2) {
+            let _ = child.kill();
+            let _ = child.wait();
+            break None;
+        }
+        std::thread::sleep(Duration::from_millis(20));
+    };
+    let mut bytes = vec![];
+    fs::File::open(log_path)?
+        .take(8192)
+        .read_to_end(&mut bytes)?;
+    Ok((code, String::from_utf8_lossy(&bytes).into_owned()))
+}
+
 fn probe(name: &str, directory: &Path, stamp: u128, search_path: &OsStr) -> Result<Tool> {
     let mut tool = Tool {
         command: name.into(),
@@ -150,10 +181,27 @@ fn probe(name: &str, directory: &Path, stamp: u128, search_path: &OsStr) -> Resu
     }
     fs::create_dir_all(directory)?;
     let log_path = directory.join(format!("sdk-{stamp}-{}-{name}.log", std::process::id()));
-    let log = OpenOptions::new()
-        .create_new(true)
-        .write(true)
-        .open(&log_path)?;
+    #[cfg(target_os = "macos")]
+    if name == "git" && fs::canonicalize(path).is_ok_and(|p| p == Path::new("/usr/bin/git")) {
+        // Apple shim may prompt to install CLT. xcode-select -p is read-only.
+        let select_log = log_path.with_extension("select.log");
+        let mut selector = Command::new("/usr/bin/xcode-select");
+        selector.arg("--print-path");
+        let ready = version_output(selector, &select_log).is_ok_and(|(status, output)| {
+            status.is_some_and(|s| s.success())
+                && Path::new(output.trim()).is_absolute()
+                && Path::new(output.trim()).join("usr/bin/git").is_file()
+        });
+        if !ready {
+            tool.status = "unavailable".into();
+            tool.detail = Some(
+                "Apple Git: Developer Tools не выбраны; выберите Git или установите его явно"
+                    .into(),
+            );
+            tool.log = Some(select_log);
+            return Ok(tool);
+        }
+    }
     let mut command = Command::new(path);
     if name == "py" {
         command.arg("-3");
@@ -162,37 +210,16 @@ fn probe(name: &str, directory: &Path, stamp: u128, search_path: &OsStr) -> Resu
         .env("PATH", search_path)
         .arg(if name == "go" { "version" } else { "--version" })
         .env("GOTOOLCHAIN", "local")
-        .env("RUSTUP_AUTO_INSTALL", "0")
-        .current_dir(std::env::temp_dir())
-        .stdin(Stdio::null())
-        .stdout(Stdio::from(log.try_clone()?))
-        .stderr(Stdio::from(log));
+        .env("RUSTUP_AUTO_INSTALL", "0");
     tool.status = "unavailable".into();
     tool.log = Some(log_path.clone());
-    let mut child = match command.spawn() {
-        Ok(child) => child,
+    let (code, output) = match version_output(command, &log_path) {
+        Ok(output) => output,
         Err(error) => {
             tool.detail = Some(error.to_string());
             return Ok(tool);
         }
     };
-    let start = Instant::now();
-    let code = loop {
-        if let Some(status) = child.try_wait()? {
-            break Some(status);
-        }
-        if start.elapsed() >= Duration::from_secs(2) {
-            let _ = child.kill();
-            let _ = child.wait();
-            break None;
-        }
-        std::thread::sleep(Duration::from_millis(20));
-    };
-    let mut bytes = vec![];
-    fs::File::open(log_path)?
-        .take(8192)
-        .read_to_end(&mut bytes)?;
-    let output = String::from_utf8_lossy(&bytes);
     let line = output.lines().next().unwrap_or("").trim();
     let expected = match name {
         "go" => line.starts_with("go version go"),
@@ -200,6 +227,11 @@ fn probe(name: &str, directory: &Path, stamp: u128, search_path: &OsStr) -> Resu
         "cargo" => line.starts_with("cargo "),
         "python" | "python3" | "py" => line.starts_with("Python 3."),
         "node" => line.starts_with('v') && line.chars().nth(1).is_some_and(|c| c.is_ascii_digit()),
+        "git" => line
+            .strip_prefix("git version ")
+            .and_then(|v| v.split('.').next())
+            .and_then(|v| v.parse::<u32>().ok())
+            .is_some_and(|v| v >= 2),
         _ => false,
     };
     match code {
@@ -243,6 +275,7 @@ pub(crate) fn inspect(ids: &[String], directory: &Path, paths: &[PathBuf]) -> Re
                 vec!["python", "python3"]
             }],
             "node" => vec![vec!["node"], vec!["npm"]],
+            "git" => vec![vec!["git"]],
             _ => return Err(invalid(format!("Unknown native SDK: {id}"))),
         };
         let mut tools = vec![];
