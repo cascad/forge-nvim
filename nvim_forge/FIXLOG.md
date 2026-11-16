@@ -13597,3 +13597,52 @@ setup-stage.lua; inspect/prepare-parser-site.lua, package-core-runtime.py;
 install-parser-runtime.test.py и diagnostics/install-parser-*.lua; планы/история.
 Evidence: .tests/parser-runtime/*windows-v*.txt, metadata, cleanup.json,
 baseline.json; OpenSpec verification.md.
+
+
+### 254. Core: native Ubuntu acceptance готовых parsers
+
+**Связь.** IDE-138, §253; change deliver-prebuilt-parser-runtime.
+Спека: IDE-BOOT-24 (FIX).
+**Статус.** Windows/Ubuntu parser delivery подтверждены; native Mac остаётся
+owner gate. Другие Core/Terminal parts и полный Default не объявляются готовыми.
+
+**Проблема/причина.** Ubuntu gate §253 ожидал Docker. После включения владельцем
+проверены engine28.5.1 и прежний image без build/pull. В нём были только отдельные
+language parsers, не полный Core. Publisher preparation выявила отдельный runtimepath
+cache: новый parser directory ещё не существовал при регистрации site, поэтому
+после успешной установки native runtime search не видел libraries.
+
+**Изменение.** prepare-parser-site создаёт parser directory до регистрации site,
+использует штатный Treesitter API и max_jobs=1, чтобы не создавать100 compiler jobs.
+SDK/CLI устанавливаются не пользователю: для stand предоставлен existing image
+compiler и official tree-sitter0.26.8 (SHA проверен по expanded_assets). Все33
+grammars взяты по прежним pinned commits;33 archives суммарно18.86MB, receipts
+с URL/SHA в .tests/ubuntu/parser-runtime/sources.json. Native сборка и тяжёлые
+test runtimes жили в /tmp контейнера;33 готовые libraries/revisions, archive и
+metadata/logs сохранены на F. Desktop/WSL lifecycle и image не менялись.
+
+**Проверка/e2e.** Native Ubuntu Core publisher и все4 delivery cases PASS40.313s:
+реальный source/UI/catalog/archive/private install/launcher, Lua parse/captures,
+owned priority после Lazy reset, missing/invalid library/query, old-kit preservation,
+publisher wrong revision/ABI, unmanaged command control. Runtime installer не
+вызывает compiler/CLI; другие plugins/Mason preparation контролируются fixture.
+Тестовый bytecode cache пока выключен только в fixture; отдельный long-path bug
+ещё открыт. Native Mac не проверен.
+
+Значимые failures сохранены: offline source mapping сначала сбрасывался native
+Treesitter reload → применён стандартный User TSUpdate customization hook.
+Два одновременных optimized C compiler jobs упёрлись в заданный2GiB cgroup limit;
+stand переключён на1 job/CFLAGS=-O1 -g0. Native readiness затем выявила отсутствие
+parser directory при регистрации RTP — исправлено в publisher preparation.
+Повторялась только падавшая подготовка; green Windows suite не гонялся снова.
+
+**Вывод.** Задача2.1 закрыта, change3/3. Это native parser acceptance, не
+полная чистая установка IDE. Следующий отдельный fix — Lua bytecode cache на
+длинных Unicode paths, затем Git/rg/Terminal/source-license inventory/Default.
+Frozen24 inputs, pins/backports/SDK/чужой WIP и raw journal prefixes сохранены.
+
+**Файлы.** scripts/prepare-parser-site.lua; tasks/verification change;
+INSTALLATION_PLAN/RELEASE_INVENTORY/IDE_ROADMAP/PROBLEMS/HISTORY.
+Evidence: .tests/parser-runtime/container-ubuntu-v*.txt,
+.tests/ubuntu/parser-runtime/prepare-ubuntu-v*.txt/e2e-ubuntu-v1.txt,
+linux-x64 и evidence-ubuntu-v1. Native SDK/user profiles не модифицированы.

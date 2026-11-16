@@ -9642,3 +9642,25 @@ metadata/logs. Финал: AST, frozen24 hashes, raw journal prefixes, staged HE
 prefixes, exact allowlist и git diff --cached --check; локальный commit без push.
 Ubuntu acceptance остаётся unchecked, Mac не заявлен. TEMP/TMP/TMPDIR/NVIM log
 и npm cache на F; C не использовался как рабочий cache/temp.
+
+
+## 162. IDE-BOOT-24: Ubuntu acceptance parser runtime
+
+2026-11-16. docker info и image inspect — прежние engine28.5.1/image;
+compose run --rm --no-deps --pull never с entrypoint python3, network none,
+отдельный compose override ограничивает2 CPU/2GiB. Start/build/pull/WSL changes нет.
+Host source preparation: native nvim -u NONE catalog export, Python urllib fetch
+pinned grammar archives и official CLI asset на F, SHA/URL receipts. GitHub API
+дал403 rate limit; official expanded_assets/v0.26.8 дал SHA CLI9754a328...fa136e.
+Временные scripts: .tests/parser-runtime/fetch-ubuntu.py и
+.tests/ubuntu/parser-runtime/{run.py,prepare-offline.lua,limits.yaml}.
+
+docker compose -f tests/containers/compose.yaml -f .tests/ubuntu/parser-runtime/limits.yaml
+run --rm --no-deps --pull never --entrypoint python3 ubuntu -B .tests/parser-runtime/run.py
+
+v1/v2 сохраняют реальные prep failures; v3 native prep PASS, затем
+python3 -B tests/install-parser-runtime.test.py —4 PASS40.313s. /tmp с тяжёлыми
+sources/runtime copies удалён вместе с disposable container; на F оставлены
+native binaries/archives/metadata/raw evidence. SDK installation не выполнялась.
+Проверка raw/staged journal prefixes/frozen24 и strict OpenSpec validate перед
+точным локальным commit. Успешные Windows suites не повторялись.

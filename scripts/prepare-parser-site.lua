@@ -6,6 +6,9 @@ local root = vim.fs.dirname(vim.fs.dirname(debug.getinfo(1, 'S').source:sub(2)))
 package.path = root .. '/nvim_forge/lua/?.lua;' .. plugin .. '/lua/?.lua;' .. package.path
 vim.opt.rtp:prepend(plugin)
 vim.env.FORGE_NVIM_COMPONENTS = nil
+-- Native runtimepath caches whether parser directories exist. Create the
+-- directory before registering this new site, then validate installed files.
+vim.fn.mkdir(site .. '/parser', 'p')
 require('nvim-treesitter').setup({install_dir = site})
-require('nvim-treesitter').install(require('forge.tool_catalog').parsers()):wait(300000)
+require('nvim-treesitter').install(require('forge.tool_catalog').parsers(), {max_jobs = 1}):wait(300000)
 require('forge.setup_readiness').parsers(require('forge.tool_catalog').parsers())

@@ -80,7 +80,7 @@ sqls/forge-sqltest без SDK компилятора. Реальные debug/que
 Следующий срез — Core/Terminal artifacts и actual Default/Custom.
 §253: готовые33 native parsers доставляются Core publisher; managed setup
 не вызывает tree-sitter/C-компилятор. Windows delivery/captures/rollback
-прошли; Ubuntu ждёт Docker, native Mac не проверялся. Остальные Core/Terminal
+прошли; §254 Ubuntu4 PASS40.313s, native Mac не проверялся. Остальные Core/Terminal
 dependencies и полный source/license inventory пока открыты.
 
 **Новый подтверждённый блокер full Default:** Neovim0.12.2 vim.loader кодирует

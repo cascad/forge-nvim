@@ -7,4 +7,4 @@
 
 ## 2. Native platform acceptance
 
-- [ ] 2.1 Тот же targeted delivery E2E на Ubuntu в уже предоставленном Docker engine без start/build/pull; сохранить результат и metadata. Native macOS явно оставить owner gate, публикацию не выполнять.
+- [x] 2.1 Тот же targeted delivery E2E на Ubuntu в уже предоставленном Docker engine без start/build/pull; сохранить результат и metadata. Native macOS явно оставить owner gate, публикацию не выполнять.

@@ -1,6 +1,6 @@
 # Что ещё требуется для полной поставки fride
 
-Исходный срез2026-11-15, код694cd9e, обновления §251–253. Это состав **существующих возможностей**, а не
+Исходный срез2026-11-15, код694cd9e, обновления §251–254. Это состав **существующих возможностей**, а не
 предложение новых LSP. Полного Default release пока нет: production
 [artifacts.tsv](../scripts/runtime/artifacts.tsv) не содержит ни одной строки.
 Готовность транспорта и отдельных стендов не равна готовности такой поставки.
@@ -27,7 +27,7 @@
 
 | Компонент | Обычные SDK | Mason в текущем managed setup | Пробел поставки |
 |---|---|---|---|
-| Core | Сам по себе не требует SDK языка | lua-language-server, stylua; 23 общих parsers | §253: готовый site с33 native libraries, выбранный каталог проверяется без сборки; Windows PASS, Ubuntu/Mac открыты. Git/rg и полный source/license inventory ещё нужны. Prettier для JSON/YAML/Markdown принадлежит Node компоненту. |
+| Core | Сам по себе не требует SDK языка | lua-language-server, stylua; 23 общих parsers | §253: готовый site с33 native libraries, выбранный каталог проверяется без сборки; Windows/Ubuntu PASS, native Mac открыт. Git/rg и полный source/license inventory ещё нужны. Prettier для JSON/YAML/Markdown принадлежит Node компоненту. |
 | Go | Go | delve, golangci-lint, gotestsum, gopls, gofumpt, golines; ещё4 parsers | При необходимости сборки новых tools требуется обычный Go1.26.0+; готовые packages переиспользуются со старым SDK. |
 | Rust | Rust/Cargo | rust-analyzer, codelldb1.12.2 на Windows/POSIX; ещё1 parser | §252: собственный LLDB/Python bundle; реальные breakpoint/continue/output проверены Windows/Ubuntu. Rustfmt — часть обычного Rust toolchain. |
 | Python | Python + Node для pyright | pyright, ruff, debugpy; ещё1 parser | Версии SDK/venv и настоящий debug/test acceptance; наличие receipt этого не доказывает. |
@@ -60,7 +60,7 @@
    принадлежат publisher. WSL2 на Windows остаётся runtime prerequisite.
 5. §253: managed setup проверяет готовый native site из Core, без CLI/compiler.
    Publisher использует уже собранные libraries с pinned revisions и выполняет
-   native ABI/query probe. Windows проверен; Ubuntu/Mac и полный Default открыты.
+   native ABI/query probe. Windows/Ubuntu проверены; Mac и полный Default открыты.
    Обычная явная команда source preparation сохраняется для publisher/unmanaged.
 
 ## Следующая очередь реализации
@@ -78,7 +78,7 @@
 3. **Собрать Core/Terminal artifacts:** Git/search/parser dependencies и
    WezTerm/font, platform manifests, source/version/SHA/license inventory.
    fd и native fzf — ускорители с существующим fallback, не скрытые обязательные SDK.
-   §253 закрыл Windows parser delivery в указанных границах; Ubuntu ждёт Docker.
+   §253–254 закрыли Windows/Ubuntu parser delivery в указанных границах.
    Новый блокер full Default — native Lua cache filename на длинных Unicode paths.
 4. **Настоящий Default/Custom из архива:** отдельный чистый профиль, реальные
    config/plugins/tools, launch → open/search → LSP → debug/tests → format,

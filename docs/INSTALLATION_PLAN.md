@@ -856,8 +856,7 @@ python3 -B tests/install-parser-runtime.test.py
 FORGE_INSTALL_TEST_NVIM/FORGE_INSTALL_UI_BINARY/FORGE_E2E_DEPS, что в остальных
 install stands. Windows4 cases прошли с адресным исправлением fixture;
 native load всех33 libraries/queries, HTTP delivery, настоящие Lua parse/captures,
-отказы и сохранение прежнего kit проверены. Ubuntu ждёт предоставленного Docker
-engine, native Mac открыт. Успешные suites повторно не запускались.
+отказы и сохранение прежнего kit проверены. Ubuntu4 cases PASS40.313s (§254), native Mac открыт. Успешные suites повторно не запускались.
 
 **Граница:** другие plugins/Mason stages в parser stand контролируются. Только
 для parser stand отключён bytecode cache Lazy: v1 обнаружил настоящий сбой
