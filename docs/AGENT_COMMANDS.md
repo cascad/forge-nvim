@@ -9830,3 +9830,54 @@ Final Windows --strict корректно exit2:141 items/25 gaps. Ubuntu gap se
 exact staging/git diff --cached --check и local commit с gc.auto=0/maintenance.auto=false.
 TEMP/TMP/TMPDIR/Nvim log/npm cache на F. Cleanup только own fixture copies;
 reports/notices сохраняются. Native Mac и full release acceptance открыты.
+
+
+## 168. 2026-11-16 — native plugin setup и actual Core
+
+Read-only: git status/diff, rg source/setup/Lazy APIs, raw receipts/logs/lock
+comparison. Native Git for Windows FAQ checked; no global Git writes.
+OpenSpec1.13.2 list/specs/show/new/instructions/status/validate через pinned
+npx.cmd; npm cache F:/forge-nvim-tmp/npm-cache. Change gate-native-plugin-setup,
+IDE-BOOT-30, baseline specs не синхронизируются. No goal tools.
+
+python -B tests/install-plugin-setup.test.py
+python -B tests/install-setup.test.py
+POSIX python3. Первый использует настоящий pinned Lazy и local Git repos;
+второй — только coordinator fixture + real backports. Final Windows7+7 PASS,
+Ubuntu7+7 PASS. Own profiles/Temp/Nvim log на F, Lazy help tags пишутся в own copy.
+Git subprocess environment сохраняется, source lock byte-identical. Native
+Neovim job scope ограничивает explicit commands и потомков, cleanup JSON сохранён.
+
+python -B tests/install-core-acceptance.test.py --kit <owned-kit> --profile <owned-profile>
+python -B tests/install-core-acceptance.test.py --kit <owned-kit> --profile <owned-profile> --case missing
+Только .tests либо явно заданный FORGE_CORE_TEST_ROOT, ready Custom Core marker.
+Installed launcher/native UI child, production config без подмен. Missing PASS;
+workflow RED на Lua diagnostic20s после Files/search/LSP attach, evidence сохраняется.
+Никаких новых SDK commands/downloads из обычного startup. PSModuleAnalysisCachePath
+для consumer stand явно на F; ранние probes создали untracked Microsoft cache,
+не включённый в коммит. Driver callback writefile перенесён в vim.schedule.
+
+Native actual setup запускался fride-setup --source <owned source snapshot>
+--components core --profile custom --runtime-path <verified Core runtime>
+--install-dir <owned kit> --log-dir <owned logs>. Production plugins/parsers/tools
+не заменялись. Source snapshot git-listed paths плюс новый helper, отдельный
+NVIM_APPNAME profile; обычные SDK environment/бинарники унаследованы. Cold missing
+clone и subsequent known-backport failure сохранены; final kit-final готов67 pins.
+При repeat после scoped LSP exit найден оставшийся bee socket/EACCES; delete exact
+owned file отклонён auto review, не повторялся. Использован новый own target.
+
+Ubuntu: docker compose -f tests/containers/compose.yaml
+-f .tests/ubuntu/parser-runtime/limits.yaml run --rm --no-deps --pull never
+--entrypoint bash ubuntu /workspace/.tests/core-acceptance/<script>.sh
+Existing image/engine, network none2CPU/2GiB; own /tmp copies, metadata экспорт F.
+Docker Desktop/WSL/image build/pull/host installs не менялись.
+
+Final: AST/Lua parse, strict OpenSpec, SHA frozen25, raw/staged journal prefix,
+exact allowlist staging, git diff --cached --check; local commit with gc.auto=0
+maintenance.auto=false. Native Mac/full Core/Default/notices не объявлены PASS.
+
+Дополнение к финальной проверке: guard также отклоняет locked plugin, отсутствующий
+в loaded spec, вместо молчаливого уменьшения состава. Новый case08 + positive01
+Windows2 PASS2.339s; Ubuntu8 PASS2.166s.8 разных native plugin сценариев на каждой
+ОС, прежние7 coordinator controls сохранены. Остальные green cases Windows не
+повторялись; полный Core остаётся RED на Lua diagnostics, как указано выше.

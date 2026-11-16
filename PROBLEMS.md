@@ -88,6 +88,14 @@ dependencies и полный source/license inventory пока открыты.
 Следующий продуктовый срез — настоящий Custom Core с Lua LSP/search/edit/save,
 затем Default. Точный остаток — docs/RELEASE_INVENTORY.md.
 
+§260: исправлен false ready при missing/failed Lazy plugins: native install/
+restore/readiness, lock preservation, Windows process-local longpaths и
+revert/apply известных backports. По7 native plugin +7 orchestration PASS на
+Windows/Ubuntu; ordinary missing-plugin control PASS на Windows. Actual Core
+Files/search и Lua LSP attach проходят, diagnostics/edit/save/restart пока RED:
+20s deadline, LuaLS preloads все plugin libraries. Следующий шаг — убрать
+ненужный обход в Lua LSP config, затем закончить actual Core acceptance/notices.
+
 §258: private Terminal доставляет pinned WezTerm/font и явный bin/fride-terminal.
 Shared config/private window state/font_dirs без замены пользовательского
 WezTerm; native config/font gate до publish. Windows GUI/input/save и Ubuntu

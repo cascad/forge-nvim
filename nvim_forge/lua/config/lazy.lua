@@ -26,6 +26,9 @@ require("lazy").setup({
         { import = "plugins" },
     },
     install = {
+        -- IDE-BOOT-30: only explicit setup installs plugins. A missing plugin
+        -- must not start an install/retry loop during ordinary editor startup.
+        missing = false,
         -- Не пытаемся подцепить какую-то стороннюю тему до загрузки catppuccin.
         colorscheme = { "catppuccin", "habamax" },
     },

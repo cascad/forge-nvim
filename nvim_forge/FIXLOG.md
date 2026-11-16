@@ -13920,3 +13920,90 @@ tests/release-inventory.test.py; OpenSpec assemble-release-inventory;
 README/планы/PROBLEMS/история/команды. Evidence .tests/release-audit/
 default-windows-final, .tests/ubuntu/release-audit/default-ubuntu-final,
 e2e-*.txt и metadata/cleanup.json. Current report/archive data не коммитятся.
+
+
+### 260. Core: готовность plugins вместо ложного success Lazy
+
+**Связь:** IDE-138; change `gate-native-plugin-setup`.
+Спека: IDE-BOOT-30 (ADDED).
+**Статус:** plugins gate исправлен, Windows/Ubuntu regression PASS. Настоящий
+Windows Core устанавливается; полный workflow пока RED на Lua diagnostics.
+
+**Проблема.** Cold production Custom Core в новом Windows test profile сообщил
+готовность, хотя grug-far.nvim не был получен. init печатал Too many rounds of
+missing plugins, installed lock потерял его pin; workspace lock не менялся.
+Это воспроизведение настоящего source/frontend/Core/Lazy/Mason, не stand
+с подменёнными командами установки. Первоначальное exit0 не было PASS.
+
+**Причина.** Git checkout не создал длинные screenshot paths grug-far.nvim.
+Автоустановка Lazy повторяла попытки, native restore не ставил missing plugin,
+а task failures не бросали Lua exception. setup-stage проверял backports, но
+не полноту plugins/HEAD/task errors. Lazy update переписал installed lock без
+missing pin. После строгого gate проявился второй факт: наши известные
+backports — tracked modifications, и native restore корректно их отклоняет.
+
+**Изменение.** install.missing=false исключает фоновый install loop обычного
+запуска. Явная подготовка использует native install(lockfile=true), restore и
+проверяет каждый plugin/task/HEAD. Snapshot source lock возвращается байтами
+при успехе и отказе; restore использует исходные pins, а не refreshed HEADs.
+Интеграция с in-memory lock/task state относится к закреплённой версии Lazy
+и проверяется настоящим Git E2E. Windows GIT_CONFIG_COUNT append включает
+core.longpaths только на время подготовки и восстанавливает environment;
+пользовательский Git config/SDKs/pins не меняются. Known backports штатно
+revert перед restore, apply/check после, apply также выполняется при отказе,
+чтобы не оставлять предыдущий kit с намеренно снятыми patches. Неизвестные
+изменения не сбрасываются. Обычный startup не запускает новые проверки установки.
+
+**Проверка/e2e.** tests/install-plugin-setup.test.py: Windows7 PASS6.659s,
+Ubuntu7 PASS1.875s. Реальные native Lazy/Git/local repos: cold pinned clone
+с длинным target path, existing wrong HEAD, clone/build/missing pin failures,
+known patch round trip и unknown tracked change сохранён при отказе. Lock bytes,
+Git config/environment и scoped descendant cleanup проверены. Native Lazy
+получает own writable copy (help generator пишет tags); сеть/SDK installs не нужны.
+В разработке fixture исправлены короткий upstream vs длинный target, LF/CRLF,
+единый URL origin и callback context; raw failed trials не удалены.
+
+Legacy tests/install-setup.test.py: Windows7 PASS3.913s, Ubuntu7 PASS10.991s.
+Fixture явно моделирует coordinator; он не заменяет предыдущие native tests.
+Добавлен недостающий parser_runtime в fixture, сохранены прежние отказные
+сценарии и real backport applier. Ubuntu existing image, network none2CPU/2GiB;
+Desktop/WSL/build/pull не менялись, только собственные /tmp stand copies.
+
+Actual Windows source installation: первый cold clone с новым gate отказал на
+known backports вместо false ready; после исправления native retry прошёл.
+Final target kit-final:67 plugins на source pins, backports checked,33 native
+parsers, LuaLS3.19.2/StyLua2.6.0 через Mason; final plugin log без init errors,
+source/installed lock byte-identical. Это prepared-profile retry, не повторная
+чистая загрузка всех67 repos после последней правки. Сквозной observer не
+подменяет config/specs/setup/LSP. Files/keyboard C-p и native Lua LSP attach
+работают. Full workflow RED: assign-type-mismatch не получен за20s, server log
+показывает preload всех plugin Lua libraries. Следующий шаг — точечное устранение
+лишней workspace library, затем diagnostics/edit/save/restart. Проверка
+--case missing на actual kit PASS: grug-far временно убран/возвращён, auto-install
+не произошёл, lock сохранён. Mac/full Ubuntu Core/Default/notices открыты.
+
+В отдельной попытке после остановки LSP scoped harness оставил bee1.tmp
+reparse socket (tag0x80000023); ownership scan предыдущего kit отказал EACCES.
+Это наблюдение не объявлено доказанным багом обычного пользовательского выхода.
+Автоматическая проверка отклонила удаление только этого test socket; файл оставлен,
+финальная установка проверена в новом own target. Старые logs/profiles сохранены.
+
+**Вывод.** Установщик больше не принимает failed native plugin tasks за готовую
+IDE, повторная подготовка учитывает штатные backports.7+7 проверок подготовки
+на каждой ОС не означают full Core PASS: реальный consumer обнаружил следующий
+продуктовый дефект, он явно стоит первым в плане. Frozen25/append-only history
+сохранены; source SDK/lock и чужой WIP не менялись. Production catalog пуст.
+
+**Файлы.** nvim_forge/lua/config/lazy.lua, forge/plugin_setup.lua,
+scripts/setup-stage.lua; tests/install-plugin-setup.test.py,
+install-core-acceptance.test.py, install-setup.test.py и3 diagnostics helpers;
+OpenSpec gate-native-plugin-setup; install/roadmap/inventory/PROBLEMS/history/tests docs.
+Evidence .tests/core-acceptance/{plugin-windows-final-v4.txt,setup-windows-v2.txt,
+consumer-windows-v2.txt,startup-missing-windows.txt,probe-1794850807403555900/kit-final};
+.tests/ubuntu/core-acceptance/{plugin-ubuntu.txt,plugin-evidence,setup-ubuntu.txt}.
+
+Дополнение к финальной проверке: guard также отклоняет locked plugin, отсутствующий
+в loaded spec, вместо молчаливого уменьшения состава. Новый case08 + positive01
+Windows2 PASS2.339s; Ubuntu8 PASS2.166s.8 разных native plugin сценариев на каждой
+ОС, прежние7 coordinator controls сохранены. Остальные green cases Windows не
+повторялись; полный Core остаётся RED на Lua diagnostics, как указано выше.

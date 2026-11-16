@@ -714,6 +714,15 @@ Legacy orchestration `tests/install-setup.test.py` использует согл
 минимальный Core fixture и те же native APIs, сохраняет прежние failure gates.
 Это не полный SDK функциональный acceptance. Native Mac прогон отдельно.
 
+`python -B tests/install-plugin-setup.test.py`: offline native Lazy/Git,
+8 cases (cold long path, existing pin, clone/build/pin failures, known patch,
+unknown local change, unloaded locked spec). Windows/Ubuntu PASS; own writable Lazy copy сохраняет
+prepared input. Shared process_scope ограничивает и убирает только descendants.
+`tests/install-core-acceptance.test.py --kit <owned kit> --profile <owned profile>`
+запускает production installed config: Files/search/Lua diagnostics/edit/save/
+restart и отдельный `--case missing`. Windows missing control PASS; full workflow
+пока RED на Lua diagnostics20s, не считается green Core. См. §260/install plan.
+
 
 ### Native SDK context — IDE-BOOT-17
 

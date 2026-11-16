@@ -396,6 +396,7 @@ Python реализован и проверен 2026-11-03; после возо�
 | §257 | [Core: обычный Git и явная установка prerequisite](../nvim_forge/FIXLOG.md#257-core-обычный-git-и-явная-установка-prerequisite) |
 | §258 | [Terminal: отдельный WezTerm и шрифт внутри fride](../nvim_forge/FIXLOG.md#258-terminal-отдельный-wezterm-и-шрифт-внутри-fride) |
 | §259 | [Release: единый source и license inventory](../nvim_forge/FIXLOG.md#259-release-единый-source-и-license-inventory) |
+| §260 | [Core: готовность plugins вместо ложного success Lazy](../nvim_forge/FIXLOG.md#260-core-готовность-plugins-вместо-ложного-success-lazy) |
 
 ## Как читать и дополнять
 

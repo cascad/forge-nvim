@@ -1086,3 +1086,40 @@ runtime, missing manifest/invalid receipt. Native Mac здесь не выпол
 
 Реальные отчёты Windows/Ubuntu: по141 позиции и одинаковые25 gaps. Точный
 список и следующий Custom Core срез — [inventory](RELEASE_INVENTORY.md#единый-проверяемый-inventory--259).
+
+## Native plugins и настоящий Core — §260
+
+Явный plugins stage выполняет native Lazy install с source pins, затем restore,
+проверяет task errors/наличие/HEAD всех67 plugins и возвращает исходные байты
+lockfile при любом исходе. Exit0 одной команды больше не доказывает готовность.
+Известные backports штатно revert перед restore и apply после, включая отказ;
+неизвестный payload отклоняется. Windows core.longpaths применяется через
+process-local GIT_CONFIG_COUNT append и снимается после подготовки. Git config
+пользователя и SDK environment не редактируются. См. [Git for Windows](https://gitforwindows.org/faq#file-names-too-long).
+Ordinary Lazy install.missing=false: удалённый plugin не запускает фоновые
+скачивания/повторы при открытии редактора; требуется явная подготовка.
+
+Регресс: `python -B tests/install-plugin-setup.test.py` (POSIX python3), native
+Neovim/Git + prepared pinned Lazy в FORGE_E2E_DEPS.8 cases PASS Windows/Ubuntu,
+также по7 orchestration controls `tests/install-setup.test.py`. Native Mac открыт.
+Lazy для regression копируется в own stand: native help generator пишет tags.
+
+Настоящий Windows candidate: source/frontend/Core →67 plugin pins/backports →
+33 parsers → LuaLS3.19.2/StyLua2.6.0. Production stages/config не подменялись;
+исходный failed cold run и successful retry сохранены. Сквозной observer:
+
+```powershell
+python -B tests/install-core-acceptance.test.py --kit <test-kit> --profile <owned-test-profile>
+python -B tests/install-core-acceptance.test.py --kit <test-kit> --profile <owned-test-profile> --case missing
+```
+
+Kit/profile должны принадлежать .tests (либо FORGE_CORE_TEST_ROOT); это отдельный
+стенд, не пользовательские данные. Observer запускает installed fride и native
+UI child с обычной конфигурацией, использует keyboard Files/search/edit/save,
+real LuaLS и повторный запуск. --case missing временно убирает один lazy plugin
+внутри own profile и всегда возвращает его; Windows PASS, lock сохранён.
+Full workflow пока RED на ожидании Lua diagnostic20s: Files/C-p и LSP attach
+прошли, log показывает preload всех plugin libraries. Не расширяем deadline;
+следующий продуктовый пункт — убрать лишнюю Lua workspace library, затем
+закончить edit/save/restart. Full Ubuntu Core, Mac, notices/Default/publication
+остаются открытыми. Проверки стадий не заменяют этот observer.

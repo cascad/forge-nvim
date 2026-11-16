@@ -32,6 +32,13 @@ local function record(kind,args)
     config=vim.fn.stdpath('config'),pid=vim.uv.os_getpid(),argv=vim.v.argv})},vim.env.FORGE_SETUP_TRACE,'a')
 end
 record('init')
+-- Orchestration fixture only. Real Lazy/Git failure/readiness is exercised
+-- separately by install-plugin-setup.test.py and installed Core acceptance.
+package.preload['forge.plugin_setup']=function() return {prepare=function(before_restore)
+  vim.cmd('Lazy! restore')
+  before_restore()
+  return {plugins=6}
+end} end
 vim.api.nvim_create_user_command('Lazy',function(a)
   record('Lazy',a.args)
   if not a.args:find('load',1,true) and vim.env.FORGE_SETUP_CASE=='plugins' then error('FORGE_SETUP_FAILURE_plugins') end
@@ -59,7 +66,7 @@ class Setup(unittest.TestCase):
         checkout=base/'checkout';profile=checkout/'nvim_forge'
         (profile/'lua/ide').mkdir(parents=True)
         (profile/'lua/forge').mkdir()
-        for module in ['tool_catalog','setup_readiness','install_profile']:
+        for module in ['tool_catalog','setup_readiness','install_profile','parser_runtime']:
             shutil.copyfile(SOURCE/('lua/forge/'+module+'.lua'),profile/('lua/forge/'+module+'.lua'))
         shutil.copytree(SOURCE/'scripts',profile/'scripts')
         (profile/'scripts/components.tsv').write_text('core\tFixture\t-\tfixture-native\tlua\n',encoding='utf-8')

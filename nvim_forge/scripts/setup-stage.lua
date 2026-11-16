@@ -4,10 +4,21 @@ package.path = root .. '/lua/?.lua;' .. package.path
 local stage = arg[1]
 local ok, err = xpcall(function()
     if stage == 'plugins' then
-        vim.cmd('Lazy! restore')
         local backports = require('ide.backports')
         local directory = vim.fn.stdpath('data') .. '/lazy'
-        backports.all(directory, 'apply')
+        local prepared, report = pcall(require('forge.plugin_setup').prepare, function()
+            -- Known backports are tracked modifications. Native restore must
+            -- see original files; unknown changes still fail closed.
+            backports.all(directory, 'revert')
+        end)
+        -- A failed restore must not leave the previous kit's known patches
+        -- reverted in the shared fride data directory. Preserve first error.
+        local applied, apply_error = pcall(backports.all, directory, 'apply')
+        if not prepared then
+            error(tostring(report) .. (not applied and ('\nBackport restore: ' .. tostring(apply_error)) or ''), 0)
+        end
+        assert(applied, apply_error)
+        io.stdout:write('Plugin readiness: ' .. vim.json.encode(report) .. '\n')
         local checked = backports.all(directory, 'check')
         io.stdout:write('Backports checked: ' .. vim.json.encode(checked) .. '\n')
     elseif stage == 'parsers' then

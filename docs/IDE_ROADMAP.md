@@ -52,6 +52,15 @@ Native Mac и GUI Ubuntu отдельно открыты.
 5 непереданных language archives).6 CLI/report regression сценариев прошли
 на каждой ОС. Следующий срез — настоящий Custom Core с Lua LSP/поиском/first
 launch, затем расширение до Default. [Конкретный остаток](RELEASE_INVENTORY.md#единый-проверяемый-inventory--259).
+§260: настоящий Windows Core выявил ложный success при failed Lazy clone.
+Explicit plugins setup теперь проверяет tasks/67 pins и сохраняет lock,
+известные backports снимаются/возвращаются вокруг restore; startup не ставит
+missing plugins. Native Windows/Ubuntu: 8 plugin regressions и по7 orchestration
+controls PASS. Windows Files/search/Lua LSP attach работают, missing-plugin
+startup control PASS. Сквозной Core пока RED: Lua diagnostics не пришли за20s,
+server log показывает preload всех plugin Lua libraries. Следующий конкретный
+пункт — устранить этот лишний обход и повторить diagnostics/edit/save/restart;
+затем Core notices и расширение Default. Mac/full Ubuntu Core не проверены.
 См. [срез парсеров](INSTALLATION_PLAN.md#готовые-native-parsers-core--253).
 Упаковка Node отменена; native Mac и полный release остаются открытыми.
 §234: общий setup обрабатывает Lua/Vim exceptions и missing commands как отказ;
