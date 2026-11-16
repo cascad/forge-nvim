@@ -9612,3 +9612,33 @@ journals, strict validate, diff --check, точный allowlist. По прось
 
 
 2026-11-16, завершение §160 после остановки: git status, OpenSpec context/instructions apply и strict validate; Python read-only audit HEAD/frozen24/raw journal prefixes/AST/native receipts/Bash hashes/SQL archive SHA/doc links. После этого точный staging allowlist, normalized staged-prefix check и git diff --cached --check. Новые test runs и Docker commands не потребовались.
+
+
+## 161. IDE-BOOT-24: готовые native parsers Core
+
+2026-11-16. Продолжение после04f58ed. Read-only: git status/log/diff; rg и
+Get-Content по Core/setup/launcher/Treesitter/Lazy, bounded cache listing;
+docker info один раз показал отсутствующий Linux engine channel, lifecycle
+Docker/WSL не трогался. OpenSpec context/list/new/status/instructions/strict
+validate — pinned @fission-ai/openspec@1.13.2, npm cache на F.
+
+Publisher: python -B scripts/package-core-runtime.py --nvim .tools/neovim/windows-x64
+--site .tests/parser-runtime/windows-x64/site --editor-deps .tests/editor-deps
+--output .tests/parser-runtime/windows-x64/core.zip. Inputs — read-only copy32
+existing native libraries/revisions и проверенный SQL parser; native revisions/
+ABI/queries проверяет publisher. SDK/host installs не выполнялись.
+
+Целевой прогон: python -B tests/install-parser-runtime.test.py. После выявленных
+ошибок адресно01/02/04 (v2), усиленный02 (v3),01/04 для managed/unmanaged build
+hook (v4); source/compiler/download commands запрещены. Полные green suites не
+повторялись. Native process argv/exit/stdout/stage logs и raw failures — в stand;
+summary logs в .tests/parser-runtime. Lua cache repro: FORGE_PARSER_TEST_CACHE=1
+и только test_parser_01_native_delivery_and_captures; production cache не менялся.
+
+Очистка: .tests/parser-runtime/cleanup.py проверяет абсолютные own stand roots
+по четырём raw logs; сохраняет native manifests/SHA и удаляет только свои runtime/
+prepared/archive copies. Остались готовый Core archive, native source site,
+metadata/logs. Финал: AST, frozen24 hashes, raw journal prefixes, staged HEAD
+prefixes, exact allowlist и git diff --cached --check; локальный commit без push.
+Ubuntu acceptance остаётся unchecked, Mac не заявлен. TEMP/TMP/TMPDIR/NVIM log
+и npm cache на F; C не использовался как рабочий cache/temp.

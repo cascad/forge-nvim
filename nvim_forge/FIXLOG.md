@@ -13526,3 +13526,74 @@ debug-tools-metadata, cleanup/audit.json; change deliver-existing-debug-test-too
 
 
 **Дополнение2026-11-16 к §252.** Работа возобновлена после остановки перед commit. Сохранённые native результаты, debugger receipts/Bash hashes и SQL archives проверены;24 frozen inputs, raw journal prefixes, AST/doc links и strict OpenSpec validation прошли. Повторный прогон успешных suites не выполнялся.
+
+
+## 2026-11-16
+
+### 253. Core: готовые native parsers без компилятора пользователя
+
+**Связь.** IDE-138, Core/Terminal очередь §250; change deliver-prebuilt-parser-runtime.
+Спека: IDE-BOOT-24 (ADDED).
+**Статус.** Код и native Windows проверены; Ubuntu ждёт доступного Docker engine,
+native Mac открыт. Это часть Core, не полный Default/публичный release.
+
+**Проблема.** Managed parsers stage вызывал source installer: CLI/C-компилятор
+требовались пользователю даже для готовой IDE. Lazy build=:TSUpdate мог начать
+ту же сборку раньше, на plugins stage. Старый app-data site мог перекрыть
+доставленные libraries после reset runtimepath в Lazy.
+
+**Причина.** Подготовка parser binaries не была отделена от установки kit;
+проверка наличия CLI не обеспечивает готовые native libraries. В lazy paths
+site только добавляется в конец, поэтому для managed Treesitter нужен явный
+приоритет собственного site перед attach.
+
+**Изменение.** package-core-runtime.py — publisher над прежним package-runtime.
+Принимает подготовленные native Neovim/site/editor-deps, сверяет locked
+Treesitter/grammar revisions, Windows SDK receipt и фактическую загрузку
+libraries/queries. Core содержит прежние33 libraries и36 query directories,
+prepared metadata с platform/source URLs/revisions/SHA. Managed parsers stage
+только проверяет owned site; Lazy source-build hook выключен только для managed.
+Native runtimepath включает runtime/treesitter и предпочитает его перед старым
+site; stdpath(data)/site не перезаписывается. Unmanaged явный source API сохранён.
+prepare-parser-site.lua — отдельная явная publisher preparation с уже доступными
+CLI/compiler, без установки SDK. Состав каталогов/pins/backports не менялся.
+
+**Проверка/e2e.** Windows publisher native probe всех33 libraries/queries PASS.
+Реальный HTTP source/UI/Core archive → private installer → installed launcher:
+Lua parse без ошибок и реальные highlight captures, после настоящего Lazy reset
+owned library имеет приоритет перед испорченной app-data копией. Missing/invalid
+library, missing owned highlights и invalid query дают stage nonzero, marker и
+library прежнего kit сохраняются. Wrong revision и native ABI отклонены publisher.
+Unmanaged startup не устанавливает parsers, явная команда обращается к прежнему
+API (provider контролируемый). Все4 cases прошли суммарно: case03 в v1,
+01/02/04 в v2 (48.652s), усиленный02 в v3 (49.247s); targeted01/04 в v4 после
+добавления build-hook control — PASS. Зелёные независимые cases не гонялись снова.
+Windows PATH не содержит build SDK, compiler/CLI/download commands запрещены
+fixture. Другие plugin/Mason preparation в stand контролируются, full Default
+этим не доказан. Ubuntu Docker Linux channel отсутствовал; Desktop/WSL не
+запускались и не менялись. Native Mac не проверялся.
+
+**Обнаруженный блокер.** Delivery v1 выявил реальный сбой native vim.loader:
+URI-encode полного module path дал basename257 символов при NTFS limit255,
+parent существует; assert(fs_open) прерывает init. Вторичный backports error
+следовал из незавершённого init. Parser fixture отключает только bytecode cache;
+production cache не изменён. FORGE_PARSER_TEST_CACHE=1 возвращает repro.
+Блокер записан в PROBLEMS/план и должен получить отдельное исправление с regression
+до full Default. Publisher v1 также неверно сравнивал отсутствующее receipt.Version
+с policy.Version (binary version проверяется отдельно); unmanaged report сначала
+перезаписывался process log. Эти адресные stand/publisher ошибки исправлены,
+raw failures сохранены, ложного full green нет.
+
+**Вывод.** Сборка native libraries принадлежит publisher; установка и открытие
+файла проверяют/используют готовые артефакты. На Windows parser delivery готов
+в указанных границах. Следующие gates: Ubuntu/Mac, Lua cache path bug,
+Git/rg/Terminal/source-license inventory и полный Default/Custom. Удалено
+2.16GiB собственных stand payloads на F; native metadata/raw logs и готовый
+Core archive сохранены. Frozen24 inputs, в том числе чужой WIP/SDK/locks,
+не менялись; журналы дополнены raw append.
+
+**Файлы.** forge/parser_runtime.lua, config/lazy.lua, plugins/treesitter.lua,
+setup-stage.lua; inspect/prepare-parser-site.lua, package-core-runtime.py;
+install-parser-runtime.test.py и diagnostics/install-parser-*.lua; планы/история.
+Evidence: .tests/parser-runtime/*windows-v*.txt, metadata, cleanup.json,
+baseline.json; OpenSpec verification.md.

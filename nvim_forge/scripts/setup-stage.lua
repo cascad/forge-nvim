@@ -11,8 +11,14 @@ local ok, err = xpcall(function()
         local checked = backports.all(directory, 'check')
         io.stdout:write('Backports checked: ' .. vim.json.encode(checked) .. '\n')
     elseif stage == 'parsers' then
-        vim.cmd('ForgeTreesitterInstall')
-        local report = require('forge.setup_readiness').parsers(require('forge.tool_catalog').parsers())
+        local runtime = require('forge.parser_runtime')
+        local report
+        if runtime.site() then
+            report = runtime.check(require('forge.tool_catalog').parsers())
+        else
+            vim.cmd('ForgeTreesitterInstall')
+            report = require('forge.setup_readiness').parsers(require('forge.tool_catalog').parsers())
+        end
         io.stdout:write('Parser readiness: ' .. vim.json.encode(report) .. '\n')
     elseif stage == 'tools' then
         -- Only this explicit setup process: never download a language SDK

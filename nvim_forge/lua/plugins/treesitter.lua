@@ -138,6 +138,7 @@ local function setup_textobjects()
 end
 
 local function setup_main()
+    require('forge.parser_runtime').activate()
     local ts = require("nvim-treesitter")
     ts.setup()
     pcall(vim.treesitter.language.register, "json", "jsonc")
@@ -291,7 +292,9 @@ return {
         "nvim-treesitter/nvim-treesitter",
         branch = "main",
         lazy = false,
-        build = ":TSUpdate",
+        -- Managed Core already delivers native libraries/queries. Lazy restore
+        -- must not start a second source build before the parsers stage.
+        build = not require('forge.parser_runtime').site() and ":TSUpdate" or false,
         dependencies = {
             { "nvim-treesitter/nvim-treesitter-textobjects", branch = "main" },
         },

@@ -44,7 +44,7 @@ require("lazy").setup({
     performance = {
         rtp = {
             -- Managed config is explicit (-u); keep it when lazy resets runtimepath.
-            paths = vim.fs.normalize(config_root) ~= vim.fs.normalize(vim.fn.stdpath('config')) and { config_root } or {},
+            paths = require('forge.parser_runtime').paths(config_root),
             -- Глобально дисейблим встроенные плагины, которые мы не используем.
             -- Стартап ускоряется на 10–20мс, и в :checkhealth тише.
             -- matchparen НЕ отключаем: он подсвечивает парную скобку,

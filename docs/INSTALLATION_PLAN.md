@@ -817,3 +817,52 @@ codelldb/Bash launch и SQL consumers прошли в готовом offline con
 Native Mac/publication остаются открытыми. Следующий срез — Core/Terminal
 artifacts и actual Default/Custom. Проверки этого этапа завершены15 ноября;
 16 ноября после возобновления выполняется аудит и локальный commit.
+
+## Готовые native parsers Core — §253
+
+Managed Core содержит `runtime/treesitter`: прежний набор33 native libraries,
+queries и query dependencies из locked Treesitter. Упаковщик проверяет grammar
+revisions, native Neovim/Windows SDK receipt, фактическую загрузку libraries и
+компиляцию queries; записывает platform/source/SHA metadata. Формат архива и
+доставка остаются прежними package-runtime/catalog/private installer.
+
+Managed parsers stage выполняет read-only проверку собственного site и не
+вызывает tree-sitter/C-компилятор. Site включён в штатный runtimepath с учётом
+reset Lazy и имеет приоритет перед старыми app-data parsers. Открытие файла
+ничего не собирает. Обычная неменеджерская явная команда подготовки сохранена.
+
+Publisher-команды из репозитория (это подготовка релиза, не шаги пользователя
+установщика; нужны уже доступные native Neovim, tree-sitter CLI и C compiler):
+
+```sh
+nvim --headless -u NONE -i NONE -l scripts/prepare-parser-site.lua .tests/editor-deps/lazy/nvim-treesitter /prepared/site
+python3 -B scripts/package-core-runtime.py --nvim /prepared/neovim --site /prepared/site --editor-deps .tests/editor-deps --output /artifacts/core.tar.gz
+```
+
+Windows: `python` и `.zip`, `--nvim .tools/neovim/windows-x64`; каталог site
+задаётся явно. Prepared editor-deps создаёт существующий prepare_editor.py.
+Source preparation использует штатный pinned Treesitter API; языковые SDK
+не устанавливает. Упаковщик принимает уже подготовленные inputs и сам не
+загружает/не компилирует их.
+
+Native acceptance после подготовки site для своей платформы:
+
+```sh
+python3 -B tests/install-parser-runtime.test.py
+```
+
+По умолчанию site: `.tests/parser-runtime/<platform>/site`; другой путь —
+`FORGE_PARSER_SITE`. Native Neovim/UI/editor-deps выбираются теми же
+FORGE_INSTALL_TEST_NVIM/FORGE_INSTALL_UI_BINARY/FORGE_E2E_DEPS, что в остальных
+install stands. Windows4 cases прошли с адресным исправлением fixture;
+native load всех33 libraries/queries, HTTP delivery, настоящие Lua parse/captures,
+отказы и сохранение прежнего kit проверены. Ubuntu ждёт предоставленного Docker
+engine, native Mac открыт. Успешные suites повторно не запускались.
+
+**Граница:** другие plugins/Mason stages в parser stand контролируются. Только
+для parser stand отключён bytecode cache Lazy: v1 обнаружил настоящий сбой
+vim.loader при basename257 символов в длинном Unicode staged path. Production
+cache не изменён; исправление этого сбоя — блокер full Default. Для воспроизведения
+задать FORGE_PARSER_TEST_CACHE=1 и запустить только test_parser_01_native_delivery_and_captures.
+Git/rg, Terminal, полный source/license inventory и публичный catalog остаются
+открытыми. Этот Core archive пока не является полной поставкой.

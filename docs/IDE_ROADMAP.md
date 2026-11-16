@@ -1,6 +1,6 @@
 # nvim_forge — рабочий план мини-IDE
 
-Обновлено: 2026-11-15. Основная сборка: **nvim_forge**.
+Обновлено: 2026-11-16. Основная сборка: **nvim_forge**.
 Статус: базовые e2e настоящего nvim_forge работают на Windows и Ubuntu;
 фоновые установки инструментов редактора перенесены в явный setup.
 IDE-001 параллельно ждёт диагностических данных с Mac.
@@ -35,6 +35,11 @@ SDK installs и публичный one-liner пока открыты.
 проверками Windows/Ubuntu. §252 добавил Mason codelldb/Bash preparation и
 native SQL part без Go/Rust у пользователя SQL. Следующий срез — Core/Terminal
 artifacts, actual Default/Custom и native Mac/publication.
+§253: Core publisher и managed read-only parser stage реализованы; Windows
+delivery/подсветка/отказы проверены с33 native parsers. Ubuntu ждёт доступного
+Docker engine, Mac остаётся owner gate. Перед full Default нужно исправить
+подтверждённый сбой vim.loader на длинных Unicode paths; Git/rg/Terminal и
+source/license inventory ещё открыты. См. [срез парсеров](INSTALLATION_PLAN.md#готовые-native-parsers-core--253).
 Упаковка Node отменена; native Mac и полный release остаются открытыми.
 §234: общий setup обрабатывает Lua/Vim exceptions и missing commands как отказ;
 по7 stand PASS Windows/Ubuntu. Default/Custom каталоги и родители создаются

@@ -78,6 +78,20 @@ LSP. §251: gopls/stylua/gofumpt/golines/prettier включены в pinned Mas
 sqls/forge-sqltest без SDK компилятора. Реальные debug/query/test consumers
 проверены Windows/Ubuntu; native Mac/Windows Bash launch/publication открыты.
 Следующий срез — Core/Terminal artifacts и actual Default/Custom.
+§253: готовые33 native parsers доставляются Core publisher; managed setup
+не вызывает tree-sitter/C-компилятор. Windows delivery/captures/rollback
+прошли; Ubuntu ждёт Docker, native Mac не проверялся. Остальные Core/Terminal
+dependencies и полный source/license inventory пока открыты.
+
+**Новый подтверждённый блокер full Default:** Neovim0.12.2 vim.loader кодирует
+полный путь Lua module в имя cache file. В длинном staged Unicode path имя
+получилось257 символов при лимите255; parent существует, fs_open даёт ENOENT,
+assert прерывает init. Source: runtime/lua/vim/loader.lua, cache_filename /
+write_cachefile. Raw proof: .tests/parser-runtime/e2e-windows-v1.txt и setup-plugins.log
+соответствующего stand. Parser fixture отключает только этот cache; исправлением
+продукта это не считается. Repro: FORGE_PARSER_TEST_CACHE=1 и
+`python -B tests/install-parser-runtime.test.py test_parser_01_native_delivery_and_captures`.
+Нужно отдельное исправление с regression до full Default, без смены SDK вслепую.
 
 §241: реализована доставка Core и selected SDK modules по platform/URL/SHA,
 сборка в private staging и сохранение прежнего kit при отказе. Native stand

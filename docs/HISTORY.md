@@ -389,6 +389,7 @@ Python реализован и проверен 2026-11-03; после возо�
 | §250 | [Release: inventory существующих инструментов IDE](../nvim_forge/FIXLOG.md#250-release-inventory-существующих-инструментов-ide) |
 | §251 | [Setup: пять существующих IDE tools через Mason](../nvim_forge/FIXLOG.md#251-setup-пять-существующих-ide-tools-через-mason) |
 | §252 | [Setup: доставка существующих debug/test tools](../nvim_forge/FIXLOG.md#252-setup-доставка-существующих-debugtest-tools) |
+| §253 | [Core: готовые native parsers без компилятора пользователя](../nvim_forge/FIXLOG.md#253-core-готовые-native-parsers-без-компилятора-пользователя) |
 
 ## Как читать и дополнять
 
