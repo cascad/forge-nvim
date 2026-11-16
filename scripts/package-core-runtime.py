@@ -1,4 +1,4 @@
-"""IDE-BOOT-24: package native Neovim + prepared parser site; never build SDKs.
+"""IDE-BOOT-24/26: package native Neovim, parsers and search; never build SDKs.
 
 The supplied editor-deps must have been prepared with prepare_editor.py at the
 current lazy-lock. Existing package-runtime owns the archive/manifest format.
@@ -21,7 +21,7 @@ def digest(path):
     return hashlib.sha256(Path(path).read_bytes()).hexdigest()
 
 
-def package(nvim_root, site, editor_deps, output):
+def package(nvim_root, site, editor_deps, output, search=None):
     nvim_root, site, editor_deps, output = [Path(p).resolve() for p in (nvim_root, site, editor_deps, output)]
     for source in (nvim_root, site, editor_deps):
         if source == output or source in output.parents:
@@ -30,6 +30,14 @@ def package(nvim_root, site, editor_deps, output):
     arch = 'arm64' if platform.machine().lower() in ('arm64', 'aarch64') else 'x64'
     if system == 'windows' and arch != 'x64':
         raise ValueError('Windows ARM64 Neovim is not verified')
+    search_root = Path(search).resolve() if search else None
+    if search_root:
+        if search_root == output or search_root in output.parents:
+            raise ValueError('Output must be outside search inputs')
+        search_spec = importlib.util.spec_from_file_location('core_search_preparation', ROOT / 'scripts/prepare-search-runtime.py')
+        search_module = importlib.util.module_from_spec(search_spec)
+        search_spec.loader.exec_module(search_module)
+        search_metadata = search_module.verify(search_root, system + '-' + arch)
     exe = nvim_root / 'bin' / ('nvim.exe' if system == 'windows' else 'nvim')
     version = subprocess.run([str(exe), '--version'], capture_output=True, text=True, timeout=10, check=True).stdout.splitlines()[0]
     if version != 'NVIM v0.12.2':
@@ -71,6 +79,11 @@ def package(nvim_root, site, editor_deps, output):
         inventory = json.loads(metadata.read_text(encoding='utf-8'))
         stage = temp / 'runtime'
         shutil.copytree(nvim_root, stage)
+        if search_root:
+            for name in [*search_metadata['files'], 'prepared.json']:
+                destination = stage / 'search' / name
+                destination.parent.mkdir(parents=True, exist_ok=True)
+                shutil.copy2(search_root / 'search' / name, destination)
         owned = stage / 'treesitter'
         (owned / 'parser').mkdir(parents=True)
         (owned / 'parser-info').mkdir()
@@ -96,6 +109,9 @@ def package(nvim_root, site, editor_deps, output):
             raise ValueError('Native parser probe failed: ' + result.stdout + result.stderr)
         recipe = {'schema': 1, 'platform': system + '-' + arch, 'nvim': 'bin/' + exe.name,
                   'components': ['core'], 'paths': ['bin'], 'probes': [['bin/' + exe.name, '--version']]}
+        if search_root:
+            recipe['paths'].append('search/bin')
+            recipe['probes'].append(['search/bin/' + ('rg.exe' if system == 'windows' else 'rg'), '--version'])
         if sdk:
             recipe['windows_sdk'] = sdk
         recipe_file = temp / 'recipe.json'
@@ -109,5 +125,6 @@ if __name__ == '__main__':
     parser.add_argument('--site', required=True, type=Path)
     parser.add_argument('--editor-deps', required=True, type=Path)
     parser.add_argument('--output', required=True, type=Path)
+    parser.add_argument('--search', required=True, type=Path, help='Prepared native search tools; release Core includes rg')
     args = parser.parse_args()
-    print(json.dumps(package(args.nvim, args.site, args.editor_deps, args.output), indent=2))
+    print(json.dumps(package(args.nvim, args.site, args.editor_deps, args.output, args.search), indent=2))

@@ -37,8 +37,9 @@ native SQL part без Go/Rust у пользователя SQL. Следующи
 artifacts, actual Default/Custom и native Mac/publication.
 §253: Core publisher и managed read-only parser stage реализованы; Windows
 delivery/подсветка/отказы проверены с33 native parsers. Ubuntu4 PASS40.313s (§254), Mac остаётся owner gate. §255 устранил сбой vim.loader на длинных
-Unicode paths штатной cache policy; full editor E2E Windows/Ubuntu прошли. Git/rg/Terminal и
-source/license inventory ещё открыты. См. [срез парсеров](INSTALLATION_PLAN.md#готовые-native-parsers-core--253).
+Unicode paths штатной cache policy; full editor E2E Windows/Ubuntu прошли. Git/Terminal и
+source/license inventory ещё открыты. §256 добавил native ripgrep/Core и
+Telescope delivery E2E на Windows/Ubuntu; rg больше не внешний prerequisite. См. [срез парсеров](INSTALLATION_PLAN.md#готовые-native-parsers-core--253).
 Упаковка Node отменена; native Mac и полный release остаются открытыми.
 §234: общий setup обрабатывает Lua/Vim exceptions и missing commands как отказ;
 по7 stand PASS Windows/Ubuntu. Default/Custom каталоги и родители создаются

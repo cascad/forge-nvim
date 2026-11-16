@@ -1,6 +1,6 @@
 # Что ещё требуется для полной поставки fride
 
-Исходный срез2026-11-15, код694cd9e, обновления §251–255. Это состав **существующих возможностей**, а не
+Исходный срез2026-11-15, код694cd9e, обновления §251–256. Это состав **существующих возможностей**, а не
 предложение новых LSP. Полного Default release пока нет: production
 [artifacts.tsv](../scripts/runtime/artifacts.tsv) не содержит ни одной строки.
 Готовность транспорта и отдельных стендов не равна готовности такой поставки.
@@ -27,7 +27,7 @@
 
 | Компонент | Обычные SDK | Mason в текущем managed setup | Пробел поставки |
 |---|---|---|---|
-| Core | Сам по себе не требует SDK языка | lua-language-server, stylua; 23 общих parsers | §253: готовый site с33 native libraries, выбранный каталог проверяется без сборки; Windows/Ubuntu PASS, native Mac открыт. Git/rg и полный source/license inventory ещё нужны. Prettier для JSON/YAML/Markdown принадлежит Node компоненту. |
+| Core | Сам по себе не требует SDK языка | lua-language-server, stylua; 23 общих parsers | §253: готовый site с33 native libraries, выбранный каталог проверяется без сборки; Windows/Ubuntu PASS, native Mac открыт. §256: pinned rg15.2.0 с лицензиями/real picker PASS Windows/Ubuntu. Git и общий source/license inventory ещё нужны. Prettier для JSON/YAML/Markdown принадлежит Node компоненту. |
 | Go | Go | delve, golangci-lint, gotestsum, gopls, gofumpt, golines; ещё4 parsers | При необходимости сборки новых tools требуется обычный Go1.26.0+; готовые packages переиспользуются со старым SDK. |
 | Rust | Rust/Cargo | rust-analyzer, codelldb1.12.2 на Windows/POSIX; ещё1 parser | §252: собственный LLDB/Python bundle; реальные breakpoint/continue/output проверены Windows/Ubuntu. Rustfmt — часть обычного Rust toolchain. |
 | Python | Python + Node для pyright | pyright, ruff, debugpy; ещё1 parser | Версии SDK/venv и настоящий debug/test acceptance; наличие receipt этого не доказывает. |
@@ -80,6 +80,7 @@
    fd и native fzf — ускорители с существующим fallback, не скрытые обязательные SDK.
    §253–254 закрыли Windows/Ubuntu parser delivery в указанных границах.
    §255 снял long-path Lua cache blocker штатной policy; полный editor E2E Windows/Ubuntu прошёл.
+   §256 доставляет native rg15.2.0/Core с лицензиями; real Telescope поиск/переход проверен Windows/Ubuntu.
 4. **Настоящий Default/Custom из архива:** отдельный чистый профиль, реальные
    config/plugins/tools, launch → open/search → LSP → debug/tests → format,
    затем repeat/cancel/upgrade. Одна целевая тестовая итерация на изменение.

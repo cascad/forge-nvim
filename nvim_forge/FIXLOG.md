@@ -13697,3 +13697,59 @@ tests/install-lua-cache.test.py, diagnostics/lua-cache-e2e.lua; планы/READM
 история и OpenSpec verification. Evidence .tests/parser-runtime/lua-cache-*.txt,
 .tests/ubuntu/parser-runtime/lua-cache-*.txt, .tests/lua-cache и editor-e2e;
 production-cache delivery logs и cleanup.json.
+
+
+### 256. Core: готовый ripgrep и настоящий поиск без системного rg
+
+**Связь.** IDE-138, Core/Terminal очередь §250–255; deliver-core-text-search.
+Спека: IDE-BOOT-26 (ADDED).
+**Статус.** Windows/Ubuntu native acceptance пройден; Mac/ARM recipes не
+объявляются проверенными. Git/Terminal/full Default/publication остаются.
+
+**Проблема/причина.** Core доставлял Neovim/parsers, но поиск Telescope
+зависел от внешнего rg/fd. Успешная установка такого Core не доказывала работу
+поиска по тексту на чистой машине.
+
+**Изменение.** Official ripgrep15.2.0 release assets закреплены URL/SHA для
+Windows x64, Linux x64/arm64 musl и Mac x64/arm64. Publisher preparation принимает
+archive либо явный --download, проверяет SHA/native version и готовит только
+IDE search/bin плюс COPYING/LICENSE-MIT/UNLICENSE. Core publisher повторно
+сверяет binary/licenses с сохранённым official archive, копирует только известные
+payload files, добавляет search/bin/probe к прежнему manifest. Generic transport/
+launcher не менялись; SDK/global PATH/чужие программы не дополняются.
+Release CLI требует --search; старый4-argument Python API остаётся для partial
+parser fixtures и не считается полной release поставкой.
+
+**Проверка/e2e.** Native Windows/Ubuntu проходят настоящие source/UI/catalog/
+Core archive/private install/fride launcher. UI-attached Neovim с installed
+environment использует настоящий Telescope config/rg: keyboard input по имени
+и содержимому, Unicode filename с пробелами, project ignore, выбранный файл и
+строка2. Частный rg имеет приоритет перед неподменяемой user copy; fd не нужен.
+Licenses совпадают с source bytes. Изменённый binary/license, corrupt archive,
+чужая native version отвергаются. Native probe corrupt rg в новом Core даёт
+nonzero, сохраняя marker и binary прежнего kit.
+
+Windows cases02/03 PASS в v1, consumer01 PASS37.075s в v3; Ubuntu02/03 PASS
+в v1, consumer01 PASS17.455s в v2. Зелёные независимые cases не повторялись.
+Прочие plugin/Mason stages контролируются parser fixture; Telescope/rg и переход
+по выбранному результату настоящие. SDK/pins/backports frozen, Mac не запускался.
+Docker только предоставленный engine/готовый image, network none,2CPU/2GiB,
+--pull never; Desktop/WSL lifecycle/build/pull не менялись.
+
+**Значимые failures.** Новый driver вызывал synchronous RPC из callback vim.wait.
+Вложенный event loop повторно запускал predicate: поиск уже показывал результат,
+затем child завершался по60s timeout (124/15). Исправлен driver по существующему
+editor:wait pattern с внешним repeat, добавлено ожидание selected entry и
+проверка нормального native exit/screen/stderr. Product picker не менялся.
+
+**Вывод.** Готовая IDE доставляет search tool и подтверждает фактический переход
+через picker. Одна receipt/version строка этого не доказывает. Следом Git policy,
+WezTerm/font и общий source/license inventory/Default. Удалено 0.99GiB только
+собственных Windows payloads на F; ready search/Core archive/metadata/raw logs
+сохранены. Linux тяжёлые runtime copies были disposable /tmp. Frozen25 и raw
+append-only журналы сохранены. Production catalog остаётся пустым.
+
+**Файлы.** scripts/sdk/ripgrep.json, prepare-search-runtime.py,
+package-core-runtime.py; install-search-runtime.test.py и install-search-observe.lua;
+план/README/история/OpenSpec verification. Evidence .tests/search-runtime/*v*.txt,
+.tests/ubuntu/search-runtime/*v*.txt, prepared.json, artifacts/metadata/cleanup.json.

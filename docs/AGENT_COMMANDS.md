@@ -9692,3 +9692,31 @@ Image/Desktop/WSL lifecycle не менялись, build/pull/host installs не
 cleanup.py, metadata/raw logs сохранены. Финал: AST, frozen25/raw journal prefix,
 exact allowlist/staged HEAD prefixes/git diff --cached --check и local commit.
 Mac и полный Default не заявлены; TEMP/TMP/TMPDIR/NVIM log/npm cache на F.
+
+
+## 164. IDE-BOOT-26: native ripgrep/Core/Telescope delivery
+
+2026-11-16. Read-only Core publisher/manifest/launcher/Telescope; official
+BurntSushi/ripgrep15.2.0 release и expanded_assets дали platform SHA/лицензии.
+OpenSpec context/list/status/instructions/strict validate — прежний pinned CLI.
+Git policy отдельно запрошена как архитектурный выбор; здесь не применяется.
+
+Publisher: python -B scripts/prepare-search-runtime.py --archive <official archive>
+--output <prepared native search>; либо явный --download. Core:
+python -B scripts/package-core-runtime.py --nvim <native Neovim> --site <native site>
+--editor-deps <pinned deps> --search <prepared search> --output <Core archive>.
+SDK/host package managers не запускаются. Source archive/binary/licenses SHA и
+native version проверены; --search обязателен в release CLI.
+
+Tests: python -B tests/install-search-runtime.test.py (POSIX python3).
+Windows provenance/old-kit cases02/03 прошли v1; после driver исправления
+адресный01 прошёл v3. Ubuntu02/03 прошли v1,01 прошёл v2. Native rg/Telescope
+и реальный выбор/открытие файла/строки, other provisioning контролируется.
+Синхронный RPC не вызывается из callback vim.wait; screen/stderr/exit сохранены.
+Green suites не повторялись. Docker compose run --rm --no-deps --pull never,
+network none,2CPU/2GiB, existing image; Desktop/WSL не запускались/не менялись.
+
+Cleanup.py проверил абсолютные own roots по3 raw logs, сохранил manifests/SHA/
+Core archive, удалил только собственные SDK/archive copies. TEMP/TMP/TMPDIR/
+NVIM log/npm cache на F. Финал: AST/frozen25/raw+staged journal prefixes,
+exact staging allowlist/git diff --cached --check и local commit без push.

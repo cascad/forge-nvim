@@ -836,7 +836,7 @@ Publisher-команды из репозитория (это подготовк�
 
 ```sh
 nvim --headless -u NONE -i NONE -l scripts/prepare-parser-site.lua .tests/editor-deps/lazy/nvim-treesitter /prepared/site
-python3 -B scripts/package-core-runtime.py --nvim /prepared/neovim --site /prepared/site --editor-deps .tests/editor-deps --output /artifacts/core.tar.gz
+python3 -B scripts/package-core-runtime.py --nvim /prepared/neovim --site /prepared/site --editor-deps .tests/editor-deps --search /prepared/search --output /artifacts/core.tar.gz
 ```
 
 Windows: `python` и `.zip`, `--nvim .tools/neovim/windows-x64`; каталог site
@@ -861,7 +861,7 @@ native load всех33 libraries/queries, HTTP delivery, настоящие Lua 
 **Граница:** другие plugins/Mason stages в parser stand контролируются.
 §255 перевёл parser fixture на production cache policy; отдельного test-only
 отключения больше нет. Полный editor startup проверяется отдельным native E2E.
-Git/rg, Terminal, полный source/license inventory и публичный catalog остаются
+Git, Terminal, полный source/license inventory и публичный catalog остаются
 открытыми. Этот Core archive пока не является полной поставкой.
 
 ## Безопасная загрузка Lua — §255
@@ -890,3 +890,42 @@ Lazy UIEnter timings в свежих profiles: Windows0.81–0.91s elapsed с н
 Ubuntu80–113ms process CPU. Разные методы напрямую не сравниваются; это не full
 Default benchmark. Native Mac, остальные Core/Terminal parts и полная языковая
 readiness matrix остаются release gates.
+
+
+## Native текстовый поиск Core — §256
+
+Release Core включает ripgrep15.2.0 в runtime/search/bin, лицензии в search/licenses
+и source/version/SHA metadata. Runtime PATH/probes прежние; global PATH/SDK/обычный
+nvim не меняются. Windows x64/MSVC, Linux x64/arm64 musl, Mac x64/arm64 описаны
+в scripts/sdk/ripgrep.json. Native acceptance выполнен только Windows/Ubuntu x64.
+
+Подготовка publisher из официального archive либо download (SDK не нужен):
+
+```sh
+python3 -B scripts/prepare-search-runtime.py --download --output /prepared/search
+python3 -B scripts/package-core-runtime.py --nvim /prepared/neovim --site /prepared/site --editor-deps .tests/editor-deps --search /prepared/search --output /artifacts/core.tar.gz
+```
+
+Windows: python/.zip и подготовленный Windows Neovim SDK. --archive <file> заменяет
+--download в offline стенде. Источники/SHA —
+[official15.2.0 release assets](https://github.com/BurntSushi/ripgrep/releases/expanded_assets/15.2.0).
+Publisher сравнивает доставляемый binary и COPYING/LICENSE-MIT/UNLICENSE с тем же
+pinned archive и проверяет native version. Неизвестные файлы input directory в
+Core не копируются. CLI требует --search; Python API без search — исторический
+parser-only fixture, не full release Core. Это publisher-команды, не ручные шаги
+пользователя установщика. Публичный catalog пока пуст.
+
+Целевой native stand:
+
+```sh
+python3 -B tests/install-search-runtime.test.py
+```
+
+FORGE_SEARCH_RUNTIME указывает prepared search (default .tests/search-runtime/<platform>),
+FORGE_PARSER_SITE/editor-deps/Neovim/UI — как в parser delivery. Native Windows/
+Ubuntu по3 cases пройдены с адресным повтором падавшего consumer. Настоящий
+source/UI/Core/launcher → Telescope find_files/live_grep с keyboard input,
+Unicode path/ignore rules и переходом на строку; system rg/fd не нужны.
+Invalid binary/license/archive/version и old-kit probe failure проверены.
+Другие plugin/Mason stages в stand контролируются; full Default этим не заявлен.
+Git policy, Terminal, общий source/license inventory и native Mac открыты.

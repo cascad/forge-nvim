@@ -1736,3 +1736,13 @@ Native Windows2 PASS/Ubuntu2 PASS (§255). Timings/report — .tests/lua-cache,
 snapshots/config/project/native exit — .tests/editor-e2e; private runtime удаляет
 прежний harness. SDK/host installs отсутствуют. Native Mac отдельно владельцем;
 полная языковая Default readiness этим тестом не доказывается.
+
+
+## IDE-BOOT-26: поиск из доставленного Core
+
+`python -B tests/install-search-runtime.test.py` (POSIX python3) — native Core
+delivery с подготовленными parsers/editor-deps/Neovim/UI и FORGE_SEARCH_RUNTIME.
+Official rg15.2.0 binary/licenses/source archive готовит scripts/prepare-search-runtime.py.
+Real Telescope filename/text search/ignore/Unicode/open-line, provenance/native
+probe failures и сохранность прежнего kit. Windows/Ubuntu по3 cases прошли;
+native Mac отдельно владельцем, full Default не заявлен (§256).

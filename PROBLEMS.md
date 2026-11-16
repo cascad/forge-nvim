@@ -83,6 +83,10 @@ sqls/forge-sqltest без SDK компилятора. Реальные debug/que
 прошли; §254 Ubuntu4 PASS40.313s, native Mac не проверялся. Остальные Core/Terminal
 dependencies и полный source/license inventory пока открыты.
 
+§256: Core доставляет pinned ripgrep15.2.0 и лицензии. Реальный Telescope
+поиск имени/текста и открытие результата, provenance/old-kit failures прошли
+Windows/Ubuntu; system rg/fd не нужны. Git/Terminal/общий inventory открыты.
+
 **§255 исправлено в сборке:** long-path Lua cache error устранён штатным
 Lazy performance.cache.enabled=false для всех ОС. Native Windows/Ubuntu full
 editor E2E по2 PASS, managed parser delivery с production policy также прошёл.
