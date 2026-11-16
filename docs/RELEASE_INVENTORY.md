@@ -147,6 +147,13 @@ Files/search/Lua attach проверены. Full Core acceptance ещё RED: д�
 publisher notices для двух Core tools. Старые inventory reports не пересчитаны:
 они описывают прежние явно переданные publisher roots, не этот test profile.
 
+§261: функциональный Core workflow Windows теперь5/5 PASS: diagnostic/edit/save/
+restart и оба project settings варианта проверены настоящим сервером. Тот же
+consumer5/5 прошёл Ubuntu на prepared full source config; full installer Ubuntu
+пока отдельно. Следующий publisher остаток — notices LuaLS/StyLua и включение
+готовых Core tools в общий report, затем remaining Default tools/parts. Не
+публикуем старые141-position reports как обновлённую полную поставку.
+
 Команды/границы: [publisher inventory](INSTALLATION_PLAN.md#publisher-inventory--259).
 E2E `python -B tests/release-inventory.test.py` (POSIX python3):6 сценариев
 прошли Windows/Ubuntu. Strict mode проверяет полноту metadata; full release

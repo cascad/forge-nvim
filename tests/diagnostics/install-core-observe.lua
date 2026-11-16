@@ -1,4 +1,4 @@
--- Production installed config only: no plugin specs/stages/LSP substitutes.
+-- spec: IDE-BOOT-30 IDE-BOOT-31. Full config, no specs/stages/LSP substitutes.
 local base, round = arg[1], tonumber(arg[2])
 local root = vim.fn.fnamemodify(debug.getinfo(1, 'S').source:sub(2), ':p:h:h:h')
 package.path = root .. '/tests/lib/?.lua;' .. package.path
@@ -43,11 +43,12 @@ local ok, err = xpcall(function()
         rpc:request('nvim_input', {keys})
         wait_for('Telescope prompt', function() return lua("return vim.bo.filetype=='TelescopePrompt'") end, 5000)
         rpc:request('nvim_input', {query})
-        wait_for('Telescope matching entry', function()
-            return lua([[local p=require('telescope.actions.state').get_current_picker(vim.api.nvim_get_current_buf())
-                if p and p.manager then for e in p.manager:iter() do
-                    if tostring(e.filename or e.value):find(...,1,true) then return true end
-                end end return false]], {file})
+        wait_for('Telescope selected matching entry', function()
+            return lua([[local file,query=...
+                local state=require('telescope.actions.state')
+                local e=state.get_selected_entry()
+                return state.get_current_line()==query and e
+                    and tostring(e.filename or e.value):find(file,1,true) ~= nil]], {file, query})
         end, 5000)
         rpc:request('nvim_input', {'<CR>'})
         wait_for('Telescope opens file', function()
@@ -55,17 +56,27 @@ local ok, err = xpcall(function()
         end, 3000)
     end
     picker('<C-p>', 'main.lua', 'main.lua')
+    local opened_at = vim.uv.hrtime()
     info.lsp = wait_for('Native Lua LSP attaches', function()
         return lua([[for _,c in ipairs(vim.lsp.get_clients({bufnr=0,name='lua_ls'})) do
-            if c.initialized then return {name=c.name,cmd=c.config.cmd,root=c.root_dir} end
+            if c.initialized then return {name=c.name,cmd=c.config.cmd,root=c.root_dir,
+                library=c.config.settings.Lua.workspace.library or {},runtime=vim.env.VIMRUNTIME} end
         end return false]])
     end, 45000)
+    info.lsp.attach_ms = (vim.uv.hrtime() - opened_at) / 1e6
+    if round == 4 then
+        assert(#info.lsp.library == 1 and info.lsp.library[1] == info.lsp.runtime, vim.inspect(info.lsp))
+        return
+    end
+    assert(#info.lsp.library == 0, 'IDE overrides explicit project library: ' .. vim.inspect(info.lsp.library))
+    if round == 5 then return end
     if round == 1 then
         info.diagnostic = wait_for('Lua type mismatch diagnostic', function()
             return lua([[for _,d in ipairs(vim.diagnostic.get(0)) do
                 if d.code=='assign-type-mismatch' then return {code=d.code,message=d.message} end
             end return false]])
         end, 20000)
+        info.diagnostic.elapsed_ms = (vim.uv.hrtime() - opened_at) / 1e6
         rpc:request('nvim_input', {'<Esc>gg0j0cclocal value = "ready"<Esc>:write<CR>'})
         wait_for('Edit/save', function()
             return lua([[return not vim.bo.modified and table.concat(vim.fn.readfile(vim.api.nvim_buf_get_name(0)),' '):find('ready',1,true) ~= nil]])
@@ -80,6 +91,7 @@ local ok, err = xpcall(function()
     end
     picker(' fg', 'FRIDE_CORE_NEEDLE', 'notes.txt')
     info.search = lua('return {path=vim.api.nvim_buf_get_name(0),line=vim.api.nvim_win_get_cursor(0)[1]}')
+    assert(info.search.line == 2, 'Grep did not open the matching line')
     info.errors = lua([[local errors={}
         for _,e in ipairs(require('forge.log_store').entries()) do
             if e.level>=vim.log.levels.ERROR then errors[#errors+1]=e.message end

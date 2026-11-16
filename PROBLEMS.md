@@ -96,6 +96,12 @@ Files/search и Lua LSP attach проходят, diagnostics/edit/save/restart �
 20s deadline, LuaLS preloads все plugin libraries. Следующий шаг — убрать
 ненужный обход в Lua LSP config, затем закончить actual Core acceptance/notices.
 
+§261 закрывает Lua diagnostics задержку из §260: весь runtimepath заменён
+штатной ограниченной library/on_init, project .luarc.json/jsonc не подменяется.
+Windows actual installed Core5/5 PASS, Ubuntu native full config5/5 PASS,
+diagnostics/edit/save/restart подтверждены без fake LSP и увеличения deadline.
+Следующие открытые пункты — Core notices, Default, native Mac/full Ubuntu delivery.
+
 §258: private Terminal доставляет pinned WezTerm/font и явный bin/fride-terminal.
 Shared config/private window state/font_dirs без замены пользовательского
 WezTerm; native config/font gate до publish. Windows GUI/input/save и Ubuntu

@@ -9881,3 +9881,41 @@ maintenance.auto=false. Native Mac/full Core/Default/notices не объявле
 Windows2 PASS2.339s; Ubuntu8 PASS2.166s.8 разных native plugin сценариев на каждой
 ОС, прежние7 coordinator controls сохранены. Остальные green cases Windows не
 повторялись; полный Core остаётся RED на Lua diagnostics, как указано выше.
+
+
+## 169. 2026-11-16 — Lua workspace library и real Core workflow
+
+Read: pinned nvim-lspconfig/lsp/lua_ls.lua official on_init example/warning,
+neodev/lsp.lua legacy hook, actual LuaLS log и consumer reports.
+Production change только существующий plugins/lsp.lua; on_init/project fs_stat,
+VIMRUNTIME-only fallback. No new LSP/SDK/pins/dependencies or baseline sync.
+
+python -B tests/install-core-acceptance.test.py --kit <owned-kit> --profile <owned-profile>
+Windows5/5 PASS. --case workflow отдельно после native selection readiness
+fix:2 PASS. --case missing/library/jsonc доступны отдельно. Tests ждут настоящую
+выбранную строку/фактический query Telescope, не только наличие entry в manager.
+Native diagnostic20s deadline прежний, последний Windows~1.75s/Ubuntu~0.64s.
+Settings/lock bytes сохранены, scope close active children0.
+
+python3 -B tests/install-core-acceptance.test.py --editor-deps <prepared-editor-deps> --runtime <native-runtime>
+Это full source config feature mode, НЕ installer acceptance. Создаёт own
+profile, copied config/plugins, проверяет manifest pins; native LuaLS/stylua/rg
+берутся из PATH. FORGE_CORE_TEST_ROOT задаёт guest /tmp. Тот же observer/keyboard
+workflow, Ubuntu5/5 PASS; после selection fix последние2 workflow PASS.
+
+Linux LuaLS3.19.2 asset скачан urllib.request по официальному GitHub release URL
+в .tests/ubuntu/core-acceptance/assets, source/version/SHA JSON рядом. Container
+извлекает его в own /tmp, копирует cached editor-deps и применяет текущие
+backports существующей prepare-plugins.lua, использует готовые native parsers.
+Только готовый engine/image: compose run --rm --no-deps --pull never, network
+none2CPU/2GiB; Desktop/WSL/image build/pull не менялись. Raw FAIL/metadata/screens
+экспортированы F, большие config/tools/profile в disposable guest /tmp.
+
+Ранний own PowerShell ModuleAnalysisCache4252 bytes перемещён из root Microsoft
+в .tests/core-acceptance/powershell-module-cache-original.bin штатным Move-Item:
+проверены exact resolved paths/размер/отсутствие destination и одинаковый SHA.
+Неудачно удаляемый bee socket не трогали. Новые test env задают cache path на F.
+
+OpenSpec bound-lua-workspace-library / IDE-BOOT-31, FIXLOG261. Final AST/Lua parse,
+strict validate, frozen25/raw+staged journal prefixes/exact index/commit no auto GC.
+Mac/full Ubuntu installer/GUI, notices и Default/publication остаются открытыми.

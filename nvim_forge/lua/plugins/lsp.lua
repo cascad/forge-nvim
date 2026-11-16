@@ -487,12 +487,21 @@ return {
 
             -- ----------- lua_ls -----------
             vim.lsp.config("lua_ls", {
+                -- IDE-BOOT-31: native lspconfig's on_init pattern. Indexing all
+                -- installed plugins delays even a tiny project's diagnostics.
+                on_init = function(client)
+                    local folder = client.workspace_folders and client.workspace_folders[1]
+                    local root = folder and folder.name
+                    if root and (vim.uv.fs_stat(root .. '/.luarc.json') or vim.uv.fs_stat(root .. '/.luarc.jsonc')) then
+                        return
+                    end
+                    client.config.settings.Lua.workspace.library = { vim.env.VIMRUNTIME }
+                end,
                 settings = {
                     Lua = {
                         runtime = { version = "LuaJIT" },
                         diagnostics = { globals = { "vim" } },
                         workspace = {
-                            library = vim.api.nvim_get_runtime_file("", true),
                             checkThirdParty = false,
                         },
                         telemetry = { enable = false },

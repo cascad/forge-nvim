@@ -14007,3 +14007,65 @@ consumer-windows-v2.txt,startup-missing-windows.txt,probe-1794850807403555900/ki
 Windows2 PASS2.339s; Ubuntu8 PASS2.166s.8 разных native plugin сценариев на каждой
 ОС, прежние7 coordinator controls сохранены. Остальные green cases Windows не
 повторялись; полный Core остаётся RED на Lua diagnostics, как указано выше.
+
+
+### 261. Lua: диагностика проекта без preload всех plugins IDE
+
+**Связь:** IDE-138; change `bound-lua-workspace-library`.
+Спека: IDE-BOOT-31 (ADDED).
+**Статус:** исправлено; Windows installed Core и Ubuntu prepared full config
+прошли5 consumer scenarios. Full Ubuntu delivery/native Mac отдельно открыты.
+
+**Проблема.** Actual Core из §260 подключал LuaLS, но маленький main.lua с
+assign-type-mismatch не получал diagnostic за20s. Server log обходил Lua
+libraries всех plugins. Сквозной edit/save/restart до этого не был проверен.
+
+**Причина.** plugins/lsp.lua безусловно задавал workspace.library через
+nvim_get_runtime_file('',true). Закреплённый lspconfig/lsp/lua_ls.lua прямо
+предупреждает о медленном варианте и показывает native on_init/VIMRUNTIME.
+Neodev hooks legacy lspconfig; новый native config сам задавал слишком широкий
+список. Сервер/SDK не менялись и не заменялись новым LSP.
+
+**Изменение.** В существующем lua_ls убрана unconditional library. Штатный
+on_init при .luarc.json/jsonc возвращается без IDE library injection, иначе
+добавляет только текущий VIMRUNTIME. Project settings остаются источником
+явных дополнительных libraries. Изменение production —11 строк в одном файле.
+Consumer дополнен default/JSONC cases и проверкой сохранности project settings.
+Source mode создаёт private profile из полной текущей config/prepared plugins,
+проверяет manifest pins и использует настоящий LuaLS из обычного PATH. Этот
+режим явно не считается installer/delivery acceptance, fake server/specs нет.
+
+**Проверка/e2e.** Windows actual frontend setup67 pins/backports/33 parsers/
+LuaLS3.19.2/StyLua2.6.0 прошёл, затем consumer5/5 PASS. Files/C-p/content grep
+с переходом на строку2, native type diagnostic, keyboard edit/save, diagnostic
+clear и restart/saved edit. Missing plugin не скачан; default library ровно1
+VIMRUNTIME, при JSON/JSONC ровно0 IDE libraries. После исправления ожидания
+selected matching entry в Telescope отдельно workflow2/2 PASS на Windows и
+Ubuntu. Последние diagnostic latency от открытия: Windows1751.9024ms,
+Ubuntu643.494456ms. Прежний20s deadline не увеличивался.
+
+Ubuntu feature5/5 PASS на полной source config/native Neovim/LuaLS3.19.2;
+existing container network none2CPU/2GiB. Официальный Linux IDE tool asset
+подготовлен отдельно на F (3696210 bytes, SHA256
+93ad326b10f6c00911dd8c450fa098332dbd8f9f45d1052f5636a2d54479b947),
+без SDK installs/image build/pull/изменений Desktop/WSL. Старые raw FAIL от
+преждевременного Enter сохранены: результат уже был в manager, но selection
+ещё не готов. Новый тест ждёт фактический prompt и выбранный matching entry.
+Native editor_process/process_scope cleanup PASS, owned active children0.
+Экспериментальный дополнительный LspStop wait не универсален в Ubuntu и убран;
+это не новая гарантия graceful shutdown сервера. §260 socket observation остаётся.
+
+**Вывод.** Реальный Core workflow доведён на Windows, языковая часть/полная
+конфигурация — на Ubuntu. Это не metadata-only success и не закрытие всего
+IDE-138. Далее — notices Core tools/complete publisher inventory, затем
+недостающие Default tools/parts; native Mac/full Ubuntu installer/GUI открыты.
+Source lock/SDK/frozen25 и append-only журналы сохранены. Ранний PowerShell
+cache4252 bytes перенесён из root Microsoft в own .tests с сохранением SHA;
+старый socket, удаление которого отклонено auto review, не трогали.
+
+**Файлы.** nvim_forge/lua/plugins/lsp.lua; tests/install-core-acceptance.test.py,
+diagnostics/install-core-observe.lua; OpenSpec bound-lua-workspace-library;
+планы/PROBLEMS/tests README/история/команды. Windows evidence
+.tests/core-acceptance/consumer-{1794852163999278500,1794852780837297000};
+Ubuntu .tests/ubuntu/core-acceptance/lua-evidence/consumer-{1794852585144321413,
+1794852796560907250}. Native Mac не запускался.

@@ -61,6 +61,13 @@ startup control PASS. Сквозной Core пока RED: Lua diagnostics не �
 server log показывает preload всех plugin Lua libraries. Следующий конкретный
 пункт — устранить этот лишний обход и повторить diagnostics/edit/save/restart;
 затем Core notices и расширение Default. Mac/full Ubuntu Core не проверены.
+§261: лишний preload Lua устранён штатным on_init текущего lua_ls. Windows
+installed Core5/5 PASS: Files/name+text search, diagnostic/edit/save/restart,
+no startup install, default library и JSON/JSONC project settings. В последнем
+workflow diagnostic получен за1.75s после открытия (прежний deadline20s).
+Ubuntu full native config с реальным LuaLS3.19.2 тоже5/5 PASS; это не full
+installer acceptance Ubuntu. Далее — notices двух Core tools и publisher
+упаковка/actual Default; native Mac/full Ubuntu delivery/GUI остаются gates.
 См. [срез парсеров](INSTALLATION_PLAN.md#готовые-native-parsers-core--253).
 Упаковка Node отменена; native Mac и полный release остаются открытыми.
 §234: общий setup обрабатывает Lua/Vim exceptions и missing commands как отказ;

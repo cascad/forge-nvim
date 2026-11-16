@@ -723,6 +723,21 @@ prepared input. Shared process_scope ограничивает и убирает 
 restart и отдельный `--case missing`. Windows missing control PASS; full workflow
 пока RED на Lua diagnostics20s, не считается green Core. См. §260/install plan.
 
+§261: тот же consumer теперь5/5 PASS Windows installed kit и5/5 Ubuntu native
+full source config. Помимо workflow проверяет default VIMRUNTIME-only library
+и отсутствие IDE library injection при .luarc.json/jsonc. `--case workflow`,
+`--case missing`, `--case library`, `--case jsonc` доступны отдельно. Source mode:
+
+```sh
+python3 -B tests/install-core-acceptance.test.py --editor-deps <prepared-editor-deps> --runtime <native-runtime>
+```
+
+`<native-runtime>/treesitter` содержит prepared native parsers; lua-language-server,
+stylua и rg доступны в PATH. Source mode создаёт own profile с source config и
+prepared plugin copies, проверяет pins, вызывает тот же native observer. Он не
+проверяет installer/receipt/delivery; в output это явно указано. Heavy Linux work
+на FORGE_CORE_TEST_ROOT в /tmp, экспорт только metadata/screens. Mac не запускался.
+
 
 ### Native SDK context — IDE-BOOT-17
 

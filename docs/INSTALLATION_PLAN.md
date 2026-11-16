@@ -1123,3 +1123,36 @@ Full workflow пока RED на ожидании Lua diagnostic20s: Files/C-p и
 следующий продуктовый пункт — убрать лишнюю Lua workspace library, затем
 закончить edit/save/restart. Full Ubuntu Core, Mac, notices/Default/publication
 остаются открытыми. Проверки стадий не заменяют этот observer.
+
+## Lua diagnostics и завершённый Core workflow — §261
+
+LuaLS больше не получает все plugins из runtimepath как library каждого проекта.
+Используется штатный nvim-lspconfig on_init: при .luarc.json/jsonc библиотеку IDE
+не добавляет, без них добавляет только VIMRUNTIME для Neovim API. Сервер/SDKs/
+Neodev/pins не менялись; явные project libraries задаются самим проектом.
+
+`tests/install-core-acceptance.test.py` прошёл5 сценариев на Windows installed
+kit: Files, C-p, content grep/line2, real Lua type mismatch → edit/save → clear,
+restart/saved edit, missing plugin без downloads, VIMRUNTIME-only default и
+JSON/JSONC без library injection. Последний workflow: diagnostic~1.75s от открытия,
+исходный timeout20s сохранён. Windows native setup67 pins/backports/33 parsers/
+LuaLS3.19.2/StyLua2.6.0 повторно прошёл перед consumer.
+
+Ubuntu existing container2CPU/2GiB/network none: те же5 сценариев PASS на полной
+source config, native LuaLS3.19.2 из официального Linux asset. Это feature check,
+не full Ubuntu installer delivery. После исправления ожидания selected entry
+в Telescope два workflow шага повторены на Windows/Ubuntu; зелёные library/
+missing cases без нового изменения повторно не гонялись. Project settings/lock
+bytes сохраняются. Обычный native editor_process/process_scope завершает свои
+дочерние процессы; отдельного гарантированного graceful LuaLS shutdown не заявляем.
+
+Source mode не подменяет server/config: `--editor-deps <prepared-editor-deps>
+--runtime <native-runtime>` вместо `--kit/--profile`, LuaLS/StyLua/rg в обычном
+PATH. Создаётся отдельный own profile, source config и prepared plugins копируются,
+manifest pins проверяются. FORGE_CORE_TEST_ROOT задаёт Linux /tmp stand root;
+native Mac запускается отдельно после подготовки тех же inputs.
+
+Далее по IDE-138: publisher notices для LuaLS/StyLua, complete Core inventory,
+затем реальные недостающие tools/parts Default. Production catalog/publication,
+native Mac/full Ubuntu install/GUI и проверка normal-exit/reinstall после LuaLS
+остаются открытыми; §260 socket observation не закрывается этим Lua fix.
