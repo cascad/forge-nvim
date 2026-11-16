@@ -83,6 +83,12 @@ sqls/forge-sqltest без SDK компилятора. Реальные debug/que
 прошли; §254 Ubuntu4 PASS40.313s, native Mac не проверялся. Остальные Core/Terminal
 dependencies и полный source/license inventory пока открыты.
 
+§258: private Terminal доставляет pinned WezTerm/font и явный bin/fride-terminal.
+Shared config/private window state/font_dirs без замены пользовательского
+WezTerm; native config/font gate до publish. Windows GUI/input/save и Ubuntu
+delivery/font/bad-TTF regression проверены. Mac/Ubuntu GUI открыты; следующий
+срез — общий inventory, затем actual Default/Custom.
+
 §257: Core требует обычный Git до загрузки artifacts/setup. Existing/install/
 recheck/cancel и --check-tools/--tool-path реализованы; Git не пропускается и не
 копируется в kit. Windows/Ubuntu по8 Git E2E + по3 SDK controls PASS; Mac открыт.

@@ -1,6 +1,6 @@
 # Что ещё требуется для полной поставки fride
 
-Исходный срез2026-11-15, код694cd9e, обновления §251–256. Это состав **существующих возможностей**, а не
+Исходный срез2026-11-15, код694cd9e, обновления §251–258. Это состав **существующих возможностей**, а не
 предложение новых LSP. Полного Default release пока нет: production
 [artifacts.tsv](../scripts/runtime/artifacts.tsv) не содержит ни одной строки.
 Готовность транспорта и отдельных стендов не равна готовности такой поставки.
@@ -34,7 +34,7 @@
 | JS/Node | Node/npm | typescript-language-server, js-debug-adapter, prettier; ещё2 parsers | Prettier3.9.10 включён §251, в том числе для JSON/YAML/Markdown. Project node_modules сохраняет приоритет. |
 | Bash | Node; Bash runtime/backend | bash-language-server, shfmt, shellcheck, pinned bash-debug-adapter; ещё1 parser | §252: принятый adapter patch применяется явным setup. Ubuntu launch проверен; Windows launch требует существующего WSL2 и здесь не проверен. |
 | SQL | Для готовых native tools SDK компилятора не нужен | sqruff; ещё1 parser; sqls/forge-sqltest из native SQL part | §252: publisher/delivery/query/Neotest проверены Windows/Ubuntu без Go/Rust в PATH. Базы/credentials пользовательские; опубликованных release URLs пока нет. |
-| Terminal | — | Mason/parsers нет | Нужен native WezTerm/font artifact и проверенная private интеграция с явным config, без замены пользовательского WezTerm. |
+| Terminal | Обычные GUI libraries Desktop ОС | Mason/parsers нет | §258: pinned official WezTerm20240203/CaskaydiaCove3.4.0, private font_dirs/config/window state, bin/fride-terminal. Windows GUI/input/save и Ubuntu config/font/delivery проверены; native Mac/GUI Ubuntu открыты. |
 
 Исходный Windows read-only snapshot: .tests/release-inventory-windows.json,
 получен самим tool_catalog в Neovim `-u NONE`, без SDK queries/сети/setup.
@@ -83,7 +83,9 @@
    §256 доставляет native rg15.2.0/Core с лицензиями; real Telescope поиск/переход проверен Windows/Ubuntu.
    §257 закрывает Git как native Core prerequisite: reuse/config/launcher и явные
    manager decisions проверены Windows/Ubuntu; private Git не поставляется.
-   Следующий срез этого пункта — WezTerm/font, затем общий inventory.
+   §258 закрывает private WezTerm/font в границах Windows GUI и Ubuntu native
+   config/font/delivery. Остался общий source/license inventory, включая
+   зависимости upstream binaries; native Mac и Ubuntu GUI отдельно открыты.
 4. **Настоящий Default/Custom из архива:** отдельный чистый профиль, реальные
    config/plugins/tools, launch → open/search → LSP → debug/tests → format,
    затем repeat/cancel/upgrade. Одна целевая тестовая итерация на изменение.

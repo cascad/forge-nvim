@@ -977,3 +977,64 @@ Windows8 PASS28.369s, Ubuntu8 PASS11.639s; по3 прежних SDK controls т�
 Нативная проверка macOS, реальные manager installs и полный Default не заявлены.
 Следующий конкретный срез — private WezTerm/font для Terminal, затем общий
 inventory и actual Default/Custom из архива. Production catalog остаётся пустым.
+
+## Private Terminal — §258
+
+Необязательный component terminal доставляет официальный WezTerm20240203 и
+CaskaydiaCove Nerd Font3.4.0 внутри kit. Windows x64 — portable zip, Linux x64 —
+официальный AppImage, распакованный publisher без FUSE; Mac x64/arm64 — universal
+.app descriptor (native acceptance открыт). Политика/SHA — scripts/sdk/terminal.json;
+источники [WezTerm release](https://github.com/wezterm/wezterm/releases/tag/20240203-110809-5046fc22)
+и [Nerd Fonts3.4.0](https://github.com/ryanoasis/nerd-fonts/releases/tag/v3.4.0).
+
+Запуск установленного комплекта из текущего проекта:
+
+```powershell
+& '<kit>/bin/fride-terminal.cmd' .
+```
+
+Linux/macOS: `<kit>/bin/fride-terminal .`. Это явный launcher внутри kit;
+обычный fride работает в текущем терминале. Launcher запускает private binary
+с --config-file, --always-new-process и текущим cwd; аргументы передаются fride.
+Существующие GUI windows/config/global PATH/font registry не заменяются.
+Отдельный launcher не регистрируется в CommandDir автоматически.
+
+Shared wezterm.lua сохранён. Тонкий installed wrapper передаёт собственный
+state/wezterm-window.json и задаёт [штатные font_dirs/ConfigDirsOnly](https://wezterm.org/config/lua/config/font_dirs.html).
+Четыре faces regular/bold/italic/bolditalic и upstream license/README находятся
+в runtime/terminal. Повторная установка сохраняет state. Без Terminal wrapper/
+launcher не создаются. Native WezTerm per-PID IPC/log и GPU driver caches остаются
+в штатных OS locations; HOME/SDK homes ради их переноса не подменяются.
+
+До publish installer выполняет native ls-fonts с действующим config и проверяет
+private face/path. Exit0 с defaults не принимается, timeout20s; лог
+`<kit>/log/terminal-fonts.log`. Hash-valid архив с invalid TTF не заменяет прежние
+runtime/config/bin/ready. Языковые SDK и программы текущего shell наследуются.
+
+Publisher-команды (не ручные действия пользователя установщика):
+
+```sh
+python3 -B scripts/prepare-terminal-runtime.py --download --output /prepared/terminal
+python3 -B scripts/prepare-terminal-runtime.py --package /prepared/terminal --output /artifacts/terminal.tar.gz
+python3 -B tests/install-terminal-runtime.test.py
+```
+
+Windows: python/.zip. Offline preparation: --source-dir <dir> с тремя pinned
+inputs вместо --download. Prepared archive должен соответствовать своей native
+платформе; publisher перепроверяет source SHA/exact payload/version перед package.
+FORGE_TERMINAL_RUNTIME указывает prepared dir (default .tests/terminal-runtime/<platform>).
+Native Neovim/frontend выбираются прежними FORGE_INSTALL_TEST_NVIM/UI_BINARY.
+GUI case выполняется автоматически на Windows; Linux/Mac GUI — явный
+FORGE_TERMINAL_GUI=1 в настоящей GUI-сессии. GUI Ubuntu/Mac здесь не проверены.
+
+Ubuntu Desktop должен предоставлять обычные X11/XCB/Wayland/fontconfig/FreeType
+runtime libraries. Минимальный server/container не равен GUI Desktop; эти пакеты
+не устанавливаются продуктом молча. В console stand12 official Ubuntu packages
+распакованы в disposable guest /tmp только для native CLI/font проверки; host/
+image не меняются. Отсутствие библиотек выявляет installed readiness gate.
+
+Windows cases01–06 проверены адресными прогонами, включая настоящий GUI/input/save;
+Ubuntu01–04/06 PASS, GUI05 skip. Дополнительно legacy window-state60 PASS.
+Readiness gate01/06 по2 PASS Windows/Ubuntu. Другие Core setup stages — fixtures;
+полный Default этим не заявлен. Следующий срез — единый source/version/SHA/license
+inventory, затем actual Default/Custom из архива и native Mac/publication.

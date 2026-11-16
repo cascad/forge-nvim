@@ -82,10 +82,11 @@ local function environment(root, runtime, paths, sdk_paths)
   for _, key in ipairs({'VIM','VIMRUNTIME','VIMINIT','EXINIT','LUA_INIT','LUA_PATH','LUA_CPATH'}) do env[key] = nil end
   return env
 end
-local function execute(argv, env, cwd, log)
-  local result = vim.system(argv, {env=env, clear_env=true, cwd=cwd, text=true}):wait(600000)
+local function execute(argv, env, cwd, log, timeout)
+  local result = vim.system(argv, {env=env, clear_env=true, cwd=cwd, text=true}):wait(timeout or 600000)
   write(log, (result.stdout or '') .. (result.stderr or ''))
   if result.code ~= 0 then fail('Command failed (' .. result.code .. '): ' .. table.concat(argv,' ') .. '; log: ' .. log) end
+  return result
 end
 local function install()
   local function absolute(value, label)
@@ -203,6 +204,15 @@ local function install()
   end
   write(join(stage,'bin/runtime-paths.txt'),table.concat(manifest.paths,'\n') .. '\n')
   write(join(stage,'bin/sdk-paths.txt'),#sdk_paths>0 and (table.concat(sdk_paths,'\n')..'\n') or '')
+  if components.terminal then
+    mkdir(join(target,'state'))
+    assert(uv.fs_copyfile(join(source,'wezterm.lua'),join(stage,'config/wezterm.lua')))
+    assert(uv.fs_copyfile(join(source,'scripts/fride-wezterm.lua'),join(stage,'config/fride-wezterm.lua')))
+    assert(uv.fs_copyfile(join(source,'scripts/launch-terminal.sh'),join(stage,'bin/fride-terminal')))
+    assert(uv.fs_chmod(join(stage,'bin/fride-terminal'),493))
+    assert(uv.fs_copyfile(join(source,'scripts/launch-terminal.ps1'),join(stage,'bin/fride-terminal.ps1')))
+    write(join(stage,'bin/fride-terminal.cmd'),'@echo off\r\npowershell.exe -NoProfile -ExecutionPolicy Bypass -File "%~dp0fride-terminal.ps1" %*\r\nexit /b %errorlevel%\r\n')
+  end
   -- Setup использует staged config/runtime, а постоянные data/state принадлежат только Forge.
   local env = environment(target,join(stage,'runtime'),manifest.paths,sdk_paths)
   env.FRIDE_CONFIG = join(stage,'config/forge')
@@ -211,6 +221,21 @@ local function install()
     local argv = {join(stage,'runtime',relative(probe[1]))}
     for i=2,#probe do argv[#argv+1]=probe[i] end
     execute(argv,env,target,join(target,'log','probe-' .. index .. '.log'))
+  end
+  if components.terminal then
+    local info=vim.json.decode(read(join(stage,'runtime/terminal/prepared.json')))
+    if info.platform~=manifest.platform then fail('Terminal platform mismatch') end
+    local binary=relative(info.policy.wezterm.platforms[manifest.platform].executable)
+    local log=join(target,'log/terminal-fonts.log')
+    local result=execute({join(stage,'runtime/terminal',binary),'--config-file',join(stage,'config/fride-wezterm.lua'),
+      'ls-fonts','--text','A'},env,target,log,20000)
+    -- WezTerm can exit0 after a config failure and use defaults. Require the
+    -- delivered face from private FontDirs, rather than accepting mere exit0.
+    local output=(result.stdout or ''):gsub('\\','/')
+    if not output:find('runtime/terminal/fonts',1,true)
+      or not output:find('CaskaydiaCoveNerdFont-Regular.ttf',1,true) then
+      fail('Terminal config/font readiness failed; log: '..log)
+    end
   end
   for _, task in ipairs({'plugins','parsers','tools'}) do
     event(task,'start')

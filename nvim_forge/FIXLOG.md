@@ -13806,3 +13806,59 @@ sdk-probe-fixture.rs; SDK/parser/SQL stand prerequisites; план/README/ист
 OpenSpec reuse-native-git. Evidence .tests/git-prerequisite/*windows*.txt,
 e2e-ubuntu-v1.txt, install-isolation/*/{ui,git,git-summary}.json, cleanup.json.
 Neovim/SDK/locks и чужой E2E/catalog WIP сохранены.
+
+## 258. Terminal: отдельный WezTerm и шрифт внутри fride
+
+2026-11-16. Спека: IDE-BOOT-28 (ADDED), WT-LOAD-1/WT-STATE-4 (MODIFIED).
+
+**Проблема.** Terminal был галочкой без private native artifact/launcher.
+Legacy installers меняли пользовательское подключение WezTerm и ставили font
+в ОС; общий home window-state не подходил для отдельного kit.
+
+**Причина.** Private component transport уже был, но Terminal ещё не имел
+publisher recipe и собственного явного запуска. --version сам по себе не
+доказывает готовность config/font/GUI dependencies: WezTerm также умеет exit0
+с fallback defaults при ошибке конфигурации.
+
+**Изменение.** Pinned official WezTerm20240203/CaskaydiaCove3.4.0, native
+publisher prepare/package с source SHA/exact payload/version и upstream
+license/README. Windows portable zip; Linux x64 AppImage extracted usr/bin
+без FUSE; Mac universal .app descriptor, native acceptance открыт.
+Прежний catalog/runtime-parts транспорт. Terminal не добавляется в PATH.
+Выбранный component получает bin/fride-terminal, explicit binary/config/
+new-process/cwd/args; обычный fride работает в текущем терминале.
+Общий root config принимает optional state-path context; installed wrapper
+задаёт private font_dirs/ConfigDirsOnly и state/wezterm-window.json. Без context
+legacy поведение прежнее. OS font registration/HOME/SDK environment не меняются.
+До publish staging реальный ls-fonts обязан подтвердить private face/path;
+exit0 с defaults не принимается. Отдельный log terminal-fonts.log, limit20s.
+
+**Проверка/e2e.** Windows01–04 PASS в первом run; настоящий GUI05 выполнил
+open/input/save/quit, затем protective foreign oracle поймал NVIDIA/GLCache.
+GUI fixture USERPROFILE отделён на F от guarded foreign files, production
+launcher не менялся. Адресный GUI05 PASS28.273s. Native pane/socket только
+собственного процесса; cleanup по точному executable, без name-wide kill.
+Legacy window-state60 PASS. Ubuntu02–04 PASS, GUI05 skip;01 initially fail:
+console image не имел GUI libs. После подготовки12 official noble/main packages
+с SHA в disposable /tmp и ldd preflight адресный01 PASS21.537s. Image/host
+packages/Desktop/WSL не менялись. Первая probe по ошибке печатала AppRun как
+текст (это ELF), raw output сохранён; исправлена на version/ldd без binary dump.
+Native readiness gate добавлен после этих checks. Адресные01+06 Windows2
+PASS63.226s/Ubuntu2 PASS53.977s: hash-valid archive с invalid TTF сохраняет
+runtime/config/bin/ready старого kit. История RED/исправлений не скрыта.
+После них только timeout20s, ясные publisher errors/output-overlap guard и docs;
+зелёные suites не повторялись. Core plugins/setup здесь fixtures, не full Default.
+
+**Вывод.** Terminal — отдельная IDE component, с реальным consumer gate до
+замены работающей установки. Native WezTerm per-PID IPC/log и GPU caches остаются
+в штатных OS locations: SDK homes ради капсулы не подменяются. Native Mac/
+Ubuntu GUI, общий source/license inventory (включая upstream binary dependencies),
+actual Default/Custom и publication открыты. Frozen25/append-only сохранены,
+own payload cleanup на F сохраняет receipts/raw evidence.
+
+**Файлы.** scripts/sdk/terminal.json, prepare-terminal-runtime.py,
+launch-terminal.ps1/.sh, fride-wezterm.lua, install-private.lua; wezterm.lua;
+tests/install-terminal-runtime.test.py и diagnostics/install-terminal-stop.ps1;
+OpenSpec deliver-private-terminal, план/README/история/команды. Evidence:
+.tests/terminal-runtime/*windows*.txt,*ubuntu*.txt,state-windows.txt,
+prepared manifests/archive receipts/UI+GUI proof и cleanup.json.

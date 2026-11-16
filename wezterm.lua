@@ -30,6 +30,8 @@
 -- операторов, <const>/<close>.
 
 local wezterm = require("wezterm")
+-- Managed fride wrapper passes only its own state path; ordinary loads pass nil.
+local context = ...
 local act = wezterm.action
 local config = wezterm.config_builder and wezterm.config_builder() or {}
 
@@ -78,7 +80,8 @@ end
 -- 2. ФАЙЛ СОСТОЯНИЯ ОКНА (WT-STATE-4)
 -- =====================================================================
 -- Размер окна и шрифт, сохранённые Ctrl/Cmd+Shift+S. История: FIXLOG §32, §48.
-local window_state_file = platform.home .. "/.wezterm_forge_window.json"
+local window_state_file = type(context) == "table" and context.window_state_file
+    or platform.home .. "/.wezterm_forge_window.json"  -- spec: WT-STATE-4
 
 -- Шрифт, если в файле состояния его нет (WT-STATE-5).
 local DEFAULT_FONT_SIZE = 12.0

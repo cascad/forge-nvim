@@ -9759,3 +9759,37 @@ network none,2CPU/2GiB. Docker Desktop/WSL/image lifecycle не менялись
 resolved own-root cleanup payloads с сохранением metadata/SHA, exact allowlist,
 staged HEAD prefix и git diff --cached --check; local commit без push.
 Raw evidence/cleanup: .tests/git-prerequisite. SDK/Neovim/locks/чужой WIP прежние.
+
+## 166. IDE-BOOT-28: private Terminal, font и native GUI
+
+2026-11-16. Read-only config/installer/spec/source inventory; pinned OpenSpec
+list/status/instructions/strict validate. Primary release assets и .sha256:
+WezTerm20240203, Nerd Fonts3.4.0 SHA-256.txt. GitHub API ответил403 rate limit,
+использованы официальные direct release URLs, без обхода доступа.
+
+Publisher: python -B scripts/prepare-terminal-runtime.py --source-dir <pinned inputs>
+--output <prepared native dir>; либо явный --download. Package:
+python -B scripts/prepare-terminal-runtime.py --package <prepared> --output <archive.zip>
+POSIX python3/.tar.gz. Проверяются archive/license SHA, exact payload и native
+version. Linux extracted usr/bin сохраняет RPATH; SDK/host installs отсутствуют.
+
+Tests: python -B tests/install-terminal-runtime.test.py; POSIX python3.
+Windows01–04 прошли v1, GUI05 после отдельного driver-cache profile прошёл v2;
+Ubuntu02–04 прошли v1, GUI05 skip,01 после GUI-library stand прошёл v3.
+После добавления installed config/font gate адресные01+06 прошли на обеих ОС.
+60 legacy checks: nvim -u NONE -i NONE -l tests/wezterm/window-state.test.lua.
+Full green suites не повторялись. Real GUI/input/save/quit использует private
+WezTerm cli и конкретные pane/socket; cleanup только точного own GUI path.
+
+Ubuntu compose: -f tests/containers/compose.yaml
+-f .tests/ubuntu/parser-runtime/limits.yaml run --rm --no-deps --pull never
+--entrypoint bash ubuntu /workspace/.tests/terminal-runtime/run.sh [case names].
+Network none,2CPU/2GiB, existing image.12 official Ubuntu .deb inputs проверены
+по SHA Packages.xz и распакованы dpkg-deb -x только в guest /tmp. Test child
+LD_LIBRARY_PATH не попадает в продукт; Desktop/WSL/image lifecycle не менялся.
+Raw font/version/probe outputs и metadata экспортированы в bind на F.
+
+Финал: AST/Lua parse, frozen25/raw+staged journal prefixes, resolved own-root
+cleanup с metadata/SHA, exact staging/git diff --cached --check и local commit.
+TEMP/TMP/TMPDIR/Nvim log на F. Native WezTerm OS IPC/log остаются штатными,
+HOME/SDK не подменяются; native Mac и Ubuntu GUI не заявлены PASS.

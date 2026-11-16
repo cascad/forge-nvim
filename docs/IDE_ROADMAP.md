@@ -42,8 +42,11 @@ source/license inventory ещё открыты. §256 добавил native ripg
 Telescope delivery E2E на Windows/Ubuntu; rg больше не внешний prerequisite.
 §257: native Git стал обязательным prerequisite Core с existing/install/recheck/cancel,
 без private Git и изменений config/credentials. Windows/Ubuntu: по8 Git E2E и
-по3 SDK controls PASS. Следующий конкретный срез — Terminal (WezTerm/font),
-затем общий inventory и настоящий Default/Custom. Native Mac отдельно открыт.
+по3 SDK controls PASS. §258 добавил private Terminal: официальный WezTerm и
+Nerd Font, bin/fride-terminal, общий config и отдельный window state. Native
+Windows GUI/input/save проверены; Ubuntu delivery/font и отказ bad TTF также.
+Следом — общий source/license inventory, затем настоящий Default/Custom.
+Native Mac и GUI Ubuntu отдельно открыты.
 См. [срез парсеров](INSTALLATION_PLAN.md#готовые-native-parsers-core--253).
 Упаковка Node отменена; native Mac и полный release остаются открытыми.
 §234: общий setup обрабатывает Lua/Vim exceptions и missing commands как отказ;
