@@ -8,8 +8,12 @@ upstream-пакеты с настраиваемыми путями; рефере
 §265: первый срез [настройки путей](TOOL_PATHS.md) реализован для Python/Node/Bash,
 Bats и JS entrypoints: user/project tools.json, совместимые overrides, явные
 ошибки и ForgeToolPaths в общих логах. Windows4 и Ubuntu4 E2E PASS (§266);
-macOS — владельца. Далее — Go/Rust/SQL и остальные LSP/DAP/formatter
-consumers, согласование setup/runtime; затем providers/update policy/Default.
+macOS — владельца. §267: SQL runtime переведён на штатный Sqruff LSP/formatter,
+без DB prerequisites при открытии; пути Sqruff общие. Windows/Ubuntu: по2 basic
+E2E и по4 advanced controls PASS. Для SQL/Bash выбран базовый объём — подсветка
+и готовые LSP/форматтеры. Следующий срез — обзор/очистка состава Default: исключить
+обязательность advanced SQL parts и Bash DAP, не удаляя старые возможности вслепую.
+Затем Go/Rust и остальные consumers, setup/runtime и providers/update policy.
 Детали build-toolchain downloads и версий решаются для этих следующих шагов;
 они не блокируют работу с путями. Core publisher остаётся d120e3a;
 новый срез не означает завершения всего контракта путей или готовности Default.

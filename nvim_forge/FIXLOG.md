@@ -14276,3 +14276,44 @@ gate. Следующий продуктовый срез — общие пути
 
 **Файлы.** tests/e2e/tool-paths.test.lua, tests/containers/tool-paths.sh,
 TOOL_PATHS/IDE_ROADMAP/HISTORY/AGENT_COMMANDS/FIXLOG и tasks/verification change.
+
+
+### 267. Базовый SQL на штатном Sqruff LSP без подключения БД
+
+Спека: IDE-BOOT-34 (ADDED), configure-sql-tool-paths. Уточнение владельца:
+SQL/Bash — подсветка и готовые LSP/форматтеры, надёжные upstream решения.
+
+**Проблема.** Обычная SQL поддержка была связана с DB config, patched SQLS,
+CLI-to-diagnostics и дополнительными DB/test возможностями. Это избыточно для
+выбранного базового объёма. Новый SQL runner или backend владельцу не нужен.
+
+**Причина.** Развитие языка и выполнение запросов постепенно объединились
+в общей setup функции. Уже имеющийся Sqruff и nvim-lspconfig позволяют
+запустить штатный LSP без этой связности.
+
+**Изменение.** sql_language использует sqruff lsp и Conform, готовый binary,
+project .sqruff и общий tools.json. Default SQL startup не запускает sqls,
+SQLLogicTest или Go/Rust, own SQL protocol не загружается. DB setup запускается
+явно перед прежними SQLRun/Connect; её prerequisites/код сохранены. Fixture
+старых DB E2E явно включает эту возможность; missing DB backend не убирает
+базовый formatter. ForgeToolPaths показывает Sqruff. Bash остаётся на готовых
+bash-language-server/shfmt/ShellCheck. Новых upstream patches/SDK не добавлено.
+
+**Проверка/e2e.** Windows/Ubuntu: по2 basic native E2E PASS (LSP diagnostics,
+format, project path/rules, background buffer, invalid override, no DB/SDK
+startup). Selected прежние query/Results controls по1 PASS и missing backend/
+config/database по3 PASS. Первоначальный smoke поймал sqls config=nil до lazy
+load; setup_connections теперь явно загружает nvim-lspconfig, повтор прошёл.
+Все старые SQL сценарии заново не запускались; Mac не проверен. Docker image
+не пересобирался, build/pull/network отсутствовали. OpenSpec strict и guards.
+
+**Вывод.** Базовый SQL стал обычной upstream языковой интеграцией. DB/test и
+Bash DAP сохранены как существующие дополнительные возможности до обзора.
+Следом пересмотреть обязательность advanced SQL parts/Bash DAP в installer;
+этот runtime-срез её ещё не изменяет. Затем остальные consumers/setup.
+
+**Файлы.** sql_language.lua, sql.lua, tool_paths.lua, plugins/lsp.lua/format.lua,
+sql-basic E2E/registry/sql_project fixture, container driver, change artifacts,
+SQL_WORKFLOW/BASH_WORKFLOW/SQL_TESTS/TOOL_PATHS/SDK_STATE/LANGUAGE_MATRIX/
+FEATURE_REVIEW/INSTALLATION_PLAN/RELEASE_INVENTORY/TOOLCHAIN_INSTALLATION_APPROACHES/
+IDE_ROADMAP/README/HISTORY/AGENT_COMMANDS и эта запись.

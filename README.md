@@ -32,6 +32,7 @@ publisher inventory/notices и следующая проверка настоя�
 обзор Go/Rust/Python/Node/Bash/SQL, выбранный подход и план настройки путей.
 [Настроить пути Python/Node/Bash и JS entrypoints](docs/TOOL_PATHS.md):
 user/project tools.json и `:ForgeToolPaths` в общих логах.
+[Базовый SQL](docs/SQL_WORKFLOW.md): штатный Sqruff LSP/formatter без подключения БД.
 [Команды агента и формат получаемых результатов](docs/AGENT_COMMANDS.md).
 [Клавиши рабочих панелей Space w](nvim_forge/QUICKSTART.md#общий-маршрут-рабочих-панелей--space-w).
 [Общая консоль логов IDE](docs/IDE_LOGS.md): `Space w i` / `:ForgeLogs`.

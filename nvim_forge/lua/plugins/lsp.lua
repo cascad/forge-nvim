@@ -759,7 +759,7 @@ return {
             end
             require('forge.node').setup_lsp()
             require('forge.bash').setup_lsp()
-            require('forge.sql').setup_lsp()
+            require('forge.sql_language').setup()
         end,
     },
 }

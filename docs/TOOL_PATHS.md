@@ -58,6 +58,7 @@ JSON-экранированный `\\`.
 | `node` | Node executable | `vim.g.forge_node_executable`, `FORGE_NODE_EXECUTABLE` |
 | `bash` | Native Bash executable | `vim.g.forge_bash_executable`, `FORGE_BASH_EXECUTABLE` |
 | `bats` | Файл Bats runner | `vim.g.forge_bats_executable`, `FORGE_BATS_EXECUTABLE` |
+| `sqruff` | Готовый Sqruff executable, LSP и formatter | `vim.g.forge_sqruff_executable`, `FORGE_SQRUFF_EXECUTABLE` |
 | `js-debug-adapter` | `dapDebugServer.js` | `vim.g.forge_js_debug_server`, `FORGE_JS_DEBUG_SERVER` |
 | `bash-debug-adapter` | `extension/out/bashDebug.js` | `vim.g.forge_bash_debug_adapter`, `FORGE_BASH_DEBUG_ADAPTER` |
 | `prettier`, `jest`, `typescript-language-server`, `bash-language-server`, `npm` | Соответствующий JS entrypoint | Штатный поиск project/shared/Mason tools сохраняется |
@@ -83,7 +84,7 @@ Python, который игнорировал неверный override. Пов�
 окружение процесса и project lockfiles не меняются.
 
 `:ForgeToolPaths` открывает IDE Logs с источником `Tool paths`. Для Python,
-Node, Bash, Bats и двух DAP entrypoints видны выбранный путь, источник, корень
+Node, Bash, Bats, Sqruff и двух DAP entrypoints видны выбранный путь, источник, корень
 проекта и ошибка. Из tool-панели учитывается открытый код. Версии пока не
 запрашиваются: отчёт не запускает SDK CLI и не скачивает tools.
 
@@ -117,7 +118,8 @@ Driver обновляет backports только в своей временно�
 
 Набор зарегистрирован в общем tests/registry.lua. Полный запуск остаётся
 `scripts/test.ps1 e2e` / `scripts/test.sh e2e` в подготовленной среде.
-Далее: Go/Rust/SQL и остальные LSP/DAP/formatter consumers, согласование путей
+§267: базовый SQL Sqruff подключён и имеет2 E2E на Windows и Ubuntu.
+Далее: Go/Rust и остальные LSP/DAP/formatter consumers, согласование путей
 setup/runtime, выбор версий/build toolchain и providers/update UI.
 Установщик сохраняет прежний `--sdk-path`; tools.json не является настройкой
 установки SDK. [Принятый подход](TOOLCHAIN_INSTALLATION_APPROACHES.md).

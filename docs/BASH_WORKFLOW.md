@@ -1,5 +1,11 @@
 # Bash: язык, запуск и Tests
 
+Решение владельца2026-11-17: базовый объём — подсветка, готовые
+bash-language-server и shfmt/ShellCheck. Собственный Bash backend не нужен.
+Описанные ниже run/Bats/DAP — существующие дополнительные возможности для обзора;
+их развитие и включение в Default не являются задачей базовой языковой поддержки.
+Текущий installer Bash всё ещё готовит DAP; очистка этого состава записана в плане.
+
 Общий workflow Windows/macOS/Ubuntu использует native Bash, Bash Language
 Server, shfmt, ShellCheck и Bats. Открытие файла ничего не скачивает.
 Bash LSP можно держать в node_modules корня смешанного repo без package.json:

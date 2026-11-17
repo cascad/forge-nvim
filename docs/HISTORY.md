@@ -403,6 +403,7 @@ Python реализован и проверен 2026-11-03; после возо�
 | §264 | [Штатные менеджеры и настраиваемые пути SDK и IDE tools](../nvim_forge/FIXLOG.md#264-штатные-менеджеры-и-настраиваемые-пути-sdk-и-ide-tools) |
 | §265 | [Пути Python Node Bash из настроек пользователя и проекта](../nvim_forge/FIXLOG.md#265-пути-python-node-bash-из-настроек-пользователя-и-проекта) |
 | §266 | [Ubuntu проверка путей без копирования derived venv в snapshot](../nvim_forge/FIXLOG.md#266-ubuntu-проверка-путей-без-копирования-derived-venv-в-snapshot) |
+| §267 | [Базовый SQL на штатном Sqruff LSP без подключения БД](../nvim_forge/FIXLOG.md#267-базовый-sql-на-штатном-sqruff-lsp-без-подключения-бд) |
 
 ## Как читать и дополнять
 

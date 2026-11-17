@@ -150,7 +150,7 @@ return {
             end,
             formatters = {
                 prettier = require('forge.node').prettier(),
-                sqruff = require('forge.sql').formatter(),
+                sqruff = require('forge.sql_language').formatter(),
                 stylua = {
                     prepend_args = { "--indent-type", "Spaces", "--indent-width", "4", "--column-width", "120" },
                 },

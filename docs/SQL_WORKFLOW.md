@@ -1,5 +1,37 @@
 # SQL: язык, подключения и запросы
 
+## Базовая поддержка — §267
+
+Решение владельца2026-11-17 для SQL/Bash: подсветка, готовый LSP и форматтер.
+Обычный SQL файл использует **штатный `sqruff lsp`** и Sqruff через Conform.
+Ни .sqls.json, ни подключение к БД, ни sqls/SQLLogicTest для этого не нужны.
+Собственная CLI-to-LSP прослойка для базовой поддержки не используется.
+Это существующий Sqruff и native Neovim LSP, без патча upstream.
+[Upstream editor integration](https://playground.quary.dev/docs/usage/editors/).
+
+Подготовка IDE tool: `:MasonInstall sqruff`. Правила/диалект задаются обычным
+проектным `.sqruff`. Свой binary можно указать в user/project tools.json:
+
+```json
+{"tools":{"sqruff":"/path/to/sqruff"}}
+```
+
+В Windows пример пути: `D:/IDE tools/sqruff.exe`. Относительные пути считаются
+по [общему контракту](TOOL_PATHS.md); `:ForgeToolPaths` показывает Sqruff в логах.
+Готовые release-пакеты не требуют Go/Rust SDK. Установщик и его прежние advanced
+SQL parts ещё требуют отдельного упрощения; runtime-срез не завершает Default.
+
+Windows/Ubuntu: по2 native basic E2E PASS — LSP/lint/format без БД, project
+rules, background buffer, paths с пробелами и invalid override. Mac отдельно.
+Sqruff даёт lint/format, не schema navigation по подключённой БД.
+
+## Дополнительные операции с БД
+
+Ниже описаны прежние дополнительные возможности, оставленные для обзора состава.
+Они не развиваются как обязательная часть базовой SQL-поддержки. SQLConnect/SQLRun
+явно готовят DB-интеграцию с её прежними prerequisites; само открытие файла этого
+больше не делает. Smoke query и3 missing-environment E2E прошли Windows/Ubuntu.
+
 Общий workflow Windows/macOS/Ubuntu. SQLS обслуживает схему, completion,
 definition/hover и alias rename; Sqruff — diagnostics и форматирование.
 Открытие SQL не устанавливает tools/SDK и не исполняет SQL из файла.

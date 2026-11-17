@@ -11,7 +11,8 @@ local function stop(client)
     client:stop(true)
 end
 local function warn(message) vim.notify(message,vim.log.levels.WARN,{title='SQL'}) end
-function M.tool(name)
+function M.tool(name,root)
+    if name=='sqruff' then return require('forge.sql_language').tool(name,root) end
     local explicit=vim.g['forge_'..name..'_executable'] or vim.env['FORGE_'..name:upper()..'_EXECUTABLE']
     if explicit and explicit~='' then return vim.fn.executable(explicit)==1 and vim.fn.exepath(explicit) or nil end
     return require('forge.native_tools').executable(name)
@@ -64,19 +65,17 @@ function M.version(path,callback)
 end
 function M.known_version(path) return versions[path] and versions[path].value end
 function M.dialect_args(path)
-    local explicit=vim.g.forge_sql_dialect or vim.env.FORGE_SQL_DIALECT
-    if explicit and explicit~='' then return {'--dialect',explicit} end
-    local dir=vim.fn.isdirectory(path)==1 and path or vim.fs.dirname(path)
-    if vim.fs.find({'.sqruff','.sqlfluff'},{path=dir,upward=true})[1] then return {} end
-    return {'--dialect','ansi'}
+    return require('forge.sql_language').dialect_args(path)
 end
 function M.formatter()
-    return {command=function() return M.tool('sqruff') or '__missing_sqruff__' end,
-        args=function(_,ctx)
-            return vim.list_extend({'fix','--quiet'},vim.list_extend(M.dialect_args(ctx.filename),{'$FILENAME'}))
-        end}
+    return require('forge.sql_language').formatter()
 end
 function M.setup_lsp()
+    require('forge.sql_language').setup()
+end
+function M.setup_connections()
+    if M.connections_ready then return end
+    require('lazy').load({plugins={'nvim-lspconfig'}})
     local on_exit=vim.lsp.config.sqls.on_exit
     vim.lsp.config('sqls',{
         on_exit=function(code,signal,id)
@@ -84,14 +83,14 @@ function M.setup_lsp()
             if on_exit then on_exit(code,signal,id) end
         end,
         root_dir=function(buf,on_dir)
-            local root=M.root(vim.api.nvim_buf_get_name(buf));local path=M.tool('sqls')
+            local root=M.root(vim.api.nvim_buf_get_name(buf));local path=M.tool('sqls',root)
             if path and M.connection(root) then M.version(path,function() on_dir(root) end) end
         end,
         before_init=function(params,config)
             params.initializationOptions={connectionConfig=assert(M.connection(config.root_dir))}
         end,
         cmd=function(dispatchers,config)
-            local path=assert(M.tool('sqls'))
+            local path=assert(M.tool('sqls',config.root_dir))
             local lifetime={}
             local handlers=vim.tbl_extend('force',dispatchers,{on_exit=function(code,signal)
                 -- Windows forced terminate возвращает exit=1/signal=15.
@@ -103,9 +102,10 @@ function M.setup_lsp()
             lifetimes[rpc]=lifetime
             return rpc
         end,
-        on_init=function(client) require('forge.sql_protocol').initialized(client,M.known_version(M.tool('sqls'))) end,
+        on_init=function(client) require('forge.sql_protocol').initialized(client,M.known_version(M.tool('sqls',client.root_dir))) end,
     })
     require('forge.sql_diagnostics').setup()
+    M.connections_ready=true
     vim.lsp.enable('sqls')
 end
 local function context()
@@ -128,9 +128,10 @@ local function label(root)
     return conn and (conn.alias or ('Connection '..(M.selected[root] or 1))) or 'SQL'
 end
 local function ensure(buf,root,active,callback)
-    local path=M.tool('sqls')
+    local path=M.tool('sqls',root)
     if not path then callback(nil,'SQL: установи sqls явно и проверь PATH / FORGE_SQLS_EXECUTABLE.');return end
     local conn,err=M.connection(root);if not conn then callback(nil,err);return end
+    M.setup_connections()
     M.version(path,function()
         if not active() then return end
         local client=clients(root)[1]

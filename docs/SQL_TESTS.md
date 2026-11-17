@@ -1,5 +1,9 @@
 # SQLLogicTest в Tests
 
+2026-11-17: это существующая дополнительная интеграция, не требование базовой SQL
+поддержки. Владелец выбрал подсветку и готовые LSP/форматтеры; дальнейшее развитие
+собственного SQL runner остановлено до обзора состава. [Базовый SQL](SQL_WORKFLOW.md).
+
 `.slt` scripts используют общие Tests и Test Output на Windows/macOS/Ubuntu.
 Native runner выполняет SQLite assertions; рабочие `.sqls.json`/DB редактора
 не используются. Каждый script получает независимую in-memory DB, а setup и

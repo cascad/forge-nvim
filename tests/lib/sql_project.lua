@@ -44,7 +44,8 @@ for name,person,extra in [('dev ü.sqlite3','Alice',''),('second.sqlite3','Bob',
       local result=vim.system({python,'-B','-c',script,dir},{text=true,env=env,clear_env=true}):wait();assert(result.code==0,result.stderr)
       local init=vim.system({'git','init',dir},{text=true,env=env,clear_env=true}):wait();assert(init.code==0,init.stderr)
       vim.fn.writefile({'.sqls.json','db/'},dir..'/.gitignore')
-      if missing=='tools' then env.FORGE_SQLS_EXECUTABLE=runtime..'/absent-sqls';env.FORGE_SQRUFF_EXECUTABLE=runtime..'/absent-sqruff'
+      -- Missing optional DB backend does not remove the basic formatter.
+      if missing=='tools' then env.FORGE_SQLS_EXECUTABLE=runtime..'/absent-sqls'
       elseif missing=='config' then assert(vim.fn.delete(dir..'/.sqls.json')==0)
       elseif missing=='database' then local cfg=read(dir..'/.sqls.json');cfg.connections[1].dataSourceName='file:db/missing.sqlite3?mode=rw';vim.fn.writefile({vim.json.encode(cfg)},dir..'/.sqls.json') end
     end})
@@ -77,6 +78,8 @@ for name,person,extra in [('dev ü.sqlite3','Alice',''),('second.sqlite3','Bob',
   vim.fn.writefile({vim.json.encode(manifest)},e.dir..'/sql-dependencies.json')
   assert(vim.uv.fs_copyfile(root..'/tests/e2e/sql-tools/sources.json',e.dir..'/sql-sources.json'))
   e:input(':cd '..vim.fn.fnameescape(e.sql_project)..'<CR>')
+  -- This fixture explicitly exercises the optional database integration.
+  e:lua([[vim.lsp.enable('sqruff',false);require('forge.sql').setup_connections()]])
   return e
 end
 function M.counter(e,second)

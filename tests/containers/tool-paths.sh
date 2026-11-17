@@ -12,5 +12,5 @@ p=pathlib.Path(sys.argv[1]); data=json.loads(p.read_text())
 data['backports']=json.loads(pathlib.Path(sys.argv[2]).read_text())
 p.write_text(json.dumps(data,indent=2)+'\n')
 PY
-export FORGE_E2E_DEPS="$work/editor-deps" FORGE_TEST_ID=IDE-BOOT-33
-exec nvim -l tests/e2e/tool-paths.test.lua
+export FORGE_E2E_DEPS="$work/editor-deps" FORGE_TEST_ID="${FORGE_TEST_ID:-IDE-BOOT-33}"
+exec nvim -l "${1:-tests/e2e/tool-paths.test.lua}"

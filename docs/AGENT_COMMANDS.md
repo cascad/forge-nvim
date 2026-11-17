@@ -10033,3 +10033,25 @@ paths-windows-artifacts.txt в .tests/toolchain-research/.
 подтвердил отличие лишь комментарием. Docker Desktop/WSL lifecycle не менялся.
 OpenSpec strict, Markdown links/diff/frozen25/raw+staged journal prefixes;
 exact allowlist commit, auto gc/maintenance выключены. SDK/release/test WIP сохранены.
+
+
+## 175. 2026-11-17 — базовый SQL на upstream Sqruff
+
+Владелец выбрал SQL/Bash highlight + готовые LSP/formatters. Web primary:
+upstream Sqruff editor docs подтверждают sqruff lsp; прочитан pinned native
+nvim-lspconfig config. Existing Bash BLS/shfmt/ShellCheck сохраняются.
+Change configure-sql-tool-paths создан/прочитан через OpenSpec instructions,
+apply3 tasks; проектный root подтверждён. Собственный SQL runner не развивался.
+
+Native Windows private Neovim -l tests/e2e/sql-basic.test.lua,
+FORGE_TEST_ID=IDE-BOOT-34:2 PASS. Ubuntu: тот же E2E через existing offline
+tests/containers/tool-paths.sh, filename argument и env ID;2 PASS.
+Selected SQL language unsaved batch: initial1 FAIL до lazy load на обеих ОС,
+после явного native lazy load по1 PASS. Missing backend/config/database по3 PASS
+на каждой ОС. Raw logs sql-basic-*, sql-advanced-*-final и sql-optional-missing-*
+в .tests/toolchain-research/. Docker/WSL lifecycle не менялся; no build/pull.
+
+TEMP/TMP/TMPDIR/NVIM_LOG_FILE на F у host, own /tmp у --rm guest. SDK не
+скачивались. Old WIP сохранён; registry stage содержит только новую SQL entry.
+OpenSpec strict, docs links/diff, frozen25 с вычетом своей registry строки,
+raw/staged journal prefix и exact allowlist; commit gc.auto=0/maintenance.auto=false.

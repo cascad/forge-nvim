@@ -118,6 +118,7 @@ function M.report()
         { 'js-debug-adapter', function() return require('forge.node').debug_server() end },
         { 'bash-debug-adapter', function() return require('forge.bash_debug').entrypoint() end },
         { 'bats', function() return require('forge.bats').runner(vim.api.nvim_buf_get_name(0)) end },
+        { 'sqruff', function() return require('forge.sql_language').tool('sqruff') end },
     }
     local out = {}
     for _, check in ipairs(checks) do
