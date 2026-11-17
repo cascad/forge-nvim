@@ -69,6 +69,33 @@ function M.new()
       failure('QueryInformationJobObject'))
     return tonumber(accounting.ActiveProcesses)
   end
+  function self:active_pids()
+    local ids=ffi.new('uint8_t[?]',8+4096*ffi.sizeof('uintptr_t'))
+    assert(kernel.QueryInformationJobObject(handle,3,ids,ffi.sizeof(ids),nil)~=0,
+      failure('QueryInformationJobObject process list'))
+    local count=tonumber(ffi.cast('uint32_t*',ids)[1]);local members=ffi.cast('uintptr_t*',ids+8)
+    local out={};for i=0,count-1 do out[#out+1]=tonumber(members[i]) end;return out
+  end
+  function self:compiler_helpers()
+    local pids=self:active_pids()
+    if #pids==0 then return {} end
+    local filter='ProcessId = '..table.concat(pids,' OR ProcessId = ')
+    local script="Get-CimInstance Win32_Process -Filter '"..filter.."' | Select-Object ProcessId,Name,ExecutablePath | ConvertTo-Json"
+    local result=vim.system({'powershell.exe','-NoProfile','-NonInteractive','-Command',script},{text=true,timeout=10000}):wait()
+    assert(result.code==0,result.stderr)
+    if vim.trim(result.stdout or '')=='' then return self:active_count()==0 and {} or nil end
+    local rows=vim.json.decode(result.stdout)
+    if rows==vim.NIL then return self:active_count()==0 and {} or nil end
+    if rows.ProcessId then rows={rows} end
+    local found={}
+    for _,row in ipairs(rows) do
+      local path=(row.ExecutablePath or ''):gsub('\\','/'):lower()
+      if row.Name:lower()~='vctip.exe' or not path:match('/vc/tools/msvc/[^/]+/bin/host[^/]+/[^/]+/vctip%.exe$') then return nil end
+      found[row.ProcessId]=true
+    end
+    for _,pid in ipairs(self:active_pids()) do if not found[pid] then return nil end end
+    return rows
+  end
   -- Explicit diagnostics receive QUERY rights only to this exact fixture Job.
   -- NULL in QueryInformationJobObject would select libuv's nested immediate Job.
   function self:duplicate_query_handle(pid)

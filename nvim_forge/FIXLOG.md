@@ -14443,3 +14443,73 @@ changes на Windows/Ubuntu; Mac отдельно. OpenSpec strict и diff/index
 **Файлы.** IDE_ROADMAP, TOOLCHAIN_INSTALLATION_APPROACHES, TOOL_PATHS,
 INSTALLATION_PLAN, SDK_STATE, HISTORY; proposal/design configure-go-rust-tool-paths;
 FIXLOG/AGENT_COMMANDS. Старые записи и посторонний WIP сохранены.
+
+
+### 271. Выбор установленных Go и Rust SDK с ручным путём
+
+Спека: IDE-BOOT-37 (ADDED), select-native-language-sdk, 2026-11-17.
+
+**Было.** По решению §270 native окружение — основа, но выбирать установленный
+Go/Rust SDK для проекта из редактора было нельзя. Отдельные adapters вызывают
+go/cargo по имени; настройка каждого private argv не даёт общего выбора среды.
+
+**Причина.** SDK — окружение процесса, а пути gopls/formatters/DAP из §269 —
+отдельные IDE tools. Переключать уже работающие процессы частично опасно для
+согласованности workflow; существующий native restart умеет сохранить сессию.
+
+**Сделано.** Space l S / ForgeSdk: native меню языка/scope, bounded async
+discovery проверенных установок, ручной root/bin/executable, refresh/cancel.
+User/project sdk.json и project priority/explicit Auto; атомарная запись и
+ошибка источника без скрытой замены. Early filesystem-only выбор не запускает
+CLI; Go использует bin/GOROOT/GOTOOLCHAIN=local, Rust — native toolchain/bin.
+Через штатный restart передаются target и baseline только затронутых env keys;
+Auto/project switch восстанавливают исходную среду. Прежний session механизм
+сохраняет файлы/layout/cursor. Active DAP/Neotest/Overseer/terminal запрещают
+SDK apply; можно сохранить для следующего запуска. Логи — SDK в ForgeLogs.
+SDK homes/cache/auth/system PATH и profiles не переписываются, wrappers/private
+adapter patches не добавлены. Installer/runtime согласование ещё в очереди.
+
+**Попутные причины.** Neotest UI counts обновляются позже реального запуска:
+guard теперь использует public client.running_positions существующего consumer.
+Go probe мог принять сохранённый GOENV/GOROOT за SDK проверяемого executable:
+GOENV/GOWORK/GOFLAGS отключены только у read-only probe, рабочая среда сохранена.
+Windows session control начинал ввод при уже видимых файлах, пока async views
+ещё меняли вкладки. Before-switch snapshot доказал подмену до project restart;
+observer ждёт штатного session_loading(false), затем выбор второй вкладки.
+Production restore и строгие layout/cursor assertions не менялись.
+
+**Проверка/e2e.** Windows и Ubuntu: по2 новых PASS (настоящее меню и native TUI)
+и2 controls PASS (GoToolchain и project session), целевые запуски без общего
+full regression. Go1.23.3/1.26.0, Rust1.91.1/1.96.1, восемь backend PIDs:
+discovered/manual path с пробелами/user/project/Auto, invalid/cancel/corrupt,
+реальные LSP/run/tests/Delve/CodeLLDB и compiler versions, active work guard,
+сохранение курсора/project switch, installs0. Исправлялись observer fast-event
+env/readiness и fixtures; tools/results не эмулировались. Windows MSVC оставил
+VCTIP: точный Job PID и native MSVC executable проверяются, только SDK E2E явно
+разрешает этот helper после всех native exit0 и закрывает свой Job. Неизвестный
+остаток — FAIL; ordinary session controls по-прежнему требуют natural drain.
+Итоговый shutdown exit0/signal0/no hardkill/active_after0. Ошибочная conhost
+гипотеза отвергнута; экспериментальные transport/FreeConsole/detach отменены.
+Подробности/логи/PIDs — change verification и SDK_SELECTION.
+
+**Вывод.** Установленный Go/Rust SDK теперь выбирается единообразно через native
+среду нового процесса fride. Следом общий UX существующих Python/Node selectors,
+затем setup/runtime/installer и providers/update policy/Default. Native Mac
+остаётся владельцу. Ubuntu test SDK подготовлены отдельной явной командой
+Go/rustup только в F test cache; Desktop/WSL/system SDK/image не менялись.
+Host tmp/cache на F; locks/native Neovim patch/postоронний WIP сохранены.
+
+**Файлы.** forge/sdk, early init, config.start и Neotest consumer; native SDK
+E2E/observer/test stand, session readiness и точная Windows Job diagnostics;
+registry только SDK entry; SDK_SELECTION/QUICKSTART/планы/границы/матрица,
+OpenSpec artifacts и append-only FIXLOG/AGENT_COMMANDS/HISTORY.
+
+
+Уточнение проверки §271 перед коммитом: Windows штатно повторно использовал PID
+давно завершившегося backend; lifecycle подтвердил новый VimEnter/ready после
+старого VimLeave. Глобальная уникальность PID была ошибкой теста. Теперь отчёт
+считает восемь native process instances по ready timestamp и смене предыдущего
+PID, включая initial launch. Промежуточный bookkeeping пропустил initial (7/8),
+исправлен; финальный Windows native run PASS: .tests/editor-e2e/45158312111400,
+functional/cleanup/ok=true, native exit0/signal0/no hardkill/active_after0.
+Product code после Ubuntu PASS не менялся; final observer/count проверен Windows.

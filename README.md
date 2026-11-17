@@ -32,6 +32,8 @@ publisher inventory/notices и следующая проверка настоя�
 обзор Go/Rust/Python/Node/Bash/SQL, выбранный подход и план настройки путей.
 [Настроить пути Python/Node/Bash и JS entrypoints](docs/TOOL_PATHS.md):
 user/project tools.json и `:ForgeToolPaths` в общих логах.
+[Выбрать установленный Go/Rust SDK](docs/SDK_SELECTION.md): `Space l S` /
+`:ForgeSdk`, ручной путь, user/project/«Авто» и переоткрытие с сохранением сессии.
 [Базовый SQL](docs/SQL_WORKFLOW.md): штатный Sqruff LSP/formatter без подключения БД.
 SQL/Bash installer ставит базовые языковые tools без обязательных DB/test/debug
 дополнений; каталогу нужны только Core/выбранный Terminal, языковые tools готовит Mason.

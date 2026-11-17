@@ -20,6 +20,11 @@ Go metadata/Delve (IDE-082): label читает режим/последнюю я
 Готовый gopls и SDK для реальной работы сохраняют обычное окружение.
 [Команды и границы](GO_TOOLS.md), regression — go-passive.test.lua.
 
+§271: [выбор Go/Rust SDK](SDK_SELECTION.md), `Space l S` — установленная версия
+или ручной путь, user/project/«Авто» через native окружение и restart с сессией.
+Windows/Ubuntu: реальные LSP/run/tests/debug с двумя версиями каждого языка
+прошли; native Mac отдельно. Отдельных SDK wrappers или adapter patches нет.
+
 Общий cmp уже подключает LSP, snippets, buffer и path. Buffer completion
 не доказывает семантический completion языка. Conform имеет общий trim
 whitespace/newlines; это не языковой formatter. Наличие Prettier для JSON/YAML/

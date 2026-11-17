@@ -1,9 +1,11 @@
 -- Native TUI inside an owned private editor terminal. No restart UI emulation.
 local M={}
-local function start(root,holder)
+local function start(root,holder,options)
+  options=options or {}
   local self={root=root,connections={}}
   holder.self=self
-  self.host=require('editor').start(root,{timeout=210000,prepare=function(project,env,runtime)
+  self.host=require('editor').start(root,{timeout=options.timeout or 210000,env=options.env,site=options.site,
+    snapshot_ignore=options.snapshot_ignore,prepare=function(project,env,runtime)
     env.FORGE_SESSION_PROBE=runtime..'/session-probe'
     vim.fn.mkdir(env.FORGE_SESSION_PROBE,'p')
     assert(vim.uv.fs_copyfile(root..'/tests/lib/session_tui_native.lua',env.FORGE_SESSION_PROBE..'/observer.lua'))
@@ -15,6 +17,7 @@ local function start(root,holder)
         assert(vim.fn.writefile(lines,path..'/'..file)==0)
       end
     end
+    if options.prepare then options.prepare(project,env,runtime) end
   end})
   local e=self.host
   self.base=e.runtime..'/session-probe'
@@ -131,7 +134,21 @@ local function start(root,holder)
       -- Match the existing lifecycle E2E: observe the drain before closing Job.
       if e.rpc.scope.active_count then
         observed.active_at_exit_callback=e.rpc.scope:active_count()
-        e:wait('host job accounting drained',function() return e.rpc.scope:active_count()==0 end)
+        local drained,why=pcall(e.wait,e,'host job accounting drained',function() return e.rpc.scope:active_count()==0 end)
+        if not drained then
+          if e.rpc.scope.active_pids then
+            observed.remaining_pids=e.rpc.scope:active_pids()
+            if #observed.remaining_pids>0 then
+              local filter='ProcessId = '..table.concat(observed.remaining_pids,' OR ProcessId = ')
+              local script="Get-CimInstance Win32_Process -Filter '"..filter.."' | Select-Object ProcessId,ParentProcessId,Name,CommandLine | ConvertTo-Json"
+              local result=vim.system({'powershell.exe','-NoProfile','-NonInteractive','-Command',script},{text=true,timeout=10000}):wait()
+              observed.remaining_details=result.stdout
+            end
+            if options.compiler_helpers=='msvc-telemetry' then observed.compiler_helpers=e.rpc.scope:compiler_helpers() end
+          end
+          vim.fn.writefile({vim.json.encode(observed)},e.dir..'/native-host-exit.json')
+          assert(observed.compiler_helpers,why)
+        end
         observed.active_after=e.rpc.scope:active_count()
       end
       observed.drain_ms=(vim.uv.hrtime()-started)/1e6
@@ -143,9 +160,9 @@ local function start(root,holder)
   end
   return self
 end
-function M.start(root)
+function M.start(root,options)
   local holder={}
-  local ok,result=xpcall(function() return start(root,holder) end,debug.traceback)
+  local ok,result=xpcall(function() return start(root,holder,options) end,debug.traceback)
   if ok then return result end
   local self=holder.self
   if self and self.host then

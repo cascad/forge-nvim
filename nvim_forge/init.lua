@@ -20,6 +20,7 @@ vim.g.loaded_python3_provider = 0
 
 -- spec: IDE-LOG-2/4. Ранние сообщения до config/lazy также доступны в IDE Logs.
 require('forge.logs').setup()
+require('forge.sdk').setup()
 require('forge.tool_paths').setup()
 require("config.ru_keys").setup()
 require("config.options")

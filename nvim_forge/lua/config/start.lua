@@ -274,14 +274,21 @@ local function restart_project(path, opts)
     end
 
     local current_path = normalize_dir(vim.fn.getcwd())
-    if current_path == path then
+    if current_path == path and not opts.reopen then
         return
     end
+
+    local valid,sdk_error=pcall(require('forge.sdk').validate,path)
+    if not valid then vim.notify(tostring(sdk_error),vim.log.levels.ERROR,{title='SDK'});return end
 
     if not write_modified_buffers() then
         return
     end
 
+    if opts.sdk then
+        local busy=require('forge.sdk').busy()
+        if busy then vim.notify('SDK reopen aborted: '..busy,vim.log.levels.WARN,{title='SDK'});return end
+    end
     local ok_dap, ide_dap = pcall(require, "ide.dap")
     if ok_dap and type(ide_dap.stop) == "function" then
         pcall(ide_dap.stop)
@@ -295,8 +302,10 @@ local function restart_project(path, opts)
     local open_files = opts.open_files ~= false
     local command = ("restart +qall! lua require('config.start').open_project_after_restart(%s, %s)")
         :format(string.format("%q", path), open_files and "true" or "false")
+    local rollback=require('forge.sdk').prepare_restart(path)
     local ok, err = pcall(vim.cmd, command)
     if not ok then
+        rollback()
         if resume_persistence then require('persistence').start() end
         vim.notify("Hard project switch failed: " .. tostring(err), vim.log.levels.ERROR, { title = "Start" })
     end
@@ -311,7 +320,7 @@ function M.open_project(path, opts)
     end
 
     local current_path = normalize_dir(vim.fn.getcwd())
-    if current_path ~= path then
+    if current_path ~= path or opts.reopen then
         restart_project(path, opts)
         return
     end

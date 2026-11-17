@@ -12,12 +12,12 @@ upstream-пакеты и настраиваемые SDK/tool paths по обра
 и JS entrypoints (§265, [формат и границы](TOOL_PATHS.md)). Текущее реализованное
 поведение, включая ограничения explicit setup, описано ниже и этим решением не меняется.
 
-§270: владелец подтвердил native environment как основу (вариант1). Ближайший
-продуктовый шаг — [выбор установленного Go/Rust SDK](IDE_ROADMAP.md#следующий-продуктовый-шаг--выбор-установленного-sdk),
-найденного или указанного вручную; user/project выбор и «Авто». Применение
-через штатную среду проекта, при необходимости с явным переоткрытием fride.
-Глобальные PATH/profiles/homes и SDK installations не меняются. Это план,
-не уже существующее общее меню в редакторе.
+§270: владелец подтвердил native environment как основу (вариант1). §271:
+[выбор установленного Go/Rust SDK](SDK_SELECTION.md) реализован: `Space l S`,
+найденный или ручной SDK, user/project/«Авто», явное переоткрытие с сессией.
+Windows/Ubuntu E2E прошли; native Mac отдельно. Меняются только затрагиваемые
+переменные процесса fride и его потомков. Глобальные PATH/profiles/homes и
+SDK installations не меняются. Следующий продуктовый шаг — общий UX Python/Node.
 
 Решение владельца2026-11-15: fride изолирует собственные компоненты, а Go,
 Rust/Cargo/Rustup, Node/npm и Python использует штатно. Исправление §244
@@ -29,7 +29,7 @@ Rust/Cargo/Rustup, Node/npm и Python использует штатно. Исп�
 | Plugins, Mason LSP/DAP и IDE tools | Штатный Neovim data приложения NVIM_APPNAME=fride |
 | IDE state, sessions, cache | Штатные каталоги приложения fride, отдельно от обычного nvim |
 | Core/install logs и temp | InstallPath/log и tmp; внутренние IDE logs — stdpath('state') |
-| Языковые SDK | Исходный PATH, настройки пользователя и проекта, активная venv |
+| Языковые SDK | Исходный PATH/project rules/venv; явный Go/Rust SDK через sdk.json |
 
 XDG_CONFIG_HOME/DATA_HOME/STATE_HOME/CACHE_HOME, HOME/USERPROFILE не меняются.
 Не задаются GOPATH/GOBIN/GOCACHE/GOMODCACHE/GOENV, CARGO_HOME/INSTALL_ROOT,

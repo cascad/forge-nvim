@@ -11,7 +11,7 @@ return function(client)
         for _,pos in tree:iter() do if pos.type=='test' then return true end end
         return false
     end
-    return {all=nio.create(function()
+    return {running=function() return #client:running_positions()>0 end,all=nio.create(function()
         local cwd=nio.fn.getcwd();cwd=vim.uv.fs_realpath(cwd) or cwd
         local targets={}
         for _,adapter in ipairs(client:get_adapters()) do

@@ -10148,3 +10148,70 @@ Local openspec validate configure-go-rust-tool-paths --type change --strict
 raw/staged append-only journal prefixes, frozen25/WIP сохранены. Редакторные
 E2E/Docker/WSL/downloads не запускались. Host temp/cache на F. Local commit
 gc.auto=0/maintenance.auto=false; без push.
+
+
+## 179. 2026-11-17 — выбор установленных Go/Rust SDK и native restart
+
+select-native-language-sdk, IDE-BOOT-37. Local openspec new/instructions/apply;
+прочитаны early init, SDK/tool paths, public Neotest consumer API, native
+restart/persistence/views, TUI harness/Windows Job. Read-only git status/diff,
+rg/Get-Content, JSON artifacts и official Go/rustup/Neovim docs. SDK selection
+реализован поверх native окружения; private APIs адаптеров не патчились.
+
+Основные команды из F:/repo/forge-nvim (TEMP/TMP/TMPDIR, NVIM_LOG_FILE на F;
+Python -B, PYTHONUTF8=1; npm cache F:/forge-nvim-tmp/npm-cache):
+
+```powershell
+$env:FORGE_TEST_ID='IDE-BOOT-37'
+& .tools/neovim/windows-x64/bin/nvim.exe -l tests/e2e/sdk-selection.test.lua
+docker compose -f tests/containers/compose.yaml run --rm --no-deps --pull never -e FORGE_TEST_ID=IDE-BOOT-37 --entrypoint bash ubuntu tests/containers/tool-paths.sh tests/e2e/sdk-selection.test.lua
+```
+
+Два случая запускались/при отказе повторялись отдельно через
+FORGE_SDK_SELECTION_CASE='real menu' либо 'native TUI'. Final aggregate:
+Windows2 / Ubuntu2 PASS, Go1.23.3/1.26.0 и Rust1.91.1/1.96.1, реальные процессы
+LSP/run/Neotest/DAP, native TUI restart (8 backend PIDs), paths/scopes/Auto.
+Raw logs sdk-selector-{menu-final,native-accepted}-{windows,ubuntu}.txt в
+.tests/toolchain-research; process/UI/SDK outputs в editor-e2e artifacts.
+
+Контроли (на каждой ОС по1 PASS), тем же executable / Ubuntu driver:
+go-passive.test.lua с FORGE_TEST_ID=IDE-BOOT-4 и
+FORGE_GO_PASSIVE_CASE='GoToolchain'; project-session.test.lua с
+FORGE_TEST_ID=IDE-PANEL-15. Windows session layout дважды нарушался уже в
+before-switch: слишком ранний test input до окончания async views. Observer
+ожидает штатное завершение и выбор tab2; final session-ready logs по1 PASS.
+Layout/cursor assertions сохранены. Полного регресса не запускали.
+
+Явная одноразовая подготовка только Ubuntu test cache (официальные Go/rustup):
+
+```powershell
+docker run --rm --cpus=2 --memory=2g --network bridge --mount 'type=bind,source=F:/repo/forge-nvim,target=/workspace,readonly' --mount 'type=bind,source=F:/repo/forge-nvim/.tests/ubuntu,target=/workspace/.tests' --workdir /workspace --entrypoint bash forge-nvim-tests:ubuntu24.04-nvim0.12.2 tests/containers/prepare-sdk-selection.sh
+```
+
+Test SDK homes/caches в .tests/ubuntu/sdk selection на F; image/system SDK не
+менялись. Затем editor E2E без сети/source RO/private prepared plugin copy.
+Docker Desktop/WSL lifecycle/build/pull не запускались.
+
+Windows native host drain диагностирован exact QueryInformationJobObject PID
+list + Get-CimInstance по этим PID: оставался MSVC VCTIP, а не предполагавшийся
+по ancestry conhost. Только SDK test явно допускает проверенный MSVC helper
+в своём Job; Job close удаляет этот остаток, active_after0. Native exit0/signal0,
+no editor hardkill; session controls strict. Не менялись VS telemetry settings.
+Неудачные FreeConsole/detach/transport эксперименты отменены. Один зависший
+собственный failed controller PID5860 остановлен после проверки точного
+command line, его Job закрыл собственных потомков; глобальных kills по имени нет.
+
+Далее local openspec validate select-native-language-sdk --type change --strict
+--no-interactive; git diff --check / staged --check; frozen25/WIP/locks/native
+SDK patch, raw/staged append-only journal prefix и exact owned index (registry
+только SDK entry). Temp journal/stage helpers в .tests/toolchain-research.
+Local commit gc.auto=0/maintenance.auto=false, без push. Native Mac отдельно.
+
+
+Финальная Windows перепроверка native TUI: первоначальный PID reused вызвал
+ложный Backend PID unchanged. Lifecycle JSON показал отдельный новый процесс;
+report.backends хранит initial +7 restart readiness records вместо требования
+глобально уникальных PID. Промежуточный count7/8 исправлен включением initial.
+sdk-selector-native-identity-windows.txt:1 PASS; artifact45158312111400,
+functional/cleanup=true, exit0/signal0/no hardkill/active_after0. После Ubuntu
+product code не менялся; финальный observer/count проверен Windows.
