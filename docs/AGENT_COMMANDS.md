@@ -9978,3 +9978,17 @@ git diff --check, raw/staged journal prefix SHA/frozen25/exact index.
 No package installation, Docker/WSL, SDK probes, IDE E2E или OpenSpec mutations.
 TEMP/TMP при технических проверках на F, Python -B/UTF8. Коммит только восьми
 документов, gc.auto=0/maintenance.auto=false; чужой WIP не трогается.
+
+
+## 172. 2026-11-17 — принятое решение о managers/upstream и custom paths
+
+Read-only rg/Get-Content setup/catalog/native_tools, Python/Node/Bash overrides
+и sdks.rs/sdk_install.rs; web primary VS Code Go/Python/user-workspace settings.
+В восьми документах записано решение владельца и ближайшая реализация paths.
+Runtime/specs/installer не изменялись, OpenSpec artifacts не создавались.
+
+Проверка документации одной итерацией: Python -B/UTF8 stdlib links/fences,
+git diff --check, frozen25 SHA, raw append-only journal prefixes, staged journal
+prefixes и exact eight-doc index. Baseline/result в .tests/toolchain-research/;
+TEMP/TMP/TMPDIR на F. No installs, Docker/WSL или IDE E2E. Local commit с
+-c gc.auto=0 -c maintenance.auto=false; посторонний WIP сохранён.

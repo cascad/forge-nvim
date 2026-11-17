@@ -14167,3 +14167,38 @@ append-only prefixes. Установочные примеры не исполн�
 INSTALLATION_PLAN.md, SDK_STATE.md, HISTORY.md, AGENT_COMMANDS.md;
 README.md и эта запись. Технические проверки сохранены в
 .tests/toolchain-research/; материалы самого исследования — в документе.
+
+
+### 264. Штатные менеджеры и настраиваемые пути SDK и IDE tools
+
+**Связь:** IDE-138, решение владельца2026-11-17. Документация и план;
+поведение/specs/pins/SDK не изменялись.
+
+**Проблема.** Обзор §263 оставлял базовый способ получения tools предметом
+обсуждения. Владелец выбрал штатные менеджеры экосистем и готовые upstream-пакеты,
+настраиваемые пути и подходы VS Code как основу.
+
+**Причина.** В текущем коде есть sdk-paths установщика, Python interpreter,
+Node executable/tools и Bash overrides, но правила выбора различаются.
+Одного добавления каталога в PATH недостаточно для конкретного LSP/DAP entrypoint.
+
+**Изменение.** В обзоре записано принятое решение и ближайший срез: настройки
+пользователя/проекта, явные пути SDK/tools, сохранение языковых правил окружения,
+ошибка неверного override и объяснение выбора в общих логах. Общая часть не
+становится новым менеджером окружений; providers остаются штатными. Политика
+build toolchain/версий остаётся отдельным следующим шагом и не блокирует paths.
+Roadmap/installation/SDK_STATE/README согласованы с решением. Реализация нового
+общего контракта путей не объявлена завершённой.
+
+**Проверка.** Сверены существующие setup/catalog/native_tools и overrides;
+перечитаны первичные Go/Python/User-workspace settings VS Code. Проверены local
+links, Markdown, exact staged docs, frozen25 и raw/staged journal prefixes.
+SDK/tools не устанавливались, Docker/WSL и IDE E2E не запускались: код не менялся.
+
+**Вывод.** Следующий продуктовый шаг конкретен: выбор путей и источника tools
+с регрессами Windows/Ubuntu и отдельной проверкой macOS владельцем. Не требуется
+сначала строить свой package manager или публиковать все LSP для каждой ОС.
+
+**Файлы.** TOOLCHAIN_INSTALLATION_APPROACHES.md, IDE_ROADMAP.md,
+INSTALLATION_PLAN.md, SDK_STATE.md, README.md, HISTORY.md, AGENT_COMMANDS.md
+и эта запись.
