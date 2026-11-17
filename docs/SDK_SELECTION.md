@@ -1,16 +1,17 @@
-# Выбор установленного Go/Rust SDK
+# Выбор установленной языковой среды
 
 `Space l S` или `:ForgeSdk` открывает выбор языка и области настройки.
-Быстрый вход: `:ForgeSdk go project`, `:ForgeSdk rust user`.
+Языки: Go, Rust, Python, Node. Быстрый вход: `:ForgeSdk go project`,
+`:ForgeSdk rust user`, `:ForgeSdk python project`, `:ForgeSdk node user`.
 Это выбор уже установленной среды; меню не устанавливает и не обновляет SDK.
 
 В списке показаны проверенная версия, executable и источник. Можно выбрать
-найденную установку, «Указать путь…», «Обновить список» или «Авто». Поиск и
+найденную установку, «Указать путь…», «Обновить список» или сброс выбора. Поиск и
 проверки CLI асинхронные, с ограничением времени/параллельности; обычный startup
 этот поиск не запускает. Неполная папка Go wrapper без SDK не считается SDK.
 
-После выбора доступны «Сохранить и переоткрыть проект» и «Сохранить для следующего
-запуска». Переоткрытие использует штатный Neovim restart и существующее
+После выбора можно переоткрыть проект или только сохранить настройку для
+следующих запусков. Переоткрытие использует штатный Neovim restart и существующее
 восстановление сессии. Изменённые файлы сохраняются обычным механизмом проекта.
 Активные debug/tests/tasks/terminal блокируют переоткрытие; сначала завершите
 их. `:ForgeSdkApply` повторяет применение сохранённого выбора. Само сохранение
@@ -18,6 +19,9 @@
 Действия и ошибки доступны в общей консоли: `:ForgeLogs events:SDK`.
 
 ## Где хранится выбор
+
+Этот раздел описывает Go/Rust. Python/Node используют прежний tools.json,
+см. отдельный раздел ниже; настройки между файлами не дублируются.
 
 - Пользователь: `sdk.json` в `:echo stdpath('config')`, для установленного fride
   отдельно от обычного nvim и конфигурации kit.
@@ -73,7 +77,53 @@ CodeLLDB с ним: ограничения upstream tools сохраняются
 остаётся отдельным пунктом плана. Старый `:GoToolchain` сохраняет прежнее явное
 поведение Go, включая возможную загрузку запрошенной отсутствующей версии.
 
+## Python и Node через общие настройки
+
+В меню выберите Python/Node, затем project/user. При ручном вводе подходит
+executable либо корень SDK/venv; для Python также каталог Scripts/bin.
+Venv symlink сохраняется как путь venv, поэтому interpreter получает её prefix.
+Список проверяет текущий выбор, active/project venv и доступные PATH/native
+manager directories. Другую установку можно указать вручную. WindowsApps
+aliases не предлагаются как установленный SDK.
+
+Выбор записывается в ключ `python` или `node` существующего user/project
+[tools.json](TOOL_PATHS.md). Другие tools и metadata сохраняются. `sdk.json`
+остаётся только для Go/Rust. «Сбросить выбор — наследовать настройки и среду»
+удаляет ключ только выбранной области: project снова наследует user, затем
+прежние legacy/native rules. Это отличается от Go/Rust «Авто», явно выбирающего
+исходное окружение даже поверх user choice.
+
+«Сохранить для следующих запусков задач» обновляет выбор существующих языковых
+резолверов: следующие Python/Node workflow читают его сами. Уже работающие LSP,
+отладка и процессы продолжают использовать свою среду. Для полного обновления
+выберите «Сохранить и переоткрыть проект» или позже `:ForgeSdkApply`.
+Python active/project venv priority, явный Pyright pythonPath, Node project-local
+tools и настройки конкретного запуска сохраняют прежние правила.
+PATH, VIRTUAL_ENV/CONDA_PREFIX, npm/pip homes и SDK installations меню не меняет.
+Corrupt JSON не перезаписывается; invalid path не заменяется другим SDK.
+
 ## Целевой regression
+
+### Python и Node — IDE-BOOT-38
+
+Нужны подготовленные editor/Node deps и обычный native Python. Новые SDK тест
+не устанавливает. Реальная venv без pip создаётся только в private test runtime.
+
+```powershell
+$env:FORGE_TEST_ID='IDE-BOOT-38'
+& .tools/neovim/windows-x64/bin/nvim.exe -l tests/e2e/python-node-sdk-picker.test.lua
+```
+
+```sh
+FORGE_TEST_ID=IDE-BOOT-38 nvim -l tests/e2e/python-node-sdk-picker.test.lua
+docker compose -f tests/containers/compose.yaml run --rm --no-deps --pull never -e FORGE_TEST_ID=IDE-BOOT-38 --entrypoint bash ubuntu tests/containers/tool-paths.sh tests/e2e/python-node-sdk-picker.test.lua
+```
+
+Для повтора одного случая: `FORGE_RUNTIME_SDK_CASE='common menu'` либо
+`'native TUI'`. Native Mac отдельно. Артефакты содержат python-runtime.json,
+node-runtime.json или runtime-sdk-native.json, снимки UI и shutdown.json.
+
+### Go и Rust — IDE-BOOT-37
 
 Нужны подготовленные editor/LSP/test/Rust/DAP deps и две существующие версии
 Go и Rust. Пути можно задать переменными `FORGE_SDK_GO_OLD`, `FORGE_SDK_GO_NEW`,
@@ -110,6 +160,13 @@ sdk-selection.json с native PIDs, выбранными executable и compiler v
 macOS acceptance выполняется отдельно владельцем.
 
 ## Проверено 2026-11-17
+
+Python/Node (§272): Windows/Ubuntu по2 новых E2E и5 controls PASS. Настоящее
+меню, venv с пробелами и сохранением prefix, NodeRunFile, user/project/reset/
+cancel/invalid/corrupt, соседние JSON keys/metadata и отсутствие startup probes.
+Native TUI: три процесса редактора, восстановление файла/курсора после двух
+применений, active task guard; shutdown exit0/signal0/active_after0, без hardkill.
+Controls: прежние tool paths4 и Go/Rust menu1. Native Mac отдельно.
 
 Windows и Ubuntu: по два E2E PASS — настоящее меню и native TUI с восемью
 процессами редактора через restart (ОС может повторно использовать старый PID).

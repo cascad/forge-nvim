@@ -130,4 +130,5 @@ return {
   { file = 'tests/e2e/sql-basic.test.lua', suite = 'e2e', timeout = 180 },
   { file = 'tests/e2e/go-rust-paths.test.lua', suite = 'e2e', timeout = 360 },
   { file = 'tests/e2e/sdk-selection.test.lua', suite = 'e2e', timeout = 600 },
+  { file = 'tests/e2e/python-node-sdk-picker.test.lua', suite = 'e2e', timeout = 360 },
 }

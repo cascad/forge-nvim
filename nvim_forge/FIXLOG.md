@@ -14513,3 +14513,54 @@ PID, включая initial launch. Промежуточный bookkeeping пр�
 исправлен; финальный Windows native run PASS: .tests/editor-e2e/45158312111400,
 functional/cleanup/ok=true, native exit0/signal0/no hardkill/active_after0.
 Product code после Ubuntu PASS не менялся; final observer/count проверен Windows.
+
+
+### 272. Общий выбор Python и Node через существующие настройки
+
+Спека: IDE-BOOT-38 (ADDED), unify-python-node-sdk-picker, 2026-11-17.
+
+**Было.** Space l S / ForgeSdk из §271 обслуживал Go/Rust. Python/Node уже
+имели общие резолверы и paths в tools.json, но меню выбора среды у них не было.
+
+**Причина.** UI и native environment Go/Rust были связаны напрямую. Для Python
+venv interpreter и Node executable уже есть единая точка выбора consumers;
+второе хранение тех же путей в sdk.json создало бы конкурирующие настройки.
+
+**Изменение.** Общий menu flow получил Python/Node provider к прежним
+резолверам: проверенная версия/executable/источник, bounded async discovery,
+manual root/bin/executable, refresh/cancel и user/project scope. Python venv
+symlink сохраняется, поэтому prefix принадлежит venv. Discovery читает active/
+project venv, PATH и ограниченные native manager directories; другое место
+можно указать вручную. WindowsApps aliases не выдаются за готовый SDK.
+Version CLI только по явному menu, timeout3s/max2 concurrent, без установок.
+
+Атомарный tools.json set/reset сохраняет другие tools/metadata, отказывается
+затирать corrupt JSON. Сброс удаляет только scoped key и возвращает прежнее
+project/user/legacy/native наследование. Это settings reset, а не Go/Rust
+explicit Auto. Следующие workflow читают новый путь; LSP/живые процессы сами
+не перезапускаются. Можно явно переоткрыть проект через существующий native
+restart/session/active work guard. SDK apply проверяет explicit Python/Node
+paths до перезапуска; global PATH/profiles/SDK homes и язык не изолируются.
+
+**Проверка/e2e.** Windows/Ubuntu по2 новых PASS и5 controls PASS: настоящее
+общее меню, discovered active venv/manual Node root с пробелами, реальные
+Python prefix/executable и NodeRunFile/version, scopes/reset→user→active venv,
+metadata/соседние keys, cancel/invalid/corrupt, passive startup/installs0.
+Native TUI:3 process instances и2 apply/restart, first.txt23,7 восстановлен,
+env unchanged, active Overseer task блокирует apply без смены PID. Strict
+shutdown exit0/signal0/no hardkill/scope not terminated/active_after0.
+Controls: прежний paths suite4 и Go/Rust menu1. Первичный menu fixture ошибочно
+ждал discovery произвольной неактивной venv; указал VIRTUAL_ENV. Windows retry
+сам изменял spelling slash переменной, лишнее присваивание убрано. Native
+cases проходили с первого раза; product code после initial run не менялся.
+Повторялись только failed menu cases, общего full регресса не было.
+
+**Вывод.** Python/Node доступны из того же меню без нового менеджера среды и
+без дублирования paths. Следом согласование installer/setup/runtime выбора и
+оставшиеся consumers, затем providers/update policy/Default. Native Mac отдельно.
+Использованы existing native deps/offline Ubuntu image, downloads0. Desktop/
+WSL/image/system SDK/locks не менялись; tmp/cache на F, старый WIP сохранён.
+
+**Файлы.** forge/sdk, runtime_sdk и tool_paths; native Python/Node picker E2E,
+registry только собственная entry; SDK_SELECTION/TOOL_PATHS/QUICKSTART/README,
+roadmap/границы/установка, OpenSpec verification и HISTORY/AGENT_COMMANDS/FIXLOG.

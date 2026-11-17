@@ -1,4 +1,4 @@
--- spec: IDE-BOOT-33 IDE-BOOT-36. Native language discovery stays in consumers.
+-- spec: IDE-BOOT-33 IDE-BOOT-36 IDE-BOOT-38. Native language discovery stays in consumers.
 local M = {}
 local cache, latest = {}, {}
 
@@ -44,6 +44,39 @@ local function config(path)
     cache[path] = { stamp = stamp, tools = ok and value or nil, error = not ok and tostring(value) or nil }
     return cache[path].tools, cache[path].error
 end
+
+function M.files(root)
+    return {project=vim.fs.joinpath(M.root(root),'.fride/tools.json'),
+        user=vim.fs.joinpath(vim.fn.stdpath('config'),'tools.json')}
+end
+
+-- Explicit settings edit; preserve other tools and unknown document metadata.
+function M.save(id, value, scope, root)
+    assert(scope=='project' or scope=='user','Expected user/project scope')
+    assert(type(id)=='string' and id~='','Expected tool id')
+    assert(value==nil or type(value)=='string' and value~='' and not value:find('%c'),'Expected path or nil')
+    local path=M.files(root)[scope]
+    local tools,err=config(path)
+    if not tools then error('Tool paths ['..scope..': '..path..']: '..tostring(err),0) end
+    local data={}
+    if vim.uv.fs_stat(path) then
+        local handle=assert(io.open(path,'rb'));local raw=handle:read(65537);handle:close()
+        data=vim.json.decode(raw)
+    end
+    data.tools=vim.deepcopy(tools);data.tools[id]=value
+    if vim.tbl_isempty(data.tools) then data.tools=vim.empty_dict() end
+    vim.fn.mkdir(vim.fs.dirname(path),'p')
+    local temp=path..'.'..vim.uv.os_getpid()..'.tmp'
+    local ok,why=pcall(function()
+        local handle=assert(io.open(temp,'wb'));assert(handle:write(vim.json.encode(data)..'\n'));assert(handle:close())
+        assert(vim.uv.fs_rename(temp,path))
+    end)
+    if not ok then vim.uv.fs_unlink(temp);error('Tool paths ['..path..']: '..tostring(why),0) end
+    cache[path]=nil
+    return path
+end
+
+function M.current(id) return vim.deepcopy(latest[id]) end
 
 local function record(id, path, source, root, err)
     local text = id .. ' | ' .. (err and ('ERROR: ' .. err) or path or 'not found')

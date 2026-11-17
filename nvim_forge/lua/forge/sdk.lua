@@ -1,4 +1,4 @@
--- spec: IDE-BOOT-37. Explicit native SDK selection; startup never probes CLI.
+-- spec: IDE-BOOT-37 IDE-BOOT-38. Explicit SDK selection; startup never probes CLI.
 local M = {}
 local uv = vim.uv
 local win = vim.fn.has('win32') == 1
@@ -282,6 +282,8 @@ end
 function M.apply()
     local valid,err=pcall(M.validate,M.root())
     if not valid then notify(tostring(err),vim.log.levels.ERROR);return false end
+    valid,err=pcall(require('forge.runtime_sdk').validate,M.root())
+    if not valid then notify(tostring(err),vim.log.levels.ERROR);return false end
     local reason=M.busy()
     if reason then notify('SDK не применён: '..reason..'. Выбор сохранён для следующего запуска.',vim.log.levels.WARN);return false end
     require('config.start').open_project(vim.fn.getcwd(),{reopen=true,sdk=true})
@@ -290,33 +292,36 @@ end
 function M.open(kind, scope)
     require('lazy').load({plugins={'telescope.nvim'}})
     if not kind or kind=='' then
-        vim.ui.select({'go','rust'},{prompt='SDK: язык'},function(value) if value then M.open(value,scope) end end);return
+        vim.ui.select({'go','rust','python','node'},{prompt='SDK: язык'},function(value) if value then M.open(value,scope) end end);return
     end
-    if kind~='go' and kind~='rust' then notify('SDK: выбери go или rust',vim.log.levels.ERROR);return end
+    if not vim.tbl_contains({'go','rust','python','node'},kind) then notify('SDK: выбери go, rust, python или node',vim.log.levels.ERROR);return end
+    local runtime=kind=='python' or kind=='node'
+    local backend=runtime and require('forge.runtime_sdk') or M
     if not scope or scope=='' then
         vim.ui.select({'project','user'},{prompt='SDK: сохранить для'},function(value) if value then M.open(kind,value) end end);return
     end
     if scope~='project' and scope~='user' then notify('SDK scope: project или user',vim.log.levels.ERROR);return end
     generation=generation+1;local id=generation;local root=M.root()
     local function current() return id==generation and M.root()==root end
-    local selected_ok,selected=pcall(M.choice,kind,root)
+    local selected_ok,selected=pcall(backend.choice,kind,root)
     if not selected_ok then notify(tostring(selected),vim.log.levels.ERROR);return end
     notify('Проверяю установленные '..kind..' SDK…')
     local function save(value)
         if not current() then return end
-        vim.ui.select({'Сохранить и переоткрыть проект','Сохранить для следующего запуска'},
+        vim.ui.select({'Сохранить и переоткрыть проект',runtime and 'Сохранить для следующих запусков задач' or 'Сохранить для следующего запуска'},
             {prompt='SDK '..kind..': '..value},function(action)
                 if not action or not current() then return end
                 log(kind..' | '..action..' | '..value..' | '..scope..': '..root)
-                local ok,err=pcall(M.save,kind,value,scope,root)
+                local ok,err=pcall(backend.save,kind,value,scope,root)
                 if not ok then notify(tostring(err),vim.log.levels.ERROR);return end
                 if action=='Сохранить и переоткрыть проект' then M.apply()
-                else notify('SDK сохранён. Применится при следующем запуске/переоткрытии проекта.') end
+                else notify(runtime and 'Путь сохранён для следующих workflow. Работающий LSP обновится после переоткрытия проекта.'
+                    or 'SDK сохранён. Применится при следующем запуске/переоткрытии проекта.') end
             end)
     end
-    M.discover(kind,function(found)
+    backend.discover(kind,function(found)
         if not current() then return end
-        local items={{label='Авто — исходное окружение языка',value='auto'}}
+        local items={{label=runtime and 'Сбросить выбор — наследовать настройки и среду' or 'Авто — исходное окружение языка',value='auto'}}
         for _,sdk in ipairs(found) do items[#items+1]={label=sdk.version..' | '..sdk.executable..' | '..sdk.source,value=sdk.path} end
         items[#items+1]={label='Указать путь…',manual=true};items[#items+1]={label='Обновить список',refresh=true}
         vim.ui.select(items,{prompt=kind..' SDK ['..scope..'] | '..selected.value..' | '..selected.source,
@@ -326,7 +331,7 @@ function M.open(kind, scope)
                 elseif item.manual then
                     vim.ui.input({prompt='SDK executable или каталог: ',completion='file'},function(value)
                         if not value or value=='' or not current() then return end
-                        M.probe(kind,value,function(sdk,err)
+                        backend.probe(kind,value,function(sdk,err)
                             if not current() then return end
                             if not sdk then notify('SDK: '..tostring(err),vim.log.levels.ERROR);return end
                             save(sdk.path)
@@ -343,7 +348,7 @@ function M.setup()
         vim.schedule(function() notify(M.error..'\nИсправь sdk.json или выбери Авто.',vim.log.levels.ERROR) end)
     end
     vim.api.nvim_create_user_command('ForgeSdk',function(args) M.open(args.fargs[1],args.fargs[2]) end,
-        {nargs='*',complete=function() return {'go','rust','project','user'} end,desc='Select an installed SDK or enter its path'})
+        {nargs='*',complete=function() return {'go','rust','python','node','project','user'} end,desc='Select an installed SDK or enter its path'})
     vim.api.nvim_create_user_command('ForgeSdkApply',M.apply,{desc='Reopen project with its selected native SDK'})
     vim.keymap.set('n','<leader>lS',function() M.open() end,{desc='SDK: select installed version or path'})
 end

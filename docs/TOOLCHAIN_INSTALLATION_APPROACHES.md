@@ -472,8 +472,9 @@ SDK определяется штатным окружением. §271 реал
 `Space l S`, установленные версии/ручной путь, user/project/«Авто». Применение —
 явное native переоткрытие проекта с восстановлением сессии; системные
 PATH/profiles/SDK homes не меняются. Windows/Ubuntu проверены, Mac отдельно.
-Следующий продуктовый шаг — общий UX существующих Python/Node selectors,
-затем согласование setup/runtime и providers/update policy/Default.
+§272 добавил Python/Node в общий вход через прежние tools.json/resolvers:
+native venv, ручной путь, scoped reset/inherit и явное переоткрытие с сессией.
+Следом согласование setup/runtime и providers/update policy/Default.
 Критерии и очередность — в [рабочем плане](IDE_ROADMAP.md#следующий-продуктовый-шаг--выбор-установленного-sdk).
 
 В VS Code есть общие настройки пользователя и переопределения workspace;

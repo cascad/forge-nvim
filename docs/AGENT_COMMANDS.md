@@ -10215,3 +10215,51 @@ report.backends хранит initial +7 restart readiness records вместо �
 sdk-selector-native-identity-windows.txt:1 PASS; artifact45158312111400,
 functional/cleanup=true, exit0/signal0/no hardkill/active_after0. После Ubuntu
 product code не менялся; финальный observer/count проверен Windows.
+
+
+## 180. 2026-11-17 — Python и Node в общем SDK menu
+
+unify-python-node-sdk-picker, IDE-BOOT-38. Read-only git status/diff, rg и
+Get-Content: roadmap, SDK/tool paths, Python/Node resolvers, native consumers,
+session TUI/tests/compose. Local openspec list --json root=F:/repo/forge-nvim,
+list --specs, new change, instructions/status/apply. Применён apply workflow;
+старые WIP/locks/native patch зафиксированы SHA256 baseline в .tests.
+
+Основные команды из F:/repo/forge-nvim:
+
+```powershell
+$env:TEMP='F:/repo/forge-nvim/.tests/tmp'
+$env:TMP=$env:TEMP; $env:TMPDIR=$env:TEMP
+$env:NVIM_LOG_FILE="$env:TEMP/runtime-picker.log"
+$env:PYTHONUTF8='1'
+$env:FORGE_TEST_ID='IDE-BOOT-38'
+& .tools/neovim/windows-x64/bin/nvim.exe -l tests/e2e/python-node-sdk-picker.test.lua
+docker compose -f tests/containers/compose.yaml run --rm --no-deps --pull never -e FORGE_TEST_ID=IDE-BOOT-38 --entrypoint bash ubuntu tests/containers/tool-paths.sh tests/e2e/python-node-sdk-picker.test.lua
+```
+
+Initial новые E2E: на каждой ОС1 PASS native /1 FAIL menu (fixture произвольной
+venv не была active). Обозначена VIRTUAL_ENV; Ubuntu menu1 PASS. Windows menu
+дошёл до env assertion: сам test присваивал путь с другими slash; лишнее
+присваивание убрано. Final Windows menu1 PASS. Повторы только common menu через
+FORGE_RUNTIME_SDK_CASE='common menu'; native не повторялся. Product code после
+первого запуска не менялся. Финальный aggregate Windows2 / Ubuntu2 PASS.
+
+Controls на каждой ОС5 PASS: FORGE_TEST_ID=IDE-BOOT-33
+tests/e2e/tool-paths.test.lua (4); FORGE_TEST_ID=IDE-BOOT-37 и
+FORGE_SDK_SELECTION_CASE='real menu', tests/e2e/sdk-selection.test.lua (1).
+Использовались тот же nvim и Ubuntu driver, без full regression.
+Raw logs python-node-picker-{windows,ubuntu,menu-final-windows,menu-ubuntu,
+path-controls-windows,path-controls-ubuntu,go-rust-control-windows,
+go-rust-control-ubuntu}.txt в .tests/toolchain-research. Native artifacts
+45788074657400 /16815766784020:3 ready records, реальный prefix/executable/
+Node image/version, restored cursor23,7, task guard, strict exit0/signal0/
+no hardkill/scope not terminated/active_after0. Menu artifacts45881015498700 /
+16859992086016. Existing SDKs; private test venv --without-pip, без downloads.
+
+Ubuntu existing image/offline/source RO/private prepared plugins; Desktop/WSL/
+build/pull не запускались. Host tmp/cache F. Native Mac отдельно.
+Local openspec validate unify-python-node-sdk-picker --type change --strict
+--no-interactive, diff/staged check, frozen25/raw+staged journal prefix,
+exact owned index/registry одна новая строка. Временные Python -B journal/stage
+helpers в .tests/toolchain-research. Commit gc.auto=0/maintenance.auto=false,
+без push, прежний WIP вне коммита.

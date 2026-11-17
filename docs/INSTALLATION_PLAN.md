@@ -25,8 +25,9 @@ paths во всех адаптерах требуют upstream API, а не об
 §270: вариант1 (native SDK environment) принят. §271 реализовал runtime
 [выбор установленных Go/Rust SDK и ручной путь](SDK_SELECTION.md): `Space l S`,
 user/project/«Авто», native restart с сохранением сессии. Windows/Ubuntu E2E
-прошли, Mac отдельно. Следом общий UX Python/Node, затем остальные consumers
-и согласование installer/setup/runtime, providers/update policy и полный Default.
+прошли, Mac отдельно. §272 добавил общий UX Python/Node через существующий
+tools.json и native resolvers. Следом остальные consumers и согласование
+installer/setup/runtime, providers/update policy и полный Default.
 Runtime sdk.json и прежний installer SDK picker пока имеют отдельные настройки;
 их согласование ещё не завершено. Полная поставка и native Mac — отдельные gates.
 

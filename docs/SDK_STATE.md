@@ -17,7 +17,10 @@ upstream-пакеты и настраиваемые SDK/tool paths по обра
 найденный или ручной SDK, user/project/«Авто», явное переоткрытие с сессией.
 Windows/Ubuntu E2E прошли; native Mac отдельно. Меняются только затрагиваемые
 переменные процесса fride и его потомков. Глобальные PATH/profiles/homes и
-SDK installations не меняются. Следующий продуктовый шаг — общий UX Python/Node.
+SDK installations не меняются. §272 добавил Python/Node в это меню через
+прежний tools.json: scoped set/reset, сохранение venv и native restart.
+Их provider не меняет окружение SDK. Windows/Ubuntu E2E прошли, Mac отдельно.
+Следующий шаг — согласовать installer/setup/runtime выбор.
 
 Решение владельца2026-11-15: fride изолирует собственные компоненты, а Go,
 Rust/Cargo/Rustup, Node/npm и Python использует штатно. Исправление §244

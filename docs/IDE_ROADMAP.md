@@ -25,21 +25,25 @@ Windows/Ubuntu: по7 новых E2E и9 native controls PASS. Go/Cargo/SDK/test
 policy и полного Default. §271: этот Go/Rust selector реализован (`Space l S`):
 установленная версия/ручной путь, user/project/«Авто», native restart с сессией.
 Windows/Ubuntu: по2 новых E2E и2 controls PASS; Mac отдельно.
-Следующий продуктовый срез — общий UX Python/Node selectors; затем остальные
-consumers/setup-runtime и providers/update policy.
+§272 добавил Python/Node в общий вход: прежний tools.json, discovered/manual
+paths, scope reset с наследованием, native restart и сохранение venv.
+Windows/Ubuntu: по2 новых E2E и5 controls PASS; Mac отдельно.
+Следом согласование installer/setup/runtime и оставшиеся consumers, затем
+providers/update policy и Default.
 Детали build-toolchain downloads и версий решаются для этих следующих шагов;
 они не блокируют работу с путями. Core publisher остаётся d120e3a;
 новый срез не означает завершения всего контракта путей или готовности Default.
 
 <a id="следующий-продуктовый-шаг--выбор-установленного-sdk"></a>
 
-### Выбор установленного SDK — Go/Rust реализован
+### Выбор установленного SDK — Go/Rust/Python/Node реализован
 
 Решение владельца2026-11-17: native окружение остаётся режимом «Авто»; добавить
 выбор из существующих установок и ручной путь. §271 реализовал Go/Rust:
 `Space l S` / `:ForgeSdk`, [команды, настройки и проверки](SDK_SELECTION.md).
-Следом общий UX для уже имеющихся Python/Node selectors. Полный Default остаётся
-отдельным этапом; native macOS проверяет владелец.
+§272 добавил Python/Node через существующие tools.json/resolvers с сохранением
+venv/project rules. Полный Default остаётся отдельным этапом; native macOS
+проверяет владелец.
 
 - [x] Показать текущий SDK, executable, версию и источник выбора; обновление
   списка выполнять асинхронно по открытию/явному refresh, без startup scans.
@@ -60,11 +64,12 @@ consumers/setup-runtime и providers/update policy.
 
 GoToolchain и SDK existing/manual path в установщике сохранены. Новый selector
 применяет SDK через обычную среду процесса, без правки private API адаптеров.
-Согласование installer/runtime settings и общий UX остальных языков ещё в плане.
+Согласование installer/runtime settings ещё в плане; Python/Node общий вход готов.
 
 - [ ] Прогнать IDE-BOOT-37 на native macOS с двумя SDK каждого языка.
-- [ ] Следующий продуктовый срез: включить существующие Python/Node selectors
+- [x] Включить существующие Python/Node selectors
   в общий вход `Space l S`, сохранив venv/project rules и ручные пути.
+- [ ] Прогнать IDE-BOOT-38 Python/Node на native macOS.
 - [ ] Затем согласовать setup/runtime/installer settings и оставшиеся consumers;
   определить providers/update policy, завершить Default/Custom и native gates.
 
