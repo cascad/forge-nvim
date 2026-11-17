@@ -248,7 +248,6 @@ install_deps() {
 
   if forge_component_enabled node-runtime; then ensure_formulas node; fi
   if forge_component_enabled python; then ensure_formulas python; fi
-  if forge_component_enabled sql; then ensure_formulas sqlite; fi
   if forge_component_enabled go-runtime; then ensure_formulas go; fi
   if forge_component_enabled rust; then
     ensure_formulas rustup-init

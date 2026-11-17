@@ -1,8 +1,9 @@
 # Граница IDE и языковых SDK
 
 §267: базовый SQL runtime использует готовый Sqruff LSP/formatter без DB SDK;
-прежние native SQL parts ниже относятся к дополнительным операциям. Их
-обязательность в installer ещё предстоит убрать после обзора состава.
+прежние native SQL parts ниже относятся к дополнительным операциям. §268 убрал
+их обязательность в installer. Явно переданный bundle проверяется при наличии
+его собственных SQL executables; обычный SQL/Bash выбор их не требует.
 
 [Обзор установки и обновления инструментов](TOOLCHAIN_INSTALLATION_APPROACHES.md)
 описывает подходы экосистем и решение владельца2026-11-17: штатные менеджеры,
@@ -83,7 +84,7 @@ normal launch сохраняет SDK policies. [Версии и границы](
 Go/Rust/C compiler у пользователя SQL не требуется. FRIDE_RUNTIME — только
 контекст собственных IDE tools; PowerShell caller value восстанавливается.
 Codelldb с его LLDB/Python bundle принадлежит Mason/fride, не Python SDK
-проекта. Bash setup патчит только свой Mason package; WSL2 не устанавливается.
+проекта. Ручная Bash preparation патчит только свой Mason package; WSL2 не устанавливается.
 
 WinGet использует exact IDs/no-upgrade; APT install --no-upgrade, brew
 HOMEBREW_NO_INSTALL_UPGRADE. Их зависимостями управляет штатный менеджер;

@@ -1,7 +1,7 @@
-"""IDE-BOOT-14: HTTP selected parts -> private IDE parts + native Neovim/host Node/npm.
+"""IDE-BOOT-14 IDE-BOOT-35: HTTP selected parts -> private IDE parts + native Neovim/host Node/npm.
 
 Init/setup and the feature-marker module are fixtures; this is delivery E2E,
-not full language/plugin readiness. No downloads outside localhost/host installs.
+not full language/plugin readiness or Terminal GUI acceptance. The Terminal part is a controlled IDE library fixture. No downloads outside localhost/host installs.
 """
 import hashlib
 import importlib.util
@@ -35,9 +35,21 @@ class Runtime(ui.UI):
         feature=stand.BASE/'node-feature-source';feature.mkdir()
         (feature/'node-feature.txt').write_text('fixture IDE library, not a language SDK\n')
         (feature/'node-tool.js').write_text('console.log("fride IDE tool fixture")\n')
-        cls.feature_recipe={'schema':1,'platform':stand.PLATFORM,'components':['node'],'paths':[],'probes':[]}
-        cls.good_feature=cls.component_archive('node',feature,cls.feature_recipe)
-        cls.routes['/runtime-node']=cls.good_feature
+        # Controlled Terminal CLI for transport tests, not a GUI/font acceptance.
+        # Real WezTerm/font delivery is covered by install-terminal-runtime.test.py.
+        shutil.copyfile(ROOT/'wezterm.lua',cls.source/'wezterm.lua')
+        terminal=feature/'terminal';(terminal/'bin').mkdir(parents=True)
+        stub=stand.BASE/'terminal-cli-fixture.rs'
+        stub.write_text('fn main() { let p=std::env::current_exe().unwrap(); println!("{}",p.parent().unwrap().parent().unwrap().join("fonts/CaskaydiaCoveNerdFont-Regular.ttf").display()); }')
+        exe='bin/wezterm-fixture'+('.exe' if stand.WINDOWS else '')
+        subprocess_env=dict(os.environ,RUSTUP_AUTO_INSTALL='0')
+        import subprocess
+        subprocess.run([shutil.which('rustc'),str(stub),'-o',str(terminal/exe)],env=subprocess_env,check=True,capture_output=True)
+        policy={'wezterm':{'platforms':{stand.PLATFORM:{'executable':exe}}}}
+        (terminal/'prepared.json').write_text(json.dumps({'platform':stand.PLATFORM,'policy':policy}))
+        cls.feature_recipe={'schema':1,'platform':stand.PLATFORM,'components':['terminal'],'paths':[],'probes':[]}
+        cls.good_feature=cls.component_archive('terminal',feature,cls.feature_recipe)
+        cls.routes['/runtime-terminal']=cls.good_feature
         cls.catalog()
 
     @classmethod
@@ -50,7 +62,7 @@ class Runtime(ui.UI):
     @classmethod
     def catalog(cls,changes=None,extra='',omit=()):
         rows=[]
-        for id in ['core','node']:
+        for id in ['core','terminal']:
             if id in omit:continue
             payload=cls.routes['/runtime-'+id]
             fields=[stand.PLATFORM,id,cls.url+'/runtime-'+id,hashlib.sha256(payload).hexdigest()]
@@ -60,10 +72,10 @@ class Runtime(ui.UI):
         cls.publish_source(cls.ui_digest)
 
     def tearDown(self):
-        self.routes['/runtime-node']=self.good_feature
+        self.routes['/runtime-terminal']=self.good_feature
         self.catalog()
 
-    def install_auto(self,base,env,target,components='node'):
+    def install_auto(self,base,env,target,components='node,terminal'):
         start=len(self.requests)
         result=self.root_entry(base,env,target,components,runtime=False)
         (base/'http.json').write_text(json.dumps(self.requests[start:],indent=2),encoding='utf-8')
@@ -122,19 +134,19 @@ assert(version.code==0 and tool.code==0)
         base,env,target=self.prepare('runtime-core')
         self.assert_ok(self.install_auto(base,env,target,'core'));self.assert_ok(self.launch(base,env,target))
         requests=json.loads((base/'http.json').read_text());self.assertIn('/runtime-core',requests)
-        self.assertNotIn('/runtime-node',requests);self.assertNotIn('/runtime-node-runtime',requests)
+        self.assertNotIn('/runtime-terminal',requests);self.assertNotIn('/runtime-node-runtime',requests)
 
     def test_runtime_02_dependency_install_repeat(self):
         base,env,target=self.prepare('runtime-node')
         self.assert_ok(self.install_auto(base,env,target));self.observe_node(base,env,target)
-        paths=json.loads((base/'http.json').read_text());self.assertEqual([p for p in paths if p.startswith('/runtime-')],['/runtime-core','/runtime-node'])
+        paths=json.loads((base/'http.json').read_text());self.assertEqual([p for p in paths if p.startswith('/runtime-')],['/runtime-core','/runtime-terminal'])
         self.assert_ok(self.install_auto(base,env,target));self.observe_node(base,env,target)
         self.assertFalse(any(p.startswith('/runtime-') for p in json.loads((base/'http.json').read_text())))
-        manifest=json.loads((target/'runtime/forge-runtime.json').read_text());self.assertEqual(manifest['components'],['core','node'])
+        manifest=json.loads((target/'runtime/forge-runtime.json').read_text());self.assertEqual(manifest['components'],['core','terminal'])
 
     def test_runtime_03_missing_selected(self):
-        base,env,target=self.prepare('runtime-missing');self.catalog(omit=('node',))
-        result=self.install_auto(base,env,target);self.assert_failed(result,base,target,'node')
+        base,env,target=self.prepare('runtime-missing');self.catalog(omit=('terminal',))
+        result=self.install_auto(base,env,target);self.assert_failed(result,base,target,'terminal')
         self.assertFalse(target.exists())
         self.assertFalse(any(p.startswith('/runtime-') for p in json.loads((base/'http.json').read_text())))
 
@@ -145,13 +157,13 @@ assert(version.code==0 and tool.code==0)
         self.assertFalse(target.exists())
 
     def test_runtime_05_bad_archive_sha(self):
-        base,env,target=self.prepare('runtime-sha');self.catalog(changes={'node':{3:'0'*64}})
+        base,env,target=self.prepare('runtime-sha');self.catalog(changes={'terminal':{3:'0'*64}})
         self.assert_failed(self.install_auto(base,env,target),base,target,'Runtime archive SHA256 mismatch')
         self.assertFalse(target.exists())
 
     def invalid_feature(self,name,edit,reason,extra=None):
         base,env,target=self.prepare(name)
-        self.routes['/runtime-node']=self.mutate(self.good_feature,edit,extra);self.catalog()
+        self.routes['/runtime-terminal']=self.mutate(self.good_feature,edit,extra);self.catalog()
         self.assert_failed(self.install_auto(base,env,target),base,target,reason)
         self.assertFalse(target.exists())
 
@@ -171,14 +183,14 @@ assert(version.code==0 and tool.code==0)
         base,env,target=self.prepare('runtime-conflict');self.assert_ok(self.install_auto(base,env,target))
         previous=stand.snapshot(target/'bin')
         source=stand.BASE/'conflict-part';source.mkdir();(source/'nvim.sha256').write_text('collision\n')
-        self.routes['/runtime-node']=self.component_archive('node',source,self.feature_recipe);self.catalog()
+        self.routes['/runtime-terminal']=self.component_archive('terminal',source,self.feature_recipe);self.catalog()
         result=self.install_auto(base,env,target);self.assertNotEqual(result.returncode,0)
         logs='\n'.join(p.read_text(encoding='utf-8',errors='replace') for p in (base/'sources/.ui-logs').glob('*.log'))
         self.assertIn('Runtime file conflict',logs);self.assertEqual(stand.snapshot(target/'bin'),previous)
         self.observe_node(base,env,target)
 
     def test_runtime_11_invalid_catalog_url(self):
-        base,env,target=self.prepare('runtime-url');self.catalog(changes={'node':{2:'file:///untrusted'}})
+        base,env,target=self.prepare('runtime-url');self.catalog(changes={'terminal':{2:'file:///untrusted'}})
         self.assert_failed(self.install_auto(base,env,target),base,target,'Invalid IDE artifact catalog')
         self.assertFalse(target.exists())
 
@@ -193,7 +205,7 @@ assert(version.code==0 and tool.code==0)
     def test_runtime_13_file_directory_conflict(self):
         base,env,target=self.prepare('runtime-directory-conflict')
         source=stand.BASE/'directory-conflict';source.mkdir();(source/'bin').write_text('not a directory\n')
-        self.routes['/runtime-node']=self.component_archive('node',source,self.feature_recipe);self.catalog()
+        self.routes['/runtime-terminal']=self.component_archive('terminal',source,self.feature_recipe);self.catalog()
         self.assert_failed(self.install_auto(base,env,target),base,target,'Runtime file conflict')
         self.assertFalse(target.exists())
 
@@ -206,7 +218,7 @@ assert(version.code==0 and tool.code==0)
         self.assertFalse(overlapping.exists());self.observe_node(base,env,target)
 
     def test_runtime_15_default_requires_complete_catalog(self):
-        base,env,target=self.prepare('runtime-default-gate')
+        base,env,target=self.prepare('runtime-default-gate');self.catalog(omit=('terminal',))
         import subprocess
         rustc=(Path(os.environ['USERPROFILE'])/'.rustup/toolchains/stable-x86_64-pc-windows-msvc/bin/rustc.exe') if stand.WINDOWS else 'rustc'
         sdk=Path(subprocess.check_output([str(rustc),'--print','sysroot'],env=dict(os.environ,RUSTUP_AUTO_INSTALL='0'),text=True).strip())
@@ -215,7 +227,8 @@ assert(version.code==0 and tool.code==0)
         result=self.run_process([str(ui.BINARY),'--source',str(self.source),'--install-dir',str(target),
             '--profile','default','--log-dir',str(base/'logs')],env,base,'default')
         self.assertNotEqual(result.returncode,0);self.assertIn('IDE artifacts not published',result.stderr)
-        self.assertIn('go',result.stderr);self.assertIn('rust',result.stderr)
+        missing=result.stderr.split('IDE artifacts not published',1)[1]
+        self.assertIn('terminal',missing);self.assertNotIn('go,',missing);self.assertNotIn('rust,',missing)
         self.assertFalse(target.exists())
         self.assertFalse((base/'stages.txt').exists());self.assertEqual(self.requests[before:],[])
 
@@ -229,6 +242,16 @@ assert(version.code==0 and tool.code==0)
         recipe=base/'sdk-recipe.json';recipe.write_text(json.dumps(dict(self.feature_recipe,components=['node-runtime'])))
         with self.assertRaisesRegex(ValueError,'Native SDK'):
             stand.packager.package(stand.BASE/'node-feature-source',recipe,base/'forbidden.zip',component='node-runtime')
+
+    def test_runtime_17_basic_languages_need_only_core_archive(self):
+        base,env,target=self.prepare('basic-language-assets');self.catalog(omit=('terminal',))
+        self.assert_ok(self.install_auto(base,env,target,'sql,bash'))
+        requests=json.loads((base/'http.json').read_text())
+        self.assertEqual([p for p in requests if p.startswith('/runtime-')],['/runtime-core'])
+        meta=json.loads((target/'runtime/forge-runtime.json').read_text())
+        self.assertEqual(meta['components'],['core'])
+        self.assertFalse((target/'runtime/sql').exists())
+        self.assert_ok(self.launch(base,env,target))
 
 if __name__=='__main__':
     print('work:',stand.BASE,'artifacts:',stand.ARTIFACTS,flush=True)

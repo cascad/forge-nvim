@@ -3,8 +3,8 @@ go	Go	go-runtime	delve,golangci-lint,gotestsum,gopls,gofumpt,golines	go,gomod,go
 rust	Rust	-	rust-analyzer,codelldb	rust
 python	Python	node-runtime	pyright,ruff,debugpy	python
 node	JS / Node.js + JSON/YAML/Markdown formatting	node-runtime	typescript-language-server,js-debug-adapter,prettier	javascript,typescript
-bash	Bash	node-runtime	bash-language-server,shfmt,shellcheck,bash-debug-adapter	bash
-sql	SQL	-	sqruff	sql
+bash	Bash: язык и форматирование	node-runtime	bash-language-server,shfmt,shellcheck	bash
+sql	SQL: язык и форматирование	-	sqruff	sql
 terminal	WezTerm / Nerd Font	-	-	-
 node-runtime	-	-	-	-
 go-runtime	-	-	-	-

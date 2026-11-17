@@ -6,7 +6,7 @@ local sql=require('forge.sql');assert(sql.tool('sqls')==native.owned('sqls'),'Ol
 vim.g.forge_sqls_executable=base..'/shadow/sqls'..(vim.fn.has('win32')==1 and '.exe' or '')
 assert(sql.tool('sqls')==vim.fn.exepath(vim.g.forge_sqls_executable),'Explicit override was ignored');vim.g.forge_sqls_executable=nil
 local ok,err=xpcall(function()
- sql.setup_lsp();local file=base..'/project/query.sql'
+ sql.setup_connections();local file=base..'/project/query.sql'
  vim.cmd.edit(vim.fn.fnameescape(file));vim.bo.filetype='sql'
  local client
  assert(vim.wait(20000,function() client=vim.lsp.get_clients({bufnr=0,name='sqls'})[1];return client and client.initialized end,20),'SQLS did not attach')

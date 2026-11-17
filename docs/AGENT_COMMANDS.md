@@ -10055,3 +10055,33 @@ TEMP/TMP/TMPDIR/NVIM_LOG_FILE на F у host, own /tmp у --rm guest. SDK не
 скачивались. Old WIP сохранён; registry stage содержит только новую SQL entry.
 OpenSpec strict, docs links/diff, frozen25 с вычетом своей registry строки,
 raw/staged journal prefix и exact allowlist; commit gc.auto=0/maintenance.auto=false.
+
+
+## 176. 2026-11-17 — базовый installer SQL/Bash и Core/Terminal assets
+
+Change simplify-language-installation: root/list, new, artifact instructions,
+apply3 tasks. Прочитаны selection, private controller, Mason/setup, inventory,
+legacy recipes и existing E2E. Удаления старых tools/data не выполнялись.
+
+Developer frontend: python -B scripts/build-installer-ui.py, offline Cargo.lock,
+F cache/work/temp. Linux первый empty-cache build отказал, повтор использовал
+read-only копию existing F cargo registry в container /tmp; SDK/crates не
+скачивались. Linux binary output .tests/ubuntu/basic-install-ui/fride-setup.
+
+Windows profile22 PASS; runtime initial6 failures ->17 PASS после private guard;
+SQL delivery initial failures fixture/plugin contract, затем4 PASS/1 failure
+в native observer ->single native recheck PASS после условного Lazy load.
+Inventory8 PASS/1 explicit-network SKIP; manual DebugTools01-03:3 PASS;
+FORGE_TEST_ID=IDE-SH-2 FORGE_BASH_CASE=shfmt manual native E2E1 PASS.
+
+Ubuntu compose run --rm --no-deps --pull never, network none; source RO, outputs
+.tests/ubuntu, большие delivery copies в own /tmp. Profiles21 PASS/1 platform
+SKIP, runtime17, SQL5 PASS. Inventory initial3 stale Neogit failures, private
+cached deps copy offline prepare ->8 PASS/1 network SKIP. Manual Bash3 и native
+format1 PASS. Не запускались Desktop/WSL/build/pull. Raw logs basic-* в
+.tests/toolchain-research и .tests/ubuntu. Общий полный регресс не повторялся.
+
+Transport Terminal CLI — явная fixture, не product GUI acceptance. Tests
+bootstrap/controller/HTTP/native SQL реальны; controlled plugins/readiness
+помечены в verification. Mac/full Default не объявлены готовыми. Strict OpenSpec,
+Markdown/diff/frozen25/raw+staged journals/exact allowlist; commit без auto GC.

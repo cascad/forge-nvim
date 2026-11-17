@@ -16,7 +16,6 @@ function M.mason()
         "bash-language-server",
         "shfmt",
         "shellcheck",
-        "sqls",
         "sqruff",
         -- DAP
         -- Delve follows Go runtime/compiler internals closely. Keep it

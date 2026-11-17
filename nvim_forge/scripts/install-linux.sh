@@ -113,8 +113,7 @@ install_deps() {
     run_sudo apt-get install -y git neovim ripgrep fd-find cmake clang unzip curl gnupg build-essential tree-sitter-cli
     if [ -z "${FORGE_NVIM_COMPONENTS:-}" ] || forge_component_enabled python; then run_sudo apt-get install -y python3 python3-venv python3-pip; fi
     if forge_component_enabled node-runtime; then run_sudo apt-get install -y nodejs npm; fi
-    if forge_component_enabled sql; then run_sudo apt-get install -y sqlite3; fi
-    if forge_component_enabled bash && [ -n "${FORGE_NVIM_COMPONENTS:-}" ]; then run_sudo apt-get install -y bash bats; fi
+    if forge_component_enabled bash && [ -n "${FORGE_NVIM_COMPONENTS:-}" ]; then run_sudo apt-get install -y bash; fi
     mkdir -p "$HOME/.local/bin"
     if ! have fd && have fdfind; then
       ln -sf "$(command -v fdfind)" "$HOME/.local/bin/fd"
@@ -129,14 +128,12 @@ install_deps() {
     run_sudo dnf install -y git neovim ripgrep fd-find cmake clang unzip curl gcc gcc-c++ make tree-sitter-cli
     if [ -z "${FORGE_NVIM_COMPONENTS:-}" ] || forge_component_enabled python; then run_sudo dnf install -y python3 python3-pip; fi
     if forge_component_enabled node-runtime; then run_sudo dnf install -y nodejs nodejs-npm; fi
-    if forge_component_enabled sql; then run_sudo dnf install -y sqlite; fi
     if forge_component_enabled go-runtime; then run_sudo dnf install -y golang; fi
     if forge_component_enabled rust; then run_sudo dnf install -y rust cargo; fi
   elif have pacman; then
     run_sudo pacman -Sy --needed --noconfirm git neovim ripgrep fd cmake clang unzip curl base-devel tree-sitter-cli
     if [ -z "${FORGE_NVIM_COMPONENTS:-}" ] || forge_component_enabled python; then run_sudo pacman -Sy --needed --noconfirm python python-pip; fi
     if forge_component_enabled node-runtime; then run_sudo pacman -Sy --needed --noconfirm nodejs npm; fi
-    if forge_component_enabled sql; then run_sudo pacman -Sy --needed --noconfirm sqlite; fi
     if forge_component_enabled go-runtime; then run_sudo pacman -Sy --needed --noconfirm go; fi
     if forge_component_enabled rust; then run_sudo pacman -Sy --needed --noconfirm rustup; fi
   else

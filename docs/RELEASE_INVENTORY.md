@@ -2,9 +2,11 @@
 
 Уточнение2026-11-17 (§267): базовый SQL/Bash теперь ограничен подсветкой и
 готовыми LSP/форматтерами. SQL runtime уже использует штатный Sqruff LSP.
-Inventory ниже ещё включает прежние advanced SQL parts/Bash DAP; следующим
-срезом пересмотреть их обязательность в Default, сохранив явный учёт существующих
-частей до обзора. Готовность прежнего package не означает, что он нужен в базе.
+§268: текущий inventory требует только Core/выбранный Terminal archives;
+языковые tools учитываются по Mason. Native SQL tools попадают в inventory
+только с явно переданным optional SQL archive. Баш debug adapter отсутствует
+в базовом профиле. Исторические списки gaps ниже относятся к прежнему составу;
+полный Default report на настоящих новых inputs ещё предстоит получить.
 
 Исходный срез2026-11-15, код694cd9e, обновления §251–259. Это состав **существующих возможностей**, а не
 предложение новых LSP. Полного Default release пока нет: production
@@ -131,7 +133,7 @@ licenses и67 plugin license sets.121/134 предоставленных license
 |7 готовых Mason packages | License documents отсутствуют у gopls/gofumpt/golines/stylua/codelldb | Добавить publisher notices из их закреплённых sources/assets |
 | Native SQL archive | License documents отсутствуют | Включить notices в SQL publisher |
 | Core/SQL/Terminal archives | Проверены manifest/files SHA и текущие обязательные runtime paths | Использовать для actual install acceptance |
-|5 language archives | Go/Rust/Python/Node/Bash не переданы | Уточнить реальный IDE payload и доставку штатных Mason tools при сборке профиля |
+|5 language archives (исторический gap §259) | Требование отменено §268 | Языковые tools готовит Mason; отдельные native archives языков не нужны |
 
 14 package IDs: bash-language-server, debugpy, delve, golangci-lint, gotestsum,
 js-debug-adapter, lua-language-server, pyright, ruff, rust-analyzer, shellcheck,

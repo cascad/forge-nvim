@@ -75,7 +75,7 @@ function M.setup_lsp()
 end
 function M.setup_connections()
     if M.connections_ready then return end
-    require('lazy').load({plugins={'nvim-lspconfig'}})
+    if not vim.lsp.config.sqls then require('lazy').load({plugins={'nvim-lspconfig'}}) end
     local on_exit=vim.lsp.config.sqls.on_exit
     vim.lsp.config('sqls',{
         on_exit=function(code,signal,id)

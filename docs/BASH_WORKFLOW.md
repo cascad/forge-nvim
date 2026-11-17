@@ -4,7 +4,11 @@
 bash-language-server и shfmt/ShellCheck. Собственный Bash backend не нужен.
 Описанные ниже run/Bats/DAP — существующие дополнительные возможности для обзора;
 их развитие и включение в Default не являются задачей базовой языковой поддержки.
-Текущий installer Bash всё ещё готовит DAP; очистка этого состава записана в плане.
+§268: базовый installer готовит BLS/shfmt/ShellCheck и использует обычный Node.
+Bash DAP не ставится/не патчится, Bats не добавляется системным менеджером ради
+этого выбора. Для существующего ручного DAP остаются явные
+`:MasonInstall bash-debug-adapter@untagged-438733f35feb8659d939` и
+`:BashDebugPrepare`; прежние файлы и возможности сохранены.
 
 Общий workflow Windows/macOS/Ubuntu использует native Bash, Bash Language
 Server, shfmt, ShellCheck и Bats. Открытие файла ничего не скачивает.

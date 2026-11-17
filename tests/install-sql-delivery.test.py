@@ -1,4 +1,4 @@
-"""IDE-BOOT-23: real SQL part -> source/UI/private install -> query/SQLite test."""
+"""IDE-BOOT-23 IDE-BOOT-35: real SQL part -> source/UI/private install -> query/SQLite test."""
 import hashlib
 import importlib.util
 import io
@@ -31,6 +31,23 @@ class SQLDelivery(ui.UI):
         with (config/'init.lua').open('a',encoding='utf-8') as f:f.write("\ndofile(assert(vim.env.FORGE_SQL_TEST_INIT))\n")
         cls.part=stand.BASE/('sql.zip' if stand.WINDOWS else 'sql.tar.gz')
         publisher.package(SQL,RUNNER,cls.part);cls.good=cls.part.read_bytes();cls.routes['/sql-part']=cls.good
+        # Advanced tools are now an explicitly supplied complete bundle.
+        # Keep the original Core archive for the basic-catalog control below.
+        if stand.WINDOWS:
+            with zipfile.ZipFile(io.BytesIO(cls.good)) as archive:
+                files={name:archive.read(name) for name in archive.namelist() if not name.endswith('/')}
+        else:
+            with tarfile.open(fileobj=io.BytesIO(cls.good),mode='r:gz') as archive:
+                files={member.name.removeprefix('./'):archive.extractfile(member).read() for member in archive if member.isfile()}
+        part=json.loads(files.pop('forge-component.json'))
+        meta_path=cls.runtime/'forge-runtime.json';meta=json.loads(meta_path.read_text())
+        for name,digest in part['files'].items():
+            dest=cls.runtime/name;dest.parent.mkdir(parents=True,exist_ok=True)
+            self_data=files[name];assert hashlib.sha256(self_data).hexdigest()==digest
+            dest.write_bytes(self_data)
+            if not stand.WINDOWS:dest.chmod(0o755 if name.startswith('sql/bin/') else 0o644)
+        meta['files'].update(part['files']);meta['paths'].extend(part['paths']);meta['probes'].extend(part['probes'])
+        meta['components'].append('sql');meta_path.write_text(json.dumps(meta),encoding='utf-8')
         cls.catalog()
     @classmethod
     def catalog(cls):
@@ -45,7 +62,7 @@ class SQLDelivery(ui.UI):
         env['PATH']=os.pathsep.join([str(Path(os.environ['SystemRoot'])/'System32'),str(Path(os.environ['SystemRoot'])/'System32/WindowsPowerShell/v1.0')]) if stand.WINDOWS else '/usr/bin:/bin'
         if stand.WINDOWS:env['PATH']+=os.pathsep+str(Path(shutil.which('git')).parent)
         return base,env,target
-    def install_sql(self,base,env,target):return self.root_entry(base,env,target,'sql',runtime=False)
+    def install_sql(self,base,env,target):return self.root_entry(base,env,target,'sql',runtime=True)
     def test_sql_01_native_delivery_without_sdk(self):
         base,env,target=self.prepared('sql-native');self.assert_ok(self.install_sql(base,env,target))
         project=base/'project';(project/'db').mkdir(parents=True);sqlite3.connect(project/'db/main.sqlite3').close()
@@ -65,9 +82,12 @@ class SQLDelivery(ui.UI):
     def test_sql_03_missing_part_keeps_previous_kit(self):
         base,env,target=self.prepared('sql-retry');self.assert_ok(self.install_sql(base,env,target))
         before=(target/'.forge-install.json').read_bytes();binary=target/'runtime/sql/bin'/('sqls.exe' if stand.WINDOWS else 'sqls');sha=hashlib.sha256(binary.read_bytes()).hexdigest()
-        self.routes['/sql-part']=b'broken archive';self.catalog()
-        result=self.install_sql(base,env,target);self.assertNotEqual(result.returncode,0)
-        self.assertEqual((target/'.forge-install.json').read_bytes(),before);self.assertEqual(hashlib.sha256(binary.read_bytes()).hexdigest(),sha)
+        source=self.runtime/'sql/bin'/('sqls.exe' if stand.WINDOWS else 'sqls');original=source.read_bytes()
+        try:
+            source.write_bytes(b'corrupt explicit bundle')
+            result=self.install_sql(base,env,target);self.assertNotEqual(result.returncode,0)
+            self.assertEqual((target/'.forge-install.json').read_bytes(),before);self.assertEqual(hashlib.sha256(binary.read_bytes()).hexdigest(),sha)
+        finally:source.write_bytes(original)
     def test_sql_04_wrong_native_version_keeps_previous_kit(self):
         base,env,target=self.prepared('sql-version');self.assert_ok(self.install_sql(base,env,target))
         marker=(target/'.forge-install.json').read_bytes();policy=self.source/'nvim_forge/scripts/native-tools.json';original=policy.read_bytes()
@@ -80,6 +100,14 @@ class SQLDelivery(ui.UI):
                     self.assertIn('Unexpected '+name+' version',log)
                     self.assertEqual((target/'.forge-install.json').read_bytes(),marker)
         finally:policy.write_bytes(original);self.publish_source(self.ui_digest)
+
+    def test_sql_05_basic_catalog_ignores_advanced_bundle(self):
+        base,env,target=self.prepared('sql-basic-only');start=len(self.requests)
+        self.assert_ok(self.root_entry(base,env,target,'sql',runtime=False))
+        self.assertNotIn('/sql-part',self.requests[start:])
+        self.assertFalse((target/'runtime/sql').exists())
+        log=(target/'log/setup-tools.log').read_text(encoding='utf-8',errors='replace')
+        self.assertIn('Tool readiness:',log);self.assertNotIn('SQL native readiness:',log)
 
 if __name__=='__main__':
     print('work:',stand.BASE,'artifacts:',stand.ARTIFACTS,flush=True)

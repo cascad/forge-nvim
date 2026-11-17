@@ -1,4 +1,4 @@
-"""spec: IDE-BOOT-29 IDE-BOOT-32. Native CLI/report/notices E2E, no SDK installs.
+"""spec: IDE-BOOT-29 IDE-BOOT-32 IDE-BOOT-35. Native CLI/report/notices E2E, no SDK installs.
 
 Small source/receipt/archive fixtures test inventory evidence; they are explicitly
 not functional IDE bundles. The separate real-input report uses authentic notices.
@@ -103,7 +103,8 @@ class ReleaseInventory(unittest.TestCase):
         data=json.loads((output/'inventory.json').read_text());self.assertEqual(data['components'],['core','go','python'])
         self.assertEqual(data['native_sdks'],['go','python','node'])
         parsers={i['name'] for i in data['items'] if i['kind']=='parser'};self.assertIn('gowork',parsers);self.assertIn('python',parsers);self.assertNotIn('rust',parsers)
-        self.assertIn({'item':'artifact:python','code':'archive_not_supplied','detail':''},data['gaps'])
+        self.assertFalse(any(g['code']=='archive_not_supplied' for g in data['gaps']))
+        self.assertFalse(any(i['kind']=='artifact' and i['name'] in ('go','python') for i in data['items']))
         self.assertTrue(any(g['item']=='mason:debugpy' for g in data['gaps']))
         self.assertNotIn(str(BASE).replace('\\','/'),json.dumps(data).replace('\\\\','/'))
 

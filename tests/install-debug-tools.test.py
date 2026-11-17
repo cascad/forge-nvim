@@ -37,7 +37,7 @@ class DebugTools(unittest.TestCase):
     def test_02_unknown_patch_is_nonzero_unchanged(self):
         file=MASON/'packages/bash-debug-adapter/extension/out/bashDebug.js';before=file.read_bytes()
         try:
-            file.write_bytes(b'unknown adapter bytes\n');base=self.base('unknown');r=invoke(base,'stage')
+            file.write_bytes(b'unknown adapter bytes\n');base=self.base('unknown');r=invoke(base,'patch')
             self.assertNotEqual(r.returncode,0);self.assertIn('Неизвестный SDK',r.stderr);self.assertEqual(file.read_bytes(),b'unknown adapter bytes\n')
         finally:file.write_bytes(before)
     def test_03_setup_ignores_external_adapter_override(self):

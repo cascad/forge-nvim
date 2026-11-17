@@ -4,8 +4,9 @@
 База: Sqruff native LSP/formatter; Bash Language Server + shfmt/ShellCheck.
 SQL DB protocol/patch/native runner и Bash DAP/WSL extensions — существующие
 дополнительные возможности для отдельного обзора; не расширять их сейчас.
-§267 отделил SQL runtime от DB startup. Следом проверить installer dependencies,
-Default/Custom состав и стоимость каждого advanced компонента перед удалением.
+§267 отделил SQL runtime от DB startup; §268 убрал обязательные advanced SQL/Bash
+dependencies из installer. Код/данные дополнительных функций остаются для обзора
+стоимости перед удалением; новые wrappers/backends ради них не добавляем.
 Небольшой общий слой tools.json (§265) выбирает пути; обнаружение SDK остаётся
 штатным и языковым. Старые выводы обзора ниже не отменяют это решение.
 

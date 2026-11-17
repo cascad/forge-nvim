@@ -12,11 +12,23 @@
 прежнюю семантику; их согласование и остальные языковые consumers идут следом.
 
 Уточнение владельца2026-11-17: SQL/Bash — подсветка и готовые LSP/форматтеры.
-§267 перевёл базовый SQL runtime на upstream Sqruff LSP/formatter. Следующий
-срез installer — убрать обязательность native sqls/forge-sqltest и Bash DAP
-из базового выбора; старые части оставить для обзора дополнительных возможностей.
-Сейчас эта очистка installer ещё не выполнена: его прежние SQL/Bash setup и
-parts сохраняются. Новые собственные DB/test/debug backends не разрабатываем.
+§267 перевёл базовый SQL runtime на upstream Sqruff LSP/formatter. §268 согласовал
+installer: SQL готовит Sqruff, Bash — BLS/shfmt/ShellCheck с обычным Node.
+SQLite CLI/Bats/Bash DAP и native SQL bundle не обязательны для базового выбора.
+Каталог автоматически загружает только Core и выбранный Terminal; tools языков
+готовит Mason, parsers — существующий setup. Языковые SDK не упаковываются.
+Явно переданные старые bundles и ручная подготовка дополнительных tools сохранены;
+их файлы и проверки не удалялись. Новые DB/test/debug backends не разрабатываем.
+Следом — пути Go/Rust и согласование setup/runtime; полная поставка Default,
+готовность всех providers/версий и native Mac остаются отдельными gates.
+
+Проверка этого среза в подготовленной native developer-среде: сначала
+`python -B scripts/build-installer-ui.py`, затем
+`python -B tests/install-profile.test.py`, `python -B tests/install-runtime.test.py`
+и `python -B tests/install-sql-delivery.test.py` (Linux/macOS: python3).
+Сборка офлайн использует имеющийся Rust SDK и cached locked crates; установщик
+пользователя её не запускает. Transport Terminal CLI в runtime-тесте — fixture;
+готовность настоящего WezTerm/шрифтов проверяет отдельный terminal suite.
 
 Требование владельца2026-11-14: Default автоматически ставит всё необходимое;
 Custom позволяет выбрать компоненты галочками с клавиатуры. Windows, Linux и

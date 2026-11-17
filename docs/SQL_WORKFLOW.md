@@ -18,8 +18,10 @@
 
 В Windows пример пути: `D:/IDE tools/sqruff.exe`. Относительные пути считаются
 по [общему контракту](TOOL_PATHS.md); `:ForgeToolPaths` показывает Sqruff в логах.
-Готовые release-пакеты не требуют Go/Rust SDK. Установщик и его прежние advanced
-SQL parts ещё требуют отдельного упрощения; runtime-срез не завершает Default.
+Готовые release-пакеты не требуют Go/Rust SDK. §268: базовый installer также
+не требует sqls/SQLLogicTest bundle или SQLite CLI. Прежний полный bundle можно
+передать явно; при его наличии native SQL tools проверяются. Публичный Default
+и готовность всех остальных компонентов ещё не завершены.
 
 Windows/Ubuntu: по2 native basic E2E PASS — LSP/lint/format без БД, project
 rules, background buffer, paths с пробелами и invalid override. Mac отдельно.

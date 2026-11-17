@@ -265,9 +265,6 @@ def generate(args):
             windows_patch_policy_sha256=file_sha(ROOT/'scripts/sdk/windows.json'),windows_source_revision=windows.get('SourceRevision'))
         search=read_json(ROOT/'scripts/sdk/ripgrep.json')
         report.item('runtime','ripgrep',source='https://github.com/BurntSushi/ripgrep',version=search['version'],license_evidence='artifact:core',policy_sha256=file_sha(ROOT/'scripts/sdk/ripgrep.json'))
-        if 'sql' in selected:
-            for name,version in sorted(catalog['native_tools'].items()):
-                report.item('native-tool',name,version=version,source='repo:scripts/sdk/'+('sql-test' if name=='forge-sqltest' else 'sqls.json'),license_evidence='artifact:sql')
         if 'terminal' in selected:
             policy=read_json(ROOT/'scripts/sdk/terminal.json')
             report.item('runtime','wezterm',version=policy['wezterm']['version'],source='https://github.com/wezterm/wezterm',license_evidence='artifact:terminal',policy_sha256=file_sha(ROOT/'scripts/sdk/terminal.json'))
@@ -277,7 +274,13 @@ def generate(args):
             id,path=value.split('=',1)
             if id in supplied or id not in selected:raise ValueError('Duplicate/unselected archive: '+id)
             supplied[id]=Path(path)
-        for id in selected:
+        # Optional old language bundles are inventoried only when supplied.
+        # The standard language tools are already covered by Mason above.
+        if 'sql' in supplied:
+            for name,version in sorted(catalog['native_tools'].items()):
+                report.item('native-tool',name,version=version,source='repo:scripts/sdk/'+('sql-test' if name=='forge-sqltest' else 'sqls.json'),license_evidence='artifact:sql')
+        required_parts=[id for id in selected if id in ('core','terminal')]
+        for id in dict.fromkeys([*required_parts,*supplied]):
             item=report.item('artifact',id)
             if id not in supplied:report.gap(item,'archive_not_supplied');continue
             try:collect_archive(report,supplied[id],item,catalog['platform'])

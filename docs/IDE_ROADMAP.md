@@ -11,9 +11,12 @@ Bats и JS entrypoints: user/project tools.json, совместимые override
 macOS — владельца. §267: SQL runtime переведён на штатный Sqruff LSP/formatter,
 без DB prerequisites при открытии; пути Sqruff общие. Windows/Ubuntu: по2 basic
 E2E и по4 advanced controls PASS. Для SQL/Bash выбран базовый объём — подсветка
-и готовые LSP/форматтеры. Следующий срез — обзор/очистка состава Default: исключить
-обязательность advanced SQL parts и Bash DAP, не удаляя старые возможности вслепую.
-Затем Go/Rust и остальные consumers, setup/runtime и providers/update policy.
+и готовые LSP/форматтеры. §268: installer больше не требует advanced SQL parts,
+Bash DAP, SQLite CLI/Bats; language tools остаются в Mason. Required archives —
+Core и выбранный Terminal, не отдельные пакеты каждого языка. Явные старые bundles
+и их проверки сохранены. Целевые Windows/Ubuntu delivery/profile/setup/inventory
+и дополнительные SQL/Bash controls проверены; Mac отдельно. Следом Go/Rust и
+остальные consumers, setup/runtime и providers/update policy; затем full Default.
 Детали build-toolchain downloads и версий решаются для этих следующих шагов;
 они не блокируют работу с путями. Core publisher остаётся d120e3a;
 новый срез не означает завершения всего контракта путей или готовности Default.

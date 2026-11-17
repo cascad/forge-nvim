@@ -109,7 +109,6 @@ function Install-Dependencies {
         Install-WingetPackage -Id "Python.Python.3.12" -Name "Python"
     }
     if (Test-ForgeComponent 'node-runtime') { Install-WingetPackage -Id 'OpenJS.NodeJS.LTS' -Name 'Node.js LTS' }
-    if (Test-ForgeComponent 'sql') { Install-WingetPackage -Id 'SQLite.SQLite' -Name 'SQLite' }
     if ($env:FORGE_NVIM_COMPONENTS -and (Test-ForgeComponent 'terminal')) { Install-WingetPackage -Id 'wez.wezterm' -Name 'WezTerm' }
 
     Update-CurrentPath

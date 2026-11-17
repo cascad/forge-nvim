@@ -1,4 +1,4 @@
-"""IDE-BOOT-10: HTTP/PTY selection и native policy, package handlers изолированы."""
+"""IDE-BOOT-10 IDE-BOOT-35: HTTP/PTY selection и native policy, package handlers изолированы."""
 import importlib.util
 import json
 import os
@@ -71,7 +71,13 @@ io.stdout:write(vim.json.encode({tools=names,versions=versions,run_on_start=opti
     def test_25_debugger_pins_all_platforms(self):
         rust=self.policy('core,rust','rust-debug-pin');bash=self.policy('core,bash','bash-debug-pin')
         self.assertIn('codelldb',rust['tools']);self.assertEqual(rust['versions']['codelldb'],'v1.12.2')
-        self.assertEqual(bash['versions']['bash-debug-adapter'],'untagged-438733f35feb8659d939')
+        self.assertNotIn('bash-debug-adapter',bash['tools']);self.assertNotIn('bash-debug-adapter',bash['versions'])
+    def test_26_basic_language_setup_without_advanced_tools(self):
+        folder=bootstrap.BASE/'basic-setup';folder.mkdir()
+        result=subprocess.run([NVIM,'-u','NONE','-i','NONE','-l',str(ROOT/'tests/diagnostics/basic-language-setup.lua'),str(ROOT),str(folder)],capture_output=True,text=True,encoding='utf-8',timeout=20)
+        (folder/'process.json').write_text(json.dumps({'code':result.returncode,'stdout':result.stdout,'stderr':result.stderr}))
+        self.assertEqual(result.returncode,0,result.stdout+result.stderr)
+        proof=json.loads((folder/'setup-proof.json').read_text());self.assertFalse(proof['advanced']);self.assertEqual(proof['install_calls'],1)
     def test_16_keyboard_toggle(self):
         key='Profile' if bootstrap.WINDOWS else 'profile'
         result,_,_,report=self.run_entry('keyboard',options={key:'Custom' if bootstrap.WINDOWS else 'custom'},ui_action='toggle')
@@ -148,9 +154,9 @@ exit 0
     def test_22_sql_package_dependency(self):
         result,log=self.package_plan('sql-packages','core,sql,go-runtime')
         self.assertEqual(result.returncode,0,result.stdout+result.stderr)
-        if bootstrap.WINDOWS:self.assertIn('GoLang.Go',log);self.assertIn('SQLite.SQLite',log)
-        elif 'brew ' in log:self.assertIn('brew install go',log);self.assertIn('brew install sqlite',log)
-        else:self.assertIn('golang-go',log);self.assertIn('sqlite3',log)
+        if bootstrap.WINDOWS:self.assertIn('GoLang.Go',log);self.assertNotIn('SQLite.SQLite',log)
+        elif 'brew ' in log:self.assertIn('brew install go',log);self.assertNotIn('brew install sqlite',log)
+        else:self.assertIn('golang-go',log);self.assertNotIn('sqlite3',log)
         self.assertNotIn('Python.Python',log);self.assertNotIn('python3',log);self.assertNotIn('rustc',log)
     @unittest.skipUnless(bootstrap.WINDOWS,'Windows package CLI exit contract')
     def test_23_package_cli_failure(self):

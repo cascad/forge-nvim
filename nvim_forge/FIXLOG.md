@@ -14317,3 +14317,48 @@ sql-basic E2E/registry/sql_project fixture, container driver, change artifacts,
 SQL_WORKFLOW/BASH_WORKFLOW/SQL_TESTS/TOOL_PATHS/SDK_STATE/LANGUAGE_MATRIX/
 FEATURE_REVIEW/INSTALLATION_PLAN/RELEASE_INVENTORY/TOOLCHAIN_INSTALLATION_APPROACHES/
 IDE_ROADMAP/README/HISTORY/AGENT_COMMANDS и эта запись.
+
+
+### 268. Базовая установка языков без обязательных дополнительных SQL и Bash tools
+
+Спека: IDE-BOOT-35 (ADDED), simplify-language-installation. Решение владельца:
+SQL/Bash — подсветка и штатные LSP/форматтеры, без развития своих DB/test/debug stacks.
+
+**Проблема.** Runtime §267 стал базовым, но installer ещё требовал native SQL
+bundle, Bash DAP, SQLite/Bats и отдельные archives каждого language checkbox.
+Это добавляло обязательные сложные компоненты и блокировало обычную установку.
+
+**Причина.** Physical runtime parts были приравнены к logical language flags,
+а setup брал advanced readiness/patch preparation по флагу языка. Publisher
+inventory повторял ту же модель, хотя language tools уже готовит Mason.
+
+**Изменение.** Bash profile: BLS/shfmt/ShellCheck с обычным Node; SQL: Sqruff.
+No-mask catalog не ставит sqls. Автоматический catalog и private install guard
+требуют только Core/выбранный Terminal. Языки сохраняются в SDK discovery,
+Mason/parser setup и явной конфигурации. Bash adapter больше не ставится и не
+патчится setup; его ручные pin/preparation сохранены. SQL readiness включается
+при фактическом наличии дополнительных native SQL executables в явно переданном
+bundle, не по языковому флагу. Legacy recipes не ставят SQLite CLI/Bats ради базы.
+Inventory учитывает Mason; дополнительные SQL tools — лишь с переданным archive.
+Никакие старые tools, patches, bundles или пользовательские данные не удалены.
+
+**Проверка/e2e.** Windows: profiles22, runtime17, SQL delivery5, inventory8+
+1 explicit-network SKIP, manual Bash preparation3, native Bash format1 PASS.
+Ubuntu: profiles21+1 platform SKIP, runtime17, SQL delivery5, inventory8+1
+network SKIP, manual Bash3, format1 PASS. Frontends собраны офлайн. Runtime
+transport использует контролируемый Terminal CLI, не GUI/font acceptance.
+Native Neovim/HTTP/hash/rollback и SQL query/SQLLogicTest настоящие; plugins
+stages в delivery fixture. Initial failures нашли оставшийся runtime language
+guard, старую plugin fixture и лишний require Lazy при готовой native config;
+исправлены, повторялись затронутые случаи. Linux stale Neogit deps обновлены
+только в private offline copy. Docker/WSL lifecycle/SDK не менялись. Mac отдельно.
+
+**Вывод.** Базовый состав согласован с upstream managers; отдельные языковые
+runtime archives не требуются. Следом Go/Rust и остальные custom paths,
+setup/runtime consistency и policy версий/build toolchain; полный Default и
+native Mac acceptance ещё открыты. Это не публикация готового release.
+
+**Файлы.** Runtime selection/private guard, components/catalog/setup и legacy
+recipes, inventory, profile/runtime/SQL/debug/inventory regressions и actors,
+change artifacts, INSTALLATION_PLAN/IDE_ROADMAP/RELEASE_INVENTORY/SDK_STATE/
+SQL_WORKFLOW/BASH_WORKFLOW/FEATURE_REVIEW/README/HISTORY/AGENT_COMMANDS/FIXLOG.

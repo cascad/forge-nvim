@@ -59,7 +59,13 @@ pub(crate) fn selected(options: &Options, plan: &Plan) -> Result<Option<String>>
     }
     let mut rows = Vec::new();
     let mut missing = Vec::new();
-    for component in &plan.components {
+    // Language tools are prepared by Mason, with native SDK prerequisites.
+    // Only IDE-owned physical runtimes belong in the archive composition.
+    for component in plan
+        .components
+        .iter()
+        .filter(|id| matches!(id.as_str(), "core" | "terminal"))
+    {
         match entries.get(&(native.as_str(), component.as_str())) {
             Some(row) => rows.push(*row),
             None => missing.push(component.as_str()),

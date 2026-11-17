@@ -9,7 +9,7 @@
 Активные среды — Windows/macOS/Ubuntu; Mint пока отложен: [границы модулей](docs/PORTABLE_ARCHITECTURE.md).
 [E2E и команды прогонов внутри VM](tests/e2e/README.md).
 [Установка одной командой: состав Default/Custom и текущая готовность](docs/INSTALLATION_PLAN.md)
-— выбор компонентов реализован; полная доставка SDK/автоматический setup ещё в разработке.
+— выбор компонентов реализован; полная готовность Default и публичная поставка ещё в разработке.
 Новый installer предназначен для отдельного комплекта с командой `fride`;
 он не обновляет обычный `nvim`, не заменяет его конфиг и не меняет системный PATH.
 Из этого checkout: Windows — `.\fride.cmd .`, Linux/macOS — `./fride .`.
@@ -18,7 +18,7 @@
 `powershell -NoProfile -ExecutionPolicy Bypass -File scripts/preview-installer.ps1`;
 Linux/macOS — `bash scripts/preview-installer.sh`. Нужен подготовленный native
 frontend; [сборка/проверки и текущая готовность](docs/INSTALLATION_PLAN.md#предпросмотр-и-native-ui--240).
-[Модульная доставка SDK](docs/INSTALLATION_PLAN.md#модульная-доставка-sdk--241):
+[Модульная доставка комплекта IDE](docs/INSTALLATION_PLAN.md#модульная-доставка-sdk--241):
 Core и выбранные зависимости, без скрытой установки системных пакетов. Release catalog
 и полный Default пока не опубликованы.
 [Обычный Git для Core](docs/INSTALLATION_PLAN.md#обычный-git-для-core--257): reuse
@@ -33,6 +33,8 @@ publisher inventory/notices и следующая проверка настоя�
 [Настроить пути Python/Node/Bash и JS entrypoints](docs/TOOL_PATHS.md):
 user/project tools.json и `:ForgeToolPaths` в общих логах.
 [Базовый SQL](docs/SQL_WORKFLOW.md): штатный Sqruff LSP/formatter без подключения БД.
+SQL/Bash installer ставит базовые языковые tools без обязательных DB/test/debug
+дополнений; каталогу нужны только Core/выбранный Terminal, языковые tools готовит Mason.
 [Команды агента и формат получаемых результатов](docs/AGENT_COMMANDS.md).
 [Клавиши рабочих панелей Space w](nvim_forge/QUICKSTART.md#общий-маршрут-рабочих-панелей--space-w).
 [Общая консоль логов IDE](docs/IDE_LOGS.md): `Space w i` / `:ForgeLogs`.

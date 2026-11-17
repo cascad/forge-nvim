@@ -178,7 +178,7 @@ local function install()
   local components = {}; for _, id in ipairs(manifest.components or {}) do components[id] = true end
   if components['node-runtime'] or components['go-runtime'] then fail('Native SDK cannot be a private IDE artifact') end
   for id in (vim.env.FORGE_NVIM_COMPONENTS or 'core'):gmatch('[^,]+') do
-    if id~='node-runtime' and id~='go-runtime' and not components[id] then fail('Runtime lacks selected component: ' .. id) end
+    if (id=='core' or id=='terminal') and not components[id] then fail('Runtime lacks selected component: ' .. id) end
   end
   event('runtime','ready')
   mkdir(target)

@@ -15,6 +15,9 @@ vim.fn.writefile({vim.json.encode({name='sqruff',schema_version='2.0',metrics={}
  source={type='registry+v1',id='pkg:generic/sqruff@0.44.0',raw={}},links={bin={[name]=name},share={},opt={}},install_options={}})},location:receipt('sqruff'))
 local catalog=require('forge.tool_catalog');catalog.mason=function() return {'sqruff'} end;catalog.parsers=function() return {} end
 package.preload['ide.backports']=function() return {all=function() return {} end} end
+package.preload['forge.plugin_setup']=function() return {prepare=function(before)
+ if before then before() end;return {fixture=true}
+end} end
 vim.api.nvim_create_user_command('Lazy',function() vim.api.nvim_create_user_command('MasonToolsInstallSync',function() end,{force=true}) end,{nargs='*',bang=true})
 vim.api.nvim_create_user_command('ForgeTreesitterInstall',function() end,{})
 local system=vim.system
