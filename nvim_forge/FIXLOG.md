@@ -14411,3 +14411,35 @@ lockfiles и Docker Desktop/WSL lifecycle не менялись; host tmp на F
 Go/Rust paths E2E и два Go observers, registry; change artifacts и руководства
 TOOL_PATHS/GO_TOOLS/LANGUAGE_MATRIX/IDE_ROADMAP/INSTALLATION_PLAN/
 TOOLCHAIN_INSTALLATION_APPROACHES/HISTORY/AGENT_COMMANDS/FIXLOG.
+
+
+### 270. Штатная SDK среда как основа и следующий селектор версий
+
+**Было.** После §269 вопрос native SDK environment либо отдельных SDK paths
+внутри всех adapters оставался открытым. Выбор установленных версий с ручным
+путём не имел конкретного места в ближайшей очереди.
+
+**Причина.** Смешались две возможности: выбор SDK среды проекта, которую
+наследует редактор, и отдельный executable override в каждом test adapter.
+Hardcoded go/cargo не запрещают явный выбор окружения нового процесса fride;
+они ограничивают независимую настройку каждой команды внутри адаптера.
+
+**Решение владельца.** Вариант1 принят: штатные managers/PATH/project rules
+остаются основой. Следующий продуктовый пункт, до providers/update policy и
+полного Default: селектор установленных Go/Rust SDK, ручной executable/root,
+user/project сохранение и «Авто». Если смена требует другого окружения fride,
+явно переоткрывать проект с восстановлением сессии; глобальные PATH/profiles/
+homes/SDK installations не менять. Running tasks/debug/tests не прерывать молча.
+GoToolchain/installer existing/manual выбор переиспользовать; неполную Go wrapper
+installation не объявлять установленным SDK. Затем общий UX Python/Node.
+
+**Проверка и вывод.** Это изменение решения/очереди, runtime не менялся.
+В план записаны E2E найденных/ручных путей, двух существующих SDK, фактической
+версии run/debug/tests/LSP, project reopen/«Авто»/invalid/no-download/no-global-
+changes на Windows/Ubuntu; Mac отдельно. OpenSpec strict и diff/index/prefix
+проверены; редакторные E2E повторно не запускались. Селектор ещё не реализован,
+поддержка отдельных SDK paths во всех адаптерах готовой не объявляется.
+
+**Файлы.** IDE_ROADMAP, TOOLCHAIN_INSTALLATION_APPROACHES, TOOL_PATHS,
+INSTALLATION_PLAN, SDK_STATE, HISTORY; proposal/design configure-go-rust-tool-paths;
+FIXLOG/AGENT_COMMANDS. Старые записи и посторонний WIP сохранены.

@@ -12,8 +12,9 @@ DAP уже имеет callback boundary. SDK metadata части adapters исп
 callbacks/args/env, отсутствие startup/download side effects и E2E реальных tools.
 
 **Non-Goals:** SDK wrappers, глобальный PATH, обновление SDK/pins, adapter patches.
-Отдельная настройка go/cargo во всех режимах ожидает решения владельца;
-первый независимый срез не обещает эту возможность.
+Владелец выбрал native окружение как основу (§270). Выбор установленного SDK
+и ручного пути — следующий продуктовый этап через штатную среду проекта,
+с явным переоткрытием при необходимости; этот срез его не реализует.
 
 ## Decisions
 
@@ -34,7 +35,8 @@ callbacks/args/env, отсутствие startup/download side effects и E2E р
 
 ## Risks / Trade-offs
 
-- SDK paths не поддерживаются всеми public adapters → отдельное решение,
-  не подменять process PATH и не вводить wrappers в этом срезе.
+- SDK executable paths не поддерживаются всеми public adapters. В этом срезе
+  process PATH не меняется. Следующий селектор может явно выбирать окружение
+  нового процесса fride; это не изменение global PATH/SDK homes или private API.
 - Active clients сохраняют старый executable → новый выбор после native restart.
 - Missing/invalid path в warmup → видимая запись, metadata не запускается.

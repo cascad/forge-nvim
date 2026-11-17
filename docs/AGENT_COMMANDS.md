@@ -10129,3 +10129,22 @@ system SDK/lockfiles. Host temp/cache на F. Native Mac отдельно.
 Local openspec validate configure-go-rust-tool-paths --type change --strict
 --no-interactive, git diff --check, frozen25 (registry минус собственная entry),
 raw/staged journal prefix и exact allowlist. Commit gc.auto=0/maintenance.auto=false.
+
+
+## 178. 2026-11-17 — решение SDK environment и следующий селектор
+
+Read-only git status, rg и Get-Content: roadmap/SDK boundaries, GoToolchain
+installed_versions, installer existing/manual SDK paths, current change
+proposal/design/spec/tasks. openspec list --json подтвердил nearest root
+F:/repo/forge-nvim; openspec status --change configure-go-rust-tool-paths --json.
+Использован openspec-update-change; owner явно выбрал вариант1, standing
+authorization покрывает правку планов без повторного подтверждения.
+
+Принято native environment по умолчанию. Следующий продуктовый срез — Go/Rust
+installed/manual SDK selector, сохранение/«Авто», явный reopen где нужен;
+потом общий UX Python/Node. Это очередь/критерии, runtime/SDK не изменялись.
+Local openspec validate configure-go-rust-tool-paths --type change --strict
+--no-interactive; git diff --check и staged --check; exact10 docs/artifacts,
+raw/staged append-only journal prefixes, frozen25/WIP сохранены. Редакторные
+E2E/Docker/WSL/downloads не запускались. Host temp/cache на F. Local commit
+gc.auto=0/maintenance.auto=false; без push.

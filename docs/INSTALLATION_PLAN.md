@@ -22,7 +22,11 @@ SQLite CLI/Bats/Bash DAP и native SQL bundle не обязательны для
 §269 добавил runtime пути gopls/rust-analyzer, gofumpt/golines/rustfmt и
 Delve/CodeLLDB. Native SDK и test runners прежние; отдельные go/cargo/gotestsum
 paths во всех адаптерах требуют upstream API, а не общей подмены PATH.
-Следом — остальные consumers и согласование setup/runtime; полная поставка Default,
+§270: вариант1 (native SDK environment) принят. Следующий продуктовый шаг —
+[селектор установленных Go/Rust SDK и ручной путь](IDE_ROADMAP.md#следующий-продуктовый-шаг--выбор-установленного-sdk),
+через штатную среду проекта; где нужно — явное переоткрытие fride. Он идёт до
+providers/update policy и полного Default; существующий installer SDK picker
+переиспользуется. Затем остальные consumers и согласование setup/runtime; полная поставка Default,
 готовность всех providers/версий и native Mac остаются отдельными gates.
 
 Проверка этого среза в подготовленной native developer-среде: сначала
