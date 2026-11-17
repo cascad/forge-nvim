@@ -15,8 +15,13 @@ E2E и по4 advanced controls PASS. Для SQL/Bash выбран базовый
 Bash DAP, SQLite CLI/Bats; language tools остаются в Mason. Required archives —
 Core и выбранный Terminal, не отдельные пакеты каждого языка. Явные старые bundles
 и их проверки сохранены. Целевые Windows/Ubuntu delivery/profile/setup/inventory
-и дополнительные SQL/Bash controls проверены; Mac отдельно. Следом Go/Rust и
-остальные consumers, setup/runtime и providers/update policy; затем full Default.
+и дополнительные SQL/Bash controls проверены; Mac отдельно. §269: пути семи
+Go/Rust IDE tools подключены к tools.json через штатные LSP/Conform/DAP APIs;
+Windows/Ubuntu: по7 новых E2E и9 native controls PASS. Go/Cargo/SDK/test runners
+остаются штатными: их отдельные paths во всех адаптерах требуют upstream API,
+в частности gotestsum fallback происходит до публичного RunSpec. Решение по
+SDK границе уточняется у владельца; скрытый PATH и runtime patches не добавлены.
+Следом остальные consumers, setup/runtime и providers/update policy; затем full Default.
 Детали build-toolchain downloads и версий решаются для этих следующих шагов;
 они не блокируют работу с путями. Core publisher остаётся d120e3a;
 новый срез не означает завершения всего контракта путей или готовности Default.

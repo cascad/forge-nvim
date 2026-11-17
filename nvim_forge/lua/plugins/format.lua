@@ -151,10 +151,13 @@ return {
             formatters = {
                 prettier = require('forge.node').prettier(),
                 sqruff = require('forge.sql_language').formatter(),
+                gofumpt = {command=require('forge.tool_paths').formatter_command('gofumpt')},
+                rustfmt = {command=require('forge.tool_paths').formatter_command('rustfmt')},
                 stylua = {
                     prepend_args = { "--indent-type", "Spaces", "--indent-width", "4", "--column-width", "120" },
                 },
                 golines = {
+                    command = require('forge.tool_paths').formatter_command('golines'),
                     -- -m 100 — макс. длина строки (совпадает с colorcolumn).
                     -- golines читает stdin, ломает длинные строки и внутри
                     -- прогоняет gofmt (по умолчанию). Финальный строгий

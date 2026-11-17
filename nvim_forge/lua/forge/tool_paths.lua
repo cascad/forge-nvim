@@ -1,4 +1,4 @@
--- spec: IDE-BOOT-33. Only path settings; native language discovery stays in consumers.
+-- spec: IDE-BOOT-33 IDE-BOOT-36. Native language discovery stays in consumers.
 local M = {}
 local cache, latest = {}, {}
 
@@ -110,6 +110,48 @@ function M.override(id, options)
     return record(id, path, source, root), true
 end
 
+function M.executable(id, options)
+    options = options or {}
+    local path, explicit = M.override(id, options)
+    if explicit then return path end
+    path = vim.fn.exepath(options.command or id)
+    return M.selected(id, path ~= '' and path or nil, options.source or 'PATH/Mason', options.root)
+end
+
+function M.formatter_command(id)
+    return function(_, ctx) return M.executable(id, {root=ctx.filename}) or id end
+end
+
+-- Keep the pinned native workspace resolver and RPC spawn options.
+function M.lsp(server, id, options)
+    options = options or {}
+    local native = vim.lsp.config[server]
+    local root_dir, command = native.root_dir, vim.deepcopy(native.cmd)
+    assert(type(root_dir)=='function' and type(command)=='table', 'Expected native LSP config: '..server)
+    vim.lsp.config(server, {
+        root_dir = function(buf, on_dir)
+            local file = vim.api.nvim_buf_get_name(buf)
+            if not M.executable(id, {root=file}) then
+                if options.missing and not vim.b[buf]['forge_missing_'..server] then
+                    vim.b[buf]['forge_missing_'..server]=true
+                    vim.schedule(function() vim.notify(options.missing, vim.log.levels.WARN, {title='LSP'}) end)
+                end
+                return
+            end
+            vim.b[buf]['forge_missing_'..server]=nil
+            root_dir(buf, on_dir)
+        end,
+        cmd = function(dispatchers, config)
+            local argv = vim.deepcopy(command)
+            argv[1] = assert(M.executable(id, {root=config.root_dir}), id..' is not prepared')
+            return vim.lsp.rpc.start(argv, dispatchers, {
+                cwd=config.cmd_cwd, env=config.cmd_env, detached=config.detached,
+            })
+        end,
+    })
+    vim.lsp.enable(server)
+end
+
 function M.report()
     local checks = {
         { 'python', function() return require('forge.python').resolve({ M.root() }) end },
@@ -119,6 +161,13 @@ function M.report()
         { 'bash-debug-adapter', function() return require('forge.bash_debug').entrypoint() end },
         { 'bats', function() return require('forge.bats').runner(vim.api.nvim_buf_get_name(0)) end },
         { 'sqruff', function() return require('forge.sql_language').tool('sqruff') end },
+        { 'gopls', function() return M.executable('gopls') end },
+        { 'rust-analyzer', function() return M.executable('rust-analyzer') end },
+        { 'gofumpt', function() return M.executable('gofumpt') end },
+        { 'golines', function() return M.executable('golines') end },
+        { 'rustfmt', function() return M.executable('rustfmt') end },
+        { 'codelldb', function() return require('forge.debug_tools').codelldb() end },
+        { 'dlv', function() return require('forge.debug_tools').report_dlv() end },
     }
     local out = {}
     for _, check in ipairs(checks) do
@@ -136,7 +185,7 @@ function M.setup()
         local store = require('forge.log_store')
         for _, entry in ipairs(entries) do store.record(entry.text, entry.error and 4 or 2, 'Tool paths') end
         vim.cmd('ForgeLogs events:Tool paths')
-    end, { desc = 'Show current Python/Node/Bash tool paths in IDE Logs' })
+    end, { desc = 'Show current language tool paths in IDE Logs' })
 end
 
 return M

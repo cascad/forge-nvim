@@ -405,6 +405,7 @@ Python реализован и проверен 2026-11-03; после возо�
 | §266 | [Ubuntu проверка путей без копирования derived venv в snapshot](../nvim_forge/FIXLOG.md#266-ubuntu-проверка-путей-без-копирования-derived-venv-в-snapshot) |
 | §267 | [Базовый SQL на штатном Sqruff LSP без подключения БД](../nvim_forge/FIXLOG.md#267-базовый-sql-на-штатном-sqruff-lsp-без-подключения-бд) |
 | §268 | [Базовая установка языков без обязательных дополнительных SQL и Bash tools](../nvim_forge/FIXLOG.md#268-базовая-установка-языков-без-обязательных-дополнительных-sql-и-bash-tools) |
+| §269 | [Пути Go и Rust IDE tools через штатные API](../nvim_forge/FIXLOG.md#269-пути-go-и-rust-ide-tools-через-штатные-api) |
 
 ## Как читать и дополнять
 

@@ -61,7 +61,7 @@ local function check(name,fallback,fn)
       e:input(':cd '..vim.fn.fnameescape(e.go)..'<CR>')
       fn(e)
       local state=e:lua([[return {requests=_G.forge_language_requests,clients=vim.tbl_map(function(c)
-        return {name=c.name,cmd=c.config.cmd,root=c.root_dir} end,vim.lsp.get_clients()),
+        return {name=c.name,cmd=type(c.config.cmd)=='table' and c.config.cmd or type(c.config.cmd),root=c.root_dir} end,vim.lsp.get_clients()),
         notifications=vim.g.forge_e2e_notifications,mode=vim.api.nvim_get_mode(),messages=vim.fn.execute('messages'),
         spawns=_G.forge_e2e_spawns,installs=vim.g.forge_e2e_installs} ]])
       vim.fn.writefile({vim.json.encode(state)},e.dir..'/language-state.json')

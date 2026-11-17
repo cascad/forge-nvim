@@ -481,6 +481,11 @@ tools.json, прежние overrides, ошибки и ForgeToolPaths. Выбор
 пока отдельный; остальные consumers остаются в плане. Общая часть отвечает за настройку пути и объяснение
 выбора; правила venv, Rust overrides, npm project tools и DAP остаются у своих
 языковых интеграций. Новый универсальный менеджер окружений не нужен.
+§269 добавил семь Go/Rust IDE executables через public LSP/Conform/DAP APIs.
+Native Go/Cargo/rustup выбор сохранён. Отдельные пути SDK/test runners во всех
+режимах пока требуют API адаптеров: gotestsum PATH fallback вызывается до
+RunSpec, `go`/`cargo` местами hardcoded. Не подменяем общий PATH и не вводим
+runtime monkey patches ради частично работающего override.
 
 Рабочий порядок для реализации:
 

@@ -14362,3 +14362,52 @@ native Mac acceptance ещё открыты. Это не публикация г
 recipes, inventory, profile/runtime/SQL/debug/inventory regressions и actors,
 change artifacts, INSTALLATION_PLAN/IDE_ROADMAP/RELEASE_INVENTORY/SDK_STATE/
 SQL_WORKFLOW/BASH_WORKFLOW/FEATURE_REVIEW/README/HISTORY/AGENT_COMMANDS/FIXLOG.
+
+
+### 269. Пути Go и Rust IDE tools через штатные API
+
+Спека: IDE-BOOT-36 (ADDED), configure-go-rust-tool-paths.
+
+**Проблема.** Общие настройки путей уже есть для Python/Node/Bash/Sqruff,
+но gopls/rust-analyzer, Go/Rust formatters и DAP оставались на PATH. Неверный
+Delve override мог молча заменяться другой установленной копией.
+
+**Причина.** Каждый consumer обнаруживал tool отдельно. Native LSP имеет
+workspace root callbacks, Conform — command callback, DAP — adapter callback;
+эти API позволяют выбрать executable без подмены SDK или глобального PATH.
+Pinned test adapters такой общей границы SDK/runner не предоставляют:
+gotestsum PATH fallback выполняется до RunSpec и меняет глобальный runner.
+
+**Изменение.** Семь ключей project/user tools.json: gopls, rust-analyzer,
+gofumpt, golines, rustfmt, dlv, codelldb. Native roots/go.work/Cargo/args/env
+сохранены. Formatter выбирается по файлу, DAP — по проекту запуска. Legacy
+Delve overrides совместимы по приоритету; неверный explicit path даёт ошибку
+с источником без fallback. CodeLLDB сохраняет штатный bundle/PATH/Mason поиск,
+Delve — async native version selection. ForgeToolPaths/health показывают пути
+без SDK probes; Rust warmup проверяет наличие выбранного сервера до metadata.
+Go/Cargo/SDK/test runners остаются штатными. Частичный gotestsum override убран
+до завершения среза; новые upstream patches, SDK wrappers и PATH hacks не добавлены.
+
+**Проверка/e2e.** На Windows и Ubuntu по7 новых native editor E2E и9 controls
+PASS в целевых запусках: LSP/format, настоящие Go tests, Delve/CodeLLDB pause/
+continue/output, user/project/invalid paths, реальный background formatter при
+другом cwd, отсутствие fallback при invalid explicit formatter и passive report.
+Controls: go.work gd/gi/gr1, Rust disabled2/warmup1, DAP discovery3, late Delve1,
+Go LSP formatter fallback1. Installs0, SDK env неизменен. Initial runner observer
+не видел native jobstart; pinned PATH fallback выявлен чтением upstream и
+gotestsum override отложен. Go observers исправлены для RPC serialization cmd
+function. CodeLLDB fixture перенесла breakpoint с macro на обычное присваивание,
+после pause снимает breakpoint перед continue. Повторялись затронутые случаи;
+общего полного регресса не было. Подробности в change verification.
+
+**Вывод.** Runtime пути основных Go/Rust IDE tools теперь общие; SDK остаётся
+языковой средой пользователя. Отдельные go/cargo/gotestsum paths во всех
+адаптерах требуют поддержанного upstream API и отдельного решения по границе.
+Следом остальные consumers, setup/runtime consistency и providers/update policy.
+Native Mac/full Default/physical keys этим срезом не закрыты. SDK/plugins/
+lockfiles и Docker Desktop/WSL lifecycle не менялись; host tmp на F.
+
+**Файлы.** Shared tool/debug paths, LSP/Conform/DAP/health/Rust warmup;
+Go/Rust paths E2E и два Go observers, registry; change artifacts и руководства
+TOOL_PATHS/GO_TOOLS/LANGUAGE_MATRIX/IDE_ROADMAP/INSTALLATION_PLAN/
+TOOLCHAIN_INSTALLATION_APPROACHES/HISTORY/AGENT_COMMANDS/FIXLOG.

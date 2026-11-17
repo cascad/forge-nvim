@@ -19,7 +19,10 @@ SQLite CLI/Bats/Bash DAP и native SQL bundle не обязательны для
 готовит Mason, parsers — существующий setup. Языковые SDK не упаковываются.
 Явно переданные старые bundles и ручная подготовка дополнительных tools сохранены;
 их файлы и проверки не удалялись. Новые DB/test/debug backends не разрабатываем.
-Следом — пути Go/Rust и согласование setup/runtime; полная поставка Default,
+§269 добавил runtime пути gopls/rust-analyzer, gofumpt/golines/rustfmt и
+Delve/CodeLLDB. Native SDK и test runners прежние; отдельные go/cargo/gotestsum
+paths во всех адаптерах требуют upstream API, а не общей подмены PATH.
+Следом — остальные consumers и согласование setup/runtime; полная поставка Default,
 готовность всех providers/версий и native Mac остаются отдельными gates.
 
 Проверка этого среза в подготовленной native developer-среде: сначала

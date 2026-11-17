@@ -29,7 +29,7 @@ T.check('SELF: GO-WORKSPACE-LANGUAGE definition/implementation/references чер
           {method=r.method,type=r.type,client=ev.data.client_id}) end})]])
     local function state()
       return e:lua([[local clients={};for _,c in ipairs(vim.lsp.get_clients({name='gopls'})) do
-        clients[#clients+1]={id=c.id,root=c.root_dir:gsub('\\','/'),cmd=c.config.cmd,
+        clients[#clients+1]={id=c.id,root=c.root_dir:gsub('\\','/'),cmd=type(c.config.cmd)=='table' and c.config.cmd or type(c.config.cmd),
           initialized=c.initialized,attached=c.attached_buffers[vim.api.nvim_get_current_buf()]==true}
         end;return {file=vim.api.nvim_buf_get_name(0):gsub('\\','/'),line=vim.api.nvim_get_current_line(),
           cursor=vim.api.nvim_win_get_cursor(0),word=vim.fn.expand('<cword>'),clients=clients,

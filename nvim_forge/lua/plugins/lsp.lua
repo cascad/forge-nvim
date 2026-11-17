@@ -436,28 +436,10 @@ return {
                     },
                 },
             })
-            -- Включаем уже подготовленный gopls из PATH/Mason bin без установки.
-            -- (тот, что собран активным Go-тулчейном).
-            if vim.fn.executable("gopls") == 1 then
-                vim.lsp.enable("gopls")
-            else
-                -- Отсутствующий Go-инструмент относится к Go, а не к первому
-                -- открытому .txt: длинный notify мог остановить UI на hit-enter.
-                vim.api.nvim_create_autocmd("FileType", {
-                    group = vim.api.nvim_create_augroup("ForgeMissingGoLsp", { clear = true }),
-                    pattern = "go", once = true,
-                    callback = function()
-                        vim.schedule(function()
-                            vim.notify(
-                                "gopls не найден в PATH — Go LSP выключен.\n"
-                                .. "Подготовь компонент Go установщиком fride\n"
-                                .. "или явно выполни :MasonToolsInstallSync.",
-                                vim.log.levels.WARN, { title = "LSP" }
-                            )
-                        end)
-                    end,
-                })
-            end
+            -- Уже готовый gopls: tools.json либо PATH/Mason, без установки.
+            require('forge.tool_paths').lsp('gopls','gopls',{
+                missing='gopls не найден в PATH/Mason или tools.json. Подготовь Go tools или выбери executable в tools.json.',
+            })
 
             -- ----------- pyright -----------
             vim.lsp.config("pyright", {
@@ -753,10 +735,11 @@ return {
             -- Mason уже добавил свой bin в PATH как dependency этого плагина.
             for server, binary in pairs({
                 pyright = "pyright-langserver", ruff = "ruff",
-                lua_ls = "lua-language-server", rust_analyzer = "rust-analyzer",
+                lua_ls = "lua-language-server",
             }) do
                 if vim.fn.executable(binary) == 1 then vim.lsp.enable(server) end
             end
+            require('forge.tool_paths').lsp('rust_analyzer','rust-analyzer')
             require('forge.node').setup_lsp()
             require('forge.bash').setup_lsp()
             require('forge.sql_language').setup()

@@ -161,15 +161,20 @@ local function unique_dlv_candidates()
     return candidates
 end
 
-local function resolve_dlv_path(candidates)
-    local override = vim.g.forge_dlv_path or vim.env.FORGE_DLV_PATH or vim.env.DLV_PATH
-    if override and override ~= "" then
-        if executable_file(override) then return override end
-        vim.notify("Configured dlv path is not executable: " .. override, vim.log.levels.WARN, { title = "DAP Go" })
-    end
+local function debug_tool_root(launch)
+    if launch and type(launch.cwd)=='string' and vim.fn.isdirectory(launch.cwd)==1 then return launch.cwd end
+    local buf=vim.g.user_dap_launch_buf
+    if type(buf)=='number' and vim.api.nvim_buf_is_valid(buf) then return vim.api.nvim_buf_get_name(buf) end
+end
+
+local function resolve_dlv_path(candidates,root)
+    local override, explicit = require('forge.debug_tools').dlv_override(root)
+    if explicit then return override end
 
     candidates = candidates or unique_dlv_candidates()
-    if #candidates > 0 then return candidates[1].path end
+    if #candidates > 0 then
+        return require('forge.tool_paths').selected('dlv',candidates[1].path,candidates[1].source,root)
+    end
     return "dlv"
 end
 
@@ -190,20 +195,7 @@ local function show_dlv_info()
     end)
 end
 
-local function codelldb_path()
-    -- Сначала пробуем PATH (`where codelldb`).
-    if vim.fn.executable("codelldb") == 1 then
-        return vim.fn.exepath("codelldb")
-    end
-    -- Потом стандартное место установки vscode-lldb на Windows.
-    local localappdata = vim.fn.expand("$LOCALAPPDATA")
-    local guess = localappdata .. "/codelldb/adapter/codelldb.exe"
-    if vim.fn.filereadable(guess) == 1 then return guess end
-    -- Mason — штатная подготовка на всех поддерживаемых ОС.
-    local mason = mason_bin("codelldb")
-    if mason then return mason end
-    return nil
-end
+local codelldb_path = require('forge.debug_tools').codelldb
 
 local function cargo_root()
     local launch_buf = vim.g.user_dap_launch_buf
@@ -1502,8 +1494,8 @@ return {
             -- =================================================================
             require('forge.bash_debug').setup(dap)
             -- spec: IDE-DAP-4 поиск нужен при запуске, не при загрузке Go/DAP.
-            dap.adapters.codelldb = function(on_config)
-                local cl = codelldb_path()
+            dap.adapters.codelldb = function(on_config,launch)
+                local cl = codelldb_path(debug_tool_root(launch))
                 if not cl then
                     vim.notify(
                         "codelldb not found (checked PATH, %LocalAppData%\\codelldb\\adapter\\, Mason).\n"
@@ -1590,7 +1582,7 @@ return {
                 original(function(adapter)
                     local resolved = vim.deepcopy(adapter)
                     require("dap.async").run(function()
-                        if resolved.executable then resolved.executable.command = resolve_dlv_path() end
+                        if resolved.executable then resolved.executable.command = resolve_dlv_path(nil,debug_tool_root(launch)) end
                         callback(resolved)
                     end)
                 end, launch)

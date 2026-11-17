@@ -10085,3 +10085,47 @@ Transport Terminal CLI — явная fixture, не product GUI acceptance. Test
 bootstrap/controller/HTTP/native SQL реальны; controlled plugins/readiness
 помечены в verification. Mac/full Default не объявлены готовыми. Strict OpenSpec,
 Markdown/diff/frozen25/raw+staged journals/exact allowlist; commit без auto GC.
+
+
+## 177. 2026-11-17 — пути Go/Rust IDE tools через public APIs
+
+configure-go-rust-tool-paths: local OpenSpec new/instructions/apply; прочитаны
+tool_paths, native pinned LSP configs, Neovim client RPC spawn, Conform command,
+Neotest-golang/rust command builders/options/RunSpec, DAP и Rust warmup.
+SDK path choice задан отдельно владельцу; независимый срез7 IDE tools завершён.
+Gotestsum override отложен из-за pinned PATH fallback до RunSpec, без patches.
+
+Основные команды (из F:/repo/forge-nvim):
+
+```powershell
+$env:TEMP='F:/repo/forge-nvim/.tests/tmp'
+$env:TMP=$env:TEMP; $env:TMPDIR=$env:TEMP
+$env:NVIM_LOG_FILE="$env:TEMP/go-rust-nvim.log"
+$env:FORGE_TEST_ID='IDE-BOOT-36'
+& .tools/neovim/windows-x64/bin/nvim.exe -l tests/e2e/go-rust-paths.test.lua
+docker compose -f tests/containers/compose.yaml run --rm --no-deps --pull never -e FORGE_TEST_ID=IDE-BOOT-36 --entrypoint bash ubuntu tests/containers/tool-paths.sh tests/e2e/go-rust-paths.test.lua
+```
+
+Native Windows/Ubuntu по7 path E2E PASS (selected aggregate). Initial4 PASS/
+1 FAIL — uv.spawn observer не видит Neotest jobstart; финальный native test
+контролирует старый runner. Отдельные повторы через FORGE_GO_RUST_PATH_CASE:
+'native Go tests', 'user paths', 'CodeLLDB override', 'Rust native LSP'.
+Background test после расширения реально вызывает Conform для другого cwd и
+проверяет invalid formatter/no fallback. CodeLLDB breakpoint fixture исправлена
+с macro line на присваивание и снятие breakpoint перед continue.
+
+Controls на каждой ОС9 PASS: go-workspace-language.test.lua (SELF:),
+rust-language.test.lua FORGE_TEST_ID=IDE-RUST-3 (2) / IDE-RUST-2 (1),
+dap-discovery.test.lua IDE-DAP-4 (3), go-passive.test.lua IDE-BOOT-4 +
+FORGE_GO_PASSIVE_CASE='поздний Delve' (1), go-language.test.lua IDE-FMT-1 +
+FORGE_GO_LANGUAGE_CASE='LSP fallback' (1). Workspace initial RPC serialization
+function отказал; после исправления двух Go observers по1 native PASS.
+Raw logs go-rust-*.txt в .tests/toolchain-research; UI snapshots/process evidence
+в .tests/editor-e2e и .tests/ubuntu/editor-e2e. Общего full регресса не было.
+
+Ubuntu — existing offline image, source RO, private /tmp prepared plugin copy;
+Desktop/WSL/build/pull не запускались. Не устанавливались SDK/tools, не менялись
+system SDK/lockfiles. Host temp/cache на F. Native Mac отдельно.
+Local openspec validate configure-go-rust-tool-paths --type change --strict
+--no-interactive, git diff --check, frozen25 (registry минус собственная entry),
+raw/staged journal prefix и exact allowlist. Commit gc.auto=0/maintenance.auto=false.

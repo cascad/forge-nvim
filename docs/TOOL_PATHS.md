@@ -1,7 +1,7 @@
 # Пути языковых сред и инструментов
 
-2026-11-17, FIXLOG §265, IDE-BOOT-33. Первый срез: Python, Node, native Bash,
-Bats и JS entrypoints инструментов Node/Bash. Чтение настроек ничего не устанавливает.
+2026-11-17, FIXLOG §265–269, IDE-BOOT-33/34/36. Python, Node, native Bash,
+Bats, Sqruff, Go/Rust LSP, форматтеры и DAP. Чтение настроек ничего не устанавливает.
 
 ## Настройки
 
@@ -59,6 +59,10 @@ JSON-экранированный `\\`.
 | `bash` | Native Bash executable | `vim.g.forge_bash_executable`, `FORGE_BASH_EXECUTABLE` |
 | `bats` | Файл Bats runner | `vim.g.forge_bats_executable`, `FORGE_BATS_EXECUTABLE` |
 | `sqruff` | Готовый Sqruff executable, LSP и formatter | `vim.g.forge_sqruff_executable`, `FORGE_SQRUFF_EXECUTABLE` |
+| `gopls`, `rust-analyzer` | Executable соответствующего LSP | При отсутствии override — PATH/Mason; native workspace discovery |
+| `gofumpt`, `golines`, `rustfmt` | Executable форматтера | PATH/Mason; прежние аргументы Conform |
+| `dlv` | Executable Delve | `vim.g.forge_dlv_path`, `FORGE_DLV_PATH`, затем `DLV_PATH` |
+| `codelldb` | Executable адаптера в готовом CodeLLDB bundle | `vim.g.forge_codelldb_path`, `FORGE_CODELLDB_PATH` |
 | `js-debug-adapter` | `dapDebugServer.js` | `vim.g.forge_js_debug_server`, `FORGE_JS_DEBUG_SERVER` |
 | `bash-debug-adapter` | `extension/out/bashDebug.js` | `vim.g.forge_bash_debug_adapter`, `FORGE_BASH_DEBUG_ADAPTER` |
 | `prettier`, `jest`, `typescript-language-server`, `bash-language-server`, `npm` | Соответствующий JS entrypoint | Штатный поиск project/shared/Mason tools сохраняется |
@@ -68,6 +72,13 @@ JS entrypoint проверяется как файл и запускается �
 в штатных launch configurations; tools.json в этом срезе содержит только пути.
 На Windows `bash` выбирает native Bash для run/tests, не меняет Linux pathBash
 WSL2 отладчика. Явная подготовка существующего Bash adapter patch остаётся прежней.
+
+Go/Rust LSP сохраняют штатные roots `go.work`/`go.mod`/Cargo workspace,
+аргументы и окружение. Форматтер выбирается по файлу, включая фоновый буфер;
+DAP — по проекту запуска. Для CodeLLDB нужен целый upstream bundle с его
+библиотеками; путь указывает на `adapter/codelldb[.exe]`. SDK и его DLL
+перемещать не нужно. Без override CodeLLDB сохраняет PATH/Windows LOCALAPPDATA/
+Mason поиск; Delve — асинхронный поиск GOBIN/GOPATH/PATH/Mason с выбором версии.
 
 ## Порядок выбора и ошибки
 
@@ -84,9 +95,22 @@ Python, который игнорировал неверный override. Пов�
 окружение процесса и project lockfiles не меняются.
 
 `:ForgeToolPaths` открывает IDE Logs с источником `Tool paths`. Для Python,
-Node, Bash, Bats, Sqruff и двух DAP entrypoints видны выбранный путь, источник, корень
+Node, Bash, Bats, Sqruff, Go/Rust tools и двух DAP entrypoints видны путь, источник, корень
 проекта и ошибка. Из tool-панели учитывается открытый код. Версии пока не
 запрашиваются: отчёт не запускает SDK CLI и не скачивает tools.
+Для Delve без override это только доступность PATH/Mason; полный выбор с
+сравнением версий выполняется при debug или явном `:DapGoDlvInfo`.
+
+## Граница настройки SDK
+
+`go`, `cargo`, `rustc`, `gotestsum` и `cargo-nextest` сейчас не являются
+поддержанными ключами tools.json. SDK выбирается штатно через окружение,
+Go toolchain и rustup/project overrides. Run/debug/tests сохраняют свои native
+интеграции. Это не обещание одного отдельного SDK override во всех режимах.
+Pinned Neotest adapters местами жёстко используют `go`/`cargo`; Go adapter
+проверяет gotestsum в PATH ещё до публичного RunSpec и меняет runner при fallback.
+Подмена argv после этого не решает задачу. Для отдельных SDK/runner paths во
+всех режимах нужен поддержанный API адаптеров; это отдельный следующий шаг.
 
 ## Проверка и оставшаяся работа
 
@@ -119,7 +143,24 @@ Driver обновляет backports только в своей временно�
 Набор зарегистрирован в общем tests/registry.lua. Полный запуск остаётся
 `scripts/test.ps1 e2e` / `scripts/test.sh e2e` в подготовленной среде.
 §267: базовый SQL Sqruff подключён и имеет2 E2E на Windows и Ubuntu.
-Далее: Go/Rust и остальные LSP/DAP/formatter consumers, согласование путей
+§269: семь Go/Rust IDE tools подключены. Семь новых E2E и девять native
+controls прошли на Windows и Ubuntu (целевые запуски, не общий полный регресс):
+реальные LSP/format, Go tests, Delve/CodeLLDB, user/project/invalid paths,
+пассивный отчёт, go.work навигация, Rust warmup/disable и late Delve override.
+macOS требует отдельного native прогона с заранее подготовленными tools.
+
+```powershell
+$env:FORGE_TEST_ID='IDE-BOOT-36'
+& .tools/neovim/windows-x64/bin/nvim.exe -l tests/e2e/go-rust-paths.test.lua
+```
+
+```sh
+FORGE_TEST_ID=IDE-BOOT-36 nvim -l tests/e2e/go-rust-paths.test.lua
+# Готовый Ubuntu image без сети/build/pull:
+docker compose -f tests/containers/compose.yaml run --rm --no-deps --pull never -e FORGE_TEST_ID=IDE-BOOT-36 --entrypoint bash ubuntu tests/containers/tool-paths.sh tests/e2e/go-rust-paths.test.lua
+```
+
+Далее: остальные LSP/DAP/formatter consumers, согласование путей
 setup/runtime, выбор версий/build toolchain и providers/update UI.
 Установщик сохраняет прежний `--sdk-path`; tools.json не является настройкой
 установки SDK. [Принятый подход](TOOLCHAIN_INSTALLATION_APPROACHES.md).

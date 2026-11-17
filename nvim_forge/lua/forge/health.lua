@@ -192,6 +192,9 @@ local function check_external_tools()
         { name = "gofumpt",    optional = true,  desc = "Go strict formatter" },
         { name = "golines",    optional = true,  desc = "Go long-line wrapper" },
         { name = "rustfmt",    optional = true },
+        { name = "gopls",      optional = true },
+        { name = "rust-analyzer", optional = true },
+        { name = "codelldb",   optional = true },
         { name = "stylua",     optional = true,  desc = "Lua formatter" },
         { name = "prettier",   optional = true },
         { name = "prettierd",  optional = true },
@@ -201,12 +204,21 @@ local function check_external_tools()
         { name = "tree-sitter", optional = true, desc = "treesitter CLI (для :TSInstall)" },
     }
 
+    local configured={gofumpt=true,golines=true,rustfmt=true,gopls=true,['rust-analyzer']=true}
     for _, t in ipairs(tools) do
-        local found = vim.fn.executable(t.name) == 1
+        local valid, path = pcall(function()
+            if t.name=='dlv' then return require('forge.debug_tools').report_dlv() end
+            if t.name=='codelldb' then return require('forge.debug_tools').codelldb() end
+            if configured[t.name] then return require('forge.tool_paths').executable(t.name) end
+            local candidate=vim.fn.exepath(t.name)
+            return candidate~='' and candidate or nil
+        end)
         local label = t.name
         if t.desc then label = label .. "  — " .. t.desc end
-        if found then
-            ok(label .. "  [" .. (vim.fn.exepath(t.name) or "") .. "]")
+        if not valid then
+            err(label..' — '..tostring(path))
+        elseif path then
+            ok(label .. "  [" .. path .. "]")
         elseif t.optional then
             local hint = INSTALL_HINTS[t.name] or "(optional)"
             info(("%s — not in PATH (install: %s)"):format(label, hint))

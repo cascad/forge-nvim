@@ -24,6 +24,11 @@ function M.warmup()
         return
     end
     local config = vim.deepcopy(vim.lsp.config.rust_analyzer)
+    local available, server = pcall(require('forge.tool_paths').executable,'rust-analyzer',{root=cwd})
+    if not available or not server then
+        log('Подготовка '..cwd..' пропущена: '..(available and 'rust-analyzer не найден.' or tostring(server)),vim.log.levels.WARN)
+        return
+    end
     local cargo = vim.env.CARGO or vim.fn.exepath('cargo')
     local command = type(config.cmd) == 'table' and config.cmd[1] or nil
     if cargo == '' or vim.fn.executable(cargo) ~= 1 then

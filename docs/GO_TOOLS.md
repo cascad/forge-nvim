@@ -24,10 +24,16 @@ GoVersion/GoToolchain и настоящие build/debug сохраняют об�
 отдельный [Mac shell trace](MACOS_STARTUP_DIAGNOSTICS.md).
 
 Delve выбирается при запуске отладки. Если инструмент установлен или изменён
-после открытия Go-файла, редактор перезапускать не требуется. Явные overrides:
-`vim.g.forge_dlv_path`, `FORGE_DLV_PATH`, `DLV_PATH`. Далее используются прежние
+после открытия Go-файла, редактор перезапускать не требуется. Явный `dlv` в
+project/user [tools.json](TOOL_PATHS.md) имеет приоритет над прежними
+`vim.g.forge_dlv_path`, `FORGE_DLV_PATH`, `DLV_PATH`. Неверный явный путь даёт
+ошибку с источником; другая копия молча не подставляется. Далее используются прежние
 GOBIN/GOPATH/bin/PATH/Mason candidates и приоритет версии. `:DapGoDlvInfo`
 явно показывает найденные варианты/выбранный путь.
+
+§269: `gopls`, `gofumpt`, `golines` тоже выбираются через tools.json. Go SDK
+и gotestsum продолжают использовать штатное окружение; отдельный ключ `go`
+не обещается всем адаптерам. `:ForgeToolPaths` показывает пути без SDK probes.
 
 Чтение GOBIN/GOPATH и версий Delve асинхронно: пока ожидается ответ, можно
 переключаться между Files и кодом, печатать. Для metadata используется локальный
