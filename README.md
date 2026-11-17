@@ -28,6 +28,8 @@ Core и выбранные зависимости, без скрытой уст�
 `fride-terminal.cmd`. Собственные config/font/window state, без font registration.
 [Состав поставки и конкретный остаток](docs/RELEASE_INVENTORY.md#единый-проверяемый-inventory--259):
 publisher inventory/notices и следующая проверка настоящего Custom Core.
+[Установка и обновление языковых инструментов](docs/TOOLCHAIN_INSTALLATION_APPROACHES.md):
+обзор Go/Rust/Python/Node/Bash/SQL и варианты схемы для обсуждения.
 [Команды агента и формат получаемых результатов](docs/AGENT_COMMANDS.md).
 [Клавиши рабочих панелей Space w](nvim_forge/QUICKSTART.md#общий-маршрут-рабочих-панелей--space-w).
 [Общая консоль логов IDE](docs/IDE_LOGS.md): `Space w i` / `:ForgeLogs`.

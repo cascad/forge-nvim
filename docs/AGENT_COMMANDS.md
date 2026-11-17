@@ -9958,3 +9958,23 @@ Build minimum Go1.26 для3 IDE tools остаётся assembly вопросо�
 OpenSpec complete-core-tool-notices/IDE-BOOT-32, FIXLOG262. AST/Lua syntax,
 strict validate, frozen25, raw/staged append-only prefixes, exact allowlist index,
 local commit gc.auto=0/maintenance.auto=false. No baseline sync/archive/publication.
+
+
+## 171. 2026-11-17 — обзор установки toolchain и языковых tools
+
+Read-only git status/log, rg/Get-Content docs/components/tool_catalog/setup и
+pinned Mason installer/managers/golang.lua. Прочитан write-page SKILL для
+структуры/редакционной проверки; сохранён установленный формат repo Markdown,
+Pages/Space не создавались. Web — первичные upstream docs/source, ссылки рядом
+с утверждениями в TOOLCHAIN_INSTALLATION_APPROACHES.md.
+
+Обновлён существующий черновик: шесть языков, три ОС, SDK/project environment,
+LSP/DAP/format/lint/tests, VS Code/Mason, updates и proposals. Новая архитектура
+не реализовывалась. Native providers и GOTOOLCHAIN policy остаются предметом
+обсуждения, прежний вопрос о выборе двух взаимоисключающих схем уточнён.
+
+Проверка: Python stdlib Markdown/local links/fences/sections, source readback,
+git diff --check, raw/staged journal prefix SHA/frozen25/exact index.
+No package installation, Docker/WSL, SDK probes, IDE E2E или OpenSpec mutations.
+TEMP/TMP при технических проверках на F, Python -B/UTF8. Коммит только восьми
+документов, gc.auto=0/maintenance.auto=false; чужой WIP не трогается.

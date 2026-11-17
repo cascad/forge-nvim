@@ -14122,3 +14122,48 @@ tests/release-inventory.test.py; OpenSpec complete-core-tool-notices;
 {baseline,core-windows,core-windows-offline,windows-e2e.txt,tools-before.json,
 native-sdks.json}; .tests/ubuntu/core-notices/{ubuntu-e2e.txt,e2e}. SDK check
 использовал GOTOOLCHAIN=local/RUSTUP_AUTO_INSTALL=0 и собственный TEMP на F.
+
+
+## 2026-11-17
+
+### 263. Обзор установки языковых инструментов перед выбором схемы Default
+
+**Связь:** IDE-138, запрос владельца на отдельный документ. Документация;
+поведение, specs, pins, SDK и установщик не изменялись.
+**Статус:** обзор завершён, дальнейшая схема ожидает обсуждения с владельцем.
+
+**Проблема.** Предыдущий вопрос противопоставлял готовые tools и Mason так,
+будто это разные менеджеры. Возникло предположение, что одна команда установки
+требует своих сборок всех языковых инструментов для каждой ОС. Владелец попросил
+сначала описать принятые подходы, остановил работу16 ноября и возобновил17 ноября.
+
+**Причина.** Смешались SDK проекта, компилятор для сборки IDE tool, поставка
+готового пакета и управление обновлениями. Ограничение нашего explicit setup
+GOTOOLCHAIN=local нельзя считать общим ограничением Go или Mason. Успешный
+пример gopls с Go1.23 не равен гарантии полной поддержки старого SDK.
+
+**Изменение.** TOOLCHAIN_INSTALLATION_APPROACHES.md: роли SDK/LSP/DAP/formatter/
+tests, каналы SDK для Windows/macOS/Ubuntu, процедуры и Mason examples для
+шести языков, подходы VS Code, native toolchain selection, зависимости Node
+для Pyright/Bash, project venv/debugpy, SQL без общего SDK, исключение patched
+sqls. Отдельны upstream facts, текущее fride и предложения. Собственная сборка
+всех tools не выбрана; следующие вопросы — explicit build-toolchain downloads,
+version/update policy и приоритет project environment. Roadmap/installation/
+SDK_STATE/README ссылаются на обзор; старая пауза заменена точкой обсуждения.
+
+**Проверка.** Прочитаны первичные docs/исходники Go extension, Go, Mason,
+Rustup/rust-analyzer, Python/Pyright/debugpy, TypeScript/js-debug, Bash tools и
+SQL tools. Сверены текущие components/catalog/setup/pins и pinned Mason Go
+provider: он выбирает GOBIN и вызывает go install, сам GOTOOLCHAIN не задаёт.
+Проверены Markdown structure/local links, source URLs и сохранность frozen25/
+append-only prefixes. Установочные примеры не исполнялись, Docker/SDK/IDE E2E
+не запускались: это документационная итерация, не native installation acceptance.
+
+**Вывод.** Основой выбора теперь служат реальные механизмы экосистем.
+Перед реализацией Default обсуждаем документ; не строим новый менеджер пакетов
+и не меняем глобальные SDK/Go settings по результатам одного сравнения.
+
+**Файлы.** docs/TOOLCHAIN_INSTALLATION_APPROACHES.md, IDE_ROADMAP.md,
+INSTALLATION_PLAN.md, SDK_STATE.md, HISTORY.md, AGENT_COMMANDS.md;
+README.md и эта запись. Технические проверки сохранены в
+.tests/toolchain-research/; материалы самого исследования — в документе.
