@@ -10015,3 +10015,21 @@ openspec validate configure-language-tool-paths --type change --strict --no-inte
 Markdown/local links, git diff --check, frozen25 и append-only raw/staged prefixes.
 В registry добавлена ровно одна строка; в index только её delta к HEAD, прежний
 чужой registry WIP сохранён. Local commit -c gc.auto=0 -c maintenance.auto=false.
+
+
+## 174. 2026-11-17 — Ubuntu E2E tool paths
+
+docker info подтвердил готовый Linux engine; image inspect без build/pull.
+compose run --rm --no-deps --pull never, network none, entrypoint nvim:
+initial4 failures до editor из-за cached backport. В собственной container /tmp
+копии plugins выполнен prepare-plugins.lua и обновлён backports manifest.
+Повтор:2 PASS/2 snapshot failures на POSIX venv links. Исправлена только fixture:
+existing snapshot_ignore для derived venv, настоящий interpreter/prefix в JSON.
+Final Ubuntu4 PASS; Windows FORGE_TEST_ID=IDE-BOOT-33 user,1 PASS. Нулевой
+prefix selection не засчитывался. Логи: paths-ubuntu[-prepared|-final].txt и
+paths-windows-artifacts.txt в .tests/toolchain-research/.
+
+Выполненный script перенесён в tests/containers/tool-paths.sh, byte guard
+подтвердил отличие лишь комментарием. Docker Desktop/WSL lifecycle не менялся.
+OpenSpec strict, Markdown links/diff/frozen25/raw+staged journal prefixes;
+exact allowlist commit, auto gc/maintenance выключены. SDK/release/test WIP сохранены.

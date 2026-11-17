@@ -92,7 +92,7 @@ Node, Bash, Bats и двух DAP entrypoints видны выбранный пу�
 Windows: четыре редакторных E2E прошли. Проверены user/project/legacy priority,
 настоящая venv, NodeRunFile и BashRunFile, JS argv с пробелами, неверные пути,
 повреждённый JSON, смена проекта, обновление config и отчёт из панели.
-Ubuntu в этой итерации не запущен: Linux engine Docker недоступен.
+Ubuntu: те же четыре E2E прошли (§266), включая native Python symlinks в venv.
 macOS — отдельный native прогон владельцем. Подготовленные editor/Node deps и
 обычные Python/Bash нужны заранее; тест не устанавливает SDK.
 
@@ -104,6 +104,16 @@ $env:FORGE_TEST_ID='IDE-BOOT-33'
 ```sh
 FORGE_TEST_ID=IDE-BOOT-33 nvim -l tests/e2e/tool-paths.test.lua
 ```
+
+Готовый Ubuntu image, офлайн и без build/pull:
+
+```sh
+docker compose -f tests/containers/compose.yaml run --rm --no-deps --pull never --entrypoint bash ubuntu tests/containers/tool-paths.sh
+```
+
+Driver обновляет backports только в своей временной копии prepared plugins;
+образ и его SDK не изменяются. Derived venv не архивируется как исходники
+проекта; фактический Python/prefix сохраняется в python-selection.json.
 
 Набор зарегистрирован в общем tests/registry.lua. Полный запуск остаётся
 `scripts/test.ps1 e2e` / `scripts/test.sh e2e` в подготовленной среде.

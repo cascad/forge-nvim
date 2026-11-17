@@ -13,7 +13,10 @@ Python/Git Bash. SDK не скачивались; Python venv создан с --
   .tests/toolchain-research/paths-foreign-filter.txt. Это guard, не acceptance.
 - Source behaviour: никакой установки/probe в startup/report, native SDK env
   не переназначается; ошибки explicit path не продолжают discovery.
-- Ubuntu: недоступен dockerDesktopLinuxEngine; Docker/WSL lifecycle не менялся.
+- Ubuntu после запуска engine владельцем:4 PASS/0 FAIL/0 SKIP;
+  .tests/toolchain-research/paths-ubuntu-final.txt. Cached backports обновлены
+  офлайн в own copy. Snapshot исключает derived venv с symlinks, реальные
+  interpreter/prefix сохранены отдельно. Native Windows targeted legacy/venv:1 PASS.
 - macOS: не запускалось, native прогон владельцем по docs/TOOL_PATHS.md.
 
 Контроль коммита: отдельная registry delta без включения прежнего WIP,

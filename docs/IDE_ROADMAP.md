@@ -7,8 +7,8 @@ upstream-пакеты с настраиваемыми путями; рефере
 [Решение и порядок реализации](TOOLCHAIN_INSTALLATION_APPROACHES.md#принятый-подход-fride--2026-11-17).
 §265: первый срез [настройки путей](TOOL_PATHS.md) реализован для Python/Node/Bash,
 Bats и JS entrypoints: user/project tools.json, совместимые overrides, явные
-ошибки и ForgeToolPaths в общих логах. Windows4 E2E PASS; Ubuntu ждёт доступного
-Linux engine, macOS — владельца. Далее — Go/Rust/SQL и остальные LSP/DAP/formatter
+ошибки и ForgeToolPaths в общих логах. Windows4 и Ubuntu4 E2E PASS (§266);
+macOS — владельца. Далее — Go/Rust/SQL и остальные LSP/DAP/formatter
 consumers, согласование setup/runtime; затем providers/update policy/Default.
 Детали build-toolchain downloads и версий решаются для этих следующих шагов;
 они не блокируют работу с путями. Core publisher остаётся d120e3a;

@@ -29,7 +29,9 @@ local function check(name,prepare,fn)
   T.check('IDE-BOOT-33 '..name,function()
     local e
     local ok,err=xpcall(function()
-      e=require('editor').start(root,{timeout=90000,prepare=function(project,env,runtime)
+      e=require('editor').start(root,{timeout=90000,
+        snapshot_ignore={['venv with spaces']=true,['active venv']=true},
+        prepare=function(project,env,runtime)
         -- No user settings leak into the private editor runtime.
         env.FORGE_PYTHON_PATH,env.FORGE_NODE_EXECUTABLE,env.FORGE_BASH_EXECUTABLE='','',''
         env.FORGE_JS_DEBUG_SERVER,env.FORGE_BASH_DEBUG_ADAPTER,env.FORGE_BATS_EXECUTABLE='','',''
@@ -70,6 +72,7 @@ end,function(e)
     local r=vim.system({p,'-c','import sys; print(sys.prefix)'},{text=true}):wait(5000)
     return {path=p,code=r.code,output=r.stdout} ]])
   T.eq(result.code,0);assert(result.path:find('venv with spaces',1,true));assert(result.output:find('venv with spaces',1,true))
+  json(e.dir..'/python-selection.json',result)
   e:input(':edit run.js<CR>');e:wait('JS file',function() return e:current_ft()=='javascript' end)
   e:lua([[_G.path_task=require('forge.node').run_file()]])
   e:wait('NodeRunFile native result',function() return vim.fn.filereadable(e.project..'/node result.txt')==1 end,10000)

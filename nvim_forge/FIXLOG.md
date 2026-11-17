@@ -14244,3 +14244,35 @@ SDK installation или дополнительные DAP argv. Existing SDK ок
 bash_debug.lua/bats.lua, tests/e2e/tool-paths.test.lua, собственная строка
 registry.lua, change artifacts, TOOL_PATHS/roadmap/installation/SDK_STATE/
 TOOLCHAIN_INSTALLATION_APPROACHES/README/HISTORY/AGENT_COMMANDS и эта запись.
+
+
+### 266. Ubuntu проверка путей без копирования derived venv в snapshot
+
+Спека: IDE-BOOT-33 (FIX), configure-language-tool-paths, задача1.4.
+
+**Проблема.** После включения Docker владельцем Ubuntu E2E сначала не дошёл
+до редактора из-за старого cached Neogit backport, затем2 случая упали при
+сохранении проекта: snapshot copier отвергает symlinks настоящей POSIX venv.
+
+**Причина.** Image подготовлен с прежними backports. Copy helper предназначен
+для исходников, а новая fixture положила derived SDK окружение внутрь проекта.
+Работа resolver и native процессов прошла, отказ возник при архивировании.
+
+**Изменение.** Offline driver копирует prepared deps в собственный /tmp и
+применяет текущие backports/manifest там. Fixture использует существующий
+snapshot_ignore для двух созданных venv; interpreter/prefix сохраняет отдельным
+JSON. Runtime код и общий copier не менялись. Driver вынесен в
+ tests/containers/tool-paths.sh; образ/SDK/Docker/WSL не перенастраивались.
+
+**Проверка/e2e.** Ubuntu final4 PASS/0 FAIL/0 SKIP, реальные Python/Node/Bash,
+проектные/пользовательские пути, ошибки и panel context. Windows targeted
+legacy/active venv1 PASS; прежний full Windows4 PASS сохранён. Офлайн/network none,
+без build/pull/download. Committed driver byte-identical исполненному кроме
+комментария. OpenSpec strict, docs/diff, frozen25 и journal prefixes проверены.
+
+**Вывод.** Первый срез подтверждён Windows/Ubuntu; Mac остаётся native owner
+gate. Следующий продуктовый срез — общие пути существующих SQL tools, затем
+остальные языковые consumers/setup. Артефакты: .tests/toolchain-research/paths-*.
+
+**Файлы.** tests/e2e/tool-paths.test.lua, tests/containers/tool-paths.sh,
+TOOL_PATHS/IDE_ROADMAP/HISTORY/AGENT_COMMANDS/FIXLOG и tasks/verification change.
