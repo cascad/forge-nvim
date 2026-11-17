@@ -30,6 +30,8 @@ Core и выбранные зависимости, без скрытой уст�
 publisher inventory/notices и следующая проверка настоящего Custom Core.
 [Установка и обновление языковых инструментов](docs/TOOLCHAIN_INSTALLATION_APPROACHES.md):
 обзор Go/Rust/Python/Node/Bash/SQL, выбранный подход и план настройки путей.
+[Настроить пути Python/Node/Bash и JS entrypoints](docs/TOOL_PATHS.md):
+user/project tools.json и `:ForgeToolPaths` в общих логах.
 [Команды агента и формат получаемых результатов](docs/AGENT_COMMANDS.md).
 [Клавиши рабочих панелей Space w](nvim_forge/QUICKSTART.md#общий-маршрут-рабочих-панелей--space-w).
 [Общая консоль логов IDE](docs/IDE_LOGS.md): `Space w i` / `:ForgeLogs`.

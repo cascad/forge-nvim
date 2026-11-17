@@ -9992,3 +9992,26 @@ git diff --check, frozen25 SHA, raw append-only journal prefixes, staged journal
 prefixes и exact eight-doc index. Baseline/result в .tests/toolchain-research/;
 TEMP/TMP/TMPDIR на F. No installs, Docker/WSL или IDE E2E. Local commit с
 -c gc.auto=0 -c maintenance.auto=false; посторонний WIP сохранён.
+
+
+## 173. 2026-11-17 — user/project tool paths, IDE-BOOT-33
+
+openspec list/status/instructions и new change configure-language-tool-paths;
+прочитаны контекст, proposal/design/tasks/spec и существующие consumers. Apply
+workflow в разрешённом владельцем плане; новые вопросы о разрешении не нужны.
+Небольшой JSON path resolver, native consumers и ForgeToolPaths; без SDK install.
+
+Windows, TEMP/TMP/TMPDIR/NVIM_LOG_FILE на F, native private SDK Neovim:
+FORGE_TEST_ID=IDE-BOOT-33 nvim -l tests/e2e/tool-paths.test.lua.
+Initial3 PASS/1 test separator mismatch; targeted legacy/project runs после
+исправления и проверки panel context; final4 PASS/0 FAIL. Отдельный foreign
+FORGE_TEST_ID=WT-CLIP с nonexistent FORGE_E2E_NODE_DEPS:0 cases/exit0, без SDK.
+Raw logs в .tests/toolchain-research/paths-windows*.txt; editor artifacts в
+.tests/editor-e2e/. Процессы Python/Node/Bash настоящие, venv --without-pip.
+
+Read-only docker info --format {{.OSType}}: engine channel absent. Docker/WSL
+не запускались/не перенастраивались. Ubuntu и native Mac не объявлены проверенными.
+openspec validate configure-language-tool-paths --type change --strict --no-interactive;
+Markdown/local links, git diff --check, frozen25 и append-only raw/staged prefixes.
+В registry добавлена ровно одна строка; в index только её delta к HEAD, прежний
+чужой registry WIP сохранён. Local commit -c gc.auto=0 -c maintenance.auto=false.

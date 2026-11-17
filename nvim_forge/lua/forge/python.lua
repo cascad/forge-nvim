@@ -10,27 +10,29 @@ local function python_in(env)
     return env..(vim.fn.has('win32')==1 and '/Scripts/python.exe' or '/bin/python')
 end
 function M.resolve(roots)
-    local explicit=vim.g.forge_python_path
-    if type(explicit)~='string' or explicit=='' then explicit=vim.env.FORGE_PYTHON_PATH end
-    local selected=executable(explicit)
-    if selected then return selected end
+    local paths=require('forge.tool_paths')
+    local selected,explicit=paths.override('python',{root=roots and roots[1],
+        global='forge_python_path',env='FORGE_PYTHON_PATH'})
+    if explicit then return selected end
+    local function found(path,source) return paths.selected('python',path,source,roots and roots[1]) end
     selected=executable(python_in(vim.env.VIRTUAL_ENV))
-    if selected then return selected end
+    if selected then return found(selected,'VIRTUAL_ENV') end
     local conda=vim.env.CONDA_PREFIX
     selected=executable(conda and conda~='' and (conda..(vim.fn.has('win32')==1 and '/python.exe' or '/bin/python')) or nil)
-    if selected then return selected end
+    if selected then return found(selected,'CONDA_PREFIX') end
     for _,root in ipairs(roots or {}) do
         for _,folder in ipairs({'.venv','venv','.env','env'}) do
             selected=executable(python_in(root..'/'..folder))
-            if selected then return selected end
+            if selected then return found(selected,'project venv') end
         end
     end
     for _,name in ipairs({'python3','python'}) do
         if vim.fn.executable(name)==1 then
             local path=vim.fn.exepath(name)
-            return path~='' and path or name
+            return found(path~='' and path or name,'PATH')
         end
     end
+    paths.selected('python',nil,'PATH',roots and roots[1])
     return 'python'
 end
 function M.before_pyright_init(_,config)

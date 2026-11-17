@@ -15,14 +15,17 @@ function M.root(path)
     return stat and stat.type == 'directory' and path or vim.fs.dirname(path) or vim.fn.getcwd()
 end
 
-function M.executable()
-    local explicit = vim.g.forge_node_executable or vim.env.FORGE_NODE_EXECUTABLE
-    if explicit and explicit ~= '' then return vim.fn.executable(explicit) == 1 and explicit or nil end
+function M.executable(path)
+    local paths = require('forge.tool_paths')
+    local selected, explicit = paths.override('node', {root=path,global='forge_node_executable',env='FORGE_NODE_EXECUTABLE'})
+    if explicit then return selected end
     local found = vim.fn.exepath('node')
-    return found ~= '' and found or nil
+    return paths.selected('node', found ~= '' and found or nil, 'PATH', path)
 end
 
 function M.script(package, entry, path, bin)
+    local selected, explicit = require('forge.tool_paths').override(package, {root=path,kind='file'})
+    if explicit then return selected end
     local root = M.root(path)
     local roots = { root }
     for parent in vim.fs.parents(root) do roots[#roots + 1] = parent end
@@ -56,7 +59,7 @@ function M.script(package, entry, path, bin)
 end
 
 function M.command(package, entry, path, bin)
-    local node, script = M.executable(), M.script(package, entry, path, bin)
+    local node, script = M.executable(path), M.script(package, entry, path, bin)
     if node and script then return { node, script } end
 end
 
@@ -87,10 +90,11 @@ function M.prettier()
 end
 
 function M.debug_server()
-    local explicit = vim.g.forge_js_debug_server or vim.env.FORGE_JS_DEBUG_SERVER
-    if explicit and explicit ~= '' then return file(explicit) and explicit or nil end
+    local paths = require('forge.tool_paths')
+    local selected, explicit = paths.override('js-debug-adapter', {kind='file',global='forge_js_debug_server',env='FORGE_JS_DEBUG_SERVER'})
+    if explicit then return selected end
     local candidate = join(vim.fn.stdpath('data'), 'mason/packages/js-debug-adapter/js-debug/src/dapDebugServer.js')
-    return file(candidate) and candidate or nil
+    return paths.selected('js-debug-adapter', file(candidate) and candidate or nil, 'Mason')
 end
 
 function M.debug_ready()

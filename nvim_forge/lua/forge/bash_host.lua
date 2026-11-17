@@ -10,11 +10,12 @@ local function usable(path)
     if win and (normalized:match('/system32/bash%.exe$') or normalized:match('/sysnative/bash%.exe$')) then return nil end
     return resolved
 end
-function M.executable()
-    local explicit=vim.g.forge_bash_executable or vim.env.FORGE_BASH_EXECUTABLE
-    if explicit and explicit~='' then return usable(explicit) end
+function M.executable(root)
+    local paths=require('forge.tool_paths')
+    local selected,explicit=paths.override('bash',{root=root,global='forge_bash_executable',env='FORGE_BASH_EXECUTABLE',validate=usable})
+    if explicit then return selected end
     local path=usable(vim.fn.exepath('bash'))
-    if path then return path end
+    if path then return paths.selected('bash',path,'PATH',root) end
     if win then
         local git=vim.fn.exepath('git')
         local candidates={}
@@ -22,8 +23,9 @@ function M.executable()
         for _,dir in ipairs({vim.env.ProgramFiles or '',vim.env['ProgramFiles(x86)'] or ''}) do
             if dir~='' then candidates[#candidates+1]=vim.fs.joinpath(dir,'Git/bin/bash.exe') end
         end
-        for _,candidate in ipairs(candidates) do local found=usable(candidate);if found then return found end end
+        for _,candidate in ipairs(candidates) do local found=usable(candidate);if found then return paths.selected('bash',found,'Git Bash',root) end end
     end
+    return paths.selected('bash',nil,'native discovery',root)
 end
 function M.cygpath(bash)
     if not win then return nil end

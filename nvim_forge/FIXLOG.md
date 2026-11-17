@@ -14202,3 +14202,45 @@ SDK/tools не устанавливались, Docker/WSL и IDE E2E не зап
 **Файлы.** TOOLCHAIN_INSTALLATION_APPROACHES.md, IDE_ROADMAP.md,
 INSTALLATION_PLAN.md, SDK_STATE.md, README.md, HISTORY.md, AGENT_COMMANDS.md
 и эта запись.
+
+
+### 265. Пути Python Node Bash из настроек пользователя и проекта
+
+**Связь:** IDE-138, решение §264. Спека: IDE-BOOT-33 (ADDED), change
+configure-language-tool-paths. Первый runtime-срез, не все языковые consumers.
+
+**Проблема.** Нужны custom SDK/tool paths без правки kit. Python игнорировал
+неверный explicit override и незаметно выбирал другой interpreter; существующие
+Node/Bash overrides не имели общего project/user порядка и отчёта.
+
+**Причина.** Настройки и проверки были распределены по языковым модулям.
+В Python проверка invalid path продолжала native discovery. Общая декларативная
+конфигурация и источник выбора отсутствовали.
+
+**Изменение.** Bounded64KiB tools.json: project > user > прежние vim.g/env >
+native discovery. Строковые executable/file paths, относительные пути, сохранение
+venv symlink, отдельная проверка JS entrypoint. Подключены Python/Node/native
+Bash/Bats/Node package scripts и два DAP entrypoints. Invalid explicit selection
+даёт ошибку источника, не fallback. ForgeToolPaths показывает пути/ошибки в общих
+IDE Logs; из панели учитывается код текущей вкладки. Startup лишь регистрирует
+команду, не запускает SDK probes/install. Native discovery остаётся у интеграций.
+
+**Проверка/e2e.** Windows: финальный целевой tests/e2e/tool-paths.test.lua —
+4 PASS/0 FAIL/0 SKIP: реальная venv, NodeRunFile/BashRunFile, argv с пробелами,
+user/project/legacy, invalid legacy Python, malformed config, переключение
+проекта/refresh и logs из панели. В первом прогоне сравнение Bash Windows path
+ошибочно различало разделители; тест исправлен, целевой сценарий и финальный
+набор прошли. Foreign ID с отсутствующими Node deps: ожидаемые0 cases/exit0,
+без проверки SDK. SDK не скачивались. Ubuntu не запускался: read-only docker info
+показал отсутствие dockerDesktopLinuxEngine; lifecycle Docker/WSL не менялся.
+Mac не проверен. OpenSpec strict, docs/diff и frozen/raw/staged journal guards.
+
+**Вывод.** Первый работающий общий контракт путей готов на Windows. Дальше
+подтвердить Ubuntu/macOS, подключить остальные языковые consumers и setup;
+providers/update policy остаются следующими срезами. tools.json пока не задаёт
+SDK installation или дополнительные DAP argv. Existing SDK окружение сохранено.
+
+**Файлы.** forge/tool_paths.lua, init.lua, forge/python.lua/node.lua/bash_host.lua/
+bash_debug.lua/bats.lua, tests/e2e/tool-paths.test.lua, собственная строка
+registry.lua, change artifacts, TOOL_PATHS/roadmap/installation/SDK_STATE/
+TOOLCHAIN_INSTALLATION_APPROACHES/README/HISTORY/AGENT_COMMANDS и эта запись.

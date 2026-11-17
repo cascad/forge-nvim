@@ -5,13 +5,14 @@
 **Текущая точка:** владелец выбрал штатные менеджеры экосистем и готовые
 upstream-пакеты с настраиваемыми путями; референс — VS Code.
 [Решение и порядок реализации](TOOLCHAIN_INSTALLATION_APPROACHES.md#принятый-подход-fride--2026-11-17).
-Ближайший шаг — согласованный выбор SDK/tools: настройки пользователя и проекта,
-явные executable/adapter paths, штатное обнаружение, понятные ошибки и источник
-выбора в логах. Сохраняем существующие Python/Node/Bash overrides и правила SDK.
-Затем — установка через providers, политика обновлений и настоящий Default.
+§265: первый срез [настройки путей](TOOL_PATHS.md) реализован для Python/Node/Bash,
+Bats и JS entrypoints: user/project tools.json, совместимые overrides, явные
+ошибки и ForgeToolPaths в общих логах. Windows4 E2E PASS; Ubuntu ждёт доступного
+Linux engine, macOS — владельца. Далее — Go/Rust/SQL и остальные LSP/DAP/formatter
+consumers, согласование setup/runtime; затем providers/update policy/Default.
 Детали build-toolchain downloads и версий решаются для этих следующих шагов;
-они не блокируют работу с путями. Последний runtime/publisher шаг — d120e3a;
-обзор и принятое решение ещё не являются реализацией нового контракта путей.
+они не блокируют работу с путями. Core publisher остаётся d120e3a;
+новый срез не означает завершения всего контракта путей или готовности Default.
 
 Статус: базовые e2e настоящего nvim_forge работают на Windows и Ubuntu;
 фоновые установки инструментов редактора перенесены в явный setup.

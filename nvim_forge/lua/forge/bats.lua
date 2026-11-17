@@ -4,17 +4,20 @@ local host=require('forge.bash_host')
 local function file(path) return path and vim.fn.filereadable(path)==1 end
 local function warn(text) vim.notify(text,vim.log.levels.WARN,{title='Bats'}) end
 local function runner(path)
-    local explicit=vim.g.forge_bats_executable or vim.env.FORGE_BATS_EXECUTABLE
-    if explicit and explicit~='' then return file(explicit) and explicit or nil end
+    local paths=require('forge.tool_paths')
+    local selected,explicit=paths.override('bats',{root=path,kind='file',global='forge_bats_executable',env='FORGE_BATS_EXECUTABLE'})
+    if explicit then return selected end
+    path=path and path~='' and path or vim.fn.getcwd()
     local root=require('forge.bash').root(path)
     for dir in vim.fs.parents(path) do
         local candidate=dir..'/node_modules/bats/bin/bats'
-        if file(candidate) then return candidate end
+        if file(candidate) then return paths.selected('bats',candidate,'project node_modules',path) end
         if dir==root then break end
     end
     local found=vim.fn.exepath('bats')
-    if found~='' then return vim.uv.fs_realpath(found) or found end
+    return paths.selected('bats',found~='' and (vim.uv.fs_realpath(found) or found) or nil,'PATH',path)
 end
+M.runner=runner
 function M.root(path)
     local root=require('forge.bash').root(path)
     -- Neotest присоединяет native separator и сравнивает с именем buffer.

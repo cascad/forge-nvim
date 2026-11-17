@@ -13,11 +13,13 @@ local function sdk_source(script)
     return raw,source,vim.fn.sha256(source)
 end
 local function entrypoint()
-    local explicit=vim.g.forge_bash_debug_adapter or vim.env.FORGE_BASH_DEBUG_ADAPTER
-    if explicit and explicit~='' then return file(explicit) and explicit or nil end
+    local paths=require('forge.tool_paths')
+    local selected,explicit=paths.override('bash-debug-adapter',{kind='file',global='forge_bash_debug_adapter',env='FORGE_BASH_DEBUG_ADAPTER'})
+    if explicit then return selected end
     local path=vim.fs.joinpath(vim.fn.stdpath('data'),'mason/packages/bash-debug-adapter/extension/out/bashDebug.js')
-    return file(path) and path or nil
+    return paths.selected('bash-debug-adapter',file(path) and path or nil,'Mason')
 end
+M.entrypoint=entrypoint
 local function prepare_script(script)
     local temporary
     local ok,why=pcall(function()

@@ -126,4 +126,5 @@ return {
   { file = 'tests/wezterm/conpty/chords.test.py', suite = 'conpty', kind = 'py', timeout = 400 },
   { file = 'tests/trace.test.lua', suite = 'trace' },
   { file = 'tests/lib/trace.test.lua', suite = 'trace' },
+  { file = 'tests/e2e/tool-paths.test.lua', suite = 'e2e', timeout = 240 },
 }
