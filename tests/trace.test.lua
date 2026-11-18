@@ -15,15 +15,32 @@ local trace = require('trace')
 -- с причиной (не PASS). Имена начинаются с `TRACE:`, а не с ID: в сводку по ID
 -- trace не попадает.
 
-local target = B.root
-if arg and arg[1] and arg[1] ~= '' then
-  target = (vim.fn.fnamemodify(arg[1], ':p'):gsub('\\', '/'):gsub('/+$', ''))
+local target, change, catalog_json = B.root, nil, nil
+local i, positional = 1, false
+while arg and i <= #arg do
+  local value = arg[i]
+  if value == '--change' or value == '--catalog-json' then
+    i = i + 1
+    if not arg[i] or arg[i] == '' then error(value .. ' требует значение') end
+    if value == '--change' then change = arg[i] else catalog_json = vim.fn.fnamemodify(arg[i], ':p') end
+  elseif value:sub(1, 2) == '--' or positional then
+    error('Неизвестный аргумент trace: ' .. value)
+  else
+    target = vim.fn.fnamemodify(value, ':p'):gsub('\\', '/'):gsub('/+$', '')
+    positional = true
+  end
+  i = i + 1
 end
 
-local ok, res = pcall(trace.collect, target)
+local ok, res = pcall(trace.collect, target, { change = change })
 if not ok then
   T.check('TRACE: индекс и реестр дерева ' .. target .. ' читаются', function() error(res, 0) end)
   T.finish()
+end
+
+if catalog_json then
+  vim.fn.mkdir(vim.fs.dirname(catalog_json), 'p')
+  vim.fn.writefile({ vim.json.encode(res.catalog) }, catalog_json)
 end
 
 for _, c in ipairs(trace.CATEGORIES) do
@@ -36,6 +53,12 @@ for _, c in ipairs(trace.CATEGORIES) do
     T.skip('TRACE: ' .. c.title, c.none)
   else
     T.check('TRACE: ' .. c.title, function() end)
+  end
+end
+
+for _, req in ipairs(res.catalog.requirements) do
+  if req.state == 'PENDING' then
+    T.skip('TRACE: E2E PENDING ' .. req.id .. ' — ' .. req.file, 'change не завершён; registered E2E ещё нет')
   end
 end
 

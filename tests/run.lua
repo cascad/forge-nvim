@@ -753,6 +753,7 @@ local report = {
     } or nil,
   },
   files = FILES,
+  e2e_catalog = require('trace').catalog(ROOT, INDEX, ARGS.registry == P.registry and REGISTRY or nil),
   ids = IDS,
   summary = {
     ids_total = n_ids,

@@ -100,6 +100,7 @@ function M.parse_spec(text)
       cur = nil
     elseif cur then
       local p = line:match('^Проверка:%s*(.-)%s*$')
+        or line:match('^Платформы:.-%sПроверка:%s*(.-)%s*$')
       if p then
         local parsed = M.parse_proverka(p)
         parsed.line = n
@@ -198,6 +199,8 @@ function M.build(root)
     order = {},      -- ID из openspec/specs по порядку: capability, затем номер
     areas = {},      -- множество областей (WT, MAC)
     added = {},      -- ID → { id, title, change, file } — ADDED открытых changes
+    changed = {},    -- полные ADDED/MODIFIED contracts активных changes
+    changes = {},    -- существующие активные change names, включая tooling
     archived = {},   -- ID → { id, change, file }
     path_refs = {},  -- 'tests/…' → { ID… } из строк `Проверка:`
     manual = { present = false, files = {}, by_id = {} },
@@ -228,11 +231,24 @@ function M.build(root)
   local changes_dir = root .. '/openspec/changes'
   for _, change in ipairs(list(changes_dir, true)) do
     if change ~= 'archive' then
+      idx.changes[change] = true
       for _, cap in ipairs(list(changes_dir .. '/' .. change .. '/specs', true)) do
         local file = 'openspec/changes/' .. change .. '/specs/' .. cap .. '/spec.md'
         local text = read(root .. '/' .. file)
         if text then
-          for _, r in ipairs(M.parse_delta(text).added) do
+          local requirements = {}
+          for _, req in ipairs(M.parse_spec(text)) do requirements[req.id] = req end
+          local delta = M.parse_delta(text)
+          for _, kind in ipairs({ 'added', 'modified' }) do
+            for _, item in ipairs(delta[kind]) do
+              local req = requirements[item.id]
+              if req then
+                req.change, req.kind, req.file, req.capability = change, kind, file, cap
+                idx.changed[#idx.changed + 1] = req
+              end
+            end
+          end
+          for _, r in ipairs(delta.added) do
             idx.added[r.id] = { id = r.id, title = r.title, change = change, file = file }
             idx.areas[area_of(r.id)] = true
           end

@@ -4,7 +4,8 @@
 
 Windows SDK SHALL рекурсивно завершать процесс по связи PPID только при доступном времени создания обоих процессов и времени child не раньше parent. Явно выбранный root завершается и при недоступном времени; более старый процесс или процесс с неизвестной хронологией не завершается через такую связь.
 Платформы: windows
-Проверка: tests/diagnostics/process-ancestry.py, tests/e2e/process-lifecycle.test.lua, tests/e2e/windows-sdk.test.lua, tests/e2e/editor-descendants.test.lua
+Проверка: tests/e2e/process-lifecycle.test.lua, tests/e2e/windows-sdk.test.lua, tests/e2e/editor-descendants.test.lua
+Диагностика: tests/diagnostics/process-ancestry.py.
 Это дополнение IDE-BOOT-3 заменяет прежнее ограничение единственным ConPTY patch на два закреплённых patch: ConPTY и process ancestry.
 
 #### Scenario: Устаревшая связь PPID

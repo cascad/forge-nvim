@@ -37,6 +37,8 @@ M.CATEGORIES = {
     none = 'в nvim_forge/FIXLOG.md нет строк `Спека:`' },
   { key = 'proverka_paths', title = 'пути tests/… в строках `Проверка:` есть и в реестре', short = 'висячий путь в строке Проверка:',
     none = 'в спеках нет строк `Проверка:` с путями tests/…' },
+  { key = 'e2e_contracts', title = 'готовые и выбранные IDE contracts имеют registered E2E', short = 'нет обязательного E2E',
+    none = 'IDE contracts в выбранной области отсутствуют' },
   { key = 'manual_items', title = 'пункты `вручную (tests/manual/…)` найдены в чек-листах', short = 'пункт вручную (…) не найден',
     none = 'в спеках нет ссылок `вручную (tests/manual/…)`' },
   { key = 'unregistered', title = 'файлы *.test.lua и *.sh в tests/ есть в реестре', short = 'файл вне реестра',
@@ -52,6 +54,7 @@ function M.is_check_file(path)
   -- Fixtures — исходники проектов под тестом, их запускает editor E2E.
   -- Это не самостоятельные suites (в том числе Bash .sh/.test.lua data).
   if path:match('^tests/e2e/fixtures/') then return false end
+  if path:match('^tests/containers/[^/]+%.sh$') then return false end
   return path:match('%.test%.lua$') ~= nil or path:match('%.sh$') ~= nil
 end
 
@@ -122,23 +125,85 @@ local function walk(root, dir)
   return out
 end
 
+local function registry_set(reg)
+  local set = {}
+  for _, e in ipairs(reg) do
+    if type(e) == 'table' and type(e.file) == 'string' then set[e.file] = e end
+  end
+  return set
+end
+
+local function with_native(root,set)
+  for _,file in ipairs(require('batch_plan').native_suites(root)) do
+    assert(not set[file], 'Duplicate native test registration: '..file)
+    set[file]={file=file,suite='e2e',kind='py',runner='native-python'}
+  end
+  return set
+end
+
 local function load_registry(root)
   local path = root .. '/' .. M.REGISTRY
   local ok, reg = pcall(dofile, path)
   if not ok then error(M.REGISTRY .. ' не загружается: ' .. tostring(reg), 0) end
   if type(reg) ~= 'table' then error(M.REGISTRY .. ' должен вернуть список', 0) end
-  local set = {}
-  for _, e in ipairs(reg) do
-    if type(e) == 'table' and type(e.file) == 'string' then set[e.file] = true end
+  return with_native(root,registry_set(reg))
+end
+
+-- Каталог presence, не свидетельство runtime/OS PASS. Данные только из
+-- existing specs/tasks/registry; незавершённое покрытие не становится готовым.
+local function catalog(root, idx, registered, selected)
+  local result = { requirements = {}, summary = { registered = 0, pending = 0, missing = 0 },
+    registry = M.REGISTRY, change = selected }
+  if selected and not idx.changes[selected] then
+    result.selection_error = 'Неизвестный E2E change: ' .. selected
+    return result
   end
-  return set
+  local completion = {}
+  local function complete(change)
+    if completion[change] ~= nil then return completion[change] end
+    local total, unfinished = 0, 0
+    for _, line in ipairs(read_lines(root .. '/openspec/changes/' .. change .. '/tasks.md') or {}) do
+      local mark = line:match('^%s*[-*]%s*%[([^%]]*)%]')
+      if mark then total = total + 1; if mark:lower() ~= 'x' then unfinished = unfinished + 1 end end
+    end
+    completion[change] = total > 0 and unfinished == 0
+    return completion[change]
+  end
+  local function add(req)
+    if not req.id:match('^IDE%-') or (selected and req.change ~= selected) then return end
+    local ready = not req.change or complete(req.change)
+    local row = { id = req.id, file = req.file, line = req.line, change = req.change,
+      kind = req.kind, implementation_complete = ready, e2e = {}, paths = {}, runners = {} }
+    local seen = {}
+    for _, p in ipairs(req.proverka) do
+      for _, path in ipairs(p.paths) do
+        row.paths[#row.paths + 1] = path
+        local entry, st = registered[path], vim.uv.fs_stat(root .. '/' .. path)
+        if entry and entry.suite == 'e2e' and st and st.type == 'file' and not seen[path] then
+          seen[path] = true; row.e2e[#row.e2e + 1] = path
+          row.runners[path]=entry.runner or 'registry'
+        end
+      end
+    end
+    row.state = #row.e2e > 0 and 'REGISTERED' or ((ready or selected) and 'MISSING' or 'PENDING')
+    local key = row.state:lower(); result.summary[key] = result.summary[key] + 1
+    result.requirements[#result.requirements + 1] = row
+  end
+  for _, id in ipairs(idx.order) do add(idx.ids[id]) end
+  for _, req in ipairs(idx.changed) do add(req) end
+  return result
+end
+
+function M.catalog(root, index, registry)
+  root = norm(root)
+  return catalog(root, index or S.build(root), registry and with_native(root,registry_set(registry)) or load_registry(root))
 end
 
 -- ---------------------------------------------------------------------------
 -- Сбор нарушений
 -- ---------------------------------------------------------------------------
 
-function M.collect(root)
+function M.collect(root, options)
   root = norm(root)
   local idx = S.build(root)
   local registered = load_registry(root)
@@ -233,8 +298,13 @@ function M.collect(root)
     end
     return checklists[file]
   end
-  for _, id in ipairs(idx.order) do
-    local req = idx.ids[id]
+  local requirements = {}
+  for _, id in ipairs(idx.order) do requirements[#requirements + 1] = idx.ids[id] end
+  for _, req in ipairs(idx.changed) do
+    if req.id:match('^IDE%-') then requirements[#requirements + 1] = req end
+  end
+  for _, req in ipairs(requirements) do
+    local id = req.id
     for _, p in ipairs(req.proverka) do
       for _, path in ipairs(p.paths) do
         count('proverka_paths')
@@ -257,6 +327,19 @@ function M.collect(root)
           if not found then add('manual_items', req.file, p.line, id, m.file .. ': нет пункта ' .. m.item) end
         end
       end
+    end
+  end
+
+  res.catalog = catalog(root, idx, registered, options and options.change)
+  if res.catalog.selection_error then
+    count('e2e_contracts')
+    add('e2e_contracts', 'openspec/changes/' .. options.change, nil, nil, res.catalog.selection_error)
+  end
+  for _, req in ipairs(res.catalog.requirements) do
+    count('e2e_contracts')
+    if req.state == 'MISSING' then
+      add('e2e_contracts', req.file, req.line, req.id,
+        'Нет registered E2E в Проверка: для готового/выбранного requirement; unit/manual не заменяют E2E')
     end
   end
 

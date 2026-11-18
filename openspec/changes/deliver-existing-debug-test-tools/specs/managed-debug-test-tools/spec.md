@@ -10,6 +10,9 @@
 
 Managed setup SHALL устанавливать pinned codelldb1.12.2 для Rust на Windows/POSIX через Mason и применять существующий hash-checked Bash adapter patch только к принадлежащему fride Mason package. Ошибка/неизвестный payload MUST давать nonzero и сохранять исходник. SQL component SHALL доставлять готовые patched sqls и forge-sqltest через существующий runtime artifact mechanism, без требования Go/Rust/C compiler у пользователя SQL. Native binary versions SHALL проверяться перед ready; private SQL tools SHALL выбираться до stock Mason/PATH copy, явные пользовательские overrides SHALL сохраняться. SDK/чужие adapters MUST не изменяться, startup MUST не устанавливать и не патчить tools. Native Mac/publication SHALL оставаться явными непроверенными этапами до фактического прогона.
 
+Платформы: все
+Проверка: tests/install-debug-tools.test.py.
+
 #### Scenario: Подготовка и повтор
 - **WHEN** выбран Rust/Bash и выполнен tools setup
 - **THEN** debugger доступен из Mason, Bash payload подготовлен без ручной команды, повтор сохраняет уже готовые файлы

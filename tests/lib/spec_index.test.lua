@@ -57,14 +57,14 @@ T.check('SELF: parse_spec собирает строки `Проверка:` то
     'Проверка выделения — это не строка проверки.',
     '#### Scenario: s',
     '### Requirement: WT-AA-2 Второе',
-    'Платформы: все',
+    'Платформы: все. Проверка: tests/b.test.lua',
   }, '\n'))
   T.eq(#reqs, 2)
   T.eq(reqs[1].id, 'WT-AA-1')
   T.eq(reqs[1].title, 'Первое')
   T.eq(#reqs[1].proverka, 1)
   T.eq(reqs[1].proverka[1].paths, { 'tests/a.test.lua' })
-  T.eq(reqs[2].proverka, {})
+  T.eq(reqs[2].proverka[1].paths, { 'tests/b.test.lua' })
 end)
 
 T.check('SELF: parse_delta видит ADDED, MODIFIED и RENAMED', function()

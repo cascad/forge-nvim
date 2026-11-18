@@ -1507,6 +1507,11 @@ entrypoints и 10 базовых сценариев настоящего ред�
 Windows/Ubuntu (FIXLOG §61). Mac, исходная задержка shell, языки, DAP,
 тестовая панель и Git ещё не закрыты этими проверками.
 
+2026-11-18, §279: общий [каталог E2E](docs/E2E_CATALOG.md) собирается из existing
+specs/tasks/registry/native inventory. Завершённый или явно выбранный contract
+без E2E даёт FAIL; pending coverage остаётся видимым. Registered не означает
+runtime/OS PASS. Source/target CLI проверены Windows/Ubuntu; native Mac открыт.
+
 ### Прежние замечания Windows
 
 Windows/WezTerm: Ctrl+] на русской раскладке приходит в nvim как `<NL>` —

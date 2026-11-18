@@ -12,7 +12,8 @@
 Выбор SQL/Bash SHALL готовить подсветку и штатные LSP/format/lint tools без
 обязательных sqls, SQLLogicTest, SQLite CLI или Bash DAP; native catalog MUST
 требовать только Core и выбранный Terminal, сохраняя штатные SDK prerequisites.
-Платформы: все. Проверка: install-profile/runtime, setup и release inventory;
+Платформы: все. Проверка: tests/install-profile.test.py, tests/install-runtime.test.py.
+Проверка: tests/install-setup.test.py, tests/release-inventory.test.py;
 native macOS отдельно владельцем.
 
 #### Scenario: SQL and Bash selected

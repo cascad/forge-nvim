@@ -14886,3 +14886,52 @@ Desktop/WSL не управлялись, Docker existing/offline/2CPU/3GiB, host
 
 **Файлы.** POSIX scope helper,4-case E2E/fixture/одна registry строка,
 OpenSpec verification/tasks, PROBLEMS/roadmap/testing/HISTORY и append-only журналы.
+
+
+## 2026-11-18
+
+### 279. Единый каталог editor и installer E2E
+
+**Связь:** IDE-011, checkpoint §275–278; change `enforce-ide-e2e-catalog`.
+**Статус:** native CLI Windows/Ubuntu PASS; Mac открыт. Все14 прежних failed
+файлов checkpoint имеют affected PASS, новый полный regression не выполнялся.
+
+**Проблема.** Старый trace позволял объявить IDE change готовым без E2E.
+Незавершённый gate проверял только Lua registry, пропускал inline proof и
+считал существующие Python installer suites отсутствующими. Root дал48 FAIL.
+
+**Причина.** Index терял полные ADDED/MODIFIED proof records; trace не имел
+готовности/selected coverage gate. Новый draft не учитывал standalone inventory,
+часть specs не ссылалась на имеющиеся E2E. Дополнительно normal runner JSON
+терял native Python при переданном registry; native default case дал14 PASS1 FAIL.
+
+**Изменение.** Единый index/trace catalog: REGISTERED/PENDING/MISSING, --change
+gate, JSON в CLI и report.json. Batch/trace переиспользуют один native_suites
+discovery24 прежних Python suites. Runner каждой связи виден; unit/manual не
+приравниваются к E2E. Два настоящих CLI/Core gate cases перенесены из unit в
+tests/e2e/test-batch.test.lua; pure selection остаётся unit, запуск не дублируется.
+Inline Проверка и реальные Peek/sorter/Outline/SDK/setup links исправлены.
+Container scripts остаются helpers; ancestry diagnostic вынесен отдельно от
+трёх registered E2E. SQL semantic references не реализованы, не архивируются.
+
+**Проверка/e2e.** Frozen8c92268: native12 CLI cases на обеих ОС дали3 PASS9 FAIL.
+Target initial6: Windows1794998513992668800=3.74s, Ubuntu1794998526164990090=41.67s,
+PASS. Report correction only affected3: Windows1794998601054979200=2.78s,
+Ubuntu1794998614235167482=46.63s, PASS. Latest38 PASS/2 informational SKIP на ОС:
+catalog15, batch CLI2, pure selection2, index7, trace mutation4, root8. В batch
+до Outline proof было3 SKIP; финальный root отдельно0/0 на каждой ОС и JSON
+146 REGISTERED/1 PENDING/0 MISSING. Selected SQL change native exit1/MISSING
+подтверждён Windows/Ubuntu, не замаскирован. Syntax10 Lua/AST Python/strict
+изменённых deltas/diff/frozen/raw+staged journals PASS. No heavy IDE retest.
+
+**Вывод.** Последний failed файл §275 исправлен. Каталог доказывает наличие
+запускаемой связи, не полноту сценариев или native feature PASS. Прежние14 FAIL
+не переписываются: новые affected artifacts сохранены отдельно. Terminal/Default/
+Mac остаются gates. Следующий продуктовый шаг — providers/update policy;
+владельцу задан вопрос о явном предложении build-toolchain download, ответа пока
+нет. Global SDK/profile/locks/backports прежние; Desktop/WSL не управлялись,
+Docker existing/offline/2CPU/3GiB и host tmp на F. Local commit, без push.
+
+**Файлы.** Existing index/trace/report/batch, native CLI cases/registry,
+10 metadata links, docs/E2E_CATALOG, README/test docs/PROBLEMS/roadmap/HISTORY,
+OpenSpec verification/tasks и append-only журналы.

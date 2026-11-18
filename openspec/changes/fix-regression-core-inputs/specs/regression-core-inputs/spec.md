@@ -11,7 +11,7 @@
 
 Пакет проверок SHALL формировать обязательные Core acceptance аргументы и
 проверять доступность объявленных входов до выполнения команд пакета.
-Платформы: все. Проверка: tests/lib/test_batch.test.lua.
+Платформы: все. Проверка: tests/e2e/test-batch.test.lua.
 
 #### Scenario: Prepared Core inputs
 - **WHEN** выбраны installed kit/profile или native source deps/runtime

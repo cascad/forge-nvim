@@ -11,7 +11,7 @@
 
 Репозиторий SHALL предоставлять Windows/POSIX команды выбора тестовых файлов,
 просмотра плана и отдельного полного regression с native installer suites.
-Платформы: все. Проверка: tests/lib/test_batch.test.lua и batch этого change.
+Платформы: все. Проверка: tests/e2e/test-batch.test.lua и batch этого change.
 
 #### Scenario: Select a block
 - **WHEN** передан список зарегистрированных tests или native installer suites

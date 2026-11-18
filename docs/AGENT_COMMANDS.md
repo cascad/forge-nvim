@@ -10537,3 +10537,41 @@ strict/diff guards PASS. probe-finish.py: frozen remainder, raw/staged journal
 prefixes, exact index15. Registry частично staged через hash-object/update-index:
 HEAD + own existing POSIX row; catalog row и все прочие WIP остаются unstaged.
 Local commit gc.auto=0/maintenance.auto=false, без push.
+
+
+## 187. Общий E2E catalog и native Python inventory — 2026-11-18
+
+openspec instructions apply enforce-ide-e2e-catalog --json, ready; proposal/
+design/tasks прочитаны. Source8c92268 exact Lua tests/lib/run/trace скопированы
+git show только в ignored .tests/catalog-source и .tests/ubuntu/catalog-source.
+FORGE_TRACE_SOURCE=<copy> nvim -l tests/e2e/e2e-catalog.test.lua: native12 cases
+Windows3 PASS9 FAIL и Ubuntu3 PASS9 FAIL. Raw host catalog-source-{windows,ubuntu}.txt,
+native argv/exit/stdout/JSON/test/helper snapshots в e2e-catalog/<stamp>.
+
+Финальный default report regression source Windows:15 cases дали14 PASS1 FAIL,
+лог catalog-report-source-windows.txt. Patch with_native не теряет Python suites
+при переданном registry. Один initial6-file batch: e2e/e2e-catalog,e2e/test-batch,
+lib/test_batch,lib/spec_index,lib/trace,trace (все .test.lua). После новой report
+правки только affected3: e2e/e2e-catalog,lib/trace,trace. Windows scripts/test.ps1
+e2e -Files @(...), Ubuntu existing/offline/limited compose tool-paths.sh --batch
+e2e --file ..., --rm --no-deps --pull never. Desktop/WSL не запускались.
+Windows1794998513992668800/1794998601054979200:3.74s/2.78s;
+Ubuntu1794998526164990090/1794998614235167482:41.67s/46.63s, PASS.
+Composite38 PASS3 batch SKIP; отдельный root после Outline metadata:8 PASS2 SKIP.
+No editor/SDK/install work запусками metadata не инициируется. Full не повторялся.
+
+Native nvim -l tests/trace.test.lua --catalog-json <ignored JSON>: root exit0,
+146 REGISTERED/1 PENDING/0 MISSING Windows/Ubuntu. --change add-sql-semantic-references
+даёт expected exit1 и MISSING; пути/code/stdout/result сохранены. Ubuntu export
+через короткий ignored catalog-export.lua driver в existing --entrypoint nvim
+контейнере. SQL не архивировался. По14 прежним failed файлам now affected PASS.
+
+rg/Get-Content/Python читали source/specs/artifacts. Два неудачных apply_patch с
+неверным контекстом были atomic failures и исправлены адресными patches; их
+артефакты не коммитились. AST scripts/test-batch.py и loadfile10 Lua PASS.
+catalog-audit.lua выявил4 remaining metadata errors после shared inventory;
+explicit proof links исправлены, diagnostic сохранён отдельным полем.
+Strict validate каждого из11 затронутых changes; catalog-finish.py проверяет
+frozen remainder, original journal prefixes, exact index35 и staged --check.
+Теперь весь прежний WIP этого каталога рассмотрен и завершается одним commit;
+прочих WIP не осталось. SDK/locks/backports прежние, temp/cache F; без push.

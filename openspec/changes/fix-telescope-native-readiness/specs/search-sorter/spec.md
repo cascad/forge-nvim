@@ -16,6 +16,9 @@ MUST NOT инициировать сборку/скачивание. Явный 
 sorter и причину fallback; если Telescope ещё не загружен, SHALL сообщать,
 что режим не определён. Подготовка optional native artifact SHALL выполняться отдельно.
 
+Платформы: все
+Проверка: tests/e2e/search-sorter.test.lua.
+
 #### Scenario: Готовая библиотека без build tools
 - **WHEN** библиотека подготовлена, а CMake отсутствует в runtime PATH
 - **THEN** picker использует настоящий native scoring для поиска файла с клавиатуры

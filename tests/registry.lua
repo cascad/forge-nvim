@@ -33,6 +33,7 @@ return {
   { file = 'tests/e2e/shell-diagnostics.test.lua', suite = 'e2e' },
   { file = 'tests/e2e/entrypoints.test.lua', suite = 'e2e' },
   { file = 'tests/e2e/entrypoint-diagnostics.test.lua', suite = 'e2e' },
+  { file = 'tests/e2e/e2e-catalog.test.lua', suite = 'e2e', timeout = 120 },
   { file = 'tests/e2e/python-case.test.lua', suite = 'e2e', timeout = 90 },
   { file = 'tests/e2e/native-assert.test.lua', suite = 'e2e', timeout = 120 },
   { file = 'tests/e2e/native-probe.test.lua', suite = 'e2e' },
@@ -134,5 +135,6 @@ return {
   { file = 'tests/e2e/python-node-sdk-picker.test.lua', suite = 'e2e', timeout = 360 },
   { file = 'tests/e2e/setup-sdk-paths.test.lua', suite = 'e2e', timeout = 240 },
   { file = 'tests/e2e/missing-tool-errors.test.lua', suite = 'e2e', timeout = 240 },
+  { file = 'tests/e2e/test-batch.test.lua', suite = 'e2e', timeout = 60 },
   { file = 'tests/lib/test_batch.test.lua', suite = 'unit', timeout = 60 },
 }

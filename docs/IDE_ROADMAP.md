@@ -52,6 +52,10 @@ Windows54/Ubuntu57 targeted E2E PASS (aggregate после failed/affected retri
 neotest, breakpoint/eval/output восстановлены. Rust без Clippy, DAP project argv,
 mixed Sqruff, Git live read и UI capture согласованы с текущими native APIs.
 Результаты и оставшиеся gates — [verification](../openspec/changes/repair-native-workflow-checkpoint/verification.md).
+§278–279 завершили POSIX probe evidence и общий учёт editor/installer E2E.
+Все14 failed файлов §275 имеют affected PASS; полный checkpoint не повторялся.
+Root catalog:146 REGISTERED/1 PENDING (SQL references),0 MISSING.
+[Как смотреть каталог](E2E_CATALOG.md). Terminal/Default/native Mac открыты.
 Детали build-toolchain downloads и версий решаются для этих следующих шагов;
 они не блокируют работу с путями. Core publisher остаётся d120e3a;
 новый срез не означает завершения всего контракта путей или готовности Default.
@@ -101,23 +105,26 @@ GoToolchain и SDK existing/manual path в установщике сохране
   сообщение/источник в Logs (Node/Bash/Debug), §276 / IDE-BOOT-41.
   Положительные LSP/run/format/tests/debug и retry проверены. Native Mac и
   положительный Windows Bash debug/WSL — отдельно; WSL не запускался агентом.
-- [ ] Закрыть оставшиеся отказы checkpoint перед Default.
+- [x] Закрыть14 failed файлов checkpoint affected проверками (§276–279).
   Rust diagnostics, DAP argv, Go test debug, mixed SQL, Git object read и UI
   capture разобраны в §277. §278 исправил потерю POSIX probe failure;
-  остался прежний trace/catalog WIP (ссылки и учёт standalone installer E2E).
+  §279 закрыл trace/catalog: общий native inventory, ссылки и native CLI report.
   Checkpoint2764.52s:120 registry files/122 запуска,14 FAIL; все24 native Python
   suites запущены. Пять упавших installer suites исправлены и проверены только
   affected повторами; Terminal suite требует prepared.json отсутствующего
   native Terminal runtime. Полный PASS не заявлен. Два отказа process/trace
-  относятся к уже существующему WIP, сохранённому без изменений.
+  относились к прежнему WIP, завершённому в §278–279 для Windows/Ubuntu.
   Шесть missing-tool файлов после §276 PASS; ещё шесть после §277 PASS.
-  Process observer после §278 native Ubuntu PASS; root trace пока FAIL.
+  Process observer после §278 native Ubuntu PASS; root trace после §279 PASS.
   Точный список и результаты —
   [verification §276](../openspec/changes/handle-missing-tool-settings-without-prompts/verification.md).
   Полный повтор — после цельного исправления блока; до него только affected
   проверки. Windows full/WSL и native Mac остаются отдельными gates.
 - [ ] Затем завершить оставшиеся consumers, установку/обновление IDE tools
   через штатные менеджеры и upstream packages, Default/Custom и native gates.
+  Следующий вопрос владельцу: предлагать штатную загрузку более нового build
+  toolchain для IDE tool отдельной галкой, сохраняя SDK проекта, либо использовать
+  только уже установленные SDK/ручной путь. Вопрос задан2026-11-18, ответа пока нет.
 
 Статус: базовые e2e настоящего nvim_forge работают на Windows и Ubuntu;
 фоновые установки инструментов редактора перенесены в явный setup.

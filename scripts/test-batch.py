@@ -72,9 +72,8 @@ def main():
     folder = ROOT / '.tests/batches' / str(time.time_ns())
     folder.mkdir(parents=True)
     env, cleared = environment()
-    installers = sorted(path.relative_to(ROOT).as_posix() for path in ROOT.glob('tests/*.test.py'))
     request = folder / 'request.json'
-    request.write_text(json.dumps({'mode':args.mode, 'files':args.file, 'installers':installers}), encoding='utf-8')
+    request.write_text(json.dumps({'mode':args.mode, 'files':args.file}), encoding='utf-8')
     registry = folder / 'registry.lua'
     planned = subprocess.run([nvim,'-u','NONE','-i','NONE','-l',str(ROOT/'scripts/test-plan.lua'),str(ROOT),str(request),str(registry)],
                              cwd=ROOT, env=env, capture_output=True, text=True, encoding='utf-8', timeout=30)
