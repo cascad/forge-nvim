@@ -155,3 +155,13 @@ process-lifecycle проверяют Windows Job backend. Source/target и ко�
 elapsed_ms и полный native result либо spawn_error. active_after остаётся
 неизвестным, scope.ok=false; повтор stop возвращает то же доказательство.
 Это не восстановление причины исторического отказа и не native macOS PASS.
+
+## Go build policy — IDE-BOOT-42
+
+Новый native suite — tests/install-go-toolchain.test.py. Он входит в общий
+inventory автоматически; backend и native package fixture разделены в
+[verification](../openspec/changes/offer-go-build-toolchain-download/verification.md).
+Выбранный developer frontend задаётся FORGE_INSTALL_UI_BINARY. Полный Default
+и successful fresh compiler download эти проверки не заменяют. Для повтора
+native unittest файла install-ide-tools используйте Tools.test_NAME, для
+нового Go suite — короткое test_go_NAME (его main выбирает собственные случаи).

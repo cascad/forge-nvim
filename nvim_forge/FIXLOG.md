@@ -14935,3 +14935,60 @@ Docker existing/offline/2CPU/3GiB и host tmp на F. Local commit, без push.
 **Файлы.** Existing index/trace/report/batch, native CLI cases/registry,
 10 metadata links, docs/E2E_CATALOG, README/test docs/PROBLEMS/roadmap/HISTORY,
 OpenSpec verification/tasks и append-only журналы.
+
+
+## 2026-11-18
+
+### 280. Явный Go build toolchain для IDE tools
+
+**Связь:** следующий этап §279, change `offer-go-build-toolchain-download`.
+Спека: IDE-BOOT-42 (ADDED).
+**Статус:** feature Windows/Ubuntu проверена, native Mac открыт.
+
+**Проблема.** Явный setup всегда задавал GOTOOLCHAIN=local, а build guard требовал
+Go1.26+ для pinned gopls/gofumpt/golines. При старом рабочем SDK отсутствовал
+выбор штатной загрузки build compiler с сохранением SDK проекта.
+
+**Причина.** Private environment и tools stage безусловно запрещали switching;
+Mason snapshots initial environment, поэтому поздняя смена vim.env недостаточна.
+
+**Изменение.** Cliclack предлагает Go download отдельно, default No; CLI
+--go-toolchain-download allow|deny и root entry flags, plan/log choice.
+Headless без opt-in deny, parent env не считается согласием. Только tools child
+получает auto до init/Mason; probes/plugins/parsers local. При ранее загруженном
+Mason проверяется public graft_env, закрытый cache не переписывается. Allow
+допускает Go1.21+ и native Go выбирает compiler; deny сохраняет прежний1.26+
+guard, готовые tools переиспользуются. Native SDK/profiles/GOENV/checksum/proxy
+не меняются, go env -w не вызывается. Ошибка сохраняет прежний kit/native log.
+
+**Проверка/e2e.** Один initial batch2 registry+5 native Python suites на ОС:
+Windows1795006649958698700/Ubuntu1795006662354140857. После failed/affected
+повторов aggregate63 PASS/2 info SKIP Windows,60 PASS/5 SKIP Ubuntu:53 Python
+cases +registry10; Ubuntu3 native older-Go skips.11 new cases:11 PASS/10 PASS1
+SKIP. UI13, source transport6, shared SDK settings11, IDE tools12 и CLI/root10.
+Native PTY Да/Нет/Esc, HTTP source/root flag, private Neovim pre-init, actual
+Mason process и go install fixture tool, executable launch, Go1.23.3 allow,
+unavailable1.99 fetch/deny, checksum/proxy preservation, ready/late snapshot,
+previous kit marker/runtime SHA и GOENV snapshots проверены. Allow preview/check
+дополнен последним адресным case: Windows20.393s/Ubuntu5.382s PASS.
+
+Initial new Go tests имели2 fixture failures: повторный create_new result file
+и ready=false reservation. Existing IDE diagnostic loaded Mason до применения
+policy: приведён к private pre-init. Новый late-policy regression проверяет
+actual cache. Source FAIL и все повторные logs сохранены. Первый IDE retry
+использовал неверные unittest имена без Tools.; loader errors не выдавались
+за выполненные случаи, повторены только настоящие3. Ubuntu build сначала не
+нашёл offline crates; взят существующий vendor archive, engine/network прежние.
+
+**Вывод.** Установщик имеет явный native Go build choice без собственного
+downloader и смены SDK проекта. Fixture package/receipt не означает full Default;
+successful fresh compiler download, полная gopls совместимость со старым SDK и
+Mac не заявлены. Следующее решение владельца получено: сохранять установленные
+Mason версии, baseline для отсутствующих, возврат отдельным действием; реализация
+следующим срезом. История/guide/план обновлены. Frozen27 SDK/locks/backports/old UI,
+source-matched new UI receipts, syntax/strict/raw+staged journals/index guards
+проверены. Host tmp F, Docker existing/offline/2CPU/3GiB, без Desktop/WSL управления.
+
+**Файлы.** Rust frontend, root PS/Bash, private/setup/readiness Lua; native11-case
+suite/fixture и прежние diagnostics helpers; GO_BUILD_TOOLCHAIN/планы/история/
+OpenSpec и append-only журналы. Local commit без push, полный regression не запускался.

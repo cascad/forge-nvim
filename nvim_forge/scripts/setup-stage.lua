@@ -33,10 +33,21 @@ local ok, err = xpcall(function()
         io.stdout:write('Parser readiness: ' .. vim.json.encode(report) .. '\n')
     elseif stage == 'tools' then
         io.stdout:write('Setup SDK selection: '..vim.json.encode(require('forge.setup_sdks').prepare())..'\n')
-        -- Only this explicit setup process: never download a language SDK
-        -- while building IDE tools through Mason's native Go/Cargo providers.
-        vim.env.GOTOOLCHAIN = 'local'
+        -- Explicit tools-only choice; apply before Mason captures its environment.
+        local policy=vim.env.FRIDE_SETUP_GO_TOOLCHAIN or 'local'
+        assert(policy=='local' or policy=='auto','Invalid FRIDE_SETUP_GO_TOOLCHAIN: '..policy)
+        local process=package.loaded['mason-core.process']
+        if process then
+            local captured
+            for _,entry in ipairs(process.graft_env({})) do
+                if entry:sub(1,12)=='GOTOOLCHAIN=' then captured=entry:sub(13) end
+            end
+            assert(captured==policy,
+                'Go build policy must be applied before Mason initialization; rerun explicit setup.')
+        end
+        vim.env.GOTOOLCHAIN = policy
         vim.env.RUSTUP_AUTO_INSTALL = '0'
+        io.stdout:write('Go build toolchain policy: '..policy..' (project SDK unchanged)\n')
         vim.cmd('Lazy load mason-tool-installer.nvim')
         local catalog = require('forge.tool_catalog')
         local readiness = require('forge.setup_readiness')

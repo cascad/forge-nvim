@@ -72,6 +72,9 @@ local function environment(root, runtime, paths, sdk_paths)
   env.TEMP, env.TMP, env.TMPDIR = join(root,'tmp'), join(root,'tmp'), join(root,'tmp')
   -- Only explicit IDE setup: a missing SDK must not trigger a toolchain download.
   env.GOTOOLCHAIN, env.RUSTUP_AUTO_INSTALL = 'local', '0'
+  local policy=vim.env.FRIDE_SETUP_GO_TOOLCHAIN or 'local'
+  if policy~='local' and policy~='auto' then fail('Invalid FRIDE_SETUP_GO_TOOLCHAIN: '..policy) end
+  env.FRIDE_SETUP_GO_TOOLCHAIN=policy
   local bins = {}; for _, path in ipairs(paths) do bins[#bins+1] = join(runtime, path) end
   env.PATH = table.concat(bins, windows and ';' or ':') .. (windows and ';' or ':') .. (env.PATH or '')
   local separator=windows and ';' or ':'
@@ -204,8 +207,9 @@ local function install()
   for _, task in ipairs({'plugins','parsers','tools'}) do
     event(task,'start')
     local preinit='lua vim.opt.rtp:prepend(vim.env.FRIDE_CONFIG); require("forge.setup_sdks").prepare({scope="user"})'
+    local task_env=vim.tbl_extend('force',env,{GOTOOLCHAIN=task=='tools' and env.FRIDE_SETUP_GO_TOOLCHAIN or 'local'})
     execute({exe,'--headless','-i','NONE','--cmd',preinit,'-u',join(stage,'config/forge/init.lua'),
-      '-l',join(stage,'config/forge/scripts/setup-stage.lua'),task},env,target,join(target,'log','setup-' .. task .. '.log'))
+      '-l',join(stage,'config/forge/scripts/setup-stage.lua'),task},task_env,target,join(target,'log','setup-' .. task .. '.log'))
     event(task,'ready')
   end
   local backup = join(target,'backups',stamp); mkdir(backup)

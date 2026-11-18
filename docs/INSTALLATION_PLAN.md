@@ -1247,3 +1247,15 @@ Ubuntu8 PASS/1 network skip2.994s в existing offline container2CPU/2GiB. Mac о
 Python3.14/Node24.11 доступны; build gopls/gofumpt/golines требует Go1.26+.
 Доставка готовых IDE tools либо явный выбор SDK должны учитывать build minimum;
 SDK/Go PATH не менялись. Языковые parts, Mac/full Ubuntu delivery/publication открыты.
+
+
+## Явный Go build toolchain — §280
+
+Новый frontend предлагает native compiler download для Go tools отдельно,
+по умолчанию Нет. CLI --go-toolchain-download allow|deny; headless deny.
+Только tools stage получает auto до Mason initialization, probes/plugins/parsers
+сохраняют local. SDK проекта, native homes и checksum/proxy policy прежние.
+[Правила и проверенные ограничения](GO_BUILD_TOOLCHAIN.md). Native Windows/Ubuntu
+проверены, Mac и full Default отдельно. Следующий срез — версии tools и повторная
+установка после ручных обновлений. Владелец выбрал preserve: baseline для
+отсутствующих, возврат к baseline только отдельным явным действием.

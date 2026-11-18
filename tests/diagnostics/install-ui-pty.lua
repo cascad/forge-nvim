@@ -30,7 +30,13 @@ local function type_text(value)
  send(value)
 end
 local ok,err=xpcall(function()
- if scenario:sub(1,4)=='sdk-' then
+ if scenario:sub(1,10)=='go-policy-' then
+  waitfor('Разрешить Go скачать toolchain для сборки IDE tools?');frame('go-policy-choice')
+  if scenario=='go-policy-allow' then send('\27[D\r')
+  elseif scenario=='go-policy-deny' then send('\r')
+  elseif scenario=='go-policy-cancel' then send('\27')
+  else error('Unknown Go policy scenario '..scenario) end
+ elseif scenario:sub(1,4)=='sdk-' then
   local marker=0
   local function fresh(text)
    assert(vim.wait(20000,function() return lua('return _G.ui_raw'):sub(marker+1):find(text,1,true) or exitcode()~=nil end,10),'SDK timeout '..text..'\n'..screen())

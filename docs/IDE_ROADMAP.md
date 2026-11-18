@@ -122,9 +122,13 @@ GoToolchain и SDK existing/manual path в установщике сохране
   проверки. Windows full/WSL и native Mac остаются отдельными gates.
 - [ ] Затем завершить оставшиеся consumers, установку/обновление IDE tools
   через штатные менеджеры и upstream packages, Default/Custom и native gates.
-  Следующий вопрос владельцу: предлагать штатную загрузку более нового build
-  toolchain для IDE tool отдельной галкой, сохраняя SDK проекта, либо использовать
-  только уже установленные SDK/ручной путь. Вопрос задан2026-11-18, ответа пока нет.
+  §280: после поручения продолжать рекомендованный вариант реализован отдельный
+  выбор native Go build toolchain, CLI allow/deny и tools-only process boundary.
+  [Правила и команды](GO_BUILD_TOOLCHAIN.md). Native Windows/Ubuntu проверены,
+  Mac отдельно; совместимость LSP с SDK и full Default этим не закрыты.
+  Владелец2026-11-18 выбрал: повторная установка сохраняет установленные версии
+  tools; baseline — для отсутствующих, возврат — отдельное явное действие.
+  Это следующий срез providers/update policy; пока он не реализован.
 
 Статус: базовые e2e настоящего nvim_forge работают на Windows и Ubuntu;
 фоновые установки инструментов редактора перенесены в явный setup.

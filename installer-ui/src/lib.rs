@@ -40,6 +40,7 @@ pub struct Options {
     pub check_tools: bool,
     pub sdk_report: Option<PathBuf>,
     pub sdk_paths: Vec<PathBuf>,
+    pub go_toolchain_download: Option<bool>,
     prepared_core: Option<PathBuf>,
 }
 
@@ -74,7 +75,7 @@ impl Options {
                     continue;
                 }
                 "--help" => {
-                    println!("fride-setup --source DIR --profile default|custom [--components CSV] --install-dir DIR\n--command-dir DIR --runtime-path DIR --runtime-archive-url URL --runtime-sha256 SHA\n--preview --no-color --print-plan --result FILE --log-dir DIR\n--check-sdks --sdk-report FILE\n--check-tools (Git prerequisite) --tool-path DIR (repeatable fallback bin; alias --sdk-path)");
+                    println!("fride-setup --source DIR --profile default|custom [--components CSV] --install-dir DIR\n--command-dir DIR --runtime-path DIR --runtime-archive-url URL --runtime-sha256 SHA\n--preview --no-color --print-plan --result FILE --log-dir DIR\n--check-sdks --sdk-report FILE\n--go-toolchain-download allow|deny (explicit Go build toolchain choice; default deny)\n--check-tools (Git prerequisite) --tool-path DIR (repeatable fallback bin; alias --sdk-path)");
                     std::process::exit(0);
                 }
                 _ => {}
@@ -101,6 +102,11 @@ impl Options {
                 "--result" => result.result_file = Some(value.into()),
                 "--sdk-report" => result.sdk_report = Some(value.into()),
                 "--sdk-path" | "--tool-path" => result.sdk_paths.push(value.into()),
+                "--go-toolchain-download" => result.go_toolchain_download = Some(match value.as_str() {
+                    "allow" => true,
+                    "deny" => false,
+                    _ => return Err(invalid("--go-toolchain-download: allow или deny")),
+                }),
                 _ => return Err(invalid(format!("Неизвестный параметр: {key}"))),
             }
         }
@@ -209,6 +215,7 @@ pub(crate) struct Plan {
     pub sdk_paths: Vec<PathBuf>,
     pub install_dir: String,
     pub command_dir: String,
+    pub go_toolchain_download: bool,
 }
 
 impl Plan {
@@ -251,6 +258,9 @@ fn review(rows: &[Row], plan: &Plan) -> String {
             plan.native_sdks.join(", ")
         ));
     }
+    if plan.native_sdks.iter().any(|sdk| sdk == "go") {
+        lines.push(format!("Загрузка Go для сборки IDE tools: {}", if plan.go_toolchain_download { "разрешена" } else { "запрещена" }));
+    }
     for path in &plan.sdk_paths {
         lines.push(format!("Внешний fallback (после PATH): {}", path.display()));
     }
@@ -277,6 +287,7 @@ pub fn run(mut options: Options) -> Result<i32> {
         sdk_paths: vec![],
         install_dir: options.install_dir.clone(),
         command_dir: options.command_dir.clone(),
+        go_toolchain_download: options.go_toolchain_download.unwrap_or(false),
     };
     plan.select(&rows, selected)?;
     // Upgrade reuses only locations recorded by an owned fride installation.
@@ -389,6 +400,28 @@ pub fn run(mut options: Options) -> Result<i32> {
             return Err(invalid(format!("SDK prerequisites не готовы. Исправьте/reset сохранённый выбор fride либо выберите SDK в PATH/--sdk-path, установите его штатно или снимите компонент. Core подготовлен; прежний комплект сохранён, остальные компоненты не устанавливались. Отчёт: {}",file.display())));
         }
     }
+    if !options.preview && plan.native_sdks.iter().any(|sdk| sdk == "go")
+        && options.go_toolchain_download.is_none()
+        && io::stdin().is_terminal() && io::stderr().is_terminal()
+    {
+        cliclack::note("Сборка инструментов Go",
+            "Некоторым IDE tools может понадобиться более новый Go. Штатный Go может скачать его в свой кеш для сборки tools. SDK проекта, системные настройки и go.mod сохраняются.")?;
+        match cliclack::confirm("Разрешить Go скачать toolchain для сборки IDE tools?")
+            .initial_value(false).interact()
+        {
+            Ok(allow) => plan.go_toolchain_download = allow,
+            Err(error) if error.kind() == io::ErrorKind::Interrupted => {
+                cliclack::outro_cancel("Отменено. Прежний комплект сохранён.")?;
+                return Ok(130);
+            }
+            Err(error) => return Err(error),
+        }
+    }
+    if !options.preview && plan.native_sdks.iter().any(|sdk| sdk == "go") {
+        let message = format!("Go tools: загрузка build toolchain {}; SDK проекта сохраняется.",
+            if plan.go_toolchain_download { "разрешена" } else { "запрещена" });
+        if plain { eprintln!("{message}"); } else { cliclack::log::info(message)?; }
+    }
     if let Some(path) = &options.result_file {
         let mut file = OpenOptions::new().create_new(true).write(true).open(path)?;
         serde_json::to_writer(&mut file, &plan)?;
@@ -494,6 +527,7 @@ fn execute(options: &Options, plan: &Plan, plain: bool) -> Result<i32> {
         .env("FORGE_SDK_PATHS", serde_json::to_string(&plan.sdk_paths)?)
         .env("FORGE_NVIM_COMPONENTS", plan.components.join(","))
         .env("FRIDE_INSTALL_UI", "1")
+        .env("FRIDE_SETUP_GO_TOOLCHAIN", if plan.go_toolchain_download { "auto" } else { "local" })
         // Installation must not turn a missing toolchain into an implicit SDK download.
         .env("GOTOOLCHAIN", "local")
         .env("RUSTUP_AUTO_INSTALL", "0")

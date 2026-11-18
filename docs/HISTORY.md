@@ -416,6 +416,7 @@ Python реализован и проверен 2026-11-03; после возо�
 | §277 | [Go test debug и восстановление native checkpoint](../nvim_forge/FIXLOG.md#277-go-test-debug-и-восстановление-native-checkpoint) |
 | §278 | [Полный результат отказа POSIX process probe](../nvim_forge/FIXLOG.md#278-полный-результат-отказа-posix-process-probe) |
 | §279 | [Единый каталог editor и installer E2E](../nvim_forge/FIXLOG.md#279-единый-каталог-editor-и-installer-e2e) |
+| §280 | [Явный Go build toolchain для IDE tools](../nvim_forge/FIXLOG.md#280-явный-go-build-toolchain-для-ide-tools) |
 
 ## Как читать и дополнять
 

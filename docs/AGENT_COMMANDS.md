@@ -10575,3 +10575,48 @@ Strict validate каждого из11 затронутых changes; catalog-fini
 frozen remainder, original journal prefixes, exact index35 и staged --check.
 Теперь весь прежний WIP этого каталога рассмотрен и завершается одним commit;
 прочих WIP не осталось. SDK/locks/backports прежние, temp/cache F; без push.
+
+
+## 188. Native Go build policy — 2026-11-18
+
+cwd F:/repo/forge-nvim, login:false/full access, без approval flags. rg/Get-Content
+читали targeted source/setup/SDK/Mason process/provider. openspec list root nearest,
+new/status/instructions apply offer-go-build-toolchain-download ready; contextFiles
+прочитаны. Go upstream API проверен по https://go.dev/doc/toolchain; provider и
+graft_env/spawn прочитаны из закреплённого local Mason, без private API mutation.
+
+Native build Windows python -B scripts/build-installer-ui.py --rustc <готовый SDK>
+--output .tests/toolchain-research/go-policy-ui/windows-x64,11.84s. Ubuntu первый
+offline Cargo вызов не нашёл cliclack; ignored .tests/ubuntu/go-policy-build.sh
+использовал прежний vendor.tar.gz во временном container /tmp,14.58s. --locked,
+RUSTUP_AUTO_INSTALL0; новые payloads не заменяют .tools UI. Оба source receipts
+сверены с текущими sources и binary SHA. SDK/locks/old UI frozen27.
+
+Один initial batch: tests/install-go-toolchain.test.py,install-ui,install-bootstrap,
+install-sdk-settings,install-ide-tools плюс tests/e2e/test-batch.test.lua и
+tests/trace.test.lua. Windows scripts/test.ps1 e2e -Files @(...), Ubuntu existing
+compose/limits/tool-paths.sh --batch e2e --file ..., --rm --no-deps --pull never,
+FORGE_INSTALL_UI_BINARY=<new ignored native binary>. Registry10 PASS2 info SKIP;
+Go2 FAIL и IDE stage failures сохранены. Бatches1795006649958698700 и1795006662354140857.
+
+Affected Go5/6/11 через Python native file short case names: temporary retry
+reports go-policy-affected-1795006936777511600 (26.48s) и1795006956481106310 (12.42s).
+Первый IDE invocation ошибся короткими именами, получили3 loader ERROR без native
+execution. Исправлен python -B tests/install-ide-tools.test.py Tools.test_10_...
+Tools.test_11_... Tools.test_12_...: Windows3 PASS (0.206s), Ubuntu1 PASS2 SKIP
+(0.356s). Only affected, Go повторно не запускался. Финальный усиленный Go1
+preview/check с allow:20.393s/5.382s PASS. Native case logs и composite в
+.tests/toolchain-research/go-policy-*.txt/json; initial immutable batch logs сохранены.
+
+63 PASS2 SKIP Windows/60 PASS5 SKIP Ubuntu latest aggregate; new11 native cases,
+proxy failure и deny проверены, successful fresh SDK fetch/full Default/Mac не
+объявлены. Общий regression не повторялся. Windows TEMP/TMP/TMPDIR/NVIM_LOG_FILE
+F:/repo/forge-nvim/.tests/tmp, Python -B/UTF8/no bytecode; Linux stand в /tmp,
+artifacts на F bind. Desktop/WSL start/stop/config, Docker build/pull не вызывались.
+
+Windows PS parser, Git Bash -n install.sh, Lua loadfile6, Python AST2, Rust build
+both OS, strict OpenSpec и trace --change gate; go-policy-finish.py frozen27,
+raw/staged prefixes и exact index25. Несколько неверных apply_patch contexts
+отказали atomic без файловых изменений, исправлены адресно. git add allowlist,
+commit gc.auto=0/maintenance.auto=false, без push. Следующая owner policy сохранена
+в плане: preserve installed, baseline missing/explicit reset.

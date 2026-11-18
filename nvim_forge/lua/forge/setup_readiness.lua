@@ -5,6 +5,8 @@ local function failures(title, errors)
 end
 -- Only explicit setup, and only when Mason needs to build a pinned Go tool.
 function M.build_sdks(names, versions)
+    local policy=vim.env.FRIDE_SETUP_GO_TOOLCHAIN or 'local'
+    assert(policy=='local' or policy=='auto','Invalid FRIDE_SETUP_GO_TOOLCHAIN: '..policy)
     local registry = require('mason-registry')
     for _, name in ipairs(names) do
         if name == 'gopls' or name == 'gofumpt' or name == 'golines' then
@@ -14,11 +16,13 @@ function M.build_sdks(names, versions)
                 return package:is_installed() and receipt and receipt:get_installed_package_version() == versions[name]
             end)
             if not (ready and matches) then
-                local result = vim.system({ 'go', 'version' }, { text = true }):wait(2000)
+                -- Inspect the bundled compiler without triggering a download.
+                local result = vim.system({ 'go', 'version' }, { text = true, env={GOTOOLCHAIN='local'} }):wait(2000)
                 local major, minor = (result.stdout or ''):match('go(%d+)%.(%d+)')
-                assert(result.code == 0 and major and (tonumber(major) > 1 or (tonumber(major) == 1 and tonumber(minor) >= 26)),
-                    'Go 1.26.0+ SDK is required to build '..name..'. Found: '..vim.trim(result.stdout or result.stderr or '')..
-                    '. Select an existing Go SDK in PATH and rerun setup. SDK was not installed or updated.')
+                local minimum=policy=='auto' and 21 or 26
+                assert(result.code == 0 and result.signal==0 and major and (tonumber(major) > 1 or (tonumber(major) == 1 and tonumber(minor) >= minimum)),
+                    'Go 1.'..minimum..'.0+ SDK is required to build '..name..'. Found: '..vim.trim(result.stdout~='' and result.stdout or result.stderr or '')..
+                    '. Select an existing Go SDK or explicitly allow native build toolchain downloads (--go-toolchain-download allow) and rerun setup. SDK was not installed or updated.')
                 return
             end
         end
