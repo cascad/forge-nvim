@@ -414,6 +414,7 @@ Python реализован и проверен 2026-11-03; после возо�
 | §275 | [Общий выбор SDK установщиком через проверенный Core](../nvim_forge/FIXLOG.md#275-общий-выбор-sdk-установщиком-через-проверенный-core) |
 | §276 | [Ошибки Node и Bash без блокировки редактора](../nvim_forge/FIXLOG.md#276-ошибки-node-и-bash-без-блокировки-редактора) |
 | §277 | [Go test debug и восстановление native checkpoint](../nvim_forge/FIXLOG.md#277-go-test-debug-и-восстановление-native-checkpoint) |
+| §278 | [Полный результат отказа POSIX process probe](../nvim_forge/FIXLOG.md#278-полный-результат-отказа-posix-process-probe) |
 
 ## Как читать и дополнять
 

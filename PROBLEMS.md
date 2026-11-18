@@ -409,6 +409,13 @@ Scope.ok=false, active_after неизвестен. Контейнер уже у�
 выдавать повторный PASS за исправление. Сначала сохранить полный результат
 probe и воспроизвести границу. Приоритет рядом с IDE-114 после текущего fix.
 
+2026-11-18, §278: boundary исправлена и native Ubuntu4 cases PASS. Теперь
+nonzero code/signal и spawn error сохраняются в shutdown.scope.probe_failure
+с argv/elapsed/attempt; signal больше не становится false empty-groups PASS.
+Source3d0e6b7 дал1 PASS/3 FAIL, target4 PASS; Windows lifecycle отдельно PASS.
+Первопричина исходного отказа8785983585636 по-прежнему неизвестна; native Mac
+observer не проверен. Подробности в capture-posix-scope-probe-failure/verification.
+
 ## IDE-116 — отложенное восстановление Files забирает фокус кода
 
 2026-11-12, общий Ubuntu E2E7aa0ba9: panel-transitions12 PASS/1 FAIL;

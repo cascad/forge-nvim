@@ -72,8 +72,18 @@ function M.new()
       for _,id in ipairs(vim.tbl_keys(self.groups)) do data.groups[#data.groups+1]=vim.deepcopy(self.groups[id]) end
       table.sort(data.groups,function(a,b) return a.group<b.group end)
       local function active()
-        local ps=vim.system({'ps','-ax','-o','pgid=','-o','stat='},{text=true,timeout=2000}):wait()
-        assert(ps.code==0,'Не удалось проверить own process groups: '..tostring(ps.stderr))
+        local argv={'ps','-ax','-o','pgid=','-o','stat='}
+        data.probe_count=(data.probe_count or 0)+1
+        local began=vim.uv.hrtime()
+        local ran,ps=pcall(function() return vim.system(argv,{text=true,timeout=2000}):wait() end)
+        if not ran or ps.code~=0 or ps.signal~=0 then
+          local failure={argv=argv,attempt=data.probe_count,elapsed_ms=(vim.uv.hrtime()-began)/1e6}
+          if ran then failure.result=ps else failure.spawn_error=tostring(ps) end
+          data.probe_failure=failure
+          error('Не удалось проверить own process groups: '..(ran
+            and ('code='..tostring(ps.code)..', signal='..tostring(ps.signal)..': '..(ps.stderr or ''))
+            or failure.spawn_error))
+        end
         local live={}
         for line in ps.stdout:gmatch('[^\n]+') do
           local group,state=line:match('^%s*(%d+)%s+(%S+)')

@@ -10507,3 +10507,33 @@ Patched Windows nvim -u NONE -i NONE -l .tests/toolchain-research/missing-tools-
 <7 Lua files>; diff --check. checkpoint-baseline.py/final guard: frozen25 including
 existing registry/WIP/SDK/locks; raw и staged journal prefixes; exact owned index17.
 git add только allowlist, commit gc.auto=0/maintenance.auto=false; push не выполнялся.
+
+
+## 186. POSIX probe evidence и native lifecycle — 2026-11-18
+
+openspec status/instructions apply capture-posix-scope-probe-failure --json,
+ready0/5; contextFiles прочитаны. Source helper из git show3d0e6b7 совпал с
+working helper до правки. Frozen copy только helper в .tests/ubuntu/ps-probe-current-source;
+source test native fixture исправлен так, чтобы PATH fallback не скрывал ENOENT.
+Docker existing/offline/2CPU/3GiB, --rm --no-deps --pull never --entrypoint nvim,
+-e FORGE_E2E_DRIVER_SOURCE=/workspace/.tests/ps-probe-current-source ubuntu -l
+tests/e2e/posix-scope-probe.test.lua:1 PASS/3 FAIL до observer fix. Каждый artifact
+содержит exact scope-source.lua/test/ps.sh и native root0/0; source JSON hashes
+и target receipts в .tests/toolchain-research/probe-{source-corrected,target-proof}.json.
+
+Один target batch: posix-scope-probe,editor-process,editor-descendants,editor-runtime,
+project-session,process-lifecycle,tests/lib/trace,tests/trace (все .test.lua).
+Windows scripts/test.ps1 e2e -Files @(...), Ubuntu compose tool-paths.sh --batch
+e2e --file ... через тот же existing image. TEMP/TMP/TMPDIR/NVIM_LOG_FILE на F,
+PYTHONUTF8=1/PYTHONDONTWRITEBYTECODE=1/Python -B. Desktop/WSL не запускались.
+Windows batch1794997892351697500=39.94s, Ubuntu1794997903402941773=86.54s.
+Process/helper19 PASS6 SKIP/22 PASS2 SKIP; отдельно root trace48 FAIL на каждой
+ОС из уже существующего catalog WIP. Failure не скрывался и не повторялся без
+изменения этого WIP. Большой regression не запускался, native Mac не проверен.
+
+Get-Content/rg/Python читали только конкретные artifacts и куски исходников;
+git diff/hash подтвердили сохранность остальных WIP. Native syntax2/OpenSpec
+strict/diff guards PASS. probe-finish.py: frozen remainder, raw/staged journal
+prefixes, exact index15. Registry частично staged через hash-object/update-index:
+HEAD + own existing POSIX row; catalog row и все прочие WIP остаются unstaged.
+Local commit gc.auto=0/maintenance.auto=false, без push.

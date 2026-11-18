@@ -139,3 +139,15 @@ failed/affected случаи. Большой checkpoint выполняется �
 FAIL и неполный прогон нельзя обозначать full PASS. Windows `regression`
 содержит POSIX-наборы через WSL и ConPTY; без готового WSL можно проверить
 план и native affected batch, это не полный Windows регресс. Mac — отдельно.
+
+## Ошибка POSIX process probe — IDE-117
+
+`scripts/test.sh e2e --file tests/e2e/posix-scope-probe.test.lua` проверяет native
+nonzero exit, signal, spawn error и настоящий ps. На Windows этот файл даёт4
+platform SKIP; отдельные editor-process/descendants/runtime/project-session и
+process-lifecycle проверяют Windows Job backend. Source/target и команды —
+[verification](../openspec/changes/capture-posix-scope-probe-failure/verification.md).
+В shutdown.json при отказе сохраняется scope.probe_failure: argv, attempt,
+elapsed_ms и полный native result либо spawn_error. active_after остаётся
+неизвестным, scope.ok=false; повтор stop возвращает то же доказательство.
+Это не восстановление причины исторического отказа и не native macOS PASS.

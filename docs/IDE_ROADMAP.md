@@ -103,14 +103,16 @@ GoToolchain и SDK existing/manual path в установщике сохране
   положительный Windows Bash debug/WSL — отдельно; WSL не запускался агентом.
 - [ ] Закрыть оставшиеся отказы checkpoint перед Default.
   Rust diagnostics, DAP argv, Go test debug, mixed SQL, Git object read и UI
-  capture разобраны в §277; далее два прежних process/trace WIP failures.
+  capture разобраны в §277. §278 исправил потерю POSIX probe failure;
+  остался прежний trace/catalog WIP (ссылки и учёт standalone installer E2E).
   Checkpoint2764.52s:120 registry files/122 запуска,14 FAIL; все24 native Python
   suites запущены. Пять упавших installer suites исправлены и проверены только
   affected повторами; Terminal suite требует prepared.json отсутствующего
   native Terminal runtime. Полный PASS не заявлен. Два отказа process/trace
   относятся к уже существующему WIP, сохранённому без изменений.
   Шесть missing-tool файлов после §276 PASS; ещё шесть после §277 PASS.
-  Два process/trace остаются открытыми. Точный список и результаты —
+  Process observer после §278 native Ubuntu PASS; root trace пока FAIL.
+  Точный список и результаты —
   [verification §276](../openspec/changes/handle-missing-tool-settings-without-prompts/verification.md).
   Полный повтор — после цельного исправления блока; до него только affected
   проверки. Windows full/WSL и native Mac остаются отдельными gates.

@@ -14844,3 +14844,45 @@ Host tmp на F, SDK/locks/backports и прежний WIP сохранены. L
 
 **Файлы.** dap.lua; пять E2E и Git helper; OpenSpec delta/verification,
 roadmap/HISTORY и append-only FIXLOG/AGENT_COMMANDS.
+
+
+## 2026-11-18
+
+### 278. Полный результат отказа POSIX process probe
+
+**Связь:** IDE-117, §275–277; change `capture-posix-scope-probe-failure`.
+**Статус:** boundary исправлена native Ubuntu; Windows lifecycle PASS; Mac открыт.
+
+**Проблема.** При отказе ps терялись exit code/signal/stdout, пустой stderr не
+позволял разобраться. Code0/signal9 принимался за empty groups и cleanup PASS.
+
+**Причина.** process_scope_posix.active проверял только code и выбрасывал только
+stderr. Source exactbytes3d0e6b7 дал native1 PASS/3 FAIL. Дополнительно spawn
+fixture находила реальный ps дальше по PATH после отсутствующего shebang
+interpreter; её PATH ограничен private bin, фактический ENOENT подтверждён.
+Историческая причина отказа8785983585636 по-прежнему неизвестна.
+
+**Изменение.** При failed code/signal/spawn сохраняются argv, attempt, elapsed,
+полный native result либо spawn_error. Неизвестное active_after не превращается
+в false; cleanup остаётся FAIL. Timeout2s, retries и signal policy прежние,
+success stdout/process table не сохраняются. Test stop verdict кеширует evidence.
+
+**Проверка/e2e.** Одна target iteration8 файлов на ОС. Ubuntu1794997903402941773
+(86.54s):22 process/helper PASS/2 platform SKIP. Windows1794997892351697500
+(39.94s):19 PASS/6 platform SKIP, включая4 POSIX-only. В обоих пакетах отдельно
+root trace5 PASS/48 FAIL/13 SKIP из прежнего catalog WIP; общий batch FAIL,
+он не выдаётся за зелёный. Ubuntu4 новых native boundary PASS: code17/signal0,
+code0/signal9, spawn ENOENT, real ps; root0/signal0/APIerrors[], failure evidence,
+отсутствие собственных живых групп независимым real ps и cached verdict проверены.
+Прежние editor process/descendants/runtime/session и Windows Job lifecycle PASS.
+Source correction1 PASS/3 FAIL, target4 PASS; exact bytes/receipts сохранены в
+probe-source-corrected.json/probe-target-proof.json. Syntax2/strict/diff и
+raw/staged journal guards PASS; SDK/locks/backports и чужой catalog WIP прежние.
+
+**Вывод.** Ещё один failed файл checkpoint исправлен. Остался root trace/catalog,
+не product/runtime regression. IDE-117 теперь сохраняет данные следующего отказа,
+но это не реконструкция его исторической причины и не native Mac PASS.
+Desktop/WSL не управлялись, Docker existing/offline/2CPU/3GiB, host tmp на F.
+
+**Файлы.** POSIX scope helper,4-case E2E/fixture/одна registry строка,
+OpenSpec verification/tasks, PROBLEMS/roadmap/testing/HISTORY и append-only журналы.
