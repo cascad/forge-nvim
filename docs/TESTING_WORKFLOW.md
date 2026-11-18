@@ -207,3 +207,18 @@ UI override. Native37+trace8 PASS/2 info SKIP Windows/Ubuntu, без повто�
 Для developer source без опубликованного catalog передать -InstallerUIPath /
 --installer-ui-path явно; normal release download остаётся автоматическим.
 Actual Default stand и границы — [verification](../openspec/changes/reject-stale-local-installer-ui/verification.md).
+
+
+## Повтор после работы IDE и actual archive checkpoint — §285
+
+Ownership проверяет сам kit/tmp, пропускает его временные OS resources, сохраняет
+проверки остальных paths. Live/closed native socket и foreign-link regressions:
+python -B tests/install-transient-entries.test.py (POSIX python3), нужен существующий
+Go SDK для одинакового native socket helper. Windows/Ubuntu5 cases PASS после
+affected repeats; previous errors сохранены. [Evidence](../openspec/changes/skip-transient-installation-entries/verification.md).
+
+Actual Default/Custom Core source/Core/Terminal archives прошли install/launch/
+tree/search/LuaLS/edit/save/restart/repeat на Windows и Ubuntu с настоящими20
+Mason packages/67 Git repos в cached native profile. Это не cold SDK bootstrap
+и не закрытие Mac/WSL/installed-language matrix/publication. Metadata/same20
+receipts и actual input bounds зафиксированы в verification.

@@ -134,6 +134,9 @@ local function install()
         local real = uv.fs_realpath(path)
         if not real or not within(real,target) then fail('External link in Forge installation: ' .. path) end
       elseif stat.type == 'directory' then
+        -- Keep the tmp boundary check above, but leave its transient OS
+        -- resources alone (including Windows AF_UNIX reparse nodes).
+        if normalize(path) == normalize(join(target,'tmp')) then return end
         for name in vim.fs.dir(path) do check_owned(join(path,name)) end
       end
     end

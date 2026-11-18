@@ -10756,3 +10756,40 @@ os.lstat owned tmp node показал reparse_tag0x80000023; read-only Microsof
 MS-FSCC Reparse Tags подтвердил AF_UNIX, без WSL calls. C free14.8GiB/F1667.8GiB
 на read-only check; Windows caches/temp на F. Full release/clean Mac не заявлены.
 git commit gc.auto=0/maintenance.auto=false, только owned files, без push.
+
+
+## 193. Transient ownership and archive acceptance — 2026-11-18
+
+cwd F:/repo/forge-nvim, login:false/full access. Targeted source reads и native
+os.lstat only собственного tmp узла; tag0x80000023 подтверждён MS-FSCC Reparse Tags
+https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-fscc/c8e77b37-3909-4fe6-a4ea-2b9d423b1ee4 .
+OpenSpec list/status/instructions apply skip-transient-installation-entries ready,
+context/artifacts прочитаны. Native policy skip top tmp recursion after boundary.
+
+One batch scripts/test.ps1 e2e -Files @(...); Ubuntu existing compose/limits run
+--rm --no-deps --pull never --entrypoint bash ubuntu tests/containers/tool-paths.sh
+--batch e2e --file ... : transient,process-exit,UI-source,trace. Бatches
+1795016930467361600/1795016943206026493. Windows2 Python fixture ERROR, Ubuntu
+passed. Read primary local Go src/net/unixsock*_windows* и Rust std net: Go
+standard API выбран без FFI/nightly. Existing native go build helper в owned
+stand, cache .tests/transient-go-cache/<platform>, GOTOOLCHAIN local/GOENV off.
+Only2 affected native cases: Windows29.203s/Ubuntu11.529s PASS. Aggregate23 PASS
+10 SKIP/31 PASS2 SKIP; initial ERROR logs сохранены, other files не повторялись.
+
+Ignored install-default-windows.py стал native Windows/Linux diagnostic driver:
+actual source/Core/Terminal по own local HTTP, root scripts/UI/SDK reader и все
+production stages, cached real67 Git repos/20 Mason packages. Windows --resume
+не повторяет успешную first install; initial failed repeat скопирован отдельно.
+Linux docker exec в known owned container261d5816a414, private GUI debs extracted
+для headless-font prerequisites, без apt/engine/WSL изменений. Native Default/
+Custom install/launch/Core workflow/repeat PASS на обеих ОС,20 receipts unchanged.
+Driver imports existing Core observer, calls native CLI, Source catalogs injected
+как local transport input; config/stages не fixtures. Evidence acceptance.json
+в .tests/default-acceptance/windows-x64/1795014050793199700 и
+.tests/ubuntu/default-acceptance/linux-x64/fride-default-f3fzzdaq.
+
+Python AST/Lua loadfile/Go compile both OS, OpenSpec strict/trace --change,
+transient-finish.py frozen27/native UI sources+SHA/raw+staged journal prefixes/
+exact index и diff --check. Temp/cache F; Docker2CPU/3GiB, actual session имеет
+явную bridge сеть только preparation. Source SDK/locks/UI не менялись. Local
+git commit gc.auto=0/maintenance.auto=false, без push; общий full не повторялся.

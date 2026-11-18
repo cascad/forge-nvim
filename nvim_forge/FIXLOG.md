@@ -15158,3 +15158,42 @@ workflow, Desktop/WSL не управлялись. E2E offline2CPU/3GiB, full н
 INSTALLATION_PLAN/ROADMAP/HISTORY/TESTING_WORKFLOW/OpenSpec и журналы. Frozen27,
 UI receipts, raw/staged journal prefixes/exact index/syntax/strict проверены.
 Local commit без push.
+
+
+## 2026-11-18
+
+### 285. Повтор установки с временными IPC узлами
+
+**Связь:** actual Default repeat после §284, skip-transient-installation-entries.
+Спека: IDE-BOOT-47 (ADDED).
+**Проблема/причина.** Рабочий Windows kit после Core workflow имел tmp/bee1.tmp,
+AF_UNIX reparse tag0x80000023. uv.fs_lstat этого временного узла возвращал EACCES,
+и рекурсивный ownership walk останавливал repeat до publication. Unix sockets
+не являются постоянными конфигами, читать/удалять их для обновления не нужно.
+**Изменение.** Сам tmp directory проходит прежнюю lstat/link проверку, затем
+рекурсия только этого subtree пропускается. Все остальные runtime/config/bin/
+log/state/backups прежние. Нет Windows-specific tag parsing, SDK patch, общего
+ignore EACCES или удаления временных ресурсов активного процесса.
+**Проверка/e2e.** Один batch/ОС: Windows1795016930467361600, Ubuntu1795016943206026493.
+New5, process-exit12,UI-source6,trace8. Initial Windows2 fixture ERROR: CPython
+не экспортирует AF_UNIX, Ubuntu5 PASS. Общий fixture заменён standard Go net
+ListenUnix/SetUnlinkOnClose(false), существующий SDK/local/no downloads, relative
+имя ipc. Only affected closed/live2 Windows29.203s/Ubuntu11.529s PASS. Native
+endpoint остаётся, active owner не остановлен, config/foreign snapshots прежние;
+foreign tmp root и persistent link всё ещё отказы. Aggregate23 PASS10 SKIP
+Windows/31 PASS2 SKIP Ubuntu (8 Windows POSIX skips+2 trace info). Source ERROR
+и affected reports сохранены. Product3-line patch после initial не менялся.
+**Actual acceptance.** Настоящие source/Core33 parsers+rg/Terminal archives,
+20 Mason packages/67 Git repos в native owned cached profile. Windows Default
+launch0.31s/Core workflow3.52s/repeat17.76s; Custom Core install20.39s/launch0.33s/
+workflow2.89s/repeat13.73s. Ubuntu Default install14.52s/launch0.06s/workflow1.39s/
+repeat4.71s, Custom Core4.12s/0.08s/1.5s/2.74s. Actual tree/search/LuaLS/
+diagnostics/edit/save/restart прошли; все20 receipts byte-identical после repeat.
+Это не cold SDK bootstrap и не installed-language/debug matrix всех платформ.
+**Вывод.** Обычная работа редактора не блокирует повтор из-за transient IPC.
+Native Mac/Windows WSL/publication и дальнейший installed-language/cold checks
+остаются. Host tmp F, existing Docker/E2E offline2CPU/3GiB, owned bridge prep
+container для actual workflow, без Desktop/WSL lifecycle. SDK/locks/backports/UI
+frozen, raw/staged prefixes/exact index/syntax/strict проверены; full не повторён.
+**Файлы.** install-private.lua, native transient suite/Go fixture, OpenSpec,
+план/история/INSTALLATION_PLAN/TESTING_WORKFLOW и журналы. Local commit без push.

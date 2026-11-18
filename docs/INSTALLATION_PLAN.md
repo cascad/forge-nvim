@@ -1292,3 +1292,18 @@ Native suite tests/install-external-tools.test.py:14 cases Windows/Ubuntu PASS,
 actual tools+Mason fixture. [Evidence](../openspec/changes/reuse-explicit-ide-tools/verification.md).
 Нужны подготовленные frontend, gopls, Node/Prettier, Delve и Mason plugins;
 tests сами SDK не устанавливают. Native Mac/full Default/publication отдельно.
+
+
+## Повтор после работы IDE и actual archive checkpoint — §285
+
+Ownership проверяет сам kit/tmp, пропускает его временные OS resources, сохраняет
+проверки остальных paths. Live/closed native socket и foreign-link regressions:
+python -B tests/install-transient-entries.test.py (POSIX python3), нужен существующий
+Go SDK для одинакового native socket helper. Windows/Ubuntu5 cases PASS после
+affected repeats; previous errors сохранены. [Evidence](../openspec/changes/skip-transient-installation-entries/verification.md).
+
+Actual Default/Custom Core source/Core/Terminal archives прошли install/launch/
+tree/search/LuaLS/edit/save/restart/repeat на Windows и Ubuntu с настоящими20
+Mason packages/67 Git repos в cached native profile. Это не cold SDK bootstrap
+и не закрытие Mac/WSL/installed-language matrix/publication. Metadata/same20
+receipts и actual input bounds зафиксированы в verification.

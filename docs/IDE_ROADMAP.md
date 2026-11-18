@@ -148,8 +148,10 @@ GoToolchain и SDK existing/manual path в установщике сохране
   checks и native Mac/Windows WSL/publication gates.
   Windows actual Default уже установлен из source/Core/Terminal archives;
   launch и Core tree/search/LuaLS/edit/save/restart прошли. Repeat выявил
-  отдельный EACCES на IPC entry в kit/tmp: следующий точечный fix до продолжения
-  Custom/Ubuntu workflows. Owner marker перечисляет runtime parts core/terminal,
+  отдельный EACCES на IPC entry в kit/tmp, исправленный §285 общей границей tmp.
+  Default/Custom archive→launch/Core workflow→repeat теперь прошли Windows/Ubuntu,
+  на cached настоящих20 Mason packages/67 Git repos, не cold SDK bootstrap.
+  Owner marker перечисляет runtime parts core/terminal,
   выбранные языки проверяются readiness20, не количеством parts.
 
 Статус: базовые e2e настоящего nvim_forge работают на Windows и Ubuntu;
