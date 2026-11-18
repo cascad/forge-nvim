@@ -3,7 +3,7 @@ local config=vim.json.decode(table.concat(vim.fn.readfile(assert(vim.env.FRIDE_V
 vim.fn.mkdir(vim.fn.stdpath('state'),'p')
 vim.opt.rtp:append(config.deps..'/lazy/mason.nvim')
 vim.opt.rtp:append(config.deps..'/lazy/mason-tool-installer.nvim')
-local name='fride-version-fixture'
+local name=config.package_name or 'fride-version-fixture'
 package.preload.fride_version_package=function() return {
   schema='registry+v1',name=name,description='Native version policy fixture',homepage='https://example.invalid',
   licenses={'MIT'},languages={},categories={},source={id='pkg:github/fride/version-fixture@v1.0.0',
@@ -19,7 +19,8 @@ local package=registry.get_package(name)
 local function capture()
   local receipt=package:get_receipt():or_else(nil)
   vim.fn.writefile({vim.json.encode({data=vim.fn.stdpath('data'),installed=package:is_installed(),
-    version=receipt and receipt:get_installed_package_version(),policy=vim.env.FRIDE_TOOLS_VERSIONS})},config.report)
+    version=receipt and receipt:get_installed_package_version(),policy=vim.env.FRIDE_TOOLS_VERSIONS,
+    go_available=vim.fn.executable('go')})},config.report)
 end
 if config.manual then
   local done,success=false,false
@@ -28,12 +29,20 @@ if config.manual then
   assert(success,'Native fixture install failed');capture();return
 end
 local catalog=require('forge.tool_catalog')
-catalog.mason=function() return {name} end
-catalog.versions=function() return {[name]='v1.0.0'} end
+catalog.mason=function() return config.names or {name} end
+catalog.versions=function() return config.versions or {[name]='v1.0.0'} end
 vim.api.nvim_create_user_command('Lazy',function()
   require('mason-tool-installer').setup({ensure_installed=catalog.mason_specs(),run_on_start=false,auto_update=false,
     integrations={['mason-lspconfig']=false,['mason-null-ls']=false,['mason-nvim-dap']=false}})
   vim.cmd('runtime plugin/mason-tool-installer.lua')
 end,{nargs='*'})
+if config.remove_external then
+  vim.api.nvim_create_autocmd('User',{pattern='MasonToolsUpdateCompleted',once=true,
+    callback=function() assert(vim.uv.fs_unlink(config.remove_external)) end})
+end
 vim.api.nvim_create_autocmd('VimLeavePre',{callback=capture})
+if config.mti_only then
+  vim.cmd('Lazy load mason-tool-installer.nvim');vim.cmd('MasonToolsInstallSync');return
+end
+if config.empty_path then vim.env.PATH='' end
 dofile(config.stage)

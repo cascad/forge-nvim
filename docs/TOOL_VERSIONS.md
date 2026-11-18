@@ -5,6 +5,11 @@
 Mason provider: закреплённую fride версию, если она есть, иначе штатную версию
 registry. Startup не запускает install/update или сканирование packages.
 
+Готовый tool, явно выбранный в пользовательском tools.json, удовлетворяет setup
+вместо Mason package — и при preserve, и при baseline. Его package не меняется,
+receipt не требуется; path/JS prerequisites проверяются отдельно.
+[Поддерживаемые ключи и область setup](TOOL_PATHS.md#явный-setup-приложения).
+
 Обновления/выбор версий доступны в штатном `:Mason`. Свои пути в tools.json и
 SDK проекта сохраняются. Этот выбор касается Mason tools, а не plugins,
 Neovim, Go/Rust/Node/Python или системных пакетов.

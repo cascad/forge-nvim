@@ -419,6 +419,7 @@ Python реализован и проверен 2026-11-03; после возо�
 | §280 | [Явный Go build toolchain для IDE tools](../nvim_forge/FIXLOG.md#280-явный-go-build-toolchain-для-ide-tools) |
 | §281 | [Сохранение установленных версий IDE tools](../nvim_forge/FIXLOG.md#281-сохранение-установленных-версий-ide-tools) |
 | §282 | [Отказ установки при завершении подготовки сигналом](../nvim_forge/FIXLOG.md#282-отказ-установки-при-завершении-подготовки-сигналом) |
+| §283 | [Явные IDE tools удовлетворяют setup без копии Mason](../nvim_forge/FIXLOG.md#283-явные-ide-tools-удовлетворяют-setup-без-копии-mason) |
 
 ## Как читать и дополнять
 

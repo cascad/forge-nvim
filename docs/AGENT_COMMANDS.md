@@ -10685,3 +10685,35 @@ Python AST, Lua loadfile, OpenSpec strict, trace --change, frozen27 (registry
 как HEAD), UI receipts/SHA, raw/staged prefix и exact index через ignored
 setup-process-finish.py. Git local commit gc.auto=0/maintenance.auto=false,
 без push. Следующий user choice external explicit tool vs backup Mason pending.
+
+
+## 191. Reuse explicit IDE tools — 2026-11-18
+
+cwd F:/repo/forge-nvim, login:false/full access. rg/Get-Content читали catalog/
+setup/readiness/tool_paths/native MTI и готовые helper/SDK metadata. OpenSpec list
+nearest root/new/status/instructions apply reuse-explicit-ide-tools ready,
+context/artifacts прочитаны. Existing user scope/resolver и native condition.
+
+Один affected batch: scripts/test.ps1 e2e -Files @(...); Ubuntu compose/limits
+run --rm --no-deps --pull never --entrypoint bash ubuntu tests/containers/tool-paths.sh
+--batch e2e --file ... .9 files: external tools, tool versions, Go toolchain,
+IDE tools, SDK settings; tool_versions unit, trace, Go/Rust paths, common paths.
+FORGE_INSTALL_UI_BINARY указывает source-matched предыдущую own сборку; Rust не
+менялся. Batches1795013112867992000/1795013124141035037. Registry21 PASS2 SKIP
+(нет manual links, прежний pending IDE-SQL-9).
+Native defaults выполняли целые файлы, inherited case filters очищены runner.
+
+Initial external errors: Windows1/Ubuntu2 fixture expectations. Поправлены
+explicit Node SDK selection и direct MTI expected nonzero; добавлен no-Node14.
+Только6/13/14 через python -B tests/install-external-tools.test.py <short names>:
+Windows17.101s/Ubuntu4.884s,3 PASS на ОС. Ubuntu direct existing container с
+FORGE_E2E_DEPS=/opt/forge/editor-deps и stand /tmp, без дополнительного backport
+write. Initial failures и все logs сохранены, composite latest56 native cases
++21 registry: Windows77 PASS2 SKIP/Ubuntu74 PASS5 SKIP. Общий full не запускался.
+
+Python AST2/Lua loadfile5, strict OpenSpec и trace --change; advisory MODIFIED22
+ожидает active predecessors, не archive. external-tools-finish.py frozen27
+(registry unchanged HEAD), UI source/binary hashes, raw/staged journal prefixes,
+exact owned index/diff --check. Local git commit gc.auto=0/maintenance.auto=false,
+без push. TMP/TEMP/TMPDIR/NVIM_LOG_FILE F; Linux stand /tmp/artifacts F, offline
+2CPU/3GiB. Desktop/WSL lifecycle/config не вызывались. Native Mac отдельно.

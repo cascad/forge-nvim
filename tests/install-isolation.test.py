@@ -74,7 +74,7 @@ class Isolation(unittest.TestCase):
         (cls.source/'nvim_forge/init.lua').write_text(INIT,encoding='utf-8')
         (cls.source/'nvim_forge/scripts/setup-stage.lua').write_text(STAGE,encoding='utf-8')
         (cls.source/'nvim_forge/lua/forge').mkdir(parents=True)
-        for name in ['setup_sdks','tool_paths','tool_catalog','install_profile','parser_runtime','sdk','log_store']:
+        for name in ['setup_sdks','setup_tools','tool_paths','tool_catalog','install_profile','parser_runtime','sdk','log_store']:
             shutil.copy2(ROOT/f'nvim_forge/lua/forge/{name}.lua',cls.source/f'nvim_forge/lua/forge/{name}.lua')
         shutil.copy2(ROOT/'nvim_forge/scripts/components.tsv',cls.source/'nvim_forge/scripts/components.tsv')
         shutil.copytree(ROOT/'scripts',cls.source/'scripts',ignore=shutil.ignore_patterns('__pycache__'))

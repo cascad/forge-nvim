@@ -135,6 +135,9 @@ GoToolchain и SDK existing/manual path в установщике сохране
   §282 закрыл найденный native отказ setup: SIGKILL child больше не считается
   успешным code0. Probes/stages/repeat проверены Windows/Ubuntu; native Mac
   отдельно. Следующий продуктовый срез прежний — consumers и Default/Custom.
+  §283: владелец подтвердил reuse явно выбранного user tool без запасной копии
+  Mason. Реализация подключает существующие runtime keys к setup с user scope,
+  отдельной readiness и прежними strict checks остальных packages.
 
 Статус: базовые e2e настоящего nvim_forge работают на Windows и Ubuntu;
 фоновые установки инструментов редактора перенесены в явный setup.

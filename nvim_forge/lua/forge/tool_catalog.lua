@@ -46,10 +46,18 @@ function M.mason_specs()
     local versions, specs = M.versions(), {}
     local preserve=M.install_policy()=='preserve'
     for _, name in ipairs(M.mason()) do
-        local spec=versions[name] and {name,version=versions[name]} or name
-        if preserve and type(spec)=='table' then
-            -- Native MTI evaluates this only for an explicit install, not at startup.
-            spec.condition=function() return not require('mason-registry').get_package(name):is_installed() end
+        local spec={name,version=versions[name]}
+        -- Native MTI evaluates this only for an explicit install, not at startup.
+        spec.condition=function()
+            local ok,external=pcall(function() return require('forge.setup_tools').external(name) end)
+            if not ok then
+                -- MTI runs conditions inside an async refresh: throwing here
+                -- would leave its synchronous command waiting forever.
+                vim.notify(external,vim.log.levels.ERROR,{title='Setup tools'})
+                return false
+            end
+            if external then return false end
+            return not (preserve and versions[name]) or not require('mason-registry').get_package(name):is_installed()
         end
         specs[#specs+1]=spec
     end

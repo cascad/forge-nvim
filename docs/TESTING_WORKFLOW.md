@@ -184,3 +184,15 @@ plugins/parsers/tools проверяются общей границей до pu
 code/signal/command/log, прежний kit сохраняется. Native regression:
 python -B tests/install-process-exit.test.py (POSIX python3). Windows4 PASS8
 POSIX SKIP, Ubuntu12 PASS; native Mac отдельно. [Evidence](../openspec/changes/reject-signaled-setup-process/verification.md).
+
+
+## Готовые tools из пользовательских путей — §283
+
+User tools.json для поддерживаемых runtime keys удовлетворяет setup вместо
+Mason package, включая baseline. Strict readiness остальных packages прежняя;
+external path/JS Node prerequisites проверяются отдельно. Project overrides —
+только runtime, ошибка выбора не заменяется fallback. [Правила](TOOL_PATHS.md#явный-setup-приложения).
+Native suite tests/install-external-tools.test.py:14 cases Windows/Ubuntu PASS,
+actual tools+Mason fixture. [Evidence](../openspec/changes/reuse-explicit-ide-tools/verification.md).
+Нужны подготовленные frontend, gopls, Node/Prettier, Delve и Mason plugins;
+tests сами SDK не устанавливают. Native Mac/full Default/publication отдельно.

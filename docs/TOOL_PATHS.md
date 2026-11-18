@@ -1,6 +1,6 @@
 # Пути языковых сред и инструментов
 
-2026-11-18, FIXLOG §265–276, IDE-BOOT-33/34/36/37/38/41. Python, Node, native Bash,
+2026-11-18, FIXLOG §265–276/283, IDE-BOOT-33/34/36/37/38/41/45. Python, Node, native Bash,
 Bats, Sqruff, Go/Rust LSP, форматтеры и DAP. Чтение настроек ничего не устанавливает.
 
 ## Ошибка пути во время работы
@@ -109,6 +109,34 @@ DAP — по проекту запуска. Для CodeLLDB нужен целы�
 Mason поиск; Delve — асинхронный поиск GOBIN/GOPATH/PATH/Mason с выбором версии.
 
 ## Порядок выбора и ошибки
+
+### Явный setup приложения
+
+Setup учитывает **пользовательский** tools.json для уже поддерживаемых путей:
+gopls/gofumpt/golines/rust-analyzer/codelldb/sqruff, dlv (Mason package delve),
+JS entrypoints prettier/typescript-language-server/bash-language-server/
+js-debug-adapter/bash-debug-adapter. Выбранный компонент по-прежнему определяет,
+какие tools нужны. Для явно выбранного готового tool соответствующий Mason
+package не устанавливается и его receipt не требуется, даже с
+`--tools-versions baseline`. Остальные packages готовятся по обычной policy.
+
+Setup проверяет executable либо JS file и готовый Node; CodeLLDB path относится
+к целому готовому upstream bundle. Источник/path и число внешних tools видны в
+`log/setup-tools.log` установленного комплекта. Это проверка расположения и
+зависимостей entrypoint, а не обещание совместимости произвольной версии tool.
+Выбранные файлы и уже существующие Mason packages сохраняются.
+
+Неверный явный путь даёт ошибку без fallback. Путь в заменяемых `runtime`,
+`config` или `bin` собственного kit не принимается: при публикации эта копия
+может исчезнуть. Файл, исчезнувший во время setup, также запрещает publication.
+Проектный tools.json не влияет на установку приложения; при работе в проекте
+его прежний приоритет сохраняется. SDK prerequisites проекта остаются обычными.
+
+Неподключённые runtime keys не исключают packages из установки. Эта policy
+касается tools.json; прежние отдельные vim.g/env overrides остаются runtime
+настройками. `:MasonInstall` остаётся прямым штатным действием менеджера.
+
+### Работа в проекте
 
 1. Проектный tools.json.
 2. Пользовательский tools.json.

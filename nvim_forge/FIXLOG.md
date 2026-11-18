@@ -15072,3 +15072,47 @@ journal prefixes/exact index проверены. Native Mac/actual Default от�
 verification, ROADMAP/HISTORY/INSTALLATION_PLAN/TESTING_WORKFLOW и журналы.
 Local commit без push. Следующая policy на выбор: явно выбранный внешний IDE
 tool удовлетворяет setup или нужен также запасной Mason package.
+
+
+## 2026-11-18
+
+### 283. Явные IDE tools удовлетворяют setup без копии Mason
+
+**Связь:** решение владельца после §282, reuse-explicit-ide-tools.
+Спека: IDE-BOOT-45 (ADDED), IDE-BOOT-22 (MODIFIED).
+**Статус:** Windows/Ubuntu проверены; native macOS открыт.
+**Проблема.** Runtime использовал tools.json, а setup всё ещё требовал Mason
+package/receipt и новый Go compiler для явно выбранного готового gopls.
+**Причина.** У каталога/MTI, build guard и readiness не было общего различия
+выбранного external tool и требуемого managed package.
+**Изменение.** Setup_tools использует прежний user resolver для подключённых
+runtime keys, JS file+Node и alias delve->dlv. MTI native condition пропускает
+external при preserve/baseline, settings не читаются ради startup каталога.
+Plan/readiness проверяют оставшиеся Mason packages и external paths отдельно;
+полностью external набор не вызывает install command. Строгие publisher API
+прежние. Invalid path/исчезновение/путь в заменяемом kit запрещает publication
+без fallback. Source/path/count видны в setup log, SDK/settings/payloads прежние.
+Project tools.json остаётся runtime scope. Прямой MTI invalid condition сообщает
+ERROR и skip вместо исключения внутри async refresh, которое могло бы оставить
+sync wait незавершённым; production plan строго падает до install.
+**Проверка/e2e.** Один affected пакет на ОС, Windows1795013112867992000
+306.31s/Ubuntu1795013124141035037 184.71s. Registry21 PASS2 info SKIP: реальные Go/Rust
+LSP/format/tests/Delve/CodeLLDB и4 общих paths,2 unit/8 trace. Native5 suites:
+external14, versions8, Go11, IDE tools12, SDK settings11. Latest aggregate
+77 PASS2 SKIP Windows,74 PASS5 SKIP Ubuntu;3 Ubuntu SDK skips. Trace SKIP —
+нет manual links и прежний незавершённый IDE-SQL-9 без registered E2E. Initial external
+13 cases дали Windows12 PASS1 FAIL/Ubuntu11 PASS2 FAIL: неправильное ожидание
+exit0 direct MTI при ERROR и отсутствие выбранного Node в positive Ubuntu JS
+fixture. Исправлены fixtures, добавлен negative missing-Node14. Only affected
+6/13/14: Windows3 PASS17.101s, Ubuntu3 PASS4.884s. Первичные FAIL сохранены.
+Native gopls/Prettier/Node/Delve и настоящий Mason/local releases fixture v1/v2
+проверяют mixed/missing/baseline/repeat, сохранение уже установленного package,
+user/project, unknown key, replaced path и исчезновение на native event.
+**Вывод.** Явный user tool заменяет требование пакета, без лишнего install и
+build SDK. Не новые path keys/совместимость любых версий/full Default; CodeLLDB
+требует целый bundle. Host tmp F, existing Docker offline2CPU/3GiB, Desktop/WSL
+не управлялись. Frozen27/UI receipts/raw+staged prefix/exact index/syntax/strict
+проверены. Далее — remaining consumers и actual Default/Custom/native gates.
+**Файлы.** setup_tools/catalog/setup-stage, shared stand+diagnostic/unit helpers,
+native external suite, TOOL_PATHS/TOOL_VERSIONS/планы/история/OpenSpec и журналы.
+Local commit без push; общий regression не повторялся.

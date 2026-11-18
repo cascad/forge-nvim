@@ -51,18 +51,22 @@ local ok, err = xpcall(function()
         vim.cmd('Lazy load mason-tool-installer.nvim')
         local catalog = require('forge.tool_catalog')
         local readiness = require('forge.setup_readiness')
+        local external = require('forge.setup_tools')
+        local plan = external.plan(catalog.mason())
         local version_policy=catalog.install_policy()
         local version_options={preserve_versions=version_policy=='preserve'}
         io.stdout:write('IDE tool versions: '..version_policy..'\n')
-        readiness.build_sdks(catalog.mason(), catalog.versions(),version_options)
+        io.stdout:write('External IDE tools: '..vim.json.encode(plan.external)..'\n')
+        readiness.build_sdks(plan.mason, catalog.versions(),version_options)
         local native = require('forge.native_tools')
         -- An explicitly supplied old bundle may include additional SQL tools.
         -- A basic SQL selection does not require that bundle.
         if native.owned('sqls') or native.owned('forge-sqltest') then
             io.stdout:write('SQL native readiness: '..vim.json.encode(native.check_sql())..'\n')
         end
-        vim.cmd('MasonToolsInstallSync')
-        local report = readiness.tools(catalog.mason(), catalog.versions(),version_options)
+        if #plan.mason>0 then vim.cmd('MasonToolsInstallSync') end
+        local report = readiness.tools(plan.mason, catalog.versions(),version_options)
+        report.external=external.check(plan.external).external
         io.stdout:write('Tool readiness: ' .. vim.json.encode(report) .. '\n')
     else
         error('Unknown setup stage: ' .. tostring(stage))

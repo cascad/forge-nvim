@@ -3,10 +3,14 @@ package.path=root..'/tests/lib/?.lua;'..root..'/nvim_forge/lua/?.lua;'..package.
 local T=require('check')
 T.check('SELF: tool version specs do not load registry during startup',function()
   local before=package.loaded['mason-registry'];local old=package.preload['mason-registry']
+  local setup,preload=package.loaded['forge.setup_tools'],package.preload['forge.setup_tools']
+  package.loaded['forge.setup_tools']=nil
+  package.preload['forge.setup_tools']=function() error('Unexpected startup tool settings load') end
   package.loaded['mason-registry']=nil
   package.preload['mason-registry']=function() error('Unexpected startup registry load') end
   local ok,result=pcall(require('forge.tool_catalog').mason_specs)
   package.preload['mason-registry']=old;package.loaded['mason-registry']=before
+  package.loaded['forge.setup_tools']=setup;package.preload['forge.setup_tools']=preload
   assert(ok,result);assert(#result>0)
 end)
 T.check('SELF: preserved installed Go tool does not require a compiler',function()
