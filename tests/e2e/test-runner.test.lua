@@ -14,6 +14,10 @@ local function new_editor(on_create)
   local path, sep = vim.env.PATH, vim.fn.has('win32') == 1 and ';' or ':'
   T.eq(manifest.gotestsum_version, 'v1.13.0', 'gotestsum соответствует явной подготовке')
   path = deps .. '/bin' .. sep .. path
+  local lsp = vim.env.FORGE_E2E_LSP_DEPS or root .. '/.tests/lsp-deps'
+  local gopls = lsp .. '/bin/gopls' .. (vim.fn.has('win32') == 1 and '.exe' or '')
+  assert(vim.fn.executable(gopls) == 1, 'Prepare native gopls with tests/e2e/prepare_lsp.py')
+  path = lsp .. '/bin' .. sep .. path
   local tools = vim.env.FORGE_E2E_DAP_TOOLS or root .. '/.tests/dap-tools'
   if vim.fn.isdirectory(tools .. '/go/bin') == 1 then
     path = tools .. '/bin' .. sep .. tools .. '/go/bin' .. sep .. path
@@ -161,9 +165,9 @@ end)
 check('IDE-TEST-2 debug nearest, реальный eval 42 и продолжение до результата', function(e)
   e:input('10G<F9> Td')
   e:wait('Delve остановился на breakpoint', function()
-    if e:ack_warning("Debug adapter didn't respond.") then return false end
     return e:lua([[local d=require('dap'); local s=d.session(); return s~=nil and s.stopped_thread_id~=nil and s.current_frame~=nil]])
   end, 60000)
+  T.eq(e:lua('return vim.api.nvim_get_mode().blocking'),false,'Go debug не оставляет hit-enter')
   T.eq(vim.fn.filereadable(e.test_project .. '/neighbour-ran.txt'), 0)
   e:input('$Fv de')
   e:wait('реальное значение переменной', function()

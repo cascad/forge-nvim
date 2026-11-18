@@ -48,6 +48,10 @@ plan, при missing inputs запуск завершается до любых 
 Windows54/Ubuntu57 targeted E2E PASS (aggregate после failed/affected retries),
 включая7 новых regressions на каждой ОС. Из14 failed файлов checkpoint шесть
 перепроверены и прошли; большой регресс повторно не запускался.
+§277 исправляет Go test debug: native Delve discovery больше не yield в coroutine
+neotest, breakpoint/eval/output восстановлены. Rust без Clippy, DAP project argv,
+mixed Sqruff, Git live read и UI capture согласованы с текущими native APIs.
+Результаты и оставшиеся gates — [verification](../openspec/changes/repair-native-workflow-checkpoint/verification.md).
 Детали build-toolchain downloads и версий решаются для этих следующих шагов;
 они не блокируют работу с путями. Core publisher остаётся d120e3a;
 новый срез не означает завершения всего контракта путей или готовности Default.
@@ -98,16 +102,15 @@ GoToolchain и SDK existing/manual path в установщике сохране
   Положительные LSP/run/format/tests/debug и retry проверены. Native Mac и
   положительный Windows Bash debug/WSL — отдельно; WSL не запускался агентом.
 - [ ] Закрыть оставшиеся отказы checkpoint перед Default.
-  Ближайший продуктовый блок: Rust diagnostics без Clippy и DAP launch args.
-  Затем Git object read при удалении worktree и
-  устаревшие ожидания стенда (gopls PATH, mixed SQL/sqls, RGB scroll).
+  Rust diagnostics, DAP argv, Go test debug, mixed SQL, Git object read и UI
+  capture разобраны в §277; далее два прежних process/trace WIP failures.
   Checkpoint2764.52s:120 registry files/122 запуска,14 FAIL; все24 native Python
   suites запущены. Пять упавших installer suites исправлены и проверены только
   affected повторами; Terminal suite требует prepared.json отсутствующего
   native Terminal runtime. Полный PASS не заявлен. Два отказа process/trace
   относятся к уже существующему WIP, сохранённому без изменений.
-  Шесть missing-tool файлов после §276 PASS; оставшиеся8 ещё не перепроверены.
-  Причины оставшихся отказов ещё не подтверждены. Точный список и результаты —
+  Шесть missing-tool файлов после §276 PASS; ещё шесть после §277 PASS.
+  Два process/trace остаются открытыми. Точный список и результаты —
   [verification §276](../openspec/changes/handle-missing-tool-settings-without-prompts/verification.md).
   Полный повтор — после цельного исправления блока; до него только affected
   проверки. Windows full/WSL и native Mac остаются отдельными gates.

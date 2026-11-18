@@ -413,6 +413,7 @@ Python реализован и проверен 2026-11-03; после возо�
 | §274 | [Обязательные входы Core acceptance перед regression](../nvim_forge/FIXLOG.md#274-обязательные-входы-core-acceptance-перед-regression) |
 | §275 | [Общий выбор SDK установщиком через проверенный Core](../nvim_forge/FIXLOG.md#275-общий-выбор-sdk-установщиком-через-проверенный-core) |
 | §276 | [Ошибки Node и Bash без блокировки редактора](../nvim_forge/FIXLOG.md#276-ошибки-node-и-bash-без-блокировки-редактора) |
+| §277 | [Go test debug и восстановление native checkpoint](../nvim_forge/FIXLOG.md#277-go-test-debug-и-восстановление-native-checkpoint) |
 
 ## Как читать и дополнять
 

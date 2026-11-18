@@ -39,7 +39,9 @@ local function live_result(e,gate,mode)
   e:wait('живой Git завершил настоящий вывод',function()
     for _,r in ipairs(records(gate,'show')) do
       if r.phase=='result' then
-        T.eq(r.code,0);T.eq(r.alive_before_release,true);assert(r.bytes>65536);return true
+        T.eq(r.code,0);T.eq(r.alive_before_release,true);assert(r.bytes>65536)
+        T.eq(r.sha256,e.expected_live_sha256,'Object read вернул другую версию файла')
+        return true
       end
     end
   end,10000)
@@ -101,6 +103,7 @@ local function check(name,dirty,mode,current)
         e:input(':cd '..vim.fn.fnameescape(linked)..'<CR>')
         e:wait('редактор уже в linked',function() return norm(e:lua('return vim.fn.getcwd()'))==norm(linked) end)
       end
+      if mode=='live' then e.expected_live_sha256=vim.fn.sha256(git(linked,'show','HEAD:file_one.txt')..'\n') end
       e:input(':edit '..vim.fn.fnameescape(linked..'/file_one.txt')..'<CR>')
       e:wait('real index show задержан',function() return #records(gate,'show')>0 end,15000)
       if mode=='live' then T.eq(records(gate,'show')[1].alive,true)
@@ -130,7 +133,7 @@ local function check(name,dirty,mode,current)
         live_result(e,gate,mode)
         -- Active worktree может detach при возврате в main до следующего read.
         -- Старый completed сценарий отдельно требует настоящий ошибочный show.
-        if not current then
+        if mode~='live' and not current then
           e:wait('следующий real show вернул ошибку Git',function()
             responsive(e);for _,r in ipairs(records(gate,'show')) do if not r.held and r.code~=0 then return true end end
           end,10000)

@@ -28,7 +28,7 @@ end
 local function checkpoint(e,label)
   local capture=e.rpc.ui_capture;assert(capture,'UI capture was not enabled')
   local previous=capture.flushes
-  local info=e:lua([[vim.cmd('redraw!');local w=vim.api.nvim_get_current_win();local b=vim.api.nvim_get_current_buf()
+  local info=e:lua([[vim.cmd('redraw');local w=vim.api.nvim_get_current_win();local b=vim.api.nvim_get_current_buf()
     local top=vim.api.nvim_win_call(w,function() return vim.fn.line('w0') end)
     local pos=vim.fn.screenpos(w,top,1)
     return {row=pos.row-1,col=pos.col-1,text=vim.api.nvim_buf_get_lines(b,top-1,top,false)[1]}]])
@@ -41,11 +41,14 @@ check('RGB UTF8 scroll resize export',{capture_ui=true},function(e)
     local lines={'RGB_CAPTURE Ω界 & <tag>'};for i=2,90 do lines[i]=('UI_ROW_%03d'):format(i) end
     vim.api.nvim_buf_set_lines(0,0,-1,false,lines);vim.wo.number=false;vim.wo.relativenumber=false
     vim.wo.signcolumn='no';vim.wo.foldcolumn='0';vim.wo.statuscolumn='';vim.wo.wrap=false
+    vim.wo.scrolloff=0
     vim.api.nvim_set_hl(0,'ForgeCaptureVector',{fg=0xff5733,bg=0x112233})
     vim.api.nvim_buf_set_extmark(0,vim.api.nvim_create_namespace('capture-vector'),0,0,{end_row=1,hl_group='ForgeCaptureVector'})
     vim.api.nvim_win_set_cursor(0,{1,0})]])
   checkpoint(e,'utf8-rgb')
+  -- Bypass the product's Ctrl+E Explorer mapping; exercise native UI scrolling.
   e:lua([[vim.cmd('normal! '..vim.api.nvim_replace_termcodes('7<C-e>',true,false,true))]])
+  e:wait('native viewport scrolled',function() return e:lua([[return vim.fn.line('w0')]])==8 end)
   checkpoint(e,'scrolled')
   e.rpc:request('nvim_ui_try_resize',{100,35});checkpoint(e,'resized')
   local python=vim.fn.exepath(vim.fn.has('win32')==1 and 'python' or 'python3');assert(python~='','Python 3 required')
@@ -54,7 +57,13 @@ check('RGB UTF8 scroll resize export',{capture_ui=true},function(e)
   T.eq(converted.code,0,(converted.stdout or '')..(converted.stderr or ''))
   local frames=vim.json.decode(table.concat(vim.fn.readfile(e.dir..'/ui/frames.json'),'\n'))
   T.eq(#frames,3);T.eq(frames[3].width,100);T.eq(frames[3].height,35)
-  assert((frames[2].events.grid_scroll or 0)>0,'Native scroll was not exercised')
+  T.eq(frames[2].metadata.text,'UI_ROW_008')
+  -- Neovim may redraw the viewport with grid_line rather than grid_scroll.
+  -- Verify the reconstructed native frame, not an optional wire optimization.
+  local scrolled=frames[2];local location=scrolled.metadata
+  local row=table.concat(vim.tbl_map(function(cell) return cell[1] end,scrolled.cells[location.row+1]),'')
+  assert(row:sub(location.col+1,location.col+#location.text)==location.text,'Captured scroll frame is stale')
+  assert(scrolled.events.grid_line>frames[1].events.grid_line,'No native viewport redraw captured')
   local first=frames[1];local meta=first.metadata;local cells=first.cells[meta.row+1]
   T.eq(cells[meta.col+1][1],'R');local attr=first.highlights[tostring(cells[meta.col+1][2])]
   T.eq(attr.foreground,0xff5733);T.eq(attr.background,0x112233)

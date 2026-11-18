@@ -1581,9 +1581,14 @@ return {
             dap.adapters.go = function(callback, launch)
                 original(function(adapter)
                     local resolved = vim.deepcopy(adapter)
-                    require("dap.async").run(function()
-                        if resolved.executable then resolved.executable.command = resolve_dlv_path(nil,debug_tool_root(launch)) end
-                        callback(resolved)
+                    -- dap.async.run reuses the caller coroutine. Neotest owns
+                    -- its nio coroutine, so native probe yields must start
+                    -- from the main loop rather than yield into nio's protocol.
+                    vim.schedule(function()
+                        require("dap.async").run(function()
+                            if resolved.executable then resolved.executable.command = resolve_dlv_path(nil,debug_tool_root(launch)) end
+                            callback(resolved)
+                        end)
                     end)
                 end, launch)
             end

@@ -107,7 +107,7 @@ T.check('SELF: MIXED-PROJECT шесть language roots, Node script и Python ve
     T.eq(py.clients.pyright.python:gsub('\\','/'),project_python:gsub('\\','/'))
     open('web/app.js','javascript','ts_ls',project..'/web')
     open('scripts/run.sh','sh','bashls',project)
-    open('db/query.sql','sql','sqls',project..'/db')
+    open('db/query.sql','sql','sqruff',project)
     open('web/app.js','javascript','ts_ls',project..'/web')
     local function picker()
       e:wait('script picker',function() return e:current_ft()=='TelescopePrompt' and e.rpc:request('nvim_get_mode',{}).mode=='i' end)

@@ -38,15 +38,19 @@ T.check('IDE-DAP-1 F5 и project picker сохраняют source buffer и fres
         return output and output.text:find('ROUTE_BEFORE 42',1,true)~=nil
       end)
       local output=P.state(e,'dap-terminal')[1]
+      -- PTY wraps long argv at the viewport width, even inside PROJECT_SINGLE.
+      local displayed=output and output.text:gsub('\n','') or ''
       assert(output and output.text:find('ROUTE_BEFORE 42',1,true),'stdout до паузы')
       for _,previous in ipairs(history) do
         assert(output.buf~=previous.buf and output.channel~=previous.channel,'launch переиспользовал старый PTY')
-        if previous.label then assert(not output.text:find(previous.label,1,true),'старый stdout попал в свежий запуск') end
+        if previous.label then assert(not displayed:find(previous.label,1,true),'старый stdout попал в свежий запуск') end
       end
       if label then
-        assert(output.text:find(label,1,true),'project args не переданы')
-        local arg=e:lua([[return require('dap').session().config.args[1] ]]):gsub('\\','/')
-        T.eq(arg,file,'${file} прочитан из tool buffer')
+        local args=e:lua([[return require('dap').session().config.args]])
+        vim.fn.writefile({vim.json.encode({args=args,output=output})},e.dir..'/'..label..'.json')
+        assert(displayed:find(label,1,true),'project args не переданы')
+        T.eq(args[1]:gsub('\\','/'),file,'${file} прочитан из tool buffer')
+        T.eq(args[2],label,'project label изменён адаптером')
       end
       e:input('<F7><F5>')
       e:wait('завершение '..name,function()

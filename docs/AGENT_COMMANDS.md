@@ -10469,3 +10469,41 @@ frozen25 (registry минус own1), raw/staged journal prefixes, exact owned in
 Registry staged отдельно: HEAD blob + own1, existing2 WIP строки остаются unstaged.
 FIXLOG276/AGENT_COMMANDS184 append через open('ab'). Commit gc.auto=0/
 maintenance.auto=false, без push; остальной WIP сохранён.
+
+
+## 185. Native workflow checkpoint и Go test debug — 2026-11-18
+
+Рабочий каталог F:/repo/forge-nvim, PowerShell login:false/full access, без
+approval flags. Get-Content/rg читали сохранённые §275 00.log, action-state,
+screen-dap-launch-routes.txt и Git gate JSON. Длинные LSP строки не копировались
+целиком. Два неудачных чтения glob-путей заменены folder/-g. Одна recursive
+Get-ChildItem .tests была остановлена Ctrl+C; файловых изменений она не делала.
+
+OpenSpec list --json подтвердил local root; new/status/instructions apply
+repair-native-workflow-checkpoint --json; contextFiles прочитаны. После Go native
+failure skip_specs заменён MODIFIED IDE-DAP-10. Исходный ADDED delta ещё не
+архивирован; archive order зафиксирован в verification. validate --type change
+--strict --no-interactive PASS с информационным предупреждением об этом порядке.
+
+Windows: TEMP=TMP=TMPDIR=F:/repo/forge-nvim/.tests/tmp, PYTHONUTF8=1,
+PYTHONDONTWRITEBYTECODE=1, GOMAXPROCS=2/CARGO_BUILD_JOBS=2/RAYON_NUM_THREADS=2.
+scripts/test.ps1 e2e -Files @(...): initial rust-language,dap-launch-routes,
+test-runner,mixed-project,ui-capture; affected test-runner,go-passive,dap-output,
+ui-capture,gitsigns-live-read,gitsigns-worktree; final ui-capture +tests/lib/ui_grid
++tests/lib/ui_capture (все с суффиксом .test.lua).
+
+Ubuntu: docker compose -f tests/containers/compose.yaml -f tests/containers/limits.yaml
+run --rm --no-deps --pull never --entrypoint bash ubuntu tests/containers/tool-paths.sh
+--batch e2e --file <каждый из тех же файлов>. Existing image/network:none/2CPU/3GiB,
+без engine/WSL start/stop/reconfigure. Каждый OS runner завершён до своего retry.
+
+Immutable batches: Windows1794997122703293800/1794997443166395400/1794997634210085300;
+Ubuntu1794997135716780557/1794997454409243970/1794997596552478452. Raw host logs:
+.tests/toolchain-research/checkpoint-{windows,ubuntu}-{batch,affected,ui}.txt.
+Composite строится по последнему result каждого файла из immutable00.log: по43
+PASS (41 E2E+2 unit),11 files. Прежние FAIL сохраняются; full не запускался.
+
+Patched Windows nvim -u NONE -i NONE -l .tests/toolchain-research/missing-tools-syntax.lua
+<7 Lua files>; diff --check. checkpoint-baseline.py/final guard: frozen25 including
+existing registry/WIP/SDK/locks; raw и staged journal prefixes; exact owned index17.
+git add только allowlist, commit gc.auto=0/maintenance.auto=false; push не выполнялся.

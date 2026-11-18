@@ -154,9 +154,13 @@ local function without_clippy(e)
     cargo_sha256=vim.fn.sha256(raw),path=env.PATH,rustc=env.RUSTC})},e.dir..'/no-clippy.json')
   assert(missing.code~=0 and missing.signal==0 and (missing.stderr or ''):find('clippy',1,true),
     'Fixture должна реально исключить cargo-clippy: '..vim.inspect(missing))
-  e:lua([[local env,ra=...;vim.env.PATH=env.PATH;vim.env.CARGO=env.CARGO;vim.env.RUSTC=env.RUSTC
+  -- PATH excludes the SDK (including Clippy); choose RA through the public resolver.
+  vim.fn.mkdir(e.rust_project..'/.fride','p')
+  vim.fn.writefile({vim.json.encode({tools={['rust-analyzer']=sdk..'rust-analyzer'..suffix}})},
+    e.rust_project..'/.fride/tools.json')
+  e:lua([[local env=...;vim.env.PATH=env.PATH;vim.env.CARGO=env.CARGO;vim.env.RUSTC=env.RUSTC
     require('lazy').load({plugins={'nvim-lspconfig'}})
-    vim.lsp.config('rust_analyzer',{cmd={ra}});vim.lsp.enable('rust_analyzer')]],{env,sdk..'rust-analyzer'..suffix})
+    vim.lsp.enable('rust_analyzer')]],{env})
 end
 check('IDE-RUST-1 Cargo diagnostics без Clippy',function(e)
   local file=e.rust_project..'/app/src/lib.rs'

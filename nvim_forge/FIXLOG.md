@@ -14796,3 +14796,51 @@ host tmp/cache на F. Docker existing/offline/limits, без engine/WSL start/s
 **Файлы.** tool_paths/node/bash/bash_debug,7-case E2E и3 missing-case assertions,
 одна собственная registry строка, TOOL_PATHS/roadmap/HISTORY, OpenSpec artifacts/
 verification и append-only FIXLOG/AGENT_COMMANDS. Local commit, без push.
+
+
+## 2026-11-18
+
+### 277. Go test debug и восстановление native checkpoint
+
+**Связь:** §275–276; change `repair-native-workflow-checkpoint`.
+Спека: IDE-DAP-10 (FIX), IDE-TEST-2 (FIX), IDE-RUST-1 (FIX), IDE-DAP-1 (FIX), IDE-GIT-9 (FIX).
+**Статус:** Windows/Ubuntu affected PASS; полный regression, Mac и Default открыты.
+
+**Проблема.** Checkpoint оставил Rust diagnostics, DAP args, Go test debug,
+mixed SQL, Git live read и UI capture FAIL. После подготовки gopls настоящий
+Go test debug дал hit-enter вместо breakpoint.
+
+**Причина.** dap.async.run переиспользует coroutine вызывающего кода; raw yield
+асинхронного Go metadata probe попал в nio protocol neotest. Native stack сохранён
+в Ubuntu11564440248158, Windows source-case тоже FAIL. Остальные пять причин —
+fixtures/assertions: RA скрыт вместе с Clippy; PROJECT_SINGLE разорван переносом
+PTY; старый sqls вместо Sqruff; необязательная следующая Git ошибка после
+успешного live show; требование grid_scroll при действительном grid_line redraw.
+
+**Изменение.** Delve callback начинает native DAP coroutine из main loop через
+vim.schedule. SDK policy и async probes прежние. Rust fixture выбирает RA через
+tools.json, подтверждая настоящий missing Clippy и SHA Cargo. DAP сверяет config
+argv и actual stdout. Go stand получает подготовленный gopls. Mixed ждёт Sqruff.
+Git live read дополнен exact SHA256 linked HEAD; completed error gate сохранён.
+UI проверяет topline8 и actual reconstructed cells; optional wire optimization
+проверяет прежний unit replay. Первая UI попытка ошибочно нажимала mapped Ctrl+E;
+возвращён normal! в fixture, scrolloff0; причины повторов не скрыты.
+
+**Проверка/e2e.** На каждой ОС итог41 E2E +2 unit PASS,11 файлов,0 FAIL/0 SKIP.
+Initial Windows1794997122703293800 (267.05s), Ubuntu1794997135716780557 (191.89s)
+дали по3 PASS/2 FAIL. Go correction/affected6: Windows1794997443166395400
+(175.28s), Ubuntu1794997454409243970 (113.43s) — по5 PASS/1 UI FAIL. Final UI3
+files: Windows1794997634210085300 (20.87s), Ubuntu1794997596552478452 (25.96s),
+PASS. Rust15, routes1, mixed1 берутся из initial; Go runner5/passive6/output4 и
+Git live4/completed2 — affected; UI3/replay1/capture1 — final. Native breakpoint,
+eval42, output/panic, fresh PTY, actual rustc diagnostics/recovery и Git stage
+проверены. Syntax7/strict/diff/frozen25/append-only/index guards PASS.
+
+**Вывод.** Ещё6 прежних failed файлов checkpoint прошли. Go debug — реальный
+product fix; fixtures восстановлены без подмен native результатов. Большой
+regression не повторялся; process/trace WIP2, Mac/Terminal/Default остаются.
+Existing Docker image без сети, limits2CPU/3GiB; Desktop/WSL не управлялись.
+Host tmp на F, SDK/locks/backports и прежний WIP сохранены. Local commit, без push.
+
+**Файлы.** dap.lua; пять E2E и Git helper; OpenSpec delta/verification,
+roadmap/HISTORY и append-only FIXLOG/AGENT_COMMANDS.
