@@ -10,6 +10,11 @@ Trace сохраняет требование регистрации .sh/.test.l
 
 ## Одна команда
 
+[Когда проверять блок и как запускать полный regression](../docs/TESTING_WORKFLOW.md).
+E2E запускаются один раз после цельной реализации; повторы — только failed/affected.
+`scripts/test.ps1 regression` / `bash scripts/test.sh regression` добавляют native
+Python suites установщика/release к прежнему full. `-Plan` / `--plan` показывает состав.
+
 ```sh
 nvim -l tests/run.lua                      # всё, что проверяется без GUI
 nvim -l tests/run.lua unit                 # только набор unit (наборы: unit, e2e, wezterm, install, trace, conpty)

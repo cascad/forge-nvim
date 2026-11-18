@@ -8,6 +8,8 @@
 Первый этап: [диагностика задержек zsh/Go на Mac](docs/MACOS_STARTUP_DIAGNOSTICS.md).
 Активные среды — Windows/macOS/Ubuntu; Mint пока отложен: [границы модулей](docs/PORTABLE_ARCHITECTURE.md).
 [E2E и команды прогонов внутри VM](tests/e2e/README.md).
+[Проверки цельного блока и полный regression](docs/TESTING_WORKFLOW.md):
+список файлов одной командой, просмотр плана, отдельный большой прогон.
 [Установка одной командой: состав Default/Custom и текущая готовность](docs/INSTALLATION_PLAN.md)
 — выбор компонентов реализован; полная готовность Default и публичная поставка ещё в разработке.
 Новый installer предназначен для отдельного комплекта с командой `fride`;

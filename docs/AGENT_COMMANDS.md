@@ -10263,3 +10263,66 @@ Local openspec validate unify-python-node-sdk-picker --type change --strict
 exact owned index/registry одна новая строка. Временные Python -B journal/stage
 helpers в .tests/toolchain-research. Commit gc.auto=0/maintenance.auto=false,
 без push, прежний WIP вне коммита.
+
+
+## 181. 2026-11-18 — selected SDK setup и один batch после реализации
+
+honor-selected-sdks-during-setup, IDE-BOOT-39 / IDE-TEST-10. Read-only git
+status/log/rg/Get-Content: installer SDK fallback, launcher/setup env, pinned
+Mason Python/npm/spawn/process initial_environ, runner/registry и fixtures.
+Local openspec list root, new/instructions/status/apply; baseline SHA25 и
+journal prefixes в .tests/toolchain-research/setup-sdk-baseline.json.
+До целого блока выполнялись только Python syntax/diff и быстрые plan unit3.
+
+Команда блока (PowerShell, cwd F:/repo/forge-nvim; TEMP/TMP/TMPDIR и NVIM_LOG_FILE
+на F, Python -B/PYTHONUTF8=1):
+
+```powershell
+./scripts/test.ps1 e2e -Files @('tests/lib/test_batch.test.lua','tests/e2e/setup-sdk-paths.test.lua','tests/install-setup.test.py','tests/install-sdk-state.test.py')
+docker compose -f tests/containers/compose.yaml run --rm --no-deps --pull never --entrypoint bash ubuntu tests/containers/tool-paths.sh --batch e2e --file tests/lib/test_batch.test.lua --file tests/e2e/setup-sdk-paths.test.lua --file tests/install-setup.test.py --file tests/install-sdk-state.test.py
+```
+
+Initial batch выявил generated registry LF→NUL (E2E ещё не стартовали), PS5
+Lua quotes и устаревшие fixtures missing native_tools/parser_runtime. Исправлены
+writer+loadfile check, single quotes и native fixture modules. После этого
+Windows batch registry10 +legacy7 PASS; SDK-state initial6 PASS/1 FAIL, затем
+python -B tests/install-sdk-state.test.py SDKState.test_07_native_lazy_keeps_kit_config:
+1 PASS. Aggregate24 PASS. Не повторялся весь уже прошедший SDK-state.
+
+Ubuntu initial SDK-state стоял на bind-mount runtime copies; docker top по
+точному контейнеру подтвердил собственный batch. docker stop --time 5
+bcb4b802118a остановил только его, не Desktop/WSL. Driver задаёт native guest
+FORGE_INSTALL_STAND_ROOT/FORGE_TEST_TMPDIR. Final batch: unit3 PASS, SDK6 PASS/
+1 alias assertion FAIL, legacy7 PASS, SDK-state6 PASS/1 Windows-only SKIP18.34s.
+Точный prefix venv и physical executable заменили ошибочное сравнение имени
+python/python3. Только failed case повторён:
+
+```powershell
+docker compose -f tests/containers/compose.yaml run --rm --no-deps --pull never -e FORGE_TEST_ID=IDE-BOOT-39 -e FORGE_SETUP_SDK_CASE=selected --entrypoint bash ubuntu tests/containers/tool-paths.sh tests/e2e/setup-sdk-paths.test.lua
+```
+
+Aggregate Ubuntu23 PASS/1 SKIP. Raw setup-sdk-{batch,batch-fixed}-{windows,ubuntu}.txt,
+setup-sdk-lazy-fixed-windows.txt, setup-sdk-selected-fixed-ubuntu.txt. Reports:
+.tests/batches/1794986602487869900 и .tests/ubuntu/batches/1794986615659721312;
+подробный inventory/artifacts в change verification. SDK tests via actual Mason
+spawn/native SDKs; tool installs в legacy orchestration fixture контролируются.
+
+Большой regression не запускался: ./scripts/test.ps1 regression -Plan и Ubuntu
+driver --batch regression --plan дали121/120 registry files+22 native installer
+suites в рабочем дереве. План/read only, без editor E2E. Full runner при реальном
+Windows regression может вызывать wsl.exe для POSIX tests — docs это раскрывают.
+Никаких Desktop/WSL start/stop/reconfigure, SDK installs или Docker build/pull.
+
+Final openspec validate honor-selected-sdks-during-setup --type change --strict
+--no-interactive; diff/staged --check; frozen25/WIP, raw/staged append-only
+journal prefixes и exact owned index, registry только2 новых entries. Helpers
+Python -B в .tests. Commit gc.auto=0/maintenance.auto=false, без push. Mac gate
+и полное frontend/preflight/setup/runtime согласование остаются в roadmap.
+
+
+Уточнение §273: финальный dry-plan inventory добавил также отдельный
+release-inventory.test.py. Финальные планы: Windows121 /Ubuntu120 registry
+files+23 native Python suites (22 installer+release inventory), без E2E.
+Быстрые unit3 прошли на обеих ОС с проверкой release inventory; промежуточный
+Ubuntu вызов unit с унаследованным IDE-BOOT-33 выполнил0 cases и не учитывается,
+корректный FORGE_TEST_ID=IDE-TEST-10 дал3 PASS. Product E2E не повторялись.

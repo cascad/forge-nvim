@@ -14564,3 +14564,78 @@ WSL/image/system SDK/locks не менялись; tmp/cache на F, старый
 **Файлы.** forge/sdk, runtime_sdk и tool_paths; native Python/Node picker E2E,
 registry только собственная entry; SDK_SELECTION/TOOL_PATHS/QUICKSTART/README,
 roadmap/границы/установка, OpenSpec verification и HISTORY/AGENT_COMMANDS/FIXLOG.
+
+
+### 273. Выбранные SDK для setup и пакет проверок блока
+
+Спека: IDE-BOOT-39 (ADDED).
+Спека: IDE-TEST-10 (ADDED).
+Дата: 2026-11-18, honor-selected-sdks-during-setup.
+
+**Было.** Python/Node picker §272 сохранял tools.json для runtime consumers,
+а явный tools setup/Mason продолжал находить SDK в PATH. E2E запускались слишком
+часто во время реализации. Прежний full не включал22 native installer Python
+suites, которые запускались отдельно и могли выпадать из проверки.
+
+**Причина.** Mason snapshot-ит initial environment при загрузке, поэтому
+поздняя правка PATH не исправляет его subprocess env. У registry и standalone
+installer tests были разные входы, а периодичность полного регресса не была
+зафиксирована на уровне цельных этапов.
+
+**Изменение продукта.** Общий setup_sdks читает только нужные по каталогу
+explicit Python/Node overrides и добавляет native bin directories в среду
+tools процесса до Mason. Pre-init подключён к private installer и legacy
+Windows/POSIX setup; stage печатает path/source report. Нет SDK wrappers,
+установок языка и изменений system PATH/homes. Invalid/непредставимый штатными
+именами executable и Node без соседнего npm останавливают setup до tools.
+Native Mason compatibility rules остаются его; Go/Rust early SDK init прежний.
+Frontend/preflight и --sdk-path fallback ещё отдельны, их согласование следом.
+
+**Изменение тестового цикла.** Во время работы — быстрые проверки/нужное native
+воспроизведение; один E2E batch после цельного блока, повтор failed/affected.
+File selection/plan используют прежний tests/run.lua через проверенный generated
+registry, его runner/catalog WIP не менялись. Regression отдельно объединяет
+full registry ОС и native installer suites. Есть dry plan, sequential run,
+exit/time/log/report, очистка inherited case filters; timeout прекращает batch.
+Документ TESTING_WORKFLOW задаёт команды/периодичность/первую большую checkpoint.
+
+**Проверка/e2e.** Targeted aggregate Windows24 PASS; Ubuntu23 PASS/1 Windows-only
+caller SKIP: SDK setup7, batch plan3, legacy setup7, SDK-state7. Настоящие
+native Python venv/prefix и Node через pinned Mason spawn/captured env; none/
+unrelated/invalid/no npm/unsupported/late snapshot, реальные installers/launchers
+и Lazy rtp/lock, без tool/SDK downloads. Full regression только plan: рабочее
+дерево121/120 registry files +22 installer suites; это не full PASS. Mac отдельно.
+
+**Найденные причины.** writefile embedded LF дал NUL в generated registry:
+запись split-строками и compile check уже при plan. PowerShell5 снял двойные
+Lua quotes: перешли на single Lua quotes; paths передаются env. Старые fixtures
+не доставляли native_tools/parser_runtime для нынешних setup/Lazy: копируются
+настоящие модули, assertions сохранены. Ubuntu provider назвал venv executable
+python3 вместо python: точный prefix плюс физический interpreter проверяются
+вместе; повторён только failed selected case. Windows SDK-state повторил только
+один failed Lazy case; остальные прошедшие cases не повторялись.
+
+**Оптимизация времени.** Первый Ubuntu batch перенёс temp на bind mount, и
+runtime-копии застряли на IO. Существующий FORGE_INSTALL_STAND_ROOT теперь в
+scoped guest /tmp, FORGE_TEST_TMPDIR сохраняет guest temp. Evidence экспортируется
+в host artifacts без SDK/архивов. Вместо нескольких минут в первом case весь
+исправленный SDK-state файл занял18.34s. Остановлен только точный собственный
+контейнер bcb4b802118a; Docker Desktop/WSL/image/настройки не трогались.
+
+**Вывод.** Tools setup и runtime используют одни Python/Node настройки через
+штатное окружение. Большой regression остаётся отдельным gate после согласования
+frontend/preflight перед Default; не повторяется после каждой правки. Host
+temp/cache на F, guest stand private, locks/native SDK/старый WIP сохранены.
+
+**Файлы.** setup_sdks/pre-init setup entrypoints; batch_plan/test-plan/test-batch
+и test wrappers/container driver; setup SDK E2E/actor и batch unit, два fixture
+обновления, registry2 own entries. Руководства/roadmap/OpenSpec verification,
+HISTORY/AGENT_COMMANDS/FIXLOG. Local commit без push.
+
+
+Уточнение §273: финальный dry-plan inventory добавил также отдельный
+release-inventory.test.py. Финальные планы: Windows121 /Ubuntu120 registry
+files+23 native Python suites (22 installer+release inventory), без E2E.
+Быстрые unit3 прошли на обеих ОС с проверкой release inventory; промежуточный
+Ubuntu вызов unit с унаследованным IDE-BOOT-33 выполнил0 cases и не учитывается,
+корректный FORGE_TEST_ID=IDE-TEST-10 дал3 PASS. Product E2E не повторялись.

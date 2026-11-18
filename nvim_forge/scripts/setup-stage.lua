@@ -32,6 +32,7 @@ local ok, err = xpcall(function()
         end
         io.stdout:write('Parser readiness: ' .. vim.json.encode(report) .. '\n')
     elseif stage == 'tools' then
+        io.stdout:write('Setup SDK selection: '..vim.json.encode(require('forge.setup_sdks').prepare())..'\n')
         -- Only this explicit setup process: never download a language SDK
         -- while building IDE tools through Mason's native Go/Cargo providers.
         vim.env.GOTOOLCHAIN = 'local'

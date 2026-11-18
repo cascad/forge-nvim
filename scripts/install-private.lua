@@ -239,7 +239,9 @@ local function install()
   end
   for _, task in ipairs({'plugins','parsers','tools'}) do
     event(task,'start')
-    execute({exe,'--headless','-i','NONE','--cmd','lua vim.opt.rtp:prepend(vim.env.FRIDE_CONFIG)','-u',join(stage,'config/forge/init.lua'),
+    local preinit='lua vim.opt.rtp:prepend(vim.env.FRIDE_CONFIG)'
+    if task=='tools' then preinit=preinit..'; require("forge.setup_sdks").prepare()' end
+    execute({exe,'--headless','-i','NONE','--cmd',preinit,'-u',join(stage,'config/forge/init.lua'),
       '-l',join(stage,'config/forge/scripts/setup-stage.lua'),task},env,target,join(target,'log','setup-' .. task .. '.log'))
     event(task,'ready')
   end

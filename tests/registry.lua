@@ -131,4 +131,6 @@ return {
   { file = 'tests/e2e/go-rust-paths.test.lua', suite = 'e2e', timeout = 360 },
   { file = 'tests/e2e/sdk-selection.test.lua', suite = 'e2e', timeout = 600 },
   { file = 'tests/e2e/python-node-sdk-picker.test.lua', suite = 'e2e', timeout = 360 },
+  { file = 'tests/e2e/setup-sdk-paths.test.lua', suite = 'e2e', timeout = 240 },
+  { file = 'tests/lib/test_batch.test.lua', suite = 'unit', timeout = 60 },
 }

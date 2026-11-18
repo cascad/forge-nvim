@@ -102,6 +102,27 @@ tools и настройки конкретного запуска сохраня
 PATH, VIRTUAL_ENV/CONDA_PREFIX, npm/pip homes и SDK installations меню не меняет.
 Corrupt JSON не перезаписывается; invalid path не заменяется другим SDK.
 
+## Выбранная среда при подготовке tools
+
+Явный tools setup читает те же Python/Node overrides до загрузки Mason.
+В PATH только этого setup процесса добавляются native SDK bin directories;
+остальные процессы fride, системный PATH и SDK homes не меняются. Отчёт
+`Setup SDK selection` в setup-tools.log показывает path/source.
+
+Штатный Python provider ищет python/python3, Node provider — node/npm.
+Если произвольно названный executable нельзя представить этими командами либо
+рядом с выбранным Node нет npm, setup остановится до установки. Создавать shim
+или молча брать другую системную копию он не будет. Native Mason сохраняет
+собственные правила совместимости пакетов, включая подбор совместимого Python.
+Для SQL/Core без зависимости от этих SDK соответствующие paths не читаются.
+
+Go/Rust по-прежнему применяются early SDK init; build toolchain/download policy
+не менялась. Старый installer `--sdk-path` остаётся fallback directory после
+PATH; это пока отдельный контракт, а не typed persistent SDK selector. Следующий
+шаг — согласовать preflight/frontend с runtime settings, не дублируя резолверы.
+
+Проверки законченного блока и полный regression: [TESTING_WORKFLOW](TESTING_WORKFLOW.md).
+
 ## Целевой regression
 
 ### Python и Node — IDE-BOOT-38

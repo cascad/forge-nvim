@@ -1,7 +1,9 @@
 # Единая точка входа внутри Windows VM; зависимости готовятся отдельно.
 param(
-    [ValidateSet('quick', 'e2e', 'full')]
-    [string] $Mode = 'full'
+    [ValidateSet('quick', 'e2e', 'full', 'regression')]
+    [string] $Mode = 'full',
+    [string[]] $Files = @(),
+    [switch] $Plan
 )
 $ErrorActionPreference = 'Stop'
 $forgeTestRoot = Split-Path -Parent $PSScriptRoot
@@ -27,7 +29,14 @@ try {
         'e2e'   { @('e2e') }
         'full'  { @('unit', 'e2e', 'wezterm', 'install', 'trace', 'conpty') }
     }
-    & $forgeTestNvim -l tests/run.lua @forgeTestSuites
+    if ($Files.Count -gt 0 -or $Plan -or $Mode -eq 'regression') {
+        $forgeBatchArgs=@('-B','scripts/test-batch.py','--nvim',$forgeTestNvim,'--mode',$Mode)
+        foreach ($forgeFile in $Files) { $forgeBatchArgs+=@('--file',$forgeFile) }
+        if ($Plan) { $forgeBatchArgs+='--plan' }
+        & python @forgeBatchArgs
+    } else {
+        & $forgeTestNvim -l tests/run.lua @forgeTestSuites
+    }
     $forgeTestExit = $LASTEXITCODE
 } finally {
     Pop-Location

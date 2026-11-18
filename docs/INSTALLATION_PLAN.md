@@ -30,6 +30,11 @@ tools.json и native resolvers. Следом остальные consumers и с�
 installer/setup/runtime, providers/update policy и полный Default.
 Runtime sdk.json и прежний installer SDK picker пока имеют отдельные настройки;
 их согласование ещё не завершено. Полная поставка и native Mac — отдельные gates.
+§273 согласовал tools setup с сохранёнными Python/Node overrides: native SDK
+directories выбираются до Mason, ошибки не заменяются fallback. Go/Rust early
+init прежний. Frontend/preflight ещё использует собственный native discovery;
+его согласование с runtime settings — следующий продуктовый пункт.
+[Проверки блока и полный regression](TESTING_WORKFLOW.md) разделены по периодичности.
 
 Проверка этого среза в подготовленной native developer-среде: сначала
 `python -B scripts/build-installer-ui.py`, затем

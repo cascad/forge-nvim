@@ -1,6 +1,6 @@
 # nvim_forge — рабочий план мини-IDE
 
-Обновлено: 2026-11-17. Основная сборка: **nvim_forge**.
+Обновлено: 2026-11-18. Основная сборка: **nvim_forge**.
 
 **Текущая точка:** владелец выбрал штатные менеджеры экосистем и готовые
 upstream-пакеты с настраиваемыми путями; референс — VS Code.
@@ -30,6 +30,11 @@ paths, scope reset с наследованием, native restart и сохран
 Windows/Ubuntu: по2 новых E2E и5 controls PASS; Mac отдельно.
 Следом согласование installer/setup/runtime и оставшиеся consumers, затем
 providers/update policy и Default.
+§273 готов: Python/Node paths в tools setup до Mason и пакетный test workflow.
+Windows24 PASS; Ubuntu23 PASS/1 Windows-only skip (targeted aggregate).
+E2E запускаются после всей реализации, не после каждой правки; большой
+regression — отдельная контрольная точка.
+[Команды и периодичность](TESTING_WORKFLOW.md).
 Детали build-toolchain downloads и версий решаются для этих следующих шагов;
 они не блокируют работу с путями. Core publisher остаётся d120e3a;
 новый срез не означает завершения всего контракта путей или готовности Default.
@@ -72,6 +77,11 @@ GoToolchain и SDK existing/manual path в установщике сохране
 - [ ] Прогнать IDE-BOOT-38 Python/Node на native macOS.
 - [ ] Затем согласовать setup/runtime/installer settings и оставшиеся consumers;
   определить providers/update policy, завершить Default/Custom и native gates.
+  Tools setup Python/Node завершён (§273). Ближайший продуктовый пункт —
+  frontend/preflight: учесть сохранённый выбор SDK, не подменяя прежний
+  --sdk-path fallback и не дублируя runtime resolver.
+  Первый полный regression — после закрытия этого согласования, перед
+  подготовкой Default. Сейчас проверены пакет блока и планы полного прогона.
 
 Статус: базовые e2e настоящего nvim_forge работают на Windows и Ubuntu;
 фоновые установки инструментов редактора перенесены в явный setup.

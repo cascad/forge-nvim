@@ -8,10 +8,13 @@ forge_setup_neovim() (
   XDG_CONFIG_HOME="$(dirname -- "$install_path")"
   NVIM_APPNAME="$(basename -- "$install_path")"
   export XDG_CONFIG_HOME NVIM_APPNAME
+  export FORGE_SETUP_CONFIG="$install_path"
   cd "$HOME"
   for stage in plugins parsers tools; do
     printf '\n==> Preparing %s\n' "$stage"
-    nvim --headless -i NONE -u "$install_path/init.lua" \
+    local preinit='lua vim.opt.rtp:prepend(vim.env.FORGE_SETUP_CONFIG)'
+    if [ "$stage" = tools ]; then preinit="$preinit; require('forge.setup_sdks').prepare()"; fi
+    nvim --headless -i NONE --cmd "$preinit" -u "$install_path/init.lua" \
       -l "$install_path/scripts/setup-stage.lua" "$stage" || exit "$?"
   done
 )

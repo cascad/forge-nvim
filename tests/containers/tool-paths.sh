@@ -13,4 +13,9 @@ data['backports']=json.loads(pathlib.Path(sys.argv[2]).read_text())
 p.write_text(json.dumps(data,indent=2)+'\n')
 PY
 export FORGE_E2E_DEPS="$work/editor-deps" FORGE_TEST_ID="${FORGE_TEST_ID:-IDE-BOOT-33}"
+if [ "${1:-}" = --batch ]; then
+  shift
+  export FORGE_TEST_TMPDIR="$work" FORGE_INSTALL_STAND_ROOT="$work/install-stands"
+  exec bash scripts/test.sh "$@"
+fi
 exec nvim -l "${1:-tests/e2e/tool-paths.test.lua}"

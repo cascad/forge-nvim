@@ -66,7 +66,7 @@ class Setup(unittest.TestCase):
         checkout=base/'checkout';profile=checkout/'nvim_forge'
         (profile/'lua/ide').mkdir(parents=True)
         (profile/'lua/forge').mkdir()
-        for module in ['tool_catalog','setup_readiness','install_profile','parser_runtime']:
+        for module in ['tool_catalog','setup_readiness','install_profile','parser_runtime','setup_sdks','tool_paths','native_tools']:
             shutil.copyfile(SOURCE/('lua/forge/'+module+'.lua'),profile/('lua/forge/'+module+'.lua'))
         shutil.copytree(SOURCE/'scripts',profile/'scripts')
         (profile/'scripts/components.tsv').write_text('core\tFixture\t-\tfixture-native\tlua\n',encoding='utf-8')

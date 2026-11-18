@@ -226,17 +226,22 @@ function Sync-Neovim {
     if (-not (Test-Path -LiteralPath $stageScript -PathType Leaf)) { throw "Installed setup stage not found: $stageScript" }
     $oldConfig = $env:XDG_CONFIG_HOME
     $oldApp = $env:NVIM_APPNAME
+    $oldSetupConfig = $env:FORGE_SETUP_CONFIG
     try {
         $env:XDG_CONFIG_HOME = Split-Path -Parent $installed
         $env:NVIM_APPNAME = Split-Path -Leaf $installed
         foreach ($stage in @('plugins', 'parsers', 'tools')) {
             Write-Step "Preparing $stage"
-            nvim --headless -i NONE -u (Join-Path $installed 'init.lua') -l $stageScript $stage
+            $env:FORGE_SETUP_CONFIG=$installed
+            $preinit='lua vim.opt.rtp:prepend(vim.env.FORGE_SETUP_CONFIG)'
+            if ($stage -eq 'tools') { $preinit+="; require('forge.setup_sdks').prepare()" }
+            nvim --headless -i NONE --cmd $preinit -u (Join-Path $installed 'init.lua') -l $stageScript $stage
             if ($LASTEXITCODE -ne 0) { throw "Setup stage $stage failed (exit $LASTEXITCODE)." }
         }
     } finally {
         $env:XDG_CONFIG_HOME = $oldConfig
         $env:NVIM_APPNAME = $oldApp
+        $env:FORGE_SETUP_CONFIG = $oldSetupConfig
     }
 }
 
