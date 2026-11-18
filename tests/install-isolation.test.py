@@ -74,7 +74,7 @@ class Isolation(unittest.TestCase):
         (cls.source/'nvim_forge/init.lua').write_text(INIT,encoding='utf-8')
         (cls.source/'nvim_forge/scripts/setup-stage.lua').write_text(STAGE,encoding='utf-8')
         (cls.source/'nvim_forge/lua/forge').mkdir(parents=True)
-        for name in ['setup_sdks','setup_tools','tool_paths','tool_catalog','install_profile','parser_runtime','sdk','log_store']:
+        for name in ['setup_sdks','setup_tools','tool_paths','tool_catalog','install_profile','parser_runtime','sdk','log_store','nextest']:
             shutil.copy2(ROOT/f'nvim_forge/lua/forge/{name}.lua',cls.source/f'nvim_forge/lua/forge/{name}.lua')
         shutil.copy2(ROOT/'nvim_forge/scripts/components.tsv',cls.source/'nvim_forge/scripts/components.tsv')
         shutil.copytree(ROOT/'scripts',cls.source/'scripts',ignore=shutil.ignore_patterns('__pycache__'))
@@ -121,6 +121,11 @@ class Isolation(unittest.TestCase):
             NVIM_LOG_FILE=str(base/'bootstrap.log'),FORGE_PROBE_OUTPUT=str(base/'probe.json'),
             PSModuleAnalysisCachePath=str(base/'powershell-module-cache'))
         env['PATH']=str(foreign/'bin')+os.pathsep+env.get('PATH','')
+        if WINDOWS:
+            # USERPROFILE is deliberately isolated. Let each PowerShell edition
+            # construct its own module paths instead of inheriting Core paths.
+            for key in list(env):
+                if key.upper()=='PSMODULEPATH':env.pop(key)
         # NVIM_APPNAME owns a standard native namespace; protect ordinary nvim
         # separately instead of treating fride's own new state as foreign writes.
         for kind in ['config','data','state','cache']:

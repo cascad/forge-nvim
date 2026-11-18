@@ -10876,3 +10876,65 @@ Owned container261d5816a414 idle between phases; Desktop/WSL не управля
 workflows-finish.py checks frozen27/product/old UI and raw/staged journal prefixes,
 exact owned index/Python AST; Lua loadfile/trace/OpenSpec strict/git diff --check;
 local commit gc.auto=0/maintenance.auto=false, no push. Rust task remains open.
+
+
+## 197. Nextest и root-file Rust Tests — 2026-11-18
+
+cwd F:/repo/forge-nvim, login:false/full access/no approvals; tmp/cache F,
+Python -B/UTF8/no pycache, CPU2. OpenSpec complete-rust-test-runtime ready,
+все contextFiles прочитаны, apply skill использован. Решение владельца:
+cargo-nextest обычный CARGO_HOME/bin, ready версия сохраняется/custom path.
+Primary official docs get.nexte.st scripts/nexte.st pre-built-binaries изучены;
+read-only downloaded PS install.ps1 и native scope probes лежат только .tests.
+Продукт не поддерживает собственную package matrix/скрипт upstream не патчит.
+
+build-installer-ui.py --work .tests/installer-ui --output
+.tests/toolchain-research/rust-test-ui/windows-x64; native Linux helper в own
+container uses vendored offline Cargo и source manifest. Final binaries Windows
+caba4da42958f5b333f096a89e0b8eaef731d91fc0d78f005daaebfbcd94d9ef,
+Linux d072e6172c63930cc89da91b5748941ab0fd2a3bc3ca4ac253ccad5ed7e072a7.
+prepare-plugins.lua --plugin-root .tests/editor-deps/lazy применил rust previous
+migration; manifest refreshed. Старые .tools UI/SDK и image не менялись.
+
+& scripts/test.ps1 e2e -Files @('tests/e2e/rust-test-runtime.test.lua',
+'tests/e2e/rust-language.test.lua','tests/e2e/plugin-backports.test.lua',
+'tests/e2e/go-rust-paths.test.lua','tests/e2e/setup-sdk-paths.test.lua',
+'tests/trace.test.lua','tests/install-nextest.test.py',
+'tests/install-sdk-settings.test.py','tests/install-sdk-actions.test.py')
+FORGE_INSTALL_UI_BINARY points to new native frontend; FORGE_NEXTEST_NETWORK_TEST=1
+explicit official network case. Windows batch1795024355458326500, affected logs
+rust-runtime/nextest-ui-*-affected and nextest-official-windows-cleared. Original
+2 Rust/3 installer failures and later signal15 cleanup preserved; only failed/
+affected repeated. Wrong CLI array/one nonexistent method did not run tests.
+Same-code final missing case PASS44086422881800, old timeout cause unknown.
+
+docker exec own261d5816a414 ... bash tests/containers/tool-paths.sh --batch e2e
+with nine repeated --file arguments above and explicit new UI/network flag.
+Ubuntu batch1795027649048450487 all9 PASS58source+34installer/2info SKIP.
+Source guards delegate native public APIs. Extra Windows Rust nearest/file,
+integration/debug3PASS, Go/Python/Node3PASS. Ubuntu Python/Node direct controls
+initially selected0 due wrapper default ID, not counted; explicit IDE-PY-1 /
+IDE-NODE-4 + existing CASE filters each actually PASS1 (*-selected logs).
+
+install-default-windows.py --resume --upgrade-only (current source includes
+untracked nextest.lua explicitly in temporary archive); copied native helper to
+Ubuntu bind .tests. CARGO_HOME from each official test user's metadata, no PATH
+prepend. Actual Default/Custom upgrade PASS preserving20 receipt hashes.
+check-installed-languages.py --workflow runtime --language rust --kit <stand>
+--profile <stand profile> --profile-layout stand --stand-root <stand>.
+Windows report1795027928879135200, Ubuntu1795027921352451075; DAP/eval42/output/
+1native test PASS. Observer now shared nextest resolver, standalone false
+PSModulePath mixed-case pop corrected. Logs under .tests/default-acceptance and
+.tests/ubuntu/default-acceptance. export-rust-final.py copyfile270 regular reports,
+no symlink/chmod/project/venv copy. SDKs already ready; not cold bootstrap.
+
+Exact docker inspect ID+fride.owner=default-acceptance then docker stop ownID;
+--rm removed it. Immediate assert caught removal race, subsequent docker ps empty;
+did not stop/modify Desktop/WSL/other containers. Earlier2 host project cleanup
+requests automatically rejected blocked by policy, no reason supplied; no
+alternate deletion attempted. Incomplete project remains at the §288 path.
+rust-finish.py checks frozen27 minus3 explicit scoped declarations, rust-only
+previous/backport guards, current UI source/binary hashes, actual reports,
+raw/staged append-only journals, Python AST/Lua syntax/exact owned index.
+OpenSpec strict and trace affected only, git diff --check; local commit with
+gc.auto=0/maintenance.auto=false, no push. Mac/WSL/GUI/cold/publication gates open.

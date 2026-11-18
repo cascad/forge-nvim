@@ -43,7 +43,9 @@ class Settings(prereq.Prerequisites):
         self.assert_ok(self.run_process([sys.executable,'-m','venv','--without-pip',str(venv)],env,base,'venv'))
         python=venv/('Scripts/python.exe' if stand.WINDOWS else 'bin/python')
         sdk=self.user(env,'sdk.json',{'version':1,'sdks':{'go':str(self.go),'rust':str(self.rust)}})
-        tools=self.user(env,'tools.json',{'tools':{'python':str(python),'node':str(self.node_bin/('node'+SUFFIX))}})
+        rust_deps=Path(os.environ.get('FORGE_E2E_RUST_DEPS',str(ROOT/'.tests/rust-deps')))
+        tools=self.user(env,'tools.json',{'tools':{'python':str(python),'node':str(self.node_bin/('node'+SUFFIX)),
+            'cargo-nextest':str(rust_deps/'nextest'/('cargo-nextest'+SUFFIX))}})
         return sdk,tools,python
 
     def test_settings_01_four_native_choices_override_path_and_ignore_project(self):
@@ -226,8 +228,9 @@ class Settings(prereq.Prerequisites):
             command=[stand.SHELL,str(ROOT/'install.sh'),'--archive-url',self.url+'/ui-source','--source-root',str(base/'sources'),
                 '--install-dir',str(target),'--runtime-path',str(self.runtime),'--components',components]
         self.assert_ok(self.run_process(command,env,base,'root-source'))
-        reports=list((base/'sources/.ui-logs').glob('preflight-*.settings.json'));self.assertEqual(len(reports),1)
-        data=json.loads(reports[0].read_text())
+        reports=[json.loads(p.read_text()) for p in (base/'sources/.ui-logs').glob('preflight-*.settings.json')];self.assertEqual(len(reports),2)
+        data=next(report for report in reports if 'rust' in report['selections'])
+        self.assertTrue(any('cargo-nextest' in report['selections'] for report in reports))
         # The shared reader's report must name the actual user files, not PATH discovery.
         raw=json.dumps(data).replace('\\\\','/')
         self.assertIn('sdk.json',raw);self.assertIn('tools.json',raw)

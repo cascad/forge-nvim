@@ -38,6 +38,7 @@ pub struct Options {
     pub print_plan: bool,
     pub check_sdks: bool,
     pub check_tools: bool,
+    pub check_rust_tools: bool,
     pub sdk_report: Option<PathBuf>,
     pub sdk_paths: Vec<PathBuf>,
     pub go_toolchain_download: Option<bool>,
@@ -75,8 +76,12 @@ impl Options {
                     result.check_tools = true;
                     continue;
                 }
+                "--check-rust-tools" => {
+                    result.check_rust_tools = true;
+                    continue;
+                }
                 "--help" => {
-                    println!("fride-setup --source DIR --profile default|custom [--components CSV] --install-dir DIR\n--command-dir DIR --runtime-path DIR --runtime-archive-url URL --runtime-sha256 SHA\n--preview --no-color --print-plan --result FILE --log-dir DIR\n--check-sdks --sdk-report FILE\n--go-toolchain-download allow|deny (explicit Go build toolchain choice; default deny)\n--tools-versions preserve|baseline (default preserve; baseline reset is explicit)\n--check-tools (Git prerequisite) --tool-path DIR (repeatable fallback bin; alias --sdk-path)");
+                    println!("fride-setup --source DIR --profile default|custom [--components CSV] --install-dir DIR\n--command-dir DIR --runtime-path DIR --runtime-archive-url URL --runtime-sha256 SHA\n--preview --no-color --print-plan --result FILE --log-dir DIR\n--check-sdks --sdk-report FILE\n--go-toolchain-download allow|deny (explicit Go build toolchain choice; default deny)\n--tools-versions preserve|baseline (default preserve; baseline reset is explicit)\n--check-tools (Git prerequisite) --check-rust-tools (nextest; requires verified Core)\n--tool-path DIR (repeatable fallback bin; alias --sdk-path)");
                     std::process::exit(0);
                 }
                 _ => {}
@@ -338,6 +343,12 @@ pub fn run(mut options: Options) -> Result<i32> {
         println!("{}", serde_json::to_string(&tool_report(&report))?);
         return Ok(if report.ready() { 0 } else { 2 });
     }
+    if options.check_rust_tools {
+        options.prepared_core = Some(sdk_settings::prepare(&options,&plan)?);
+        let report=inspect_rust_tools(&options,&plan)?;
+        println!("{}",serde_json::to_string(&tool_report(&report))?);
+        return Ok(if report.ready() {0} else {2});
+    }
     let automatic = options.components.is_some() || options.profile == "default";
     let plain = options.plain || !io::stderr().is_terminal();
     let color = !plain && std::env::var_os("NO_COLOR").is_none();
@@ -411,6 +422,17 @@ pub fn run(mut options: Options) -> Result<i32> {
         if !report.ready() {
             return Err(invalid(format!("SDK prerequisites не готовы. Исправьте/reset сохранённый выбор fride либо выберите SDK в PATH/--sdk-path, установите его штатно или снимите компонент. Core подготовлен; прежний комплект сохранён, остальные компоненты не устанавливались. Отчёт: {}",file.display())));
         }
+    }
+    if !options.preview && plan.components.iter().any(|id|id=="rust") {
+        let report=inspect_rust_tools(&options,&plan)?;
+        let report=if !report.ready() && io::stdin().is_terminal() && io::stderr().is_terminal() {
+            match sdk_actions::configure_rust_tools(&options,&rows,&mut plan,report)? {
+                Some(report)=>report,
+                None=>{cliclack::outro_cancel("Отмена IDE. Прежний комплект сохранён; явно установленный nextest остаётся в Cargo home.")?;return Ok(130);}
+            }
+        } else {report};
+        if plain {eprintln!("Rust Tests\n{}",report.summary());} else {cliclack::note("Rust Tests",report.summary())?;}
+        if !report.ready() {return Err(invalid(format!("Rust Tests: cargo-nextest не готов. Выберите существующий tool в tools.json/--tool-path, установите официальный nextest или снимите Rust. Прежний комплект сохранён. Логи: {}",options.log_dir.display())));}
     }
     if !options.preview && plan.native_sdks.iter().any(|sdk| sdk == "go")
         && options.go_toolchain_download.is_none()
@@ -708,6 +730,12 @@ pub(crate) fn inspect_tools(options: &Options, plan: &Plan) -> Result<sdks::Repo
         &tool_report(&report),
     )?;
     Ok(report)
+}
+
+pub(crate) fn inspect_rust_tools(options: &Options, plan: &Plan) -> Result<sdks::Report> {
+    let ids=if plan.components.iter().any(|id|id=="rust") {vec!["cargo-nextest".into()]} else {vec![]};
+    let snapshot=sdk_settings::snapshot_for(options,plan,&ids)?;
+    sdks::inspect_selected(&ids,&options.log_dir,&plan.sdk_paths,&snapshot)
 }
 
 fn write_sdk_report(options: &Options, report: &sdks::Report) -> Result<PathBuf> {

@@ -250,6 +250,15 @@ SDK должны быть готовы, Cargo home — доступен для �
 native F5 default, breakpoint, evaluate42, continue/output и Neotest/output.
 Pytest/Jest dependencies подготавливаются offline из прежних native test inputs;
 SDK/IDE packages не ставятся. `--language rust` повторяет только Rust. Нужен
-cargo-nextest; check явно сообщает его отсутствие. На текущем Default это ещё
-незакрытый gap, а root-level Rust tests также выявили ошибку file filter.
-Go/Python/Node PASS обеих ОС; [точные результаты §288](../openspec/changes/verify-installed-runtime-workflows/verification.md).
+cargo-nextest; check явно сообщает его отсутствие. §289 закрывает оба выявленных
+в §288 Rust gap: подготовку nextest и root-file filter. Actual installed
+Go/Python/Node (§288) и Rust (§289) имеют PASS на Windows/Ubuntu.
+[Точные результаты §289](../openspec/changes/complete-rust-test-runtime/verification.md).
+
+Новые regressions: `tests/e2e/rust-test-runtime.test.lua` (5 real cases),
+`tests/install-nextest.test.py` (10 installer cases). Они входят в общий batch.
+Последний installer case скачивает официальный binary только при явном
+`FORGE_NEXTEST_NETWORK_TEST=1`; обычный offline запуск помечает его SKIP.
+Для affected пакета выберите эти файлы через `-Files`/`--file` обычных runners.
+Затем повторяйте только failed/affected cases; `FORGE_NEXTEST_CASE` выбирает
+буквальную подстроку имени одного Rust case при прямом запуске файла.

@@ -10,6 +10,7 @@ pub(crate) struct Recipe {
     pub program: PathBuf,
     pub args: Vec<OsString>,
     pub source: String,
+    pub preserve_nextest: Option<PathBuf>,
 }
 impl Recipe {
     pub fn display(&self) -> String {
@@ -40,6 +41,19 @@ fn manager(name: &str, path: &std::ffi::OsStr) -> Option<PathBuf> {
 }
 pub(crate) fn recipe(id: &str, paths: &[PathBuf]) -> Result<Recipe> {
     let path = sdks::effective_path(paths)?;
+    if id=="cargo-nextest" {
+        let home=std::env::var_os("CARGO_HOME").map(PathBuf::from).or_else(||
+            std::env::var_os(if cfg!(windows){"USERPROFILE"}else{"HOME"}).map(|p|PathBuf::from(p).join(".cargo")))
+            .ok_or_else(||invalid("Cargo home не найден; задайте CARGO_HOME или выберите существующий nextest"))?;
+        let target=home.join("bin").join(if cfg!(windows){"cargo-nextest.exe"}else{"cargo-nextest"});
+        let (program,args)=if cfg!(windows) {
+            (manager("powershell",&path).unwrap_or_else(||PathBuf::from(crate::sdk_settings::default_powershell())),
+             vec![OsString::from("-NoProfile"),"-Command".into(),r#"$ErrorActionPreference='Stop'; [Net.ServicePointManager]::SecurityProtocol=[Net.ServicePointManager]::SecurityProtocol -bor [Net.SecurityProtocolType]::Tls12; $script=Invoke-RestMethod -Uri 'https://get.nexte.st/install.ps1' -TimeoutSec 180; Invoke-Expression -Command $script"#.into()])
+        } else {
+            (PathBuf::from("/bin/sh"),vec!["-c".into(),r#"set -e; script="$(curl --fail --show-error --silent --location --proto '=https' --tlsv1.2 --connect-timeout 15 --max-time 180 'https://get.nexte.st/install.sh')"; /bin/sh -c "$script""#.into()])
+        };
+        return Ok(Recipe{program,args,source:format!("cargo-nextest: официальный готовый binary с upstream SHA256; {}. SDK/PATH не меняются. https://nexte.st/docs/installation/pre-built-binaries/",target.display()),preserve_nextest:Some(target)});
+    }
     let (manager, items, source) = if cfg!(windows) {
         let package = match id {
             "go" => "GoLang.Go",
@@ -82,6 +96,7 @@ pub(crate) fn recipe(id: &str, paths: &[PathBuf]) -> Result<Recipe> {
         program,
         args: items.into_iter().map(OsString::from).collect(),
         source: source.into(),
+        preserve_nextest:None,
     };
     if manager == "apt-get" {
         if let Some(sudo) = sdks::find("sudo", &path) {
@@ -102,6 +117,18 @@ fn manager_path(name: &str, path: &std::ffi::OsStr) -> Result<PathBuf> {
     })
 }
 pub(crate) fn run(options: &Options, paths: &[PathBuf], recipe: &Recipe) -> Result<bool> {
+    if let Some(target)=&recipe.preserve_nextest {
+        let mut search=paths.to_vec();search.push(target.parent().ok_or_else(||invalid("Missing Cargo bin"))?.to_owned());
+        if sdks::inspect(&["cargo-nextest".into()],&options.log_dir,&search)?.ready() {
+            cliclack::log::info("Используется уже установленный cargo-nextest; версия сохранена.")?;
+            return Ok(true);
+        }
+        match fs::symlink_metadata(target) {
+            Ok(_)=>return Err(invalid(format!("cargo-nextest target уже существует и не готов; файл сохранён: {}. Исправьте его или выберите другой executable в tools.json.",target.display()))),
+            Err(error) if error.kind()==std::io::ErrorKind::NotFound=>{},
+            Err(error)=>return Err(error),
+        }
+    }
     fs::create_dir_all(&options.log_dir)?;
     let log = options.log_dir.join(format!(
         "sdk-install-{}.log",
@@ -113,12 +140,17 @@ pub(crate) fn run(options: &Options, paths: &[PathBuf], recipe: &Recipe) -> Resu
     let mut file = OpenOptions::new().create_new(true).write(true).open(&log)?;
     writeln!(file, "{}\n{}", recipe.source, recipe.display())?;
     cliclack::log::info(format!("Штатная установка · лог: {}", log.display()))?;
-    let mut child = Command::new(&recipe.program)
-        .args(&recipe.args)
+    let mut command = Command::new(&recipe.program);
+    command.args(&recipe.args)
         .env("PATH", sdks::effective_path(paths)?)
         .env("HOMEBREW_NO_AUTO_UPDATE", "1")
-        .env("HOMEBREW_NO_INSTALL_UPGRADE", "1")
-        .stdin(Stdio::inherit())
+        .env("HOMEBREW_NO_INSTALL_UPGRADE", "1");
+    if let Some(target)=&recipe.preserve_nextest {
+        // Use the reviewed destination, including when the caller has another
+        // upstream install-directory override. This does not change their env.
+        command.env("NEXTEST_INSTALL_DIR",target.parent().ok_or_else(||invalid("Missing Cargo bin"))?);
+    }
+    let mut child=command.stdin(Stdio::inherit())
         .stdout(Stdio::piped())
         .stderr(Stdio::piped())
         .spawn()?;

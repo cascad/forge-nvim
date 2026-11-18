@@ -45,10 +45,10 @@ return {
 
             local ok_rust, rust = pcall(require, "neotest-rust")
             if ok_rust then
-                table.insert(adapters, rust({
+                table.insert(adapters, require('forge.nextest').wrap(rust({
                     args = { "--no-capture" },
                     dap_adapter = "codelldb",
-                }))
+                })))
             end
 
             local ok_go, go = pcall(require, "neotest-golang")
@@ -97,6 +97,7 @@ return {
                 quickfix = { open = false },
                 summary = { mappings = { help = 'g?' } }, -- ? — общий panel help
             })
+            require('neotest').forge_runner.bind_run_api(require('neotest').run)
 
             -- То же правило, что и для LSP-диагностики (см. plugins/lsp.lua):
             -- текст упавшего теста не раскрывается сам и не раздвигает код.

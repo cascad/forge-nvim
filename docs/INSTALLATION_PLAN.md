@@ -1,5 +1,16 @@
 # IDE-138 — установка одной командой
 
+§289 / IDE-BOOT-49: Rust-компонент включает отдельную проверку cargo-nextest,
+меню existing/install/skip/refresh/cancel и официальный binary installer в
+обычный CARGO_HOME/bin. Готовый nextest переиспользуется, его версия сохраняется;
+нерабочий занятый target не перезаписывается. User/project executable задаётся
+через tools.json, setup читает только user scope. Это общая Rust-утилита,
+не собственный SDK/package и не новый Mason provider. Headless missing завершается
+с причиной до замены прежнего kit. Windows/Ubuntu official install+repeat,
+Default/Custom archive upgrade и actual installed Rust debug/Tests прошли;
+все20 Mason receipts сохранены. [Evidence](../openspec/changes/complete-rust-test-runtime/verification.md).
+Cold SDK/native Mac/WSL/GUI/publication остаются открыты отдельно.
+
 2026-11-17: владелец выбрал
 [установку и обновление языковых инструментов](TOOLCHAIN_INSTALLATION_APPROACHES.md):
 штатные менеджеры экосистем и готовые upstream-пакеты, гибкая настройка путей,

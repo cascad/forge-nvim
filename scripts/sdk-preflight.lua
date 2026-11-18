@@ -10,6 +10,12 @@ local ok,why=pcall(function()
     local report={schema=1,selections=vim.empty_dict(),errors=vim.empty_dict()}
     for _,id in ipairs(ids) do
         local resolved,value=pcall(function()
+            if id=='cargo-nextest' then
+                local path=require('forge.nextest').executable(nil,{scope='user'})
+                if not path then return end
+                return {tools={['cargo-nextest']=path},bin=vim.fs.dirname(path),env=vim.empty_dict(),
+                    source=require('forge.tool_paths').current('cargo-nextest').source}
+            end
             if id=='go' or id=='rust' then return require('forge.sdk').selection(id,nil,{scope='user'}) end
             assert(id=='python' or id=='node','Unknown native SDK: '..tostring(id))
             local selected=require('forge.setup_sdks').resolve({ids={id},scope='user'})

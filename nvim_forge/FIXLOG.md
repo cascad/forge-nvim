@@ -15300,3 +15300,53 @@ review blocked by policy, этот остаток не удалён. Preparation
 **Файлы.** Diagnostic driver/new observer, verification/планы/Testing/HISTORY,
 commands196. Syntax/strict/trace/frozen product/SDK/UI и journal prefixes/exact
 index проверены. Local commit без push; поведение продукта этой записью не меняется.
+
+
+## 2026-11-18
+
+### 289. Штатный nextest и запуск корневых Rust тестов
+
+**Проблема и причина.** Actual installed §288 показал: cargo-nextest не был
+prerequisite Default, а pinned adapter для main/lib file run предполагал tests::
+и пропускал root/arbitrary-module тесты. Ready PATH control подтверждал второй
+дефект. Владелец выбрал shared CARGO_HOME/bin, reuse/preserve, upstream/custom.
+**Что сделали.** Shared nextest resolver (tools.json/PATH/normal Cargo bin),
+отдельный frontend existing/install/skip/refresh/cancel и setup readiness до
+publication. Official sh/PowerShell binary install после явного выбора,
+upstream SHA verification; ready tool сохраняется, conflict не перезаписывается.
+Child NEXTEST_INSTALL_DIR закреплён за показанным Cargo bin; чужой prefix сохранён.
+Native RunSpec получает выбранный executable, public consumer проверяет missing
+prerequisite до run/run_last/Run all, Logs/edit доступны. DAP использует прежний
+Cargo/CodeLLDB. Opening/discovery не выполняют version probe/install. Root-file
+backport выбирает actual IDs/Cargo target, previous SHA сохраняет migration.
+Pin/companions/lazy-lock не менялись; source tests и actual workflow не подгоняли
+в mod tests ради зелёного. SDK остаются пользовательскими языковыми SDK.
+**Проверка.** Один affected пакет/ОС, затем только failed/affected cases:
+Windows aggregate58 source+34 installer PASS/2 info SKIP, Ubuntu тот же пакет
+все9 файлов PASS (58+34/2 info). Пять новых Rust cases,10 installer cases,
+nearest/integration/debug и Go/Python/Node public Run controls. Official0.9.152
+install+repeat обе ОС сохраняет binary/version. Windows installer отказ был
+смешиванием PS7 modules с WinPS5.1 в изолированном HOME: copied Python env имеет
+uppercase PSMODULEPATH; mixed-case pop не срабатывал. Native A/B подтверждён,
+case-insensitive cleanup только stand/observer исправлен, upstream не менялся.
+Исправлены test JSON/ANSI assertions, ранний consumer multireturn/guard, временная
+TLS опечатка до build. CLI invocation errors сохранены, это не test PASS.
+**Actual acceptance.** Source/Core/Terminal Default+Custom upgrades PASS:
+Windows23.03/15.47s, Ubuntu7.88/3.90s.20 real Mason receipts неизменны. Installed
+Rust breakpoint/eval42/stdout и test1 PASS/output: Windows4.67s, Ubuntu3.02s;
+normal Cargo home test user вне kit/PATH. Вместе с §288 все4 installed языковых
+run/debug/tests имеют PASS.270 regular reports/logs экспортированы, без projects.
+**Ограничения и вывод.** Source/installer fixture readiness недостаточна без
+installed workflow: проверять production consumers вместе. Один Windows test
+cleanup после успешных assertions завершён signal15; тот же case PASS без
+ослабления2s deadline, первопричина неизвестна, исходный failure сохранён.
+Native Mac/WSL/Bash/Terminal GUI/cold SDK/publication не проверены. Общий full
+не повторялся. Owned container261d5816a414 остановлен после export/label check,
+штатно --rm удалён (первый poll опередил removal); Desktop/WSL не менялись.
+Ранее automatic review отклонил cleanup incomplete host project §288 с ответом
+blocked by policy без объяснения: остаток на F сохранён, обхода не делали.
+**Файлы.** forge.nextest/test_runner/tools/setup, frontend shared preflight и
+native action, pinned rust primary, diagnostics/E2E/registry, guides/планы,
+commands197/history и complete-rust-test-runtime verification. Frozen SDK/UI/
+locks, current frontend source/binary SHA, journals/index/syntax/strict/trace
+проверены перед local commit; без push, native gates остаются открыты.

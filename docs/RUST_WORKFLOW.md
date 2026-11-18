@@ -47,8 +47,17 @@ Windows/Ubuntu: отмена и выбранный второй bin провер
 Обычный startup исходники plugin не переписывает.
 
 Панель Tests использует neotest-rust и cargo-nextest, поэтому одного cargo
-test недостаточно. Cargo-nextest устанавливается явно по
-[официальной инструкции](https://nexte.st/docs/installation/pre-built-binaries/).
+test недостаточно. Установщик fride отдельно проверяет nextest и предлагает
+выбрать готовый, установить официальным upstream-скриптом в обычный
+`CARGO_HOME/bin`, пропустить Rust либо отменить установку. Уже готовая версия
+сохраняется; занятый нерабочий файл не заменяется. SDK/PATH не переписываются.
+Ручной executable — ключ `cargo-nextest` в [tools.json](TOOL_PATHS.md).
+При обычном запуске редактора ничего не устанавливается. Можно установить
+nextest самостоятельно по [официальной инструкции](https://nexte.st/docs/installation/pre-built-binaries/).
+§289: file run поддерживает root и nested tests в `main.rs`/`lib.rs`, включая
+модули с произвольным именем, и ограничивает запуск нужным Cargo target.
+Pinned backport применяется при явном setup/`:Lazy build neotest-rust`;
+старый подготовленный вариант поддерживается через previous SHA migration.
 Tests / Test Output: Space w t / Space w r; nearest / file / debug nearest:
 Space T t / Space T f / Space T d. Нужен Rust Treesitter parser, подготовленный
 явным :TSInstall rust. Обнаружение тестов и фактический запуск — разные этапы.

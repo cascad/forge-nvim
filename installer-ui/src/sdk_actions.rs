@@ -1,5 +1,5 @@
 use crate::{
-    inspect_sdks, inspect_tools, review, sdk_bootstrap, sdk_install, sdks, Options, Plan, Result,
+    inspect_rust_tools, inspect_sdks, inspect_tools, review, sdk_bootstrap, sdk_install, sdks, Options, Plan, Result,
     Row,
 };
 use std::path::{Path, PathBuf};
@@ -14,25 +14,28 @@ fn interrupted<T>(value: &Result<T>) -> bool {
 enum Subject {
     Sdks,
     Git,
+    RustTools,
 }
 impl Subject {
     fn git(self) -> bool {
         matches!(self, Self::Git)
     }
     fn label(self, id: &str) -> String {
-        if self.git() {
+        if self.rust_tools() {"Rust Tests · cargo-nextest".into()} else if self.git() {
             "Git".into()
         } else {
             format!("SDK {id}")
         }
     }
     fn inspect(self, options: &Options, plan: &Plan) -> Result<sdks::Report> {
-        if self.git() {
+        if self.rust_tools() {inspect_rust_tools(options,plan)} else if self.git() {
             inspect_tools(options, plan)
         } else {
             inspect_sdks(options, plan)
         }
     }
+    fn rust_tools(self)->bool {matches!(self,Self::RustTools)}
+    fn noun(self)->&'static str {if self.git() {"Git"} else if self.rust_tools() {"cargo-nextest"} else {"SDK"}}
 }
 
 fn discover(
@@ -95,7 +98,7 @@ fn existing(
             return Ok(report);
         }
     }
-    Err(crate::invalid(format!("{} из каталога не готов. Проверьте root/bin{} и программу раньше в PATH; приоритет PATH сохраняется.", if subject.git() { "Git" } else { "SDK" }, if subject.git() { "/cmd" } else { "" })))
+    Err(crate::invalid(format!("{} из каталога не готов. Проверьте root/bin{} и программу раньше в PATH; приоритет PATH сохраняется.", subject.noun(), if subject.git() { "/cmd" } else { "" })))
 }
 
 pub(crate) fn configure(
@@ -114,6 +117,10 @@ pub(crate) fn configure_git(
     report: sdks::Report,
 ) -> Result<Option<sdks::Report>> {
     configure_for(Subject::Git, options, rows, plan, report)
+}
+
+pub(crate) fn configure_rust_tools(options:&Options,rows:&[Row],plan:&mut Plan,report:sdks::Report)->Result<Option<sdks::Report>> {
+    configure_for(Subject::RustTools,options,rows,plan,report)
 }
 
 fn configure_for(
@@ -141,21 +148,13 @@ fn configure_for(
         };
         let label = subject.label(&id);
         cliclack::note(
-            if subject.git() {
-                "Готовность Git"
-            } else {
-                "Готовность SDK"
-            },
+            format!("Готовность {}",subject.noun()),
             report.summary(),
         )?;
         let mut menu = cliclack::select(format!("{label}: действие"))
             .item(
                 0,
-                if subject.git() {
-                    "Выбрать существующий Git"
-                } else {
-                    "Выбрать существующий SDK"
-                },
+                format!("Выбрать существующий {}",subject.noun()),
                 if subject.git() {
                     "root/bin/cmd; fallback после вашего PATH"
                 } else {
@@ -213,7 +212,7 @@ fn configure_for(
                 1 => {
                     let recipe = match sdk_install::recipe(&id, &plan.sdk_paths) {
                         Ok(recipe) => recipe,
-                        Err(error) if error.kind() == std::io::ErrorKind::NotFound => {
+                        Err(error) if error.kind() == std::io::ErrorKind::NotFound && !subject.rust_tools() => {
                             let Some(bootstrap) = sdk_bootstrap::recipe(options, &plan.sdk_paths)?
                             else {
                                 return Err(error);
@@ -236,7 +235,7 @@ fn configure_for(
                         }
                         Err(error) => return Err(error),
                     };
-                    cliclack::note(if subject.git() { "Штатная установка Git" } else { "Штатная установка SDK" },format!("{}\n{}\nНе запрашиваем upgrade выбранной программы; зависимости обрабатывает штатный менеджер. Программа останется в системе при последующей отмене IDE.",recipe.source,recipe.display()))?;
+                    cliclack::note(format!("Штатная установка {}",subject.noun()),format!("{}\n{}\nНе запрашиваем upgrade выбранной программы; зависимости обрабатывает штатный менеджер. Программа останется в системе при последующей отмене IDE.",recipe.source,recipe.display()))?;
                     let confirm = cliclack::confirm(format!("Установить {label} этой командой?"))
                         .initial_value(false)
                         .interact();
@@ -250,7 +249,7 @@ fn configure_for(
                             .iter()
                             .any(|s| s.id == id && s.status != "ready")
                         {
-                            cliclack::log::warning(format!("Команда завершилась, но {} пока не готов. Выберите каталог или исправьте PATH и повторите.", if subject.git() { "Git" } else { "SDK" }))?;
+                            cliclack::log::warning(format!("Команда завершилась, но {} пока не готов. Выберите каталог или исправьте PATH и повторите.", subject.noun()))?;
                         }
                         Ok(Some(checked))
                     } else {
@@ -261,7 +260,7 @@ fn configure_for(
                     let affected = plan
                         .components
                         .iter()
-                        .filter(|component| sdks::required(&[(*component).clone()]).contains(&id))
+                        .filter(|component| sdks::required(&[(*component).clone()]).contains(&if subject.rust_tools(){"rust".into()}else{id.clone()}))
                         .cloned()
                         .collect::<Vec<_>>();
                     let labels = rows
@@ -284,7 +283,7 @@ fn configure_for(
                             .cloned()
                             .collect::<Vec<_>>(),
                     )?;
-                    Ok(Some(inspect_sdks(options, plan)?))
+                    Ok(Some(subject.inspect(options, plan)?))
                 }
                 3 => Ok(Some(discover(subject, options, plan, &id)?)),
                 _ => unreachable!("SDK action"),

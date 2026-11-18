@@ -1,5 +1,12 @@
 # Временные исправления плагинов
 
+§289 / IDE-TEST-3: primary `neotest-rust` на прежнем pin теперь выбирает реальные
+discovered test IDs и Cargo target для root `main.rs`/`lib.rs`, вместо обязательного
+префикса `tests::`. Previous SHA сохраняет upgrade прежней подготовки; extras,
+pin и lazy-lock не меняются. Root+nested/neighbor-target E2E и прежние
+nearest/integration/debug controls проходят Windows/Ubuntu. Удалять этот срез
+после upstream версии, прошедшей те же `rust-test-runtime` и `rust-language` cases.
+
 После обновления checkout подготовь **все** объявленные plugin backports,
 а не выборочный список. Если версия установленного плагина отличается от
 lazy-lock.json, сначала выполни в Forge `:Lazy restore`, дождись завершения

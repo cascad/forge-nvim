@@ -3,6 +3,13 @@
 2026-11-18, FIXLOG §265–276/283/287, IDE-BOOT-33/34/36/37/38/41/45/48. Python, Node, native Bash,
 Bats, Sqruff, Go/Rust LSP, форматтеры и DAP. Чтение настроек ничего не устанавливает.
 
+§289 / IDE-BOOT-49: ключ `cargo-nextest` выбирает executable для Rust Tests.
+Приоритет — явный project/user path, PATH, обычный `CARGO_HOME/bin` (либо
+`~/.cargo/bin`). Например, `{"tools":{"cargo-nextest":"F:/tools/nextest/cargo-nextest.exe"}}`.
+Неверный явный путь блокирует запуск тестов с причиной в `:ForgeLogs`, не выбирает
+другую копию и не мешает редактированию. F5/debug nearest используют штатный
+Cargo/CodeLLDB и не требуют nextest. Версия не проверяется при открытии файла.
+
 ## Ошибка пути во время работы
 
 При неверном Node/Bash, JS entrypoint или повреждённом tools.json открытие

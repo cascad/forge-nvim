@@ -167,6 +167,16 @@ GoToolchain и SDK existing/manual path в установщике сохране
   который сейчас пропускает тесты вне mod tests. Владелец выбрал обычный
   CARGO_HOME/bin, reuse/preserve и официальный upstream, custom paths сохраняются.
   [Actual evidence](../openspec/changes/verify-installed-runtime-workflows/verification.md).
+  §289 завершил этот пробел: nextest проверяется и предлагается отдельно от SDK,
+  ставится официальным upstream в обычный Cargo home, готовая версия сохраняется;
+  custom executable поддержан. Root main/lib file tests исправлены на прежнем pin.
+  Actual Default Rust breakpoint/eval/output/Tests PASS Windows и Ubuntu после
+  archive upgrade;20 Mason receipts неизменны, Custom Core upgrade тоже PASS.
+  Вместе с §288 installed run/debug/tests всех четырёх языков теперь имеют PASS.
+  [Проверки и границы](../openspec/changes/complete-rust-test-runtime/verification.md).
+  Следующие gates: cold SDK/bootstrap в чистой среде, native macOS, Windows
+  WSL/Bash debug, Terminal GUI и публикация готовых artifacts. Cached проверки
+  их не заменяют; системные SDK этой рабочей машины ради cold теста не удаляем.
 
 Статус: базовые e2e настоящего nvim_forge работают на Windows и Ubuntu;
 фоновые установки инструментов редактора перенесены в явный setup.

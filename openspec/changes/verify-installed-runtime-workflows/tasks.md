@@ -2,7 +2,7 @@
 
 ## 1. Installed workflow
 
-- [ ] 1.1 Дополнить diagnostic driver/observer; native DAP и Neotest four-language пакет Windows/Ubuntu, только failed repeats; записать actual reports и причины.
+- [x] 1.1 Дополнить diagnostic driver/observer; native DAP и Neotest four-language пакет Windows/Ubuntu, только failed repeats; записать actual reports и причины. Rust gap закрыт последующим §289, исходные RED §288 сохранены.
 - [x] 1.2 Зафиксировать evidence/границы/следующий пункт в FIXLOG288, commands196, roadmap/guides/history; syntax/strict/trace/frozen/prefix/index и local commit.
 
 ## 2. Native gates

@@ -15,7 +15,7 @@ local function screen() return table.concat(lines(),'\n') end
 local frames,events={},{}
 local function frame(title) frames[#frames+1]={title=title,lines=lines(),raw=lua('return _G.ui_raw')} end
 local function waitfor(text)
- assert(vim.wait(20000,function() return screen():find(text,1,true) or exitcode()~=nil end,10),'Timeout: '..text..'\n'..screen())
+ assert(vim.wait(tonumber(vim.env.FORGE_UI_WAIT_MS) or 20000,function() return screen():find(text,1,true) or exitcode()~=nil end,10),'Timeout: '..text..'\n'..screen())
  assert(exitcode()==nil,'Early exit '..tostring(exitcode())..': '..screen())
  events[#events+1]=text
 end
@@ -36,21 +36,25 @@ local ok,err=xpcall(function()
   elseif scenario=='go-policy-deny' then send('\r')
   elseif scenario=='go-policy-cancel' then send('\27')
   else error('Unknown Go policy scenario '..scenario) end
- elseif scenario:sub(1,4)=='sdk-' then
+ elseif scenario:sub(1,4)=='sdk-' or scenario:sub(1,8)=='nextest-' then
+  local nextest=scenario:sub(1,8)=='nextest-'
+  local subject=nextest and 'Rust Tests · cargo-nextest' or 'SDK node'
+  local noun=nextest and 'cargo-nextest' or 'SDK'
+  if nextest then scenario='sdk-'..scenario:sub(9) end
   local marker=0
   local function fresh(text)
-   assert(vim.wait(20000,function() return lua('return _G.ui_raw'):sub(marker+1):find(text,1,true) or exitcode()~=nil end,10),'SDK timeout '..text..'\n'..screen())
+   assert(vim.wait(tonumber(vim.env.FORGE_UI_WAIT_MS) or 20000,function() return lua('return _G.ui_raw'):sub(marker+1):find(text,1,true) or exitcode()~=nil end,10),'SDK timeout '..text..'\n'..screen())
    assert(exitcode()==nil,'SDK early exit '..tostring(exitcode())..'\n'..screen());frame(text)
   end
   local function input(keys) marker=#lua('return _G.ui_raw');send(keys) end
   local function choose(index) input(string.rep('\27[B',index)..'\r') end
-  local function menu() fresh('SDK node: действие') end
+  local function menu() fresh(subject..': действие') end
   local function final() fresh('Продолжить установку IDE с этим планом?');input('\r') end
   local function existing(path)
-   choose(0);fresh('Каталог SDK node');type_text(path);input('\r')
+   choose(0);fresh('Каталог '..subject);type_text(path);input('\r')
   end
   local function install(accept)
-   choose(1);fresh('Установить SDK node этой командой?');input(accept and '\27[D\r' or '\r')
+   choose(1);fresh('Установить '..subject..' этой командой?');input(accept and '\27[D\r' or '\r')
   end
   local function bootstrap(accept)
    choose(1);fresh('Установить менеджер SDK этой командой?');input(accept and '\27[D\r' or '\r')
@@ -62,10 +66,18 @@ local ok,err=xpcall(function()
   if scenario=='sdk-cancel' then input('\27')
   elseif scenario=='sdk-existing' then existing(assert(vim.env.FORGE_UI_SDK_INPUT));final()
   elseif scenario=='sdk-invalid-existing' then
-   existing(assert(vim.env.FORGE_UI_BAD_SDK_INPUT));fresh('SDK из каталога не готов');menu();existing(assert(vim.env.FORGE_UI_SDK_INPUT));final()
+   existing(assert(vim.env.FORGE_UI_BAD_SDK_INPUT));fresh(noun..' из каталога не готов');menu();existing(assert(vim.env.FORGE_UI_SDK_INPUT));final()
   elseif scenario=='sdk-skip' then choose(2);fresh('Убрать компоненты:');input('\27[D\r');final()
   elseif scenario=='sdk-decline' then install(false);menu();choose(4)
   elseif scenario=='sdk-install' then install(true);final()
+  elseif scenario=='sdk-install-appeared' then
+   local target=assert(vim.env.FORGE_UI_NEXTEST_TARGET);vim.fn.mkdir(vim.fs.dirname(target),'p')
+   assert(vim.uv.fs_copyfile(assert(vim.env.FORGE_UI_NEXTEST_READY),target))
+   if vim.fn.has('win32')~=1 then assert(vim.uv.fs_chmod(target,493)) end
+   install(true);final()
+  elseif scenario=='sdk-install-conflict' then
+   local target=assert(vim.env.FORGE_UI_NEXTEST_TARGET);vim.fn.mkdir(vim.fs.dirname(target),'p');vim.fn.writefile({'user file'},target)
+   install(true);fresh('target уже существует и не готов');menu();choose(4)
   elseif scenario=='sdk-install-cancel' then install(true);fresh('Продолжить установку IDE с этим планом?');input('\27[D\r')
   elseif scenario=='sdk-retry' then install(true);menu();install(true);final()
   elseif scenario=='sdk-noop' then install(true);fresh('SDK пока не готов');menu();choose(4)

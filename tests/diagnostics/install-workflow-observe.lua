@@ -84,8 +84,9 @@ for _,case in ipairs(cases) do
             wait_for('startup',function() return lua('return vim.v.vim_did_enter==1') end,5000)
             lua([[vim.cmd.edit(vim.fn.fnameescape(...))]],{dir..'/'..case.file})
             if case.id=='rust' then
-                result.prerequisite=lua([[local r=vim.system({'cargo','nextest','--version'},{text=true}):wait(10000)
-                    return {code=r.code,signal=r.signal,stdout=r.stdout,stderr=r.stderr} ]])
+                result.prerequisite=lua([[local path=assert(require('forge.nextest').executable(vim.api.nvim_buf_get_name(0)),'Missing selected nextest')
+                    local r=vim.system({path,'--version'},{text=true}):wait(10000)
+                    return {path=path,code=r.code,signal=r.signal,stdout=r.stdout,stderr=r.stderr} ]])
                 assert(result.prerequisite.code==0 and result.prerequisite.signal==0,
                     'Rust Tests prerequisite cargo-nextest: '..result.prerequisite.stderr)
             end

@@ -139,7 +139,11 @@ pub(crate) fn prepare(options: &Options, plan: &Plan) -> Result<PathBuf> {
 }
 
 pub(crate) fn snapshot(options: &Options, plan: &Plan) -> Result<sdks::Snapshot> {
-    if plan.native_sdks.is_empty() {
+    snapshot_for(options,plan,&plan.native_sdks)
+}
+
+pub(crate) fn snapshot_for(options: &Options, plan: &Plan, ids: &[String]) -> Result<sdks::Snapshot> {
+    if ids.is_empty() {
         return Ok(sdks::Snapshot::default());
     }
     let runtime = options
@@ -152,7 +156,7 @@ pub(crate) fn snapshot(options: &Options, plan: &Plan) -> Result<sdks::Snapshot>
         .create_new(true)
         .write(true)
         .open(&request)?
-        .write_all(serde_json::to_string(&plan.native_sdks)?.as_bytes())?;
+        .write_all(serde_json::to_string(ids)?.as_bytes())?;
     let mut command = Command::new(runtime.join(if cfg!(windows) {
         "bin/nvim.exe"
     } else {

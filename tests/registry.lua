@@ -139,4 +139,5 @@ return {
   { file = 'tests/lib/test_batch.test.lua', suite = 'unit', timeout = 60 },
   { file = 'tests/lib/tool_versions.test.lua', suite = 'unit', timeout = 30 },
   { file = 'tests/e2e/managed-entrypoints.test.lua', suite = 'e2e', timeout = 300 },
+  { file = 'tests/e2e/rust-test-runtime.test.lua', suite = 'e2e', timeout = 360 },
 }

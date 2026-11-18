@@ -247,6 +247,7 @@ function M.report()
         { 'pyright', function() return require('forge.node').script('pyright','langserver.index.js') end },
         { 'shellcheck', function() return M.executable('shellcheck') end },
         { 'shfmt', function() return M.executable('shfmt') end },
+        { 'cargo-nextest', function() return require('forge.nextest').executable() end },
         { 'bash', function() return require('forge.bash_host').executable() end },
         { 'js-debug-adapter', function() return require('forge.node').debug_server() end },
         { 'bash-debug-adapter', function() return require('forge.bash_debug').entrypoint() end },

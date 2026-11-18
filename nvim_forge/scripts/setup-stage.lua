@@ -50,6 +50,9 @@ local ok, err = xpcall(function()
         io.stdout:write('Go build toolchain policy: '..policy..' (project SDK unchanged)\n')
         vim.cmd('Lazy load mason-tool-installer.nvim')
         local catalog = require('forge.tool_catalog')
+        if vim.tbl_contains(catalog.mason(),'rust-analyzer') then
+            io.stdout:write('Rust test tool readiness: '..vim.json.encode(require('forge.nextest').check())..'\n')
+        end
         local readiness = require('forge.setup_readiness')
         local external = require('forge.setup_tools')
         local plan = external.plan(catalog.mason())

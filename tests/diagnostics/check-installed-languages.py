@@ -30,6 +30,9 @@ for name,relative in locations.items():
     path=profile/(relative if args.profile_layout=='stand' else name)
     assert path.is_dir(),'Prepared native profile path missing: '+str(path)
     env[name]=str(path)
+if os.name=='nt':
+    for key in list(env):
+        if key.upper()=='PSMODULEPATH':env.pop(key)
 for name in ('VIM','VIMRUNTIME','VIMINIT','EXINIT','LUA_INIT','LUA_PATH','LUA_CPATH','FRIDE_CONFIG','FRIDE_RUNTIME','FRIDE_SDK_BASE','FRIDE_SDK_PROJECT','FORGE_INSTALLED_LANGUAGE_CASE'):
     env.pop(name,None)
 if args.language:env['FORGE_INSTALLED_LANGUAGE_CASE']=args.language

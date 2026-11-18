@@ -425,6 +425,7 @@ Python реализован и проверен 2026-11-03; после возо�
 | §286 | [Шесть языков в установленном Default](../nvim_forge/FIXLOG.md#286-шесть-языков-в-установленном-default) |
 | §287 | [Выбранный Node и native managed tools](../nvim_forge/FIXLOG.md#287-выбранный-node-и-native-managed-tools) |
 | §288 | [Installed debug и Tests выявили пробелы Rust](../nvim_forge/FIXLOG.md#288-installed-debug-и-tests-выявили-пробелы-rust) |
+| §289 | [Штатный nextest и запуск корневых Rust тестов](../nvim_forge/FIXLOG.md#289-штатный-nextest-и-запуск-корневых-rust-тестов) |
 
 ## Как читать и дополнять
 

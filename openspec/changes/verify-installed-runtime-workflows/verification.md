@@ -62,3 +62,12 @@ Export первоначально пытался скопировать и вр�
 (`blocked by policy`); остаток в F evidence не удалён и отмечен для очистки.
 Свой preparation container пока нужен для следующего product fix; запись commands195
 о его removal описывала предполагаемый cleanup, он ещё не выполнен.
+
+## Follow-up §289
+
+`complete-rust-test-runtime` устраняет оба продуктовых Rust gap. После настоящего
+archive upgrade Default/Custom с теми же20 Mason receipts, Rust-only installed
+DAP/eval42/stdout и root-file Neotest/output PASS: Windows4.67s, Ubuntu3.02s.
+Официальный nextest0.9.152 находится в обычном Cargo home тестового пользователя,
+не в kit/PATH; готовые SDK переиспользованы. Исходные RED выше не переписаны.
+[Актуальный отчёт](../complete-rust-test-runtime/verification.md).

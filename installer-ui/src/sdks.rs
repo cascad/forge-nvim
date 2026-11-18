@@ -260,6 +260,7 @@ fn probe(
         "go" => line.starts_with("go version go"),
         "rustc" => line.starts_with("rustc "),
         "cargo" => line.starts_with("cargo "),
+        "cargo-nextest" => line.starts_with("cargo-nextest "),
         "python" | "python3" | "py" => line.starts_with("Python 3."),
         "node" => line.starts_with('v') && line.chars().nth(1).is_some_and(|c| c.is_ascii_digit()),
         "git" => line
@@ -345,6 +346,7 @@ pub(crate) fn inspect_selected(
             }],
             "node" => vec![vec!["node"], vec!["npm"]],
             "git" => vec![vec!["git"]],
+            "cargo-nextest" => vec![vec!["cargo-nextest"]],
             _ => return Err(invalid(format!("Unknown native SDK: {id}"))),
         };
         let mut tools = vec![];
