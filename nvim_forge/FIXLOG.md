@@ -14737,3 +14737,62 @@ Frozen25/чужой WIP, исходные locks и Windows Neovim SDK сохра
 frontend/probes; installer settings regression и affected fixtures/expectations;
 SDK_SELECTION/INSTALLATION_PLAN/TESTING_WORKFLOW/roadmap, OpenSpec verification,
 HISTORY и append-only AGENT_COMMANDS/FIXLOG. Local commit, без push.
+
+
+### 276. Ошибки Node и Bash без блокировки редактора
+
+Спека: IDE-BOOT-41 (ADDED), handle-missing-tool-settings-without-prompts, 2026-11-18.
+
+**Было.** Invalid Node/Bash/JS adapter path или malformed tools.json давал
+hit-enter при открытии JS/Bash, сохранении и F5; contextual missing notice не
+появлялся. Шесть файлов checkpoint §275 падали в missing/recovery сценариях.
+
+**Причина подтверждена.** Strict override бросал ошибку из ts_ls/bashls root
+callback, Node default_config искал SDK раньше debug_ready, Runtime Run/Debug
+не перехватывал ошибку resolver. Новый save-case показал дополнительный путь:
+Conform.get_formatter_info вычисляет command ДО condition; защищённого condition
+недостаточно. Stack BufWritePost сохранён в первых failed retry artifacts.
+
+**Сделано.** Strict resolvers, report и setup/preflight сохранены. Runtime
+boundaries получают protected result; короткий WARN остаётся в native notify,
+полная source/reason — в Logs. LSP guard не вызывает on_dir при ошибке,
+дедуплицирует buffer/server/reason, сбрасывается при успехе и подавляет устаревший
+scheduled warning. Native root/RPC API и OS spawn handling прежние.
+Node default config теперь декларативный до readiness; adapter использует уже
+проверенные Node/entrypoint. Run не создаёт task, failed Debug — session.
+Bash entrypoint/native shell проверяются до adapter callback. Prettier защищает
+command/args/condition; пустой command штатно означает unavailable, без fake
+binary, wrapper и замены явного Node рабочей PATH копией. Глобальный notify
+backend не менялся. После исправления пути доступны native retry/LspStart.
+
+**Проверка.** После цельного кода один affected batch Windows9/Ubuntu10 files;
+затем только failed/affected new suite + Node. Первые3 новых FAIL были fixture
+input (comment continuation/не дождались normal), следующий retry подтвердил
+настоящий Conform command throw; обе причины исправлены. Итог per-file aggregate:
+Windows54 PASS/0 SKIP, Ubuntu57 PASS/0 SKIP. По7 новых native editor regressions:
+invalid Node + real ts_ls/Node recovery, malformed project/user JSON + strict
+inspection/recovery, JS/Bash missing adapters, native Bash recovery без WSL,
+generic missing gopls guard. Проверены edit/save без подтверждений, dedup,
+source Logs, no task/session/fallback/installation. Controls: Node8/Bash8/
+Logs3/sources8/focus2/paths4/GoRust7/setup7; Ubuntu ещё real Bash debug3.
+Windows WSL positive workflow не запускался; missing cases его не требуют.
+
+Initial reports1794995382072765300 /1794995393335041240 остаются FAIL; retry только
+new1794995699291577000 /1794995711277831148 тоже сохранён. Final new+Node:
+1794995899266979700 /1794995908292669822, по15 PASS,135.09s/76.68s.
+Composite и scope — OpenSpec verification, missing-tools-composite.json.
+Несколько initial/retry процессов кратко пересеклись в OS harness; mutable
+logs/report менялись. Aggregate взят из отдельных batch00.log; editor artifacts
+имеют unique dirs. Старый full report сохранён в checkpoint/registry-report.json
+до нового запуска. Полный regression не повторялся.
+
+**Вывод.** Шесть прежних failed файлов missing Node/Bash/adapter перепроверены
+и прошли. Оставшиеся8 checkpoint files не перепроверялись; далее Rust diagnostics/
+DAP launch args, Git read и stand mismatches. Existing process/trace WIP не
+менялся. Default, native Mac и Terminal/Windows WSL acceptance не объявлены PASS.
+Source schemas/SDK/native binaries/locks сохранены, installation не запускалась;
+host tmp/cache на F. Docker existing/offline/limits, без engine/WSL start/stop.
+
+**Файлы.** tool_paths/node/bash/bash_debug,7-case E2E и3 missing-case assertions,
+одна собственная registry строка, TOOL_PATHS/roadmap/HISTORY, OpenSpec artifacts/
+verification и append-only FIXLOG/AGENT_COMMANDS. Local commit, без push.

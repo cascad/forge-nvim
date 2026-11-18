@@ -2,7 +2,7 @@
 local M={}
 local win=vim.fn.has('win32')==1
 local function file(path) return path and path~='' and vim.fn.filereadable(path)==1 end
-local function warn(text) vim.notify(text,vim.log.levels.WARN,{title='Bash debug'}) end
+local function warn(text,reason) require('forge.tool_paths').warn(text,reason,'Bash debug') end
 local function sdk_patch()
     local path=vim.fs.joinpath(vim.fs.dirname(debug.getinfo(1,'S').source:sub(2)),'bash_debug_patch.json')
     return vim.json.decode(table.concat(vim.fn.readfile(path),'\n'))
@@ -52,8 +52,8 @@ function M.prepare_installed()
     return prepare_script(script)
 end
 function M.prepare()
-    local script=entrypoint()
-    if not script then warn('BashDebugPrepare: adapter не найден. Сначала :MasonInstall bash-debug-adapter.');return end
+    local script,reason=require('forge.tool_paths').attempt(entrypoint)
+    if not script then warn('BashDebugPrepare: adapter не найден. Проверь настройку; :ForgeLogs.',reason);return end
     local ok,why=pcall(prepare_script,script)
     if not ok then warn('BashDebugPrepare: '..tostring(why));return end
     vim.notify('Bash debug SDK '..why..' (IDE-128)',vim.log.levels.INFO,{title='Bash debug'})
@@ -88,13 +88,16 @@ end
 function M.setup(dap)
     vim.api.nvim_create_user_command('BashDebugPrepare',M.prepare,{desc='Явно подготовить проверенный Bash debug SDK',force=true})
     dap.adapters.bashdb=function(callback)
-        local node=require('forge.node').executable()
-        if not node then warn('Node не найден. Подготовь Node для bash-debug или задай FORGE_NODE_EXECUTABLE.');return end
-        local script=entrypoint()
+        local paths=require('forge.tool_paths')
+        local node,reason=paths.attempt(require('forge.node').executable)
+        if not node then warn('Node не найден. Проверь Node для bash-debug или настройку; :ForgeLogs.',reason);return end
+        local script;script,reason=paths.attempt(entrypoint)
         if not script then
-            warn('bash-debug adapter не найден. :MasonInstall bash-debug-adapter или FORGE_BASH_DEBUG_ADAPTER=<extension/out/bashDebug.js>.')
+            warn('bash-debug adapter не найден. Проверь :MasonInstall bash-debug-adapter или настройку; :ForgeLogs.',reason)
             return
         end
+        local shell;shell,reason=paths.attempt(bash)
+        if not shell then warn('Bash не найден для debug. Проверь настройку; :ForgeLogs.',reason);return end
         local checked,ready=pcall(sdk_ready,script)
         if not checked or not ready then
             warn('Bash debug SDK не подготовлен для безопасного Stop. Выполни :BashDebugPrepare или prepare_bash_dap.py --download.')
@@ -105,7 +108,7 @@ function M.setup(dap)
             options={detached=false,initialize_timeout_sec=win and 30 or nil},
             enrich_config=function(config,on_config)
                 local terminal=config.terminalKind or (config.console=='internalConsole' and 'debugConsole' or 'integrated')
-                local defaults={pathBash=bash(),pathBashdb=debugger_path(bundle..'/bashdb_dir/bashdb'),
+                local defaults={pathBash=shell,pathBashdb=debugger_path(bundle..'/bashdb_dir/bashdb'),
                     pathBashdbLib=debugger_path(bundle..'/bashdb_dir'),
                     pathCat=win and '/usr/bin/cat' or vim.fn.exepath('cat'),
                     pathMkfifo=win and '/usr/bin/mkfifo' or vim.fn.exepath('mkfifo'),

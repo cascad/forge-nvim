@@ -151,7 +151,7 @@ end)
 check('IDE-SH-1 IDE-SH-3 missing tools editable без WSL',function(e)
   open(e,'run.sh');e:input('gg0i# STILL_EDITABLE<CR><Esc>:write<CR>:BashRunFile<CR>')
   e:wait('missing Bash notice',function()
-    if e.rpc:request('nvim_get_mode',{}).blocking then e:ack_warning('Bash');return false end
+    assert(not e.rpc:request('nvim_get_mode',{}).blocking,'Missing Bash blocked editing')
     return e:lua([[for _,n in ipairs(vim.g.forge_e2e_notifications) do if n.message:find('Bash не найден',1,true) then return true end end;return false]])
   end)
   T.eq(e:lua([[return #vim.lsp.get_clients({name='bashls'})]]),0)

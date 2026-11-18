@@ -1,7 +1,7 @@
 -- spec: IDE-SH-1 IDE-SH-3. Один workflow для Windows/macOS/Linux.
 local M={}
 local host=require('forge.bash_host')
-local function warn(text) vim.notify(text,vim.log.levels.WARN,{title='Bash'}) end
+local function warn(text,reason) require('forge.tool_paths').warn(text,reason,'Bash') end
 function M.root(path)
     path=path and path~='' and path or vim.api.nvim_buf_get_name(0)
     return vim.fs.root(path,{'.git'}) or vim.fs.dirname(path) or vim.fn.getcwd()
@@ -32,7 +32,9 @@ function M.setup_lsp()
         end},
         root_dir=function(buf,on_dir)
             local path=vim.api.nvim_buf_get_name(buf)
-            if require('forge.node').command('bash-language-server','out/cli.js',path) then on_dir(M.root(path)) end
+            if require('forge.tool_paths').lsp_guard(buf,'bashls',function()
+                return require('forge.node').command('bash-language-server','out/cli.js',path)
+            end,'Bash LSP не запущен. Проверь Node/bash-language-server; :ForgeLogs.') then on_dir(M.root(path)) end
         end,
         cmd=function(dispatchers,config)
             local cmd=assert(require('forge.node').command('bash-language-server','out/cli.js',config.root_dir),'Bash Language Server не найден')
@@ -46,8 +48,8 @@ function M.run_file(args)
     require('ide').focus_main()
     local path=vim.api.nvim_buf_get_name(0)
     if path=='' or vim.fn.filereadable(path)~=1 then warn('BashRunFile: сначала сохрани script.');return end
-    local bash=host.executable()
-    if not bash then warn('Bash не найден. Установи native Bash (Windows: Git Bash) или задай FORGE_BASH_EXECUTABLE.');return end
+    local bash,reason=require('forge.tool_paths').attempt(host.executable,path)
+    if not bash then warn('Bash не найден. Проверь native Bash или настройку; :ForgeLogs.',reason);return end
     local script,err=host.path(path,bash)
     if not script then warn(err);return end
     local cmd={bash,'--noprofile','--norc',script}

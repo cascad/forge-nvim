@@ -3,7 +3,7 @@
 local M = {}
 local function file(path) return path and vim.fn.filereadable(path) == 1 end
 local function join(...) return vim.fs.joinpath(...) end
-local function warn(text) vim.notify(text, vim.log.levels.WARN, { title = 'Node' }) end
+local function warn(text, reason) require('forge.tool_paths').warn(text, reason, 'Node') end
 
 function M.root(path)
     path = path and path ~= '' and path or vim.api.nvim_buf_get_name(0)
@@ -69,7 +69,10 @@ function M.setup_lsp()
         init_options = { disableAutomaticTypingAcquisition = true },
         root_dir = function(buf, on_dir)
             original_root(buf, function(root)
-                if M.command('typescript-language-server', 'lib/cli.mjs', root or vim.api.nvim_buf_get_name(buf)) then on_dir(root) end
+                local command = require('forge.tool_paths').lsp_guard(buf, 'ts_ls', function()
+                    return M.command('typescript-language-server', 'lib/cli.mjs', root or vim.api.nvim_buf_get_name(buf))
+                end, 'JS/TS LSP не запущен. Проверь Node/typescript-language-server; :ForgeLogs.')
+                if command then on_dir(root) end
             end)
         end,
         cmd = function(dispatchers, config)
@@ -83,9 +86,17 @@ end
 
 function M.prettier()
     return {
-        command = function() return M.executable() or 'node' end,
-        prepend_args = function(_, ctx) return { M.script('prettier', 'bin/prettier.cjs', ctx.dirname) or '__missing_prettier__' } end,
-        condition = function(_, ctx) return M.command('prettier', 'bin/prettier.cjs', ctx.dirname) ~= nil end,
+        command = function(_, ctx)
+            -- Conform resolves command before condition. Empty means unavailable.
+            return require('forge.tool_paths').attempt(M.executable, ctx and ctx.filename) or ''
+        end,
+        prepend_args = function(_, ctx)
+            local script = require('forge.tool_paths').attempt(function() return M.script('prettier', 'bin/prettier.cjs', ctx.dirname) end)
+            return script and {script} or {}
+        end,
+        condition = function(_, ctx)
+            return require('forge.tool_paths').attempt(function() return M.command('prettier', 'bin/prettier.cjs', ctx.dirname) end) ~= nil
+        end,
     }
 end
 
@@ -98,30 +109,34 @@ function M.debug_server()
 end
 
 function M.debug_ready()
-    if not M.executable() then warn('Node.js не найден. Установи Node.js и добавь node в PATH.');return false end
-    if not M.debug_server() then
-        warn('js-debug adapter не найден. Явно выполни :MasonInstall js-debug-adapter или задай FORGE_JS_DEBUG_SERVER (dapDebugServer.js).')
+    local paths = require('forge.tool_paths')
+    local node, reason = paths.attempt(M.executable)
+    if not node then warn('Node.js не найден. Проверь Node/PATH или настройку; :ForgeLogs.', reason);return false end
+    local script;script, reason = paths.attempt(M.debug_server)
+    if not script then
+        warn('js-debug adapter не найден. Проверь :MasonInstall js-debug-adapter или настройку; :ForgeLogs.', reason)
         return false
     end
-    return true
+    return true, node, script
 end
 
 function M.is_config(config) return type(config) == 'table' and (config.type == 'pwa-node' or config.type == 'node') end
 function M.default_config(path)
     if not path:lower():match('%.m?js$') and not path:lower():match('%.cjs$') then return nil end
     return { name = 'Current Node file', type = 'pwa-node', request = 'launch', program = path,
-        cwd = M.root(path), runtimeExecutable = M.executable() or 'node', console = 'internalConsole',
+        cwd = M.root(path), console = 'internalConsole',
         outputCapture = 'std', autoAttachChildProcesses = false, skipFiles = { '<node_internals>/**' } }
 end
 
 function M.setup_dap(dap)
     local function adapter(callback)
-        if not M.debug_ready() then return end
+        local ready, node, script = M.debug_ready()
+        if not ready then return end
         callback({ type = 'server', host = '127.0.0.1', port = '${port}',
-            executable = { command = M.executable(), args = { M.debug_server(), '${port}', '127.0.0.1' }, detached = false },
+            executable = { command = node, args = { script, '${port}', '127.0.0.1' }, detached = false },
             enrich_config = function(config, done)
                 local copy = vim.deepcopy(config);copy.type = 'pwa-node'
-                copy.runtimeExecutable = copy.runtimeExecutable or M.executable()
+                copy.runtimeExecutable = copy.runtimeExecutable or node
                 copy.console = copy.console or 'internalConsole'
                 copy.outputCapture = copy.outputCapture or 'std'
                 done(copy)
@@ -141,8 +156,9 @@ function M.run_file()
     require('ide').focus_main()
     local path = vim.api.nvim_buf_get_name(0)
     if not M.default_config(path) then warn('NodeRunFile: нужен сохранённый .js/.cjs/.mjs; для JSX/TS используй package script.');return end
-    if not M.executable() then warn('Node.js не найден в PATH.');return end
-    return start_task('Node: ' .. vim.fs.basename(path), { M.executable(), path }, M.root(path))
+    local node, reason = require('forge.tool_paths').attempt(M.executable, path)
+    if not node then warn('Node.js не найден. Проверь Node/PATH или настройку; :ForgeLogs.', reason);return end
+    return start_task('Node: ' .. vim.fs.basename(path), { node, path }, M.root(path))
 end
 
 function M.run_script()
@@ -150,8 +166,8 @@ function M.run_script()
     local root = M.root()
     local ok, package = pcall(function() return vim.json.decode(table.concat(vim.fn.readfile(join(root, 'package.json')), '\n')) end)
     if not ok or type(package.scripts) ~= 'table' or vim.tbl_isempty(package.scripts) then warn('NodeRun: нет package.json со scripts.');return end
-    local command = M.command('npm', 'bin/npm-cli.js', root)
-    if not command then warn('NodeRun: Node/npm не найдены. Установи Node.js с npm.');return end
+    local command, reason = require('forge.tool_paths').attempt(function() return M.command('npm', 'bin/npm-cli.js', root) end)
+    if not command then warn('NodeRun: Node/npm не найдены. Проверь настройку; :ForgeLogs.', reason);return end
     local names = vim.tbl_keys(package.scripts);table.sort(names)
     vim.ui.select(names, { prompt = 'Node package script:' }, function(name)
         if name then start_task('npm: ' .. name, vim.list_extend(vim.deepcopy(command), { 'run', name }), root) end
@@ -178,8 +194,8 @@ function M.jest()
     local build = adapter.build_spec
     adapter.build_spec = function(args)
         require('nio').scheduler()
-        local command = M.command('jest', 'bin/jest.js', args.tree:data().path)
-        if not command then warn('Jest/Node не найден. Установи Jest в проекте (npm install --save-dev jest).');return nil end
+        local command, reason = require('forge.tool_paths').attempt(function() return M.command('jest', 'bin/jest.js', args.tree:data().path) end)
+        if not command then warn('Jest/Node не найден. Проверь проект и настройку; :ForgeLogs.', reason);return nil end
         if args.strategy == 'dap' and not M.debug_ready() then return nil end
         local spec = build(args)
         require('nio').scheduler()

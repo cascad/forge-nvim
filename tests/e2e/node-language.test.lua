@@ -220,7 +220,7 @@ end)
 check('IDE-NODE-3 отсутствие adapter не оставляет сессию',function(e)
   open(e,'app.js');e:input('<F5>')
   e:wait('понятное сообщение',function()
-    if e.rpc:request('nvim_get_mode',{}).blocking then e:ack_warning('js-debug adapter');return false end
+    assert(not e.rpc:request('nvim_get_mode',{}).blocking,'Missing adapter blocked editing')
     return e:lua([[for _,n in ipairs(vim.g.forge_e2e_notifications) do if n.message:find('js-debug adapter не найден',1,true) then return true end end;return false]])
   end)
   T.eq(e:lua([[return require('dap').session()==nil]]),true)
@@ -232,7 +232,7 @@ check('IDE-NODE-1 отсутствующий Node не мешает редакт
   e:wait('файл сохранён без Node',function() return table.concat(vim.fn.readfile(e.node_project..'/src/complete.js'),'\n'):find('return 42;',1,true)~=nil end)
   T.eq(e:lua([[return #vim.lsp.get_clients({name='ts_ls'})]]),0)
   e:input('<F5>');e:wait('Node отсутствует без сессии',function()
-    if e.rpc:request('nvim_get_mode',{}).blocking then e:ack_warning('Node.js');return false end
+    assert(not e.rpc:request('nvim_get_mode',{}).blocking,'Missing Node blocked editing')
     return e:lua([[if require('dap').session() then return false end;for _,n in ipairs(vim.g.forge_e2e_notifications) do
       if n.message:find('Node.js не найден',1,true) then return true end end;return false]])
   end)

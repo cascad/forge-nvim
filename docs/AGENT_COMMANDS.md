@@ -10420,3 +10420,52 @@ Final openspec validate share-sdk-preflight-through-core --type change --strict
 frozen25/raw journals2/exact owned index35/staged journal prefixes.
 Helpers/extraction/verification в ignored .tests; journals append через open('ab').
 Local commit gc.auto=0/maintenance.auto=false, без push; чужой WIP не staged.
+
+
+## 184. 2026-11-18 — Missing tools без hit-enter
+
+После пользовательского git push HEAD012018e и «давай дальше» взят конкретный
+следующий блок roadmap, без goals. openspec-apply-change:
+handle-missing-tool-settings-without-prompts / IDE-BOOT-41. Read-only git status,
+rg/Get-Content runtime resolvers/Node/Bash/LSP/DAP/Conform и предыдущие stack/
+screen artifacts. Scope перед implementation записан proposal/design/spec/tasks;
+openspec instructions apply ready0/3. Baseline frozen25/journals2 в ignored .tests.
+
+Все host exec cwd F:/repo/forge-nvim, login=false, TEMP/TMP/TMPDIR/NVIM_LOG_FILE
+на F, Python -B/UTF8. No approval prompts/SDK installation/lock edits. Native
+Neovim loadfile fast syntax до E2E; первый test syntax typo исправлен до запуска.
+
+После всего блока один initial пакет на ОС:
+python -B scripts/test-batch.py --nvim .tools/neovim/windows-x64/bin/nvim.exe --mode e2e
+--file tests/e2e/missing-tool-errors.test.lua --file tests/e2e/node-language.test.lua
+--file tests/e2e/bash-language.test.lua --file tests/e2e/ide-logs.test.lua
+--file tests/e2e/ide-log-sources.test.lua --file tests/e2e/debug-focus-order.test.lua
+--file tests/e2e/tool-paths.test.lua --file tests/e2e/go-rust-paths.test.lua
+--file tests/e2e/setup-sdk-paths.test.lua
+Windows initial445.21s (9 files), Ubuntu285.64s (10, +bash-debug.test.lua).
+
+Ubuntu команда: docker compose -f tests/containers/compose.yaml
+-f tests/containers/limits.yaml run --rm --no-deps --pull never --entrypoint bash
+ubuntu tests/containers/tool-paths.sh --batch e2e <те же --file, плюс Bash debug>.
+Existing image, network:none, limits2CPU/3GiB; Desktop/WSL start/stop/reconfigure,
+build/pull не вызывались. Windows positive Bash/WSL suite не запускался.
+
+Only failed/affected retries: сначала --file missing-tool-errors.test.lua;
+после Conform command fix --file missing-tool-errors.test.lua --file node-language.test.lua.
+Последний пакет по15 PASS: Windows1794995899266979700 /Ubuntu1794995908292669822,
+135.09s/76.68s. Полный regression не запускался. Initial/retry reports не заменены
+в PASS; composite54/57 строится по immutable batch00.log. Initial/retry кратко
+пересеклись в OS runner, поэтому общие logs/report не используются как aggregate.
+
+Python read-only копирование прежнего report.json (assert122 runs/14 FAIL) в
+.tests/ubuntu/batches/1794989655059525809/registry-report.json до overwrite.
+Get-Content raw screens/stack подтвердил BufWritePost get_formatter_info command
+before condition. Conform API прочитан из pinned prepared source. Protected
+command возвращает empty/unavailable; никаких dummy executable или нового RPC API.
+
+Final loadfile syntax, openspec validate handle-missing-tool-settings-without-prompts
+--type change --strict --no-interactive; diff/staged --check; missing-tools-check.py:
+frozen25 (registry минус own1), raw/staged journal prefixes, exact owned index20.
+Registry staged отдельно: HEAD blob + own1, existing2 WIP строки остаются unstaged.
+FIXLOG276/AGENT_COMMANDS184 append через open('ab'). Commit gc.auto=0/
+maintenance.auto=false, без push; остальной WIP сохранён.

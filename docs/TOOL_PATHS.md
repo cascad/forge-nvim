@@ -1,7 +1,29 @@
 # Пути языковых сред и инструментов
 
-2026-11-17, FIXLOG §265–272, IDE-BOOT-33/34/36/37/38. Python, Node, native Bash,
+2026-11-18, FIXLOG §265–276, IDE-BOOT-33/34/36/37/38/41. Python, Node, native Bash,
 Bats, Sqruff, Go/Rust LSP, форматтеры и DAP. Чтение настроек ничего не устанавливает.
+
+## Ошибка пути во время работы
+
+При неверном Node/Bash, JS entrypoint или повреждённом tools.json открытие
+JS/Bash файла и его сохранение остаются доступны. LSP не запускается с неверным
+путём; Run/Debug выводит предупреждение без создания задачи/сессии. Полная
+причина и область настройки доступны в `:ForgeLogs events:Tool paths` и общем
+списке событий. Другая копия из PATH не выбирается вместо явной настройки.
+Повтор одного LSP события для того же буфера/причины не повторяет предупреждение.
+
+Исправьте tools.json или путь в настройке и повторите Run/Debug. Для не
+запустившегося LSP после исправления можно выполнить `:LspStart ts_ls` /
+`:LspStart bashls` либо переоткрыть файл. Неверный Node помечает Prettier
+недоступным; сохранение не вызывает исключения из formatter callback.
+Строгая проверка `:ForgeToolPaths`, setup/preflight и SDK picker сохранена:
+ошибка не превращается в молчаливый выбор другой среды.
+
+Native regressions: `tests/e2e/missing-tool-errors.test.lua`,7 сценариев;
+Windows/Ubuntu PASS (§276). В пакет также входят прежние Node/Bash/Logs,
+tool paths, Go/Rust и setup checks. Native Bash debug workflow проверен на
+Ubuntu; Windows missing cases не запускают WSL, Windows native WSL acceptance
+остаётся отдельным шагом. macOS проверяет владелец.
 
 ## Настройки
 
@@ -170,7 +192,7 @@ FORGE_TEST_ID=IDE-BOOT-36 nvim -l tests/e2e/go-rust-paths.test.lua
 docker compose -f tests/containers/compose.yaml run --rm --no-deps --pull never -e FORGE_TEST_ID=IDE-BOOT-36 --entrypoint bash ubuntu tests/containers/tool-paths.sh tests/e2e/go-rust-paths.test.lua
 ```
 
-Далее: остальные LSP/DAP/formatter consumers, согласование путей
-setup/runtime, выбор версий/build toolchain и providers/update UI.
-Установщик сохраняет прежний `--sdk-path`; tools.json не является настройкой
-установки SDK. [Принятый подход](TOOLCHAIN_INSTALLATION_APPROACHES.md).
+Далее: оставшиеся consumers, build-toolchain compatibility и установка/обновление
+IDE tools. User SDK settings frontend/setup/runtime согласованы в §275;
+`--sdk-path` остаётся fallback. SDK не устанавливается автоматически при чтении
+tools.json. [Принятый подход](TOOLCHAIN_INSTALLATION_APPROACHES.md).

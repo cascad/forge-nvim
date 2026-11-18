@@ -43,6 +43,11 @@ plan, при missing inputs запуск завершается до любых 
 прошли; обычный runtime сохраняет project choices. Большой Ubuntu checkpoint
 выявил отказы прежних сценариев; перед Default их надо закрыть. Итог и точные
 файлы — [verification](../openspec/changes/share-sdk-preflight-through-core/verification.md).
+§276 закрыл missing Node/Bash/adapter → hit-enter/нет сообщения: runtime guards
+сохраняют причину в Logs, edit/save и повтор после исправления пути работают.
+Windows54/Ubuntu57 targeted E2E PASS (aggregate после failed/affected retries),
+включая7 новых regressions на каждой ОС. Из14 failed файлов checkpoint шесть
+перепроверены и прошли; большой регресс повторно не запускался.
 Детали build-toolchain downloads и версий решаются для этих следующих шагов;
 они не блокируют работу с путями. Core publisher остаётся d120e3a;
 новый срез не означает завершения всего контракта путей или готовности Default.
@@ -77,7 +82,8 @@ venv/project rules. Полный Default остаётся отдельным э�
 
 GoToolchain и SDK existing/manual path в установщике сохранены. Новый selector
 применяет SDK через обычную среду процесса, без правки private API адаптеров.
-Согласование installer/runtime settings ещё в плане; Python/Node общий вход готов.
+Согласование user SDK settings frontend/setup/runtime завершено в §275;
+оставшиеся consumers и установка/обновление IDE tools идут после regression gates.
 
 - [ ] Прогнать IDE-BOOT-37 на native macOS с двумя SDK каждого языка.
 - [x] Включить существующие Python/Node selectors
@@ -87,17 +93,22 @@ GoToolchain и SDK existing/manual path в установщике сохране
   Владелец2026-11-18 выбрал Core-first; shared Lua resolvers и прежний
   --sdk-path fallback, без отдельного Rust settings reader. Missing SDK
   оставляет прежний kit; остальные компоненты готовятся после readiness.
-- [ ] Закрыть отказы первого большого Ubuntu checkpoint перед Default.
-  Ближайший блок: missing SDK/adapter должен оставлять редактирование без
-  hit-enter и показывать сообщение в Logs (Node/Bash/Debug). Отдельно разобрать
-  Rust diagnostics, DAP launch args, Git object read при удалении worktree и
+- [x] Missing SDK/adapter оставляет редактирование без hit-enter и показывает
+  сообщение/источник в Logs (Node/Bash/Debug), §276 / IDE-BOOT-41.
+  Положительные LSP/run/format/tests/debug и retry проверены. Native Mac и
+  положительный Windows Bash debug/WSL — отдельно; WSL не запускался агентом.
+- [ ] Закрыть оставшиеся отказы checkpoint перед Default.
+  Ближайший продуктовый блок: Rust diagnostics без Clippy и DAP launch args.
+  Затем Git object read при удалении worktree и
   устаревшие ожидания стенда (gopls PATH, mixed SQL/sqls, RGB scroll).
   Checkpoint2764.52s:120 registry files/122 запуска,14 FAIL; все24 native Python
   suites запущены. Пять упавших installer suites исправлены и проверены только
   affected повторами; Terminal suite требует prepared.json отсутствующего
   native Terminal runtime. Полный PASS не заявлен. Два отказа process/trace
   относятся к уже существующему WIP, сохранённому без изменений.
-  Причины ещё не подтверждены; это список наблюдавшихся отказов, не диагнозы.
+  Шесть missing-tool файлов после §276 PASS; оставшиеся8 ещё не перепроверены.
+  Причины оставшихся отказов ещё не подтверждены. Точный список и результаты —
+  [verification §276](../openspec/changes/handle-missing-tool-settings-without-prompts/verification.md).
   Полный повтор — после цельного исправления блока; до него только affected
   проверки. Windows full/WSL и native Mac остаются отдельными gates.
 - [ ] Затем завершить оставшиеся consumers, установку/обновление IDE tools

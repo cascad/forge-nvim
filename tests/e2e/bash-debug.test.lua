@@ -44,7 +44,7 @@ local function check(missing)
         e:input('<F5>');e:wait('Понятный '..label,function()
           for _,n in ipairs(e.rpc.notifications) do if n.message:find(expected,1,true) then return true end end
         end)
-        local mode=e.rpc:request('nvim_get_mode',{});if mode.blocking then e:input('<CR>') end
+        assert(not e.rpc:request('nvim_get_mode',{}).blocking,'Missing Bash debug dependency blocked editing')
         T.eq(e:lua([[return require('dap').session()==nil]]),true)
         T.eq(e:lua('return vim.g.forge_e2e_installs'),0)
         report.missing=true;return

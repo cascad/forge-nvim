@@ -152,6 +152,39 @@ function M.executable(id, options)
     return M.selected(id, path ~= '' and path or nil, options.source or 'PATH/Mason', options.root)
 end
 
+-- Runtime consumers handle strict resolver errors; setup/report keep throwing.
+function M.attempt(resolve, ...)
+    local ok, value = pcall(resolve, ...)
+    if ok then return value end
+    return nil, tostring(value)
+end
+
+function M.warn(message, reason, title)
+    title = title or 'Tool paths'
+    if reason then
+        local store = require('forge.log_store')
+        if store.session then store.record(message .. '\n' .. reason, vim.log.levels.WARN, title) end
+    end
+    -- Keep the notification short; source paths/JSON errors remain in Logs.
+    vim.notify(message, vim.log.levels.WARN, {title=title})
+end
+
+function M.lsp_guard(buf, server, resolve, missing)
+    local value, reason = M.attempt(resolve)
+    local key = 'forge_missing_' .. server
+    if value then vim.b[buf][key] = nil; return value end
+    if missing or reason then
+        local message = missing or ('LSP ' .. server .. ' не запущен. Подробнее: :ForgeLogs.')
+        local identity = message .. '\n' .. (reason or '')
+        if vim.b[buf][key] ~= identity then
+            vim.b[buf][key] = identity
+            vim.schedule(function()
+                if vim.api.nvim_buf_is_valid(buf) and vim.b[buf][key] == identity then M.warn(message, reason, 'LSP') end
+            end)
+        end
+    end
+end
+
 function M.formatter_command(id)
     return function(_, ctx) return M.executable(id, {root=ctx.filename}) or id end
 end
@@ -165,14 +198,7 @@ function M.lsp(server, id, options)
     vim.lsp.config(server, {
         root_dir = function(buf, on_dir)
             local file = vim.api.nvim_buf_get_name(buf)
-            if not M.executable(id, {root=file}) then
-                if options.missing and not vim.b[buf]['forge_missing_'..server] then
-                    vim.b[buf]['forge_missing_'..server]=true
-                    vim.schedule(function() vim.notify(options.missing, vim.log.levels.WARN, {title='LSP'}) end)
-                end
-                return
-            end
-            vim.b[buf]['forge_missing_'..server]=nil
+            if not M.lsp_guard(buf, server, function() return M.executable(id, {root=file}) end, options.missing) then return end
             root_dir(buf, on_dir)
         end,
         cmd = function(dispatchers, config)
