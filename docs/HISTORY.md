@@ -424,6 +424,7 @@ Python реализован и проверен 2026-11-03; после возо�
 | §285 | [Повтор установки с временными IPC узлами](../nvim_forge/FIXLOG.md#285-повтор-установки-с-временными-ipc-узлами) |
 | §286 | [Шесть языков в установленном Default](../nvim_forge/FIXLOG.md#286-шесть-языков-в-установленном-default) |
 | §287 | [Выбранный Node и native managed tools](../nvim_forge/FIXLOG.md#287-выбранный-node-и-native-managed-tools) |
+| §288 | [Installed debug и Tests выявили пробелы Rust](../nvim_forge/FIXLOG.md#288-installed-debug-и-tests-выявили-пробелы-rust) |
 
 ## Как читать и дополнять
 

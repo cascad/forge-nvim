@@ -161,6 +161,12 @@ GoToolchain и SDK existing/manual path в установщике сохране
   [Evidence и границы](../openspec/changes/use-native-managed-tool-entrypoints/verification.md).
   Далее: весь installed run/debug/tests matrix, cold SDK/bootstrap, native Mac,
   Windows WSL/Bash debug и publication. GUI и эти gates пока не закрыты.
+  §288: actual installed run/debug/tests Go/Python/Node прошли обе ОС; Rust
+  breakpoint/eval/output прошёл, Tests ещё FAIL. Следующий конкретный продуктовый
+  пункт: обеспечить cargo-nextest и исправить root main.rs/lib.rs file filter,
+  который сейчас пропускает тесты вне mod tests. Владелец выбрал обычный
+  CARGO_HOME/bin, reuse/preserve и официальный upstream, custom paths сохраняются.
+  [Actual evidence](../openspec/changes/verify-installed-runtime-workflows/verification.md).
 
 Статус: базовые e2e настоящего nvim_forge работают на Windows и Ubuntu;
 фоновые установки инструментов редактора перенесены в явный setup.

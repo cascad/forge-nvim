@@ -10841,3 +10841,38 @@ SHA, raw/staged journal prefixes/exact index/evidence/Python AST. Lua loadfile,
 native trace --change/strict OpenSpec, git diff --check; local commit with
 gc.auto=0/maintenance.auto=false, no push. Existing containers2CPU/3GiB, no build/
 pull/Desktop/WSL lifecycle; own prep container removed after evidence export.
+
+
+## 196. Installed app debug/tests — 2026-11-18
+
+cwd F:/repo/forge-nvim, login:false, full access, Python -B/tmp F/CPU2. OpenSpec
+verify-installed-runtime-workflows skip_specs ready, context/artifacts прочитаны.
+Команда194 + --workflow runtime, same installed kit/profile/stand. Один пакет4
+языков каждой ОС, дальше только failed Rust/Python/Node, Go не повторяли.
+Windows initial1795021148030794400, Ubuntu1795021147210439842. Corrections
+observer/scalar RPC/watch/public Neotest API/Node single config; затем fixtures
+Rust macro/Python softwrap/Jest declaration. Go/Python/Node actual PASS обе ОС;
+Rust app DAP PASS, Tests RED. Signals/cleanup сохраняются отдельно, full не нужен.
+Windows foreach invocation без & {...} перед redirection вывел native logs в
+exec session22349 и вызвал отдельный > command ERROR; process reports целы, это
+shell defect. Следующий control использовал & {...} > log правильно.
+
+Rust-only negative control: нет cargo-nextest, fail-fast version probe. Ready
+control PATH preprended .tests/rust-deps/nextest или /opt/forge/rust-deps/nextest,
+native0.9.151 reused, global environment не меняется. Tests FAIL0run1skipped:
+upstream root main/lib file filter tests::. Product fix следует отдельно.
+Official primary docs https://nexte.st/docs/installation/pre-built-binaries/
+и /from-source/: scripts обычный CARGO_HOME/bin, ready binaries, SHA256, no PATH
+rewrite; native source cargo install requires --locked. Current registry package
+URL cargo-nextest404 не используется как provider. Владелец подтвердил ordinary
+CARGO_HOME/bin/reuse/preserve/custom path. Новая implementation ещё не сделана.
+
+docker cp own installed-workflows failed on Python symlink Windows privilege;
+copytree reports metadata chmod failed; native Python copyfile249 regular logs/
+reports to mounted .tests path succeeded, no project venv/module copies needed.
+Two native Remove-Item cleanup requests rejected by automatic policy review
+(blocked by policy); incomplete first host project remains, no bypass attempted.
+Owned container261d5816a414 idle between phases; Desktop/WSL не управлялись.
+workflows-finish.py checks frozen27/product/old UI and raw/staged journal prefixes,
+exact owned index/Python AST; Lua loadfile/trace/OpenSpec strict/git diff --check;
+local commit gc.auto=0/maintenance.auto=false, no push. Rust task remains open.

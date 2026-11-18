@@ -245,3 +245,11 @@ diagnostics, исправление, native `:Format`, save и исчезнов�
 SDK должны быть готовы, Cargo home — доступен для записи; обычный Cargo может
 получать зависимости проекта. Это не cold SDK install и не весь debug/test matrix.
 Новые E2E managed entrypoints входят в registry; существующие runners сохранены.
+
+`--workflow runtime` запускает тот же installed driver для Go/Rust/Python/Node:
+native F5 default, breakpoint, evaluate42, continue/output и Neotest/output.
+Pytest/Jest dependencies подготавливаются offline из прежних native test inputs;
+SDK/IDE packages не ставятся. `--language rust` повторяет только Rust. Нужен
+cargo-nextest; check явно сообщает его отсутствие. На текущем Default это ещё
+незакрытый gap, а root-level Rust tests также выявили ошибку file filter.
+Go/Python/Node PASS обеих ОС; [точные результаты §288](../openspec/changes/verify-installed-runtime-workflows/verification.md).

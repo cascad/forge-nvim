@@ -13,13 +13,15 @@ parser.add_argument('--profile',type=Path,required=True)
 parser.add_argument('--stand-root',type=Path,default=ROOT/'.tests')
 parser.add_argument('--profile-layout',choices=['env','stand'],default='env')
 parser.add_argument('--language',choices=['go','rust','python','node','bash','sql'])
+parser.add_argument('--workflow',choices=['language','runtime'],default='language')
 parser.add_argument('--output',type=Path)
 args=parser.parse_args()
 owned=args.stand_root.resolve();kit=args.kit.resolve();profile=args.profile.resolve()
 assert kit.is_relative_to(owned) and profile.is_relative_to(owned),'Use an owned test kit/profile'
 marker=json.loads((kit/'.forge-install.json').read_text(encoding='utf-8'))
 assert marker.get('ready') and marker.get('product')=='forge-nvim' and 'core' in marker.get('components',[]),'Ready installed kit required'
-base=(args.output or owned/'installed-languages'/str(time.time_ns())).resolve()
+assert args.workflow!='runtime' or args.language not in ('bash','sql'),'Runtime acceptance covers Go/Rust/Python/Node'
+base=(args.output or owned/('installed-workflows' if args.workflow=='runtime' else 'installed-languages')/str(time.time_ns())).resolve()
 assert base.is_relative_to(owned) and not base.exists(),'Use a new owned output directory'
 base.mkdir(parents=True);project=base/'project';project.mkdir()
 env=os.environ.copy();original_user=Path(env.get('USERPROFILE',env.get('HOME','')))
@@ -40,8 +42,9 @@ env.setdefault('RUSTUP_HOME',str(original_user/'.rustup'));env.setdefault('CARGO
 (base/'gitconfig').write_text('')
 subprocess.run(['git','init','-q',str(project)],env=env,check=True,capture_output=True)
 launch=[shutil.which('powershell.exe'),'-NoProfile','-ExecutionPolicy','Bypass','-File',str(kit/'bin/fride.ps1')] if os.name=='nt' else ['bash',str(kit/'bin/fride')]
-command=launch+['--headless','-i','NONE','-l',str(ROOT/'tests/diagnostics/install-language-observe.lua'),str(base)]
-print('Installed language acceptance:',base,flush=True)
+observer='install-workflow-observe.lua' if args.workflow=='runtime' else 'install-language-observe.lua'
+command=launch+['--headless','-i','NONE','-l',str(ROOT/'tests/diagnostics'/observer),str(base)]
+print('Installed '+args.workflow+' acceptance:',base,flush=True)
 started=time.monotonic()
 with (base/'process.log').open('w',encoding='utf-8') as log:
     result=subprocess.run(command,cwd=project,env=env,stdout=log,stderr=subprocess.STDOUT,timeout=800)

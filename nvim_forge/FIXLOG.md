@@ -15263,3 +15263,40 @@ WSL не управлялись. SDK/locks/backports/old UI frozen, raw/staged j
 exact index/syntax/strict/trace проверены. Local commit без push, full не повторён.
 **Файлы.** forge tool_paths/native_tools/node/bash/setup_tools, LSP/format specs,
 managed-entrypoints E2E/external setup, OpenSpec/guides/roadmap/history, команды195.
+
+
+## 2026-11-18
+
+### 288. Installed debug и Tests выявили пробелы Rust
+
+**Связь.** verify-installed-runtime-workflows, test-only skip_specs, после §287.
+**Проблема.** LSP/format acceptance не доказывает installed app/debug/test workflow.
+**Изменение.** Existing owned driver получил --workflow runtime: настоящий F5
+default/picker, breakpoint/evaluate42/continue/output и Neotest/output для4 языков.
+Pytest явно готовится offline в sample venv; Jest — project dependency из готовых
+inputs. SDK/IDE packages/adapters/config не подменяются и не устанавливаются.
+**Проверка/причины.** Initial Windows223.76s/Ubuntu158.79s имели observer defects:
+functions в RPC record, LLDB REPL вместо watch, несуществующий state.results и
+ожидание picker при единственном Node default. Исправлены scalar capture/public
+status_counts/output_panel. Затем Rust macro breakpoint повторялся, Python marker
+soft-wrapped в узком terminal, Jest не был объявлен package.json; исправлены
+fixtures, не продукт. Original FAIL reports сохранены, только failed cases repeats.
+**Actual результат.** Go11.95s/6.45s, Python3.88s/2.12s, Node7.04s/2.48s cases
+полностью PASS Windows/Ubuntu. Rust debug/evaluate/output PASS, Tests FAIL:
+Default не содержит nextest. Прямой fail-fast version probe подтверждён обе ОС.
+С подготовленным nextest0.9.151 только в PATH stand native runner стартует, но
+root answer_test в main.rs пропускается: pinned file filter /^tests::/ выбирает
+0 tests/1 skipped. Это второй product gap; не заменяли тест на mod tests ради PASS.
+Владелец выбрал обычный CARGO_HOME/bin, reuse/preserve и официальный upstream с
+custom path. Доставка nextest и root file filter — следующий product change.
+**Вывод.** Installed Go/Python/Node проверены, Rust Tests честно остаются RED.
+Общий full не повторён; cold SDK/native Mac/WSL/publication открыты. Новый
+diagnostic packet использует прежний runner/RPC, temp F, existing2CPU/3GiB image.
+Native logs/249 regular reports сохранены на F. Initial docker cp venv symlink
+не поддержан Windows; copytree chmod на bind mount отказал; copyfile reports
+прошёл. Две cleanup команды incomplete host project export отклонены automatic
+review blocked by policy, этот остаток не удалён. Preparation container пока
+нужен следующему fix, cleanup обещанный commands195 ещё не состоялся.
+**Файлы.** Diagnostic driver/new observer, verification/планы/Testing/HISTORY,
+commands196. Syntax/strict/trace/frozen product/SDK/UI и journal prefixes/exact
+index проверены. Local commit без push; поведение продукта этой записью не меняется.

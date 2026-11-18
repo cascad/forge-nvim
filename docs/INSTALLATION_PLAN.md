@@ -1320,3 +1320,9 @@ User Pyright/shfmt/ShellCheck paths также удовлетворяют явн
 
 Дальше — installed run/debug/tests matrix, clean SDK/bootstrap и native Mac/
 Windows WSL перед publication. Готовность публичного one-liner ещё не заявлена.
+
+§288: installed Go/Python/Node app debug/tests PASS Windows/Ubuntu. Rust DAP
+прошёл, Tests остаются FAIL: nextest не доставляется, root file filter пропускает
+тесты вне mod tests. Владелец выбрал cargo-nextest в обычном CARGO_HOME/bin,
+reuse/preserve existing и официальный upstream, ручной путь поддерживается.
+Это следующие конкретные product fixes до native gates/publication.
