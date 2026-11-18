@@ -8,6 +8,20 @@ function M.root(path)
 end
 function M.setup_lsp()
     vim.lsp.config('bashls',{
+        before_init=function(_,config)
+            local paths=require('forge.tool_paths')
+            local settings=config.settings.bashIde
+            -- Preserve explicit upstream config; select defaults by the normal
+            -- resolver, including actual .exe behind Mason's Windows export.
+            local function tool(name)
+                local value,reason=paths.attempt(paths.executable,name,{root=config.root_dir})
+                if reason then paths.warn('Bash '..name..' недоступен; :ForgeLogs.',reason,'Bash LSP') end
+                return value or (reason and '' or name)
+            end
+            if not settings.shellcheckPath and not vim.env.SHELLCHECK_PATH then settings.shellcheckPath=tool('shellcheck') end
+            settings.shfmt=settings.shfmt or {}
+            if not settings.shfmt.path and not vim.env.SHFMT_PATH then settings.shfmt.path=tool('shfmt') end
+        end,
         handlers={['textDocument/rename']=function(err,result,ctx,config)
             -- IDE-058: indexed URI и didOpen URI отличаются %C3%BC/%c3%bc.
             -- Сервер возвращает один edit дважды; повтор стирает соседний текст.

@@ -422,6 +422,8 @@ Python реализован и проверен 2026-11-03; после возо�
 | §283 | [Явные IDE tools удовлетворяют setup без копии Mason](../nvim_forge/FIXLOG.md#283-явные-ide-tools-удовлетворяют-setup-без-копии-mason) |
 | §284 | [Frontend из каталога выбранной версии source](../nvim_forge/FIXLOG.md#284-frontend-из-каталога-выбранной-версии-source) |
 | §285 | [Повтор установки с временными IPC узлами](../nvim_forge/FIXLOG.md#285-повтор-установки-с-временными-ipc-узлами) |
+| §286 | [Шесть языков в установленном Default](../nvim_forge/FIXLOG.md#286-шесть-языков-в-установленном-default) |
+| §287 | [Выбранный Node и native managed tools](../nvim_forge/FIXLOG.md#287-выбранный-node-и-native-managed-tools) |
 
 ## Как читать и дополнять
 

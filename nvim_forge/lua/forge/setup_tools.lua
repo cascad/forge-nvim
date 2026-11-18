@@ -1,8 +1,8 @@
 -- spec: IDE-BOOT-45. Explicit setup of keys already consumed by the runtime.
 local M={}
 local executables={gopls=true,gofumpt=true,golines=true,['rust-analyzer']=true,
-    codelldb=true,sqruff=true,delve='dlv'}
-local scripts={prettier=true,['typescript-language-server']=true,
+    codelldb=true,sqruff=true,shfmt=true,shellcheck=true,delve='dlv'}
+local scripts={prettier=true,pyright=true,['typescript-language-server']=true,
     ['bash-language-server']=true,['js-debug-adapter']=true,['bash-debug-adapter']=true}
 
 local function outside_replacement(path,source)

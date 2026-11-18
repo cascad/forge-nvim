@@ -24,38 +24,41 @@ function M.executable(path)
 end
 
 function M.script(package, entry, path, bin)
-    local selected, explicit = require('forge.tool_paths').override(package, {root=path,kind='file'})
+    local paths=require('forge.tool_paths')
+    local selected, explicit = paths.override(package, {root=path,kind='file'})
     if explicit then return selected end
+    local function found(candidate,source) return paths.selected(package,candidate,source,path) end
     local root = M.root(path)
     local roots = { root }
     for parent in vim.fs.parents(root) do roots[#roots + 1] = parent end
     for _, dir in ipairs(roots) do
         local candidate = join(dir, 'node_modules', package, entry)
-        if file(candidate) then return candidate end
+        if file(candidate) then return found(candidate,'project Node module') end
     end
     local shared = vim.g.forge_node_tools or vim.env.FORGE_NODE_TOOLS
     if shared and shared ~= '' then
         local candidate = join(shared, 'node_modules', package, entry)
-        if file(candidate) then return candidate end
+        if file(candidate) then return found(candidate,'shared Node tools') end
     end
     local candidate = join(vim.fn.stdpath('data'), 'mason/packages', package, 'node_modules', package, entry)
-    if file(candidate) then return candidate end
+    if file(candidate) then return found(candidate,'Mason Node module') end
     local executable = vim.fn.exepath(bin or package)
     if executable ~= '' then
         local real = vim.uv.fs_realpath(executable) or executable
-        if real:gsub('\\', '/'):sub(-#entry) == entry then return real end
+        if real:gsub('\\', '/'):sub(-#entry) == entry then return found(real,'PATH JS entrypoint') end
         candidate = join(vim.fs.dirname(executable), 'node_modules', package, entry)
-        if file(candidate) then return candidate end
+        if file(candidate) then return found(candidate,'PATH Node module') end
     end
     local node = M.executable()
     if node then
         for _, dir in ipairs({ vim.fs.dirname(node), vim.fs.dirname(vim.fs.dirname(node)) }) do
             for _, location in ipairs({ 'node_modules', 'lib/node_modules' }) do
                 candidate = join(dir, location, package, entry)
-                if file(candidate) then return candidate end
+                if file(candidate) then return found(candidate,'selected Node modules') end
             end
         end
     end
+    return found(nil,'native JS discovery')
 end
 
 function M.command(package, entry, path, bin)
@@ -63,25 +66,32 @@ function M.command(package, entry, path, bin)
     if node and script then return { node, script } end
 end
 
-function M.setup_lsp()
-    local original_root = vim.lsp.config.ts_ls.root_dir
-    vim.lsp.config('ts_ls', {
-        init_options = { disableAutomaticTypingAcquisition = true },
+function M.setup_lsp(options)
+    options=options or {server='ts_ls',package='typescript-language-server',entry='lib/cli.mjs',
+        init_options={disableAutomaticTypingAcquisition=true},
+        missing='JS/TS LSP не запущен. Проверь Node/typescript-language-server; :ForgeLogs.'}
+    local server=options.server
+    local native=vim.lsp.config[server]
+    local original_root = native.root_dir
+    vim.lsp.config(server, {
+        init_options = options.init_options,
         root_dir = function(buf, on_dir)
-            original_root(buf, function(root)
-                local command = require('forge.tool_paths').lsp_guard(buf, 'ts_ls', function()
-                    return M.command('typescript-language-server', 'lib/cli.mjs', root or vim.api.nvim_buf_get_name(buf))
-                end, 'JS/TS LSP не запущен. Проверь Node/typescript-language-server; :ForgeLogs.')
+            local function ready(root)
+                local command = require('forge.tool_paths').lsp_guard(buf, server, function()
+                    return M.command(options.package,options.entry,root or vim.api.nvim_buf_get_name(buf))
+                end, options.missing)
                 if command then on_dir(root) end
-            end)
+            end
+            if type(original_root)=='function' then original_root(buf,ready)
+            else ready(original_root or vim.fs.root(buf,native.root_markers)) end
         end,
         cmd = function(dispatchers, config)
-            local command = assert(M.command('typescript-language-server', 'lib/cli.mjs', config.root_dir), 'TypeScript Language Server отсутствует')
+            local command = assert(M.command(options.package,options.entry,config.root_dir),options.package..' отсутствует')
             command[#command + 1] = '--stdio'
-            return vim.lsp.rpc.start(command, dispatchers)
+            return vim.lsp.rpc.start(command,dispatchers,{cwd=config.cmd_cwd,env=config.cmd_env,detached=config.detached})
         end,
     })
-    vim.lsp.enable('ts_ls') -- guarded root не запускает отсутствующие tools
+    vim.lsp.enable(server) -- guarded root не запускает отсутствующие tools
 end
 
 function M.prettier()

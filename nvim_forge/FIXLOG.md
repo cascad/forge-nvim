@@ -15197,3 +15197,69 @@ container для actual workflow, без Desktop/WSL lifecycle. SDK/locks/backpo
 frozen, raw/staged prefixes/exact index/syntax/strict проверены; full не повторён.
 **Файлы.** install-private.lua, native transient suite/Go fixture, OpenSpec,
 план/история/INSTALLATION_PLAN/TESTING_WORKFLOW и журналы. Local commit без push.
+
+
+## 2026-11-18
+
+### 286. Шесть языков в установленном Default
+
+**Связь:** actual Default/Custom после §285, verify-installed-language-consumers,
+test-only skip_specs. Проверка существующих IDE-BOOT/языковых требований.
+**Проблема.** Source E2E не доказывает связку настоящего установленного kit,
+managed profile, выбранных SDK и Mason packages.
+**Изменение.** Явный diagnostic driver запускает managed fride и observer через
+existing RPC/process cleanup:6 файлов Go/Rust/Python/Node/Bash/SQL, initialized
+LSP, diagnostics, исправление, native Format/save и исчезновение ERROR.
+Owned kit/profile/output проверяются; --language повторяет только отказ.
+**Причина и проверка.** Initial Windows/Ubuntu выявили реальные Pyright/Windows
+ShellCheck gaps, вынесенные в §287. Исправлены также test defects: RPC vim.NIL,
+общий90s lifetime и forced Cargo offline. Это не выдаётся за product fixes.
+После §287 Windows1795020511631048900:6 PASS,6.37s. Ubuntu1795020355667184771:
+5 PASS, Rust не мог писать registry в read-only image /opt/forge/cargo.
+Only Rust1795020460691815744 с writable stand CARGO_HOME:PASS3.27s, SDK/
+RUSTUP_HOME прежние. Все shutdown.ok=true. Reports сохранены, initial FAIL тоже.
+**Вывод.** Все6 native language consumers работают внутри actual Default обеих
+ОС с готовыми20 packages/67 repos. Cold SDK, installed run/debug/tests matrix,
+native Mac/WSL/publication не закрыты. Это одна матрица + affected repeat,
+без full regression и без нового runner. Commands193 предыдущая последняя
+строка «Custom/Ubuntu archive не PASS» была устаревшей: §285/evidence уже
+подтвердили cached archive workflow обеих ОС; она не отменяет эти результаты.
+**Файлы.** tests/diagnostics/check-installed-languages.py/install-language-observe.lua,
+verification, планы/матрица/история и команды194. Product fixes отдельно §287.
+
+### 287. Выбранный Node и native managed tools
+
+**Связь:** installed matrix §286, use-native-managed-tool-entrypoints.
+Спека: IDE-BOOT-48 (ADDED).
+**Проблема/причина.** Pyright wrapper зависел от Node в PATH вопреки явному
+выбору SDK; BashLS Windows не находил ShellCheck за Mason .cmd. Source fixtures
+использовали готовые прямые binaries и не проверяли настоящий managed layout.
+**Изменение.** Существующий Node resolver подключён к Pyright JS entrypoint,
+сохранены native roots/settings/Python before_init. Общий read-only resolver
+получает .exe за собственным Windows export через native Mason receipt API.
+Явные внешние paths/wrappers прежние; BashLS shellcheckPath/shfmt.path и Conform
+shfmt используют общий выбор; Sqruff тоже. User Pyright/shfmt/ShellCheck keys
+удовлетворяют setup без Mason копии. Нет нового LSP/manager, registry refresh,
+SDK installs, wrapper generation, private API или upstream package patches.
+**Проверка/e2e.** Один пакет/ОС: Windows1795019835358564000/Ubuntu1795019848767004971,
+8 registry файлов и external setup16. Initial registry каждой ОС49 PASS/2 FAIL/
+2 info SKIP. SQL fixture ошибочно ожидал uppercase без policy, исправлен .sqruff.
+Ubuntu Pyright один timeout diagnostics, причина неизвестна; сохранены evidence,
+добавлен capture настоящих clients/settings/diagnostics/LSP log. Affected suite
+затем3 PASS каждой ОС. Windows existing adapter-error test получил RPC timeout/
+child SIGTERM при уже сохранённом exit23 notification; only-case repeat PASS
+без изменения DAP/helper/deadline, причина первого timeout не установлена.
+Остальные successful файлы не повторялись. Latest affected aggregate67 PASS/
+2 info SKIP каждой ОС. Новые3 E2E: selected Node вне PATH+Pyright/Python;
+real ShellCheck SC2154/shfmt; real Sqruff/format/external priority. Setup16 PASS
+каждой ОС, включая новые Pyright/Bash keys. Initial failures не скрыты.
+**Actual установка.** Source archive upgrade Default/Custom Windows16.54s/12.46s,
+Ubuntu5.19s/3.38s; все exit0,20 receipts прежние. Installed6-language cases §286
+прошли. Source-matched frontend и cached настоящие Git/Mason inputs; initial
+Core/archive evidence §285 сохранён. Native Mac/WSL/cold SDK/publication отдельно.
+**Вывод.** Выбранный SDK и managed packages используются одинаково в setup и
+runtime. Temp/cache F; existing image2CPU/3GiB, только owned prep сеть, Desktop/
+WSL не управлялись. SDK/locks/backports/old UI frozen, raw/staged journals и
+exact index/syntax/strict/trace проверены. Local commit без push, full не повторён.
+**Файлы.** forge tool_paths/native_tools/node/bash/setup_tools, LSP/format specs,
+managed-entrypoints E2E/external setup, OpenSpec/guides/roadmap/history, команды195.

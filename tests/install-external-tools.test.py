@@ -169,6 +169,20 @@ class External(versions.Versions):
         result=self.setup(base,env,target);self.assertNotEqual(result.returncode,0)
         self.assertIn('requires Node',(target/'log/setup-tools.log').read_text());self.assertFalse((target/'bin/fride').exists())
 
+    def test_external_15_pyright_entry_satisfies_setup(self):
+        base,env,target,chosen=self.prepare_external('pyright',names=('pyright',))
+        python_deps=Path(os.environ.get('FORGE_E2E_PYTHON_DEPS',str(ROOT/'.tests/python-deps')))
+        entry=python_deps/'tools/node_modules/pyright/langserver.index.js'
+        self.user(env,{'pyright':str(entry),'node':str(self.node)})
+        self.assert_ok(self.setup(base,env,target));self.assert_external(base,target,'pyright',entry)
+
+    def test_external_16_bash_native_tools_satisfy_setup(self):
+        base,env,target,chosen=self.prepare_external('bash-tools',names=('shfmt','shellcheck'))
+        deps=Path(os.environ.get('FORGE_E2E_BASH_DEPS',str(ROOT/'.tests/bash-deps')))
+        tools={name:str(deps/'bin'/(name+versions.SUFFIX)) for name in ('shfmt','shellcheck')}
+        self.user(env,tools);self.assert_ok(self.setup(base,env,target))
+        for name,path in tools.items():self.assert_external(base,target,name,Path(path))
+
 
 if __name__=='__main__':
     print('work:',stand.BASE,'artifacts:',stand.ARTIFACTS,flush=True)

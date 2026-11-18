@@ -222,3 +222,26 @@ tree/search/LuaLS/edit/save/restart/repeat на Windows и Ubuntu с насто�
 Mason packages/67 Git repos в cached native profile. Это не cold SDK bootstrap
 и не закрытие Mac/WSL/installed-language matrix/publication. Metadata/same20
 receipts и actual input bounds зафиксированы в verification.
+
+## Языки в установленном приложении — §286–287
+
+После цельного изменения установщика/consumers проверяется уже установленный
+owned kit, со своим профилем и настоящими SDK/tools. Диагностика не выполняет
+setup и не подставляет исходную конфигурацию вместо установленной:
+
+```powershell
+python -B tests/diagnostics/check-installed-languages.py --kit '<stand>/kit' --profile '<stand>/profile' --stand-root '<stand>' --profile-layout stand
+```
+
+На Linux/macOS — `python3 -B` с теми же аргументами. `stand` означает каталоги
+профиля home/local/config/data/state/cache; для прежнего Core acceptance с
+каталогами HOME/XDG_* используется `--profile-layout env`. Нужен ready marker
+нашей установки. Пути kit/profile/output обязаны находиться внутри stand.
+
+Один запуск проверяет Go/Rust/Python/Node/Bash/SQL: initialized LSP, настоящая
+diagnostics, исправление, native `:Format`, save и исчезновение ошибок.
+`--language rust` повторяет только отказавший язык. Времена, clients, diagnostics,
+форматированный текст и cleanup записываются в новый installed-languages/<id>.
+SDK должны быть готовы, Cargo home — доступен для записи; обычный Cargo может
+получать зависимости проекта. Это не cold SDK install и не весь debug/test matrix.
+Новые E2E managed entrypoints входят в registry; существующие runners сохранены.

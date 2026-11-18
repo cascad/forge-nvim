@@ -1,6 +1,6 @@
 # Пути языковых сред и инструментов
 
-2026-11-18, FIXLOG §265–276/283, IDE-BOOT-33/34/36/37/38/41/45. Python, Node, native Bash,
+2026-11-18, FIXLOG §265–276/283/287, IDE-BOOT-33/34/36/37/38/41/45/48. Python, Node, native Bash,
 Bats, Sqruff, Go/Rust LSP, форматтеры и DAP. Чтение настроек ничего не устанавливает.
 
 ## Ошибка пути во время работы
@@ -87,17 +87,24 @@ JSON-экранированный `\\`.
 | `bash` | Native Bash executable | `vim.g.forge_bash_executable`, `FORGE_BASH_EXECUTABLE` |
 | `bats` | Файл Bats runner | `vim.g.forge_bats_executable`, `FORGE_BATS_EXECUTABLE` |
 | `sqruff` | Готовый Sqruff executable, LSP и formatter | `vim.g.forge_sqruff_executable`, `FORGE_SQRUFF_EXECUTABLE` |
+| `shellcheck`, `shfmt` | Native executable для Bash LSP и форматирования | PATH/Mason; явные BashLS settings и `SHELLCHECK_PATH`/`SHFMT_PATH` сохраняются |
 | `gopls`, `rust-analyzer` | Executable соответствующего LSP | При отсутствии override — PATH/Mason; native workspace discovery |
 | `gofumpt`, `golines`, `rustfmt` | Executable форматтера | PATH/Mason; прежние аргументы Conform |
 | `dlv` | Executable Delve | `vim.g.forge_dlv_path`, `FORGE_DLV_PATH`, затем `DLV_PATH` |
 | `codelldb` | Executable адаптера в готовом CodeLLDB bundle | `vim.g.forge_codelldb_path`, `FORGE_CODELLDB_PATH` |
 | `js-debug-adapter` | `dapDebugServer.js` | `vim.g.forge_js_debug_server`, `FORGE_JS_DEBUG_SERVER` |
 | `bash-debug-adapter` | `extension/out/bashDebug.js` | `vim.g.forge_bash_debug_adapter`, `FORGE_BASH_DEBUG_ADAPTER` |
-| `prettier`, `jest`, `typescript-language-server`, `bash-language-server`, `npm` | Соответствующий JS entrypoint | Штатный поиск project/shared/Mason tools сохраняется |
+| `pyright`, `prettier`, `jest`, `typescript-language-server`, `bash-language-server`, `npm` | Соответствующий JS entrypoint; для Pyright — `langserver.index.js` | Штатный поиск project/shared/Mason tools сохраняется |
 
 JS entrypoint проверяется как файл и запускается выбранным Node; executable bit
 ему не нужен. `.cmd` не подставляется вместо JS entrypoint. Аргументы DAP остаются
 в штатных launch configurations; tools.json в этом срезе содержит только пути.
+
+Pyright использует выбранный `node`, как TypeScript/Bash LSP и Prettier;
+выбор Python для анализа и проектной venv остаётся отдельным. Для готовых
+Windows Mason exports ShellCheck/shfmt/Sqruff прямой запуск использует `.exe`
+из штатного receipt. Явные пользовательские пути и внешние wrappers сохраняются.
+Это runtime lookup готового пакета, без registry refresh, установки или обновления.
 На Windows `bash` выбирает native Bash для run/tests, не меняет Linux pathBash
 WSL2 отладчика. Явная подготовка существующего Bash adapter patch остаётся прежней.
 

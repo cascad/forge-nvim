@@ -10793,3 +10793,51 @@ transient-finish.py frozen27/native UI sources+SHA/raw+staged journal prefixes/
 exact index и diff --check. Temp/cache F; Docker2CPU/3GiB, actual session имеет
 явную bridge сеть только preparation. Source SDK/locks/UI не менялись. Local
 git commit gc.auto=0/maintenance.auto=false, без push; общий full не повторялся.
+
+
+## 194. Installed six-language acceptance — 2026-11-18
+
+cwd F:/repo/forge-nvim; login:false/full access; Python -B, tmp/cache F.
+OpenSpec list/status/instructions apply verify-installed-language-consumers ready;
+artifacts прочитаны, skip_specs. Native observer через installed managed launcher,
+existing editor_rpc/editor_process, без source-config substitution/setup.
+
+python -B tests/diagnostics/check-installed-languages.py --kit <owned-kit>
+--profile <owned-profile> --profile-layout stand --stand-root <owned-stand>
+Linux: docker exec known owned261d5816a414 python3 -B /workspace/tests/diagnostics/
+check-installed-languages.py с теми же args. --language rust only affected.
+Native output: new installed-languages/<id>/process.log,json,observed/report.json,
+screen/stderr/shutdown. Initial126s/124s FAIL сохранены; observer vim.NIL/lifetime/
+offline исправлены отдельно от product gaps. Final Windows6 PASS6.37s; Ubuntu
+5 PASS+Rust readonly Cargo failure, writable own CARGO_HOME Rust-only PASS3.27s.
+Original SDK/toolchain untouched; native Cargo std metadata разрешена в prep сети.
+docker cp exact own installed-languages и lsp.log в host F evidence до cleanup.
+Это не весь installed run/debug/tests/cold SDK/Mac/WSL/public release.
+
+## 195. Native managed entrypoints — 2026-11-18
+
+Skill openspec-apply-change, use-native-managed-tool-entrypoints ready/context
+прочитан до code. Read pinned primary Mason InstallLocation/InstallReceipt,
+nvim-lspconfig/Conform и BashLS config; no registry edits. Native Node+JS for
+Pyright, read-only Windows receipt-to-exe; user external paths unchanged.
+
+One scripts/test.ps1 e2e -Files packet / Ubuntu existing compose+limits --rm
+--no-deps --pull never --entrypoint bash ubuntu tests/containers/tool-paths.sh
+--batch e2e --file ... : managed-entrypoints,Python,Bash,SQL,Node,Go/Rust,
+missing-tools,trace,external-tools. Batches1795019835358564000/1795019848767004971.
+Initial49 PASS2 FAIL2 info SKIP registry+16 setup each. Only failed suites/case
+rerun: nvim -l tests/e2e/managed-entrypoints.test.lua (3PASS each), Windows
+FORGE_PYTHON_CASE='неожиданный adapter', python-language.test.lua (1PASS).
+Product fixes не менялись после initial; SQL policy fixture/log capture только.
+Latest affected aggregate67 PASS2 info SKIP each; initial timeouts unknown,
+raw failures preserved. Full не повторялся.
+
+Ignored actual archive driver --resume --upgrade-only: root scripts/source UI,
+production stages/67 Git repos/20 Mason packages, one Default/Custom call each.
+Windows16.54s/12.46s, Ubuntu5.19s/3.38s exit0, receipts unchanged. Keeps initial
+acceptance.json, adds upgrade-acceptance.json. Installed matrix command194.
+entrypoints-finish.py validates frozen27 (registry only own row), UI source+binary
+SHA, raw/staged journal prefixes/exact index/evidence/Python AST. Lua loadfile,
+native trace --change/strict OpenSpec, git diff --check; local commit with
+gc.auto=0/maintenance.auto=false, no push. Existing containers2CPU/3GiB, no build/
+pull/Desktop/WSL lifecycle; own prep container removed after evidence export.

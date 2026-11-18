@@ -150,6 +150,7 @@ return {
             end,
             formatters = {
                 prettier = require('forge.node').prettier(),
+                shfmt = {command=require('forge.tool_paths').formatter_command('shfmt')},
                 sqruff = require('forge.sql_language').formatter(),
                 gofumpt = {command=require('forge.tool_paths').formatter_command('gofumpt')},
                 rustfmt = {command=require('forge.tool_paths').formatter_command('rustfmt')},

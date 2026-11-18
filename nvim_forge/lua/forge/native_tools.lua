@@ -8,7 +8,7 @@ function M.owned(name)
     return vim.fn.executable(path) == 1 and path or nil
 end
 function M.executable(name)
-    local path = M.owned(name) or vim.fn.exepath(name)
+    local path = M.owned(name) or require('forge.tool_paths').mason_native(name,vim.fn.exepath(name))
     return path and path ~= '' and path or nil
 end
 function M.check_sql()

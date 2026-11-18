@@ -134,3 +134,10 @@ Mac выполняется отдельно на машине владельца
 после функциональной матрицы. Controls Terminal/Trouble проверены Windows/Ubuntu
 (§172); Mac/GUI и IDE-047/048
 сохраняются в очереди, не смешиваются с языковым шагом.
+
+2026-11-18, §286–287: actual installed Default проверен на Windows/Ubuntu для
+всех6 языков: initialized LSP, diagnostics, исправление, native format/save и
+очищенные ERROR. Pyright использует выбранный Node; Windows Mason native exports
+работают для Bash/Sqruff/Conform. Это cached installation,20 готовых packages/
+67 pinned Git repos; installed run/debug/tests matrix, cold SDK и Mac отдельно.
+[Evidence](../openspec/changes/verify-installed-language-consumers/verification.md).

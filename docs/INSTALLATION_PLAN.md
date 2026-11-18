@@ -1307,3 +1307,16 @@ tree/search/LuaLS/edit/save/restart/repeat на Windows и Ubuntu с насто�
 Mason packages/67 Git repos в cached native profile. Это не cold SDK bootstrap
 и не закрытие Mac/WSL/installed-language matrix/publication. Metadata/same20
 receipts и actual input bounds зафиксированы в verification.
+
+## Installed language checkpoint — §286–287
+
+Actual source upgrade Default/Custom Core прошёл Windows/Ubuntu,20 Mason
+receipts прежние. Установленный Default открывает Go/Rust/Python/Node/Bash/SQL,
+запускает настоящие LSP, показывает diagnostics, форматирует и сохраняет
+исправление. Pyright получил выбранный Node; Bash/Sqruff/Conform на Windows
+получают native target из Mason receipt без batch process и без install.
+User Pyright/shfmt/ShellCheck paths также удовлетворяют явный setup.
+[Проверки и исходные отказы](../openspec/changes/use-native-managed-tool-entrypoints/verification.md).
+
+Дальше — installed run/debug/tests matrix, clean SDK/bootstrap и native Mac/
+Windows WSL перед publication. Готовность публичного one-liner ещё не заявлена.

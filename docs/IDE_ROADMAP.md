@@ -153,6 +153,14 @@ GoToolchain и SDK existing/manual path в установщике сохране
   на cached настоящих20 Mason packages/67 Git repos, не cold SDK bootstrap.
   Owner marker перечисляет runtime parts core/terminal,
   выбранные языки проверяются readiness20, не количеством parts.
+  §286–287: actual installed Default проверен по Go/Rust/Python/Node/Bash/SQL:
+  LSP, diagnostics, исправление, format/save. Pyright использует выбранный Node;
+  Windows Bash/SQL/format получают native target за Mason export. Default/Custom
+  archive upgrade обеих ОС сохраняет20 версий. Source affected aggregate67 PASS/
+  2 info SKIP каждой ОС после только failed repeats; original failures сохранены.
+  [Evidence и границы](../openspec/changes/use-native-managed-tool-entrypoints/verification.md).
+  Далее: весь installed run/debug/tests matrix, cold SDK/bootstrap, native Mac,
+  Windows WSL/Bash debug и publication. GUI и эти gates пока не закрыты.
 
 Статус: базовые e2e настоящего nvim_forge работают на Windows и Ubuntu;
 фоновые установки инструментов редактора перенесены в явный setup.

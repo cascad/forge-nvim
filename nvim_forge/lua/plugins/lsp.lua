@@ -734,13 +734,15 @@ return {
             -- Нативное включение доступных серверов не требует registry refresh.
             -- Mason уже добавил свой bin в PATH как dependency этого плагина.
             for server, binary in pairs({
-                pyright = "pyright-langserver", ruff = "ruff",
+                ruff = "ruff",
                 lua_ls = "lua-language-server",
             }) do
                 if vim.fn.executable(binary) == 1 then vim.lsp.enable(server) end
             end
             require('forge.tool_paths').lsp('rust_analyzer','rust-analyzer')
             require('forge.node').setup_lsp()
+            require('forge.node').setup_lsp({server='pyright',package='pyright',entry='langserver.index.js',
+                missing='Python LSP не запущен. Проверь Node/Pyright; :ForgeLogs.'})
             require('forge.bash').setup_lsp()
             require('forge.sql_language').setup()
         end,

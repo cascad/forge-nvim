@@ -144,11 +144,39 @@ function M.override(id, options)
     return record(id, path, source, root), true
 end
 
+-- Node and other shell-free APIs cannot execute Mason's Windows batch export.
+-- Resolve only that owned export through its native receipt; never unwrap a
+-- user's explicit wrapper or a different PATH installation.
+function M.mason_native(id, path)
+    if vim.fn.has('win32')~=1 then return path end
+    local ok,value=pcall(function()
+        local location=require('mason-core.installer.InstallLocation').global()
+        local alias=id..'.cmd'
+        local export=location:bin(alias)
+        local function key(file) return vim.fs.normalize(file):lower() end
+        if path and path~='' and key(path)~=key(export) then return path end
+        local package=id=='dlv' and 'delve' or id
+        local directory=location:package(package)
+        local file=vim.fs.joinpath(directory,'mason-receipt.json')
+        local stat=vim.uv.fs_stat(file)
+        if not stat or stat.type~='file' or stat.size>1048576 then return path end
+        local receipt=require('mason-core.receipt').InstallReceipt.from_json(vim.json.decode(table.concat(vim.fn.readfile(file),'\n')))
+        if receipt:get_name()~=package then return path end
+        local links=receipt:get_links().bin or {}
+        local target=links[alias] or links[id]
+        if type(target)~='string' or not target:lower():match('%.exe$') then return path end
+        local candidate=vim.fs.normalize(vim.fs.joinpath(directory,target))
+        if key(candidate):sub(1,#key(directory)+1)~=key(directory)..'/' then return path end
+        return vim.fn.executable(candidate)==1 and candidate or path
+    end)
+    return ok and value or path
+end
+
 function M.executable(id, options)
     options = options or {}
     local path, explicit = M.override(id, options)
     if explicit then return path end
-    path = vim.fn.exepath(options.command or id)
+    path = M.mason_native(options.command or id,vim.fn.exepath(options.command or id))
     return M.selected(id, path ~= '' and path or nil, options.source or 'PATH/Mason', options.root)
 end
 
@@ -216,6 +244,9 @@ function M.report()
     local checks = {
         { 'python', function() return require('forge.python').resolve({ M.root() }) end },
         { 'node', function() return require('forge.node').executable() end },
+        { 'pyright', function() return require('forge.node').script('pyright','langserver.index.js') end },
+        { 'shellcheck', function() return M.executable('shellcheck') end },
+        { 'shfmt', function() return M.executable('shfmt') end },
         { 'bash', function() return require('forge.bash_host').executable() end },
         { 'js-debug-adapter', function() return require('forge.node').debug_server() end },
         { 'bash-debug-adapter', function() return require('forge.bash_debug').entrypoint() end },
