@@ -75,6 +75,9 @@ local function environment(root, runtime, paths, sdk_paths)
   local policy=vim.env.FRIDE_SETUP_GO_TOOLCHAIN or 'local'
   if policy~='local' and policy~='auto' then fail('Invalid FRIDE_SETUP_GO_TOOLCHAIN: '..policy) end
   env.FRIDE_SETUP_GO_TOOLCHAIN=policy
+  local versions=vim.env.FRIDE_TOOLS_VERSIONS or 'preserve'
+  if versions~='preserve' and versions~='baseline' then fail('Invalid FRIDE_TOOLS_VERSIONS: '..versions) end
+  env.FRIDE_TOOLS_VERSIONS=versions
   local bins = {}; for _, path in ipairs(paths) do bins[#bins+1] = join(runtime, path) end
   env.PATH = table.concat(bins, windows and ';' or ':') .. (windows and ';' or ':') .. (env.PATH or '')
   local separator=windows and ';' or ':'

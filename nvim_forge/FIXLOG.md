@@ -14992,3 +14992,49 @@ source-matched new UI receipts, syntax/strict/raw+staged journals/index guards
 **Файлы.** Rust frontend, root PS/Bash, private/setup/readiness Lua; native11-case
 suite/fixture и прежние diagnostics helpers; GO_BUILD_TOOLCHAIN/планы/история/
 OpenSpec и append-only журналы. Local commit без push, полный regression не запускался.
+
+
+## 2026-11-18
+
+### 281. Сохранение установленных версий IDE tools
+
+**Связь:** решение владельца после §280, preserve-installed-tool-versions.
+Спека: IDE-BOOT-43 ADDED, IDE-BOOT-22 MODIFIED.
+**Статус:** Windows/Ubuntu проверены; native macOS открыт.
+
+**Проблема.** Повторный setup pinned tools возвращал выбранные пользователем
+версии к baseline. Готовый Go tool другой версии мог требовать новый compiler.
+**Причина.** ensure_installed и readiness трактовали pin как обязательную версию
+при каждой установке, без различия заполнения и явного сброса.
+
+**Изменение.** Default preserve использует native condition MTI и сохраняет
+установленные pinned packages; missing ставит прежний pin/provider default.
+Явный --tools-versions baseline восстанавливает pinned версии штатным Mason.
+Frontend/root flags/plan/log согласованы, parent env не выбирает reset.
+Readiness сохраняет receipt/name/required exports/files; strict API publisher
+прежний. Go build guard принимает готовый preserved tool без compiler;
+download consent отдельный. Startup registry не загружается этим condition.
+SDK, tools.json, plugins и Neovim не относятся к reset. Повреждения той же
+версии исправляются штатным Mason; новый repair/version manager не добавлен.
+
+**Проверка/e2e.** Один initial affected batch/ОС: Windows1795008886439389100
+157.2s, Ubuntu1795008897029427886 96.32s. Registry12 PASS2 info SKIP; native
+Python77 cases: Windows77 PASS, Ubuntu73 PASS4 SDK/platform SKIP. Aggregate
+89 PASS2 SKIP Windows/85 PASS6 SKIP Ubuntu после только affected повторов.
+Native fixture Rust v1/v2, HTTP releases, actual Mason provider/MTI/receipt,
+production tools stage проверяют8 cases: missing, manual update, preserve,
+explicit baseline, broken export/receipt, preview, root flags, invalid CLI.
+Первый fixture не создал state для Mason log:1 PASS7 FAIL на каждой ОС.
+После mkdir повторены только7: Windows59.022s/Ubuntu5.965s, все PASS.
+Последний Windows root case21.998s PASS с uppercase BASELINE после нормализации
+PowerShell enum. Initial failures/immutable batches и composite сохранены.
+Полный regression не повторялся; actual Default/LSP compatibility/Mac не заявлены.
+
+**Вывод.** Установщик заполняет missing без скрытого downgrade пользовательских
+tools. История/guide/план и OpenSpec обновлены; следующий срез — оставшиеся
+consumers и цельный Default/Custom acceptance. Frozen27 (registry только новая
+строка), source-matched UI manifests, raw/staged prefixes/exact index проверены.
+Temp/cache на F, existing Docker offline2CPU/3GiB, Desktop/WSL не управлялись.
+**Файлы.** Catalog/readiness/setup/private Lua, Rust frontend/root shell entries,
+native suite/fixture и2 diagnostics controls, unit registry, TOOL_VERSIONS/
+планы/история/verification и append-only журналы. Local commit без push.

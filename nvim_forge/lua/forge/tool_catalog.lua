@@ -37,10 +37,21 @@ function M.native_versions()
     return vim.json.decode(table.concat(vim.fn.readfile(root..'/scripts/native-tools.json'),'\n'))
 end
 
+function M.install_policy()
+    local policy=vim.env.FRIDE_TOOLS_VERSIONS or 'preserve'
+    assert(policy=='preserve' or policy=='baseline','Invalid FRIDE_TOOLS_VERSIONS: '..policy)
+    return policy
+end
 function M.mason_specs()
     local versions, specs = M.versions(), {}
+    local preserve=M.install_policy()=='preserve'
     for _, name in ipairs(M.mason()) do
-        specs[#specs + 1] = versions[name] and { name, version = versions[name] } or name
+        local spec=versions[name] and {name,version=versions[name]} or name
+        if preserve and type(spec)=='table' then
+            -- Native MTI evaluates this only for an explicit install, not at startup.
+            spec.condition=function() return not require('mason-registry').get_package(name):is_installed() end
+        end
+        specs[#specs+1]=spec
     end
     return specs
 end

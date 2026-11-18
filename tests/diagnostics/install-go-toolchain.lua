@@ -1,7 +1,9 @@
 -- IDE-BOOT-42. Fixture package/receipt, actual setup stage + Mason process + native Go.
 local config=vim.json.decode(table.concat(vim.fn.readfile(assert(vim.env.FRIDE_GO_POLICY_CONFIG)),'\n'))
 vim.opt.rtp:append(config.mason)
-package.loaded['forge.tool_catalog']={mason=function() return {'gopls'} end,versions=function() return {gopls='fixture'} end}
+local catalog=require('forge.tool_catalog')
+catalog.mason=function() return {'gopls'} end
+catalog.versions=function() return {gopls='fixture'} end
 package.loaded['mason-registry']={get_package=function() error('Fixture package requires build') end}
 local report={before_policy=vim.env.GOTOOLCHAIN,policy=vim.env.FRIDE_SETUP_GO_TOOLCHAIN,
   initial=vim.g.fride_go_policy_initial}

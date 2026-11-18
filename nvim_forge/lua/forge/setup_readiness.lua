@@ -4,7 +4,8 @@ local function failures(title, errors)
     if #errors > 0 then error(title .. '\n' .. table.concat(errors, '\n'), 0) end
 end
 -- Only explicit setup, and only when Mason needs to build a pinned Go tool.
-function M.build_sdks(names, versions)
+function M.build_sdks(names, versions, options)
+    options=options or {}
     local policy=vim.env.FRIDE_SETUP_GO_TOOLCHAIN or 'local'
     assert(policy=='local' or policy=='auto','Invalid FRIDE_SETUP_GO_TOOLCHAIN: '..policy)
     local registry = require('mason-registry')
@@ -13,7 +14,7 @@ function M.build_sdks(names, versions)
             local ready, matches = pcall(function()
                 local package = registry.get_package(name)
                 local receipt = package:get_receipt():or_else(nil)
-                return package:is_installed() and receipt and receipt:get_installed_package_version() == versions[name]
+                return package:is_installed() and receipt and (options.preserve_versions or receipt:get_installed_package_version() == versions[name])
             end)
             if not (ready and matches) then
                 -- Inspect the bundled compiler without triggering a download.
@@ -28,7 +29,8 @@ function M.build_sdks(names, versions)
         end
     end
 end
-function M.tools(names, versions)
+function M.tools(names, versions, options)
+    options=options or {}
     local registry = require('mason-registry')
     local location = require('mason-core.installer.InstallLocation').global()
     local errors, links_checked = {}, 0
@@ -40,7 +42,7 @@ function M.tools(names, versions)
             assert(receipt, 'install receipt missing')
             assert(receipt:get_name() == name, 'install receipt names another package')
             local version = versions and versions[name]
-            if version then
+            if version and not options.preserve_versions then
                 assert(receipt:get_installed_package_version() == version,
                     'expected version '..version..', receipt has '..tostring(receipt:get_installed_package_version()))
             end

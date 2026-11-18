@@ -41,6 +41,7 @@ pub struct Options {
     pub sdk_report: Option<PathBuf>,
     pub sdk_paths: Vec<PathBuf>,
     pub go_toolchain_download: Option<bool>,
+    pub tools_versions: String,
     prepared_core: Option<PathBuf>,
 }
 
@@ -75,7 +76,7 @@ impl Options {
                     continue;
                 }
                 "--help" => {
-                    println!("fride-setup --source DIR --profile default|custom [--components CSV] --install-dir DIR\n--command-dir DIR --runtime-path DIR --runtime-archive-url URL --runtime-sha256 SHA\n--preview --no-color --print-plan --result FILE --log-dir DIR\n--check-sdks --sdk-report FILE\n--go-toolchain-download allow|deny (explicit Go build toolchain choice; default deny)\n--check-tools (Git prerequisite) --tool-path DIR (repeatable fallback bin; alias --sdk-path)");
+                    println!("fride-setup --source DIR --profile default|custom [--components CSV] --install-dir DIR\n--command-dir DIR --runtime-path DIR --runtime-archive-url URL --runtime-sha256 SHA\n--preview --no-color --print-plan --result FILE --log-dir DIR\n--check-sdks --sdk-report FILE\n--go-toolchain-download allow|deny (explicit Go build toolchain choice; default deny)\n--tools-versions preserve|baseline (default preserve; baseline reset is explicit)\n--check-tools (Git prerequisite) --tool-path DIR (repeatable fallback bin; alias --sdk-path)");
                     std::process::exit(0);
                 }
                 _ => {}
@@ -102,6 +103,10 @@ impl Options {
                 "--result" => result.result_file = Some(value.into()),
                 "--sdk-report" => result.sdk_report = Some(value.into()),
                 "--sdk-path" | "--tool-path" => result.sdk_paths.push(value.into()),
+                "--tools-versions" => result.tools_versions = match value.as_str() {
+                    "preserve" | "baseline" => value,
+                    _ => return Err(invalid("--tools-versions: preserve или baseline")),
+                },
                 "--go-toolchain-download" => result.go_toolchain_download = Some(match value.as_str() {
                     "allow" => true,
                     "deny" => false,
@@ -216,6 +221,7 @@ pub(crate) struct Plan {
     pub install_dir: String,
     pub command_dir: String,
     pub go_toolchain_download: bool,
+    pub tools_versions: String,
 }
 
 impl Plan {
@@ -265,6 +271,11 @@ fn review(rows: &[Row], plan: &Plan) -> String {
         lines.push(format!("Внешний fallback (после PATH): {}", path.display()));
     }
     lines.push("Git из вашей системы (обязателен для Core)".into());
+    lines.push(if plan.tools_versions=="baseline" {
+        "Версии IDE tools: вернуть закреплённые fride версии".into()
+    } else {
+        "Версии IDE tools: сохранить установленные, добавить отсутствующие".into()
+    });
     lines.join("\n")
 }
 
@@ -288,6 +299,7 @@ pub fn run(mut options: Options) -> Result<i32> {
         install_dir: options.install_dir.clone(),
         command_dir: options.command_dir.clone(),
         go_toolchain_download: options.go_toolchain_download.unwrap_or(false),
+        tools_versions: if options.tools_versions.is_empty() { "preserve".into() } else { options.tools_versions.clone() },
     };
     plan.select(&rows, selected)?;
     // Upgrade reuses only locations recorded by an owned fride installation.
@@ -528,6 +540,7 @@ fn execute(options: &Options, plan: &Plan, plain: bool) -> Result<i32> {
         .env("FORGE_NVIM_COMPONENTS", plan.components.join(","))
         .env("FRIDE_INSTALL_UI", "1")
         .env("FRIDE_SETUP_GO_TOOLCHAIN", if plan.go_toolchain_download { "auto" } else { "local" })
+        .env("FRIDE_TOOLS_VERSIONS", &plan.tools_versions)
         // Installation must not turn a missing toolchain into an implicit SDK download.
         .env("GOTOOLCHAIN", "local")
         .env("RUSTUP_AUTO_INSTALL", "0")

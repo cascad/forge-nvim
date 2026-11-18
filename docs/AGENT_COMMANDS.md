@@ -10620,3 +10620,38 @@ raw/staged prefixes и exact index25. Несколько неверных apply_
 отказали atomic без файловых изменений, исправлены адресно. git add allowlist,
 commit gc.auto=0/maintenance.auto=false, без push. Следующая owner policy сохранена
 в плане: preserve installed, baseline missing/explicit reset.
+
+
+## 189. Preserve installed tool versions — 2026-11-18
+
+cwd F:/repo/forge-nvim, PowerShell login:false/full access, без approvals.
+rg/Get-Content/git diff — targeted reads; nearest root OpenSpec list/status/
+instructions apply preserve-installed-tool-versions, ready/context прочитаны.
+Native MTI condition/receipt/public registry API изучены из pinned deps.
+
+python -B scripts/build-installer-ui.py --rustc <готовый Windows SDK> --output
+.tests/toolchain-research/tool-versions-ui/windows-x64:10.67s. Ubuntu existing
+vendor через ignored .tests/ubuntu/tool-versions-build.sh:15.10s, offline/locked.
+Native manifests/source hashes и binary SHA сверены, прежний .tools UI сохранён.
+
+scripts/test.ps1 e2e -Files @(...), Ubuntu compose/limits run --rm --no-deps
+--pull never --entrypoint bash ubuntu tests/containers/tool-paths.sh --batch e2e
+--file ...; FORGE_INSTALL_UI_BINARY=<own native new UI>. Initial batches
+1795008886439389100/1795008897029427886,157.2s/96.32s. Files: install-tool-versions,
+install-go-toolchain, install-ide-tools, install-ui, install-profile,
+install-sdk-settings; tool_versions unit, test-batch and trace registry.
+
+Только7 failed new cases после fixture state mkdir: python -B
+tests/install-tool-versions.test.py test_versions_01_... ... test_versions_07_...
+Windows7 PASS59.022s, Ubuntu7 PASS5.965s. Первичные FAIL не стирались.
+Последний PS enum/root case test_versions_07_root_entry_forwards_baseline
+21.998s PASS; BASELINE передаётся frontend lowercase. Composite latest cases:
+Windows89 PASS2 info SKIP, Ubuntu85 PASS6 SKIP. Full не повторялся.
+
+PS parser, Git Bash -n, Lua loadfile, Python AST, strict OpenSpec +trace --change,
+tool-versions-finish.py guard27 frozen (registry own row), UI sources/binary,
+journals raw/staged append prefixes, git diff --check, exact index allowlist.
+git commit gc.auto=0/maintenance.auto=false без push. Host TEMP/TMP/TMPDIR/
+NVIM_LOG_FILE под F:. Docker existing offline/no pull, Desktop/WSL без изменений.
+Native Mac/Default/publication отдельно. Read-only Go1.23.3/gopls0.23 check
+fixture exit0 сохранён отдельно; не выдавался за полную compatibility matrix.

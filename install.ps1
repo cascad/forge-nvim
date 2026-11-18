@@ -12,6 +12,7 @@ param(
     [string]$CommandDir = '',
     [string]$InstallerUIPath = '',
     [ValidateSet('allow','deny')][string]$GoToolchainDownload = '',
+    [ValidateSet('preserve','baseline')][string]$ToolsVersions = '',
     [switch]$SkipDependencies,
     [Alias('Profile')][ValidateSet('Default','Custom')][string]$InstallProfile = 'Default',
     [AllowEmptyString()][string]$Components = ''
@@ -30,6 +31,7 @@ $sourceRootFull = [IO.Path]::GetFullPath($SourceRoot)
 $staging = Join-Path $sourceRootFull ('.bootstrap-' + [Guid]::NewGuid().ToString('N'))
 $oldComponents = $env:FORGE_NVIM_COMPONENTS
 $oldGoToolchainPolicy = $env:FRIDE_SETUP_GO_TOOLCHAIN
+$oldToolVersions = $env:FRIDE_TOOLS_VERSIONS
 New-Item -ItemType Directory -Path $staging | Out-Null
 function Test-Source([string]$Directory) {
     foreach ($name in @('nvim_forge\init.lua', 'scripts\install-private.ps1', 'scripts\install-private.lua', 'nvim_forge.sh', 'wezterm.lua')) {
@@ -79,7 +81,8 @@ try {
         $uiArgs=@('--source',$source,'--install-dir',$InstallPath,'--profile',$InstallProfile.ToLowerInvariant(),
             '--powershell',(Get-Process -Id $PID).Path,'--log-dir',(Join-Path $sourceRootFull '.ui-logs'))
         if ($componentsExplicit) { $uiArgs+=@('--components='+$Components) }
-        if ($GoToolchainDownload) { $uiArgs+=@('--go-toolchain-download',$GoToolchainDownload) }
+        if ($GoToolchainDownload) { $uiArgs+=@('--go-toolchain-download',$GoToolchainDownload.ToLowerInvariant()) }
+        if ($ToolsVersions) { $uiArgs+=@('--tools-versions',$ToolsVersions.ToLowerInvariant()) }
         if ($CommandDir) { $uiArgs+=@('--command-dir',$CommandDir) }
         if ($RuntimePath) { $uiArgs+=@('--runtime-path',$RuntimePath) }
         if ($RuntimeArchiveUrl) { $uiArgs+=@('--runtime-archive-url',$RuntimeArchiveUrl,'--runtime-sha256',$RuntimeSHA256) }
@@ -89,7 +92,9 @@ try {
         return
     }
     if ($GoToolchainDownload) { throw 'Go toolchain choice requires the fride setup frontend.' }
+    if ($ToolsVersions) { throw 'Tool version choice requires the fride setup frontend.' }
     $env:FRIDE_SETUP_GO_TOOLCHAIN = 'local'
+    $env:FRIDE_TOOLS_VERSIONS = 'preserve'
     . (Join-Path $source 'nvim_forge\scripts\lib\install-profile.ps1')
     $env:FORGE_NVIM_COMPONENTS = Resolve-ForgeProfile -Profile $InstallProfile -Components $Components -Explicit $componentsExplicit
     Write-Host "Selected components: $env:FORGE_NVIM_COMPONENTS"
@@ -107,6 +112,7 @@ try {
 } finally {
     $env:FORGE_NVIM_COMPONENTS = $oldComponents
     $env:FRIDE_SETUP_GO_TOOLCHAIN = $oldGoToolchainPolicy
+    $env:FRIDE_TOOLS_VERSIONS = $oldToolVersions
     # Проверить абсолютную границу перед recursive cleanup на Windows.
     $stageFull = [IO.Path]::GetFullPath($staging)
     $prefix = $sourceRootFull.TrimEnd('\', '/') + [IO.Path]::DirectorySeparatorChar

@@ -128,7 +128,10 @@ GoToolchain и SDK existing/manual path в установщике сохране
   Mac отдельно; совместимость LSP с SDK и full Default этим не закрыты.
   Владелец2026-11-18 выбрал: повторная установка сохраняет установленные версии
   tools; baseline — для отсутствующих, возврат — отдельное явное действие.
-  Это следующий срез providers/update policy; пока он не реализован.
+  §281 реализовал preserve по умолчанию и отдельный --tools-versions baseline,
+  native Mason condition и readiness без скрытого downgrade.
+  [Правила версий](TOOL_VERSIONS.md). Следом — оставшиеся consumers и actual
+  Default/Custom acceptance; native Mac/publication остаются отдельными gates.
 
 Статус: базовые e2e настоящего nvim_forge работают на Windows и Ubuntu;
 фоновые установки инструментов редактора перенесены в явный setup.

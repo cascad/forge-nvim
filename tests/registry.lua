@@ -137,4 +137,5 @@ return {
   { file = 'tests/e2e/missing-tool-errors.test.lua', suite = 'e2e', timeout = 240 },
   { file = 'tests/e2e/test-batch.test.lua', suite = 'e2e', timeout = 60 },
   { file = 'tests/lib/test_batch.test.lua', suite = 'unit', timeout = 60 },
+  { file = 'tests/lib/tool_versions.test.lua', suite = 'unit', timeout = 30 },
 }

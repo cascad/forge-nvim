@@ -165,3 +165,13 @@ inventory автоматически; backend и native package fixture разд
 и successful fresh compiler download эти проверки не заменяют. Для повтора
 native unittest файла install-ide-tools используйте Tools.test_NAME, для
 нового Go suite — короткое test_go_NAME (его main выбирает собственные случаи).
+
+
+## Версии tools при повторной установке — §281
+
+По умолчанию preserve: установленные Mason tools сохраняются, missing получает
+baseline/provider default. Явный --tools-versions baseline возвращает pinned
+версии. Go consent независим, receipt/exports обязательны. [Правила](TOOL_VERSIONS.md).
+Native tests/install-tool-versions.test.py проверяет8 cases настоящего Mason
+с releases native fixture v1/v2; affected batch Windows/Ubuntu выполнен, Mac
+отдельно. Это не full Default acceptance; он идёт следующим цельным этапом.

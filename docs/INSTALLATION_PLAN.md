@@ -1259,3 +1259,13 @@ SDK/Go PATH не менялись. Языковые parts, Mac/full Ubuntu deliv
 проверены, Mac и full Default отдельно. Следующий срез — версии tools и повторная
 установка после ручных обновлений. Владелец выбрал preserve: baseline для
 отсутствующих, возврат к baseline только отдельным явным действием.
+
+
+## Версии tools при повторной установке — §281
+
+По умолчанию preserve: установленные Mason tools сохраняются, missing получает
+baseline/provider default. Явный --tools-versions baseline возвращает pinned
+версии. Go consent независим, receipt/exports обязательны. [Правила](TOOL_VERSIONS.md).
+Native tests/install-tool-versions.test.py проверяет8 cases настоящего Mason
+с releases native fixture v1/v2; affected batch Windows/Ubuntu выполнен, Mac
+отдельно. Это не full Default acceptance; он идёт следующим цельным этапом.
