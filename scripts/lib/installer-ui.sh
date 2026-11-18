@@ -12,13 +12,6 @@ forge_installer_ui() {
   case "$(uname -s)" in Linux) platform=linux;; Darwin) platform=macos;; *) printf 'Unsupported installer UI platform.\n' >&2; return 1;; esac
   case "$(uname -m)" in x86_64) arch=x64;; arm64|aarch64) arch=arm64;; *) printf 'Unsupported installer UI architecture.\n' >&2; return 1;; esac
   platform="$platform-$arch"
-  if [ -n "$checkout" ]; then
-    ready="$checkout/.tools/installer-ui/$platform";binary="$ready/fride-setup"
-    if [ -f "$binary" ]; then
-      [ -f "$ready/binary.sha256" ] && [ "$(forge_ui_hash "$binary")" = "$(cat "$ready/binary.sha256")" ] || { printf 'Prepared installer UI checksum mismatch.\n' >&2; return 1; }
-      printf '%s\n' "$binary";return
-    fi
-  fi
   if [ -f "$source_dir/installer-ui/artifacts.tsv" ]; then
     while IFS=$'\t' read -r id link expected; do
       expected="${expected%$'\r'}"
@@ -26,10 +19,16 @@ forge_installer_ui() {
       if [ "$id" = "$platform" ]; then url="$link";break;fi
     done < "$source_dir/installer-ui/artifacts.tsv"
   fi
-  [ -n "$url" ] || { printf 'Installer UI artifact for %s is not published. Developer preview: scripts/build-installer-ui.py; install never runs Cargo.\n' "$platform" >&2;return 1; }
+  [ -n "$url" ] || { printf 'Installer UI artifact for %s is not published. Developer preview: build with scripts/build-installer-ui.py and pass --installer-ui-path explicitly; install never runs Cargo.\n' "$platform" >&2;return 1; }
   case "$url" in https://*|http://*) ;; *) printf 'Installer UI URL must use HTTP(S).\n' >&2;return 1;; esac
   [ "${#expected}" = 64 ] || { printf 'Installer UI requires SHA256.\n' >&2;return 1; }
   case "$expected" in *[!a-f0-9]*) printf 'Installer UI requires SHA256.\n' >&2;return 1;; esac
+  if [ -n "$checkout" ]; then
+    ready="$checkout/.tools/installer-ui/$platform";binary="$ready/fride-setup"
+    if [ -f "$binary" ] && [ -x "$binary" ] && [ "$(forge_ui_hash "$binary")" = "$expected" ]; then
+      printf '%s\n' "$binary";return
+    fi
+  fi
   local cache="$cache_root/.ui-cache" current="$cache_root/.ui-cache" pending
   while [ -n "$current" ] && [ "$current" != / ]; do
     [ ! -L "$current" ] || { printf 'Linked UI cache: %s\n' "$current" >&2;return 1; };current="$(dirname "$current")"

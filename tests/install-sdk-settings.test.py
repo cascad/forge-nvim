@@ -215,6 +215,25 @@ class Settings(prereq.Prerequisites):
             stand.BASE,stand.transport.serve=original_base,original_serve
 
 
+    def test_settings_12_repo_entry_uses_source_frontend_and_user_sdks(self):
+        base,env,target=self.prepare('settings-root-source');sdk,tools,python=self.choices(base,env)
+        components='go,rust,python,node'
+        if stand.WINDOWS:
+            command=[stand.SHELL,'-NoProfile','-ExecutionPolicy','Bypass','-File',str(ROOT/'install.ps1'),
+                '-ArchiveUrl',self.url+'/ui-source','-SourceRoot',str(base/'sources'),'-InstallPath',str(target),
+                '-RuntimePath',str(self.runtime),'-Components',components]
+        else:
+            command=[stand.SHELL,str(ROOT/'install.sh'),'--archive-url',self.url+'/ui-source','--source-root',str(base/'sources'),
+                '--install-dir',str(target),'--runtime-path',str(self.runtime),'--components',components]
+        self.assert_ok(self.run_process(command,env,base,'root-source'))
+        reports=list((base/'sources/.ui-logs').glob('preflight-*.settings.json'));self.assertEqual(len(reports),1)
+        data=json.loads(reports[0].read_text())
+        # The shared reader's report must name the actual user files, not PATH discovery.
+        raw=json.dumps(data).replace('\\\\','/')
+        self.assertIn('sdk.json',raw);self.assertIn('tools.json',raw)
+        self.assertTrue((target/'bin/fride').is_file())
+
+
 if __name__=='__main__':
     print('work:',stand.BASE,'artifacts:',stand.ARTIFACTS,flush=True)
     names=sys.argv[1:] or [n for n in Settings.__dict__ if n.startswith('test_settings_')]

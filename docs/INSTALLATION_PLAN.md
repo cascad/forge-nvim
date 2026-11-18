@@ -581,9 +581,11 @@ Cargo/target/temp изолированы в .tests/installer-ui, результ�
 .tools/installer-ui/<platform>. Это команда разработчика, установщик Cargo
 не запускает. На Windows перед сборкой TEMP/TMP/TMPDIR направлять на F.
 
-Source entry берёт готовый frontend из developer checkout, явного
--InstallerUIPath/--installer-ui-path либо скачивает native binary по URL/SHA256
-из installer-ui/artifacts.tsv. Неверный SHA запрещает запуск. Каталог пока
+Source entry выбирает frontend по URL/SHA256 выбранного source catalog
+installer-ui/artifacts.tsv; совпадающий digest в developer checkout/cache можно
+переиспользовать. Старый .tools binary не подменяет выбранную версию source.
+Явный -InstallerUIPath/--installer-ui-path остаётся developer override;
+при неопубликованной сборке его надо передать явно после build. Неверный SHA запрещает запуск. Каталог пока
 не содержит опубликованных платформ: публичный one-liner ещё не готов.
 Legacy source без UI marker сохраняет прежний advanced путь.
 

@@ -10717,3 +10717,42 @@ Python AST2/Lua loadfile5, strict OpenSpec и trace --change; advisory MODIFIED2
 exact owned index/diff --check. Local git commit gc.auto=0/maintenance.auto=false,
 без push. TMP/TEMP/TMPDIR/NVIM_LOG_FILE F; Linux stand /tmp/artifacts F, offline
 2CPU/3GiB. Desktop/WSL lifecycle/config не вызывались. Native Mac отдельно.
+
+
+## 192. Source-bound frontend and actual Default stand — 2026-11-18
+
+cwd F:/repo/forge-nvim, login:false/full access. rg/Get-Content targeted reads.
+OpenSpec list/status/instructions apply reject-stale-local-installer-ui ready;
+context/artifacts прочитаны. Source catalog priority, без Rust rebuild/deps.
+PS parser/Bash -n/Python AST, строгая validate/trace --change и frozen27/native
+UI receipts/raw+staged prefixes/exact index через ignored ui-source-finish.py.
+
+Один batch: scripts/test.ps1 e2e -Files @(...), Ubuntu existing compose/limits
+run --rm --no-deps --pull never --entrypoint bash ubuntu tests/containers/tool-paths.sh
+--batch e2e --file ... . SourceUI, SDK settings, UI, bootstrap иtrace. Бatches
+1795015497831217300/1795015510428857166,100.65s/52.99s,45 PASS2 info SKIP каждая
+ОС. Без failed repeats. SDK root case запускает настоящий ROOT/install file,
+обычные transport cases используют scriptblock и не замечали local checkout.
+
+Ignored prepare-default-windows.py/source config +own profile: actual production
+tools stage,20 packages154.56s. Existing pinned SDKs, Mason max1, caches/temp F.
+Owned container --detach --rm --no-deps --pull never с label fride.owner=default-acceptance,
+sleep keepalive и отдельным bridge override только для явных downloads; Desktop/
+WSL не запускались/не менялись. ID261d5816a414, metadata default-linux-container.json.
+docker exec prepare-default-linux.py:20 packages142.99s, SDKs образа неизменны;
+пять native cache packages reuse, app data/tmp в контейнере до его teardown.
+
+prepare-default-git.py native clone --filter=blob:none --depth1 --branch +fetch
+source pin/checkout --detach:67 actual repos/ОС, max2 workers, refs/objects
+проверены. Windows move только после проверки всех resolved paths внутри stand.
+Прежний archive-only fixture quarantined, оригинальные editor-deps прежние.
+Package Core33 parsers/rg18.76s, Terminal5s стандартными publisher CLI; source/
+UI/Core/Terminal обслуживает own HTTP stand. Actual Windows root failure old UI
+и plugin fixture сохранён initial-fail. После fix install0/launch0/observe0;
+repeat0 пока не получен: tmp IPC reparse EACCES. Marker assertion исправлен
+как fixture; --resume не повторял успешную installation ради него.
+
+os.lstat owned tmp node показал reparse_tag0x80000023; read-only Microsoft
+MS-FSCC Reparse Tags подтвердил AF_UNIX, без WSL calls. C free14.8GiB/F1667.8GiB
+на read-only check; Windows caches/temp на F. Full release/clean Mac не заявлены.
+git commit gc.auto=0/maintenance.auto=false, только owned files, без push.

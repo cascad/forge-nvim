@@ -15116,3 +15116,45 @@ build SDK. Не новые path keys/совместимость любых ве�
 **Файлы.** setup_tools/catalog/setup-stage, shared stand+diagnostic/unit helpers,
 native external suite, TOOL_PATHS/TOOL_VERSIONS/планы/история/OpenSpec и журналы.
 Local commit без push; общий regression не повторялся.
+
+
+## 2026-11-18
+
+### 284. Frontend из каталога выбранной версии source
+
+**Связь:** actual Default после §283, reject-stale-local-installer-ui.
+Спека: IDE-BOOT-46 (ADDED).
+**Проблема/причина.** Repo install file предпочитал local .tools frontend до
+source catalog. Его checksum валиден, но код старый: реальный root preflight
+игнорировал user SDK settings и показал PATH Go1.23/другой Node. Source требовал
+новый frontend; проверка собственной checksum не доказывала соответствие source.
+**Изменение.** PS/Bash сначала читают platform URL/SHA выбранного source. Local
+checkout/cache переиспользуется только при этом digest, иначе normal download.
+При неопубликованном catalog нужен прежний explicit developer UI path после
+build. Нормальный опубликованный one-liner автоматический, без Cargo/новых deps,
+JSON parser для Bash или compatibility/version manager. Старые binaries не менялись.
+**Проверка/e2e.** Один affected batch/ОС: Windows1795015497831217300 100.65s,
+Ubuntu1795015510428857166 52.99s. Native37 PASS (SourceUI6,SDK12,UI13,bootstrap6)
++trace8 PASS2 info SKIP:45 PASS2 SKIP на ОС, без повторов. Новые7 случаев:
+stale/matching/cache/unpublished/explicit/bad SHA, запуск binary и настоящий
+repo root без forced UI path с user settings. Initial false Default results
+сохранены отдельно; новые tests не меняют SDK/locks/backports/.tools artifacts.
+**Actual Default.** Production tools stage подготовил20 настоящих Mason packages
+Windows154.56s/Ubuntu142.99s,1017/989 exports; только existing SDK, concurrency1.
+Первый Windows plugin отказ вызван тем, что я использовал archive-only E2E cache
+без полных Git refs/objects: fixture error, не product bug. Получены67 настоящих
+pinned Git repos на каждой ОС обычными clone/fetch, concurrency2, в owned stand.
+После source UI fix Windows actual source/Core/Terminal Default install21.25s
+PASS; managed launch0 и tree/search/LuaLS/diagnostics/edit/save/restart4.18s PASS.
+Marker содержит runtime parts core/terminal, не8 language IDs; первоначальный
+неверный assertion исправлен без переустановки. Repeat выявил следующий отдельный
+EACCES на Windows IPC node в kit/tmp, tag0x80000023: принятие Default ещё не закрыто.
+Custom/Ubuntu archive/Mac/WSL/publication не объявлены PASS.
+**Вывод.** Source frontend semantics сохраняются независимо от старого dev cache.
+Следом transient ownership fix, затем цельный Default/Custom checkpoint. Temp F;
+owned Linux bridge prep container261d5816a414 сохраняет native venv paths до
+workflow, Desktop/WSL не управлялись. E2E offline2CPU/3GiB, full не повторялся.
+**Файлы.** Два shell resolver, native SourceUI tests/SDK root regression,
+INSTALLATION_PLAN/ROADMAP/HISTORY/TESTING_WORKFLOW/OpenSpec и журналы. Frozen27,
+UI receipts, raw/staged journal prefixes/exact index/syntax/strict проверены.
+Local commit без push.

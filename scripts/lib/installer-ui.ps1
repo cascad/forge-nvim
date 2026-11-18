@@ -14,14 +14,6 @@ function Get-ForgeInstallerUI([string]$Source,[string]$CacheRoot,[string]$Checko
     if (-not $machine) { $machine=$env:PROCESSOR_ARCHITECTURE }
     $arch=if ($machine -match 'ARM64') { 'arm64' } elseif ($machine -match 'AMD64') { 'x64' } else { throw 'Unsupported installer UI architecture.' }
     $platform='windows-'+$arch
-    if ($Checkout) {
-        $ready=Join-Path $Checkout ('.tools/installer-ui/'+$platform)
-        $binary=Join-Path $ready 'fride-setup.exe';$checksum=Join-Path $ready 'binary.sha256'
-        if (Test-Path -LiteralPath $binary -PathType Leaf) {
-            if (-not (Test-Path -LiteralPath $checksum -PathType Leaf) -or (Get-ForgeUIHash $binary) -ne ([IO.File]::ReadAllText($checksum).Trim())) { throw 'Prepared installer UI checksum mismatch.' }
-            return $binary
-        }
-    }
     $catalog=Join-Path $Source 'installer-ui/artifacts.tsv'
     $url='';$expected=''
     if (Test-Path -LiteralPath $catalog -PathType Leaf) {
@@ -32,10 +24,14 @@ function Get-ForgeInstallerUI([string]$Source,[string]$CacheRoot,[string]$Checko
             if ($fields[0] -eq $platform) { $url=$fields[1];$expected=$fields[2] }
         }
     }
-    if (-not $url) { throw "Installer UI artifact for $platform is not published. Developer preview: scripts/build-installer-ui.py; install never runs Cargo." }
+    if (-not $url) { throw "Installer UI artifact for $platform is not published. Developer preview: build with scripts/build-installer-ui.py and pass -InstallerUIPath explicitly; install never runs Cargo." }
     if ($expected -notmatch '^[a-f0-9]{64}$') { throw 'Installer UI requires SHA256.' }
     $uri=[Uri]$url
     if (-not $uri.IsAbsoluteUri -or $uri.Scheme -notin @('https','http')) { throw 'Installer UI URL must use HTTP(S).' }
+    if ($Checkout) {
+        $binary=Join-Path $Checkout ('.tools/installer-ui/'+$platform+'/fride-setup.exe')
+        if ((Test-Path -LiteralPath $binary -PathType Leaf) -and (Get-ForgeUIHash $binary) -eq $expected) { return $binary }
+    }
     $cache=Join-Path $CacheRoot '.ui-cache'
     $current=[IO.Path]::GetFullPath($cache)
     while ($current) {

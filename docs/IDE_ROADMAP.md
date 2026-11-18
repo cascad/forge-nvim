@@ -138,6 +138,19 @@ GoToolchain и SDK existing/manual path в установщике сохране
   §283: владелец подтвердил reuse явно выбранного user tool без запасной копии
   Mason. Реализация подключает существующие runtime keys к setup с user scope,
   отдельной readiness и прежними strict checks остальных packages.
+  §284: полный production tools stage подготовил все20 настоящих Mason packages
+  Windows/Ubuntu (154.56s/142.99s). Archive Default нашёл выбор старого .tools UI
+  раньше source catalog: resolver исправлен, новые SDK semantics сохраняются.
+  Первый plugin отказ относился к archive-only E2E cache, не к продукту;
+  для actual stand подготовлены67 настоящих pinned Git repos на обеих ОС.
+  Следующий checkpoint — Default/Custom archive → launch/tree/search/LuaLS/edit/
+  save/restart/repeat с настоящими tools, затем оставшиеся installed-language
+  checks и native Mac/Windows WSL/publication gates.
+  Windows actual Default уже установлен из source/Core/Terminal archives;
+  launch и Core tree/search/LuaLS/edit/save/restart прошли. Repeat выявил
+  отдельный EACCES на IPC entry в kit/tmp: следующий точечный fix до продолжения
+  Custom/Ubuntu workflows. Owner marker перечисляет runtime parts core/terminal,
+  выбранные языки проверяются readiness20, не количеством parts.
 
 Статус: базовые e2e настоящего nvim_forge работают на Windows и Ubuntu;
 фоновые установки инструментов редактора перенесены в явный setup.

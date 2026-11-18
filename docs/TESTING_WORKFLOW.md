@@ -196,3 +196,14 @@ Native suite tests/install-external-tools.test.py:14 cases Windows/Ubuntu PASS,
 actual tools+Mason fixture. [Evidence](../openspec/changes/reuse-explicit-ide-tools/verification.md).
 Нужны подготовленные frontend, gopls, Node/Prettier, Delve и Mason plugins;
 tests сами SDK не устанавливают. Native Mac/full Default/publication отдельно.
+
+
+## Frontend выбранного source — §284
+
+tests/install-ui-source.test.py проверяет native PS/Bash resolver и настоящий
+frontend: catalog digest определяет выбор, local .tools не подменяет версию.
+tests/install-sdk-settings.test.py включает repo root regression без explicit
+UI override. Native37+trace8 PASS/2 info SKIP Windows/Ubuntu, без повторов.
+Для developer source без опубликованного catalog передать -InstallerUIPath /
+--installer-ui-path явно; normal release download остаётся автоматическим.
+Actual Default stand и границы — [verification](../openspec/changes/reject-stale-local-installer-ui/verification.md).
