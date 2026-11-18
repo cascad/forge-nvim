@@ -175,3 +175,12 @@ baseline/provider default. Явный --tools-versions baseline возвраща
 Native tests/install-tool-versions.test.py проверяет8 cases настоящего Mason
 с releases native fixture v1/v2; affected batch Windows/Ubuntu выполнен, Mac
 отдельно. Это не full Default acceptance; он идёт следующим цельным этапом.
+
+
+## Завершение процесса подготовки — §282
+
+Ненулевой signal child — отказ установки даже при code0. Runtime probes и
+plugins/parsers/tools проверяются общей границей до publication. Ошибка содержит
+code/signal/command/log, прежний kit сохраняется. Native regression:
+python -B tests/install-process-exit.test.py (POSIX python3). Windows4 PASS8
+POSIX SKIP, Ubuntu12 PASS; native Mac отдельно. [Evidence](../openspec/changes/reject-signaled-setup-process/verification.md).

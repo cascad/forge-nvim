@@ -10655,3 +10655,33 @@ git commit gc.auto=0/maintenance.auto=false без push. Host TEMP/TMP/TMPDIR/
 NVIM_LOG_FILE под F:. Docker existing offline/no pull, Desktop/WSL без изменений.
 Native Mac/Default/publication отдельно. Read-only Go1.23.3/gopls0.23 check
 fixture exit0 сохранён отдельно; не выдавался за полную compatibility matrix.
+
+
+## 190. Native setup signal failure — 2026-11-18
+
+cwd F:/repo/forge-nvim, login:false/full access. rg/Get-Content/git diff читали
+execute/setup/stand/runtime validator. Exploratory .tests setup-signal-probe.py:
+первый /workspace/.tests путь отсутствовал из-за overlay; copy в .tests/ubuntu.
+Следующий bind stand медленно паковал SDK, остановлен только собственный
+container6fda427308df. /tmp stand дал SIGTERM exit1; SIGKILL exit0/published=true
+на старом execute. Native probe logs сохранены, Desktop/WSL не менялись.
+
+OpenSpec list nearest root/new/status/instructions apply reject-signaled-setup-process
+ready/context прочитаны; code/signal fix3 lines и native12-case regression.
+Один batch: scripts/test.ps1 e2e -Files @('tests/install-process-exit.test.py',
+'tests/install-ui.test.py','tests/trace.test.lua'); Ubuntu compose/limits run
+--rm --no-deps --pull never --entrypoint bash ubuntu tests/containers/tool-paths.sh
+--batch e2e --file ...; newUI previous source-matched payload. Бatches
+1795010203091073000/1795010215384730150. Initial fixture FAIL/ERROR сохранены.
+
+Only affected Python cases: Windows3 nonzero18.023s, Ubuntu3 nonzero+1 signal
+repeat5.184s (artifact helper), затем3 failed signal first3.900s, все PASS.
+New native Windows4 PASS8 POSIX SKIP/Ubuntu12 PASS; UI13 иtrace8 PASS1 SKIP
+обе ОС. Aggregate25 PASS9 SKIP/33 PASS1 SKIP, общий regression не повторялся.
+TEMP/TMP/TMPDIR/NVIM_LOG_FILE F, Python -B/UTF8/no bytecode; Linux /tmp stand,
+regular logs на F, socket nodes не копируются. Existing container offline2CPU/3GiB.
+
+Python AST, Lua loadfile, OpenSpec strict, trace --change, frozen27 (registry
+как HEAD), UI receipts/SHA, raw/staged prefix и exact index через ignored
+setup-process-finish.py. Git local commit gc.auto=0/maintenance.auto=false,
+без push. Следующий user choice external explicit tool vs backup Mason pending.

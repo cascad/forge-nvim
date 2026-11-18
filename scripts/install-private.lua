@@ -92,7 +92,9 @@ end
 local function execute(argv, env, cwd, log, timeout)
   local result = vim.system(argv, {env=env, clear_env=true, cwd=cwd, text=true}):wait(timeout or 600000)
   write(log, (result.stdout or '') .. (result.stderr or ''))
-  if result.code ~= 0 then fail('Command failed (' .. result.code .. '): ' .. table.concat(argv,' ') .. '; log: ' .. log) end
+  if result.code ~= 0 or (result.signal or 0) ~= 0 then
+    fail('Command failed (' .. tostring(result.code) .. '): signal=' .. tostring(result.signal or 0) .. '; ' .. table.concat(argv,' ') .. '; log: ' .. log)
+  end
   return result
 end
 local function install()

@@ -418,6 +418,7 @@ Python реализован и проверен 2026-11-03; после возо�
 | §279 | [Единый каталог editor и installer E2E](../nvim_forge/FIXLOG.md#279-единый-каталог-editor-и-installer-e2e) |
 | §280 | [Явный Go build toolchain для IDE tools](../nvim_forge/FIXLOG.md#280-явный-go-build-toolchain-для-ide-tools) |
 | §281 | [Сохранение установленных версий IDE tools](../nvim_forge/FIXLOG.md#281-сохранение-установленных-версий-ide-tools) |
+| §282 | [Отказ установки при завершении подготовки сигналом](../nvim_forge/FIXLOG.md#282-отказ-установки-при-завершении-подготовки-сигналом) |
 
 ## Как читать и дополнять
 

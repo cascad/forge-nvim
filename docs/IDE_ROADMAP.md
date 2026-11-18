@@ -132,6 +132,9 @@ GoToolchain и SDK existing/manual path в установщике сохране
   native Mason condition и readiness без скрытого downgrade.
   [Правила версий](TOOL_VERSIONS.md). Следом — оставшиеся consumers и actual
   Default/Custom acceptance; native Mac/publication остаются отдельными gates.
+  §282 закрыл найденный native отказ setup: SIGKILL child больше не считается
+  успешным code0. Probes/stages/repeat проверены Windows/Ubuntu; native Mac
+  отдельно. Следующий продуктовый срез прежний — consumers и Default/Custom.
 
 Статус: базовые e2e настоящего nvim_forge работают на Windows и Ubuntu;
 фоновые установки инструментов редактора перенесены в явный setup.

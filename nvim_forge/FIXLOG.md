@@ -15038,3 +15038,37 @@ Temp/cache на F, existing Docker offline2CPU/3GiB, Desktop/WSL не управ
 **Файлы.** Catalog/readiness/setup/private Lua, Rust frontend/root shell entries,
 native suite/fixture и2 diagnostics controls, unit registry, TOOL_VERSIONS/
 планы/история/verification и append-only журналы. Local commit без push.
+
+
+## 2026-11-18
+
+### 282. Отказ установки при завершении подготовки сигналом
+
+**Связь:** найден при подготовке Default после §281, reject-signaled-setup-process.
+Спека: IDE-BOOT-11 (FIX), IDE-BOOT-44 (ADDED).
+**Статус:** Windows/Ubuntu проверены; native macOS открыт.
+**Проблема/причина.** Native Ubuntu child Neovim self SIGKILL возвращал code0/
+signal9. Общий private execute проверял лишь code и публиковал незавершённый kit:
+repro exit0/published=true сохранён. SIGTERM exit1 этого обхода не даёт.
+**Изменение.** Успех требует code0 и signal0/nil, для probes и setup stages.
+Ошибка сохраняет прежний префикс/command/log и показывает signal. Publication
+не выполняется, прежний kit работает; собственного process manager нет.
+**Проверка/e2e.** Новый native suite12 cases:8 POSIX signal (3 stages+probe,
+first/repeat),3 nonzero exit и success/repeat/launch. Проверяет native output,
+logs/stage trace, config/runtime/bin/owner hashes и command registration.
+Один affected batch Windows1795010203091073000/Ubuntu1795010215384730150;
+existing UI13 и trace8 PASS1 info SKIP. Initial fixture failures: Windows3 path
+separator assertions; Ubuntu3 duplicate first-case dirs плюс artifact-copy Unix
+sockets после SIGKILL. Исправлен только fixture, product fix остался прежним.
+Windows3 affected18.023s PASS. Ubuntu4 helper controls5.184s PASS, затем именно
+3 failed first cases3.900s PASS. Latest aggregate25 PASS9 SKIP Windows,
+33 PASS1 SKIP Ubuntu; original errors не скрыты. Full не повторялся.
+**Вывод.** Прерванный native этап не считается готовым. SIGKILL касается только
+PID fixture child. Первый bind-based exploratory container был остановлен по
+собственному ID6fda427308df, затем stand /tmp с artifacts F. Desktop/WSL не
+управлялись. SDK/locks/backports/UI frozen, syntax/strict/trace и raw/staged
+journal prefixes/exact index проверены. Native Mac/actual Default отдельно.
+**Файлы.** install-private.lua, install-process-exit.test.py, OpenSpec delta/
+verification, ROADMAP/HISTORY/INSTALLATION_PLAN/TESTING_WORKFLOW и журналы.
+Local commit без push. Следующая policy на выбор: явно выбранный внешний IDE
+tool удовлетворяет setup или нужен также запасной Mason package.
