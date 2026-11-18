@@ -67,6 +67,33 @@ PASS с SKIP не означает проверку отсутствующей �
 в `.tests/report.json`. Physical GUI/горячие клавиши на машине владельца —
 отдельная проверка. `--plan` выполняет только лёгкое чтение Lua registry.
 
+## Входы Core acceptance
+
+`regression -Plan` показывает `ready` и `missing_inputs`. Core acceptance
+требует подготовленный комплект и его отдельный тестовый профиль, либо
+подготовленные native inputs. Без них actual batch возвращает2 **до любых
+тестов**; Core suite не пропускается и ничего автоматически не устанавливается.
+
+Для установленного комплекта:
+
+```powershell
+$env:FORGE_CORE_TEST_KIT='F:/repo/forge-nvim/.tests/my-kit'
+$env:FORGE_CORE_TEST_PROFILE='F:/repo/forge-nvim/.tests/my-kit-profile'
+```
+
+Для проверки source configuration:
+
+```powershell
+$env:FORGE_E2E_DEPS='F:/repo/forge-nvim/.tests/editor-deps'
+$env:FORGE_CORE_TEST_RUNTIME='F:/repo/forge-nvim/.tests/my-prepared-runtime'
+```
+
+Runtime должен содержать `treesitter/parser/lua.so`; это подготовленный native
+runtime, не просто каталог site. POSIX использует те же env names с `export`.
+Оба режима запускают прежний Core suite с его readiness/ownership проверками.
+`prepared-native-config` не считается подтверждением installed-kit delivery.
+Пути выше — примеры: batch их не создаёт и не загружает.
+
 ## Время и результаты
 
 Пакет идёт последовательно. Сохраняются plan.json, report.json, exit codes,

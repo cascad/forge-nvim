@@ -34,4 +34,38 @@ T.check('IDE-TEST-10 native dry plan uses real registry and clears inherited fil
   assert(full.code==0,full.stderr)
   assert(vim.tbl_contains(vim.json.decode(full.stdout).installers,'tests/release-inventory.test.py'),'Release inventory omitted from regression')
 end)
+T.check('IDE-TEST-11 Core input gate blocks before tests and declares source installed argv',function()
+  local python=vim.fn.exepath(vim.fn.has('win32')==1 and 'python' or 'python3')
+  local argv={python,'-B',root..'/scripts/test-batch.py','--nvim',vim.v.progpath,'--mode','e2e','--file','tests/install-core-acceptance.test.py'}
+  local env={FORGE_CORE_TEST_KIT='',FORGE_CORE_TEST_PROFILE='',FORGE_CORE_TEST_RUNTIME=''}
+  local function invoke(extra)
+    local result=vim.system(vim.list_extend(vim.deepcopy(argv),extra or {}),{cwd=root,text=true,timeout=30000,env=env}):wait()
+    return result,result.code==0 and vim.json.decode(result.stdout) or nil
+  end
+  local result,data=invoke({'--plan'})
+  assert(result.code==0,result.stderr);assert(not data.ready and #data.missing_inputs>0)
+  T.eq(data.installers,{'tests/install-core-acceptance.test.py'});T.eq(data.results,{})
+  local blocked=invoke()
+  T.eq(blocked.code,2);assert(blocked.stderr:find('no tests started',1,true))
+  local report_path=assert(blocked.stderr:match('Report: ([^\r\n]+)'))
+  local stopped=vim.json.decode(table.concat(vim.fn.readfile(report_path),'\n'))
+  T.eq(stopped.results,{});assert(not stopped.complete and not stopped.ok)
+  local folder=root..'/.tests/batch-inputs/'..tostring(vim.uv.hrtime())
+  vim.fn.mkdir(folder..'/runtime/treesitter/parser','p')
+  vim.fn.writefile({'plan fixture, not a binary'},folder..'/runtime/treesitter/parser/lua.so')
+  env.FORGE_CORE_TEST_RUNTIME=folder..'/runtime'
+  result,data=invoke({'--plan'});assert(result.code==0,result.stderr)
+  T.eq(data.core_mode,'prepared-native-config');assert(data.ready)
+  assert(vim.tbl_contains(data.commands[1].argv,'--editor-deps') and vim.tbl_contains(data.commands[1].argv,'--runtime'))
+  vim.fn.mkdir(folder..'/kit','p');vim.fn.mkdir(folder..'/profile','p')
+  vim.fn.writefile({'{}'},folder..'/kit/.forge-install.json')
+  env.FORGE_CORE_TEST_KIT=folder..'/kit';env.FORGE_CORE_TEST_PROFILE=folder..'/profile'
+  result,data=invoke({'--plan'});assert(result.code==0,result.stderr)
+  T.eq(data.core_mode,'installed-kit');assert(data.ready)
+  assert(vim.tbl_contains(data.commands[1].argv,'--kit') and vim.tbl_contains(data.commands[1].argv,'--profile'))
+  assert(not vim.tbl_contains(data.commands[1].argv,'--editor-deps'))
+  env.FORGE_CORE_TEST_PROFILE=''
+  result,data=invoke({'--plan'});assert(result.code==0,result.stderr)
+  assert(not data.ready and data.core_mode=='installed-kit','Partial kit input silently fell back to source mode')
+end)
 T.finish()

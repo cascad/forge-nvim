@@ -14639,3 +14639,30 @@ files+23 native Python suites (22 installer+release inventory), без E2E.
 Быстрые unit3 прошли на обеих ОС с проверкой release inventory; промежуточный
 Ubuntu вызов unit с унаследованным IDE-BOOT-33 выполнил0 cases и не учитывается,
 корректный FORGE_TEST_ID=IDE-TEST-10 дал3 PASS. Product E2E не повторялись.
+
+
+### 274. Обязательные входы Core acceptance перед regression
+
+Спека: IDE-TEST-11 (FIX), fix-regression-core-inputs, 2026-11-18.
+
+**Было/причина.** Регресс §273 включал install-core-acceptance.test.py как
+обычный standalone Python suite без аргументов. Его argparse требует --kit /
+--profile либо --editor-deps /--runtime; план выглядел готовым, но actual полный
+прогон гарантированно дошёл бы до CLI FAIL после остальных долгих suites.
+
+**Сделано.** Core argv строится из explicit FORGE_CORE_TEST_KIT/PROFILE либо
+FORGE_CORE_TEST_RUNTIME и prepared FORGE_E2E_DEPS. Plan показывает core_mode,
+missing_inputs/ready. Отсутствующие входы дают exit2 и пустой incomplete report
+до любых tests. Частичная kit/profile pair не заменяется source mode. Suite
+не пропускается, inputs не скачиваются; настоящие ownership/hash/workflow
+postconditions остаются в Core acceptance. Source не называется installed PASS.
+
+**Проверка/вывод.** Windows/Ubuntu по4 быстрых CLI checks PASS: exact file plan,
+inventory/filters и missing/source/installed/partial inputs, actual no-tests
+gate/result. Нативные SDK/editor/full E2E не повторялись, Mac отдельно.
+Это исправление прежнего test entry, а не прогресс frontend SDK ordering:
+выбор владельца Core-before-SDK против Rust reader пока ожидается. Product
+code/installer lifecycle/locks/чужой WIP сохранены, host tmp на F.
+
+**Файлы.** test-batch.py, batch unit, TESTING_WORKFLOW/roadmap/HISTORY,
+OpenSpec verification и append-only FIXLOG/AGENT_COMMANDS.

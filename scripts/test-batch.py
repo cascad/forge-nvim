@@ -11,6 +11,39 @@ import time
 
 ROOT = Path(__file__).resolve().parents[1]
 
+def core_inputs(env):
+    """Declare CLI inputs; acceptance keeps ownership/hash/workflow checks."""
+    kit, profile = env.get('FORGE_CORE_TEST_KIT'), env.get('FORGE_CORE_TEST_PROFILE')
+    missing = []
+    if kit or profile:
+        argv = []
+        if kit:
+            argv += ['--kit', kit]
+            if not (Path(kit)/'.forge-install.json').is_file():
+                missing.append('FORGE_CORE_TEST_KIT must contain a prepared owned kit marker')
+        else:
+            missing.append('Set FORGE_CORE_TEST_KIT together with FORGE_CORE_TEST_PROFILE')
+        if profile:
+            argv += ['--profile', profile]
+            if not Path(profile).is_dir():
+                missing.append('FORGE_CORE_TEST_PROFILE directory does not exist')
+        else:
+            missing.append('Set FORGE_CORE_TEST_PROFILE for installed-kit acceptance')
+        return argv, missing, 'installed-kit'
+    deps = Path(env.get('FORGE_E2E_DEPS') or ROOT/'.tests/editor-deps')
+    argv = ['--editor-deps', str(deps)]
+    if not (deps/'manifest.json').is_file():
+        missing.append('Prepared FORGE_E2E_DEPS/manifest.json is required for Core source acceptance')
+    runtime = env.get('FORGE_CORE_TEST_RUNTIME')
+    if runtime:
+        argv += ['--runtime', runtime]
+        if not (Path(runtime)/'treesitter/parser/lua.so').is_file():
+            missing.append('FORGE_CORE_TEST_RUNTIME must contain treesitter/parser/lua.so')
+    else:
+        missing.append('Set FORGE_CORE_TEST_RUNTIME, or FORGE_CORE_TEST_KIT + FORGE_CORE_TEST_PROFILE')
+    return argv, missing, 'prepared-native-config'
+
+
 def environment():
     env = os.environ.copy()
     cleared = []
@@ -49,22 +82,32 @@ def main():
         sys.stderr.write(planned.stdout+planned.stderr)
         return planned.returncode
     selected = json.loads(planned.stdout)
-    commands = []
+    commands, missing_inputs, core_mode = [], [], None
     if selected['registry']:
         commands.append({'name':'registry', 'argv':[nvim,'-l','tests/run.lua',*selected['suites'],'--registry',str(registry)], 'timeout':None})
     for name in selected['installers']:
-        commands.append({'name':name, 'argv':[sys.executable,'-B',name], 'timeout':1800})
+        extra = []
+        if name == 'tests/install-core-acceptance.test.py':
+            extra, missing_inputs, core_mode = core_inputs(env)
+        commands.append({'name':name, 'argv':[sys.executable,'-B',name,*extra], 'timeout':1800})
     if not commands:
         parser.error('Empty test batch')
     env['FORGE_INSTALL_TEST_NVIM'] = nvim
     report = {'mode':args.mode, 'started_at':datetime.datetime.now(datetime.timezone.utc).isoformat(),
               'registry_files':[row['file'] for row in selected['registry']], 'installers':selected['installers'],
-              'commands':commands, 'results':[], 'filters_cleared':cleared, 'report':str(folder/'report.json')}
+              'commands':commands, 'results':[], 'filters_cleared':cleared, 'core_mode':core_mode,
+              'missing_inputs':missing_inputs, 'ready':not missing_inputs, 'report':str(folder/'report.json')}
     destination = folder / 'plan.json'
     destination.write_text(json.dumps(report,indent=2,ensure_ascii=False), encoding='utf-8')
     if args.plan:
         print(json.dumps(report,indent=2,ensure_ascii=False))
         return 0
+    if missing_inputs:
+        report.update(complete=False, ok=False)
+        (folder/'report.json').write_text(json.dumps(report,indent=2,ensure_ascii=False),encoding='utf-8')
+        sys.stderr.write('Batch inputs are not ready; no tests started:\n'+'\n'.join(missing_inputs)+'\n')
+        sys.stderr.write('Report: '+str(folder/'report.json')+'\n')
+        return 2
     print(f"Batch: {len(selected['registry'])} registered files, {len(selected['installers'])} native Python suites",flush=True)
     print('Plan: '+str(destination),flush=True)
     started = time.monotonic()

@@ -10326,3 +10326,25 @@ files+23 native Python suites (22 installer+release inventory), без E2E.
 Быстрые unit3 прошли на обеих ОС с проверкой release inventory; промежуточный
 Ubuntu вызов unit с унаследованным IDE-BOOT-33 выполнил0 cases и не учитывается,
 корректный FORGE_TEST_ID=IDE-TEST-10 дал3 PASS. Product E2E не повторялись.
+
+
+## 182. 2026-11-18 — Core inputs полного regression
+
+Read-only git status/log, SDK/native preflight/frontend/runtime transport и
+Core acceptance CLI. Задан отдельный вопрос о Core/SDK порядке; ответ обязателен
+для изменения frontend и пока не получен. Независимо исправлен найденный баг
+старого test-batch: bare Core acceptance argv без обязательного режима.
+Применён openspec-apply-change, fix-regression-core-inputs; native SDK code не менялся.
+
+После целого исправления один быстрый файл на каждой ОС:
+./scripts/test.ps1 quick -Files @('tests/lib/test_batch.test.lua')
+docker compose -f tests/containers/compose.yaml run --rm --no-deps --pull never --entrypoint bash ubuntu tests/containers/tool-paths.sh --batch quick --file tests/lib/test_batch.test.lua
+
+Windows4 /Ubuntu4 PASS, no editor E2E/SDK installs. Raw core-inputs-unit-windows.txt
+и core-inputs-unit-ubuntu.txt в .tests/toolchain-research. Reports1794987942684299400 /
+1794987952947085014; actual Core-missing invocation exit2/results[]/complete=false
+до тестов. Source/kit plan fixtures проверяют только argv/наличие входов, не
+функциональную готовность Core. Full regression не запускался. Desktop/WSL/
+build/pull не трогались. Host TEMP/TMP/TMPDIR/NVIM_LOG_FILE на F; Python -B.
+Local OpenSpec strict, diff/frozen25/append-only prefixes/exact index и commit
+gc.auto=0/maintenance.auto=false. Остальной SDK frontend пункт pending owner.

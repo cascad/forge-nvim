@@ -35,6 +35,9 @@ Windows24 PASS; Ubuntu23 PASS/1 Windows-only skip (targeted aggregate).
 E2E запускаются после всей реализации, не после каждой правки; большой
 regression — отдельная контрольная точка.
 [Команды и периодичность](TESTING_WORKFLOW.md).
+§274 исправил Core acceptance в regression: обязательные inputs/argv видны в
+plan, при missing inputs запуск завершается до любых tests. Windows/Ubuntu4
+быстрых CLI checks PASS; editor/full E2E не повторялись.
 Детали build-toolchain downloads и версий решаются для этих следующих шагов;
 они не блокируют работу с путями. Core publisher остаётся d120e3a;
 новый срез не означает завершения всего контракта путей или готовности Default.
@@ -80,6 +83,9 @@ GoToolchain и SDK existing/manual path в установщике сохране
   Tools setup Python/Node завершён (§273). Ближайший продуктовый пункт —
   frontend/preflight: учесть сохранённый выбор SDK, не подменяя прежний
   --sdk-path fallback и не дублируя runtime resolver.
+  Ожидается решение порядка: сначала verified Core для общих Lua resolvers,
+  либо прежняя ранняя проверка SDK с отдельным Rust reader. Первый вариант
+  предложен как основной; до ответа реализация этого изменения не начата.
   Первый полный regression — после закрытия этого согласования, перед
   подготовкой Default. Сейчас проверены пакет блока и планы полного прогона.
 
