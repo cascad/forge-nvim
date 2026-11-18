@@ -40,6 +40,7 @@ class Prerequisites(ui.UI):
         args=[str(ui.BINARY),'--source',str(self.source),'--install-dir',str(target),'--components',components,
               '--log-dir',str(base/'logs'),'--sdk-report',str(report)]
         if check:args+=['--check-sdks']
+        if '--runtime-path' not in extra and '--runtime-archive-url' not in extra:args+=['--runtime-path',str(self.runtime)]
         result=self.run_process(args+list(extra),env,base,'sdk-driver-'+str(time.time_ns()))
         return result,json.loads(report.read_text(encoding='utf-8')) if report.exists() else None
 
@@ -119,7 +120,8 @@ class Prerequisites(ui.UI):
 
     def test_sdk_10_default_requires_sdk_decision(self):
         base,env,target=self.prepare('sdk-default');env['PATH']=str(base/'no-SDK')
-        result=self.run_process([str(ui.BINARY),'--source',str(self.source),'--install-dir',str(target),'--profile','default','--log-dir',str(base/'logs')],env,base,'default')
+        folder=Path(env['PATH']);folder.mkdir();shutil.copy2(self.fixture,folder/('git.exe' if stand.WINDOWS else 'git'))
+        result=self.run_process([str(ui.BINARY),'--source',str(self.source),'--install-dir',str(target),'--runtime-path',str(self.runtime),'--profile','default','--log-dir',str(base/'logs')],env,base,'default')
         self.assertNotEqual(result.returncode,0);self.assertIn('SDK prerequisites',result.stderr)
         report=json.loads(next((base/'logs').glob('sdks-*.json')).read_text())
         self.assertEqual([sdk['id'] for sdk in report['sdks']],['go','rust','python','node'])

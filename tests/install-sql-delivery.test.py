@@ -26,7 +26,7 @@ class SQLDelivery(ui.UI):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
-        config=cls.source/'nvim_forge';shutil.copytree(ROOT/'nvim_forge/lua',config/'lua')
+        config=cls.source/'nvim_forge';shutil.copytree(ROOT/'nvim_forge/lua',config/'lua',dirs_exist_ok=True)
         for name in ['setup-stage.lua','native-tools.json']:shutil.copyfile(ROOT/'nvim_forge/scripts'/name,config/'scripts'/name)
         with (config/'init.lua').open('a',encoding='utf-8') as f:f.write("\ndofile(assert(vim.env.FORGE_SQL_TEST_INIT))\n")
         cls.part=stand.BASE/('sql.zip' if stand.WINDOWS else 'sql.tar.gz')

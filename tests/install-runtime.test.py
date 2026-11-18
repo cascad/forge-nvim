@@ -148,7 +148,7 @@ assert(version.code==0 and tool.code==0)
         base,env,target=self.prepare('runtime-missing');self.catalog(omit=('terminal',))
         result=self.install_auto(base,env,target);self.assert_failed(result,base,target,'terminal')
         self.assertFalse(target.exists())
-        self.assertFalse(any(p.startswith('/runtime-') for p in json.loads((base/'http.json').read_text())))
+        self.assertEqual([p for p in json.loads((base/'http.json').read_text()) if p.startswith('/runtime-')],['/runtime-core'])
 
     def test_runtime_04_duplicate_catalog(self):
         base,env,target=self.prepare('runtime-duplicate')
@@ -230,7 +230,7 @@ assert(version.code==0 and tool.code==0)
         missing=result.stderr.split('IDE artifacts not published',1)[1]
         self.assertIn('terminal',missing);self.assertNotIn('go,',missing);self.assertNotIn('rust,',missing)
         self.assertFalse(target.exists())
-        self.assertFalse((base/'stages.txt').exists());self.assertEqual(self.requests[before:],[])
+        self.assertFalse((base/'stages.txt').exists());self.assertTrue(all(p=='/runtime-core' for p in self.requests[before:]))
 
 
     def test_runtime_16_no_sdk_artifacts(self):

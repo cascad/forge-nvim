@@ -1,6 +1,7 @@
 // spec: IDE-BOOT-18. Native SDK discovery, never provisioning.
 use crate::{invalid, Result};
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
 use std::ffi::{OsStr, OsString};
 use std::fs::{self, OpenOptions};
 use std::io::Read;
@@ -33,6 +34,23 @@ pub(crate) struct Tool {
     version: Option<String>,
     detail: Option<String>,
     log: Option<PathBuf>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    source: Option<String>,
+}
+
+#[derive(Default, Deserialize)]
+pub(crate) struct Snapshot {
+    pub schema: u8,
+    pub selections: HashMap<String, Selection>,
+    pub errors: HashMap<String, String>,
+}
+
+#[derive(Deserialize)]
+pub(crate) struct Selection {
+    pub tools: HashMap<String, PathBuf>,
+    pub bin: PathBuf,
+    pub env: HashMap<String, String>,
+    pub source: String,
 }
 
 #[derive(Serialize)]
@@ -61,7 +79,7 @@ impl Report {
                     .iter()
                     .map(|tool| {
                         format!(
-                            "{}: {}{}{}",
+                            "{}: {}{}{}{}",
                             tool.command,
                             tool.path
                                 .as_ref()
@@ -72,6 +90,10 @@ impl Report {
                                 .map(|v| format!(" · {v}"))
                                 .unwrap_or_default(),
                             tool.detail
+                                .as_ref()
+                                .map(|v| format!(" · {v}"))
+                                .unwrap_or_default(),
+                            tool.source
                                 .as_ref()
                                 .map(|v| format!(" · {v}"))
                                 .unwrap_or_default()
@@ -162,14 +184,24 @@ fn version_output(mut command: Command, log_path: &Path) -> Result<(Option<ExitS
     Ok((code, String::from_utf8_lossy(&bytes).into_owned()))
 }
 
-fn probe(name: &str, directory: &Path, stamp: u128, search_path: &OsStr) -> Result<Tool> {
+fn probe(
+    name: &str,
+    directory: &Path,
+    stamp: u128,
+    search_path: &OsStr,
+    selection: Option<&Selection>,
+) -> Result<Tool> {
     let mut tool = Tool {
         command: name.into(),
-        path: find(name, search_path),
+        path: match selection {
+            Some(s) => s.tools.get(name).cloned(),
+            None => find(name, search_path),
+        },
         status: "missing".into(),
         version: None,
         detail: None,
         log: None,
+        source: selection.map(|s| s.source.clone()),
     };
     let Some(path) = &tool.path else {
         return Ok(tool);
@@ -203,6 +235,9 @@ fn probe(name: &str, directory: &Path, stamp: u128, search_path: &OsStr) -> Resu
         }
     }
     let mut command = Command::new(path);
+    if let Some(selection) = selection {
+        command.envs(&selection.env);
+    }
     if name == "py" {
         command.arg("-3");
     }
@@ -256,6 +291,15 @@ fn probe(name: &str, directory: &Path, stamp: u128, search_path: &OsStr) -> Resu
 }
 
 pub(crate) fn inspect(ids: &[String], directory: &Path, paths: &[PathBuf]) -> Result<Report> {
+    inspect_selected(ids, directory, paths, &Snapshot::default())
+}
+
+pub(crate) fn inspect_selected(
+    ids: &[String],
+    directory: &Path,
+    paths: &[PathBuf],
+    snapshot: &Snapshot,
+) -> Result<Report> {
     let path = effective_path(paths)?;
     let stamp = SystemTime::now()
         .duration_since(UNIX_EPOCH)
@@ -266,6 +310,31 @@ pub(crate) fn inspect(ids: &[String], directory: &Path, paths: &[PathBuf]) -> Re
         sdks: vec![],
     };
     for id in ids {
+        if let Some(error) = snapshot.errors.get(id) {
+            report.sdks.push(Sdk {
+                id: id.clone(),
+                status: "unavailable".into(),
+                tools: vec![Tool {
+                    command: id.clone(),
+                    path: None,
+                    status: "unavailable".into(),
+                    version: None,
+                    detail: Some(error.clone()),
+                    log: None,
+                    source: Some("saved SDK setting".into()),
+                }],
+            });
+            continue;
+        }
+        let selection = snapshot.selections.get(id);
+        let search_path = if let Some(selected) = selection {
+            std::env::join_paths(
+                std::iter::once(selected.bin.clone()).chain(std::env::split_paths(&path)),
+            )
+            .map_err(invalid)?
+        } else {
+            path.clone()
+        };
         let groups: Vec<Vec<&str>> = match id.as_str() {
             "go" => vec![vec!["go"]],
             "rust" => vec![vec!["rustc"], vec!["cargo"]],
@@ -282,7 +351,7 @@ pub(crate) fn inspect(ids: &[String], directory: &Path, paths: &[PathBuf]) -> Re
         for alternatives in groups {
             let mut chosen = None;
             for name in alternatives {
-                let candidate = probe(name, directory, stamp, &path)?;
+                let candidate = probe(name, directory, stamp, &search_path, selection)?;
                 let ready = candidate.status == "ready";
                 if chosen
                     .as_ref()

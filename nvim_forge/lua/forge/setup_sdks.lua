@@ -1,11 +1,15 @@
 -- spec: IDE-BOOT-39. Explicit setup only, before Mason snapshots its environment.
 local M={}
-function M.prepare()
-    if vim.g.forge_setup_sdk_report then return vim.g.forge_setup_sdk_report end
+function M.resolve(options)
+    options=options or {}
     local wanted={}
-    for _,name in ipairs(require('forge.tool_catalog').mason()) do
-        if name=='debugpy' then wanted.python=true end
-        if vim.tbl_contains({'pyright','prettier','typescript-language-server','js-debug-adapter','bash-language-server'},name) then wanted.node=true end
+    if options.ids then
+        for _,id in ipairs(options.ids) do wanted[id]=true end
+    else
+        for _,name in ipairs(require('forge.tool_catalog').mason()) do
+            if name=='debugpy' then wanted.python=true end
+            if vim.tbl_contains({'pyright','prettier','typescript-language-server','js-debug-adapter','bash-language-server'},name) then wanted.node=true end
+        end
     end
     local selected,bins,seen={}, {}, {}
     local win=vim.fn.has('win32')==1
@@ -14,7 +18,7 @@ function M.prepare()
         if wanted[kind] then
             local paths=require('forge.tool_paths')
             local path,explicit=paths.override(kind,{global=kind=='python' and 'forge_python_path' or 'forge_node_executable',
-                env=kind=='python' and 'FORGE_PYTHON_PATH' or 'FORGE_NODE_EXECUTABLE'})
+                env=kind=='python' and 'FORGE_PYTHON_PATH' or 'FORGE_NODE_EXECUTABLE',scope=options.scope})
             if explicit then
                 local entry=paths.current(kind)
                 local function fail(message) error('Setup SDK '..kind..' ['..entry.source..']: '..message,0) end
@@ -33,17 +37,28 @@ function M.prepare()
                         fail('npm not found beside selected Node: '..npm..'. Choose Node with npm.')
                     end
                 end
-                selected[kind]={path=path,command=native,source=entry.source}
+                selected[kind]={path=path,command=native,source=entry.source,bin=bin,env=vim.empty_dict(),tools={[kind]=path}}
+                if kind=='node' then selected[kind].tools.npm=bin..(win and '/npm.cmd' or '/npm') end
                 if not seen[key(bin)] then seen[key(bin)]=true;bins[#bins+1]=bin end
             end
         end
     end
+    return selected,bins
+end
+function M.prepare(options)
+    if vim.g.forge_setup_sdk_report then return vim.g.forge_setup_sdk_report end
+    options=options or {}
+    local selected,bins=M.resolve(options)
     -- A late PATH edit cannot update Mason's captured initial_environ.
     if #bins>0 then
         assert(not package.loaded['mason-core.process'],'Selected SDK setup must run before Mason; rerun the explicit installer/setup entrypoint.')
-        bins[#bins+1]=vim.env.PATH or '';vim.env.PATH=table.concat(bins,win and ';' or ':')
+        bins[#bins+1]=vim.env.PATH or '';vim.env.PATH=table.concat(bins,vim.fn.has('win32')==1 and ';' or ':')
     end
-    local report={phase='pre-mason',selected=selected}
+    local kinds={}
+    for _,kind in ipairs({'go','rust'}) do
+        if not vim.env.FORGE_NVIM_COMPONENTS or require('forge.install_profile').selected(kind) then kinds[#kinds+1]=kind end
+    end
+    local report={phase='pre-mason',selected=selected,scope=options.scope,sdk_kinds=kinds}
     vim.g.forge_setup_sdk_report=report
     return report
 end

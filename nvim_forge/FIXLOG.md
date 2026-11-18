@@ -14666,3 +14666,74 @@ code/installer lifecycle/locks/чужой WIP сохранены, host tmp на 
 
 **Файлы.** test-batch.py, batch unit, TESTING_WORKFLOW/roadmap/HISTORY,
 OpenSpec verification и append-only FIXLOG/AGENT_COMMANDS.
+
+
+### 275. Общий выбор SDK установщиком через проверенный Core
+
+Спека: IDE-BOOT-40 (ADDED), share-sdk-preflight-through-core, 2026-11-18.
+
+**Было/причина.** Runtime/setup читали Lua settings, frontend искал SDK только
+в PATH/fallback. Сохранённый Go/Rust/Python/Node мог не совпасть с проверенным
+установщиком. На чистой машине общего Lua host ещё нет. Владелец выбрал сначала
+получить Core, затем использовать его Neovim; отдельный Rust JSON reader не нужен.
+
+**Сделано.** PS/Bash prepare-only получает Core прежним SHA transport/cache,
+не создавая target. Shared runtime-core.lua проверяет прежние manifest/platform/
+version/Windows pins/file hashes/tree; installer и read-only snapshot используют
+одну проверку. Core запускается -u NONE/-i NONE, без init/plugins пользователя.
+Lua экспортирует explicit tools/bin/env/source/errors; Rust оставляет bounded
+native version probes. Настройки языков в Rust не разбираются.
+
+User sdk.json/tools.json имеют прежние относительные/~ paths и Auto semantics.
+Неверный explicit choice/JSON/CLI не подменяется другой копией в PATH; report
+показывает источник. --sdk-path остаётся native fallback; Git проверяется отдельно.
+SDK внутри заменяемого kit отклоняется. Private setup всех3 стадий задаёт user
+scope до init/Mason; чужой project restart baseline очищается только у этих
+детей. Обычный runtime сохраняет project→user и native SDK homes/cache/auth.
+При missing SDK Core уже может быть получен, но прежний target и остальные
+компоненты не заменяются. Preview/print-plan/native Git check Core не получает.
+
+**Проверки.** Offline Rust builds Windows/Ubuntu, Python/Lua syntax, OpenSpec
+strict. Пакет Windows1794989295171684900 /Ubuntu1794989347596062342 после всего
+кода: setup SDK7 и6 native suites. Первый запуск поймал свои extraction exe-path
+и logging-before-setup ошибки; исправлены. Старые assertions «до любых Core
+downloads» и отдельный Rust archive приведены к уже принятой поставке.
+Повторены failed/affected случаи. Aggregate исходного затронутого набора: Windows90 PASS;
+Ubuntu86 PASS/4 platform skips. В них по10 новых SDK scenarios: реальные
+Go1.26/Rust1.96.1/Python venv/Node24.11, user/project/PATH, relative/tilde/Auto,
+invalid settings/CLI, Core HTTP/cache/corrupt/preview и сохранность target.
+Mason stages здесь fixtures, не Default acceptance. Windows stage-scope ещё2
+affected PASS: три настоящих SDK init до stages и download-env control; Ubuntu
+окончательный stage-scope прошёл в большом checkpoint. Control failed class
+setup отдельно прошёл на Windows и в новом suite11/11 на Ubuntu.
+
+**Большой checkpoint.** Ubuntu1794989655059525809: complete=true/ok=false,2764.52s. Registry120 файлов/122 запуска:103 PASS/14 FAIL/5 SKIP,1851.05s,1049 cases. Все24 native Python suites запущены; Core acceptance5/5 PASS, SDK settings11/11 PASS (10 SDK+1 fixture cleanup). Первоначальные6 native failed suites не скрыты;5 исправлены и проверены только affected повторами. Terminal acceptance не начал cases: отсутствует terminal-runtime/linux-x64/prepared.json. Registry отказы и Terminal inputs остаются gate; полный PASS не заявлен. Точный список и artifact paths — openspec/changes/share-sdk-preflight-through-core/verification.md.
+
+
+**Fixtures после checkpoint.** Общая Isolation уже создаёт Lua modules; старые
+Parser/SQL copytree без merge падали до cases. При setUpClass error unittest
+не вызывает tearDownClass: HTTP server зависал при shutdown. Добавлены merge
+и addClassCleanup, native failure control; один уже failed parser PID53737
+остановлен SIGTERM внутри own container, raw exit=-15/235s сохранён. Readiness
+stand теперь копирует актуальные зависимости, parser stand явно контролирует
+plugin_setup (плагины здесь не subject), observation gopls не сериализует
+native cmd=function и принимает штатный Mason .CMD. UI использует install log
+и текущие SDK dependencies. Product readiness/проверки pins не ослаблены.
+Windows batch1794992478419789100: Parser4/SQL5/readiness15+1 skip PASS;
+Ubuntu1794992697474789878: Parser4/Search3/readiness16 PASS; Search Windows3,
+UI по4, IDE tools по2 PASS отдельно. Первый узкий Windows assert не учитывал
+штатный gopls.CMD — исправлен и повторён только этот case. Полный регресс
+второй раз не запускался; parser/search/UI/readiness/IDE-tools initial FAIL
+сохранены в исходном отчёте.
+
+**Вывод.** Общий SDK choice реализован; это не публикация/готовность Default.
+Найденные большим прогоном отказы записаны в verification/roadmap как gate;
+новые providers/update policy и следующие фичи пока не добавлялись. Mac отдельно.
+Desktop/WSL не запускались/не перенастраивались, Docker build/pull не было.
+Host tmp/artifacts на F; guest SDK-копии в /tmp и удаляются с own container.
+Frozen25/чужой WIP, исходные locks и Windows Neovim SDK сохранены.
+
+**Файлы.** sdk/setup_sdks/tool_paths, Core prepare/validator/snapshot и native
+frontend/probes; installer settings regression и affected fixtures/expectations;
+SDK_SELECTION/INSTALLATION_PLAN/TESTING_WORKFLOW/roadmap, OpenSpec verification,
+HISTORY и append-only AGENT_COMMANDS/FIXLOG. Local commit, без push.

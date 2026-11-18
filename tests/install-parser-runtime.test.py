@@ -37,7 +37,7 @@ class Parsers(ui.UI):
     def setUpClass(cls):
         super().setUpClass()
         config = cls.source / 'nvim_forge'
-        shutil.copytree(ROOT / 'nvim_forge/lua', config / 'lua')
+        shutil.copytree(ROOT / 'nvim_forge/lua', config / 'lua', dirs_exist_ok=True)
         shutil.copyfile(ROOT / 'nvim_forge/scripts/setup-stage.lua', config / 'scripts/setup-stage.lua')
         (config / 'init.lua').write_text("dofile(assert(vim.env.FORGE_PARSER_TEST_INIT))\n", encoding='utf-8')
         cls.core = stand.BASE / ('parser-core.zip' if stand.WINDOWS else 'parser-core.tar.gz')

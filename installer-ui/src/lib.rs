@@ -3,6 +3,7 @@ mod runtime;
 mod sdk_actions;
 mod sdk_bootstrap;
 mod sdk_install;
+mod sdk_settings;
 mod sdks;
 mod wizard;
 use serde::{Deserialize, Serialize};
@@ -39,13 +40,14 @@ pub struct Options {
     pub check_tools: bool,
     pub sdk_report: Option<PathBuf>,
     pub sdk_paths: Vec<PathBuf>,
+    prepared_core: Option<PathBuf>,
 }
 
 impl Options {
     pub fn parse(arguments: impl IntoIterator<Item = String>) -> Result<Self> {
         let mut result = Self {
             source: std::env::current_dir()?,
-            powershell: "powershell.exe".into(),
+            powershell: sdk_settings::default_powershell(),
             ..Default::default()
         };
         let mut arguments = arguments.into_iter();
@@ -256,7 +258,7 @@ fn review(rows: &[Row], plan: &Plan) -> String {
     lines.join("\n")
 }
 
-pub fn run(options: Options) -> Result<i32> {
+pub fn run(mut options: Options) -> Result<i32> {
     let rows = table(&options.source)?;
     let selected = options
         .components
@@ -300,6 +302,9 @@ pub fn run(options: Options) -> Result<i32> {
         return Ok(0);
     }
     if options.check_sdks {
+        if !plan.native_sdks.is_empty() {
+            options.prepared_core = Some(sdk_settings::prepare(&options, &plan)?);
+        }
         let report = inspect_sdks(&options, &plan)?;
         write_sdk_report(&options, &report)?;
         println!("{}", serde_json::to_string(&report)?);
@@ -358,6 +363,7 @@ pub fn run(options: Options) -> Result<i32> {
         }
     }
     if !options.preview && !plan.native_sdks.is_empty() {
+        options.prepared_core = Some(sdk_settings::prepare(&options, &plan)?);
         let report = inspect_sdks(&options, &plan)?;
         let interactive = io::stdin().is_terminal() && io::stderr().is_terminal();
         let report = if !report.ready() && interactive {
@@ -380,7 +386,7 @@ pub fn run(options: Options) -> Result<i32> {
             }
         }
         if !report.ready() {
-            return Err(invalid(format!("SDK prerequisites не готовы. Выберите существующий SDK в PATH/--sdk-path, установите его штатно или снимите зависимый компонент. SDK и IDE artifacts не устанавливались. Отчёт: {}",file.display())));
+            return Err(invalid(format!("SDK prerequisites не готовы. Исправьте/reset сохранённый выбор fride либо выберите SDK в PATH/--sdk-path, установите его штатно или снимите компонент. Core подготовлен; прежний комплект сохранён, остальные компоненты не устанавливались. Отчёт: {}",file.display())));
         }
     }
     if let Some(path) = &options.result_file {
@@ -464,7 +470,7 @@ fn execute(options: &Options, plan: &Plan, plain: bool) -> Result<i32> {
         }
         command
     } else {
-        let mut command = Command::new("bash");
+        let mut command = Command::new("/bin/bash");
         command
             .arg(options.source.join("scripts/install-private.sh"))
             .arg(&options.source)
@@ -611,7 +617,13 @@ fn sdk_report_path(options: &Options) -> PathBuf {
 }
 
 pub(crate) fn inspect_sdks(options: &Options, plan: &Plan) -> Result<sdks::Report> {
-    let report = sdks::inspect(&plan.native_sdks, &options.log_dir, &plan.sdk_paths)?;
+    let snapshot = sdk_settings::snapshot(options, plan)?;
+    let report = sdks::inspect_selected(
+        &plan.native_sdks,
+        &options.log_dir,
+        &plan.sdk_paths,
+        &snapshot,
+    )?;
     if !plan.native_sdks.is_empty() {
         fs::create_dir_all(&options.log_dir)?;
         let path = options.log_dir.join(format!(

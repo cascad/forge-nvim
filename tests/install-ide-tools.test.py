@@ -120,7 +120,9 @@ class Tools(unittest.TestCase):
         (project/'main.go').write_text('package sample\nfunc Run() int { return Twice(2) }\n')
         (project/'defs.go').write_text('package sample\nfunc Twice(n int) int { return n * 2 }\n')
         result=invoke(base,ROOT/'tests/diagnostics/install-ide-tools-check.lua',['lsp',base]);self.assert_ok(result)
-        self.assertIn('defs.go',json.loads((base/'consumer.json').read_text())['target'])
+        report=json.loads((base/'consumer.json').read_text())
+        self.assertIn('defs.go',report['target']);self.assertIn(report['cmd_type'],('function','table'))
+        self.assertIn(Path(report['selected']['path']).name.lower(),('gopls','gopls.exe','gopls.cmd'))
 
     def test_08_repeat_keeps_receipts(self):
         _,result=self.check('repeat','repeat');self.assert_ok(result)
@@ -130,7 +132,8 @@ class Tools(unittest.TestCase):
         base=BASE/'missing-node';base.mkdir();env=environment(base);env['FORGE_NODE_EXECUTABLE']=str(base/'not-installed-node')
         result=subprocess.run([str(NVIM),'--headless','-u','NONE','-i','NONE','-l',str(ROOT/'tests/diagnostics/install-ide-tools-check.lua'),'failure',str(base)],env=env,capture_output=True,text=True,encoding='utf-8',timeout=30)
         (base/'result.json').write_text(json.dumps({'exit':result.returncode,'stdout':result.stdout,'stderr':result.stderr},indent=2))
-        self.assertNotEqual(result.returncode,0);self.assertIn('Node SDK missing for Prettier',result.stderr)
+        self.assertNotEqual(result.returncode,0);self.assertIn('Tool paths: node [$FORGE_NODE_EXECUTABLE]',result.stderr)
+        self.assertIn('invalid executable',result.stderr);self.assertIn('not-installed-node',result.stderr)
 
     def test_10_setup_stage_false_success(self):
         with self.receipt('gopls',lambda d:d['source'].update(id='pkg:golang/golang.org/x/tools/gopls@v0.1.0')):

@@ -21,8 +21,8 @@ assert NVIM.is_file() and (DEPS/'lazy/mason.nvim/lua/mason/init.lua').is_file()
 class Readiness(unittest.TestCase):
     def execute(self,name,stage='tools'):
         base=BASE/name;base.mkdir();profile=base/'profile';(profile/'lua/forge').mkdir(parents=True);(profile/'scripts').mkdir()
-        for module in ['tool_catalog','setup_readiness','install_profile']:
-            shutil.copyfile(ROOT/('nvim_forge/lua/forge/'+module+'.lua'),profile/('lua/forge/'+module+'.lua'))
+        # Exercise current setup dependencies; a stale subset fails before the install callback.
+        shutil.copytree(ROOT/'nvim_forge/lua',profile/'lua',dirs_exist_ok=True)
         shutil.copyfile(SOURCE,profile/'scripts/setup-stage.lua')
         parser='lua,forge_missing' if name=='missing-parser' else ('lua,forge_broken' if name=='broken-parser' else 'lua')
         (profile/'scripts/components.tsv').write_text('core\tFixture\t-\tfixture-native\t'+parser+'\nnode\tUnused\t-\tmissing-unselected\tmissing_unselected\n',encoding='utf-8')

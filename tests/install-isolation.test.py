@@ -74,7 +74,7 @@ class Isolation(unittest.TestCase):
         (cls.source/'nvim_forge/init.lua').write_text(INIT,encoding='utf-8')
         (cls.source/'nvim_forge/scripts/setup-stage.lua').write_text(STAGE,encoding='utf-8')
         (cls.source/'nvim_forge/lua/forge').mkdir(parents=True)
-        for name in ['setup_sdks','tool_paths','tool_catalog','install_profile','parser_runtime']:
+        for name in ['setup_sdks','tool_paths','tool_catalog','install_profile','parser_runtime','sdk','log_store']:
             shutil.copy2(ROOT/f'nvim_forge/lua/forge/{name}.lua',cls.source/f'nvim_forge/lua/forge/{name}.lua')
         shutil.copy2(ROOT/'nvim_forge/scripts/components.tsv',cls.source/'nvim_forge/scripts/components.tsv')
         shutil.copytree(ROOT/'scripts',cls.source/'scripts',ignore=shutil.ignore_patterns('__pycache__'))
@@ -96,6 +96,8 @@ class Isolation(unittest.TestCase):
         else:
             with tarfile.open(cls.archive) as arc:arc.extractall(cls.runtime,filter='data')
         cls.server=transport.serve();cls.url,cls.routes,cls.requests=cls.server.__enter__()
+        # unittest also runs class cleanups when a subclass setUpClass fails.
+        cls.addClassCleanup(cls.server.__exit__,None,None,None)
         cls.routes['/runtime']=cls.archive.read_bytes()
         source_bytes=io.BytesIO()
         if WINDOWS:
@@ -105,9 +107,6 @@ class Isolation(unittest.TestCase):
         else:
             with tarfile.open(fileobj=source_bytes,mode='w:gz') as arc:arc.add(cls.source,arcname='forge-main')
         cls.routes['/isolation-source']=source_bytes.getvalue()
-
-    @classmethod
-    def tearDownClass(cls):cls.server.__exit__(None,None,None)
 
     def prepare(self,name):
         base=BASE/name;base.mkdir();foreign=base/'foreign';foreign.mkdir()
@@ -217,9 +216,9 @@ class Isolation(unittest.TestCase):
         self.assertNotEqual(result.returncode,0);self.assertIn('SHA256 mismatch',result.stderr);self.assertFalse(target.exists())
 
     def test_07_missing_component(self):
-        base,env,target=self.prepare('missing-component');env['FORGE_NVIM_COMPONENTS']='core,rust'
+        base,env,target=self.prepare('missing-component');env['FORGE_NVIM_COMPONENTS']='core,terminal'
         result=self.install(base,env,target);self.assertNotEqual(result.returncode,0)
-        self.assertIn('lacks selected component: rust',result.stderr);self.assertFalse(target.exists())
+        self.assertIn('lacks selected component: terminal',result.stderr);self.assertFalse(target.exists())
 
     def test_08_linked_target(self):
         base,env,target=self.prepare('linked-target');target.parent.mkdir(parents=True)

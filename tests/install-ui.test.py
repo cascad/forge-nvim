@@ -98,7 +98,7 @@ class UI(stand.Isolation):
         base,env,target=self.prepare('ui-back')
         self.pty(base,env,self.binary_args(base,target,profile='custom'),'custom-back')
         plan=json.loads((base/'result.json').read_text(encoding='utf-8'))
-        self.assertNotIn('go',plan['components']);self.assertIn('go',plan['native_sdks']);self.assertFalse(target.exists())
+        self.assertNotIn('go',plan['components']);self.assertEqual(plan['native_sdks'],['rust','python','node']);self.assertFalse(target.exists())
 
     def test_ui_03_cancel(self):
         base,env,target=self.prepare('ui-cancel')
@@ -118,21 +118,21 @@ class UI(stand.Isolation):
         result=self.run_process(self.binary_args(base,target,preview=False,components='')+['--no-color'],env,base,'native')
         self.assert_ok(result);self.assertNotIn('\x1b',result.stdout+result.stderr)
         self.assertIn('Подготовка завершена',result.stderr);self.assertEqual((base/'stages.txt').read_text().splitlines(),['plugins','parsers','tools'])
-        self.assert_ok(self.launch(base,env,target));logs=list((base/'logs').glob('*.log'));self.assertEqual(len(logs),1)
+        self.assert_ok(self.launch(base,env,target));logs=list((base/'logs').glob('install-*.log'));self.assertEqual(len(logs),1)
         text=logs[0].read_text(encoding='utf-8',errors='replace');self.assertIn('FRIDE_EVENT',text);self.assertIn('Launch:',text)
 
     def test_ui_06_backend_failure(self):
         base,env,target=self.prepare('ui-failure');env['FORGE_FAIL_STAGE']='parsers'
         result=self.run_process(self.binary_args(base,target,preview=False,components='core'),env,base,'failure')
         self.assertNotEqual(result.returncode,0);self.assertIn('ошибка',result.stderr)
-        log=next((base/'logs').glob('*.log')).read_text(encoding='utf-8',errors='replace');self.assertIn('Command failed (13)',log)
+        log=next((base/'logs').glob('install-*.log')).read_text(encoding='utf-8',errors='replace');self.assertIn('Command failed (13)',log)
         self.assertFalse((target/'bin/fride').exists())
 
     def test_ui_07_explicit_csv_policy(self):
         base,env,target=self.prepare('ui-csv')
         result=self.run_process(self.binary_args(base,target,components='python,sql')+['--print-plan'],env,base,'policy')
         self.assert_ok(result);plan=json.loads(result.stdout)
-        self.assertEqual(plan['components'],['core','python','sql']);self.assertEqual(plan['native_sdks'],['go','python','node']);self.assertFalse(target.exists())
+        self.assertEqual(plan['components'],['core','python','sql']);self.assertEqual(plan['native_sdks'],['python','node']);self.assertFalse(target.exists())
 
     def test_ui_08_unknown_component(self):
         base,env,target=self.prepare('ui-unknown')

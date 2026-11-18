@@ -8,8 +8,8 @@
 Текущая политика GOTOOLCHAIN не изменена; её детали рассматриваются отдельно
 для явной установки tools. Новый менеджер пакетов и собственные сборки всех LSP
 не требуются. §265 реализовал runtime user/project paths для Python/Node/Bash
-и JS entrypoints; [руководство](TOOL_PATHS.md). SDK paths установщика пока имеют
-прежнюю семантику; их согласование и остальные языковые consumers идут следом.
+и JS entrypoints; [руководство](TOOL_PATHS.md). Согласование SDK paths установщика
+описано ниже в IDE-BOOT-40; остальные языковые consumers идут следом.
 
 Уточнение владельца2026-11-17: SQL/Bash — подсветка и готовые LSP/форматтеры.
 §267 перевёл базовый SQL runtime на upstream Sqruff LSP/formatter. §268 согласовал
@@ -28,13 +28,27 @@ user/project/«Авто», native restart с сохранением сессии
 прошли, Mac отдельно. §272 добавил общий UX Python/Node через существующий
 tools.json и native resolvers. Следом остальные consumers и согласование
 installer/setup/runtime, providers/update policy и полный Default.
-Runtime sdk.json и прежний installer SDK picker пока имеют отдельные настройки;
-их согласование ещё не завершено. Полная поставка и native Mac — отдельные gates.
+Runtime sdk.json и installer preflight согласуются через verified Core / shared
+Lua user-scope resolvers (IDE-BOOT-40). Полная поставка и native Mac — отдельные gates.
 §273 согласовал tools setup с сохранёнными Python/Node overrides: native SDK
 directories выбираются до Mason, ошибки не заменяются fallback. Go/Rust early
-init прежний. Frontend/preflight ещё использует собственный native discovery;
-его согласование с runtime settings — следующий продуктовый пункт.
+init прежний. §275 подключает frontend/preflight к тем же user settings через
+Core; native discovery остаётся для «Авто» и прежнего --sdk-path fallback.
 [Проверки блока и полный regression](TESTING_WORKFLOW.md) разделены по периодичности.
+
+Текущий preflight — IDE-BOOT-40 (§275): владелец выбрал Core-first. После Git
+сначала доставляется и проверяется Core, затем его Neovim без init/plugins
+читает общие user-scope SDK settings. Rust выполняет только прежние native
+version probes. В --check-sdks Core тоже может скачаться; это заменяет прежнее
+обещание «до любых IDE downloads». Native SDK при этом не устанавливаются.
+Target остаётся прежним до готовности SDK; Terminal/остальная доставка и setup
+начинаются после readiness. Core повторно берётся из SHA-кэша.
+User sdk.json (Go/Rust), tools.json (Python/Node), относительные пути и «Авто»
+совпадают с runtime; project settings случайной cwd не влияют на installer.
+--sdk-path/--tool-path остаются fallback для native discovery, ошибочный явный
+выбор их не включает. Исправьте/reset user choice и повторите проверку.
+Private setup всех стадий читает ту же область до init/Mason, не наследуя restart baseline
+другого проекта. Обычный запуск редактора сохраняет project→user приоритет.
 
 Проверка этого среза в подготовленной native developer-среде: сначала
 `python -B scripts/build-installer-ui.py`, затем

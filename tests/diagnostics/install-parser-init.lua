@@ -23,6 +23,11 @@ local treesitter = require('plugins.treesitter')[1]
 assert(treesitter.build == false, 'Managed Lazy restore can still build parsers')
 treesitter.config()
 package.preload['ide.backports'] = function() return {all = function() return {} end} end
+-- Only parser delivery is under test; native plugin readiness has its own suite.
+package.preload['forge.plugin_setup'] = function() return {prepare = function(before)
+    if before then before() end
+    return {fixture = true}
+end} end
 vim.api.nvim_create_user_command('Lazy', function() end, {nargs = '*', bang = true, force = true})
 vim.api.nvim_create_user_command('MasonToolsInstallSync', function() end, {force = true})
 local catalog = require('forge.tool_catalog')

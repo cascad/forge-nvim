@@ -10348,3 +10348,75 @@ Windows4 /Ubuntu4 PASS, no editor E2E/SDK installs. Raw core-inputs-unit-windows
 build/pull не трогались. Host TEMP/TMP/TMPDIR/NVIM_LOG_FILE на F; Python -B.
 Local OpenSpec strict, diff/frozen25/append-only prefixes/exact index и commit
 gc.auto=0/maintenance.auto=false. Остальной SDK frontend пункт pending owner.
+
+
+## 183. 2026-11-18 — Shared SDK preflight через verified Core
+
+Владелец выбрал Core-first. openspec-apply-change:
+share-sdk-preflight-through-core, IDE-BOOT-40. Read-only git status/diff/rg,
+targeted Get-Content; исходники native frontend/Core transport/shared resolvers,
+fixture APIs, старые assertions и Docker inventory. Все host exec в F:/repo/forge-nvim,
+login=false, TEMP/TMP/TMPDIR/NVIM_LOG_FILE в .tests/tmp, Python -B/UTF8.
+Дополнительных разрешений/SDK downloads/system installs не запрашивалось.
+
+Сборка/fast checks после реализации:
+python -B scripts/build-installer-ui.py --work .tests/installer-ui --output .tests/shared-preflight-ui/windows-x64
+rustfmt --edition2021 --config skip_children=true <3 own Rust files>
+python -B: ast.parse <3 Python files>
+private nvim --headless -u NONE -i NONE: assert(loadfile(<6 Lua files>))
+Windows initial build до оставшихся adapters и окончательный build; lock прежний.
+Ubuntu native offline build из прежнего vendor.tar.gz, work /tmp, output
+/workspace/.tests/shared-preflight-ui/linux-x64. Не Docker build/pull.
+
+Один affected пакет на ОС с FORGE_INSTALL_UI_BINARY на own build:
+python -B scripts/test-batch.py --nvim .tools/neovim/windows-x64/bin/nvim.exe --mode e2e
+--file tests/e2e/setup-sdk-paths.test.lua --file tests/install-sdk-settings.test.py
+--file tests/install-prerequisites.test.py --file tests/install-isolation.test.py
+--file tests/install-runtime.test.py --file tests/install-sdk-actions.test.py
+--file tests/install-sdk-bootstrap.test.py
+
+Ubuntu: docker compose -f tests/containers/compose.yaml -f tests/containers/limits.yaml
+run --rm --no-deps --pull never --entrypoint bash ubuntu
+/workspace/.tests/toolchain-research/shared-preflight-linux.sh
+Driver делает native offline build и тот же пакет через tool-paths.sh --batch.
+Network:none; limits2CPU/3GiB. Desktop/WSL не управлялись.
+
+Initial reports1794989295171684900 /1794989347596062342 содержат ошибки;
+они не переписаны в PASS. После исправлений только failed/affected retry:
+python -B tests/install-sdk-settings.test.py (полный новый suite,10 cases)
+python -B tests/install-prerequisites.test.py test_sdk_08_setup_disables_auto_download (Windows)
+python -B tests/install-isolation.test.py Isolation.test_07_missing_component
+python -B tests/install-runtime.test.py test_runtime_03_missing_selected test_runtime_15_default_requires_complete_catalog
+Windows ещё test_settings_08_private_setup_uses_same_user_choices для parent env,
+затем final stage-scope + прежний download-env control. Ubuntu final scope
+проверяет полный checkpoint. Логи shared-preflight-{windows,ubuntu}-{batch,retry}.txt
+и windows-{parent-env,stage-scope}.txt в .tests/toolchain-research.
+
+Большой запуск: тот же docker compose с
+/workspace/.tests/toolchain-research/shared-preflight-regression.sh.
+Driver готовит source Core inputs из cached native parser и LuaLS3.19.2 archive
+с проверкой saved SHA; no downloads, не installed-kit acceptance; вызывает
+tool-paths.sh --batch regression. Ubuntu1794989655059525809: complete=true/ok=false,2764.52s. Registry120 файлов/122 запуска:103 PASS/14 FAIL/5 SKIP,1851.05s,1049 cases. Все24 native Python suites запущены; Core acceptance5/5 PASS, SDK settings11/11 PASS (10 SDK+1 fixture cleanup). Первоначальные6 native failed suites не скрыты;5 исправлены и проверены только affected повторами. Terminal acceptance не начал cases: отсутствует terminal-runtime/linux-x64/prepared.json. Registry отказы и Terminal inputs остаются gate; полный PASS не заявлен. Точный список и artifact paths — openspec/changes/share-sdk-preflight-through-core/verification.md.
+Windows: test-batch --mode regression --plan (121+24, ready=false: Core inputs
+не заданы). Actual full требует также WSL и не запускался; Mac отдельно.
+Read-only docker exec <own container> ls/cat/ps для triage и docker stats --no-stream;
+команд host/engine start/stop/reconfigure не было.
+
+Дополнительные failed/affected повторы, без всего regression:
+Windows batch: --file install-parser-runtime /install-sql-delivery /install-readiness
+(полные tests/*.test.py paths), report1794992478419789100. Search отдельно.
+Ubuntu driver shared-preflight-fixture-final.sh: batch Parser/Search/readiness
+(report1794992697474789878), затем UI cases02/05/06/07. Windows те же UI4.
+IDE tools Windows/Ubuntu: Tools.test_07_gopls_navigation Tools.test_09_missing_node;
+Windows после .CMD correction только Tools.test_07_gopls_navigation.
+Fixture cleanup regression: test_settings_11_failed_class_setup_closes_native_http_stand
+(Windows отдельно, Ubuntu в полном SDK suite11).
+Own failed parser остановлен только docker exec f6f75064d842 /bin/kill -TERM 53737;
+это child текущего batch, найденный ps в том же ephemeral container после
+printed setUpClass ERROR. Engine и чужие процессы не останавливались.
+
+Final openspec validate share-sdk-preflight-through-core --type change --strict
+--no-interactive; diff/staged --check; shared-preflight-guard.py:
+frozen25/raw journals2/exact owned index35/staged journal prefixes.
+Helpers/extraction/verification в ignored .tests; journals append через open('ab').
+Local commit gc.auto=0/maintenance.auto=false, без push; чужой WIP не staged.

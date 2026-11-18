@@ -9,7 +9,8 @@ for _,key in ipairs(keys) do startup_env[key]=vim.env[key] or vim.NIL end
 local generation = 0
 
 local function log(message, level)
-    require('forge.log_store').record(message, level or vim.log.levels.INFO, 'SDK')
+    local store=require('forge.log_store')
+    if store.session then store.record(message, level or vim.log.levels.INFO, 'SDK') end
 end
 local function failure(message)
     log(message, vim.log.levels.ERROR)
@@ -45,10 +46,10 @@ end
 function M.files(root)
     return {project=vim.fs.joinpath(M.root(root),'.fride/sdk.json'),user=vim.fs.joinpath(vim.fn.stdpath('config'),'sdk.json')}
 end
-function M.choice(kind, root)
+function M.choice(kind, root, options)
     assert(kind=='go' or kind=='rust','Expected go or rust')
     local files=M.files(root)
-    for _,scope in ipairs({'project','user'}) do
+    for _,scope in ipairs(options and options.scope=='user' and {'user'} or {'project','user'}) do
         local data=read(files[scope]);local value=data.sdks[kind]
         if value then return {kind=kind,value=value,source=scope..': '..files[scope],
             base=scope=='project' and M.root(root) or vim.fn.stdpath('config')} end
@@ -96,16 +97,26 @@ local function inherited_env()
     for key,value in pairs(baseline()) do env[key]=value~=vim.NIL and value or nil end
     return env
 end
-function M.initialize(root)
+-- Pure selection shared by runtime startup and installer preflight; no CLI probes.
+function M.selection(kind, root, options)
+    local choice=M.choice(kind,root,options)
+    if choice.value=='auto' then return nil end
+    local ok,sdk=pcall(M.location,kind,choice.value,choice.base)
+    if not ok then failure('SDK ['..choice.source..']: '..tostring(sdk)) end
+    sdk.source=choice.source
+    sdk.tools=kind=='go' and {go=sdk.executable} or {rustc=sdk.executable,cargo=sdk.bin..'/cargo'..suffix}
+    sdk.env=kind=='go' and {GOROOT=sdk.path,GOTOOLCHAIN='local'} or {
+        RUSTUP_TOOLCHAIN=sdk.path,RUSTUP_AUTO_INSTALL='0',RUSTC=sdk.executable,
+        RUSTDOC=sdk.bin..'/rustdoc'..suffix,CARGO=sdk.tools.cargo}
+    return sdk
+end
+function M.initialize(root, options)
+    options=options or {}
     root=M.root(root or vim.env.FRIDE_SDK_PROJECT or vim.fn.getcwd())
     local selected, any = {}, false
-    for _,kind in ipairs({'go','rust'}) do
-        local choice=M.choice(kind,root)
-        if choice.value~='auto' then
-            local ok, location=pcall(M.location,kind,choice.value,choice.base)
-            if not ok then failure('SDK ['..choice.source..']: '..tostring(location)) end
-            selected[kind]=location;any=true
-        end
+    for _,kind in ipairs(options.kinds or {'go','rust'}) do
+        selected[kind]=M.selection(kind,root,options)
+        any=any or selected[kind]~=nil
     end
     local base=baseline()
     if any or vim.env.FRIDE_SDK_BASE then
@@ -113,20 +124,17 @@ function M.initialize(root)
         for _,key in ipairs(keys) do vim.env[key]=base[key]~=vim.NIL and base[key] or nil end
     end
     local bins={}
-    if selected.go then
-        bins[#bins+1]=selected.go.bin
-        vim.env.GOROOT=selected.go.path;vim.env.GOTOOLCHAIN='local'
-    end
-    if selected.rust then
-        local sdk=selected.rust;bins[#bins+1]=sdk.bin
-        vim.env.RUSTUP_TOOLCHAIN=sdk.path;vim.env.RUSTUP_AUTO_INSTALL='0'
-        vim.env.RUSTC=sdk.executable;vim.env.RUSTDOC=sdk.bin..'/rustdoc'..suffix
-        vim.env.CARGO=sdk.bin..'/cargo'..suffix
+    for _,kind in ipairs({'go','rust'}) do
+        local sdk=selected[kind]
+        if sdk then
+            bins[#bins+1]=sdk.bin
+            for key,value in pairs(sdk.env) do vim.env[key]=value end
+        end
     end
     if #bins>0 then bins[#bins+1]=vim.env.PATH or '';vim.env.PATH=table.concat(bins,sep) end
     vim.env.FRIDE_SDK_PROJECT=nil
     M.active={root=root,selected=selected}
-    for kind,sdk in pairs(selected) do log(kind..' | '..sdk.executable..' | '..M.choice(kind,root).source) end
+    for kind,sdk in pairs(selected) do log(kind..' | '..sdk.executable..' | '..sdk.source) end
 end
 function M.validate(root)
     for _,kind in ipairs({'go','rust'}) do
@@ -342,7 +350,9 @@ function M.open(kind, scope)
     end)
 end
 function M.setup()
-    local ok,err=pcall(M.initialize)
+    local report=vim.g.forge_setup_sdk_report
+    local options=report and report.scope and {scope=report.scope,kinds=report.sdk_kinds} or nil
+    local ok,err=pcall(M.initialize,nil,options)
     if not ok then
         M.error=tostring(err)
         vim.schedule(function() notify(M.error..'\nИсправь sdk.json или выбери Авто.',vim.log.levels.ERROR) end)

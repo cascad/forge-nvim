@@ -40,7 +40,8 @@ local ok,err=xpcall(function()
   local response=client:request_sync('textDocument/definition',{textDocument={uri=vim.uri_from_fname(path)},position={line=1,character=assert(line:find('Twice',1,true))-1}},15000,0)
   assert(response and not response.err and response.result and #response.result>0,vim.inspect(response))
   local target=response.result[1].uri or response.result[1].targetUri;assert(target:find('defs.go',1,true),target)
-  vim.fn.writefile({vim.json.encode({cmd=client.config.cmd,target=target})},base..'/consumer.json')
+  vim.fn.writefile({vim.json.encode({cmd_type=type(client.config.cmd),
+    selected=require('forge.tool_paths').current('gopls'),target=target})},base..'/consumer.json')
   client:stop(true);vim.wait(3000,function() return client:is_stopped() end,20)
  else error('Unknown case '..mode) end
  for name,value in pairs(before) do assert((vim.env[name] or vim.NIL)==value,'SDK env changed: '..name) end

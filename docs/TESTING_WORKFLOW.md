@@ -113,3 +113,29 @@ suite имеет deadline30 минут; timeout прекращает дальн�
 поддержанный FORGE_INSTALL_STAND_ROOT. На Windows host temp остаётся на диске
 репозитория. На bind mount сохраняются доказательства, без повторного копирования
 бинарных SDK/архивов. Это не уменьшает состав тестов.
+
+## Shared SDK preflight — IDE-BOOT-40
+
+После developer build frontend (команда выше) native сценарии доступны как
+`python -B tests/install-sdk-settings.test.py` (на Linux/macOS — python3).
+Нужны готовые Neovim/Node/Go/Rust и Python с venv; SDK тест не устанавливает.
+Frontend можно выбрать через `FORGE_INSTALL_UI_BINARY`; по умолчанию используется
+подготовленная `.tools/installer-ui/<platform>/fride-setup[.exe]`.
+Go root при необходимости задаётся `FORGE_SDK_GO_NEW`.
+
+10 сценариев проверяют реальные SDK/venv, user scope против project/PATH,
+относительный/домашний путь и «Авто», ошибки JSON/path/CLI, Core HTTP/cache,
+испорченный Core, preview, private setup и запрет SDK внутри заменяемого kit.
+Setup stages — fixtures: эти случаи не выдают себя за full Default acceptance.
+Ещё1 control проверяет закрытие настоящего HTTP-стенда при ошибке setUpClass:
+такая ошибка не должна оставлять suite висеть до внешнего deadline.
+Suite автоматически входит в standalone Python inventory `regression` и
+выбирается через `-Files` / `--file tests/install-sdk-settings.test.py`.
+Для повтора одного случая передайте его имя непосредственно Python suite.
+
+После всего блока запускается один affected batch; повторяются только
+failed/affected случаи. Большой checkpoint выполняется отдельно один раз,
+с фиксированными SDK/deps и отдельными результатами. Отсутствие prerequisites,
+FAIL и неполный прогон нельзя обозначать full PASS. Windows `regression`
+содержит POSIX-наборы через WSL и ConPTY; без готового WSL можно проверить
+план и native affected batch, это не полный Windows регресс. Mac — отдельно.

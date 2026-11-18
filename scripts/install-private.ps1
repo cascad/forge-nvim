@@ -3,9 +3,10 @@
 [CmdletBinding()]
 param([Parameter(Mandatory=$true)][string]$Source,
       [Parameter(Mandatory=$true)][string]$InstallPath,
-      [string]$RuntimePath = '', [string]$RuntimeArchiveUrl = '', [string]$RuntimeSHA256 = '', [string]$CommandDir = '', [string]$RuntimePlanPath = '')
+      [string]$RuntimePath = '', [string]$RuntimeArchiveUrl = '', [string]$RuntimeSHA256 = '', [string]$CommandDir = '', [string]$RuntimePlanPath = '', [switch]$PrepareOnly)
 $ErrorActionPreference='Stop'
-if ($env:FRIDE_INSTALL_UI -eq '1') {
+if ($PrepareOnly) { [Console]::OutputEncoding=New-Object Text.UTF8Encoding($false) }
+if (-not $PrepareOnly -and $env:FRIDE_INSTALL_UI -eq '1') {
     [Console]::OutputEncoding=New-Object Text.UTF8Encoding($false)
     [Console]::Out.WriteLine('FRIDE_EVENT'+[char]9+'{"stage":"runtime","status":"start"}')
 }
@@ -60,7 +61,8 @@ if ($RuntimePlanPath) {
         if ($row[1] -in @('node-runtime','go-runtime')) { throw 'Native SDK cannot be a private IDE artifact.' }
         if ($first -and $row[1] -ne 'core') { throw 'Runtime delivery plan requires Core first.' }
         $seen[$row[1]]=$true
-        Write-Output ('Runtime component: '+$row[1])
+        if ($PrepareOnly -and $row[1] -ne 'core') { throw 'PrepareOnly requires a Core-only plan.' }
+        if (-not $PrepareOnly) { Write-Output ('Runtime component: '+$row[1]) }
         $part=Receive-ForgeRuntimeArchive $row[2] $row[3]
         if ($first) { $RuntimePath=$part;$first=$false }
     }
@@ -74,6 +76,7 @@ $binary=[IO.Path]::GetFullPath((Join-Path $runtime $manifest.nvim))
 if (-not $binary.StartsWith($runtime.TrimEnd('\','/')+'\',[StringComparison]::OrdinalIgnoreCase)) { throw 'Runtime executable escapes its root.' }
 $expected=$manifest.files.PSObject.Properties[$manifest.nvim].Value
 if (-not $expected -or (Get-RuntimeHash $binary) -ne $expected) { throw 'Runtime Neovim SHA256 mismatch.' }
+if ($PrepareOnly) { Write-Output $runtime; return }
 # -u NONE и очищенное окружение: даже bootstrap не читает init.lua пользователя.
 $keys=@('FORGE_INSTALL_SOURCE','FORGE_INSTALL_TARGET','FORGE_INSTALL_RUNTIME','FORGE_INSTALL_COMMAND_DIR','FORGE_INSTALL_RUNTIME_PLAN','VIM','VIMRUNTIME','VIMINIT','EXINIT','LUA_INIT','LUA_PATH','LUA_CPATH',
     'NVIM_APPNAME','NVIM_LOG_FILE','TEMP','TMP','TMPDIR')

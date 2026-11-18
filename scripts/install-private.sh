@@ -3,8 +3,8 @@
 set -euo pipefail
 source_dir="$1"; install_dir="$2"; runtime="${3:-}"
 url="${4:-}"; expected="${5:-}"
-command_dir="${6:-}"; runtime_plan="${7:-}"
-if [ "${FRIDE_INSTALL_UI:-}" = 1 ]; then printf 'FRIDE_EVENT\t{"stage":"runtime","status":"start"}\n';fi
+command_dir="${6:-}"; runtime_plan="${7:-}"; mode="${8:-}"
+if [ "$mode" != prepare ] && [ "${FRIDE_INSTALL_UI:-}" = 1 ]; then printf 'FRIDE_EVENT\t{"stage":"runtime","status":"start"}\n';fi
 hash_file() {
   if command -v sha256sum >/dev/null 2>&1; then sha256sum "$1" | cut -d ' ' -f 1
   else shasum -a 256 "$1" | cut -d ' ' -f 1; fi
@@ -53,7 +53,8 @@ if [ -n "$runtime_plan" ]; then
     case "$runtime_seen" in *",$part_id,"*) printf 'Duplicate runtime component.\n' >&2;exit 1;; esac
     [ "$runtime_first" != 1 ] || [ "$part_id" = core ] || { printf 'Runtime delivery plan requires Core first.\n' >&2;exit 1; }
     runtime_seen="$runtime_seen$part_id,"
-    printf 'Runtime component: %s\n' "$part_id" >&2
+    [ "$mode" != prepare ] || [ "$part_id" = core ] || { printf 'Prepare requires a Core-only plan.\n' >&2;exit 1; }
+    if [ "$mode" != prepare ]; then printf 'Runtime component: %s\n' "$part_id" >&2;fi
     part_path="$(receive_runtime_archive "$part_url" "$part_sha")"
     if [ "$runtime_first" = 1 ]; then runtime="$part_path";runtime_first=0;fi
   done < "$runtime_plan"
@@ -67,6 +68,7 @@ runtime="$(cd "$runtime" && pwd -P)"
 # Нормализованный bundle contract: POSIX executable всегда bin/nvim.
 [ -f "$runtime/forge-runtime.json" ] && [ -x "$runtime/bin/nvim" ] || { printf 'Incomplete private runtime.\n' >&2; exit 1; }
 [ -f "$runtime/nvim.sha256" ] && [ "$(hash_file "$runtime/bin/nvim")" = "$(cat "$runtime/nvim.sha256")" ] || { printf 'Runtime Neovim SHA256 mismatch.\n' >&2; exit 1; }
+if [ "$mode" = prepare ]; then printf '%s\n' "$runtime";exit 0;fi
 unset VIM VIMRUNTIME VIMINIT EXINIT LUA_INIT LUA_PATH LUA_CPATH
 export FORGE_INSTALL_SOURCE="$source_dir" FORGE_INSTALL_TARGET="$install_dir" FORGE_INSTALL_RUNTIME="$runtime"
 export FORGE_INSTALL_COMMAND_DIR="$command_dir"

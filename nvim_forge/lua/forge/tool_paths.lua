@@ -116,6 +116,7 @@ function M.override(id, options)
         { path = vim.fs.joinpath(root, '.fride/tools.json'), base = root, scope = 'project' },
         { path = vim.fs.joinpath(user, 'tools.json'), base = user, scope = 'user' },
     }
+    if options.scope == 'user' then table.remove(sources, 1) end
     local value, base, source
     local function fail(reason)
         local message = 'Tool paths: ' .. id .. ' [' .. source .. ']: ' .. reason

@@ -38,6 +38,11 @@ regression — отдельная контрольная точка.
 §274 исправил Core acceptance в regression: обязательные inputs/argv видны в
 plan, при missing inputs запуск завершается до любых tests. Windows/Ubuntu4
 быстрых CLI checks PASS; editor/full E2E не повторялись.
+§275: frontend/private setup используют сохранённые user SDK settings через
+проверенный Core и общие Lua resolvers. По10 новых SDK cases Windows/Ubuntu
+прошли; обычный runtime сохраняет project choices. Большой Ubuntu checkpoint
+выявил отказы прежних сценариев; перед Default их надо закрыть. Итог и точные
+файлы — [verification](../openspec/changes/share-sdk-preflight-through-core/verification.md).
 Детали build-toolchain downloads и версий решаются для этих следующих шагов;
 они не блокируют работу с путями. Core publisher остаётся d120e3a;
 новый срез не означает завершения всего контракта путей или готовности Default.
@@ -78,16 +83,25 @@ GoToolchain и SDK existing/manual path в установщике сохране
 - [x] Включить существующие Python/Node selectors
   в общий вход `Space l S`, сохранив venv/project rules и ручные пути.
 - [ ] Прогнать IDE-BOOT-38 Python/Node на native macOS.
-- [ ] Затем согласовать setup/runtime/installer settings и оставшиеся consumers;
-  определить providers/update policy, завершить Default/Custom и native gates.
-  Tools setup Python/Node завершён (§273). Ближайший продуктовый пункт —
-  frontend/preflight: учесть сохранённый выбор SDK, не подменяя прежний
-  --sdk-path fallback и не дублируя runtime resolver.
-  Ожидается решение порядка: сначала verified Core для общих Lua resolvers,
-  либо прежняя ранняя проверка SDK с отдельным Rust reader. Первый вариант
-  предложен как основной; до ответа реализация этого изменения не начата.
-  Первый полный regression — после закрытия этого согласования, перед
-  подготовкой Default. Сейчас проверены пакет блока и планы полного прогона.
+- [x] Согласовать frontend/preflight/private setup с user SDK settings (§275).
+  Владелец2026-11-18 выбрал Core-first; shared Lua resolvers и прежний
+  --sdk-path fallback, без отдельного Rust settings reader. Missing SDK
+  оставляет прежний kit; остальные компоненты готовятся после readiness.
+- [ ] Закрыть отказы первого большого Ubuntu checkpoint перед Default.
+  Ближайший блок: missing SDK/adapter должен оставлять редактирование без
+  hit-enter и показывать сообщение в Logs (Node/Bash/Debug). Отдельно разобрать
+  Rust diagnostics, DAP launch args, Git object read при удалении worktree и
+  устаревшие ожидания стенда (gopls PATH, mixed SQL/sqls, RGB scroll).
+  Checkpoint2764.52s:120 registry files/122 запуска,14 FAIL; все24 native Python
+  suites запущены. Пять упавших installer suites исправлены и проверены только
+  affected повторами; Terminal suite требует prepared.json отсутствующего
+  native Terminal runtime. Полный PASS не заявлен. Два отказа process/trace
+  относятся к уже существующему WIP, сохранённому без изменений.
+  Причины ещё не подтверждены; это список наблюдавшихся отказов, не диагнозы.
+  Полный повтор — после цельного исправления блока; до него только affected
+  проверки. Windows full/WSL и native Mac остаются отдельными gates.
+- [ ] Затем завершить оставшиеся consumers, установку/обновление IDE tools
+  через штатные менеджеры и upstream packages, Default/Custom и native gates.
 
 Статус: базовые e2e настоящего nvim_forge работают на Windows и Ubuntu;
 фоновые установки инструментов редактора перенесены в явный setup.
