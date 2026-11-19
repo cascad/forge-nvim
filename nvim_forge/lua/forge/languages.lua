@@ -30,7 +30,7 @@ local function sdk(kind,directory)
         end
         if not path or path=='' then return {kind=kind,ready=false,source=source} end
         local location=backend.location(kind,(kind=='go' or kind=='rust') and vim.fs.dirname(path) or path)
-        local cached=M.versions[location.executable]
+        local cached=M.versions[key(location.executable,directory)]
         return {kind=kind,path=location.executable,source=source,ready=not (cached and cached.error),
             version=cached and cached.version,error=cached and cached.error}
     end)
@@ -92,7 +92,7 @@ function M.recheck(kind,directory,callback)
         local entry=M.status(kind,directory).sdks[1]
         if not entry or not entry.path then if callback then callback(M.status(kind,directory)) end;return end
         vim.system({vim.v.progpath,'--headless','-u','NONE','-i','NONE','-l',script,entry.path,report,'project'},
-            {cwd=directory,text=true,timeout=30000},function(result)
+            {cwd=directory,text=true,timeout=30000,env={MISE_AUTO_INSTALL='false',MISE_EXEC_AUTO_INSTALL='false',MISE_NOT_FOUND_AUTO_INSTALL='false'}},function(result)
                 vim.schedule(function()
                     local valid,value=pcall(read,report)
                     if result.code==0 and (result.signal or 0)==0 and valid and value.schema==1 then
@@ -108,10 +108,10 @@ function M.recheck(kind,directory,callback)
         if entry.path then
             local backend=(entry.kind=='go' or entry.kind=='rust') and require('forge.sdk') or require('forge.runtime_sdk')
             backend.probe(entry.kind,entry.path,function(found,why)
-                M.versions[entry.path]=found and {version=found.version} or {error=tostring(why)}
+                M.versions[key(entry.path,directory)]=found and {version=found.version} or {error=tostring(why)}
                 pending=pending-1
                 if pending==0 then complete() end
-            end)
+            end,directory)
         end
     end
 end

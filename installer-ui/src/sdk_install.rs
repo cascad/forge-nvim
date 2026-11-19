@@ -42,6 +42,14 @@ fn manager(name: &str, path: &std::ffi::OsStr) -> Option<PathBuf> {
 }
 pub(crate) fn recipe(options: &Options, id: &str, paths: &[PathBuf]) -> Result<Recipe> {
     let path = sdks::effective_path(paths)?;
+    let mise = if cfg!(target_os = "linux")
+        && crate::system::linux_family()? == "arch"
+        && matches!(id, "go" | "rust" | "python" | "node")
+    {
+        sdks::find("mise", &path)
+    } else {
+        None
+    };
     let rustup_home = std::env::var_os("CARGO_HOME")
         .map(PathBuf::from)
         .or_else(|| {
@@ -56,7 +64,9 @@ pub(crate) fn recipe(options: &Options, id: &str, paths: &[PathBuf]) -> Result<R
         })
         .is_file()
     });
-    if (cfg!(target_os = "linux") && id == "go") || (id == "rust" && (!cfg!(windows) || has_rustup))
+    if mise.is_some()
+        || (cfg!(target_os = "linux") && id == "go")
+        || (id == "rust" && (!cfg!(windows) || has_rustup))
     {
         let core = options
             .prepared_core
@@ -72,10 +82,25 @@ pub(crate) fn recipe(options: &Options, id: &str, paths: &[PathBuf]) -> Result<R
         if !script.is_file() {
             return Err(invalid(format!("SDK worker missing: {}", script.display())));
         }
+        let mut args = vec![
+            "--headless".into(),
+            "-u".into(),
+            "NONE".into(),
+            "-i".into(),
+            "NONE".into(),
+            "-l".into(),
+            script.into_os_string(),
+            id.into(),
+            result.clone().into_os_string(),
+        ];
+        if let Some(mise) = &mise {
+            args.push(mise.clone().into_os_string());
+        }
         return Ok(Recipe {
             program:core.join(if cfg!(windows){"bin/nvim.exe"}else{"bin/nvim"}),
-            args:vec!["--headless".into(),"-u".into(),"NONE".into(),"-i".into(),"NONE".into(),"-l".into(),script.into_os_string(),id.into(),result.clone().into_os_string()],
-            source:if id=="go" {"Официальный stable Go: go.dev metadata/archive/SHA256, обычный ~/sdk/go<version>; существующие SDK сохраняются. https://go.dev/dl/"}
+            args,
+            source:if mise.is_some() {"Mise: установить только выбранный язык с версиями/настройками текущего проекта; если язык не настроен — latest. mise install не меняет config/defaults; готовые SDK сохраняются. https://mise.jdx.dev/cli/install.html"}
+                else if id=="go" {"Официальный stable Go: go.dev metadata/archive/SHA256, обычный ~/sdk/go<version>; существующие SDK сохраняются. https://go.dev/dl/"}
                 else {"Официальный rustup: обычные Cargo/Rustup homes, rustfmt/rust-src; без изменения shell profiles/PATH. https://rustup.rs/"}.into(),
             preserve_nextest:None,sdk_result:Some(result),
         });
@@ -130,6 +155,19 @@ pub(crate) fn recipe(options: &Options, id: &str, paths: &[PathBuf]) -> Result<R
             "Homebrew: версия formula из настроенного репозитория; штатный prefix Homebrew",
         )
     } else {
+        match crate::system::linux_family()?.as_str() {
+            "arch" => {
+                let packages = match id {
+                    "git" => vec!["git"],
+                    "node" => vec!["nodejs", "npm"],
+                    "python" => vec!["python"],
+                    _ => return Err(invalid("Unknown Arch SDK package")),
+                }.into_iter().map(str::to_owned).collect::<Vec<_>>();
+                return pacman_recipe(paths, &packages);
+            }
+            "debian" => {}
+            family => return Err(invalid(format!("Нет native package provider для {family}; выбери существующий SDK/путь или установи его штатным manager ОС"))),
+        }
         let packages = match id {
             "go" => vec!["golang-go"],
             "rust" => vec!["rustc", "cargo"],
@@ -169,25 +207,38 @@ pub(crate) fn apt_recipe(paths: &[PathBuf], args: Vec<OsString>, source: &str) -
         apt.into_os_string(),
     ];
     argv.extend(args);
-    let mut recipe = Recipe {
+    let recipe = Recipe {
         program: PathBuf::from("/usr/bin/env"),
         args: argv,
         source: source.into(),
         preserve_nextest: None,
         sdk_result: None,
     };
-    if let Some(sudo) = sdks::find("sudo", &path) {
+    Ok(elevated(recipe, &path))
+}
+pub(crate) fn pacman_recipe(paths: &[PathBuf], packages: &[String]) -> Result<Recipe> {
+    let path = sdks::effective_path(paths)?;
+    let mut args = vec!["-S".into(), "--needed".into(), "--noconfirm".into()];
+    args.extend(packages.iter().map(OsString::from));
+    Ok(elevated(Recipe {
+        program: manager_path("pacman", &path)?, args,
+        source: "Pacman: текущие настроенные репозитории Arch/Omarchy; только недостающее. База и вся система не обновляются. Если база/keyring/mirror устарели, обнови ОС штатно и повтори fride; транзитивные зависимости решает pacman.".into(),
+        preserve_nextest: None, sdk_result: None,
+    }, &path))
+}
+fn elevated(mut recipe: Recipe, path: &std::ffi::OsStr) -> Recipe {
+    if let Some(sudo) = sdks::find("sudo", path) {
         recipe.args.insert(0, recipe.program.into_os_string());
         recipe.program = sudo;
     }
-    Ok(recipe)
+    recipe
 }
 fn manager_path(name: &str, path: &std::ffi::OsStr) -> Result<PathBuf> {
     manager(name, path).ok_or_else(|| {
         std::io::Error::new(
             std::io::ErrorKind::NotFound,
             format!(
-                "{name} не найден. Выберите существующий каталог программы; для Ubuntu необходим штатный APT."
+                "{name} не найден. Выберите существующий каталог программы или восстановите штатный manager ОС."
             ),
         )
     })

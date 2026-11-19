@@ -25,12 +25,13 @@ function M.location(kind,value)
     -- Do not fs_realpath Python: a venv's symlink belongs to that environment.
     return {kind=kind,path=path,executable=path}
 end
-function M.probe(kind,value,callback)
+function M.probe(kind,value,callback,directory)
     local ok,sdk=pcall(M.location,kind,value)
     if not ok then callback(nil,tostring(sdk));return end
     local command=kind=='python' and {sdk.executable,'-I','-B','-c',
         'import sys,json; print(json.dumps({"version":sys.version.split()[0],"prefix":sys.prefix}))'} or {sdk.executable,'--version'}
-    local started,why=pcall(vim.system,command,{cwd=vim.uv.os_tmpdir(),text=true,timeout=3000,env={NODE_OPTIONS=''}},function(result)
+    local started,why=pcall(vim.system,command,{cwd=require('forge.tool_paths').root(directory),text=true,timeout=3000,
+        env={NODE_OPTIONS='',MISE_AUTO_INSTALL='false',MISE_EXEC_AUTO_INSTALL='false',MISE_NOT_FOUND_AUTO_INSTALL='false'}},function(result)
         vim.schedule(function()
             if result.code~=0 or (result.signal or 0)~=0 then callback(nil,(result.stderr or '')..' (exit '..result.code..', signal '..tostring(result.signal or 0)..')');return end
             if kind=='python' then

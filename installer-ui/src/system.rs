@@ -19,7 +19,10 @@ struct Requirement {
     scopes: Vec<String>,
     command: Option<String>,
     library: Option<String>,
+    #[serde(default)]
     apt: Vec<String>,
+    #[serde(default)]
+    pacman: Vec<String>,
 }
 #[derive(Serialize)]
 pub(crate) struct Missing {
@@ -90,6 +93,11 @@ fn family(text: &str) -> String {
         id
     }
 }
+pub(crate) fn linux_family() -> Result<String> {
+    Ok(family(
+        &String::from_utf8(read(Path::new("/etc/os-release"), 65536)?).map_err(invalid)?,
+    ))
+}
 fn package_name(name: &str) -> bool {
     !name.is_empty()
         && name.len() <= 128
@@ -120,8 +128,7 @@ pub(crate) fn inspect(options: &Options, plan: &Plan) -> Result<Report> {
     if !cfg!(target_os = "linux") {
         return Ok(report);
     }
-    report.family =
-        family(&String::from_utf8(read(Path::new("/etc/os-release"), 65536)?).map_err(invalid)?);
+    report.family = linux_family()?;
     let catalog: Catalog = serde_json::from_slice(&read(
         &options
             .configuration()
@@ -164,8 +171,12 @@ pub(crate) fn inspect(options: &Options, plan: &Plan) -> Result<Report> {
     for entry in selected {
         if entry.id.is_empty()
             || entry.command.is_some() == entry.library.is_some()
-            || entry.apt.is_empty()
-            || entry.apt.iter().any(|name| !package_name(name))
+            || entry.apt.is_empty() && entry.pacman.is_empty()
+            || entry
+                .apt
+                .iter()
+                .chain(&entry.pacman)
+                .any(|name| !package_name(name))
         {
             return Err(invalid("Invalid system requirement catalog entry"));
         }
@@ -177,12 +188,22 @@ pub(crate) fn inspect(options: &Options, plan: &Plan) -> Result<Report> {
             (name, ready)
         };
         if !ready {
+            if report.family == "arch" && entry.pacman.is_empty()
+                || report.family == "debian" && entry.apt.is_empty()
+            {
+                return Err(invalid(format!(
+                    "Нет package mapping {} для {}; обнови каталог fride",
+                    report.family, entry.id
+                )));
+            }
             report.missing.push(Missing {
                 id: entry.id,
                 requirement: name,
             });
             if report.family == "debian" {
                 packages.extend(entry.apt);
+            } else if report.family == "arch" {
+                packages.extend(entry.pacman);
             }
         }
     }
@@ -212,31 +233,43 @@ pub(crate) fn ensure(options: &Options, plan: &Plan) -> Result<bool> {
         return Ok(true);
     }
     let file = save(options, &report)?;
-    if report.family != "debian" {
-        return Err(invalid(format!("Системные зависимости не готовы: {}. Native APT provider только Debian/Ubuntu; для {} используй штатный manager. Omarchy/pacman: IDE-143. Отчёт: {}",report.summary(),report.family,file.display())));
+    if report.packages.is_empty() {
+        return Err(invalid(format!("Системные зависимости не готовы: {}. Для {} нет package mapping; используй штатный manager или обнови каталог fride. Native providers: Debian/Ubuntu APT, Arch/Omarchy pacman. Отчёт: {}",report.summary(),report.family,file.display())));
     }
-    let update = sdk_install::apt_recipe(
-        &plan.sdk_paths,
-        vec!["update".into()],
-        "Обновить индекс штатных репозиториев APT; конфигурация repositories сохраняется",
-    )?;
-    let mut args = vec![
-        "install".into(),
-        "--yes".into(),
-        "--no-upgrade".into(),
-        "--no-remove".into(),
-    ];
-    args.extend(report.packages.iter().map(Into::into));
-    let install = sdk_install::apt_recipe(
-        &plan.sdk_paths,
-        args,
-        "Системные зависимости выбранных компонентов; транзитивные зависимости решает штатный APT",
-    )?;
+    let recipes = match report.family.as_str() {
+        "debian" => {
+            let mut args = vec![
+                "install".into(),
+                "--yes".into(),
+                "--no-upgrade".into(),
+                "--no-remove".into(),
+            ];
+            args.extend(report.packages.iter().map(Into::into));
+            vec![sdk_install::apt_recipe(&plan.sdk_paths, vec!["update".into()],
+                "Обновить индекс штатных репозиториев APT; конфигурация repositories сохраняется")?,
+                sdk_install::apt_recipe(&plan.sdk_paths, args,
+                "Системные зависимости выбранных компонентов; транзитивные зависимости решает штатный APT")?]
+        }
+        "arch" => vec![sdk_install::pacman_recipe(
+            &plan.sdk_paths,
+            &report.packages,
+        )?],
+        _ => {
+            return Err(invalid(format!(
+                "Нет native package provider для {}; отчёт: {}",
+                report.family,
+                file.display()
+            )))
+        }
+    };
     eprintln!(
-        "Системные зависимости ОС\n{}\n{}\n{}\nОтчёт: {}",
+        "Системные зависимости ОС\n{}\n{}\nОтчёт: {}",
         report.summary(),
-        update.display(),
-        install.display(),
+        recipes
+            .iter()
+            .map(|recipe| recipe.display())
+            .collect::<Vec<_>>()
+            .join("\n"),
         file.display()
     );
     let policy = if options.system_deps.is_empty() {
@@ -260,7 +293,7 @@ pub(crate) fn ensure(options: &Options, plan: &Plan) -> Result<bool> {
             Err(error) => return Err(error),
         }
     }
-    for recipe in [&update, &install] {
+    for recipe in &recipes {
         if !sdk_install::run(options, &plan.sdk_paths, recipe)? {
             return Err(invalid(
                 "Установка системных зависимостей не завершилась; смотри native package log",

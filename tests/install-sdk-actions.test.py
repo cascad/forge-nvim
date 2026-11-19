@@ -15,6 +15,8 @@ import unittest
 ROOT=Path(__file__).resolve().parents[1]
 spec=importlib.util.spec_from_file_location('runtime',ROOT/'tests/install-runtime.test.py')
 runtime=importlib.util.module_from_spec(spec);spec.loader.exec_module(runtime);ui=runtime.ui;stand=ui.stand
+ARCH=sys.platform.startswith('linux') and ('arch' in platform.freedesktop_os_release().get('ID_LIKE','').split()
+    or platform.freedesktop_os_release().get('ID') in ('arch','omarchy'))
 
 class Actions(runtime.Runtime):
     @classmethod
@@ -34,7 +36,9 @@ class Actions(runtime.Runtime):
         if not stand.WINDOWS:
             for name in ['bash','sh','dirname','readlink','mktemp','mkdir','uname','cut','sha256sum','shasum','tar','gzip','curl','wget','mv','rm','cat']:
                 if source:=shutil.which(name):(toolkit/name).symlink_to(source)
-        if manager:shutil.copy2(self.fixture,toolkit/('winget.exe' if stand.WINDOWS else 'brew' if sys.platform=='darwin' else 'apt-get'))
+        if manager:
+            shutil.copy2(self.fixture,toolkit/('winget.exe' if stand.WINDOWS else 'brew' if sys.platform=='darwin' else 'pacman' if ARCH else 'apt-get'))
+            if ARCH:shutil.copy2(self.fixture,toolkit/'apt-get') # Foreign manager must not change family routing.
         env.update(PATH=str(toolkit),SDK_PACKAGE_TRACE=str(base/'package.tsv'),SDK_PACKAGE_BIN=str(toolkit),SDK_PACKAGE_MODE='success')
         return base,env,target
 
@@ -140,7 +144,8 @@ class Actions(runtime.Runtime):
         base,env,target=self.prepared('sdk-install');self.interact(base,env,target,'sdk-install')
         calls=(base/'package.tsv').read_text().splitlines();self.assertEqual(len(calls),1)
         self.assertIn('OpenJS.NodeJS.LTS' if stand.WINDOWS else 'node' if sys.platform=='darwin' else 'nodejs',calls[0])
-        if sys.platform!='darwin':self.assertIn('--no-upgrade',calls[0])
+        if ARCH:self.assertIn('--needed',calls[0]);self.assertNotIn('-Sy',calls[0])
+        elif sys.platform!='darwin':self.assertIn('--no-upgrade',calls[0])
         self.assertTrue(list((base/'logs').glob('sdk-install-*.log')));self.assertTrue((target/'bin/fride').exists())
 
     def test_actions_07_failed_install_retry(self):

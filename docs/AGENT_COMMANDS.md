@@ -11216,3 +11216,93 @@ export.py preserves268 regular native records/298231 bytes under cold-completion
 without SDK/runtime/plugin trees. Host batch/editor snapshots already on F.
 Cold target removed after exact ID/owner/resource checks; publisher remains owned
 and available for next IDE-143 instead of starting another identical test service.
+
+
+## 202. Arch Core checkpoint и исправление проверки истории — 2026-11-19
+
+IDE-143 в работе; это промежуточный CLI результат, не завершённая Omarchy.
+Working directory F:/repo/forge-nvim, PowerShell -NoProfile, host tmp/logs на F.
+
+Чтение: git status --short; rg --files/rg -n по roadmap, config/lazy.lua,
+forge/log_store.lua и Core observer; Get-Content выбранных коротких fragments.
+Общий журнал сохраняет несколько сессий: использована native session, история
+не удалялась. Две небольшие проверки actual kit при HOME=/root и owned HOME
+показали одинаковый XDG data/lazy root и installed=true; это не profile defect.
+
+Повтор только affected postchecks:
+python -B tests/diagnostics/check-arch-install.py --artifacts .tests/cold-install/artifacts/omarchy --publisher-container <exact owned cold-publisher> --resume .tests/omarchy/cold-core --keep
+Original core FAIL сохранён как actual-core-workflow.first-failure.log.
+После правки observer: Core5 PASS, Custom missing path PASS, preservation/repeat
+PASS. Затем native-report --versions --quick: report PASS, 19/20 quick files
+PASS, trace FAIL: manual reference содержала O1-O8 внутри file path. Исправлена
+только ссылка; docker cp exact delta + trace-only на actual private Neovim:
+trace2 PASS. Исходный source archive SHA прежний, auxiliary inputs отдельно.
+
+Native regression history control: actual fride процесс записывает ERROR
+FRIDE_CORE_HISTORY_CONTROL в свой журнал; следующий editor process выполняет
+workflow и видит старый ERROR только в history. Команда внутри exact own target:
+FORGE_CORE_TEST_ROOT=<owned work> python3 -B <source>/tests/install-core-acceptance.test.py --kit <installed> --profile <owned profile> --profile-layout stand --case workflow
+PASS rounds1/2. Product config, caches и SDK не подменялись.
+
+Syntax: Python ast.parse без pyc, native bash -n scripts/test-omarchy.sh,
+native Neovim loadfile семи затронутых Lua файлов — PASS. Полный E2E packet
+не повторялся: SDK provider decision ещё pending. Test stand package preparation
+явная; product pacman command не делает -Sy/-Syu. Docker Desktop/WSL не трогались.
+
+Checkpoint/export: core-checkpoint.json содержит source/frontend и auxiliary SHA, native history current0/history1. Экспорт72 regular records/87648 bytes без SDK/plugin payload. Exact owned cold-default container остановлен и --rm удалён с bounded inspect; cold-publisher и Arch fixture остаются для следующего шага. git diff --check и local openspec strict PASS. Никаких push или изменений Docker Desktop/WSL.
+
+
+## 203. Mise provider и итоговый Arch checkpoint — 2026-11-19
+
+Продолжение support-omarchy-installation, repo F:/repo/forge-nvim, HEAD33dd22d.
+Read-only: git status/diff, rg --files/rg -n и выбранные Get-Content fragments;
+local openspec list root/status/instructions apply (ready). Public Mise CLI docs
+install/where/Rust и native help/settings проверены. Native probe outputs —
+.tests/omarchy/arch-1795099801339130200, без host SDK/config changes.
+
+Сборка после цельной реализации:
+rustfmt --edition 2021 installer-ui/src/sdk_install.rs installer-ui/src/sdks.rs installer-ui/src/system.rs
+python -B scripts/build-installer-ui.py --work .tests/installer-ui --output .tests/omarchy/frontend/windows-x64
+Native Linux build через exact own Ubuntu publisher и vendor inputs:
+bash /workspace/.tests/build-omarchy-ui.sh
+Current frontend hashes c7d8b10e Windows /9664c9b1 Linux. Первый compile error
+Result<String> comparison исправлен; source-matched retry PASS. Host TEMP/TMP/
+TMPDIR/NVIM_LOG_FILE на F, compiler jobs2. Old .tools frontend/SDK не заменялись.
+
+Явная подготовка disposable Arch TEST fixture: pacman -S rust, native Python/
+Mise ранее; prepared official Node SDK и Core Neovim — test inputs, не cold
+installation target. Source mount RO → writable native tracked-file checkout.
+После всей реализации один packet/OS: .tests/omarchy/final-windows.ps1 через
+pwsh; own Ubuntu .tests/ubuntu/omarchy-final.sh; own Arch arch-final.sh.
+Files: install-system-dependencies.test.py, install-sdk-actions.test.py,
+install-arch-packages.test.py; Windows/Ubuntu editor language-environments +
+sdk-proxies; unit/trace20. Python native results/explicit OS skips приведены
+в verification.md. Первый Windows5 runner прервался на stderr wrapper, затем
+pwsh packet прошёл; это не product failure.
+
+После packet только affected06 SDK assertion; Arch01/07/10 test corrections;
+затем только07 shim/result report. Actual Mise Node24.11.0 download/reuse,
+Python link/reshim/readonly project state PASS. Process-report filename отделён
+от diagnostic output; Python prefix aliases сравниваются по real directory.
+Source RED: .tests/omarchy/sdk-context-source-red.py временно подменил три
+SDK modules в OWN fixture source на HEAD33dd22d (не kit), получил ожидаемый
+Missing SDK should be reported, восстановил текущие bytes. Native target PASS
+сохранён отдельно; повтор unrelated suites не выполнялся.
+
+Чистый final entrypoint без publisher ID:
+python -B tests/diagnostics/check-arch-install.py --artifacts .tests/cold-install/artifacts/omarchy --report-dir .tests/omarchy/final-cold
+PASS336.6с: separate own publisher auto-created; pinned Arch target2CPU/3GiB;
+explicit disposable transport pacman -Syu (не product command), Default без
+SDK, Core5, actual ordinary Python venv test preparation, Custom/repeat и
+before/after receipts/pins/settings/SDK/ordinary Neovim/Mise, native report/
+quick20. Product pacman не делает sync/upgrade. Source5daa7574, frontend9664c9b1.
+Target/publisher stopped/--rm. Export61 regular records/135822 bytes. Старые
+own fixture/publisher export863 files/2262882 bytes и477/1567656; removed after
+exact ID/owner checks. Docker Desktop/WSL не менялись; чужие containers не трогались.
+
+Final metadata: openspec strict; native Windows Neovim loadfile10 Lua files;
+change trace9 PASS/catalog JSON; Python AST; git diff --check; HEAD journal
+prefixes; unchanged lazy-lock/Cargo.lock/SDK policies/backports/.tools SHA;
+current Windows/Linux frontend manifests match Rust source. Документация после
+acceptance — отдельные doc-only updates. Общий native Omarchy desktop и Mac
+не запускались. Local commit only, no push.

@@ -252,7 +252,10 @@ fn probe(
         .env("PATH", search_path)
         .arg(if name == "go" { "version" } else { "--version" })
         .env("GOTOOLCHAIN", "local")
-        .env("RUSTUP_AUTO_INSTALL", "0");
+        .env("RUSTUP_AUTO_INSTALL", "0")
+        .env("MISE_AUTO_INSTALL", "false")
+        .env("MISE_EXEC_AUTO_INSTALL", "false")
+        .env("MISE_NOT_FOUND_AUTO_INSTALL", "false");
     tool.status = "unavailable".into();
     tool.log = Some(log_path.clone());
     let (code, output) = match version_output(command, &log_path) {

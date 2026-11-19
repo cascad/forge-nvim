@@ -1,5 +1,7 @@
 -- spec: IDE-BOOT-40. Verified Core, no user init/plugins and no SDK CLI calls.
 local source,runtime,request,output,config,scope=unpack(arg)
+-- Reading SDK configuration must not install versions through environment managers.
+vim.env.MISE_AUTO_INSTALL='false';vim.env.MISE_EXEC_AUTO_INSTALL='false';vim.env.MISE_NOT_FOUND_AUTO_INSTALL='false'
 scope=scope or 'user'
 local function read(path)
     local f=assert(io.open(path,'rb'));local bytes=f:read('*a');f:close();return bytes

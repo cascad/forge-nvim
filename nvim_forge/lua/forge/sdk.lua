@@ -176,14 +176,16 @@ function M.save(kind, value, scope, root)
     log(kind..' | saved '..value..' | '..scope..': '..file)
 end
 -- No CLI until explicit menu/refresh. Probe environment cannot install a toolchain.
-function M.probe(kind, value, callback)
+function M.probe(kind, value, callback, directory)
     local ok, location=pcall(M.location,kind,value)
     if not ok then callback(nil,tostring(location));return end
     local env=inherited_env()
     env.GOTOOLCHAIN='local';env.GOROOT=nil;env.GOENV='off';env.GOWORK='off';env.GOFLAGS=''
-    env.GOTELEMETRY='off';env.RUSTUP_AUTO_INSTALL='0'
+    env.GOTELEMETRY='off';env.RUSTUP_AUTO_INSTALL='0';env.GO111MODULE='off'
+    env.MISE_AUTO_INSTALL='false';env.MISE_EXEC_AUTO_INSTALL='false';env.MISE_NOT_FOUND_AUTO_INSTALL='false'
+    local cwd=M.root(directory)
     local function run(argv, done)
-        local started,why=pcall(vim.system,argv,{env=env,clear_env=true,cwd=uv.os_tmpdir(),text=true,timeout=3000},function(result)
+        local started,why=pcall(vim.system,argv,{env=env,clear_env=true,cwd=cwd,text=true,timeout=3000},function(result)
             vim.schedule(function()
                 if result.code~=0 or (result.signal or 0)~=0 then done(nil,(result.stderr or '')..' (exit '..result.code..', signal '..tostring(result.signal or 0)..')')
                 else done(result.stdout or '') end

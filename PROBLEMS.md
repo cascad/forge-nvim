@@ -10,7 +10,17 @@
 
 Маршрут и приоритеты: [рабочий план nvim_forge](docs/IDE_ROADMAP.md).
 Для новых пунктов используем следующий свободный ID `IDE-xxx`; исходный
-симптом хранится здесь, этап и состояние — в плане. Следующий ID: `IDE-145`.
+симптом хранится здесь, этап и состояние — в плане. Следующий ID: `IDE-146`.
+
+## IDE-145 — общий SDK shim терял контекст проекта
+
+Native Mise control 2026-11-19: version probe запускался из temp, а cache версии/
+ошибки был общим по executable. Один Python shim для двух проектов не показывал
+отсутствующий SDK второго проекта. Legacy source33dd22d воспроизводит отказ;
+current native Mise E2E проходит: linked existing venv, missing project version,
+независимый cache и отсутствие загрузки. Проверки теперь получают project cwd,
+cache включает root, child-only Mise flags отключают автоматическую установку.
+Runtime terminal environment сохраняется. Подробности — FIXLOG §295.
 
 ## IDE-144 — Rustup ошибочно отвергался после проверки версии
 

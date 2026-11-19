@@ -1,6 +1,25 @@
 // Native single-process fixture for version/error/timeout; never installs SDKs.
 fn main() {
     let name = std::env::current_exe().unwrap().file_stem().unwrap().to_string_lossy().to_string();
+    if name=="mise" {
+        use std::io::Write;
+        let args:Vec<_>=std::env::args().skip(1).collect();
+        let root=std::path::PathBuf::from(std::env::var("SDK_MISE_ROOT").expect("controlled Mise fixture only"));
+        let mut trace=std::fs::OpenOptions::new().create(true).append(true).open(std::env::var("SDK_MISE_TRACE").unwrap()).unwrap();
+        writeln!(trace,"{}",args.join("\t")).unwrap();
+        match args[0].as_str() {
+            "ls"=>println!("{}",if std::env::var("SDK_MISE_CONFIGURED").as_deref()==Ok("1") {"[{\"requested_version\":\"24\"}]"} else {"[]"}),
+            "where"=>{if !root.join("ready").exists() {std::process::exit(2);} println!("{}",root.display());},
+            "install"=>{
+                match std::env::var("SDK_MISE_MODE").as_deref() {Ok("fail")=>{eprintln!("Mise fixture install failed");std::process::exit(7);},Ok("noop")=>return,_=>{}}
+                std::fs::create_dir_all(root.join("bin")).unwrap();
+                for tool in ["go","rustc","cargo","node","npm","python3"] {std::fs::copy(std::env::current_exe().unwrap(),root.join("bin").join(tool)).unwrap();}
+                std::fs::write(root.join("ready"),"controlled SDK fixture").unwrap();
+            },
+            _=>panic!("Unexpected Mise command"),
+        }
+        return;
+    }
     if let Ok(folder)=std::env::var("SYSTEM_FIXTURE_BIN") {
         use std::io::Write;
         let args:Vec<_>=std::env::args().skip(1).collect();
@@ -11,21 +30,21 @@ fn main() {
             if state.exists() {println!("libfride-fixture-gui.so.1 (libc6) => /fixture/libgui.so.1");}
             return;
         }
-        if name=="sudo" || name=="apt-get" {
+        if name=="sudo" || name=="apt-get" || name=="pacman" {
             let mut trace=std::fs::OpenOptions::new().create(true).append(true).open(std::env::var("SYSTEM_FIXTURE_TRACE").unwrap()).unwrap();
             writeln!(trace,"{}\t{}\t{}",name,std::env::var("DEBIAN_FRONTEND").unwrap_or_default(),args.join("\t")).unwrap();
             if name=="sudo" {
                 let status=std::process::Command::new(&args[0]).args(&args[1..]).status().unwrap();std::process::exit(status.code().unwrap_or(1));
             }
-            if args.iter().any(|arg|arg=="install") {
+            if args.iter().any(|arg|arg=="install" || arg=="-S") {
                 match std::env::var("SYSTEM_FIXTURE_MODE").as_deref() {
                     Ok("fail")=>std::process::exit(7),Ok("noop")=>return,_=>{}
                 }
                 let bin=std::path::PathBuf::from(folder);
-                for (package,command) in [("unzip","fride-probe-unzip"),("build-essential","fride-probe-cc")] {
+                for (package,command) in [("unzip","fride-probe-unzip"),("build-essential","fride-probe-cc"),("base-devel","fride-probe-cc")] {
                     if args.iter().any(|arg|arg==package) {std::fs::copy(std::env::current_exe().unwrap(),bin.join(command)).unwrap();}
                 }
-                if args.iter().any(|arg|arg=="libegl1") {std::fs::write(state,"ready").unwrap();}
+                if args.iter().any(|arg|arg=="libegl1" || arg=="libglvnd") {std::fs::write(state,"ready").unwrap();}
             }
             return;
         }
@@ -45,7 +64,7 @@ fn main() {
         std::fs::copy(std::env::current_exe().unwrap(), root.join(if cfg!(windows) {"winget.exe"} else {"brew"})).unwrap();
         return;
     }
-    if ["winget","apt-get","sudo","brew"].contains(&name.as_str()) {
+    if ["winget","apt-get","sudo","brew","pacman"].contains(&name.as_str()) {
         use std::io::Write;
         let trace=std::env::var("SDK_PACKAGE_TRACE").unwrap();
         let previous=std::fs::read_to_string(&trace).unwrap_or_default().lines().count();
@@ -59,6 +78,10 @@ fn main() {
         std::fs::create_dir_all(&root).unwrap();
         if std::env::args().any(|arg| arg == "Git.Git" || arg == "git") {
             std::fs::copy(std::env::current_exe().unwrap(),root.join(if cfg!(windows) {"git.exe"} else {"git"})).unwrap();
+            return;
+        }
+        if std::env::args().any(|arg|arg=="python" || arg=="python3") {
+            std::fs::copy(std::env::current_exe().unwrap(),root.join(if cfg!(windows) {"python3.exe"} else {"python3"})).unwrap();
             return;
         }
         std::fs::copy(std::env::current_exe().unwrap(),root.join(if cfg!(windows) {"node.exe"} else {"node"})).unwrap();
@@ -98,6 +121,7 @@ fn main() {
         "python" => "Python 2.7.18",
         "python3" => "Python 3.14.0",
         "node" => "v24.11.0",
+        "npm" => "10.9.0",
         "git" => "git version 2.51.0 fixture",
         _ => "unknown fixture",
     });

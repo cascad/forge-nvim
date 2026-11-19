@@ -92,10 +92,20 @@ local ok, err = xpcall(function()
     picker(' fg', 'FRIDE_CORE_NEEDLE', 'notes.txt')
     info.search = lua('return {path=vim.api.nvim_buf_get_name(0),line=vim.api.nvim_win_get_cursor(0)[1]}')
     assert(info.search.line == 2, 'Grep did not open the matching line')
-    info.errors = lua([[local errors={}
-        for _,e in ipairs(require('forge.log_store').entries()) do
-            if e.level>=vim.log.levels.ERROR then errors[#errors+1]=e.message end
-        end return errors]])
+    info.logs = lua([[local store=require('forge.log_store')
+        local current,history={},{}
+        for _,e in ipairs(store.entries()) do
+            if e.level>=vim.log.levels.ERROR then
+                local target=e.session==store.session and current or history
+                target[#target+1]={message=e.message,session=e.session}
+            end
+        end return {session=store.session,current=current,history=history}]])
+    info.errors = info.logs.current
+    if round == 1 then
+        assert(vim.iter(info.logs.history):any(function(e)
+            return e.message == 'FRIDE_CORE_HISTORY_CONTROL'
+        end), 'Earlier session error disappeared from shared log history')
+    end
     assert(#info.errors == 0, vim.inspect(info.errors))
     assert(#rpc.api_errors == 0, vim.inspect(rpc.api_errors))
 end, debug.traceback)

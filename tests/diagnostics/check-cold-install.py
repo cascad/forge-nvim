@@ -1,16 +1,22 @@
-"""IDE-138: real cold Ubuntu Default. Requires explicitly prepared native IDE artifacts."""
+"""IDE-138/IDE-BOOT-53: real Ubuntu/Arch Default with explicitly prepared native IDE artifacts."""
 import argparse,hashlib,io,json,os
 from pathlib import Path
 import shutil,subprocess,tarfile,time
 
 ROOT=Path(__file__).resolve().parents[2]
 IMAGE='ubuntu:24.04@sha256:fe81560990fae86dc4743202b2cb4d3df98d0bcf949173cecef15ce1127ef852'
+ARCH_IMAGE='archlinux:base@sha256:d4594bb2300cba11f41c2f27923eb56f63d9988909c402f9c95517d1e362c899'
 parser=argparse.ArgumentParser(description=__doc__)
 parser.add_argument('--artifacts',type=Path,required=True,help='core.tar.gz, terminal.tar.gz, native fride-setup + frontend-manifest.json')
 parser.add_argument('--publisher-container',required=True,help='Owned fride.owner=cold-publisher container with artifacts mounted at /artifacts')
+parser.add_argument('--os',choices=('ubuntu','arch'),default='ubuntu',help='CLI OS baseline; Arch is not a native Omarchy desktop')
+parser.add_argument('--publisher-prefix',default='',help='Relative artifact subdirectory served by the owned publisher')
+parser.add_argument('--report-dir',type=Path,help='New owned directory under .tests; default timestamped cold-install directory')
 parser.add_argument('--nvim',type=Path,default=ROOT/'.tools/neovim/windows-x64/bin/nvim.exe' if os.name=='nt' else shutil.which('nvim'))
 parser.add_argument('--keep',action='store_true',help='Keep only this owned target for diagnosis; never changes Docker Desktop/WSL')
 args=parser.parse_args()
+if args.os=='arch':IMAGE=ARCH_IMAGE
+assert not args.publisher_prefix.startswith('/') and all(part not in ('.','..') for part in args.publisher_prefix.split('/')),'Relative publisher prefix required'
 artifacts=args.artifacts.resolve();nvim=args.nvim.resolve()
 assert artifacts.is_relative_to(ROOT/'.tests') and nvim.is_file(),'Owned artifacts and prepared native test Neovim required'
 for name in ('core.tar.gz','terminal.tar.gz','fride-setup','frontend-manifest.json'):assert (artifacts/name).is_file(),name
@@ -18,7 +24,10 @@ digest=lambda raw:hashlib.sha256(raw).hexdigest()
 manifest=json.loads((artifacts/'frontend-manifest.json').read_text())
 assert manifest['platform']=='linux-x64' and digest((artifacts/'fride-setup').read_bytes())==manifest['sha256']
 for name,expected in manifest['sources'].items():assert digest((ROOT/name).read_bytes().replace(b'\r\n',b'\n'))==expected,name
-base=ROOT/'.tests/cold-install'/str(time.time_ns());base.mkdir(parents=True)
+stamp=str(time.time_ns())
+base=args.report_dir.resolve() if args.report_dir else ROOT/'.tests/cold-install'/stamp
+assert base.is_relative_to(ROOT/'.tests') and base!=ROOT/'.tests','Owned reports required'
+base.mkdir(parents=True)
 env=os.environ.copy();tmp=base/'tmp';tmp.mkdir()
 env.update(TEMP=str(tmp),TMP=str(tmp),TMPDIR=str(tmp),NVIM_LOG_FILE=str(tmp/'nvim.log'),PYTHONUTF8='1',PYTHONDONTWRITEBYTECODE='1')
 
@@ -37,7 +46,21 @@ def inspect(identity,owner):
 
 publisher=inspect(args.publisher_container,'cold-publisher');publisher_id=publisher['Id']
 url='http://'+publisher['NetworkSettings']['IPAddress']+':8765'
-run(['docker','exec','-d',publisher_id,'python3','-B','-m','http.server','8765','--directory','/artifacts'],'publisher-http')
+prefix=args.publisher_prefix.strip('/')
+if prefix:url+='/'+prefix
+# Reuse an already running owned publisher, verifying the served manifest.
+probe_code='''import urllib.request,urllib.error,hashlib,sys
+try:data=urllib.request.urlopen(sys.argv[1],timeout=3).read()
+except urllib.error.HTTPError:sys.exit(3)
+except urllib.error.URLError:sys.exit(2)
+sys.exit(0 if hashlib.sha256(data).hexdigest()==sys.argv[2] else 3)
+'''
+probe=subprocess.run(['docker','exec',publisher_id,'python3','-B','-c',probe_code,
+    url+'/frontend-manifest.json',digest((artifacts/'frontend-manifest.json').read_bytes())],capture_output=True)
+assert probe.returncode in (0,2),'Existing publisher does not serve the provided artifact manifest/prefix'
+if probe.returncode==2:
+    run(['docker','exec','-d',publisher_id,'python3','-B','-m','http.server','8765','--directory','/artifacts'],'publisher-http')
+else:(base/'publisher-reused.json').write_text(json.dumps({'id':publisher_id,'url':url,'manifest_verified':True}))
 files=subprocess.check_output(['git','ls-files','-z'],cwd=ROOT).decode().strip('\0').split('\0')
 replacements={'installer-ui/artifacts.tsv':f'linux-x64\t{url}/fride-setup\t{digest((artifacts/"fride-setup").read_bytes())}\n'.encode(),
  'scripts/runtime/artifacts.tsv':''.join(f'linux-x64\t{name}\t{url}/{name}.tar.gz\t{digest((artifacts/(name+".tar.gz")).read_bytes())}\n' for name in ('core','terminal')).encode()}
@@ -50,8 +73,8 @@ with tarfile.open(artifacts/'source.tar.gz','w:gz') as archive:
 (artifacts/'entry.sh').write_bytes((ROOT/'install.sh').read_bytes())
 (base/'inputs.json').write_text(json.dumps({'head':subprocess.check_output(['git','rev-parse','HEAD']).decode().strip(),
  'image':IMAGE,'publisher':publisher_id,'url':url,'artifacts':{name:digest((artifacts/name).read_bytes()) for name in ('core.tar.gz','terminal.tar.gz','fride-setup','source.tar.gz','entry.sh')}},indent=2))
-name='fride-cold-'+base.name
-work='/tmp/fride-cold-'+base.name
+name='fride-cold-'+stamp
+work='/tmp/fride-cold-'+stamp
 kit=work+'/installed';profile=work+'/profile';source=work+'/source'
 command=['docker','run','-d','--rm','--init','--name',name,'--label','fride.owner=cold-default','--cpus','2','--memory','3g',
  '--mount',f'type=bind,source={base},target=/stand','--env','HOME=/root','--env','TERM=xterm-256color',
@@ -60,15 +83,21 @@ command=['docker','run','-d','--rm','--init','--name',name,'--label','fride.owne
  '--env','XDG_STATE_HOME='+profile+'/state','--env','XDG_CACHE_HOME='+profile+'/cache',
  '--env','GOMAXPROCS=2','--env','CARGO_BUILD_JOBS=2','--env','RAYON_NUM_THREADS=2','--env','GIT_TERMINAL_PROMPT=0',IMAGE,'sleep','infinity']
 container=subprocess.check_output(command,env=env,text=True).strip()
-(base/'container.json').write_text(json.dumps({'id':container,'name':name,'owner':'cold-default','workdir':work,'kit':kit,'profile':profile,'source':source}))
+(base/'container.json').write_text(json.dumps({'id':container,'name':name,'owner':'cold-default','os':args.os,'workdir':work,'kit':kit,'profile':profile,'source':source}))
 print('Cold stand:',base,'container:',container,flush=True)
 code=1
 try:
     inspect(container,'cold-default')
     run(['docker','exec',container,'mkdir','-p',work+'/tmp'],'native-tmp')
-    run(['docker','exec',container,'bash','-c','apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends ca-certificates curl'],'transport',600)
-    # Same signed Ubuntu repositories; avoid the environment's stalled plain HTTP.
-    run(['docker','exec',container,'sed','-i','s|http://archive.ubuntu.com|https://archive.ubuntu.com|g; s|http://security.ubuntu.com|https://security.ubuntu.com|g','/etc/apt/sources.list.d/ubuntu.sources'],'transport-https')
+    if args.os=='ubuntu':
+        run(['docker','exec',container,'bash','-c','apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends ca-certificates curl'],'transport',600)
+        # Same signed Ubuntu repositories; avoid the environment's stalled plain HTTP.
+        run(['docker','exec',container,'sed','-i','s|http://archive.ubuntu.com|https://archive.ubuntu.com|g; s|http://security.ubuntu.com|https://security.ubuntu.com|g','/etc/apt/sources.list.d/ubuntu.sources'],'transport-https')
+    else:
+        # Explicit preparation of a disposable test OS; fride never runs -Syu.
+        run(['docker','exec',container,'bash','-c','pacman -Syu --noconfirm --needed ca-certificates curl neovim mise'],'transport',900)
+        run(['docker','exec',container,'bash','-c',
+            'mkdir -p "$XDG_CONFIG_HOME/nvim" "$XDG_CONFIG_HOME/mise"; printf -- "-- ORDINARY_NVIM_KEEP\\n" > "$XDG_CONFIG_HOME/nvim/init.lua"; printf "# MISE_KEEP\\n" > "$XDG_CONFIG_HOME/mise/config.toml"; sha256sum /usr/bin/nvim "$XDG_CONFIG_HOME/nvim/init.lua" "$XDG_CONFIG_HOME/mise/config.toml" > /stand/ordinary-before.sha256'],'ordinary-guards')
     baseline='''set -eu
 for tool in git nvim go rustc cargo python3 node npm cargo-nextest; do
  if command -v "$tool"; then printf 'Unexpected preinstalled SDK/tool: %s\n' "$tool"; exit 1; fi
@@ -77,6 +106,9 @@ test ! -e /root/.cargo; test ! -e /root/.rustup
 dpkg-query -W; printf '\nCOLD_BASELINE_OK\n'
 '''
     baseline+='\ntest ! -e '+kit+'; test ! -e '+profile+'/data; test ! -e '+profile+'/cache\n'
+    if args.os=='arch':
+        baseline=baseline.replace('git nvim go','git go').replace('dpkg-query -W','pacman -Q')
+        baseline=baseline.replace(profile+'/data;',profile+'/data/fride;').replace(profile+'/cache\n',profile+'/cache/fride\n')
     run(['docker','exec',container,'bash','-c',baseline],'baseline')
     run(['docker','exec',container,'curl','--fail','--silent','--show-error',url+'/entry.sh','-o','/stand/entry.sh'],'entry-download')
     command=['docker','exec','-it',container,'bash','/stand/entry.sh','--archive-url',url+'/source.tar.gz',
@@ -84,11 +116,12 @@ dpkg-query -W; printf '\nCOLD_BASELINE_OK\n'
     env.update(FORGE_INSTALL_UI_COMMAND=json.dumps(command),FORGE_UI_SCENARIO='cold-default',
         FORGE_INSTALL_UI_REPORT=str(base/'ui.json'),FORGE_UI_WAIT_MS='600000',FORGE_UI_EXIT_MS='900000')
     code=run([nvim,'-u','NONE','-i','NONE','-l',ROOT/'tests/diagnostics/install-ui-pty.lua'],'install-ui',1500,False)
-    run(['docker','exec',container,'bash','-c','dpkg-query -W; for t in git go rustc cargo python3 node npm; do command -v "$t" || true; done'],'after',check=False)
+    run(['docker','exec',container,'bash','-c',('pacman -Q' if args.os=='arch' else 'dpkg-query -W')+'; for t in git go rustc cargo python3 node npm; do command -v "$t" || true; done'],'after',check=False)
     if code==0:
         run(['docker','exec',container,'cat',kit+'/.forge-install.json'],'ready-marker')
         run(['docker','exec',container,'bash','-c','for tool in go rustc cargo python3 node npm; do if command -v "$tool"; then exit 1; fi; done; test ! -e /root/.cargo; test ! -e /root/.rustup; printf "DEFERRED_SDK_BASELINE_OK\\n"'],'deferred-baseline')
         run(['docker','exec',container,'bash',kit+'/bin/fride','--headless','-i','NONE','-c','qa!'],'first-launch',120)
+        if args.os=='arch':run(['docker','exec',container,'sha256sum','--check','/stand/ordinary-before.sha256'],'ordinary-preserved')
     print('Cold install exit:',code,'evidence:',base,flush=True)
 finally:
     # Only regular installer logs, not SDKs/plugin data or virtual environments.

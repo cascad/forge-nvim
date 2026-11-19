@@ -1,5 +1,12 @@
 # IDE-138 — установка одной командой
 
+**2026-11-19 / Arch-Omarchy:** добавлены native pacman dependencies/Git и
+Node/Python fallback. Уже установленный Mise используется для явной подготовки
+SDK по проекту; config/defaults/обычные SDK не заменяются. Pacman ставит только
+недостающее через `-S --needed --noconfirm`, без sync DB/system upgrade/AUR.
+При старой базе/keyring/mirror — native log и штатное обновление ОС вне fride.
+[Текущий план, stand и границы проверки](OMARCHY_SUPPORT_PLAN.md).
+
 **2026-11-19 / реализация §291:** языковые SDK не обязательны
 при установке fride. При первом Go/Rust файле — предложение install/existing/
 later; готовая среда переиспользуется. Подготовка SDK и зависимых IDE tools
@@ -31,8 +38,9 @@ installed async prepare/cancel/retry, сохранил SDK/receipts/plugins пр
 upgrade; исправлен IDE-144 Rustup proxy version check. Полный native
 cross-platform PASS и публикация пока не объявляются.
 [Текущие результаты](../openspec/changes/prepare-native-system-dependencies/verification.md).
-Arch/Omarchy не получает APT: native pacman и VM/Wayland acceptance — отдельный
-[IDE-143](OMARCHY_SUPPORT_PLAN.md). macOS и GUI требуют настоящих систем.
+Arch/Omarchy не получает APT: native pacman/Mise и clean CLI acceptance готовы
+в [IDE-143](OMARCHY_SUPPORT_PLAN.md). Native Omarchy/Wayland, macOS и физические
+клавиши требуют настоящих систем.
 
 §289 / IDE-BOOT-49: Rust-компонент включает отдельную проверку cargo-nextest,
 меню existing/install/skip/refresh/cancel и официальный binary installer в

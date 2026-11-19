@@ -15552,3 +15552,81 @@ affected trace repeat на Windows; original failures и source hashes сохр�
 **Файлы.** SDK resolver, registered sdk-proxies/registry, installed async observer,
 PTY, tasks/verification, IDE-144/roadmap/guides/HISTORY/commands201. Regular
 export268 файлов298231 bytes, без SDK/runtime копий; host tmp/logs на F.
+
+
+### 294. Arch Core и границы истории ошибок
+
+**Спека: IDE-BOOT-53 (ADDED), IDE-BOOT-30/31 (FIX проверки).** IDE-143, работа продолжается.
+**Было.** При первом native Arch Core acceptance проверка завершилась ERROR
+«Plugin ... is not installed», хотя дерево, поиск, LuaLS и edit/save уже работали.
+**Причина.** Observer читал общий сохранённый журнал всех сессий и приписывал
+ERROR первоначальной подготовки текущему процессу. Плагины присутствовали;
+смена HOME при прежнем XDG_DATA_HOME не воспроизвела отказ загрузки.
+**Сделано.** В evidence разделены current/history по native log-store session;
+ошибки текущего процесса по-прежнему завершают проверку. Core workflow теперь
+специально сохраняет ERROR прошлого запуска и проверяет его наличие в истории.
+Runtime logging и пользовательская история не менялись и не очищались.
+**Проверки.** Actual Arch Default/Terminal/font/startup без SDK PASS. Все пять
+Core rounds PASS; Custom создал отсутствующий путь; repeat сохранил receipts,
+plugin pins, preferences и обычные Neovim/Mise. Отдельный affected history-control
+workflow PASS с реальным журналом двух процессов. Native report сформирован.
+Quick: 19/20 файлов PASS, один trace FAIL из-за неверной ссылки manual path
+в новой спеке; после исправления только trace2 PASS. Исходные failures сохранены.
+Python/Lua/Bash syntax PASS. Evidence: .tests/omarchy/cold-core, pinned image и
+frontend/source SHA в inputs.json; обновления diagnostic helpers учтены отдельно.
+**Вывод.** Проверка нового запуска должна отличать текущие ошибки от истории.
+Arch CLI checkpoint не доказывает Wayland/Omarchy desktop. Ещё открыты выбор
+Mise provider, SDK/native package regressions, final Windows/Ubuntu/Arch packet,
+документация/delivery и local commit. Native macOS/Omarchy не объявлены PASS.
+**Файлы.** Core acceptance/observer, Arch controller, Omarchy plan/spec/roadmap.
+
+Дополнение к §294: после native history-control экспортированы72 regular records/87648 bytes; current ERROR0, сохранённый historical ERROR1. core-checkpoint.json фиксирует отдельные helper SHA и незакрытые gates. Exact owned cold target удалён после export; publisher/Arch fixture сохранены для оставшейся реализации. Strict OpenSpec и diff --check PASS.
+
+
+### 295. Штатная установка на Arch и SDK через Mise
+
+**Спека: IDE-BOOT-53 (ADDED), IDE-BOOT-50 (FIX readiness).** IDE-143/145.
+**Было.** На Arch отсутствующие OS dependencies/Git/Node/Python не имели native
+provider. SDK shim проверялся из temp; cache версии/ошибки был общим по пути.
+**Причина.** APT recipe не разделяла Linux families; dynamic shim зависит от cwd,
+а прежний cache принимал один executable за одну среду во всех проектах.
+**Сделано.** Общий native family routing, optional pacman names в catalog;
+missing-only -S --needed --noconfirm, common sudo/recheck/log/error без DB sync/
+upgrade/AUR. При наличии Mise на Arch явная подготовка языка использует public
+ls/install/where и project versions/options, иначе прежние providers. Config,
+defaults, trust и готовые SDK сохраняются; error/no-op не вызывает другой provider.
+SDK probes получили project cwd и child-only Mise auto-install off, cache ключ
+root+executable. Обычный terminal env не менялся. Native commands/checklist,
+pinned Arch stand и автоматический собственный publisher добавлены.
+
+**Проверки.** Один affected packet после реализации. Windows: system3 PASS/
+6 Linux SKIP, SDK12 PASS/1 Linux SKIP, language UI4 PASS/proxy SKIP EPERM;
+Ubuntu: system9/SDK13/language4+proxy1 PASS. Arch: system9/SDK13/Arch10 PASS
+aggregate с failed/affected повторами. Quick20 файлов PASS на каждой ОС.
+Actual Mise Node24.11.0 install/reuse сохранил config/version/executable;
+Python native linked venv/shared shim проверил разные проекты, missing version
+без download и независимый cache. Go/Rust Mise worker — controlled native
+fixture; actual cold Go/Rust были Ubuntu upstream в §292–293, не новый Arch PASS.
+Legacy33dd22d SDK modules дали source RED Missing SDK should be reported;
+current target PASS. Это прямое воспроизведение потери cwd; общий старый cache
+также виден в коде, его изоляция проверена target control.
+
+Current clean Arch: frontend9664c9b1/source5daa7574,336.6с. Actual bootstrap/
+Default/Terminal/font/startup без SDK, Core5 rounds, Custom missing path,
+repeat, native report/quick20 PASS. Harness после baseline создал обычный
+Python venv, без подстановки SDK/cache в Default. Совпали67 plugin pins,
+2 Mason receipts, preferences/fallback, Python executable/version/prefix/
+pyvenv.cfg; ordinary Neovim/Mise guards PASS. Export61 regular records/135822
+bytes; target/publisher удалены. Fixtures export863/2262882 и477/1567656,
+без SDK/plugin payloads; старые собственные containers тоже удалены.
+
+**Ошибки наблюдателей.** Сохранены исходные логи и affected repeats: RO source
+mount, неверные Plan/pacman assertions, отсутствие cwd у нового test driver,
+ожидание env activation от shim вместо native linked SDK, alias Python prefix,
+и совпадение имён diagnostic/process JSON. Исправлены тесты; эти случаи не
+объявлены product failures. Strict/change trace9, Lua/Python/Bash syntax,
+source manifests/frozen SDK+old UI+locks/backports/journal prefixes PASS.
+**Вывод.** CLI поддержка Arch готова; настоящий Omarchy O1-O8, macOS/physical
+и общая публикация остаются отдельными gates. Новый LSP/SDK manager не введён.
+**Файлы.** Native system/SDK providers/catalog, SDK probes, Arch tests/stand,
+manual Omarchy commands, verification, roadmap/PROBLEMS/history.

@@ -1,10 +1,13 @@
 -- IDE-BOOT-50. Explicit native SDK installation, only after frontend confirmation.
-local kind,report=unpack(arg)
-assert(kind=='go' or kind=='rust','Expected Go or Rust SDK')
+local kind,report,mise=unpack(arg)
+assert(kind=='go' or kind=='rust' or (mise and (kind=='node' or kind=='python')),'Unsupported SDK provider')
 local windows=vim.fn.has('win32')==1
 local suffix=windows and '.exe' or ''
-assert(kind=='rust' or vim.fn.has('linux')==1,'Go provider requires Linux; other OS use their native managers')
+assert(kind=='rust' or vim.fn.has('linux')==1,'SDK provider requires Linux; other OS use their native managers')
 local uv,join=vim.uv,vim.fs.joinpath
+local readonly={MISE_AUTO_INSTALL='false',MISE_EXEC_AUTO_INSTALL='false',MISE_NOT_FOUND_AUTO_INSTALL='false',
+    GOTOOLCHAIN='local',GO111MODULE='off',GOENV='off',GOWORK='off',RUSTUP_AUTO_INSTALL='0',NODE_OPTIONS=''}
+local executable_name=({go='go',rust='rustc',node='node',python='python3'})[kind]
 local function run(command,options)
     options=vim.tbl_extend('force',{text=true,timeout=180000},options or {})
     local result=vim.system(command,options):wait()
@@ -18,15 +21,24 @@ local function write(path,value)
     local f=assert(io.open(path,'wb'));assert(f:write(value));assert(f:close())
 end
 local function ready(bin)
-    local executable=join(bin,(kind=='go' and 'go' or 'rustc')..suffix)
+    local executable=join(bin,executable_name..suffix)
+    if kind=='python' and vim.fn.executable(executable)~=1 then executable=join(bin,'python'..suffix) end
     if vim.fn.executable(executable)~=1 then return end
+    local environment=vim.tbl_extend('force',readonly,{PATH=bin..(windows and ';' or ':')..(vim.env.PATH or '')})
     local ok,version
     if kind=='go' then
-        ok,version=pcall(run,{executable,'version'},{timeout=10000,env={GOTOOLCHAIN='local'}})
+        ok,version=pcall(run,{executable,'version'},{timeout=10000,env=environment})
         if not ok or not version:match('^go version go%d') then return end
-    else
-        ok,version=pcall(run,{executable,'--version'},{timeout=10000,env={RUSTUP_AUTO_INSTALL='0'}})
+    elseif kind=='rust' then
+        ok,version=pcall(run,{executable,'--version'},{timeout=10000,env=environment})
         if not ok or not version:match('^rustc %d') or vim.fn.executable(join(bin,'cargo'..suffix))~=1 then return end
+    else
+        ok,version=pcall(run,{executable,'--version'},{timeout=10000,env=environment})
+        if not ok or not version:match(kind=='node' and '^v%d+%.%d+%.%d+' or '^Python 3%.') then return end
+        if kind=='node' then
+            local npm_ok=pcall(run,{join(bin,'npm'),'--version'},{timeout=10000,env=environment})
+            if not npm_ok then return end
+        end
     end
     return version
 end
@@ -35,19 +47,41 @@ local function finish(bin,reused)
     local tools,env=vim.empty_dict(),vim.empty_dict()
     if kind=='go' then
         tools.go=join(bin,'go'..suffix)
-        env.GOROOT=run({tools.go,'env','GOROOT'},{timeout=10000,env={GOTOOLCHAIN='local',GOROOT=''}})
-    else
+        env.GOROOT=run({tools.go,'env','GOROOT'},{timeout=10000,env=vim.tbl_extend('force',readonly,{GOROOT=''})})
+    elseif kind=='rust' then
         tools.rustc=join(bin,'rustc'..suffix);tools.cargo=join(bin,'cargo'..suffix)
+    elseif kind=='node' then
+        tools.node=join(bin,'node');tools.npm=join(bin,'npm')
+    else
+        local python=join(bin,'python3')
+        if vim.fn.executable(python)~=1 then python=join(bin,'python') end
+        tools.python=python;tools.python3=python
     end
     write(report,vim.json.encode({schema=1,kind=kind,ready=true,bin=bin,version=version,reused=reused,
-        selection={tools=tools,bin=bin,env=env,source='native SDK provider'}})..'\n')
+        selection={tools=tools,bin=bin,env=env,source=mise and 'native Mise SDK provider' or 'native SDK provider'}})..'\n')
     print('SDK '..kind..': '..version..' | '..bin..(reused and ' (existing version preserved)' or ''))
 end
 local stage,reserved
 local ok,why=xpcall(function()
     assert(report and vim.fn.filereadable(report)==0,'Use a new SDK result file')
-    local inherited=vim.fn.exepath(kind=='go' and 'go' or 'rustc')
+    local inherited=vim.fn.exepath(executable_name)
+    if inherited=='' and kind=='python' then inherited=vim.fn.exepath('python') end
     if inherited~='' and ready(vim.fs.dirname(inherited)) then finish(vim.fs.dirname(inherited),true);return end
+    if mise then
+        assert(vim.fn.executable(mise)==1,'Mise executable is unavailable: '..mise)
+        -- Native config resolution retains project versions/options and trust.
+        -- A bare install never writes mise.toml or changes global defaults.
+        local configured=vim.json.decode(run({mise,'ls','--current','--json',kind},{env=readonly}))
+        local tool=#configured>0 and kind or kind..'@latest'
+        local found,path=pcall(run,{mise,'where',tool},{env=readonly,timeout=10000})
+        if found and ready(join(path,'bin')) then finish(join(path,'bin'),true);return end
+        print('Mise: install '..tool..' | project '..vim.fn.getcwd());io.stdout:flush()
+        run({mise,'install','--jobs','2',tool},{env=readonly,timeout=900000})
+        local root=run({mise,'where',tool},{env=readonly,timeout=10000})
+        assert(vim.fn.isdirectory(root)==1,'Mise returned an unavailable SDK directory: '..root)
+        finish(join(root,'bin'),false)
+        return
+    end
     local home=assert(uv.os_homedir(),'Native home unavailable')
     local curl={'curl','--fail','--silent','--show-error','--location','--proto','=https','--tlsv1.2','--connect-timeout','15','--max-time','180'}
     local function fetch(url,file)

@@ -18,9 +18,9 @@ ui,stand=actions.ui,actions.stand
 LINUX=sys.platform.startswith('linux')
 
 CATALOG={'schema':1,'requirements':[
- {'id':'zip','scopes':['core'],'command':'fride-probe-unzip','apt':['unzip']},
- {'id':'gui','scopes':['terminal'],'library':'libfride-fixture-gui.so.1','apt':['libegl1']},
- {'id':'rust-build','scopes':['rust'],'command':'fride-probe-cc','apt':['build-essential']},
+ {'id':'zip','scopes':['core'],'command':'fride-probe-unzip','apt':['unzip'],'pacman':['unzip']},
+ {'id':'gui','scopes':['terminal'],'library':'libfride-fixture-gui.so.1','apt':['libegl1'],'pacman':['libglvnd']},
+ {'id':'rust-build','scopes':['rust'],'command':'fride-probe-cc','apt':['build-essential'],'pacman':['base-devel']},
 ]}
 
 class System(actions.Actions):
@@ -33,7 +33,7 @@ class System(actions.Actions):
             SYSTEM_FIXTURE_TRACE=str(base/'system.tsv'),SYSTEM_FIXTURE_MODE=mode,DEBIAN_FRONTEND='parent-value')
         folder=Path(env['SYSTEM_FIXTURE_BIN'])
         if LINUX:
-            for name in ('ldconfig','sudo'):shutil.copy2(self.fixture,folder/name)
+            for name in ('ldconfig','sudo','pacman'):shutil.copy2(self.fixture,folder/name)
             for name in ('awk','chmod'):(folder/name).symlink_to(shutil.which(name))
         return base,env,target
 
@@ -63,11 +63,18 @@ class System(actions.Actions):
         self.assert_ok(self.run_process(self.arguments(base,target,'core,terminal','--system-deps','install'),env,base,'install'))
         self.assertEqual(env,original)
         trace=(base/'system.tsv').read_text().splitlines()
-        self.assertTrue(any(line.startswith('sudo\tparent-value\t/usr/bin/env\tDEBIAN_FRONTEND=noninteractive') for line in trace))
-        install=next(line for line in trace if line.startswith('apt-get\tnoninteractive\tinstall'))
-        self.assertIn('--no-upgrade',install);self.assertIn('--no-remove',install)
-        self.assertIn('unzip',install);self.assertIn('libegl1',install);self.assertNotIn('build-essential',install)
-        self.assertEqual(len(trace),4)
+        if actions.ARCH:
+            self.assertTrue(any(line.startswith('sudo\tparent-value\t') and 'pacman' in line for line in trace))
+            install=next(line for line in trace if line.startswith('pacman\tparent-value\t-S\t--needed\t--noconfirm'))
+            self.assertIn('libglvnd',install);self.assertNotIn('base-devel',install)
+            self.assertFalse(any(line.startswith('apt-get\t') for line in trace));self.assertEqual(len(trace),2)
+            self.assertFalse(set(install.split('\t')) & {'-Sy','-Syu','--refresh','--sysupgrade'})
+        else:
+            self.assertTrue(any(line.startswith('sudo\tparent-value\t/usr/bin/env\tDEBIAN_FRONTEND=noninteractive') for line in trace))
+            install=next(line for line in trace if line.startswith('apt-get\tnoninteractive\tinstall'))
+            self.assertIn('--no-upgrade',install);self.assertIn('--no-remove',install)
+            self.assertIn('libegl1',install);self.assertNotIn('build-essential',install);self.assertEqual(len(trace),4)
+        self.assertIn('unzip',install)
         before=(base/'system.tsv').read_bytes();result,data=self.query(base,env,target,'core,terminal')
         self.assertEqual(result.returncode,0);self.assertEqual(data['missing'],[])
         repeat=self.arguments(base,target,'core,terminal','--system-deps','install')
@@ -123,7 +130,7 @@ class System(actions.Actions):
         base,env,target=self.setup('system-rust')
         result,data=self.query(base,env,target,'rust');self.assertEqual(data['scopes'],['core'])
         result,data=self.query(base,env,target,'rust','--prepare-languages')
-        self.assertEqual(data['scopes'],['core','rust']);self.assertIn('build-essential',data['packages'])
+        self.assertEqual(data['scopes'],['core','rust']);self.assertIn('base-devel' if actions.ARCH else 'build-essential',data['packages'])
         self.assertFalse((base/'system.tsv').exists())
 
     @unittest.skipUnless(LINUX,'Native installed SDK preparation applies to Linux only')

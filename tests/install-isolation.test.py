@@ -146,8 +146,8 @@ class Isolation(unittest.TestCase):
         before=foreign_snapshot(foreign)
         return base,env,base/'missing parents ü/kit'
 
-    def run_process(self,args,env,base,label):
-        result=subprocess.run(args,env=env,capture_output=True,text=True,encoding='utf-8',errors='replace',timeout=90)
+    def run_process(self,args,env,base,label,*,cwd=None):
+        result=subprocess.run(args,cwd=cwd,env=env,capture_output=True,text=True,encoding='utf-8',errors='replace',timeout=90)
         (base/(label+'.json')).write_text(json.dumps({'args':args,'exit':result.returncode,'out':result.stdout,'err':result.stderr},ensure_ascii=False,indent=2),encoding='utf-8')
         return result
 

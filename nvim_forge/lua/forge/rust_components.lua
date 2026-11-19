@@ -17,7 +17,8 @@ function M.inspect(rustc,scope)
         local selected=require('forge.sdk').selection('rust',nil,{scope=scope or 'project'})
         rustc=rustc or selected and selected.tools.rustc or vim.fn.exepath('rustc')
         assert(rustc and rustc~='' and vim.fn.executable(rustc)==1,'Rust SDK not found')
-        local env=vim.tbl_extend('force',selected and selected.env or {},{RUSTUP_AUTO_INSTALL='0'})
+        local env=vim.tbl_extend('force',selected and selected.env or {},{RUSTUP_AUTO_INSTALL='0',
+            MISE_AUTO_INSTALL='false',MISE_EXEC_AUTO_INSTALL='false',MISE_NOT_FOUND_AUTO_INSTALL='false'})
         local sysroot,error_text=call({rustc,'--print','sysroot'},env)
         assert(sysroot and vim.fn.isdirectory(sysroot)==1,error_text or 'Invalid Rust sysroot')
         result.rustc=rustc;result.root=sysroot

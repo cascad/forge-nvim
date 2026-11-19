@@ -1,6 +1,6 @@
 # nvim_forge — рабочий план мини-IDE
 
-Обновлено: 2026-11-18. Основная сборка: **nvim_forge**.
+Обновлено: 2026-11-19. Основная сборка: **nvim_forge**.
 
 **Текущая точка:** владелец выбрал штатные менеджеры экосистем и готовые
 upstream-пакеты с настраиваемыми путями; референс — VS Code.
@@ -197,9 +197,11 @@ GoToolchain и SDK existing/manual path в установщике сохране
   Registered native Rustup E2E включён в обычный regression; original failures
   и affected повторы сохранены. Go PASS — предыдущий cold checkpoint.
   [Проверки §292](../openspec/changes/prepare-native-system-dependencies/verification.md).
-  **IDE-143 / следующий отдельный этап:** владелец добавил Omarchy в рабочие среды.
-  Нужны native pacman provider, bootstrap/upgrade/reuse SDK и общие CLI E2E,
-  затем настоящая Omarchy VM/машина для Wayland/WezTerm/clipboard/hotkeys.
+  **IDE-143 / CLI часть завершена:** pacman и existing Mise SDK provider готовы;
+  current clean Arch Default/Core/Custom/repeat и сохранение ordinary Neovim/
+  Mise/Python SDK прошли (§294–295). Final affected Windows/Ubuntu/Arch packet
+  закрыт; простой stand создаёт/удаляет свои containers. Осталась настоящая
+  Omarchy VM/машина для O1-O8: Wayland/WezTerm/clipboard/hotkeys/mixed workflow.
   [План Omarchy](OMARCHY_SUPPORT_PLAN.md). APT не является общим Linux provider;
   текущая Ubuntu проверка не объявляет Omarchy готовой.
   Постоянное управление — «Языки и инструменты» через существующий Space l S:

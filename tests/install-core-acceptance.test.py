@@ -24,6 +24,7 @@ mode.add_argument('--kit', type=Path)
 mode.add_argument('--editor-deps', type=Path, help='Prepared native editor inputs; checks config, NOT installation')
 parser.add_argument('--runtime', type=Path, help='Native prepared runtime containing treesitter/ (source mode)')
 parser.add_argument('--profile', type=Path, help='Existing owned profile (kit mode)')
+parser.add_argument('--profile-layout',choices=['env','stand'],default='env',help='Existing profile: ENV names or lowercase native stand layout')
 parser.add_argument('--case', choices=['all', 'workflow', 'missing', 'library', 'jsonc'], default='all')
 args = parser.parse_args()
 owned = Path(os.environ.get('FORGE_CORE_TEST_ROOT', str(ROOT / '.tests'))).resolve()
@@ -35,15 +36,16 @@ assert profile.is_relative_to(owned) and profile != owned, 'An owned test profil
 if kit:
     assert args.profile and kit.is_relative_to(owned), 'A prepared owned kit/profile is required'
     marker = json.loads((kit / '.forge-install.json').read_text(encoding='utf-8'))
-    assert marker.get('ready') is True and marker.get('product') == 'forge-nvim' and marker.get('components') == ['core'], marker
+    assert marker.get('ready') is True and marker.get('product') == 'forge-nvim' and 'core' in marker.get('components',[]), marker
 project = base / 'project'
 project.mkdir()
 (project / 'main.lua').write_text('---@type string\nlocal value = 123\nprint(value)\n', encoding='utf-8')
 (project / 'notes.txt').write_text('notes\nFRIDE_CORE_NEEDLE\n', encoding='utf-8')
 (project / '.luarc.json').write_text('{"workspace":{"checkThirdParty":false}}', encoding='utf-8')
 env = os.environ.copy()
-for key in ['HOME', 'USERPROFILE', 'LOCALAPPDATA', 'XDG_CONFIG_HOME', 'XDG_DATA_HOME', 'XDG_STATE_HOME', 'XDG_CACHE_HOME', 'TEMP', 'TMP', 'TMPDIR']:
-    path = profile / key
+stand_layout={'HOME':'home','USERPROFILE':'home','LOCALAPPDATA':'local','XDG_CONFIG_HOME':'config','XDG_DATA_HOME':'data','XDG_STATE_HOME':'state','XDG_CACHE_HOME':'cache','TEMP':'tmp','TMP':'tmp','TMPDIR':'tmp'}
+for key in stand_layout:
+    path = profile / (stand_layout[key] if args.profile_layout=='stand' else key)
     if not kit: path.mkdir(parents=True, exist_ok=True)
     assert path.is_dir(), str(path)
     env[key] = str(path)
@@ -77,10 +79,17 @@ else:
     launch = [nvim, '--cmd', 'lua vim.opt.rtp:prepend(vim.env.FRIDE_CONFIG)', '-u', str(config / 'init.lua')]
 lock = config / 'lazy-lock.json'
 lock_before = lock.read_bytes()
-plugin = profile / 'XDG_DATA_HOME' / ('fride-data' if os.name == 'nt' else 'fride') / 'lazy/grug-far.nvim'
+plugin = Path(env['XDG_DATA_HOME']) / ('fride-data' if os.name == 'nt' else 'fride') / 'lazy/grug-far.nvim'
 quarantine = plugin.with_name('grug-far.nvim.core-acceptance')
 assert plugin.is_dir() and not quarantine.exists(), str(plugin)
 assert plugin.resolve().is_relative_to(profile), 'Plugin path leaves owned profile'
+if args.case in ('all', 'workflow'):
+    # The shared log console retains earlier sessions. A previous ERROR must
+    # remain visible without being attributed to the editor being tested.
+    seed = subprocess.run(launch + ['--headless', '-i', 'NONE', '-c',
+        "lua require('forge.log_store').record('FRIDE_CORE_HISTORY_CONTROL',vim.log.levels.ERROR,'Core acceptance')",
+        '-c', 'qa!'], cwd=project, env=env, capture_output=True, text=True, timeout=30)
+    assert seed.returncode == 0, seed.stdout + seed.stderr
 print('evidence:', base, flush=True)
 print('mode:', 'installed-kit' if kit else 'prepared-native-config (not installation acceptance)', flush=True)
 try:
