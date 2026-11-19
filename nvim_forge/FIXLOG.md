@@ -15630,3 +15630,36 @@ source manifests/frozen SDK+old UI+locks/backports/journal prefixes PASS.
 и общая публикация остаются отдельными gates. Новый LSP/SDK manager не введён.
 **Файлы.** Native system/SDK providers/catalog, SDK probes, Arch tests/stand,
 manual Omarchy commands, verification, roadmap/PROBLEMS/history.
+
+
+### 296. Актуальный обзор и выполнение выделения в плане
+
+**Спека: skip_specs=true — обзор и документация, без изменения runtime.** IDE-080/146.
+**Было.** FEATURE_REVIEW смешивал старые варианты и очереди с уже принятыми
+решениями; таблица plugins ещё предлагала оценивать удаление breadcrumbs/
+Satellite/Comment. Новый запрос владельца — обязательное выполнение выделения
+в активной встроенной консоли. Старый Ctrl+Enter вызывает внешний pwsh через
+:write ! и не выполняет нужный встроенный сценарий.
+**Причина.** Исторический обзор накапливался без отделения текущего решения;
+legacy selection route предшествует ToggleTerm и общей shell policy.
+**Сделано.** Один текущий FEATURE_REVIEW и сохранённый исторический текст с
+перебазированными links. Все67 pins сверены; решения владельца сохранены.
+Карта фич/готовых backend/собственных слоёв,6 backports/16 files, SDK corrections,
+source cost и coverage gaps обновлены. Следующая очередь: IDE-146, native
+проверка legacy neodev hook, затем небольшое разделение DAP target helpers.
+Удаление SQL extras вынесено на отдельный выбор, никакие функции не удалены.
+IDE-146/WF-14 записан в PROBLEMS/roadmap: active terminal reveal/reuse/create,
+тот же job/REPL, точное выделение, portable hotkey, multiple terminals и
+Windows/Ubuntu E2E после цельной реализации; Mac/Omarchy physical отдельно.
+**Проверки.** Source8d721c3:19 plugin configs/5884 lines,43 forge Lua/5147,
+14 ide/2731,8 config/2334,11 installer Rust/3522; рядом Bash patch JSON30.
+LOC включает comments/blank и не доказывает CPU/startup cost.67 names/pins
+совпали;45 local links PASS. Metadata trace9 PASS/1 SQL PENDING: catalog160
+REGISTERED/1 PENDING/0 MISSING, не160 behavioral PASS. Native/тяжёлые E2E
+не запускались; code/lock/SDK прежние. Strict skip-specs/diff/journal prefixes
+проверены перед commit. Native Omarchy/macOS gates не закрыты.
+**Вывод.** Полная смена сборки не обоснована; есть конкретная продуктовая
+доработка IDE-146 и узкие кандидаты упрощения. SQL scope требует отдельного
+решения. Старые измерения сохранены, но не выдаются за актуальный benchmark.
+**Файлы.** FEATURE_REVIEW/PLUGIN_INVENTORY/history archive, roadmap/PROBLEMS,
+HISTORY и review-current-ide-surface.

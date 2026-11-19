@@ -11306,3 +11306,36 @@ prefixes; unchanged lazy-lock/Cargo.lock/SDK policies/backports/.tools SHA;
 current Windows/Linux frontend manifests match Rust source. Документация после
 acceptance — отдельные doc-only updates. Общий native Omarchy desktop и Mac
 не запускались. Local commit only, no push.
+
+
+## 204. Текущий обзор и IDE-146 в плане — 2026-11-19
+
+Read-only source8d721c3: git status/log, rg --files/rg -n/Get-Content по
+FEATURE_REVIEW/PLUGIN_INVENTORY/roadmap, plugin configs и SDK backport metadata.
+Python -B inventory через git ls-files:67 lock pins, Lua/Rust file+physical-line
+counts,6 dependencies/16 patched files. Из pinned local neodev/lsp.lua прочитан
+legacy lspconfig.util.on_setup hook; current LuaLS использует vim.lsp.config.
+Это candidate source review, не native removal/performance PASS.
+
+OpenSpec root/context проверены; review-current-ide-surface с skip_specs=true,
+proposal/design/tasks и apply ready. Scope — docs only. Дополнительный SQL
+вынесен на async вопрос владельцу, до ответа runtime сохраняется. IDE-146/WF-14
+записан как новый обязательный active-terminal scenario; Ctrl+Enter legacy
+pwsh найден в config/keymaps.lua, новый хоткей/код ещё не реализованы.
+
+Метаданные, без запуска editor E2E:
+.tools/neovim/windows-x64/bin/nvim.exe -u NONE -i NONE -l tests/trace.test.lua --catalog-json .tests/review-current/e2e-catalog.json
+9 PASS/1 SQL PENDING, catalog160 REGISTERED/1 PENDING/0 MISSING. Host
+TEMP/TMP/TMPDIR/NVIM_LOG_FILE на F. Никаких Docker/WSL start/containers/downloads.
+
+.tests/review-current/update-review.py: old FEATURE_REVIEW bytes сверены с HEAD,
+исторический текст сохранён в docs/history с relative-link rebasing; новый
+current review и обновлённые plugin decisions записаны. Python verification
+сверил все67 name/pin rows и45 local links (исторические .tests artifacts
+не являются portable docs). Старые live counts явно отделены от нового source
+inventory. Runtime source/SDK/lock не менялись; E2E product suites не повторялись.
+Final: local openspec strict, journal prefixes, doc links/inventory и git diff
+--check; local commit only. Ожидается только отдельное решение по SQL extras,
+документальный обзор от этого не скрывает и не удаляет существующее поведение.
+
+Archive verification caught Windows CRCRLF from implicit text newline conversion; archive rebuilt from HEAD with explicit UTF-8 bytes. Reverse link rebasing now restores the original narrative exactly.

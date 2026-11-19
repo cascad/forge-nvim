@@ -1,28 +1,30 @@
-# Инвентарь плагинов — IDE-080, 2026-11-10
+# Инвентарь плагинов — IDE-080, 2026-11-19
 
-Обновление2026-11-11 после e00bcea: состав/pins те же67. Свежий plain text
-profile Windows/Ubuntu загрузил45 plugins, installs0; первоначальный idle28
-ниже — другая фаза. Актуальные решения после Files/Logs/pilot и6 plugin
-backports/13 files — в начале [FEATURE_REVIEW](FEATURE_REVIEW.md).
+Source8d721c3: все67 имён и полные pins сверены с lazy-lock.json; ниже pin
+показан сокращённо. Это source/dependency inventory, не новый live snapshot
+или startup benchmark. Цена слоёв, решения и очередь — [FEATURE_REVIEW](FEATURE_REVIEW.md).
 
-Живой Lazy config и lock содержат одинаковые 67 имён. В idle тестовом снимке загружены 28, установок при запуске 0. Это инвентарь, а не benchmark старта. Оценки — предложения для review; рабочие плагины не удалялись.
+Breadcrumbs/navic/Satellite и Comment сохраняются принятыми решениями владельца.
+Neodev — кандидат отдельного native compatibility control, до него не удалён.
+Остальные оценки в таблице означают роль/предмет обзора, не разрешение удаления.
+Шесть backports затрагивают16 upstream files; состав описан в текущем обзоре.
+Прямые dependencies в таблице — прежний нормализованный Lazy snapshot;
+состав/pins сверены сейчас, новый live dependency graph не снимался.
 
-Источник: .tests/feature-review-runtime.json, editor artifact 3322136536400. Команда: `<nvim> -l tests/diagnostics/inspect-plugins.lua`. Цена фич, доказательства и открытые вопросы — [FEATURE_REVIEW.md](FEATURE_REVIEW.md).
-
-Уточнение review: `loaded`/pin не доказывают готовность native-компонента.
-В проверенном Windows SDK fzf-native есть в Lazy, но DLL отсутствует; Ubuntu
-исключает его условием cmake. Picker работает на fallback, ускорение не
-подтверждено. Детали — IDE-081 в FEATURE_REVIEW; pins остаются прежними.
+Исторические live snapshots: source3322136536400/feature-review-runtime.json
+имел28 loaded/0 installs, e00bcea plain-text Windows/Ubuntu —45 loaded/0 installs.
+Эти фазы не сравниваются как benchmark. Старое наблюдение отсутствующей FZF DLL
+относится к раннему source; native/fallback readiness позже исправлена §151.
 
 | Plugin | Роль | Оценка | Прямые dependencies | Pin |
 |---|---|---|---|---|
-| [Comment.nvim](https://github.com/numToStr/Comment.nvim.git) | Editor helpers | оценить штатные альтернативы без потери ввода | — | e30b7f2008e5 |
+| [Comment.nvim](https://github.com/numToStr/Comment.nvim.git) | Editor helpers | сохранить: explicit line/block и RU/EN keys; §228 | — | e30b7f2008e5 |
 | [FixCursorHold.nvim](https://github.com/antoinemadec/FixCursorHold.nvim.git) | Tests и language adapters | ядро; dependency не отдельная фича | — | 1900f89dc17c |
 | [LuaSnip](https://github.com/L3MON4D3/LuaSnip.git) | Completion и snippets | ядро ввода | friendly-snippets | 642b0c595e11 |
 | [aerial.nvim](https://github.com/stevearc/aerial.nvim.git) | Outline | явно запрошено | nvim-treesitter, nvim-web-devicons | 645d108a5242 |
-| [alpha-nvim](https://github.com/goolord/alpha-nvim.git) | Dashboard/recents | дополнительный workflow | nvim-web-devicons, persistence.nvim, project.nvim | 6c6a89d5b068 |
+| [alpha-nvim](https://github.com/goolord/alpha-nvim.git) | Dashboard/recents | сохранить dashboard/recents/open folder | nvim-web-devicons, persistence.nvim, project.nvim | 6c6a89d5b068 |
 | [auto-save.nvim](https://github.com/okuuva/auto-save.nvim.git) | Autosave | политика редактирования, не косметика | — | 9aabcb839622 |
-| [barbecue.nvim](https://github.com/utilyre/barbecue.nvim.git) | Breadcrumbs | кандидат для сравнения без этой фичи | nvim-navic, nvim-web-devicons | 3e31404f0b93 |
+| [barbecue.nvim](https://github.com/utilyre/barbecue.nvim.git) | Breadcrumbs | сохранить: выбор владельца 2026-11-13 | nvim-navic, nvim-web-devicons | 3e31404f0b93 |
 | [bufferline.nvim](https://github.com/akinsho/bufferline.nvim.git) | Файловые вкладки | ядро | nvim-web-devicons | 655133c3b4c3 |
 | [catppuccin](https://github.com/catppuccin/nvim.git) | Theme/statusline/icons/indent | UX, не отдельный language backend | — | 426dbebe06b5 |
 | [cmp-buffer](https://github.com/hrsh7th/cmp-buffer.git) | Completion и snippets | ядро ввода | — | b74fab3656ee |
@@ -46,7 +48,7 @@ backports/13 files — в начале [FEATURE_REVIEW](FEATURE_REVIEW.md).
 | [mason-tool-installer.nvim](https://github.com/WhoIsSethDaniel/mason-tool-installer.nvim.git) | LSP и setup | ядро / настройка инструментов | mason.nvim | 443f1ef8b5e6 |
 | [mason.nvim](https://github.com/williamboman/mason.nvim.git) | LSP и setup | ядро / настройка инструментов | — | e54f5bf5f12c |
 | [neo-tree.nvim](https://github.com/nvim-neo-tree/neo-tree.nvim.git) | Дерево файлов | ядро | nui.nvim, nvim-web-devicons, plenary.nvim | 84c75e7a7e44 |
-| [neodev.nvim](https://github.com/folke/neodev.nvim.git) | Разработка Lua-конфига | проверить необходимость вне шести рабочих языков | — | 46aa467dca16 |
+| [neodev.nvim](https://github.com/folke/neodev.nvim.git) | Разработка Lua-конфига | кандидат проверки legacy hook; пока сохранить | — | 46aa467dca16 |
 | [neogit](https://github.com/NeogitOrg/neogit.git) | Git status/commit/ветки/worktree | ядро | diffview.nvim, plenary.nvim, telescope.nvim | d7bb91b42f98 |
 | [neotest](https://github.com/nvim-neotest/neotest.git) | Tests и language adapters | ядро; dependency не отдельная фича | FixCursorHold.nvim, neotest-golang, neotest-jest, neotest-python, neotest-rust, nvim-nio, nvim-treesitter, plenary.nvim | 27bf92149804 |
 | [neotest-golang](https://github.com/fredrikaverpil/neotest-golang.git) | Tests и language adapters | ядро; dependency не отдельная фича | — | 65b2be63c3de |
@@ -63,17 +65,17 @@ backports/13 files — в начале [FEATURE_REVIEW](FEATURE_REVIEW.md).
 | [nvim-dap-virtual-text](https://github.com/theHamsta/nvim-dap-virtual-text.git) | Debug protocol/UI/adapters | ядро; проверить цену собственного glue | — | fbdb48c2ed45 |
 | [nvim-hlslens](https://github.com/kevinhwang91/nvim-hlslens.git) | Поисковые highlights/заметки | дополнительный UX | — | be2d7b2be018 |
 | [nvim-lspconfig](https://github.com/neovim/nvim-lspconfig.git) | LSP и setup | ядро / настройка инструментов | cmp-nvim-lsp, mason.nvim | 451d4ef9abd4 |
-| [nvim-navic](https://github.com/SmiteshP/nvim-navic.git) | Breadcrumbs | кандидат для сравнения без этой фичи | — | f5eba192f39b |
+| [nvim-navic](https://github.com/SmiteshP/nvim-navic.git) | Breadcrumbs | сохранить: выбор владельца 2026-11-13 | — | f5eba192f39b |
 | [nvim-nio](https://github.com/nvim-neotest/nvim-nio.git) | Plugin manager / библиотеки | техническая зависимость, не отдельная фича | — | 21f5324bfac1 |
 | [nvim-surround](https://github.com/kylechui/nvim-surround.git) | Editor helpers | оценить штатные альтернативы без потери ввода | — | 2e93e154de9f |
 | [nvim-treesitter](https://github.com/nvim-treesitter/nvim-treesitter.git) | Парсеры/структура текста | языковое ядро и keyboard navigation | nvim-treesitter-textobjects | 4916d6592ede |
 | [nvim-treesitter-textobjects](https://github.com/nvim-treesitter/nvim-treesitter-textobjects.git) | Парсеры/структура текста | языковое ядро и keyboard navigation | — | 851e865342e5 |
 | [nvim-web-devicons](https://github.com/nvim-tree/nvim-web-devicons.git) | Theme/statusline/icons/indent | UX, не отдельный language backend | — | 2795c26c916b |
 | [overseer.nvim](https://github.com/stevearc/overseer.nvim.git) | Tasks/run | ядро; не дублирует структурированные Tests | — | f818eefff81f |
-| [persistence.nvim](https://github.com/folke/persistence.nvim.git) | Проекты/root и session restore | сверить реальные сценарии и пересечения | — | b20b2a7887bd |
+| [persistence.nvim](https://github.com/folke/persistence.nvim.git) | Проекты/root и session restore | сохранить штатный session backend | — | b20b2a7887bd |
 | [plenary.nvim](https://github.com/nvim-lua/plenary.nvim.git) | Plugin manager / библиотеки | техническая зависимость, не отдельная фича | — | 74b06c6c75e4 |
-| [project.nvim](https://github.com/ahmedkhalf/project.nvim.git) | Проекты/root и session restore | сверить реальные сценарии и пересечения | — | 8c6bad7d22ee |
-| [satellite.nvim](https://github.com/lewis6991/satellite.nvim.git) | Overview ruler | дополнительный UI, оценить цену | — | 87843c9c8f28 |
+| [project.nvim](https://github.com/ahmedkhalf/project.nvim.git) | Проекты/root и session restore | сохранить selected workspace/history; не language root | — | 8c6bad7d22ee |
+| [satellite.nvim](https://github.com/lewis6991/satellite.nvim.git) | Overview ruler | сохранить: выбор владельца 2026-11-13 | — | 87843c9c8f28 |
 | [telescope-dap.nvim](https://github.com/nvim-telescope/telescope-dap.nvim.git) | Debug protocol/UI/adapters | ядро; проверить цену собственного glue | — | 783366bd6c1e |
 | [telescope-fzf-native.nvim](https://github.com/nvim-telescope/telescope-fzf-native.nvim.git) | Поиск и pickers | ядро; extensions отдельны от основного plugin | — | b25b749b9db6 |
 | [telescope-ui-select.nvim](https://github.com/nvim-telescope/telescope-ui-select.nvim.git) | Поиск и pickers | ядро; extensions отдельны от основного plugin | — | 6e51d7da30bd |
