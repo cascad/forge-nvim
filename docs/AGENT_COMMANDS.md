@@ -11463,3 +11463,54 @@ Native Mac/Omarchy и physical GUI не проверены. Source inventory о�
 Exact-ID/owner own container остановлен docker stop --timeout5 и отсутствие
 подтверждено bounded AutoRemove check; cleanup.json сохранён на F. Desktop/WSL
 и image не менялись. Временные private editor profiles удалены штатным fixture.
+
+## 207. Разделение DAP helpers — 2026-11-19
+
+Source766b775; split-dap-language-targets, skip_specs=true, FIXLOG299/IDE-080.
+OpenSpec proposal/design/tasks/apply ready прочитаны. Host scratch/logs на F,
+Python -B/UTF8/no bytecode, Go/Rust native jobs2. No agents/goals/push.
+
+.tests/dap-refactor/extract.py механически перенёс функции Go/Rust/Python и
+три общие context функции в4 modules. Сигнатуры/тела прежние; обратная замена
+imports/aliases и возвращение блоков точно восстановили source766b775.
+source-fidelity.json: main1629→1146 строк, modules29/165/193/148 строк;
+общий LOC не выдаётся за latency improvement. Native Lua loadfile PASS.
+
+Один selected packet на ОС после всей реализации:
+```powershell
+$env:FORGE_E2E_DEPS='F:/repo/forge-nvim/.tests/neodev-review/editor-deps'
+python -B .tests/ubuntu/dap-refactor-cases.py --output .tests/dap-refactor/windows-packet
+```
+Same runner в own Ubuntu container: python3 -B /workspace/.tests/dap-refactor-cases.py
+--output /workspace/.tests/dap-refactor/ubuntu-packet. Direct nvim -u NONE -i NONE
+-l с существующими *_CASE env filters; batch runner эти filters очищает.
+Go-passive IDE-DAP-10 и late Delve; Rust IDE-DAP-9 (2) и IDE-DAP-7 (1);
+Python default/project и pytest debug; dap-discovery3 controls — всего10/ОС.
+
+Initial packet обеих ОС7 PASS/3 FAIL. Native actual Delve/Rust/Python launches
+прошли; callbacks observers всё ещё фильтровали plugins/dap.lua. Go observer
+и Cargo delay обновлены на legacy+new producer path, Go passive startup guard
+также знает новый module. Логика продукта после initial packet не менялась.
+Повторены только failed Go1/Cargo2:
+```powershell
+python -B .tests/ubuntu/dap-refactor-cases.py --output .tests/dap-refactor/windows-retry --only go-async rust-metadata
+```
+Ubuntu retry аналогичен через dap-refactor-retry.sh. По3 PASS на ОС, итог10
+PASS/ОС aggregate, не новый цельный green packet. report.json и stdout каждого
+кейса сохранены в windows-packet/windows-retry и host .tests/ubuntu/dap-refactor.
+Остальные языковые/full E2E не повторялись; Mac/Omarchy/physical keys не проверены.
+
+Own Ubuntu containerecbc9270cfaf, label dap-refactor-e2e, network none/CPU2/
+RAM3GiB/source RO/.tests RW на F. Использованы image SDK и private66-pin cache,
+без загрузок/сборки image/изменения Desktop/WSL/чужих containers. Private editor
+profiles удалены штатным fixture. SQL extras removal принят отдельным ответом
+владельца и записан в roadmap, SQL runtime этого change не касается.
+
+Финал: native Lua syntax (modules/main/observers), local OpenSpec strict и
+git diff --check PASS. Trace9 PASS/1 SQL pending SKIP. verify-metadata.py:
+append-only prefixes к766b775,66 pins/source rows/SDK/backports/старый UI lock
+прежние,3 frozen .tools SHA; все4 moved blocks совпали с source; native
+aggregate10/ОС подтверждён report.json. Source-fidelity.json фиксирует exact
+reverse reconstruction. Exact-ID/owner container остановлен docker stop
+--timeout5, bounded absence check PASS; cleanup.json и все regular records
+сохранены на F. Чужие ресурсы/Desktop/WSL/image не менялись.

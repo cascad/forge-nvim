@@ -10,9 +10,12 @@
    выделение в обычную системную консоль внутри IDE; native Windows/Ubuntu по7 E2E.
 3. Legacy neodev удалён после native LuaLS control (§298): диагностика,
    Neovim API и luarc/jsonc сохранены, Windows/Ubuntu по3 PASS; осталось66 pins.
-   Следующий самостоятельный пункт — language target helpers DAP с сохранением поведения.
-4. SQL extras: запросить решение владельца об удалении или сохранении; runtime
-   пока прежний. Native Omarchy/macOS/physical gates остаются параллельно.
+   Языковые DAP helpers разделены §299: Go/Rust/Python и3 общих context функции,
+   main1629→1146 строк, тела функций прежние; Windows/Ubuntu по10 selected E2E PASS.
+4. Решение владельца: удалить SQL extras и собственные слои подключения/
+   queries/Results/SQL assertions, сохранить Sqruff LSP/formatter и подсветку.
+   Реализация — отдельным change после DAP; пока runtime прежний.
+   Native Omarchy/macOS/physical gates остаются параллельно.
 
 **История установки и SDK:** владелец выбрал штатные менеджеры экосистем и готовые
 upstream-пакеты с настраиваемыми путями; референс — VS Code.

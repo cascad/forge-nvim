@@ -6,7 +6,7 @@
 [Все66 plugins/pins](PLUGIN_INVENTORY.md) — текущий список после cleanup §298.
 После этого source review IDE-146 реализован §297: Visual Space t e / Ctrl+Enter
 в обычную встроенную системную консоль, native Windows/Ubuntu E2E; следующие
-neodev удалён после controls §298; следующий кандидат — language target helpers DAP.
+neodev удалён после controls §298; DAP language helpers разделены §299.
 
 ## Что оставляем
 
@@ -72,14 +72,15 @@ Backports: Gitsigns2, Neogit5, Neotest4, DAP1, neotest-rust2, Neo-tree2 files.
 |---|---|---|
 | Выполнено | IDE-146: выполнение выделения в active integrated terminal | §297: visible/hidden/missing/multiple, точный текст, Unicode, повтор и тот же job; по7 native E2E Windows/Ubuntu |
 | Выполнено | Legacy neodev удалён после native LuaLS control (§298) | Загруженный baseline и target без plugin: diagnostics/edit/save, Neovim API completion/hover, explicit luarc/jsonc; Windows/Ubuntu по3 PASS,66 остальных pins прежние |
-| 3 | Разделить конкретные language target helpers в dap.lua | Те же public DAP entrypoints, async cancellation/cwd/launch.json и F5. Без нового dispatcher/state или смены adapters |
-| Решение | Дополнительный SQL: убрать либо оставить optional | Удаление уберёт DB-aware workflow/schema/query Results и SQL assertions, sqls protocol/SDK patch и отдельную сборку SQL runner; Sqruff baseline сохранится |
+| Выполнено | Языковые DAP helpers разделены (§299) | Main1629→1146 строк; Go/Rust/Python +3 прежние context функции, неизменные bodies, по10 selected native E2E Windows/Ubuntu aggregate |
+| Следующий | По решению владельца удалить дополнительные SQL-функции | Убрать DB-aware workflow/schema/query Results и SQL assertions, sqls protocol/SDK patch и SQL runner; сохранить Sqruff baseline. Runtime ещё прежний, отдельный change после DAP |
 | Позже | Распространение рамок, platform UX | Только после физической оценки pilot/clipboard/keys; no shadow-panel rewrite |
 
 SQL extras сейчас включают forge/sql.lua239, sql_protocol22, sql_diagnostics55,
 sql_tests95, ide/sql60 строк; отдельный Rust runner185 строк, packager69 и SDK
 policy/patch. Test preparation/fixtures — дополнительная стоимость. Это не
-базовый Sqruff module41 строк. До решения владельца удалений нет. Bash extras
+базовый Sqruff module41 строк. Владелец выбрал удаление SQL extras после DAP;
+реализация отдельным change ещё впереди. Bash extras
 оцениваются отдельно: пользователь уже выбирал WSL2 backend, а Bash run/tests
 также используют этот OS boundary.
 
@@ -108,5 +109,5 @@ Omarchy clean CLI прошёл; Wayland/GPU/clipboard/hotkeys/рабочий mix
 
 Полная пересборка редактора или смена backend не обоснованы. Основу оставляем;
 IDE-146 устранён §297; legacy neodev удалён после native controls §298.
-Далее уменьшаем смешение языковых обязанностей DAP. Удаление SQL extras требует
-отдельного решения; массового удаления plugins по их числу не предлагаем.
+DAP helpers разделены §299 с сохранением native workflows. Следом удаляем
+SQL extras по отдельному решению владельца, сохраняя Sqruff baseline.

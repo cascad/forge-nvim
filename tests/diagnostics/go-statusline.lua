@@ -86,7 +86,8 @@ for _,toolchain in ipairs({'auto','local'}) do
       assert(record.proxy=='off' and record.goenv=='off','Probe must remain offline')
       local source=(record.caller or '')..(record.stack or '')
       source=source:gsub('\\','/')
-      assert(not source:find('/lua/forge/go.lua',1,true) and not source:find('/lua/plugins/dap.lua',1,true),
+      assert(not source:find('/lua/forge/go.lua',1,true) and not source:find('/lua/plugins/dap.lua',1,true)
+        and not source:find('/lua/forge/dap/go.lua',1,true),
         'IDE-BOOT-4: own metadata must remain passive')
     end
     local report={toolchain=toolchain,artifacts=e.dir,records=records,

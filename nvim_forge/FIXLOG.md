@@ -15726,3 +15726,32 @@ VIMRUNTIME в default workspace и отсутствие подмены explicit 
 рефакторинг; SQL extras остаются до отдельного решения владельца.
 **Файлы.** plugins/lsp.lua, lazy-lock.json, plugin-sources/registry и Lua E2E,
 inventory/review/roadmap/HISTORY, remove-unused-neodev/verification, commands206.
+
+
+### 299. Разделение языковых helpers DAP
+
+**Спека: skip_specs=true — внутренний перенос, прежние IDE-DAP-4/5/7/8/9/10 сохранены.** IDE-080.
+**Было.** plugins/dap.lua1629 строк смешивал Delve discovery/version/override,
+Cargo metadata/targets и Python venv/debugpy с общими UI/run/launch.json.
+**Причина.** Языковые helpers росли в одном plugin config; замыкания на
+launch-buffer/path функции мешали видеть границы ответственности.
+**Сделано.** Прямые modules forge/dap/go.lua, rust.lua, python.lua; context.lua
+содержит только3 прежние функции normalize_path/with_launch_buffer/current_launch_path.
+Main теперь1146 строк, прямые imports/aliases сохраняют public entrypoints.
+Native async probes, coroutine, отмена/смена cwd, options и приоритеты tool/SDK
+не менялись; нового state/dispatcher/SDK manager нет. Тела функций неизменны,
+обратная реконструкция main точно совпала с source766b775.
+**Проверки.** Один selected native packet после всей реализации,10 cases/ОС:
+Go async discovery+late Delve/launch.json; Cargo pending input/cancel, stale
+cwd abort и запуск второго bin; Python default/project и pytest debug;
+3 missing-codelldb controls. Initial Windows/Ubuntu7 PASS/3 FAIL: наблюдатели
+по старому filepath не удержали реальные metadata callbacks. Добавлены новые
+пути при сохранении legacy-origin controls; product bodies не менялись.
+Только failed3 повторены,3 PASS/ОС; итог10 PASS/ОС aggregate. Broad E2E нет.
+Native Mac/Omarchy/physical keys отдельно. Производительность численно не измерялась.
+**Вывод.** Ответственность языков отделена от UI/run без смены поведения;
+test instrumentation тоже требует обновления при перемещении producer code.
+Владелец отдельно выбрал удаление SQL extras; оно идёт следующим change,
+Sqruff LSP/formatter/подсветка сохраняются, в этом переносе SQL runtime прежний.
+**Файлы.** plugins/dap.lua, forge/dap/*, native Go/Cargo observers,
+review/roadmap/HISTORY, split-dap-language-targets/verification, commands207.

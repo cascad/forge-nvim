@@ -2,7 +2,8 @@
 -- JSON/exit/stdout не подменяются; область — один manifest частного проекта.
 local M={}
 function M.arm(manifest,producer)
-  producer=producer or 'plugins/dap.lua'
+  local producers=producer and {producer} or {'plugins/dap.lua','forge/dap/rust.lua'}
+  producer=producer or table.concat(producers,'|')
   local target=vim.fs.normalize(assert(vim.uv.fs_realpath(manifest)))
   local function same(path)
     local value=vim.fs.normalize(path)
@@ -12,7 +13,10 @@ function M.arm(manifest,producer)
   local function matches(args)
     if type(args)~='table' or args[2]~='metadata' then return false end
     -- Одинаковый command может исходить из DAP, warmup или native root detection.
-    if not debug.traceback('',2):gsub('\\','/'):find(producer,1,true) then return false end
+    local stack=debug.traceback('',2):gsub('\\','/')
+    local origin=false
+    for _,source in ipairs(producers) do if stack:find(source,1,true) then origin=true;break end end
+    if not origin then return false end
     for i,arg in ipairs(args) do if arg=='--manifest-path' then return same(args[i+1]) end end
     return false
   end

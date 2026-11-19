@@ -39,7 +39,8 @@ local function observe(e)
         return system(cmd,opts,function(result)
           row.result={code=result.code,signal=result.signal,stdout=result.stdout,stderr=result.stderr};row.done=true
           if (_G.forge_hold_go_version and type(cmd)=='table' and cmd[2]=='version') or
-            (_G.forge_hold_go_env and type(cmd)=='table' and cmd[2]=='env' and row.stack:find('plugins/dap.lua',1,true)) then
+            (_G.forge_hold_go_env and type(cmd)=='table' and cmd[2]=='env' and
+              (row.stack:find('plugins/dap.lua',1,true) or row.stack:find('forge/dap/go.lua',1,true))) then
             -- Удерживаем только доставку настоящего завершённого CLI результата.
             table.insert(_G.forge_go_held,function() callback(result) end)
           else callback(result) end
@@ -152,7 +153,8 @@ check('IDE-DAP-10 native Delve discovery keeps input and local metadata','auto',
     if vim.fn.filereadable(e.dir..'/go-calls.jsonl')==0 then return false end
     for _,line in ipairs(vim.fn.readfile(e.dir..'/go-calls.jsonl')) do
       local row=vim.json.decode(line)
-      if row.command[2]=='env' and row.stack:find('plugins/dap.lua',1,true) then first=row;return true end
+      if row.command[2]=='env' and (row.stack:find('plugins/dap.lua',1,true) or
+        row.stack:find('forge/dap/go.lua',1,true)) then first=row;return true end
     end
   end)
   vim.fn.writefile({vim.json.encode({first_probe=first})},e.dir..'/go-discovery.json')
