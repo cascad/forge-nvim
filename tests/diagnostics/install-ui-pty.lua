@@ -30,7 +30,33 @@ local function type_text(value)
  send(value)
 end
 local ok,err=xpcall(function()
- if scenario:sub(1,10)=='go-policy-' then
+ if scenario=='cold-default' then
+  local marker,installed=0,{}
+  local subjects={'Git','SDK go','SDK rust','SDK python','SDK node','Rust Tests · cargo-nextest'}
+  while true do
+   local selected,review
+   assert(vim.wait(tonumber(vim.env.FORGE_UI_WAIT_MS) or 180000,function()
+    local raw=lua('return _G.ui_raw:sub((...)+1)',{marker})
+    for _,subject in ipairs(subjects) do if raw:find(subject..': действие',1,true) then selected=subject;return true end end
+    review=raw:find('Продолжить установку IDE с этим планом?',1,true)
+    return review or exitcode()~=nil
+   end,20),'Cold setup progress timeout\n'..screen())
+   if exitcode()~=nil then break end
+   if review then
+    frame('cold-review');marker=lua('return #_G.ui_raw');send('\r')
+   else
+    frame(selected)
+    assert(not installed[selected],'Native install did not make '..selected..' ready; first failure preserved\n'..screen())
+    installed[selected]=true;events[#events+1]='install '..selected
+    io.stdout:write('Cold install action: '..selected..'\n');io.stdout:flush()
+    marker=lua('return #_G.ui_raw');send('\27[B\r')
+    local confirmation='Установить '..selected..' этой командой?'
+    assert(vim.wait(30000,function() return lua('return _G.ui_raw:sub((...)+1)',{marker}):find(confirmation,1,true) or exitcode()~=nil end,20),'Cold install confirmation missing\n'..screen())
+    assert(exitcode()==nil,'Cold setup exited before confirmation')
+    marker=lua('return #_G.ui_raw');send('\27[D\r')
+   end
+  end
+ elseif scenario:sub(1,10)=='go-policy-' then
   waitfor('Разрешить Go скачать toolchain для сборки IDE tools?');frame('go-policy-choice')
   if scenario=='go-policy-allow' then send('\27[D\r')
   elseif scenario=='go-policy-deny' then send('\r')
@@ -146,7 +172,7 @@ local ok,err=xpcall(function()
   waitfor('Каталог команды fride');type_text(assert(vim.env.FORGE_UI_COMMAND_INPUT));send('\r')
   waitfor('Завершить предпросмотр?');frame('custom-paths-review');send('\r')
  else error('Unknown scenario '..scenario) end
- assert(vim.wait(30000,function() return exitcode()~=nil end,10),'UI exit timeout\n'..screen())
+ assert(vim.wait(tonumber(vim.env.FORGE_UI_EXIT_MS) or 30000,function() return exitcode()~=nil end,10),'UI exit timeout\n'..screen())
  assert(exitcode()==(tonumber(vim.env.FORGE_UI_EXPECTED_EXIT) or (scenario=='cancel' and 130 or 0)),'UI exit '..tostring(exitcode())..'\n'..screen())
  frame('done')
 end,debug.traceback)

@@ -561,3 +561,11 @@ QuitPre до штатного SIGTERM и native invalid-command notification с 
 ошибочным event/успешным выходом. Это не воспроизведение причины старого IDE-085.
 Bounded source RED и followup — FIXLOG §152. Unhooked control flag отключает
 observer только для сравнения; обычные regressions оставляют capture включённым.
+
+`check-cold-install.py` — явный network stand §290: native archives/frontend
+из developer publisher и отдельная pinned Ubuntu24.04 без SDK/Git/Nvim/cache.
+Команда, prerequisites, границы и first RED —
+[verification](../../openspec/changes/verify-cold-ubuntu-installation/verification.md).
+Сам Docker Desktop/WSL не запускает. По умолчанию удаляет только свой target;
+`--keep` оставляет его для diagnosis. Подготовленный publisher — отдельный owned
+контейнер, его lifecycle остаётся у вызывающего. Logs/temp/artifacts только .tests.

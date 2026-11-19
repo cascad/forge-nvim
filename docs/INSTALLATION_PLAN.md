@@ -1,5 +1,20 @@
 # IDE-138 — установка одной командой
 
+**Решение владельца2026-11-19 (ожидает реализации):** языковые SDK не обязательны
+при установке fride. При первом Go/Rust файле — предложение install/existing/
+later; готовая среда переиспользуется. Подготовка SDK и зависимых IDE tools
+асинхронна и начинается после выбора, не на каждом BufEnter. Default readiness
+должна различать готовую основу IDE и отложенные языки. Новая Ubuntu: official
+Go и rustup с rustfmt/rust-src вместо неподходящих APT SDK; установленные SDK
+не меняются. Текущий код ещё eagerly требует SDK; реализация —
+`defer-language-environment-setup`. Cold §290 выявил tzdata prompt Python APT
+и совместимость SDK; [evidence](../openspec/changes/verify-cold-ubuntu-installation/verification.md).
+Управление постоянно доступно через «Языки и инструменты» (расширение Space l S):
+выбор SDK/версии/пути, готовность LSP/format/DAP/tests, install/recheck/logs,
+настройки пользователя/проекта и возврат отключённых предложений. Существующий
+прямой ForgeSdk selector остаётся. Основа UX — явные команды сред/tools и
+User/Workspace настройки VS Code, без потери управления после закрытия prompt.
+
 §289 / IDE-BOOT-49: Rust-компонент включает отдельную проверку cargo-nextest,
 меню existing/install/skip/refresh/cancel и официальный binary installer в
 обычный CARGO_HOME/bin. Готовый nextest переиспользуется, его версия сохраняется;

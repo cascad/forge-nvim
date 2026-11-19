@@ -15350,3 +15350,42 @@ native action, pinned rust primary, diagnostics/E2E/registry, guides/планы,
 commands197/history и complete-rust-test-runtime verification. Frozen SDK/UI/
 locks, current frontend source/binary SHA, journals/index/syntax/strict/trace
 проверены перед local commit; без push, native gates остаются открыты.
+
+
+## 2026-11-19
+
+### 290. Чистая Ubuntu и отложенная подготовка SDK
+
+**Связь.** verify-cold-ubuntu-installation, test-only skip_specs; IDE-138 после
+§289. Продукт пока не менялся, full/regression отложен до цельной реализации.
+**Проблема.** Cached actual Default не доказывает работу чистой машины.
+**Что сделали.** Explicit diagnostic check-cold-install.py: pinned Ubuntu24.04,
+2CPU/3GiB, native archives/SHA/source/bootstrap/frontend/PTY. Baseline доказывает
+отсутствие SDK/Git/Nvim/Cargo homes/kit/fride caches. Publisher separate; SDK
+и Mason/plugin caches в target не копировались. Logs/temp/artifacts F.
+**Найденные причины.** APT HTTP downloads зависали; тот же официальный mirror
+через HTTPS работает. Первый180s observer timeout/прерванный download сохранены,
+не product fix. Observer промежуточный review после Git принимал за последний;
+исправлен цикл SDK groups, чтение suffix внутри RPC/ограниченные deadlines.
+SDK actions Git/Go/Rust реально пройдены; APT Go1.22.2 не подходит actual
+Delve1.27.2 (upstream min1.25), Rust/Cargo1.75 без rustfmt/rust-src. Python
+APT остановился на tzdata Geographic area: --yes не отвечает debconf.
+**Проверка.** Native baseline + actual PTY с original failed attempts и SDK/
+package/version logs в .tests/cold-install/1795073324804404800. Не объявляем
+cold PASS и не подставляем готовые SDK. Own target после exact label/ID check
+остановлен/--rm удалён, exit137 от этого stop, не Neovim crash. Publisher
+80a7a7eebd57 остаётся для активного следующего change; engine/WSL не менялись.
+**Решение владельца.** Official Go/rustup для новых SDK, готовые сохраняются.
+Затем момент установки изменён: fride не требует SDK заранее; первый Go/Rust
+файл предлагает install/existing/later, асинхронно и без повторов BufEnter.
+SDK-зависимые IDE tools тоже отложены, иначе SDK скачался бы скрытно. Требуется
+постоянный раздел «Языки и инструменты» (Space l S), SDK/версии/пути/готовность/
+logs и обратимое управление prompts user/project. Прямой ForgeSdk сохраняется.
+VS Code primary docs подтверждают explicit tools/environment commands и scopes;
+общий hub — наш дизайн. Реализация defer-language-environment-setup следующая,
+не готовая функция. Итоговый cold/regression — после всего блока.
+**Вывод.** Наличие SDK executable не равно готовности языка; первоначальный
+installer должен различать Core ready и deferred language environments.
+**Файлы.** Diagnostic/PTY, verification/tasks, guides/планы/HISTORY, commands198,
+новый proposal. AST/Lua/strict/trace/prefix/index checks перед local commit,
+SDK/старые UI/product source/locks прежние. Native Mac/WSL/GUI/publication открыты.

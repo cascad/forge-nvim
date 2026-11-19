@@ -10938,3 +10938,52 @@ previous/backport guards, current UI source/binary hashes, actual reports,
 raw/staged append-only journals, Python AST/Lua syntax/exact owned index.
 OpenSpec strict and trace affected only, git diff --check; local commit with
 gc.auto=0/maintenance.auto=false, no push. Mac/WSL/GUI/cold/publication gates open.
+
+
+## 198. Чистая Ubuntu — 2026-11-19
+
+cwd F:/repo/forge-nvim, login:false, full access/never, tmp F, Python -B/UTF8.
+User pushed0db5fce; затем поручил идти по всем пунктам, вопросы по решениям,
+final tests после цельной реализации. Сначала docker version: отсутствовал
+Linux engine; user включил Desktop. Агент engine/WSL не запускал/не менял.
+OpenSpec root/context read, verify-cold-ubuntu-installation skip_specs ready,
+все apply contextFiles read; apply skill. Native SDK actions19/manager21 specs,
+SDK/tool catalogs/private installer/profile/source inspected read-only.
+
+docker pull ubuntu:24.04@sha256:fe81560990fae86dc4743202b2cb4d3df98d0bcf949173cecef15ce1127ef852.
+Own publisher80a7a7eebd57: existing prepared image, root/2CPU/3GiB, repo ro,
+.tests/ubuntu rw и .tests/cold-install/artifacts на /artifacts. Existing
+package-core-runtime.py --nvim /opt/nvim --site /workspace/.tests/parser-runtime/linux-x64/site
+--editor-deps /opt/forge/editor-deps --search /workspace/.tests/search-runtime/linux-x64
+--output /artifacts/core.tar.gz. Terminal existing prepare/package scripts,
+native gui libs только publisher; frontend source-matched §289 Linux binary.
+prepare-cold-artifacts.py ignored helper, ready IDE archives only; no SDK bundles.
+
+python -B tests/diagnostics/check-cold-install.py --artifacts
+.tests/cold-install/artifacts --publisher-container80a7a7eebd57... --keep.
+Actual target abeab62ce0e0... /stand bind to F stand1795073324804404800,
+curl/CA only transport, baseline COLD_BASELINE_OK. Own publisher stdlib HTTP
+bridge/no host port; source temporary catalogs include actual artifact SHA.
+Original HTTP Git download exceeded180s observer deadline. Native package
+download interrupted before dpkg, same official APT sources switched HTTPS;
+Git install PASS. Intermediate SDK-group review observer fixed; original
+attempts retained. resume-ui.py only repeats failed UI, same cold origin and
+baseline, not a fabricated new cold PASS. Last resume1795074131668583100:
+Go1.22.2/Rust1.75 native installs, Python tzdata Geography prompt. sdk-observed
+and sdk-install logs capture versions/missing Rust components. After exact
+owner check docker stop --timeout10 own target, --rm removed; no host SDK writes.
+Publisher intentionally kept for next current implementation, not orphan cleanup.
+
+Read-only upstream sources: mason README requirements; Delve v1.27.2
+pkg/goversion/compat.go minGo1.25 matching actual §289 Mason receipt;
+go.dev/doc/install and rustup book. User selected official Go+rustup for missing
+SDKs, then first-file SDK/tool preparation and central reversible settings hub.
+VS Code primary docs: Python environments, user/workspace settings, golang/
+vscode-go tools.md (SDK separate, Install/Update Tools command). No third-party
+SDK manager or backwards tool-version compatibility matrix selected.
+
+New defer-language-environment-setup proposal only; no product behavior change
+yet. Cold trace/syntax/strict and exact owned docs/test/proposal index checks;
+journals append-only, product Lua/frontend/bootstrap/locks and .tools SDK/UI
+unchanged. Full E2E/regression not launched; user requested it at block end.
+Local commit gc.auto0/maintenance.auto=false, no push; then continue product.

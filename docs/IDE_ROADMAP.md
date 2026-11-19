@@ -178,6 +178,22 @@ GoToolchain и SDK existing/manual path в установщике сохране
   WSL/Bash debug, Terminal GUI и публикация готовых artifacts. Cached проверки
   их не заменяют; системные SDK этой рабочей машины ради cold теста не удаляем.
 
+  **2026-11-19 / §290:** clean Ubuntu baseline подтверждён без SDK/Git/Nvim/
+  fride caches; native Git/Go/Rust install пройден, Python APT остановился на
+  tzdata. APT Go1.22.2 несовместим с текущим Delve, Rust1.75 без rustfmt/rust-src.
+  [Факты и команда стенда](../openspec/changes/verify-cold-ubuntu-installation/verification.md).
+  Владелец выбрал official Go/rustup для новых SDK, затем изменил порядок:
+  **установка IDE не требует SDK; первый Go/Rust файл предлагает подготовку**.
+  Готовую среду переиспользовать, иначе install/existing/later; асинхронно,
+  без повторов на каждом BufEnter. SDK-зависимые Mason tools тоже отложены,
+  не объявляются готовыми. Следующий конкретный продуктовый срез —
+  `defer-language-environment-setup`, затем новый cold и итоговый regression.
+  Постоянное управление — «Языки и инструменты» через существующий Space l S:
+  SDK/версии/пути, состояние IDE tools, install/select/recheck/logs, user/project
+  настройки и обратимое отключение предложений. Разовое Later не заменяет
+  настройки; прямой ForgeSdk selector сохраняется. Референсы VS Code записаны
+  в proposal нового change, это пока план, не готовая функция.
+
 Статус: базовые e2e настоящего nvim_forge работают на Windows и Ubuntu;
 фоновые установки инструментов редактора перенесены в явный setup.
 IDE-001 параллельно ждёт диагностических данных с Mac.

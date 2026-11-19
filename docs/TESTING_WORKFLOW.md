@@ -1,5 +1,13 @@
 # Проверки законченного блока
 
+§290: отдельный explicit network diagnostic чистой Ubuntu —
+`python -B tests/diagnostics/check-cold-install.py --artifacts <native archives> --publisher-container <owned publisher id>`.
+Не входит в каждый quick/E2E. Проверяет clean baseline без SDK/cache, реальные
+source/Core/Terminal/frontend hashes и SDK actions; host SDK не меняет.
+Первый actual run выявил SDK compatibility/tzdata, не PASS. Владелец изменил
+порядок на first-file preparation; итоговый cold/regression следует после
+цельной реализации. [Evidence и prerequisites](../openspec/changes/verify-cold-ubuntu-installation/verification.md).
+
 Решение владельца 2026-11-18: E2E нужны для каждой фичи и исправления, но
 запускаются после цельной реализации, а не после каждого изменения файла.
 
