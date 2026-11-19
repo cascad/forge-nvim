@@ -51,18 +51,21 @@ with tarfile.open(artifacts/'source.tar.gz','w:gz') as archive:
 (base/'inputs.json').write_text(json.dumps({'head':subprocess.check_output(['git','rev-parse','HEAD']).decode().strip(),
  'image':IMAGE,'publisher':publisher_id,'url':url,'artifacts':{name:digest((artifacts/name).read_bytes()) for name in ('core.tar.gz','terminal.tar.gz','fride-setup','source.tar.gz','entry.sh')}},indent=2))
 name='fride-cold-'+base.name
+work='/tmp/fride-cold-'+base.name
+kit=work+'/installed';profile=work+'/profile';source=work+'/source'
 command=['docker','run','-d','--rm','--init','--name',name,'--label','fride.owner=cold-default','--cpus','2','--memory','3g',
  '--mount',f'type=bind,source={base},target=/stand','--env','HOME=/root','--env','TERM=xterm-256color',
- '--env','TEMP=/stand/tmp','--env','TMP=/stand/tmp','--env','TMPDIR=/stand/tmp','--env','NVIM_LOG_FILE=/stand/tmp/nvim.log',
- '--env','XDG_CONFIG_HOME=/stand/profile/config','--env','XDG_DATA_HOME=/stand/profile/data',
- '--env','XDG_STATE_HOME=/stand/profile/state','--env','XDG_CACHE_HOME=/stand/profile/cache',
+ '--env','TEMP='+work+'/tmp','--env','TMP='+work+'/tmp','--env','TMPDIR='+work+'/tmp','--env','NVIM_LOG_FILE='+work+'/tmp/nvim.log',
+ '--env','XDG_CONFIG_HOME='+profile+'/config','--env','XDG_DATA_HOME='+profile+'/data',
+ '--env','XDG_STATE_HOME='+profile+'/state','--env','XDG_CACHE_HOME='+profile+'/cache',
  '--env','GOMAXPROCS=2','--env','CARGO_BUILD_JOBS=2','--env','RAYON_NUM_THREADS=2','--env','GIT_TERMINAL_PROMPT=0',IMAGE,'sleep','infinity']
 container=subprocess.check_output(command,env=env,text=True).strip()
-(base/'container.json').write_text(json.dumps({'id':container,'name':name,'owner':'cold-default'}))
+(base/'container.json').write_text(json.dumps({'id':container,'name':name,'owner':'cold-default','workdir':work,'kit':kit,'profile':profile,'source':source}))
 print('Cold stand:',base,'container:',container,flush=True)
 code=1
 try:
     inspect(container,'cold-default')
+    run(['docker','exec',container,'mkdir','-p',work+'/tmp'],'native-tmp')
     run(['docker','exec',container,'bash','-c','apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends ca-certificates curl'],'transport',600)
     # Same signed Ubuntu repositories; avoid the environment's stalled plain HTTP.
     run(['docker','exec',container,'sed','-i','s|http://archive.ubuntu.com|https://archive.ubuntu.com|g; s|http://security.ubuntu.com|https://security.ubuntu.com|g','/etc/apt/sources.list.d/ubuntu.sources'],'transport-https')
@@ -70,24 +73,28 @@ try:
 for tool in git nvim go rustc cargo python3 node npm cargo-nextest; do
  if command -v "$tool"; then printf 'Unexpected preinstalled SDK/tool: %s\n' "$tool"; exit 1; fi
 done
-test ! -e /root/.cargo; test ! -e /root/.rustup; test ! -e /stand/installed
-test ! -e /stand/profile/data; test ! -e /stand/profile/cache
+test ! -e /root/.cargo; test ! -e /root/.rustup
 dpkg-query -W; printf '\nCOLD_BASELINE_OK\n'
 '''
+    baseline+='\ntest ! -e '+kit+'; test ! -e '+profile+'/data; test ! -e '+profile+'/cache\n'
     run(['docker','exec',container,'bash','-c',baseline],'baseline')
     run(['docker','exec',container,'curl','--fail','--silent','--show-error',url+'/entry.sh','-o','/stand/entry.sh'],'entry-download')
     command=['docker','exec','-it',container,'bash','/stand/entry.sh','--archive-url',url+'/source.tar.gz',
-        '--source-root','/stand/source','--install-dir','/stand/installed','--go-toolchain-download','allow']
+        '--source-root',source,'--install-dir',kit,'--go-toolchain-download','allow']
     env.update(FORGE_INSTALL_UI_COMMAND=json.dumps(command),FORGE_UI_SCENARIO='cold-default',
         FORGE_INSTALL_UI_REPORT=str(base/'ui.json'),FORGE_UI_WAIT_MS='600000',FORGE_UI_EXIT_MS='900000')
     code=run([nvim,'-u','NONE','-i','NONE','-l',ROOT/'tests/diagnostics/install-ui-pty.lua'],'install-ui',1500,False)
     run(['docker','exec',container,'bash','-c','dpkg-query -W; for t in git go rustc cargo python3 node npm; do command -v "$t" || true; done'],'after',check=False)
     if code==0:
-        run(['docker','exec',container,'bash','-c','test -f /stand/installed/.forge-install.json; cat /stand/installed/.forge-install.json'],'ready-marker')
+        run(['docker','exec',container,'cat',kit+'/.forge-install.json'],'ready-marker')
         run(['docker','exec',container,'bash','-c','for tool in go rustc cargo python3 node npm; do if command -v "$tool"; then exit 1; fi; done; test ! -e /root/.cargo; test ! -e /root/.rustup; printf "DEFERRED_SDK_BASELINE_OK\\n"'],'deferred-baseline')
-        run(['docker','exec',container,'bash','/stand/installed/bin/fride','--headless','-i','NONE','-c','qa!'],'first-launch',120)
+        run(['docker','exec',container,'bash',kit+'/bin/fride','--headless','-i','NONE','-c','qa!'],'first-launch',120)
     print('Cold install exit:',code,'evidence:',base,flush=True)
 finally:
+    # Only regular installer logs, not SDKs/plugin data or virtual environments.
+    for folder,label in ((source+'/.ui-logs','ui-logs'),(kit+'/log','kit-logs')):
+        destination=base/label;destination.mkdir(exist_ok=True)
+        run(['docker','cp',container+':'+folder+'/.',destination],'export-'+label,60,False)
     if not args.keep:
         inspect(container,'cold-default');run(['docker','stop','--timeout','10',container],'target-stop',30)
     else:print('Owned target kept for diagnosis:',container,flush=True)

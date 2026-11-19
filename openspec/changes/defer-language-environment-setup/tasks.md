@@ -25,5 +25,8 @@
 
 7/9 tasks complete. Native async protocol/editor failure/cancel and shared SDK
 provider reuse verified; actual installed cold language flow in3.3/4.1 remains
-open. Default failed on Terminal OS library; IDE-142 awaits dependency policy
-choice. No full cold PASS, no archive/all_done. See verification.md.
+open. §292 resolved Terminal/Core OS dependencies; new cold Default/repeat and
+Go prepare/LSP/format/debug/output/tests PASS. Rust cold workflow is blocked by
+Ubuntu archive SSL timeout; positive editor async reuse remains open.
+No all-languages cold PASS, no archive/all_done. See verification.md and
+../prepare-native-system-dependencies/verification.md.

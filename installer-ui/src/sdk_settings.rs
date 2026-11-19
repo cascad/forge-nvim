@@ -19,10 +19,24 @@ fn unique(options: &Options, suffix: &str) -> Result<PathBuf> {
 }
 
 // Files avoid unbounded pipe buffers; callers read only a bounded diagnostic tail.
-pub(crate) fn capture(
+pub(crate) fn capture(command: Command, options: &Options, timeout: Duration) -> Result<String> {
+    capture_output(command, options, timeout, None)
+}
+
+pub(crate) fn capture_complete(
+    command: Command,
+    options: &Options,
+    timeout: Duration,
+    limit: u64,
+) -> Result<String> {
+    capture_output(command, options, timeout, Some(limit))
+}
+
+fn capture_output(
     mut command: Command,
     options: &Options,
     timeout: Duration,
+    limit: Option<u64>,
 ) -> Result<String> {
     let log = unique(options, "log")?;
     let file = OpenOptions::new().create_new(true).write(true).open(&log)?;
@@ -54,7 +68,20 @@ pub(crate) fn capture(
         std::thread::sleep(Duration::from_millis(25));
     };
     let mut bytes = vec![];
-    fs::File::open(&log)?.take(16384).read_to_end(&mut bytes)?;
+    let output = fs::File::open(&log)?;
+    if limit.is_some_and(|size| {
+        output
+            .metadata()
+            .is_ok_and(|metadata| metadata.len() > size)
+    }) {
+        return Err(invalid(format!(
+            "Preflight output exceeds bound; log: {}",
+            log.display()
+        )));
+    }
+    output
+        .take(limit.unwrap_or(16384))
+        .read_to_end(&mut bytes)?;
     let text = String::from_utf8_lossy(&bytes).into_owned();
     if !status.success() {
         let mut stderr = vec![];

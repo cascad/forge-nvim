@@ -6,6 +6,7 @@ mod sdk_bootstrap;
 mod sdk_install;
 mod sdk_settings;
 mod sdks;
+mod system;
 mod wizard;
 use serde::{Deserialize, Serialize};
 use std::collections::HashSet;
@@ -40,6 +41,8 @@ pub struct Options {
     pub check_sdks: bool,
     pub check_tools: bool,
     pub check_rust_tools: bool,
+    pub check_system: bool,
+    pub system_deps: String,
     pub prepare_languages: bool,
     pub prepare_language: Option<String>,
     pub installed_kit: Option<PathBuf>,
@@ -67,6 +70,10 @@ impl Options {
         let mut arguments = arguments.into_iter();
         while let Some(argument) = arguments.next() {
             match argument.as_str() {
+                "--check-system" => {
+                    result.check_system = true;
+                    continue;
+                }
                 "--preview" => {
                     result.preview = true;
                     continue;
@@ -96,6 +103,7 @@ impl Options {
                     continue;
                 }
                 "--help" => {
+                    println!("--check-system (read-only OS dependencies) --system-deps ask|install|check");
                     println!("--prepare-languages (explicit eager SDK/tools setup; default prepares Core)");
                     println!("fride-setup --source DIR --profile default|custom [--components CSV] --install-dir DIR\n--command-dir DIR --runtime-path DIR --runtime-archive-url URL --runtime-sha256 SHA\n--preview --no-color --print-plan --result FILE --log-dir DIR\n--check-sdks --sdk-report FILE\n--go-toolchain-download allow|deny (explicit Go build toolchain choice; default deny)\n--tools-versions preserve|baseline (default preserve; baseline reset is explicit)\n--check-tools (Git prerequisite) --check-rust-tools (nextest; requires verified Core)\n--tool-path DIR (repeatable fallback bin; alias --sdk-path)");
                     std::process::exit(0);
@@ -117,6 +125,12 @@ impl Options {
                 "--profile" => result.profile = value.to_ascii_lowercase(),
                 "--components" => result.components = Some(value),
                 "--prepare-language" => result.prepare_language = Some(value),
+                "--system-deps" => {
+                    result.system_deps = match value.as_str() {
+                        "ask" | "install" | "check" => value,
+                        _ => return Err(invalid("--system-deps: ask|install|check")),
+                    };
+                }
                 "--installed-kit" => result.installed_kit = Some(value.into()),
                 "--runtime-path" => result.runtime = value,
                 "--runtime-archive-url" => result.runtime_url = value,
@@ -354,6 +368,17 @@ fn review(rows: &[Row], plan: &Plan) -> String {
 }
 
 pub fn run(mut options: Options) -> Result<i32> {
+    if options.check_system
+        && (options.preview
+            || options.print_plan
+            || options.check_sdks
+            || options.check_tools
+            || options.check_rust_tools)
+    {
+        return Err(invalid(
+            "--check-system cannot be combined with preview/other check modes",
+        ));
+    }
     if options.prepare_language.is_some() {
         return language::prepare(options);
     }
@@ -410,6 +435,11 @@ pub fn run(mut options: Options) -> Result<i32> {
         println!("{}", serde_json::to_string(&plan)?);
         return Ok(0);
     }
+    if options.check_system {
+        let report = system::inspect(&options, &plan)?;
+        println!("{}", serde_json::to_string(&report)?);
+        return Ok(if report.ready() { 0 } else { 2 });
+    }
     if options.check_sdks {
         if !plan.native_sdks.is_empty() {
             options.prepared_core = Some(sdk_settings::prepare(&options, &plan)?);
@@ -453,6 +483,10 @@ pub fn run(mut options: Options) -> Result<i32> {
     } else {
         wizard::intro(options.preview)?;
         cliclack::note("План установки", review(&rows, &plan))?;
+    }
+    if !options.preview && !system::ensure(&options, &plan)? {
+        cliclack::outro_cancel("Отмена системных зависимостей. Прежний комплект сохранён.")?;
+        return Ok(130);
     }
     if !options.preview {
         let report = inspect_tools(&options, &plan)?;

@@ -10,7 +10,16 @@
 
 Маршрут и приоритеты: [рабочий план nvim_forge](docs/IDE_ROADMAP.md).
 Для новых пунктов используем следующий свободный ID `IDE-xxx`; исходный
-симптом хранится здесь, этап и состояние — в плане. Следующий ID: `IDE-143`.
+симптом хранится здесь, этап и состояние — в плане. Следующий ID: `IDE-144`.
+
+## IDE-143 — установка и работа на Omarchy
+
+2026-11-19: владелец планирует тестировать и использовать fride на Omarchy.
+Нужны штатная установка зависимостей, сохранение существующих Neovim/SDK/
+настроек Omarchy, CLI E2E и отдельный GUI/Wayland прогон. Arch-контейнер не
+считается полной проверкой Omarchy. Это отдельный запланированный этап;
+текущий IDE-142 не должен распространять APT на все Linux.
+[План и критерии](docs/OMARCHY_SUPPORT_PLAN.md).
 
 ## IDE-142 — системные зависимости чистой Ubuntu
 
@@ -20,10 +29,14 @@ Ubuntu также отсутствует unzip, который требуетс�
 Rust/rustfmt/rust-src, но предупредил об отсутствии системного linker `cc`.
 Успех SDK provider не означает готовность всего language/run workflow.
 
-Нужно согласовать native шаг системных зависимостей Default и отдельно Rust
-после явной подготовки языка. Вопрос владельцу: ставить недостающее через APT
-либо требовать desktop dependencies для Terminal. Установленные программы и
-языковые SDK сохраняем; SDK не возвращаем в обязательную установку Core.
+§292 реализовал native APT шаг: показывает недостающие OS packages,
+спрашивает перед изменением и перепроверяет результат. Rust build-essential
+проверяется только после явного выбора языка. Чистые Default/font/startup и
+repeat прошли без SDK; затем official Go и installed LSP/format/debug/output/
+tests прошли. Rust cold workflow открыт: Ubuntu archive перестал отвечать
+(SSL timeout), native cc пока не установлен. Установленные программы и SDK
+сохраняем; SDK не возвращаем в обязательную установку Core.
+[Текущие проверки и блокер](openspec/changes/prepare-native-system-dependencies/verification.md).
 Исходный отказ и границы — [§291](nvim_forge/FIXLOG.md#291-языки-и-инструменты-без-обязательных-sdk)
 и [verification](openspec/changes/defer-language-environment-setup/verification.md).
 

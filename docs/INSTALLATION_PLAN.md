@@ -16,12 +16,21 @@ Go и rustup с rustfmt/rust-src вместо неподходящих APT SDK; 
 прямой ForgeSdk selector остаётся. Основа UX — явные команды сред/tools и
 User/Workspace настройки VS Code, без потери управления после закрытия prompt.
 
-Новый cold Default дошёл до Terminal и остановился на отсутствующей системной
-libX11-xcb.so.1. Полный clean install ещё не готов: требуется решение по установке
-зависимостей ОС (также unzip для Core/Mason), затем installed workflow/repeat.
-Новые official Go1.27.4 и Rust1.100.0 установлены отдельно в тестовый HOME;
-repeat сохранил версии/бинарники, rustfmt/rust-src готовы. Это проверка providers,
-она не заменяет готовность всей IDE. [Результаты и ограничения](../openspec/changes/defer-language-environment-setup/verification.md).
+§292 устранил отказ libX11-xcb.so.1/unzip отдельным штатным шагом OS packages.
+На Debian/Ubuntu native frontend показывает недостающие utilities/libraries,
+предлагает APT и проверяет результат. Default не ставит языковые SDK; Rust
+build-essential проверяется только при явной подготовке Rust. Готовые программы
+переиспользуются. `--system-deps ask|install|check` управляет шагом, а отдельный
+`--check-system` даёт read-only JSON/exit0 либо2. Windows bootstrap принимает
+`-SystemDependencies ask|install|check`. Без TTY ask требует явного выбора;
+preview не выполняет OS probes.
+
+Чистые Default/font/startup и repeat прошли без SDK; затем official Go1.27.4 и
+installed LSP/format/debug/output/tests прошли. Rust cold workflow блокирует
+недоступный Ubuntu archive; полный cross-platform PASS не объявляется.
+[Текущие результаты](../openspec/changes/prepare-native-system-dependencies/verification.md).
+Arch/Omarchy не получает APT: native pacman и VM/Wayland acceptance — отдельный
+[IDE-143](OMARCHY_SUPPORT_PLAN.md). macOS и GUI требуют настоящих систем.
 
 §289 / IDE-BOOT-49: Rust-компонент включает отдельную проверку cargo-nextest,
 меню existing/install/skip/refresh/cancel и официальный binary installer в

@@ -11071,3 +11071,80 @@ integration SKIP with preparation guidance. Supplied/invalid paths still fail;
 acceptance supplied verified native inputs and passed4 cases per OS. Explicit
 build/env/Windows/POSIX test commands are in docs/LANGUAGE_ENVIRONMENTS.md.
 No frontend/Cargo download is added to the ordinary E2E runner.
+
+
+## 200. Native OS dependencies, cold Default/Go и план Omarchy — 2026-11-19
+
+Workspace F:/repo/forge-nvim, HEAD8181e87. Full access/never; no goal, agents,
+npx, push. Host TEMP/TMP/TMPDIR/NVIM_LOG_FILE and Python -B artifacts on F.
+Native Linux kit/profile/build scratch under exact own /tmp; 2CPU/3GiB.
+Discovery: git status/diff, rg/rg --files, bounded Get-Content/Select-String;
+OpenSpec proposal/apply context read; no other repository edited.
+Omarchy plan informed by official omarchy.org and upstream
+github.com/basecamp/omarchy/blob/master/bin/omarchy-pkg-install (pacman).
+No Omarchy install/test claimed; IDE-143 separate future platform stage.
+
+Builds: python -B scripts/build-installer-ui.py --work .tests/installer-ui
+  --output .tests/native-prerequisites/frontend/windows-x64
+Linux: docker exec <ownPublisher> bash /workspace/.tests/ubuntu/build-system-ui.sh
+  (native vendored locked Cargo); output .tests/ubuntu/native-prerequisites/frontend/linux-x64.
+Old .tools SDK/frontend not replaced. Windows SHA b2a37f260a9e5f9f288949517ac07b1472a4915a0d5e751756c0162765c46ce7;
+Linux SHA deec79b29bc216e0320aa7a0227ff45c3566c7644a38a2308d10883e12d74231.
+Native unit: .tests/native-prerequisites/unit-windows.ps1 and
+  docker exec <ownPublisher> bash /workspace/.tests/ubuntu/unit-system.sh →2PASS/OS.
+
+One affected packet: .tests/native-prerequisites/affected-windows.ps1 and
+  docker exec <ownPublisher> bash /workspace/.tests/ubuntu/affected-system.sh.
+FORGE_INSTALL_UI_BINARY supplied; Linux FORGE_E2E_DEPS native prepared overlay,
+FORGE_INSTALL_STAND_ROOT=/tmp/fride-system-stands and native editor profiles.
+Windows batch1795088998786345500; Ubuntu1795089008394062362.
+Selected files: language-environments/setup-sdk-paths E2E; native system,
+language-environments, SDK actions/settings, Nextest, Go policy and UI source.
+Only failed/affected system repeats thereafter; original fixture failures kept
+in system-linux-retry.txt/system-linux-final.txt and original batch. Fixture
+catalog/manager/cache controls do not install actual host packages.
+
+Actual cold command: python -B tests/diagnostics/check-cold-install.py
+  --artifacts .tests/cold-install/artifacts --publisher-container <ownPublisher> --keep
+→.tests/cold-install/1795089490408203300. Baseline/noSDK, native APT OS dependencies,
+Git, Default/font/ready/first actual fride launch PASS. Native work/profile/kit
+paths in container.json/native-paths.json, source SHA84dc6fb871e9c42105913cf2999f7fb58a28ddf3b46e5c8abfba1a1cea0ab5b0.
+repeat-cold.py repeats real root entry and compares Mason/plugin/preference/
+ordinary Neovim guards, SDK still absent. No source/SDK caches copied to target.
+Actual installed fride -l tests/diagnostics/install-first-language-observe.lua
+  <ownedProject> /stand/first-languages.json →one notice/language, no SDK downloads.
+prepare-cold-languages.py go drives native kit/bin/fride-setup
+  --prepare-language go --installed-kit <kit> --result /stand/prepared-go.json
+  --log-dir <work>/prepare-go --go-toolchain-download deny →official Go/tools ready.
+docker exec -e FORGE_INSTALLED_LANGUAGE_CASE=go -e GOTOOLCHAIN=local
+  -e RUSTUP_AUTO_INSTALL=0 -e GOMAXPROCS=2 <ownCold> <kit>/bin/fride --headless -i NONE
+  -l <coldSource>/tests/diagnostics/install-language-observe.lua <work>/actual-go-language
+and same with install-workflow-observe.lua <work>/actual-go-runtime →Go native PASS.
+Stdout actual-go-language.txt / actual-go-runtime.txt; actual DAP/output/tests,
+not fixture success. Full async editor prepare/reuse remains open.
+
+External blocker: apt-get install --yes --no-upgrade python3 was only an optional
+test harness after no-SDK gates, fetched nothing. Stopped exact own apt PID9049
+after ps/argv check. Bounded curl probes (connect5s/max10s), native DNS and host
+request show Ubuntu archive unavailable; go.dev still reachable. No mirror/TLS
+changes or Docker/WSL restarts. Final network-final.txt: curl28 SSL timeout.
+Rust cc/APT then Rust actual workflow remains open; no full cold-language PASS.
+
+Final unit/trace once: native nvim -l tests/run.lua unit trace →20 files PASS/OS.
+Checkpoint helper .tests/native-prerequisites/checkpoint.py captures journal
+prefixes at HEAD8181e87 and verifies append-only/old SDK+UI/locks/backports,
+both frontend source manifests and changed Python AST. Lua loadfile, PS Parser,
+bash -n install.sh; openspec validate <change> --type change --strict --no-interactive;
+nvim -l tests/trace.test.lua --change <change> for current and linked changes.
+Exact owned staging/diff --check; local git -c gc.auto=0 -c maintenance.auto=false commit.
+
+Export-records.py inspects exact ID/owner before regular log/report export:
+publisher108 files24108 bytes + cold51 files102371 bytes. No SDK/runtime/plugin
+trees copied. Then only exact owned publisher7585e76c1165 / cold fa0d570e05fe
+are stopped/--rm removed. Desktop/WSL/unrelated containers remain untouched.
+Next: remaining Rust/positive async cases when network works, then native
+platform gates; Omarchy implementation follows its explicit plan.
+
+Cleanup evidence: cleanup-containers.txt сохранил immediate --rm race assertion;
+cleanup-containers-final.txt/json подтверждают удаление обоих exact owned IDs.
+Повтор использовал bounded poll, не Docker Desktop/WSL actions.

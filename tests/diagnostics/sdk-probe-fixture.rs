@@ -1,6 +1,35 @@
 // Native single-process fixture for version/error/timeout; never installs SDKs.
 fn main() {
     let name = std::env::current_exe().unwrap().file_stem().unwrap().to_string_lossy().to_string();
+    if let Ok(folder)=std::env::var("SYSTEM_FIXTURE_BIN") {
+        use std::io::Write;
+        let args:Vec<_>=std::env::args().skip(1).collect();
+        let state=std::path::PathBuf::from(std::env::var("SYSTEM_FIXTURE_STATE").unwrap());
+        if name=="ldconfig" {
+            // Needed entry is beyond the old 16KiB diagnostic-tail bound.
+            for index in 0..1500 {println!("libfixture-padding-{}.so.1 (libc6) => /fixture/lib{}.so",index,index);}
+            if state.exists() {println!("libfride-fixture-gui.so.1 (libc6) => /fixture/libgui.so.1");}
+            return;
+        }
+        if name=="sudo" || name=="apt-get" {
+            let mut trace=std::fs::OpenOptions::new().create(true).append(true).open(std::env::var("SYSTEM_FIXTURE_TRACE").unwrap()).unwrap();
+            writeln!(trace,"{}\t{}\t{}",name,std::env::var("DEBIAN_FRONTEND").unwrap_or_default(),args.join("\t")).unwrap();
+            if name=="sudo" {
+                let status=std::process::Command::new(&args[0]).args(&args[1..]).status().unwrap();std::process::exit(status.code().unwrap_or(1));
+            }
+            if args.iter().any(|arg|arg=="install") {
+                match std::env::var("SYSTEM_FIXTURE_MODE").as_deref() {
+                    Ok("fail")=>std::process::exit(7),Ok("noop")=>return,_=>{}
+                }
+                let bin=std::path::PathBuf::from(folder);
+                for (package,command) in [("unzip","fride-probe-unzip"),("build-essential","fride-probe-cc")] {
+                    if args.iter().any(|arg|arg==package) {std::fs::copy(std::env::current_exe().unwrap(),bin.join(command)).unwrap();}
+                }
+                if args.iter().any(|arg|arg=="libegl1") {std::fs::write(state,"ready").unwrap();}
+            }
+            return;
+        }
+    }
     if ["powershell", "bash"].contains(&name.as_str()) {
         use std::io::Write;
         let trace = std::env::var("SDK_BOOTSTRAP_TRACE").expect("bootstrap fixture only");

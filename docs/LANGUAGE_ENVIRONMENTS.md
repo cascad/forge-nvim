@@ -79,6 +79,13 @@ bin/fride-setup --prepare-language go --installed-kit /path/to/fride --result /n
 ```
 
 На Windows executable — `bin/fride-setup.exe`. Current directory задаёт проект.
+На Debian/Ubuntu перед подготовкой проверяются зависимости ОС: Rust требует
+native `cc`/`ar`. Frontend показывает APT-команды и запрашивает подтверждение;
+готовые зависимости переиспользуются. SDK остаётся обычным upstream environment.
+Для автоматизации есть `--system-deps install`, для запрета изменений —
+`--system-deps check`; без TTY ask требует явного выбора. `--check-system` —
+отдельная read-only проверка выбранного установочного плана, несовместимая с
+prepare. Отчёты недостающего — `system-*.json` в `--log-dir`.
 Для source checkout без установленного frontend встроенная подготовка сообщает
 причину; доступны ручной SDK selector и Mason. Cargo автоматически не запускается.
 

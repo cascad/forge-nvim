@@ -31,18 +31,22 @@ local function type_text(value)
 end
 local ok,err=xpcall(function()
  if scenario=='cold-default' then
-  local marker,installed=0,{}
+  local marker,installed,system_done=0,{},false
   local subjects={'Git','SDK go','SDK rust','SDK python','SDK node','Rust Tests · cargo-nextest'}
   while true do
-   local selected,review
+   local selected,review,system
    assert(vim.wait(tonumber(vim.env.FORGE_UI_WAIT_MS) or 180000,function()
     local raw=lua('return _G.ui_raw:sub((...)+1)',{marker})
     for _,subject in ipairs(subjects) do if raw:find(subject..': действие',1,true) then selected=subject;return true end end
     review=raw:find('Продолжить установку IDE с этим планом?',1,true)
-    return review or exitcode()~=nil
+    system=not system_done and raw:find('Установить системные зависимости ОС?',1,true)
+    return review or system or exitcode()~=nil
    end,20),'Cold setup progress timeout\n'..screen())
    if exitcode()~=nil then break end
-   if review then
+   if system then
+    system_done=true
+    frame('cold-system-dependencies');marker=lua('return #_G.ui_raw');send('\r')
+   elseif review then
     frame('cold-review');marker=lua('return #_G.ui_raw');send('\r')
    else
     frame(selected)
@@ -56,6 +60,12 @@ local ok,err=xpcall(function()
     marker=lua('return #_G.ui_raw');send('\27[D\r')
    end
   end
+ elseif scenario:sub(1,7)=='system-' then
+  waitfor('Установить системные зависимости ОС?');frame('system-dependency-choice')
+  if scenario=='system-cancel' then send('\27')
+  elseif scenario=='system-decline' then send('\27[C\r')
+  elseif scenario=='system-install' then send('\r')
+  else error('Unknown system dependency scenario') end
  elseif scenario:sub(1,10)=='go-policy-' then
   waitfor('Разрешить Go скачать toolchain для сборки IDE tools?');frame('go-policy-choice')
   if scenario=='go-policy-allow' then send('\27[D\r')

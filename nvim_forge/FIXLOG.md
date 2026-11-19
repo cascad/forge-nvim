@@ -15455,3 +15455,62 @@ IDE-142/roadmap/installation/HISTORY, active change verification и commands199.
 SKIP с причиной, не запускает скрытую сборку/загрузку; acceptance обеих ОС
 использовал source-matched binaries и прошёл все4 UI case. Команды подготовки
 и проверки добавлены в LANGUAGE_ENVIRONMENTS.
+
+
+### 292. Системные зависимости и чистая установка без SDK
+
+**Спека: IDE-BOOT-52 (ADDED).** IDE-142; отдельный будущий IDE-143 Omarchy.
+**Было.** Cold Default останавливался на libX11-xcb.so.1, Mason нуждался в
+unzip, а для будущего Rust run отсутствовал cc. Наличие SDK само по себе
+не доказывало готовность IDE. Нельзя решать это ранней установкой всех SDK.
+**Причина.** Shared SDK/tool preflight не покрывал OS runtime dependencies
+private Terminal и utilities/linker, требуемые native upstream tools.
+**Сделано.** Отдельный requirements catalog и native inspector: release/PATH/
+read-only ldconfig cache, без SDK probes. На Debian/Ubuntu — показанный APT
+update/install недостающего, ask/install/check, отмена130, native logs/recheck;
+failure/no-op не объявляют ready и не заменяют kit. --check-system возвращает
+read-only JSON/exit0 либо2. Preview без probes. Non-TTY ask требует явной policy.
+Core/Terminal не требуют языковых SDK; Rust cc/ar только при explicit prepare.
+Windows/macOS не выполняют Linux probes, Arch/Omarchy не получают APT.
+Native package runner общий с SDK; DEBIAN_FRONTEND задан внутри sudo child,
+parent environment прежний. Library cache читается целиком в bounded режиме,
+обычные SDK error tails остаются прежними. Installed prepare и оба bootstrap
+forward эту policy. SDK/.tools UI/locks/pins/backports прежние.
+
+**Проверки.** Source-matched Windows/Linux builds; native Rust unit2/OS PASS.
+Один affected packet/OS: language UI/setup paths плюс system/language/SDK
+actions/settings/Nextest/Go policy/UI suites. На Linux исходные три fixture
+ошибки сохранены: Terminal scope, лишний PTY review и bootstrap PATH/повторный
+result. После точечных исправлений только affected repeats; все9 system cases
+прошли. Windows3 применимых PASS/6 Linux-only SKIP. Итог unit+trace20 файлов/OS
+PASS; strict/change trace/syntax/frozen/journal/index checkpoint сохранён.
+
+Actual cold1795089490408203300: baseline без SDK/Git/Nvim/caches, native OS
+packages и Git, реальные Core/Terminal archives,67 plugins/2 Core Mason.
+Font/startup/ready PASS, Go/Rust/Python/Node ещё отсутствуют. Repeat сохранил
+Mason receipts/plugin pins/preferences/ordinary Neovim, SDK не поставил.
+Первые Go/Rust файлы дали local-only notice без повторов/downloads. Explicit
+Go prepare поставил official Go1.27.4 в обычный ~/sdk и IDE tools; installed
+LSP/diagnostics/navigation/format и debug breakpoint/eval/output/Tests PASS.
+SDK/config/tool substitutes в эти actual проверки не вводились.
+
+**Открыто.** После Go Ubuntu archive перестал отвечать (SSL timeout), поэтому
+Rust build-essential→rustup/nextest→installed workflow не пройден. Попытка
+Python только для test harness ничего не скачала; остановлен только exact
+own apt PID. Repositories/mirrors/TLS не менялись. Positive async prepare из
+редактора также не закрывается native CLI PASS. Оба change остаются открытыми;
+native Mac/WSL/GUI/publication отдельно. IDE-143 содержит pacman/bootstrap/reuse
+и отдельную настоящую Omarchy VM/Wayland acceptance, её PASS не заявляется.
+
+**Вывод.** Чистая IDE и последующая подготовка Go работают без предварительной
+установки всех SDK. Для завершения cold language gate нужны доступный APT и
+оставшиеся Rust/async cases; повторять весь E2E на каждое изменение не нужно.
+Reports/logs на F; exported159 regular files/126479 bytes, без SDK/runtime copies.
+Контейнеры удаляются только по exact ID/owner; Docker Desktop/WSL не менялись.
+**Файлы.** Frontend system/SDK runner/scopes, OS catalog, bootstrap, targeted
+fixtures/diagnostics, current verification/tasks, guides/roadmap/Omarchy plan,
+HISTORY и commands200. Подробные команды и evidence — там.
+
+Дополнение к §292: оба exact owned containers остановлены/--rm удалены.
+Первый cleanup inspect опередил асинхронный auto-remove Docker; исходный
+assertion сохранён, bounded poll подтвердил удаление. Это не product/test failure.

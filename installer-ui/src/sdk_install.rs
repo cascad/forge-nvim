@@ -157,17 +157,28 @@ pub(crate) fn recipe(options: &Options, id: &str, paths: &[PathBuf]) -> Result<R
         ]);
     }
     if manager == "apt-get" {
-        // apt --yes covers package choices, not debconf (for example tzdata).
-        // Keep this inside sudo's environment boundary and out of the caller.
+        return apt_recipe(paths, recipe.args, &recipe.source);
+    }
+    Ok(recipe)
+}
+pub(crate) fn apt_recipe(paths: &[PathBuf], args: Vec<OsString>, source: &str) -> Result<Recipe> {
+    let path = sdks::effective_path(paths)?;
+    let apt = manager_path("apt-get", &path)?;
+    let mut argv = vec![
+        "DEBIAN_FRONTEND=noninteractive".into(),
+        apt.into_os_string(),
+    ];
+    argv.extend(args);
+    let mut recipe = Recipe {
+        program: PathBuf::from("/usr/bin/env"),
+        args: argv,
+        source: source.into(),
+        preserve_nextest: None,
+        sdk_result: None,
+    };
+    if let Some(sudo) = sdks::find("sudo", &path) {
         recipe.args.insert(0, recipe.program.into_os_string());
-        recipe
-            .args
-            .insert(0, "DEBIAN_FRONTEND=noninteractive".into());
-        recipe.program = PathBuf::from("/usr/bin/env");
-        if let Some(sudo) = sdks::find("sudo", &path) {
-            recipe.args.insert(0, recipe.program.into_os_string());
-            recipe.program = sudo;
-        }
+        recipe.program = sudo;
     }
     Ok(recipe)
 }

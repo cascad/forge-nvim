@@ -73,6 +73,9 @@ class Isolation(unittest.TestCase):
         (cls.source/'nvim_forge/scripts').mkdir(parents=True)
         (cls.source/'nvim_forge/init.lua').write_text(INIT,encoding='utf-8')
         (cls.source/'nvim_forge/scripts/setup-stage.lua').write_text(STAGE,encoding='utf-8')
+        # Delivery-only stand: fixture tools/Terminal stages do not need real
+        # desktop libraries. Dedicated system-dependency E2E supplies its catalog.
+        (cls.source/'nvim_forge/scripts/system-dependencies.json').write_text(json.dumps({'schema':1,'requirements':[]}))
         (cls.source/'nvim_forge/lua/forge').mkdir(parents=True)
         for name in ['setup_sdks','setup_tools','tool_paths','tool_catalog','install_profile','parser_runtime','sdk','log_store','nextest']:
             shutil.copy2(ROOT/f'nvim_forge/lua/forge/{name}.lua',cls.source/f'nvim_forge/lua/forge/{name}.lua')

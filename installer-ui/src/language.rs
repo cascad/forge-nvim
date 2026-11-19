@@ -137,6 +137,7 @@ pub(crate) fn prepare(mut options: Options) -> Result<i32> {
         || options.check_sdks
         || options.check_tools
         || options.check_rust_tools
+        || options.check_system
     {
         return Err(invalid(
             "Language preparation cannot be combined with preview/check modes",
@@ -208,6 +209,9 @@ pub(crate) fn prepare(mut options: Options) -> Result<i32> {
         cliclack::intro(format!("Fride · подготовка {kind}"))?;
     }
     eprintln!("SDK и инструменты {kind}; редактор и проект продолжают работать.");
+    if !crate::system::ensure(&options, &plan)? {
+        return Ok(130);
+    }
     // The installed preflight validates Core even for a language without an SDK.
     let report = crate::inspect_sdks(&options, &plan)?;
     let report = if !report.ready() && interactive {

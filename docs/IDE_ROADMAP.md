@@ -188,9 +188,17 @@ GoToolchain и SDK existing/manual path в установщике сохране
   без повторов на каждом BufEnter. SDK-зависимые Mason tools тоже отложены,
   не объявляются готовыми. §291 реализовал этот срез: deferred Default,
   native подготовка языка и постоянное меню; affected Windows/Ubuntu проверки
-  прошли. Новый cold Default остановился на зависимости ОС WezTerm
-  libX11-xcb.so.1. До cold installed workflow/repeat нужно определить шаг
-  системных зависимостей (Core/Mason также нужен unzip).
+  прошли. §292 добавил явный native APT шаг недостающих OS packages с recheck,
+  отменой и automation policy. Чистые Default/font/startup и repeat прошли без
+  SDK, затем official Go и installed LSP/format/debug/output/tests.
+  Rust cold workflow блокирует недоступный Ubuntu archive; positive async
+  prepare из редактора также остаётся открытым case.
+  [Проверки §292](../openspec/changes/prepare-native-system-dependencies/verification.md).
+  **IDE-143 / следующий отдельный этап:** владелец добавил Omarchy в рабочие среды.
+  Нужны native pacman provider, bootstrap/upgrade/reuse SDK и общие CLI E2E,
+  затем настоящая Omarchy VM/машина для Wayland/WezTerm/clipboard/hotkeys.
+  [План Omarchy](OMARCHY_SUPPORT_PLAN.md). APT не является общим Linux provider;
+  текущая Ubuntu проверка не объявляет Omarchy готовой.
   Постоянное управление — «Языки и инструменты» через существующий Space l S:
   SDK/версии/пути, состояние IDE tools, install/select/recheck/logs, user/project
   настройки и обратимое отключение предложений. Разовое Later не заменяет

@@ -69,7 +69,7 @@ class UI(stand.Isolation):
         self.assertEqual(styled,'--no-color' not in command,'Native color/no-color presentation')
         return value
 
-    def root_entry(self,base,env,target,components='core',runtime=True,go_toolchain_download=None,tools_versions=None):
+    def root_entry(self,base,env,target,components='core',runtime=True,go_toolchain_download=None,tools_versions=None,system_dependencies=None):
         if stand.WINDOWS:
             quote=lambda value:"'"+str(value).replace("'","''")+"'"
             command='& ([scriptblock]::Create((Invoke-WebRequest -UseBasicParsing -Uri '+quote(self.url+'/entry')+').Content))'
@@ -77,6 +77,7 @@ class UI(stand.Isolation):
             if runtime:values.append(('RuntimePath',self.runtime))
             if go_toolchain_download is not None:values.append(('GoToolchainDownload',go_toolchain_download))
             if tools_versions is not None:values.append(('ToolsVersions',tools_versions))
+            if system_dependencies is not None:values.append(('SystemDependencies',system_dependencies))
             for key,value in values:
                 command+=' -'+key+' '+quote(value)
             args=[stand.SHELL,'-NoProfile','-ExecutionPolicy','Bypass','-Command',command]
@@ -86,6 +87,7 @@ class UI(stand.Isolation):
             if runtime:values.append(('runtime-path',self.runtime))
             if go_toolchain_download is not None:values.append(('go-toolchain-download',go_toolchain_download))
             if tools_versions is not None:values.append(('tools-versions',tools_versions))
+            if system_dependencies is not None:values.append(('system-deps',system_dependencies))
             for key,value in values:
                 command+=' --'+key+' '+shlex.quote(str(value))
             args=[stand.SHELL,'-c',command]

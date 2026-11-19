@@ -1,0 +1,18 @@
+{
+  "schema": 1,
+  "requirements": [
+    {"id":"download","scopes":["core"],"command":"curl","apt":["curl"]},
+    {"id":"zip","scopes":["core"],"command":"unzip","apt":["unzip"]},
+    {"id":"tar","scopes":["core"],"command":"tar","apt":["tar"]},
+    {"id":"gzip","scopes":["core"],"command":"gzip","apt":["gzip"]},
+    {"id":"xcb","scopes":["terminal"],"library":"libxcb.so.1","apt":["libxcb1"]},
+    {"id":"x11-xcb","scopes":["terminal"],"library":"libX11-xcb.so.1","apt":["libx11-xcb1"]},
+    {"id":"x11","scopes":["terminal"],"library":"libX11.so.6","apt":["libx11-6"]},
+    {"id":"fontconfig","scopes":["terminal"],"library":"libfontconfig.so.1","apt":["libfontconfig1"]},
+    {"id":"wayland-client","scopes":["terminal"],"library":"libwayland-client.so.0","apt":["libwayland-client0"]},
+    {"id":"egl","scopes":["terminal"],"library":"libEGL.so.1","apt":["libegl1"]},
+    {"id":"gl","scopes":["terminal"],"library":"libGL.so.1","apt":["libgl1"]},
+    {"id":"rust-linker","scopes":["rust"],"command":"cc","apt":["build-essential"]},
+    {"id":"rust-archive","scopes":["rust"],"command":"ar","apt":["build-essential"]}
+  ]
+}

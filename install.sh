@@ -14,6 +14,7 @@ ui_path=""
 go_toolchain_download=""
 tools_versions=""
 prepare_languages=0
+system_dependencies=""
 original_checkout=''
 if [ -n "${BASH_SOURCE[0]:-}" ] && [ -f "${BASH_SOURCE[0]}" ]; then original_checkout="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd -P)";fi
 skip_dependencies=0
@@ -22,7 +23,7 @@ components=''
 components_explicit=0
 while [ "$#" -gt 0 ]; do
   case "$1" in
-    --ref|--archive-url|--source-root|--install-dir|--profile|--components|--runtime-path|--runtime-archive-url|--runtime-sha256|--command-dir|--installer-ui-path|--go-toolchain-download|--tools-versions)
+    --ref|--archive-url|--source-root|--install-dir|--profile|--components|--runtime-path|--runtime-archive-url|--runtime-sha256|--command-dir|--installer-ui-path|--go-toolchain-download|--tools-versions|--system-deps)
       [ "$#" -ge 2 ] || { printf 'Missing value: %s\n' "$1" >&2; exit 1; }
       case "$1" in
         --ref) ref="$2";;
@@ -36,6 +37,7 @@ while [ "$#" -gt 0 ]; do
         --installer-ui-path) ui_path="$2";;
         --go-toolchain-download) go_toolchain_download="$2";;
         --tools-versions) tools_versions="$2";;
+        --system-deps) system_dependencies="$2";;
         --profile) profile="$2";;
         --components) components="$2"; components_explicit=1;;
       esac
@@ -52,6 +54,7 @@ while [ "$#" -gt 0 ]; do
       printf '%s\n' '--go-toolchain-download allow|deny (explicit native Go build policy)'
       printf '%s\n' '--tools-versions preserve|baseline (keep installed tools unless baseline reset is explicit)'
       printf '%s\n' '--prepare-languages (explicit eager SDK/tools setup; default prepares Core)'
+      printf '%s\n' '--system-deps ask|install|check (native OS requirements; default ask)'
       exit 0;;
     *) printf 'Unknown option: %s\n' "$1" >&2; exit 1;;
   esac
@@ -59,6 +62,7 @@ done
 case "$profile" in default|custom) ;; *) printf 'Unknown profile: %s\n' "$profile" >&2; exit 1;; esac
 case "$go_toolchain_download" in ''|allow|deny) ;; *) printf 'Go toolchain download: allow or deny\n' >&2;exit 1;; esac
 case "$tools_versions" in ''|preserve|baseline) ;; *) printf 'Tool versions: preserve or baseline\n' >&2;exit 1;; esac
+case "$system_dependencies" in ''|ask|install|check) ;; *) printf 'System dependencies: ask|install|check\n' >&2;exit 1;; esac
 case "$(uname -s)" in
   Linux) platform=linux;;
   Darwin) platform=macos;;
@@ -125,6 +129,7 @@ if [ -n "$ui_path" ] || [ -f "$source_dir/installer-ui/Cargo.toml" ]; then
   if [ -n "$go_toolchain_download" ]; then ui_args+=(--go-toolchain-download "$go_toolchain_download");fi
   if [ -n "$tools_versions" ]; then ui_args+=(--tools-versions "$tools_versions");fi
   if [ "$prepare_languages" -eq 1 ]; then ui_args+=(--prepare-languages);fi
+  if [ -n "$system_dependencies" ]; then ui_args+=(--system-deps "$system_dependencies");fi
   if [ -n "$command_dir" ]; then ui_args+=(--command-dir "$command_dir");fi
   if [ -n "$runtime_path" ]; then ui_args+=(--runtime-path "$runtime_path");fi
   if [ -n "$runtime_url" ]; then ui_args+=(--runtime-archive-url "$runtime_url" --runtime-sha256 "$runtime_sha");fi
@@ -134,6 +139,7 @@ fi
 [ -z "$go_toolchain_download" ] || { printf 'Go toolchain choice requires the fride setup frontend.\n' >&2;exit 1; }
 [ -z "$tools_versions" ] || { printf 'Tool version choice requires the fride setup frontend.\n' >&2;exit 1; }
 [ "$prepare_languages" -eq 0 ] || { printf 'Language preparation requires the fride setup frontend.\n' >&2;exit 1; }
+[ -z "$system_dependencies" ] || { printf 'System dependencies choice requires the fride setup frontend.\n' >&2;exit 1; }
 . "$source_dir/nvim_forge/scripts/lib/install-profile.sh"
 FORGE_NVIM_COMPONENTS="$(forge_select_profile "$profile" "$components" "$components_explicit")"
 export FORGE_NVIM_COMPONENTS

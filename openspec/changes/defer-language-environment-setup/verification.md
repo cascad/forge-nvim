@@ -98,3 +98,12 @@ remains open until OS dependencies are resolved. Full regression across all
 unrelated features was not repeated; this block ran its affected packet and
 unit/trace once, with failed/affected repeats only. Native macOS, Windows WSL,
 Terminal GUI and public artifact publication remain separate genuine gates.
+
+## Следующий checkpoint — §292
+
+IDE-142 получил native OS dependency step. Новый cold Default/font/startup и
+repeat прошли без SDK, первые Go/Rust файлы не запускали downloads. Затем
+настоящие official Go prepare и installed LSP/format/debug/output/tests прошли.
+Rust cold workflow блокирует недоступный Ubuntu archive (нужен native cc);
+positive async prepare/reuse из редактора остаётся открытым. Исторический отказ
+выше сохранён. [Новые факты](../prepare-native-system-dependencies/verification.md).
