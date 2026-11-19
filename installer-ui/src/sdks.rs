@@ -43,9 +43,10 @@ pub(crate) struct Snapshot {
     pub schema: u8,
     pub selections: HashMap<String, Selection>,
     pub errors: HashMap<String, String>,
+    pub cwd: Option<PathBuf>,
 }
 
-#[derive(Deserialize)]
+#[derive(Clone, Deserialize)]
 pub(crate) struct Selection {
     pub tools: HashMap<String, PathBuf>,
     pub bin: PathBuf,
@@ -159,8 +160,10 @@ fn version_output(mut command: Command, log_path: &Path) -> Result<(Option<ExitS
         .create_new(true)
         .write(true)
         .open(log_path)?;
+    if command.get_current_dir().is_none() {
+        command.current_dir(std::env::temp_dir());
+    }
     command
-        .current_dir(std::env::temp_dir())
         .stdin(Stdio::null())
         .stdout(Stdio::from(log.try_clone()?))
         .stderr(Stdio::from(log));
@@ -190,6 +193,7 @@ fn probe(
     stamp: u128,
     search_path: &OsStr,
     selection: Option<&Selection>,
+    cwd: Option<&Path>,
 ) -> Result<Tool> {
     let mut tool = Tool {
         command: name.into(),
@@ -235,6 +239,9 @@ fn probe(
         }
     }
     let mut command = Command::new(path);
+    if let Some(cwd) = cwd {
+        command.current_dir(cwd);
+    }
     if let Some(selection) = selection {
         command.envs(&selection.env);
     }
@@ -353,7 +360,14 @@ pub(crate) fn inspect_selected(
         for alternatives in groups {
             let mut chosen = None;
             for name in alternatives {
-                let candidate = probe(name, directory, stamp, &search_path, selection)?;
+                let candidate = probe(
+                    name,
+                    directory,
+                    stamp,
+                    &search_path,
+                    selection,
+                    snapshot.cwd.as_deref(),
+                )?;
                 let ready = candidate.status == "ready";
                 if chosen
                     .as_ref()

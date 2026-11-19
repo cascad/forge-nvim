@@ -56,7 +56,7 @@ function M.prepare(options)
     end
     local kinds={}
     for _,kind in ipairs({'go','rust'}) do
-        if not vim.env.FORGE_NVIM_COMPONENTS or require('forge.install_profile').selected(kind) then kinds[#kinds+1]=kind end
+        if require('forge.install_profile').prepared(kind) then kinds[#kinds+1]=kind end
     end
     local report={phase='pre-mason',selected=selected,scope=options.scope,sdk_kinds=kinds}
     vim.g.forge_setup_sdk_report=report

@@ -76,6 +76,10 @@ class Isolation(unittest.TestCase):
         (cls.source/'nvim_forge/lua/forge').mkdir(parents=True)
         for name in ['setup_sdks','setup_tools','tool_paths','tool_catalog','install_profile','parser_runtime','sdk','log_store','nextest']:
             shutil.copy2(ROOT/f'nvim_forge/lua/forge/{name}.lua',cls.source/f'nvim_forge/lua/forge/{name}.lua')
+        for name in ['runtime_sdk','rust_components']:
+            shutil.copy2(ROOT/f'nvim_forge/lua/forge/{name}.lua',cls.source/f'nvim_forge/lua/forge/{name}.lua')
+        for name in ['install-sdk.lua','check-rust-components.lua']:
+            shutil.copy2(ROOT/f'nvim_forge/scripts/{name}',cls.source/f'nvim_forge/scripts/{name}')
         shutil.copy2(ROOT/'nvim_forge/scripts/components.tsv',cls.source/'nvim_forge/scripts/components.tsv')
         shutil.copytree(ROOT/'scripts',cls.source/'scripts',ignore=shutil.ignore_patterns('__pycache__'))
         for name in ['components.tsv','lib/install-profile.ps1','lib/install-profile.sh']:

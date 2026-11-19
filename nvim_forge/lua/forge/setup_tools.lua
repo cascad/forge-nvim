@@ -20,20 +20,22 @@ local function outside_replacement(path,source)
     end
 end
 
-function M.external(name)
+function M.external(name,options)
+    options=options or {}
+    local scope=options.scope or (vim.g.forge_setup_sdk_report or {}).scope or 'user'
     local key=executables[name]
     if key==true then key=name end
     local kind='executable'
     if scripts[name] then key=name;kind='file' end
     if not key then return end
     local paths=require('forge.tool_paths')
-    local path,explicit=paths.override(key,{scope='user',kind=kind})
+    local path,explicit=paths.override(key,{scope=scope,kind=kind})
     if not explicit then return end
     local entry=paths.current(key)
     outside_replacement(path,entry.source)
     local command={path}
     if kind=='file' then
-        local node,chosen=paths.override('node',{scope='user',global='forge_node_executable',env='FORGE_NODE_EXECUTABLE'})
+        local node,chosen=paths.override('node',{scope=scope,global='forge_node_executable',env='FORGE_NODE_EXECUTABLE'})
         if not chosen then node=vim.fn.exepath('node') end
         assert(node and node~='','Setup tool '..name..' ['..entry.source..'] requires Node; choose an existing Node SDK.')
         command={node,path}

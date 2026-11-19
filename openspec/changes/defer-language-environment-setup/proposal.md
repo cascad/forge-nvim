@@ -37,8 +37,11 @@ Cold Ubuntu §290 показал неподходящие Go1.22.2/Rust1.75 из
 
 ### Modified Capabilities
 
-Bootstrap/profile/SDK readiness: уточнить существующие IDE-BOOT-10/15/18 по
-полному чтению контрактов до создания delta; check-sdks остаётся строгим.
+Нет root IDE baseline: openspec list --specs содержит только WezTerm/macOS.
+Полностью прочитаны active contracts IDE-BOOT-10/15/18. Новый контракт уточняет
+границу: desired languages не равны текущему preparation mask. Старые строгие
+postconditions/preflight сохраняются для явно подготавливаемого набора;
+check-sdks остаётся строгим. Отсутствующие main specs не создаются через MODIFIED.
 
 ## Impact
 

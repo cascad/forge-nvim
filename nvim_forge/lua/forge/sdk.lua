@@ -179,7 +179,7 @@ function M.probe(kind, value, callback)
     local function run(argv, done)
         local started,why=pcall(vim.system,argv,{env=env,clear_env=true,cwd=uv.os_tmpdir(),text=true,timeout=3000},function(result)
             vim.schedule(function()
-                if result.code~=0 then done(nil,(result.stderr or '')..' (exit '..result.code..')')
+                if result.code~=0 or (result.signal or 0)~=0 then done(nil,(result.stderr or '')..' (exit '..result.code..', signal '..tostring(result.signal or 0)..')')
                 else done(result.stdout or '') end
             end)
         end)

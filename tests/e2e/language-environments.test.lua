@@ -1,0 +1,95 @@
+-- spec: IDE-BOOT-50 IDE-BOOT-51. Native editor/Telescope/settings; no downloads.
+local root=vim.fn.fnamemodify(debug.getinfo(1,'S').source:sub(2),':p:h:h:h'):gsub('\\','/')
+package.path=root..'/tests/lib/?.lua;'..package.path
+local T=require('check')
+if vim.env.FORGE_TEST_ID and not T.matches('IDE-BOOT-50',vim.env.FORGE_TEST_ID) and not T.matches('IDE-BOOT-51',vim.env.FORGE_TEST_ID) then T.finish();return end
+local function read(path)return vim.json.decode(table.concat(vim.fn.readfile(path),'\n'))end
+local function select(e,label)
+  e:wait('language menu',function()return e:current_ft()=='TelescopePrompt' and e.rpc:request('nvim_get_mode',{}).mode=='i' and e:lua('return vim.api.nvim_get_current_buf()')~=e.language_prompt end,30000)
+  e:input(label)
+  e:wait('choice '..label,function()return e:lua([[local x=require('telescope.actions.state').get_selected_entry();return x and x.ordinal:find(...,1,true)~=nil]],{label})end)
+  e.language_prompt=e:lua('return vim.api.nvim_get_current_buf()');e:input('<CR>')
+end
+local function run(name,fn)
+ T.check(name,function()
+  local e;local ok,why=xpcall(function()
+   e=require('editor').start(root,{timeout=120000,prepare=function(project)
+    vim.fn.writefile({'select 1;'},project..'/first.sql')
+   end})
+   e:wait('ready',function()return e:lua('return _G.forge_e2e_observed')end,15000)
+   fn(e)
+  end,debug.traceback)
+  if e then e:snapshot('languages');io.stdout:write('  artifacts: '..e.dir..'\n');local stopped,err=pcall(e.stop,e,not ok and why or nil);if not stopped then ok=false;why=tostring(why)..'\n'..tostring(err)end end
+  assert(ok,why)
+ end)
+end
+run('IDE-BOOT-50 first file offers once without SDK/network probes and keeps editing',function(e)
+ e:lua([[_G.language_spawns=#_G.forge_e2e_spawns;_G.language_notice=0
+  local notify=vim.notify;vim.notify=function(text,...)if text:find('Space l S',1,true) then _G.language_notice=_G.language_notice+1 end;return notify(text,...)end]])
+ e:input(':edit new.sql<CR>')
+ e:wait('one offer',function()return e:lua('return _G.language_notice')==1 end)
+ e:input('iselect 2;<Esc>:write<CR>:edit first.sql<CR>:buffer new.sql<CR>')
+ e:lua([[require('forge.languages').file(vim.api.nvim_get_current_buf());assert(_G.language_notice==1)
+  for index=_G.language_spawns+1,#_G.forge_e2e_spawns do
+   local name=vim.fs.basename(_G.forge_e2e_spawns[index].cmd):lower()
+   assert(not name:match('^go[.]?') and not name:match('^rustc') and not name:match('^rustup') and not name:match('^curl') and not name:match('^wget'),'Unexpected SDK/network probe '..name)
+  end;assert(vim.g.forge_e2e_installs==0);return true]])
+ T.eq(vim.fn.readfile(e.project..'/new.sql')[1],'select 2;')
+end)
+run('IDE-BOOT-51 hub project/user policy precedence metadata reset and malformed config',function(e)
+ e:input(' lS');select(e,'SQL');select(e,'Предложения');select(e,'Позже')
+ e:input('<Esc><Esc>')
+ e:lua([[local s=require('forge.language_settings');assert(s.get('sql').scope=='default')
+  assert(vim.fn.filereadable(s.files().project)==0)
+  assert(require('forge.languages').seen[require('forge.tool_paths').root()..'\nsql']);return true]])
+ e:input(':ForgeLanguages sql<CR>');select(e,'Предложения');select(e,'Не предлагать для проекта')
+ local project=e.project..'/.fride/languages.json'
+ e:wait('policy saved',function()return vim.fn.filereadable(project)==1 end)
+ T.eq(read(project).prompts.sql,'manual')
+ e:input('<Esc><Esc>')
+ local user=e:lua([[local s=require('forge.language_settings');s.set('sql','manual','user');s.set('sql','ask','project')
+  assert(s.get('sql').scope=='project' and s.get('sql').value=='ask');s.set('sql',nil,'project')
+  assert(s.get('sql').scope=='user' and s.get('sql').value=='manual');return s.files().user]])
+ T.eq(read(user).prompts.sql,'manual')
+ e:lua([[local s=require('forge.language_settings');local f=s.files().project
+  vim.fn.writefile({vim.json.encode({version=1,prompts={sql='manual'},metadata={keep=true}})},f)
+  s.set('sql','ask','project');assert(vim.json.decode(table.concat(vim.fn.readfile(f),'\n')).metadata.keep)
+  s.set('sql',nil,'project');s.set('sql',nil,'user');assert(s.get('sql').scope=='default')
+  s.set('sql','manual','project')
+  local probe=vim.fs.joinpath(vim.fn.stdpath('state'),'fresh-language-policy.lua')
+  vim.fn.writefile({"vim.opt.rtp:prepend(vim.env.FORGE_E2E_CONFIG)",
+   "local policy=require('forge.language_settings').get('sql')",
+   "assert(policy.value=='manual' and policy.scope=='project')"},probe)
+  local r=vim.system({vim.v.progpath,'--headless','-u','NONE','-i','NONE','-l',probe},{cwd=vim.fn.getcwd(),text=true}):wait(5000)
+  assert(r.code==0 and (r.signal or 0)==0,r.stderr);s.set('sql',nil,'project')
+  vim.fn.writefile({'{broken'},f);local ok=pcall(s.set,'sql','manual','project');assert(not ok)
+  assert(vim.fn.readfile(f)[1]=='{broken');local state=require('forge.languages').status('sql');assert(state.error and state.policy.value=='manual');return true]])
+end)
+run('IDE-BOOT-50 source missing preparation backend remains editable and logs reason',function(e)
+ local task=e:lua([[local m=require('forge.languages');m.prepare('sql');assert(m.active==nil);return true]])
+ assert(task)
+ e:input(':edit retained.sql<CR>iselect 2;<Esc>:write<CR>')
+ e:wait('saved after unavailable backend',function()return vim.fn.filereadable(e.project..'/retained.sql')==1 end)
+ T.eq(vim.fn.readfile(e.project..'/retained.sql')[1],'select 2;')
+ e:lua([[local found=false;for _,entry in ipairs(require('forge.log_store').memory)do if entry.source=='Languages' and entry.message:find('Source checkout',1,true)then found=true end end;assert(found);return true]])
+end)
+local native_case='IDE-BOOT-50 native async failure releases preparation and keeps editor usable'
+if not vim.env.FORGE_INSTALL_UI_BINARY or vim.env.FORGE_INSTALL_UI_BINARY=='' then
+ T.skip(native_case,'Source-only stand: prepare native frontend and set FORGE_INSTALL_UI_BINARY; no build/download during E2E')
+else
+run(native_case,function(e)
+ local binary=vim.env.FORGE_INSTALL_UI_BINARY
+ assert(binary and vim.fn.executable(binary)==1,'Provide current native FORGE_INSTALL_UI_BINARY explicitly')
+ local kit=e.runtime..'/own incomplete maintenance kit';vim.fn.mkdir(kit..'/bin','p');vim.fn.mkdir(kit..'/runtime','p')
+ local target=kit..'/bin/'..(vim.fn.has('win32')==1 and 'fride-setup.exe' or 'fride-setup')
+ assert(vim.uv.fs_copyfile(binary,target));vim.uv.fs_chmod(target,493)
+ vim.fn.writefile({vim.json.encode({schema=1,product='forge-nvim',ready=true})},kit..'/.forge-install.json')
+ e:lua([[vim.env.FRIDE_RUNTIME=...;local task=require('forge.languages').prepare('sql');assert(task);return true]],{kit..'/runtime'})
+ e:wait('native failure observed',function()return e:lua([[local m=require('forge.languages');return m.active==nil and next(m.results)~=nil]])end,30000)
+ e:input('<C-\\><C-n>:edit after-failure.sql<CR>iselect 3;<Esc>:write<CR>')
+ e:wait('editable after native failure',function()return vim.fn.filereadable(e.project..'/after-failure.sql')==1 end)
+ e:lua([[for _,result in pairs(require('forge.languages').results)do assert(result.error and not result.ready)end;return true]])
+ T.eq(vim.fn.readfile(e.project..'/after-failure.sql')[1],'select 3;')
+end)
+end
+T.finish()

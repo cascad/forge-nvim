@@ -26,7 +26,7 @@ class Nextest(settings.Settings):
         return base,env,target
 
     def command(self,base,target,check=False):
-        args=[str(ui.BINARY),'--source',str(self.source),'--runtime-path',str(self.runtime),
+        args=[str(ui.BINARY),'--prepare-languages','--source',str(self.source),'--runtime-path',str(self.runtime),
             '--components','rust','--install-dir',str(target),'--log-dir',str(base/'logs')]
         if check:args+=['--check-rust-tools']
         return args

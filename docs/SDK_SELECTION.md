@@ -1,6 +1,7 @@
 # Выбор установленной языковой среды
 
-`Space l S` или `:ForgeSdk` открывает выбор языка и области настройки.
+`Space l S` открывает общий раздел [«Языки и инструменты»](LANGUAGE_ENVIRONMENTS.md).
+`:ForgeSdk` открывает прежний прямой выбор языка и области настройки.
 Языки: Go, Rust, Python, Node. Быстрый вход: `:ForgeSdk go project`,
 `:ForgeSdk rust user`, `:ForgeSdk python project`, `:ForgeSdk node user`.
 Это выбор уже установленной среды; меню не устанавливает и не обновляет SDK.

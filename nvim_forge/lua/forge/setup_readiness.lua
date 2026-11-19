@@ -29,17 +29,17 @@ function M.build_sdks(names, versions, options)
         end
     end
 end
-function M.tools(names, versions, options)
+-- Passive per-tool check, shared by setup and the language UI. It never loads
+-- registry metadata, probes versions, refreshes or installs anything.
+function M.local_tool(name, versions, options)
     options=options or {}
-    local registry = require('mason-registry')
     local location = require('mason-core.installer.InstallLocation').global()
-    local errors, links_checked = {}, 0
-    for _, name in ipairs(names) do
-        local ok, reason = pcall(function()
-            local package = registry.get_package(name)
-            assert(package:is_installed(), 'package directory missing')
-            local receipt = package:get_receipt():or_else(nil)
-            assert(receipt, 'install receipt missing')
+    local path=vim.fs.joinpath(location:package(name),'mason-receipt.json')
+    local stat=vim.uv.fs_stat(path)
+    assert(stat and stat.type=='file' and stat.size<=1048576,'install receipt missing or invalid')
+    local f=assert(io.open(path,'rb'));local bytes=f:read('*a');f:close()
+    local receipt=require('mason-core.receipt').InstallReceipt.from_json(vim.json.decode(bytes))
+    local links_checked=0
             assert(receipt:get_name() == name, 'install receipt names another package')
             local version = versions and versions[name]
             if version and not options.preserve_versions then
@@ -48,6 +48,7 @@ function M.tools(names, versions, options)
             end
             local links = receipt:get_links()
             assert(type(links) == 'table', 'install receipt has no links')
+            assert(type(links.bin)=='table' and next(links.bin)~=nil,'required bin exports missing: '..name)
             if name == 'prettier' then
                 local entry = vim.fs.joinpath(location:package(name), 'node_modules/prettier/bin/prettier.cjs')
                 assert(vim.fn.filereadable(entry) == 1, 'Prettier JS entrypoint missing: '..entry)
@@ -77,6 +78,16 @@ function M.tools(names, versions, options)
                     links_checked=links_checked+1
                 end
             end
+    return {name=name,source='Mason',version=receipt:get_installed_package_version(),links=links_checked,path=location:package(name)}
+end
+function M.tools(names, versions, options)
+    local registry=require('mason-registry')
+    local errors,links_checked={},0
+    for _,name in ipairs(names) do
+        local ok,reason=pcall(function()
+            assert(registry.get_package(name):is_installed(),'package directory missing')
+            local report=M.local_tool(name,versions,options)
+            links_checked=links_checked+report.links
         end)
         if not ok then errors[#errors+1]=name..': '..tostring(reason) end
     end

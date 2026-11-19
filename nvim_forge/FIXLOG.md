@@ -15389,3 +15389,69 @@ installer должен различать Core ready и deferred language enviro
 **Файлы.** Diagnostic/PTY, verification/tasks, guides/планы/HISTORY, commands198,
 новый proposal. AST/Lua/strict/trace/prefix/index checks перед local commit,
 SDK/старые UI/product source/locks прежние. Native Mac/WSL/GUI/publication открыты.
+
+
+### 291. Языки и инструменты без обязательных SDK
+
+**Было.** Default требовал SDK всех языков заранее. Разовый отказ от предложения
+оставлял пользователя без общего места для подготовки/настройки среды.
+Владелец выбрал SDK по первому файлу и постоянное управление как в привычной IDE.
+**Причина.** Desired capabilities и подготовленные tools использовали одну маску;
+SDK selector, Mason и setup существовали отдельно, installed maintenance входа
+не было. Разовая подсказка не заменяет обратимые user/project настройки.
+**Сделано.** Default готовит Core и выбранную подсветку/Terminal, языковые SDK и
+tools отложены. Explicit eager (--prepare-languages), direct setup и check modes
+сохранены. Current frontend/helper payload встроен в atomic staging. Отдельный
+--prepare-language использует shared Core/SDK/tool preflight и Mason, не заменяет
+работающий kit; после успеха пишет только fallback sdk-paths.txt metadata.
+SDK providers штатные, Ubuntu Go — официальный SHA-verified archive в ~/sdk,
+Rust — rustup с rustfmt/rust-src. Временный выбор применяется только к дочерней
+подготовке, explicit settings сохраняют приоритет; project probes учитывают cwd.
+APT debconf noninteractive задаётся внутри sudo boundary.
+
+Space l S / ForgeLanguages теперь открывает постоянные «Языки и инструменты»:
+SDK/version/path/source, LSP/format/debug/tests, prepare/select/check/apply,
+Mason/tools.json и Logs. Прямой ForgeSdk остаётся. Первый файл даёт короткую
+local-only подсказку один раз на root+language/сеанс, без сети/version probes.
+Later — сеанс; languages.json user и .fride/languages.json — обратимые ask/manual,
+project precedence, inherit/reset/edit с сохранением metadata. Подготовка —
+штатный async Overseer task/terminal, один активный процесс, повтор открывает
+вывод. Ошибки/отмена не объявляются ready и не мешают править/сохранять файл;
+SDK apply явно использует прежний restart/busy механизм.
+
+**Проверки.** Windows/Ubuntu affected SDK actions/settings/Nextest/Go policy/tool
+versions, installed-mode fixtures и editor E2E прошли; final menu E2E4 PASS/OS,
+unit+trace20 файлов PASS/OS, change trace8 PASS/1 INFO, strict/syntax/guards.
+Native preparation cancel130 сохраняет kit, no ready result. Receipt без bin
+exports отвергается. Длинное failure notice вызывало hit-enter: сокращено, полный
+путь остаётся в Logs. Для нового пустого SQL файла используется также штатный
+vim.filetype.match. Legacy receipt fixture исправлена на native v1 schema,
+перед Mason явно задаётся local policy. Linux backports подготовлены в своём
+overlay; неактуальные deps и медленные bind-mounted профили не считались PASS.
+Успешные повторы используют native tmp, исходные отказы сохранены.
+
+Cold1795081713824789000 подтвердил отсутствие SDK/cache, установил Git и отложил
+языки, но Default остановился на WezTerm libX11-xcb.so.1. Отдельно в тестовом HOME
+прошли реальные official Go1.27.4 и rustup/Rust1.100.0/rustfmt1.11/rust-src, repeat
+сохранил версии и selected executable SHA. Go сначала отверг официальный Unicode
+Þfoo.go из-за octal quoting GNU tar: literal listing исправляет причину; native
+archive regression проверяет Unicode и traversal. Default /root SDK homes и host
+SDK не менялись. Это provider acceptance, не готовый cold installed workflow.
+Rustup также предупредил об отсутствии cc; IDE-142 сохраняет OS dependency gap.
+
+**Вывод.** Постоянный раздел и SDK по потребности реализованы и проверены.
+Полный clean Default/Go-Rust installed workflow ещё открыт: нужен выбор шага
+системных зависимостей (Terminal libraries, unzip для Mason, linker для Rust
+после выбора языка). Native Mac/WSL/GUI/publication не подменены Linux PASS.
+SDK/старый .tools UI/locks/policies/backports прежние; host tmp/logs на F.
+Regular evidence exported (1447 файлов/2498947 bytes), оба точных owned cold
+контейнера остановлены после проверки labels/ID; Desktop/WSL не трогались.
+**Файлы.** Native frontend/providers/private staging, shared resolvers/readiness,
+language hub/settings, targeted tests, LANGUAGE_ENVIRONMENTS/SDK_SELECTION,
+IDE-142/roadmap/installation/HISTORY, active change verification и commands199.
+
+Дополнение к проверке: native async E2E требует явно подготовленный frontend
+через FORGE_INSTALL_UI_BINARY. Source-only прогон без него показывает один
+SKIP с причиной, не запускает скрытую сборку/загрузку; acceptance обеих ОС
+использовал source-matched binaries и прошёл все4 UI case. Команды подготовки
+и проверки добавлены в LANGUAGE_ENVIRONMENTS.

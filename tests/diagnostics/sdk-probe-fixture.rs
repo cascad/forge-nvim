@@ -42,6 +42,20 @@ fn main() {
             std::env::var("GOTOOLCHAIN").unwrap_or_default(),
             std::env::var("RUSTUP_AUTO_INSTALL").unwrap_or_default())).unwrap();
     }
+    if name == "go" && std::env::args().nth(1).as_deref()==Some("env") && std::env::args().nth(2).as_deref()==Some("GOROOT") {
+        println!("{}",std::env::current_exe().unwrap().parent().unwrap().parent().unwrap().display());
+        return;
+    }
+    if name == "curl" {
+        if let Ok(folder) = std::env::var("SDK_PROVIDER_FIXTURE") {
+            let folder=std::path::PathBuf::from(folder);
+            let args:Vec<_>=std::env::args().collect();
+            if let Some(index)=args.iter().position(|arg|arg=="--output") {
+                std::fs::copy(folder.join("go.tar.gz"),&args[index+1]).unwrap();
+            } else {print!("{}",std::fs::read_to_string(folder.join("metadata.json")).unwrap());}
+            return;
+        }
+    }
     match std::env::var("SDK_PROBE_MODE").as_deref() {
         Ok("timeout") => std::thread::sleep(std::time::Duration::from_secs(30)),
         Ok("invalid") => { println!("not a language SDK"); return; }

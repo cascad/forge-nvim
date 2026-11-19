@@ -19,7 +19,11 @@ fn unique(options: &Options, suffix: &str) -> Result<PathBuf> {
 }
 
 // Files avoid unbounded pipe buffers; callers read only a bounded diagnostic tail.
-fn capture(mut command: Command, options: &Options, timeout: Duration) -> Result<String> {
+pub(crate) fn capture(
+    mut command: Command,
+    options: &Options,
+    timeout: Duration,
+) -> Result<String> {
     let log = unique(options, "log")?;
     let file = OpenOptions::new().create_new(true).write(true).open(&log)?;
     let errors = log.with_extension("stderr.log");
@@ -139,11 +143,15 @@ pub(crate) fn prepare(options: &Options, plan: &Plan) -> Result<PathBuf> {
 }
 
 pub(crate) fn snapshot(options: &Options, plan: &Plan) -> Result<sdks::Snapshot> {
-    snapshot_for(options,plan,&plan.native_sdks)
+    snapshot_for(options, plan, &plan.native_sdks)
 }
 
-pub(crate) fn snapshot_for(options: &Options, plan: &Plan, ids: &[String]) -> Result<sdks::Snapshot> {
-    if ids.is_empty() {
+pub(crate) fn snapshot_for(
+    options: &Options,
+    plan: &Plan,
+    ids: &[String],
+) -> Result<sdks::Snapshot> {
+    if ids.is_empty() && options.installed_kit.is_none() {
         return Ok(sdks::Snapshot::default());
     }
     let runtime = options
@@ -172,6 +180,9 @@ pub(crate) fn snapshot_for(options: &Options, plan: &Plan, ids: &[String]) -> Re
         .env("NVIM_APPNAME", "fride")
         .env("NVIM_LOG_FILE", unique(options, "nvim.log")?)
         .env("PATH", sdks::effective_path(&plan.sdk_paths)?);
+    if options.installed_kit.is_some() {
+        command.arg(&options.source).arg("project");
+    }
     for key in [
         "VIM",
         "VIMRUNTIME",

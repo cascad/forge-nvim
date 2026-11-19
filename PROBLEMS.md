@@ -10,7 +10,22 @@
 
 Маршрут и приоритеты: [рабочий план nvim_forge](docs/IDE_ROADMAP.md).
 Для новых пунктов используем следующий свободный ID `IDE-xxx`; исходный
-симптом хранится здесь, этап и состояние — в плане. Следующий ID: `IDE-142`.
+симптом хранится здесь, этап и состояние — в плане. Следующий ID: `IDE-143`.
+
+## IDE-142 — системные зависимости чистой Ubuntu
+
+2026-11-19: новый cold Default без SDK дошёл до Terminal и остановился:
+`wezterm-gui: libX11-xcb.so.1: cannot open shared object file`. В минимальной
+Ubuntu также отсутствует unzip, который требуется Mason. Новый rustup поставил
+Rust/rustfmt/rust-src, но предупредил об отсутствии системного linker `cc`.
+Успех SDK provider не означает готовность всего language/run workflow.
+
+Нужно согласовать native шаг системных зависимостей Default и отдельно Rust
+после явной подготовки языка. Вопрос владельцу: ставить недостающее через APT
+либо требовать desktop dependencies для Terminal. Установленные программы и
+языковые SDK сохраняем; SDK не возвращаем в обязательную установку Core.
+Исходный отказ и границы — [§291](nvim_forge/FIXLOG.md#291-языки-и-инструменты-без-обязательных-sdk)
+и [verification](openspec/changes/defer-language-environment-setup/verification.md).
 
 ## IDE-141 — команда запуска и установщик в стиле LocalVox
 

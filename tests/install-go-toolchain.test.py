@@ -59,7 +59,7 @@ if arg[1]=='tools' then dofile(vim.env.FRIDE_GO_POLICY_HELPER) end
         return base,env,target,project,binary
 
     def arguments(self,base,target,choice=None,preview=False):
-        args=self.binary_args(base,target,preview=preview,profile='default',components='go')+['--no-color']
+        args=self.binary_args(base,target,preview=preview,profile='default',components='go')+['--no-color','--prepare-languages']
         if choice is not None:args+=['--go-toolchain-download',choice]
         return args
 

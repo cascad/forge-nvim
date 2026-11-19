@@ -29,7 +29,7 @@ function M.mason()
         "gotestsum",
     }
     table.insert(tools, 'codelldb')
-    return require('forge.install_profile').filter(tools,4)
+    return require('forge.install_profile').filter(tools,4,vim.env.FORGE_PREPARE_COMPONENTS)
 end
 
 function M.native_versions()

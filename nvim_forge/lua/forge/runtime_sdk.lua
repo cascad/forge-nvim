@@ -32,7 +32,7 @@ function M.probe(kind,value,callback)
         'import sys,json; print(json.dumps({"version":sys.version.split()[0],"prefix":sys.prefix}))'} or {sdk.executable,'--version'}
     local started,why=pcall(vim.system,command,{cwd=vim.uv.os_tmpdir(),text=true,timeout=3000,env={NODE_OPTIONS=''}},function(result)
         vim.schedule(function()
-            if result.code~=0 then callback(nil,(result.stderr or '')..' (exit '..result.code..')');return end
+            if result.code~=0 or (result.signal or 0)~=0 then callback(nil,(result.stderr or '')..' (exit '..result.code..', signal '..tostring(result.signal or 0)..')');return end
             if kind=='python' then
                 local decoded,data=pcall(vim.json.decode,result.stdout or '')
                 if not decoded or type(data)~='table' or type(data.version)~='string' or type(data.prefix)~='string' then callback(nil,'Invalid Python response');return end

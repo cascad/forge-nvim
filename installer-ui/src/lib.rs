@@ -1,4 +1,5 @@
 // spec: IDE-BOOT-13. Presentation без установки SDK/пакетов в пользовательскую ОС.
+mod language;
 mod runtime;
 mod sdk_actions;
 mod sdk_bootstrap;
@@ -39,6 +40,9 @@ pub struct Options {
     pub check_sdks: bool,
     pub check_tools: bool,
     pub check_rust_tools: bool,
+    pub prepare_languages: bool,
+    pub prepare_language: Option<String>,
+    pub installed_kit: Option<PathBuf>,
     pub sdk_report: Option<PathBuf>,
     pub sdk_paths: Vec<PathBuf>,
     pub go_toolchain_download: Option<bool>,
@@ -47,6 +51,13 @@ pub struct Options {
 }
 
 impl Options {
+    pub(crate) fn configuration(&self) -> PathBuf {
+        if self.installed_kit.is_some() {
+            self.source.clone()
+        } else {
+            self.source.join("nvim_forge")
+        }
+    }
     pub fn parse(arguments: impl IntoIterator<Item = String>) -> Result<Self> {
         let mut result = Self {
             source: std::env::current_dir()?,
@@ -58,6 +69,10 @@ impl Options {
             match argument.as_str() {
                 "--preview" => {
                     result.preview = true;
+                    continue;
+                }
+                "--prepare-languages" => {
+                    result.prepare_languages = true;
                     continue;
                 }
                 "--plain" | "--no-color" => {
@@ -81,6 +96,7 @@ impl Options {
                     continue;
                 }
                 "--help" => {
+                    println!("--prepare-languages (explicit eager SDK/tools setup; default prepares Core)");
                     println!("fride-setup --source DIR --profile default|custom [--components CSV] --install-dir DIR\n--command-dir DIR --runtime-path DIR --runtime-archive-url URL --runtime-sha256 SHA\n--preview --no-color --print-plan --result FILE --log-dir DIR\n--check-sdks --sdk-report FILE\n--go-toolchain-download allow|deny (explicit Go build toolchain choice; default deny)\n--tools-versions preserve|baseline (default preserve; baseline reset is explicit)\n--check-tools (Git prerequisite) --check-rust-tools (nextest; requires verified Core)\n--tool-path DIR (repeatable fallback bin; alias --sdk-path)");
                     std::process::exit(0);
                 }
@@ -100,6 +116,8 @@ impl Options {
                 "--command-dir" => result.command_dir = value,
                 "--profile" => result.profile = value.to_ascii_lowercase(),
                 "--components" => result.components = Some(value),
+                "--prepare-language" => result.prepare_language = Some(value),
+                "--installed-kit" => result.installed_kit = Some(value.into()),
                 "--runtime-path" => result.runtime = value,
                 "--runtime-archive-url" => result.runtime_url = value,
                 "--runtime-sha256" => result.runtime_sha = value,
@@ -108,15 +126,19 @@ impl Options {
                 "--result" => result.result_file = Some(value.into()),
                 "--sdk-report" => result.sdk_report = Some(value.into()),
                 "--sdk-path" | "--tool-path" => result.sdk_paths.push(value.into()),
-                "--tools-versions" => result.tools_versions = match value.as_str() {
-                    "preserve" | "baseline" => value,
-                    _ => return Err(invalid("--tools-versions: preserve или baseline")),
-                },
-                "--go-toolchain-download" => result.go_toolchain_download = Some(match value.as_str() {
-                    "allow" => true,
-                    "deny" => false,
-                    _ => return Err(invalid("--go-toolchain-download: allow или deny")),
-                }),
+                "--tools-versions" => {
+                    result.tools_versions = match value.as_str() {
+                        "preserve" | "baseline" => value,
+                        _ => return Err(invalid("--tools-versions: preserve или baseline")),
+                    }
+                }
+                "--go-toolchain-download" => {
+                    result.go_toolchain_download = Some(match value.as_str() {
+                        "allow" => true,
+                        "deny" => false,
+                        _ => return Err(invalid("--go-toolchain-download: allow или deny")),
+                    })
+                }
                 _ => return Err(invalid(format!("Неизвестный параметр: {key}"))),
             }
         }
@@ -155,7 +177,11 @@ pub(crate) struct Row {
 }
 
 pub(crate) fn table(source: &std::path::Path) -> Result<Vec<Row>> {
-    let content = fs::read_to_string(source.join("nvim_forge/scripts/components.tsv"))?;
+    table_file(&source.join("nvim_forge/scripts/components.tsv"))
+}
+
+pub(crate) fn table_file(path: &std::path::Path) -> Result<Vec<Row>> {
+    let content = fs::read_to_string(path)?;
     let mut rows = Vec::new();
     let mut ids = HashSet::new();
     for line in content.lines() {
@@ -221,8 +247,11 @@ pub(crate) struct Plan {
     pub schema: u8,
     pub components: Vec<String>,
     pub native_sdks: Vec<String>,
+    pub prepare_languages: bool,
     #[serde(skip_serializing_if = "Vec::is_empty")]
     pub sdk_paths: Vec<PathBuf>,
+    #[serde(skip)]
+    pub provisioned_sdks: std::collections::HashMap<String, sdks::Selection>,
     pub install_dir: String,
     pub command_dir: String,
     pub go_toolchain_download: bool,
@@ -230,6 +259,31 @@ pub(crate) struct Plan {
 }
 
 impl Plan {
+    pub(crate) fn provisioned_environment(
+        &self,
+    ) -> Result<Vec<(std::ffi::OsString, std::ffi::OsString)>> {
+        let mut ids: Vec<_> = self.provisioned_sdks.keys().collect();
+        ids.sort();
+        let mut environment = vec![];
+        let mut bins = vec![];
+        for id in ids {
+            let selected = &self.provisioned_sdks[id];
+            bins.push(selected.bin.clone());
+            environment.extend(
+                selected
+                    .env
+                    .iter()
+                    .map(|(key, value)| (key.into(), value.into())),
+            );
+        }
+        if !bins.is_empty() {
+            bins.extend(std::env::split_paths(&sdks::effective_path(
+                &self.sdk_paths,
+            )?));
+            environment.push(("PATH".into(), std::env::join_paths(bins).map_err(invalid)?));
+        }
+        Ok(environment)
+    }
     pub(crate) fn select(
         &mut self,
         rows: &[Row],
@@ -263,20 +317,35 @@ fn review(rows: &[Row], plan: &Plan) -> String {
             format!("Команда fride: {} (без изменения PATH)", plan.command_dir)
         },
     ]);
-    if !plan.native_sdks.is_empty() {
+    if plan.prepare_languages && !plan.native_sdks.is_empty() {
         lines.push(format!(
             "SDK из вашей системы: {}",
             plan.native_sdks.join(", ")
         ));
     }
-    if plan.native_sdks.iter().any(|sdk| sdk == "go") {
-        lines.push(format!("Загрузка Go для сборки IDE tools: {}", if plan.go_toolchain_download { "разрешена" } else { "запрещена" }));
+    if !plan.prepare_languages
+        && plan
+            .components
+            .iter()
+            .any(|id| !matches!(id.as_str(), "core" | "terminal"))
+    {
+        lines.push("Языковые среды: при первом файле; управление — Space l S".into());
+    }
+    if plan.prepare_languages && plan.native_sdks.iter().any(|sdk| sdk == "go") {
+        lines.push(format!(
+            "Загрузка Go для сборки IDE tools: {}",
+            if plan.go_toolchain_download {
+                "разрешена"
+            } else {
+                "запрещена"
+            }
+        ));
     }
     for path in &plan.sdk_paths {
         lines.push(format!("Внешний fallback (после PATH): {}", path.display()));
     }
     lines.push("Git из вашей системы (обязателен для Core)".into());
-    lines.push(if plan.tools_versions=="baseline" {
+    lines.push(if plan.tools_versions == "baseline" {
         "Версии IDE tools: вернуть закреплённые fride версии".into()
     } else {
         "Версии IDE tools: сохранить установленные, добавить отсутствующие".into()
@@ -285,6 +354,12 @@ fn review(rows: &[Row], plan: &Plan) -> String {
 }
 
 pub fn run(mut options: Options) -> Result<i32> {
+    if options.prepare_language.is_some() {
+        return language::prepare(options);
+    }
+    if options.installed_kit.is_some() {
+        return Err(invalid("--installed-kit requires --prepare-language"));
+    }
     let rows = table(&options.source)?;
     let selected = options
         .components
@@ -300,11 +375,17 @@ pub fn run(mut options: Options) -> Result<i32> {
         schema: 1,
         components: vec![],
         native_sdks: vec![],
+        prepare_languages: options.prepare_languages,
         sdk_paths: vec![],
+        provisioned_sdks: Default::default(),
         install_dir: options.install_dir.clone(),
         command_dir: options.command_dir.clone(),
         go_toolchain_download: options.go_toolchain_download.unwrap_or(false),
-        tools_versions: if options.tools_versions.is_empty() { "preserve".into() } else { options.tools_versions.clone() },
+        tools_versions: if options.tools_versions.is_empty() {
+            "preserve".into()
+        } else {
+            options.tools_versions.clone()
+        },
     };
     plan.select(&rows, selected)?;
     // Upgrade reuses only locations recorded by an owned fride installation.
@@ -344,10 +425,10 @@ pub fn run(mut options: Options) -> Result<i32> {
         return Ok(if report.ready() { 0 } else { 2 });
     }
     if options.check_rust_tools {
-        options.prepared_core = Some(sdk_settings::prepare(&options,&plan)?);
-        let report=inspect_rust_tools(&options,&plan)?;
-        println!("{}",serde_json::to_string(&tool_report(&report))?);
-        return Ok(if report.ready() {0} else {2});
+        options.prepared_core = Some(sdk_settings::prepare(&options, &plan)?);
+        let report = inspect_rust_tools(&options, &plan)?;
+        println!("{}", serde_json::to_string(&tool_report(&report))?);
+        return Ok(if report.ready() { 0 } else { 2 });
     }
     let automatic = options.components.is_some() || options.profile == "default";
     let plain = options.plain || !io::stderr().is_terminal();
@@ -396,7 +477,7 @@ pub fn run(mut options: Options) -> Result<i32> {
             return Err(invalid(format!("Git prerequisite не готов. Выберите Git в PATH/--tool-path или установите его штатно. IDE artifacts не загружались; прежний комплект сохранён. Отчёты: {}", options.log_dir.display())));
         }
     }
-    if !options.preview && !plan.native_sdks.is_empty() {
+    if !options.preview && plan.prepare_languages && !plan.native_sdks.is_empty() {
         options.prepared_core = Some(sdk_settings::prepare(&options, &plan)?);
         let report = inspect_sdks(&options, &plan)?;
         let interactive = io::stdin().is_terminal() && io::stderr().is_terminal();
@@ -423,38 +504,54 @@ pub fn run(mut options: Options) -> Result<i32> {
             return Err(invalid(format!("SDK prerequisites не готовы. Исправьте/reset сохранённый выбор fride либо выберите SDK в PATH/--sdk-path, установите его штатно или снимите компонент. Core подготовлен; прежний комплект сохранён, остальные компоненты не устанавливались. Отчёт: {}",file.display())));
         }
     }
-    if !options.preview && plan.components.iter().any(|id|id=="rust") {
-        let report=inspect_rust_tools(&options,&plan)?;
-        let report=if !report.ready() && io::stdin().is_terminal() && io::stderr().is_terminal() {
-            match sdk_actions::configure_rust_tools(&options,&rows,&mut plan,report)? {
-                Some(report)=>report,
-                None=>{cliclack::outro_cancel("Отмена IDE. Прежний комплект сохранён; явно установленный nextest остаётся в Cargo home.")?;return Ok(130);}
+    if !options.preview && plan.prepare_languages && plan.components.iter().any(|id| id == "rust") {
+        let report = inspect_rust_tools(&options, &plan)?;
+        let report = if !report.ready() && io::stdin().is_terminal() && io::stderr().is_terminal() {
+            match sdk_actions::configure_rust_tools(&options, &rows, &mut plan, report)? {
+                Some(report) => report,
+                None => {
+                    cliclack::outro_cancel("Отмена IDE. Прежний комплект сохранён; явно установленный nextest остаётся в Cargo home.")?;
+                    return Ok(130);
+                }
             }
-        } else {report};
-        if plain {eprintln!("Rust Tests\n{}",report.summary());} else {cliclack::note("Rust Tests",report.summary())?;}
-        if !report.ready() {return Err(invalid(format!("Rust Tests: cargo-nextest не готов. Выберите существующий tool в tools.json/--tool-path, установите официальный nextest или снимите Rust. Прежний комплект сохранён. Логи: {}",options.log_dir.display())));}
-    }
-    if !options.preview && plan.native_sdks.iter().any(|sdk| sdk == "go")
-        && options.go_toolchain_download.is_none()
-        && io::stdin().is_terminal() && io::stderr().is_terminal()
-    {
-        cliclack::note("Сборка инструментов Go",
-            "Некоторым IDE tools может понадобиться более новый Go. Штатный Go может скачать его в свой кеш для сборки tools. SDK проекта, системные настройки и go.mod сохраняются.")?;
-        match cliclack::confirm("Разрешить Go скачать toolchain для сборки IDE tools?")
-            .initial_value(false).interact()
-        {
-            Ok(allow) => plan.go_toolchain_download = allow,
-            Err(error) if error.kind() == io::ErrorKind::Interrupted => {
-                cliclack::outro_cancel("Отменено. Прежний комплект сохранён.")?;
-                return Ok(130);
-            }
-            Err(error) => return Err(error),
+        } else {
+            report
+        };
+        if plain {
+            eprintln!("Rust Tests\n{}", report.summary());
+        } else {
+            cliclack::note("Rust Tests", report.summary())?;
+        }
+        if !report.ready() {
+            return Err(invalid(format!("Rust Tests: cargo-nextest не готов. Выберите существующий tool в tools.json/--tool-path, установите официальный nextest или снимите Rust. Прежний комплект сохранён. Логи: {}",options.log_dir.display())));
         }
     }
-    if !options.preview && plan.native_sdks.iter().any(|sdk| sdk == "go") {
-        let message = format!("Go tools: загрузка build toolchain {}; SDK проекта сохраняется.",
-            if plan.go_toolchain_download { "разрешена" } else { "запрещена" });
-        if plain { eprintln!("{message}"); } else { cliclack::log::info(message)?; }
+    if !options.preview
+        && plan.prepare_languages
+        && plan.native_sdks.iter().any(|sdk| sdk == "go")
+        && options.go_toolchain_download.is_none()
+        && io::stdin().is_terminal()
+        && io::stderr().is_terminal()
+    {
+        if !configure_go_build(&mut plan)? {
+            return Ok(130);
+        }
+    }
+    if !options.preview && plan.prepare_languages && plan.native_sdks.iter().any(|sdk| sdk == "go")
+    {
+        let message = format!(
+            "Go tools: загрузка build toolchain {}; SDK проекта сохраняется.",
+            if plan.go_toolchain_download {
+                "разрешена"
+            } else {
+                "запрещена"
+            }
+        );
+        if plain {
+            eprintln!("{message}");
+        } else {
+            cliclack::log::info(message)?;
+        }
     }
     if let Some(path) = &options.result_file {
         let mut file = OpenOptions::new().create_new(true).write(true).open(path)?;
@@ -558,10 +655,27 @@ fn execute(options: &Options, plan: &Plan, plain: bool) -> Result<i32> {
     };
     command
         .env("PATH", sdks::effective_path(&plan.sdk_paths)?)
+        .envs(plan.provisioned_environment()?)
         .env("FORGE_SDK_PATHS", serde_json::to_string(&plan.sdk_paths)?)
         .env("FORGE_NVIM_COMPONENTS", plan.components.join(","))
+        .env(
+            "FORGE_PREPARE_COMPONENTS",
+            if plan.prepare_languages {
+                plan.components.join(",")
+            } else {
+                "core".into()
+            },
+        )
+        .env("FORGE_SETUP_EXECUTABLE", std::env::current_exe()?)
         .env("FRIDE_INSTALL_UI", "1")
-        .env("FRIDE_SETUP_GO_TOOLCHAIN", if plan.go_toolchain_download { "auto" } else { "local" })
+        .env(
+            "FRIDE_SETUP_GO_TOOLCHAIN",
+            if plan.go_toolchain_download {
+                "auto"
+            } else {
+                "local"
+            },
+        )
         .env("FRIDE_TOOLS_VERSIONS", &plan.tools_versions)
         // Installation must not turn a missing toolchain into an implicit SDK download.
         .env("GOTOOLCHAIN", "local")
@@ -685,8 +799,29 @@ fn sdk_report_path(options: &Options) -> PathBuf {
     })
 }
 
+pub(crate) fn configure_go_build(plan: &mut Plan) -> Result<bool> {
+    cliclack::note("Сборка инструментов Go",
+        "Некоторым IDE tools может понадобиться более новый Go. Штатный Go может скачать его в свой кеш для сборки tools. SDK проекта, системные настройки и go.mod сохраняются.")?;
+    match cliclack::confirm("Разрешить Go скачать toolchain для сборки IDE tools?")
+        .initial_value(false)
+        .interact()
+    {
+        Ok(allow) => {
+            plan.go_toolchain_download = allow;
+            Ok(true)
+        }
+        Err(error) if error.kind() == io::ErrorKind::Interrupted => Ok(false),
+        Err(error) => Err(error),
+    }
+}
+
 pub(crate) fn inspect_sdks(options: &Options, plan: &Plan) -> Result<sdks::Report> {
-    let snapshot = sdk_settings::snapshot(options, plan)?;
+    let mut snapshot = sdk_settings::snapshot(options, plan)?;
+    for (id, selected) in &plan.provisioned_sdks {
+        if !snapshot.errors.contains_key(id) && !snapshot.selections.contains_key(id) {
+            snapshot.selections.insert(id.clone(), selected.clone());
+        }
+    }
     let report = sdks::inspect_selected(
         &plan.native_sdks,
         &options.log_dir,
@@ -733,9 +868,13 @@ pub(crate) fn inspect_tools(options: &Options, plan: &Plan) -> Result<sdks::Repo
 }
 
 pub(crate) fn inspect_rust_tools(options: &Options, plan: &Plan) -> Result<sdks::Report> {
-    let ids=if plan.components.iter().any(|id|id=="rust") {vec!["cargo-nextest".into()]} else {vec![]};
-    let snapshot=sdk_settings::snapshot_for(options,plan,&ids)?;
-    sdks::inspect_selected(&ids,&options.log_dir,&plan.sdk_paths,&snapshot)
+    let ids = if plan.components.iter().any(|id| id == "rust") {
+        vec!["cargo-nextest".into()]
+    } else {
+        vec![]
+    };
+    let snapshot = sdk_settings::snapshot_for(options, plan, &ids)?;
+    sdks::inspect_selected(&ids, &options.log_dir, &plan.sdk_paths, &snapshot)
 }
 
 fn write_sdk_report(options: &Options, report: &sdks::Report) -> Result<PathBuf> {

@@ -1,4 +1,4 @@
-"""IDE-BOOT-19: native SDK menus/manager fixture/real kit and launcher."""
+"""IDE-BOOT-19 IDE-BOOT-50: native SDK menus/manager/archive fixtures/real kit and launcher."""
 import importlib.util
 import json
 import os
@@ -6,6 +6,10 @@ from pathlib import Path
 import shutil
 import subprocess
 import sys
+import hashlib
+import io
+import platform
+import tarfile
 import unittest
 
 ROOT=Path(__file__).resolve().parents[1]
@@ -42,10 +46,46 @@ class Actions(runtime.Runtime):
         return folder
 
     def arguments(self,base,target):
-        args=[str(ui.BINARY),'--source',str(self.source),'--install-dir',str(target),'--components','node',
+        args=[str(ui.BINARY),'--prepare-languages','--source',str(self.source),'--install-dir',str(target),'--components','node',
             '--profile','default','--log-dir',str(base/'logs'),'--result',str(base/'result.json')]
         if stand.WINDOWS:args+=['--powershell',stand.SHELL]
         return args
+
+    @unittest.skipUnless(sys.platform.startswith('linux'),'Official Go archive provider uses Linux/GNU tar')
+    def test_actions_00_official_archive_unicode_and_traversal(self):
+        base,env,_=self.prepared('provider-archive')
+        provider=base/'provider';provider.mkdir()
+        shutil.copy2(self.fixture,provider/'curl')
+        for name in ('tar','gzip'):(provider/name).symlink_to(shutil.which(name))
+        # Native executable with controlled SDK responses; real official archive
+        # installation is exercised separately by the cold diagnostic.
+        version='go1.26.0'
+        arch='arm64' if platform.machine() in ('aarch64','arm64') else 'amd64'
+        data=base/'provider data';data.mkdir()
+        for bad in (False,True):
+            with self.subTest(traversal=bad):
+                archive=data/'go.tar.gz'
+                with tarfile.open(archive,'w:gz') as tar:
+                    tar.add(self.fixture,arcname='go/bin/go')
+                    for folder in ('go/src','go/pkg'):
+                        info=tarfile.TarInfo(folder);info.type=tarfile.DIRTYPE;tar.addfile(info)
+                    content=b'fixture\n';entry=tarfile.TarInfo('go/../escape' if bad else 'go/test/Þfoo.go')
+                    entry.size=len(content);tar.addfile(entry,io.BytesIO(content))
+                metadata=[{'version':version,'stable':True,'files':[{'os':'linux','arch':arch,'kind':'archive',
+                    'filename':version+'.linux-'+arch+'.tar.gz','sha256':hashlib.sha256(archive.read_bytes()).hexdigest()}]}]
+                (data/'metadata.json').write_text(json.dumps(metadata))
+                home=base/('bad home' if bad else 'native home');home.mkdir()
+                output=base/('bad-result.json' if bad else 'good-result.json')
+                child=dict(env,HOME=str(home),PATH=str(provider),SDK_PROVIDER_FIXTURE=str(data),GOROOT='')
+                result=self.run_process([str(stand.NVIM),'--headless','-u','NONE','-i','NONE','-l',
+                    str(ROOT/'nvim_forge/scripts/install-sdk.lua'),'go',str(output)],child,base,'archive-'+str(bad))
+                self.assertFalse((home/'sdk/escape').exists())
+                if bad:
+                    self.assertNotEqual(result.returncode,0);self.assertFalse(output.exists())
+                    self.assertIn('Invalid official archive path',result.stderr)
+                else:
+                    self.assert_ok(result);report=json.loads(output.read_text());self.assertTrue(report['ready'])
+                    self.assertTrue((Path(report['bin']).parent/'test/Þfoo.go').exists())
 
     def interact(self,base,env,target,scenario,expected=0):
         env['FORGE_UI_EXPECTED_EXIT']=str(expected)

@@ -1,6 +1,6 @@
 use crate::{
-    inspect_rust_tools, inspect_sdks, inspect_tools, review, sdk_bootstrap, sdk_install, sdks, Options, Plan, Result,
-    Row,
+    inspect_rust_tools, inspect_sdks, inspect_tools, review, sdk_bootstrap, sdk_install, sdks,
+    Options, Plan, Result, Row,
 };
 use std::path::{Path, PathBuf};
 
@@ -21,21 +21,35 @@ impl Subject {
         matches!(self, Self::Git)
     }
     fn label(self, id: &str) -> String {
-        if self.rust_tools() {"Rust Tests · cargo-nextest".into()} else if self.git() {
+        if self.rust_tools() {
+            "Rust Tests · cargo-nextest".into()
+        } else if self.git() {
             "Git".into()
         } else {
             format!("SDK {id}")
         }
     }
     fn inspect(self, options: &Options, plan: &Plan) -> Result<sdks::Report> {
-        if self.rust_tools() {inspect_rust_tools(options,plan)} else if self.git() {
+        if self.rust_tools() {
+            inspect_rust_tools(options, plan)
+        } else if self.git() {
             inspect_tools(options, plan)
         } else {
             inspect_sdks(options, plan)
         }
     }
-    fn rust_tools(self)->bool {matches!(self,Self::RustTools)}
-    fn noun(self)->&'static str {if self.git() {"Git"} else if self.rust_tools() {"cargo-nextest"} else {"SDK"}}
+    fn rust_tools(self) -> bool {
+        matches!(self, Self::RustTools)
+    }
+    fn noun(self) -> &'static str {
+        if self.git() {
+            "Git"
+        } else if self.rust_tools() {
+            "cargo-nextest"
+        } else {
+            "SDK"
+        }
+    }
 }
 
 fn discover(
@@ -119,8 +133,13 @@ pub(crate) fn configure_git(
     configure_for(Subject::Git, options, rows, plan, report)
 }
 
-pub(crate) fn configure_rust_tools(options:&Options,rows:&[Row],plan:&mut Plan,report:sdks::Report)->Result<Option<sdks::Report>> {
-    configure_for(Subject::RustTools,options,rows,plan,report)
+pub(crate) fn configure_rust_tools(
+    options: &Options,
+    rows: &[Row],
+    plan: &mut Plan,
+    report: sdks::Report,
+) -> Result<Option<sdks::Report>> {
+    configure_for(Subject::RustTools, options, rows, plan, report)
 }
 
 fn configure_for(
@@ -147,14 +166,11 @@ fn configure_for(
             return Ok(if proceed? { Some(report) } else { None });
         };
         let label = subject.label(&id);
-        cliclack::note(
-            format!("Готовность {}",subject.noun()),
-            report.summary(),
-        )?;
+        cliclack::note(format!("Готовность {}", subject.noun()), report.summary())?;
         let mut menu = cliclack::select(format!("{label}: действие"))
             .item(
                 0,
-                format!("Выбрать существующий {}",subject.noun()),
+                format!("Выбрать существующий {}", subject.noun()),
                 if subject.git() {
                     "root/bin/cmd; fallback после вашего PATH"
                 } else {
@@ -210,9 +226,12 @@ fn configure_for(
                     )?))
                 }
                 1 => {
-                    let recipe = match sdk_install::recipe(&id, &plan.sdk_paths) {
+                    let recipe = match sdk_install::recipe(options, &id, &plan.sdk_paths) {
                         Ok(recipe) => recipe,
-                        Err(error) if error.kind() == std::io::ErrorKind::NotFound && !subject.rust_tools() => {
+                        Err(error)
+                            if error.kind() == std::io::ErrorKind::NotFound
+                                && !subject.rust_tools() =>
+                        {
                             let Some(bootstrap) = sdk_bootstrap::recipe(options, &plan.sdk_paths)?
                             else {
                                 return Err(error);
@@ -231,7 +250,7 @@ fn configure_for(
                             if !sdk_install::run(options, &plan.sdk_paths, &bootstrap)? {
                                 return Ok(None);
                             }
-                            sdk_install::recipe(&id, &plan.sdk_paths).map_err(|_| crate::invalid(format!("Команда завершилась, но менеджер {} не найден. Проверьте лог, выберите существующий каталог или повторите.", if subject.git() { "для Git" } else { "SDK" })))?
+                            sdk_install::recipe(options, &id, &plan.sdk_paths).map_err(|_| crate::invalid(format!("Команда завершилась, но менеджер {} не найден. Проверьте лог, выберите существующий каталог или повторите.", if subject.git() { "для Git" } else { "SDK" })))?
                         }
                         Err(error) => return Err(error),
                     };
@@ -243,6 +262,10 @@ fn configure_for(
                         return Ok(None);
                     }
                     if sdk_install::run(options, &plan.sdk_paths, &recipe)? {
+                        if let Some(selected) = sdk_install::installed_selection(&recipe, &id)? {
+                            sdks::add_path(plan, selected.bin.clone())?;
+                            plan.provisioned_sdks.insert(id.clone(), selected);
+                        }
                         let checked = discover(subject, options, plan, &id)?;
                         if checked
                             .sdks
@@ -260,7 +283,15 @@ fn configure_for(
                     let affected = plan
                         .components
                         .iter()
-                        .filter(|component| sdks::required(&[(*component).clone()]).contains(&if subject.rust_tools(){"rust".into()}else{id.clone()}))
+                        .filter(|component| {
+                            sdks::required(&[(*component).clone()]).contains(&if subject
+                                .rust_tools()
+                            {
+                                "rust".into()
+                            } else {
+                                id.clone()
+                            })
+                        })
                         .cloned()
                         .collect::<Vec<_>>();
                     let labels = rows

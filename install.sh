@@ -13,6 +13,7 @@ command_dir=""
 ui_path=""
 go_toolchain_download=""
 tools_versions=""
+prepare_languages=0
 original_checkout=''
 if [ -n "${BASH_SOURCE[0]:-}" ] && [ -f "${BASH_SOURCE[0]}" ]; then original_checkout="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd -P)";fi
 skip_dependencies=0
@@ -40,6 +41,7 @@ while [ "$#" -gt 0 ]; do
       esac
       shift 2;;
     --skip-dependencies) skip_dependencies=1; shift;;
+    --prepare-languages) prepare_languages=1; shift;;
     --help)
       printf '%s\n' 'forge-nvim source bootstrap (development entry)' \
         '--ref REF --archive-url URL --source-root DIR --install-dir DIR --skip-dependencies' \
@@ -49,6 +51,7 @@ while [ "$#" -gt 0 ]; do
       printf '%s\n' '--installer-ui-path FILE (development: prepared frontend)'
       printf '%s\n' '--go-toolchain-download allow|deny (explicit native Go build policy)'
       printf '%s\n' '--tools-versions preserve|baseline (keep installed tools unless baseline reset is explicit)'
+      printf '%s\n' '--prepare-languages (explicit eager SDK/tools setup; default prepares Core)'
       exit 0;;
     *) printf 'Unknown option: %s\n' "$1" >&2; exit 1;;
   esac
@@ -121,6 +124,7 @@ if [ -n "$ui_path" ] || [ -f "$source_dir/installer-ui/Cargo.toml" ]; then
   if [ "$components_explicit" = 1 ]; then ui_args+=("--components=$components");fi
   if [ -n "$go_toolchain_download" ]; then ui_args+=(--go-toolchain-download "$go_toolchain_download");fi
   if [ -n "$tools_versions" ]; then ui_args+=(--tools-versions "$tools_versions");fi
+  if [ "$prepare_languages" -eq 1 ]; then ui_args+=(--prepare-languages);fi
   if [ -n "$command_dir" ]; then ui_args+=(--command-dir "$command_dir");fi
   if [ -n "$runtime_path" ]; then ui_args+=(--runtime-path "$runtime_path");fi
   if [ -n "$runtime_url" ]; then ui_args+=(--runtime-archive-url "$runtime_url" --runtime-sha256 "$runtime_sha");fi
@@ -129,6 +133,7 @@ if [ -n "$ui_path" ] || [ -f "$source_dir/installer-ui/Cargo.toml" ]; then
 fi
 [ -z "$go_toolchain_download" ] || { printf 'Go toolchain choice requires the fride setup frontend.\n' >&2;exit 1; }
 [ -z "$tools_versions" ] || { printf 'Tool version choice requires the fride setup frontend.\n' >&2;exit 1; }
+[ "$prepare_languages" -eq 0 ] || { printf 'Language preparation requires the fride setup frontend.\n' >&2;exit 1; }
 . "$source_dir/nvim_forge/scripts/lib/install-profile.sh"
 FORGE_NVIM_COMPONENTS="$(forge_select_profile "$profile" "$components" "$components_explicit")"
 export FORGE_NVIM_COMPONENTS

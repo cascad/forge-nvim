@@ -11,6 +11,7 @@ pub(crate) struct Recipe {
     pub args: Vec<OsString>,
     pub source: String,
     pub preserve_nextest: Option<PathBuf>,
+    pub sdk_result: Option<PathBuf>,
 }
 impl Recipe {
     pub fn display(&self) -> String {
@@ -39,20 +40,70 @@ fn manager(name: &str, path: &std::ffi::OsStr) -> Option<PathBuf> {
             .find_map(|directory| sdks::find(name, directory.as_os_str()))
     })
 }
-pub(crate) fn recipe(id: &str, paths: &[PathBuf]) -> Result<Recipe> {
+pub(crate) fn recipe(options: &Options, id: &str, paths: &[PathBuf]) -> Result<Recipe> {
     let path = sdks::effective_path(paths)?;
-    if id=="cargo-nextest" {
-        let home=std::env::var_os("CARGO_HOME").map(PathBuf::from).or_else(||
-            std::env::var_os(if cfg!(windows){"USERPROFILE"}else{"HOME"}).map(|p|PathBuf::from(p).join(".cargo")))
-            .ok_or_else(||invalid("Cargo home не найден; задайте CARGO_HOME или выберите существующий nextest"))?;
-        let target=home.join("bin").join(if cfg!(windows){"cargo-nextest.exe"}else{"cargo-nextest"});
-        let (program,args)=if cfg!(windows) {
+    let rustup_home = std::env::var_os("CARGO_HOME")
+        .map(PathBuf::from)
+        .or_else(|| {
+            std::env::var_os(if cfg!(windows) { "USERPROFILE" } else { "HOME" })
+                .map(|home| PathBuf::from(home).join(".cargo"))
+        });
+    let has_rustup = rustup_home.is_some_and(|home| {
+        home.join(if cfg!(windows) {
+            "bin/rustup.exe"
+        } else {
+            "bin/rustup"
+        })
+        .is_file()
+    });
+    if (cfg!(target_os = "linux") && id == "go") || (id == "rust" && (!cfg!(windows) || has_rustup))
+    {
+        let core = options
+            .prepared_core
+            .as_ref()
+            .ok_or_else(|| invalid("Verified Core required for official SDK install"))?;
+        fs::create_dir_all(&options.log_dir)?;
+        let stamp = SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .map_err(invalid)?
+            .as_nanos();
+        let result = options.log_dir.join(format!("sdk-provider-{stamp}.json"));
+        let script = options.configuration().join("scripts/install-sdk.lua");
+        if !script.is_file() {
+            return Err(invalid(format!("SDK worker missing: {}", script.display())));
+        }
+        return Ok(Recipe {
+            program:core.join(if cfg!(windows){"bin/nvim.exe"}else{"bin/nvim"}),
+            args:vec!["--headless".into(),"-u".into(),"NONE".into(),"-i".into(),"NONE".into(),"-l".into(),script.into_os_string(),id.into(),result.clone().into_os_string()],
+            source:if id=="go" {"Официальный stable Go: go.dev metadata/archive/SHA256, обычный ~/sdk/go<version>; существующие SDK сохраняются. https://go.dev/dl/"}
+                else {"Официальный rustup: обычные Cargo/Rustup homes, rustfmt/rust-src; без изменения shell profiles/PATH. https://rustup.rs/"}.into(),
+            preserve_nextest:None,sdk_result:Some(result),
+        });
+    }
+    if id == "cargo-nextest" {
+        let home = std::env::var_os("CARGO_HOME")
+            .map(PathBuf::from)
+            .or_else(|| {
+                std::env::var_os(if cfg!(windows) { "USERPROFILE" } else { "HOME" })
+                    .map(|p| PathBuf::from(p).join(".cargo"))
+            })
+            .ok_or_else(|| {
+                invalid(
+                    "Cargo home не найден; задайте CARGO_HOME или выберите существующий nextest",
+                )
+            })?;
+        let target = home.join("bin").join(if cfg!(windows) {
+            "cargo-nextest.exe"
+        } else {
+            "cargo-nextest"
+        });
+        let (program, args) = if cfg!(windows) {
             (manager("powershell",&path).unwrap_or_else(||PathBuf::from(crate::sdk_settings::default_powershell())),
              vec![OsString::from("-NoProfile"),"-Command".into(),r#"$ErrorActionPreference='Stop'; [Net.ServicePointManager]::SecurityProtocol=[Net.ServicePointManager]::SecurityProtocol -bor [Net.SecurityProtocolType]::Tls12; $script=Invoke-RestMethod -Uri 'https://get.nexte.st/install.ps1' -TimeoutSec 180; Invoke-Expression -Command $script"#.into()])
         } else {
             (PathBuf::from("/bin/sh"),vec!["-c".into(),r#"set -e; script="$(curl --fail --show-error --silent --location --proto '=https' --tlsv1.2 --connect-timeout 15 --max-time 180 'https://get.nexte.st/install.sh')"; /bin/sh -c "$script""#.into()])
         };
-        return Ok(Recipe{program,args,source:format!("cargo-nextest: официальный готовый binary с upstream SHA256; {}. SDK/PATH не меняются. https://nexte.st/docs/installation/pre-built-binaries/",target.display()),preserve_nextest:Some(target)});
+        return Ok(Recipe{program,args,source:format!("cargo-nextest: официальный готовый binary с upstream SHA256; {}. SDK/PATH не меняются. https://nexte.st/docs/installation/pre-built-binaries/",target.display()),preserve_nextest:Some(target),sdk_result:None});
     }
     let (manager, items, source) = if cfg!(windows) {
         let package = match id {
@@ -96,9 +147,23 @@ pub(crate) fn recipe(id: &str, paths: &[PathBuf]) -> Result<Recipe> {
         program,
         args: items.into_iter().map(OsString::from).collect(),
         source: source.into(),
-        preserve_nextest:None,
+        preserve_nextest: None,
+        sdk_result: None,
     };
+    if manager == "winget" && id == "rust" {
+        recipe.args.extend([
+            "--override".into(),
+            "-y --no-modify-path --profile minimal --component rustfmt --component rust-src".into(),
+        ]);
+    }
     if manager == "apt-get" {
+        // apt --yes covers package choices, not debconf (for example tzdata).
+        // Keep this inside sudo's environment boundary and out of the caller.
+        recipe.args.insert(0, recipe.program.into_os_string());
+        recipe
+            .args
+            .insert(0, "DEBIAN_FRONTEND=noninteractive".into());
+        recipe.program = PathBuf::from("/usr/bin/env");
         if let Some(sudo) = sdks::find("sudo", &path) {
             recipe.args.insert(0, recipe.program.into_os_string());
             recipe.program = sudo;
@@ -116,10 +181,56 @@ fn manager_path(name: &str, path: &std::ffi::OsStr) -> Result<PathBuf> {
         )
     })
 }
+pub(crate) fn installed_selection(recipe: &Recipe, id: &str) -> Result<Option<sdks::Selection>> {
+    let Some(path) = &recipe.sdk_result else {
+        return Ok(None);
+    };
+    let file = fs::File::open(path)?;
+    if file.metadata()?.len() > 65536 {
+        return Err(invalid("SDK provider report exceeds 64KiB"));
+    }
+    let data: serde_json::Value = serde_json::from_reader(file).map_err(invalid)?;
+    if data["schema"] != 1 || data["kind"] != id || data["ready"] != true {
+        return Err(invalid("Invalid SDK provider result"));
+    }
+    let bin = PathBuf::from(
+        data["bin"]
+            .as_str()
+            .ok_or_else(|| invalid("SDK bin missing"))?,
+    );
+    if !bin.is_absolute() || !bin.is_dir() {
+        return Err(invalid("SDK bin must be an existing absolute directory"));
+    }
+    let selected: sdks::Selection =
+        serde_json::from_value(data["selection"].clone()).map_err(invalid)?;
+    if selected.bin != bin
+        || selected
+            .tools
+            .values()
+            .any(|path| !path.is_absolute() || !path.is_file())
+    {
+        return Err(invalid("Invalid SDK provider selection"));
+    }
+    Ok(Some(selected))
+}
 pub(crate) fn run(options: &Options, paths: &[PathBuf], recipe: &Recipe) -> Result<bool> {
-    if let Some(target)=&recipe.preserve_nextest {
-        let mut search=paths.to_vec();search.push(target.parent().ok_or_else(||invalid("Missing Cargo bin"))?.to_owned());
-        if sdks::inspect(&["cargo-nextest".into()],&options.log_dir,&search)?.ready() {
+    run_with_env(options, paths, recipe, &[])
+}
+pub(crate) fn run_with_env(
+    options: &Options,
+    paths: &[PathBuf],
+    recipe: &Recipe,
+    environment: &[(OsString, OsString)],
+) -> Result<bool> {
+    if let Some(target) = &recipe.preserve_nextest {
+        let mut search = paths.to_vec();
+        search.push(
+            target
+                .parent()
+                .ok_or_else(|| invalid("Missing Cargo bin"))?
+                .to_owned(),
+        );
+        if sdks::inspect(&["cargo-nextest".into()], &options.log_dir, &search)?.ready() {
             cliclack::log::info("Используется уже установленный cargo-nextest; версия сохранена.")?;
             return Ok(true);
         }
@@ -141,16 +252,26 @@ pub(crate) fn run(options: &Options, paths: &[PathBuf], recipe: &Recipe) -> Resu
     writeln!(file, "{}\n{}", recipe.source, recipe.display())?;
     cliclack::log::info(format!("Штатная установка · лог: {}", log.display()))?;
     let mut command = Command::new(&recipe.program);
-    command.args(&recipe.args)
+    command
+        .args(&recipe.args)
         .env("PATH", sdks::effective_path(paths)?)
+        .envs(environment.iter().map(|(key, value)| (key, value)))
+        .env_remove("FRIDE_SDK_BASE")
+        .env_remove("FRIDE_SDK_PROJECT")
         .env("HOMEBREW_NO_AUTO_UPDATE", "1")
         .env("HOMEBREW_NO_INSTALL_UPGRADE", "1");
-    if let Some(target)=&recipe.preserve_nextest {
+    if let Some(target) = &recipe.preserve_nextest {
         // Use the reviewed destination, including when the caller has another
         // upstream install-directory override. This does not change their env.
-        command.env("NEXTEST_INSTALL_DIR",target.parent().ok_or_else(||invalid("Missing Cargo bin"))?);
+        command.env(
+            "NEXTEST_INSTALL_DIR",
+            target
+                .parent()
+                .ok_or_else(|| invalid("Missing Cargo bin"))?,
+        );
     }
-    let mut child=command.stdin(Stdio::inherit())
+    let mut child = command
+        .stdin(Stdio::inherit())
         .stdout(Stdio::piped())
         .stderr(Stdio::piped())
         .spawn()?;

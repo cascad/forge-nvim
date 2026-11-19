@@ -171,6 +171,14 @@ local function install()
   write(join(stage,'runtime/forge-runtime.json'),vim.json.encode(manifest))
   mkdir(join(stage,'config')); copy_tree(join(source,'nvim_forge'),join(stage,'config/forge'))
   mkdir(join(stage,'bin'))
+  local frontend=vim.env.FORGE_SETUP_EXECUTABLE
+  if frontend and frontend~='' then
+    copy_tree(frontend,join(stage,'bin',windows and 'fride-setup.exe' or 'fride-setup'))
+    for _,name in ipairs({'sdk-preflight.lua','runtime-core.lua','sdk/windows.json'}) do
+      local destination=join(stage,'config/forge/scripts',name)
+      mkdir(vim.fs.dirname(destination));copy_tree(join(source,'scripts',name),destination)
+    end
+  end
   for _, name in ipairs({'fride','forge-nvim','forge'}) do
     assert(uv.fs_copyfile(join(source,'scripts/launch-managed.sh'),join(stage,'bin',name)))
     assert(uv.fs_chmod(join(stage,'bin',name),493))
@@ -228,7 +236,14 @@ local function install()
       rename(join(stage,dir),join(target,dir)); committed[#committed+1]=dir
     end
     if registration then registration.apply() end
-    write(owner_path,vim.json.encode({schema=1,product='forge-nvim',ready=true,components=manifest.components,backup=backup}))
+    local prepared,deferred={},{}
+    for id in (vim.env.FORGE_PREPARE_COMPONENTS or vim.env.FORGE_NVIM_COMPONENTS or 'core'):gmatch('[^,]+') do prepared[#prepared+1]=id end
+    for id in (vim.env.FORGE_NVIM_COMPONENTS or ''):gmatch('[^,]+') do
+      if id~='core' and id~='terminal' and not vim.tbl_contains(prepared,id) then deferred[#deferred+1]=id end
+    end
+    write(owner_path,vim.json.encode({schema=1,product='forge-nvim',ready=true,components=manifest.components,
+      prepared_components=prepared,deferred_components=deferred,
+      maintenance=frontend and (windows and 'bin/fride-setup.exe' or 'bin/fride-setup') or nil,backup=backup}))
   end)
   if not ok then
     if registration then registration.rollback() end

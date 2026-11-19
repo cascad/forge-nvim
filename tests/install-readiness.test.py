@@ -34,6 +34,7 @@ class Readiness(unittest.TestCase):
         env=os.environ.copy();env.update(HOME=str(foreign),USERPROFILE=str(foreign),LOCALAPPDATA=str(base/'local'),
             XDG_CONFIG_HOME=str(base/'config'),XDG_DATA_HOME=str(base/'data'),XDG_STATE_HOME=str(base/'state'),XDG_CACHE_HOME=str(base/'cache'),
             NVIM_APPNAME='readiness',NVIM_LOG_FILE=str(base/'nvim.log'),FORGE_NVIM_COMPONENTS='core',
+            GOTOOLCHAIN='local',FRIDE_SETUP_GO_TOOLCHAIN='local',
             FORGE_READINESS_CASE=name,FORGE_READINESS_DEPS=str(DEPS),FORGE_READINESS_ROOT=str(base/'mason'),FORGE_READINESS_TRACE=str(base/'command.txt'))
         result=subprocess.run([str(NVIM),'--headless','-u',str(init),'-i','NONE','-l',str(profile/'scripts/setup-stage.lua'),stage],env=env,capture_output=True,text=True,encoding='utf-8',errors='replace',timeout=30)
         (base/'result.json').write_text(json.dumps({'exit':result.returncode,'stdout':result.stdout,'stderr':result.stderr,'stage':stage,'source':str(SOURCE),'source_sha256':hashlib.sha256(SOURCE.read_bytes()).hexdigest()},ensure_ascii=False,indent=2),encoding='utf-8')
@@ -53,6 +54,7 @@ class Readiness(unittest.TestCase):
     def test_05_missing_export(self):self.failed('missing-export','export missing')
     def test_06_host_fallback(self):self.failed('host-fallback','export missing')
     def test_07_wrong_receipt(self):self.failed('wrong-receipt','another package')
+    def test_07b_unversioned_missing_bin(self):self.failed('empty-bin','required bin exports missing')
     def test_08_tools_ready_selected(self):
         result=self.execute('ready');self.assertEqual(result.returncode,0,result.stdout+result.stderr);self.assertIn('Tool readiness:',result.stdout)
     def test_09_missing_parser(self):self.failed('missing-parser','forge_missing','parsers')

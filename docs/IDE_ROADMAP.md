@@ -186,13 +186,17 @@ GoToolchain и SDK existing/manual path в установщике сохране
   **установка IDE не требует SDK; первый Go/Rust файл предлагает подготовку**.
   Готовую среду переиспользовать, иначе install/existing/later; асинхронно,
   без повторов на каждом BufEnter. SDK-зависимые Mason tools тоже отложены,
-  не объявляются готовыми. Следующий конкретный продуктовый срез —
-  `defer-language-environment-setup`, затем новый cold и итоговый regression.
+  не объявляются готовыми. §291 реализовал этот срез: deferred Default,
+  native подготовка языка и постоянное меню; affected Windows/Ubuntu проверки
+  прошли. Новый cold Default остановился на зависимости ОС WezTerm
+  libX11-xcb.so.1. До cold installed workflow/repeat нужно определить шаг
+  системных зависимостей (Core/Mason также нужен unzip).
   Постоянное управление — «Языки и инструменты» через существующий Space l S:
   SDK/версии/пути, состояние IDE tools, install/select/recheck/logs, user/project
   настройки и обратимое отключение предложений. Разовое Later не заменяет
   настройки; прямой ForgeSdk selector сохраняется. Референсы VS Code записаны
-  в proposal нового change, это пока план, не готовая функция.
+  в change. [Управление](LANGUAGE_ENVIRONMENTS.md),
+  [проверки и открытые пункты](../openspec/changes/defer-language-environment-setup/verification.md).
 
 Статус: базовые e2e настоящего nvim_forge работают на Windows и Ubuntu;
 фоновые установки инструментов редактора перенесены в явный setup.

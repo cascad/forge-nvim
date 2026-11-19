@@ -57,7 +57,7 @@ check('common menu settings reset cancel errors preserve native venv and metadat
     assert(e:lua([[for _,spawn in ipairs(_G.forge_e2e_spawns) do
       local name=vim.fs.basename(spawn.cmd):lower();assert(not name:match('^python') and not name:match('^node'),'Runtime probe at startup') end;return true]]))
     local original=e:lua([[return {PATH=vim.env.PATH,VIRTUAL_ENV=vim.env.VIRTUAL_ENV,CONDA_PREFIX=vim.env.CONDA_PREFIX,pid=vim.uv.os_getpid()}]])
-    e:input(' lS');select(e,'python');select(e,'project');select(e,'venv with spaces');select(e,'Сохранить для следующих')
+    e:input(':ForgeSdk python<CR>');select(e,'project');select(e,'venv with spaces');select(e,'Сохранить для следующих')
     local project=e.project..'/.fride/tools.json'
     local selected=e.project..'/venv with spaces/'..(win and 'Scripts/python.exe' or 'bin/python')
     e:wait('project Python saved',function() return read(project).tools.python~=nil end)

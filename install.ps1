@@ -13,6 +13,7 @@ param(
     [string]$InstallerUIPath = '',
     [ValidateSet('allow','deny')][string]$GoToolchainDownload = '',
     [ValidateSet('preserve','baseline')][string]$ToolsVersions = '',
+    [switch]$PrepareLanguages,
     [switch]$SkipDependencies,
     [Alias('Profile')][ValidateSet('Default','Custom')][string]$InstallProfile = 'Default',
     [AllowEmptyString()][string]$Components = ''
@@ -83,6 +84,7 @@ try {
         if ($componentsExplicit) { $uiArgs+=@('--components='+$Components) }
         if ($GoToolchainDownload) { $uiArgs+=@('--go-toolchain-download',$GoToolchainDownload.ToLowerInvariant()) }
         if ($ToolsVersions) { $uiArgs+=@('--tools-versions',$ToolsVersions.ToLowerInvariant()) }
+        if ($PrepareLanguages) { $uiArgs+='--prepare-languages' }
         if ($CommandDir) { $uiArgs+=@('--command-dir',$CommandDir) }
         if ($RuntimePath) { $uiArgs+=@('--runtime-path',$RuntimePath) }
         if ($RuntimeArchiveUrl) { $uiArgs+=@('--runtime-archive-url',$RuntimeArchiveUrl,'--runtime-sha256',$RuntimeSHA256) }
@@ -93,6 +95,7 @@ try {
     }
     if ($GoToolchainDownload) { throw 'Go toolchain choice requires the fride setup frontend.' }
     if ($ToolsVersions) { throw 'Tool version choice requires the fride setup frontend.' }
+    if ($PrepareLanguages) { throw 'Language preparation requires the fride setup frontend.' }
     $env:FRIDE_SETUP_GO_TOOLCHAIN = 'local'
     $env:FRIDE_TOOLS_VERSIONS = 'preserve'
     . (Join-Path $source 'nvim_forge\scripts\lib\install-profile.ps1')

@@ -84,6 +84,7 @@ dpkg-query -W; printf '\nCOLD_BASELINE_OK\n'
     run(['docker','exec',container,'bash','-c','dpkg-query -W; for t in git go rustc cargo python3 node npm; do command -v "$t" || true; done'],'after',check=False)
     if code==0:
         run(['docker','exec',container,'bash','-c','test -f /stand/installed/.forge-install.json; cat /stand/installed/.forge-install.json'],'ready-marker')
+        run(['docker','exec',container,'bash','-c','for tool in go rustc cargo python3 node npm; do if command -v "$tool"; then exit 1; fi; done; test ! -e /root/.cargo; test ! -e /root/.rustup; printf "DEFERRED_SDK_BASELINE_OK\\n"'],'deferred-baseline')
         run(['docker','exec',container,'bash','/stand/installed/bin/fride','--headless','-i','NONE','-c','qa!'],'first-launch',120)
     print('Cold install exit:',code,'evidence:',base,flush=True)
 finally:

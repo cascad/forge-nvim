@@ -10987,3 +10987,87 @@ yet. Cold trace/syntax/strict and exact owned docs/test/proposal index checks;
 journals append-only, product Lua/frontend/bootstrap/locks and .tools SDK/UI
 unchanged. Full E2E/regression not launched; user requested it at block end.
 Local commit gc.auto0/maintenance.auto=false, no push; then continue product.
+
+
+## 199. Языки по потребности и постоянные настройки — 2026-11-19
+
+Workspace F:/repo/forge-nvim; HEAD before work af6f103. Full access/never;
+no execution approval, no npx, no goal, no push. TEMP/TMP/TMPDIR/NVIM_LOG_FILE,
+Python -B/cache/artifacts all on F; native container scratch only in own tmp.
+
+Discovery: git status/diff, rg, bounded Get-Content/Select-String; OpenSpec apply
+context read. Native Rust frontend delegates SDK/settings to shared Lua, packages
+to upstream/native providers, UI preparation to public Overseer task API. No SDK
+version matrix/private plugin state. Official VS Code settings/Python/Go tool
+docs informed scopes and explicit actions; central menu is our own design.
+
+Developer builds (source matched, no .tools replacement):
+python -B scripts/build-installer-ui.py --work .tests/installer-ui
+  --output .tests/cold-install/frontend/windows-x64
+Linux: docker exec own publisher bash /workspace/.tests/build-deferred-ui.sh;
+vendored locked Cargo inputs, native Linux build, output /artifacts/frontend.
+Windows binary SHA a4a6360a7183d6cbef7cd10b595865902ff777d0fb7307a59ccb0daa703e5b38;
+Linux SHA4840b7a71004cff9a46fcef7c9251ec310c18946814b32c074153465db8b4ad7.
+rustfmt only modified Rust files; later runtime Lua fixes need no Rust rebuild.
+
+One affected packet per OS after the feature implementation:
+.tests/cold-install/run-windows-affected.ps1 → batch1795081125538079100.
+docker exec own publisher bash /workspace/.tests/run-deferred-affected.sh
+  → native-stand batch1795081543259253662. Only failed/affected repeats thereafter.
+Eight native suites: language environments, SDK actions/settings, Nextest,
+prerequisites, receipt/parser readiness, Go build policy, tool-version preserve.
+Four registry files: new language UI, Python/Node SDK picker, setup SDK paths,
+tool version checks. Stand/mocked tools stage is explicitly not full acceptance.
+
+Final UI/readiness: Windows batch1795081776745074100 and Linux
+batch1795082110168941537; language UI4 PASS/OS, existing picker2/setup paths7 PASS.
+Final .tests/cold-install/final-windows.ps1 / .tests/ubuntu/final-deferred.sh:
+menu scopes/Later/fresh-process persistence/error/edit and unit+trace20 files/OS
+PASS. SDK-mode native cancel130: cancel-windows.txt / cancel-linux.txt. Archive
+Unicode/traversal: tests/install-sdk-actions.test.py
+test_actions_00_official_archive_unicode_and_traversal → final PASS. The local
+fixture has a controlled native SDK response/curl archive, never public network.
+
+Source failures kept: hit-enter from a long failure notice; first empty SQL
+filetype; stale native Neogit/neotest-rust backports; Linux stands/profiles on
+the Windows bind mount; legacy v1 receipt with v2 source data; missing fixture
+pre-Mason Go policy. These were fixed or prepared before affected repeats, not
+silently treated as product success. Two own batch process trees were stopped
+after exact PID/argv checks; JSON ledgers describe why. Native Linux tests use
+FORGE_TEST_TMPDIR and FORGE_INSTALL_STAND_ROOT under /tmp/fride-cold-publisher.
+
+Real cold command:
+python -B tests/diagnostics/check-cold-install.py
+  --artifacts .tests/cold-install/artifacts --publisher-container <ownID> --keep
+→1795081713824789000. Pinned Ubuntu baseline, real archive/root entry/native PTY;
+only Git action, SDKs deferred. Default ERROR127 on libX11-xcb.so.1 in Terminal
+font probe, no ready marker. No full cold PASS. SDK workers then exercised in
+separate /tmp/fride-sdk-provider-home using already validated Core, preserving
+the cold default home. Go1.27.4 actual SHA-verified install initially failed on
+GNU tar octal Unicode quoting; literal listing fixed it. rustup installed real
+Rust1.100.0, fmt/src, shared component check ready. provider-repeat.lua verified
+same versions and selected executable SHA; /root Cargo/Rustup still absent.
+Rust cc warning and missing unzip/GUI libs are open IDE-142, product choice asked.
+
+Reports/logs stay .tests/cold-install, .tests/ubuntu/batches and
+.tests/ubuntu/cold-install-native-records. Export only regular small records;
+1447 files2498947 bytes, no runtime binary/SDK copies. Cold artifacts preserve
+previous-0db5fce frontend/manifest, historical inputs and original failures;
+corrected worker was a separate candidate, source SHA captured. Owner/ID verified
+before stopping target58530688913f and publisher80a7a7eebd57. No other containers,
+Docker Desktop/WSL settings/start/stop/reconfigure actions.
+
+Final checks: Python AST, loadfile21 Lua, PowerShell Parser, bash -n,
+openspec validate defer-language-environment-setup --type change --strict
+  --no-interactive; nvim -l tests/trace.test.lua --change <change>
+→8PASS/1SKIP(info). checkpoint-deferred.py compares append-only journal prefixes,
+SDK/old UI hashes, HEAD locks/policies/backports and both frontend source hashes;
+exact owned staging, git diff --check, local commit gc.auto0/maintenance.autofalse.
+Open tasks: actual cold installed workflow/repeat after OS dependencies decision;
+native Mac/WSL/GUI and publication. No goal and no automatic all-suite repetition.
+
+Source-only UI E2E without FORGE_INSTALL_UI_BINARY now declares one native
+integration SKIP with preparation guidance. Supplied/invalid paths still fail;
+acceptance supplied verified native inputs and passed4 cases per OS. Explicit
+build/env/Windows/POSIX test commands are in docs/LANGUAGE_ENVIRONMENTS.md.
+No frontend/Cargo download is added to the ordinary E2E runner.

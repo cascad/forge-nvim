@@ -27,7 +27,11 @@ if case~='missing-package' then
    source={type='registry+v1',id='pkg:generic/fixture-native@1.0.0',raw={}},
    registry={proto='lua',mod='forge_fixture_registry'},links={bin={[exported]='tool'},share={},opt={}},
    metrics={start_time=0,completion_time=1},install_options={}}
-  if case=='legacy-receipt' then receipt.schema_version='1.0';receipt.links.bin={['fixture-native']='tool'} end
+  if case=='legacy-receipt' then
+   receipt.schema_version='1.0';receipt.primary_source=receipt.source;receipt.source=nil
+   receipt.links.bin={['fixture-native']='tool'}
+  end
+  if case=='empty-bin' then receipt.links.bin=vim.empty_dict() end
   if case=='share-ready' or case=='share-missing' or case=='opt-missing' then
    receipt.links.share={['fixture-share']='assets'};receipt.links.opt={['fixture-opt']='assets'}
    vim.fn.mkdir(package_root..'/assets','p')

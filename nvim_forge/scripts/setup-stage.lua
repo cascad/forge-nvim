@@ -51,7 +51,9 @@ local ok, err = xpcall(function()
         vim.cmd('Lazy load mason-tool-installer.nvim')
         local catalog = require('forge.tool_catalog')
         if vim.tbl_contains(catalog.mason(),'rust-analyzer') then
-            io.stdout:write('Rust test tool readiness: '..vim.json.encode(require('forge.nextest').check())..'\n')
+            local components=require('forge.rust_components').inspect(nil,vim.g.forge_setup_sdk_report.scope or 'user')
+            assert(components.ready,'Rust SDK components missing: '..vim.json.encode(components.missing)..' '..tostring(components.error or 'use rustup component add rustfmt rust-src'))
+            io.stdout:write('Rust test tool readiness: '..vim.json.encode(require('forge.nextest').check({scope=vim.g.forge_setup_sdk_report.scope or 'user'}))..'\n')
         end
         local readiness = require('forge.setup_readiness')
         local external = require('forge.setup_tools')

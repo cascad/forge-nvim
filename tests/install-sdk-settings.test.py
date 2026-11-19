@@ -224,9 +224,11 @@ class Settings(prereq.Prerequisites):
             command=[stand.SHELL,'-NoProfile','-ExecutionPolicy','Bypass','-File',str(ROOT/'install.ps1'),
                 '-ArchiveUrl',self.url+'/ui-source','-SourceRoot',str(base/'sources'),'-InstallPath',str(target),
                 '-RuntimePath',str(self.runtime),'-Components',components]
+            command+=['-PrepareLanguages']
         else:
             command=[stand.SHELL,str(ROOT/'install.sh'),'--archive-url',self.url+'/ui-source','--source-root',str(base/'sources'),
                 '--install-dir',str(target),'--runtime-path',str(self.runtime),'--components',components]
+            command+=['--prepare-languages']
         self.assert_ok(self.run_process(command,env,base,'root-source'))
         reports=[json.loads(p.read_text()) for p in (base/'sources/.ui-logs').glob('preflight-*.settings.json')];self.assertEqual(len(reports),2)
         data=next(report for report in reports if 'rust' in report['selections'])

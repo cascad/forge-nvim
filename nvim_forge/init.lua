@@ -38,6 +38,7 @@ require("config.lazy")
 -- по требованию (через safe_require) — плагины должны быть в rtp.
 -- Сам setup лёгкий: ничего не открывает, только регистрирует specs.
 require("ide").setup()
+require('forge.languages').setup()
 -- spec: IDE-PANEL-20. Модуль не загружается и ничего не открывает до команды.
 vim.api.nvim_create_user_command('ForgeFramePilot',function() require('forge.frame_pilot').start() end,{desc='Experimental Code/Locals frames: toggle'})
 
