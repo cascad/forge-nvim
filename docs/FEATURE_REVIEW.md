@@ -4,6 +4,9 @@
 редактор, SDK и pins не менялись, новых behavioral PASS или benchmark нет.
 [Прежний обзор и измерения](history/FEATURE_REVIEW_2026-11-19.md) сохранены отдельно.
 [Все67 plugins/pins](PLUGIN_INVENTORY.md) — полный список зависимостей, не67 отдельных фич.
+После этого source review IDE-146 реализован §297: Visual Space t e / Ctrl+Enter
+в обычную встроенную системную консоль, native Windows/Ubuntu E2E; следующие
+кандидаты — legacy neodev hook и language target helpers DAP.
 
 ## Что оставляем
 
@@ -11,7 +14,7 @@
 операции, поиск, вкладки, шесть языков, запуск/debug/output/tests, Git, встроенная
 консоль, общая клавиатурная модель и логи. Breadcrumbs/navic/Satellite и Comment
 сохранены решениями владельца; повторно выбирать их не требуется. IDE-146 —
-новое обязательное выполнение выделения в консоли, пока не реализовано.
+обязательное выполнение выделения в консоли, реализовано после обзора (§297).
 
 | Возможность | Готовый backend | Собственная ответственность и решение |
 |---|---|---|
@@ -24,7 +27,7 @@
 | Diff/hunks/history/branches/worktree/commit/push | Gitsigns, Neogit, Diffview | Разные Git UI; сохранить все три, снимать только доказанные patches |
 | Debug/config/breakpoint/locals/stack/output/panic | nvim-dap, dap-ui, adapters | dap.lua содержит язык/target discovery и lifecycle glue; разделять малыми шагами |
 | Tests/nearest/file/all/debug/output | Neotest + Go/Rust/Python/Jest adapters | Go workspace и nextest/native SDK policy; сохранить готовый backend |
-| Terminal и чтение вывода | ToggleTerm, native terminal, Edgy | Сохранить job/history/scroll; IDE-146 заменит внешний pwsh route на active terminal |
+| Terminal и чтение вывода | ToggleTerm, native terminal, Edgy | Сохранить job/history/scroll; IDE-146 заменил внешний pwsh route на active terminal (§297) |
 | Run/build/tasks | Overseer | Не объединять task lifecycle с видимостью панели; сохранить штатные templates |
 | Вкладки/другой проект/restore | Bufferline, Alpha, project.nvim, persistence | ide.buffers, session_views и startup; различать selected workspace и language roots |
 | Панели/клавиши/focus/hide/zoom | Edgy, native splits, dap-ui | state/registry/controls/guard имеют разные роли; не вводить новый window manager |
@@ -67,7 +70,7 @@ Backports: Gitsigns2, Neogit5, Neotest4, DAP1, neotest-rust2, Neo-tree2 files.
 
 | Порядок | Действие | Что сохраняем / как доказываем результат |
 |---|---|---|
-| 1 | IDE-146: выполнение выделения в active integrated terminal | Visible/hidden/missing/multiple, точный текст, Unicode, повтор и тот же job; native Windows/Ubuntu E2E одним пакетом |
+| Выполнено | IDE-146: выполнение выделения в active integrated terminal | §297: visible/hidden/missing/multiple, точный текст, Unicode, повтор и тот же job; по7 native E2E Windows/Ubuntu |
 | 2 | Проверить legacy neodev hook и удалить только при доказанном отсутствии роли | Pinned neodev использует lspconfig.util.on_setup; текущий LuaLS настроен native vim.lsp.config. Нужен native LuaLS/Neovim API/explicit luarc control до удаления pin |
 | 3 | Разделить конкретные language target helpers в dap.lua | Те же public DAP entrypoints, async cancellation/cwd/launch.json и F5. Без нового dispatcher/state или смены adapters |
 | Решение | Дополнительный SQL: убрать либо оставить optional | Удаление уберёт DB-aware workflow/schema/query Results и SQL assertions, sqls protocol/SDK patch и отдельную сборку SQL runner; Sqruff baseline сохранится |
@@ -84,7 +87,7 @@ policy/patch. Test preparation/fixtures — дополнительная сто�
 
 Каталог на этот snapshot: **160 REGISTERED / 1 PENDING / 0 MISSING**.
 PENDING — IDE-SQL-9 semantic references. Это проверка регистрации E2E, не160 PASS.
-IDE-146 пока только план; выполнение выделения ещё не имеет готового E2E.
+После обзора IDE-146 получил registered terminal-selection E2E и native PASS (§297).
 Реальные platform результаты берём из соответствующих verification/FIXLOG,
 а не из наличия файла, pin или загруженного plugin.
 
@@ -92,7 +95,7 @@ IDE-146 пока только план; выполнение выделения 
 |---|---|---|
 | Files/буферы | [file-explorer](../tests/e2e/file-explorer.test.lua), [file-copy-delete](../tests/e2e/file-copy-delete.test.lua), [buffers](../tests/e2e/buffers.test.lua) | Большой рабочий проект/редкие filesystem ошибки и native Mac отдельно |
 | Mixed languages, navigation, Debug/Tests | [mixed-project](../tests/e2e/mixed-project.test.lua), [peek-navigation](../tests/e2e/peek-navigation.test.lua), [dap-output](../tests/e2e/dap-output.test.lua), [test-runner](../tests/e2e/test-runner.test.lua) | [Матрица языков](LANGUAGE_MATRIX.md), не все реальные env/платформы закрыты |
-| Панели/terminal/session | [tool-panels](../tests/e2e/tool-panels.test.lua), [project-session](../tests/e2e/project-session.test.lua), [session-tool-views](../tests/e2e/session-tool-views.test.lua) | Физические keys/рамки; selection route IDE-146 отсутствует |
+| Панели/terminal/session | [tool-panels](../tests/e2e/tool-panels.test.lua), [project-session](../tests/e2e/project-session.test.lua), [session-tool-views](../tests/e2e/session-tool-views.test.lua), [terminal-selection](../tests/e2e/terminal-selection.test.lua) | Физические keys/рамки отдельно; selection route реализован §297 |
 | Git | [git-workflow](../tests/e2e/git-workflow.test.lua) и Git error/conflict suites | Реальные accounts/SSH/OAuth и редкие Windows handles отдельно |
 | SDK/install/deferred prepare | [language-environments](../tests/e2e/language-environments.test.lua), [Omarchy verification](../openspec/changes/support-omarchy-installation/verification.md) | Current Windows/Ubuntu/Arch affected packet; actual Omarchy/macOS не запускались |
 
@@ -104,6 +107,6 @@ Omarchy clean CLI прошёл; Wayland/GPU/clipboard/hotkeys/рабочий mix
 ## Итог обзора
 
 Полная пересборка редактора или смена backend не обоснованы. Основу оставляем;
-сначала устраняем конкретный пробел IDE-146, затем проверяем legacy compatibility
+IDE-146 устранён §297; далее проверяем legacy compatibility
 и уменьшаем смешение языковых обязанностей DAP. Удаление SQL extras требует
 отдельного решения; массового удаления plugins по их числу не предлагаем.

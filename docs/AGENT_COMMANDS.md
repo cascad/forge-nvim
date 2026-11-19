@@ -11339,3 +11339,75 @@ Final: local openspec strict, journal prefixes, doc links/inventory и git diff
 документальный обзор от этого не скрывает и не удаляет существующее поведение.
 
 Archive verification caught Windows CRCRLF from implicit text newline conversion; archive rebuilt from HEAD with explicit UTF-8 bytes. Reverse link rebasing now restores the original narrative exactly.
+
+## 205. Выделение в обычной встроенной консоли — 2026-11-19
+
+Source d073799; change send-selection-to-active-terminal; FIXLOG297,
+IDE-146/WF-14/IDE-PANEL-30. Уточнение владельца: обычный системный terminal
+внутри редактора, выбранный shell/environment/tools, без auto interpreter.
+Python reader ниже — только наблюдатель PTY stdin, не product shell.
+
+Все host TEMP/TMP/TMPDIR/NVIM_LOG_FILE — F:/repo/forge-nvim/.tests;
+Python -B, PYTHONUTF8=1, PYTHONDONTWRITEBYTECODE=1. Никаких goal/agents/push.
+Использованы OpenSpec propose/apply, локальный openspec, без npx/download CLI.
+Прочитаны pinned ToggleTerm API и native getregion semantics; runtime меняет
+один существующий keymaps.lua callback, без plugin/SDK/module additions.
+
+Legacy config извлечён git show d073799:nvim_forge/... в отдельный ignored
+.tests/terminal-selection/legacy-config. FORGE_E2E_CONFIG_SOURCE направляет
+editor fixture туда. Source RED batch1795109973656610800:7 FAIL. Попытка
+FORGE_SELECTION_CASE='first CtrlEnter' не ограничила этот batch: runner
+намеренно удаляет FORGE_*_CASE. Фактически проверены все7, не1.
+
+После цельной реализации по одному affected packet:
+```powershell
+& ./scripts/test.ps1 e2e -Files @('tests/e2e/terminal-selection.test.lua','tests/e2e/terminal-shell.test.lua')
+```
+В реально выполненном PowerShell harness параметр -Files передан массивом
+@('tests/e2e/terminal-selection.test.lua','tests/e2e/terminal-shell.test.lua').
+Windows batch1795110202693204400: new3 PASS/4 FAIL, shell2 PASS/2 SKIP.
+Ubuntu batch1795110171990687749: new5 PASS/2 FAIL, shell2 PASS/2 SKIP.
+После native instance/newlines corrections повторён только новый test file:
+Windows1795110751921632800, Ubuntu1795110763571262975:6 PASS/1 FAIL каждой ОС.
+Последний failure — setup не сфокусировал уже видимый terminal; explicit
+focus() исправил тест. Добавлена проверка blank/whitespace. Только два affected
+кейса запущены прямо, чтобы batch runner не очищал фильтр:
+```powershell
+$env:FORGE_SELECTION_CASE='last active' # затем 'char reversed'
+& ./.tools/neovim/windows-x64/bin/nvim.exe -u NONE -i NONE -l tests/e2e/terminal-selection.test.lua
+```
+Linux эквивалент использует тот же -u NONE -i NONE -l и private prepared cache.
+Windows .tests/terminal-selection/affected-cases.ps1 и Ubuntu
+.tests/ubuntu/terminal-selection-cases.sh дали по1 PASS на каждый из двух
+кейсов/ОС. Итого7 PASS/ОС aggregate, не цельный новый green batch.
+Все первичные failures и reader JSON сохранены. shell suite после PASS не
+повторялась; unrelated Go/Rust/DAP/full E2E не запускались.
+
+Ubuntu проверялся в собственном container7871857f6f05 с exact ID из
+.tests/terminal-selection/container.json, label fride.owner=selection-e2e,
+network none/CPU2/RAM3GiB/source RO/.tests RW на F. Подготовка сначала выявила,
+что image cache tar не содержит git objects: вместо downloader использована
+собственная /tmp копия67 pinned plugins и native prepare-plugins.lua/backports.
+Никаких image/user SDK/Desktop/WSL изменений. Перед удалением сверены identity,
+label/resources; records уже находятся на host F. Удаляется только этот container.
+
+Финальная проверка — Lua loadfile syntax, local openspec strict, change trace
+и catalog, git diff --check, SHA256 frozen .tools и прежних lock/SDK/backport
+файлов, append-only prefixes FIXLOG/commands относительно d073799. Это metadata
+проверки, не повтор поведенческих E2E. Native Mac/Omarchy и physical keyboard
+не проверялись; SQL scope и neodev/refactor этой реализацией не менялись.
+
+Фактически выполненные финальные команды:
+```powershell
+& ./.tools/neovim/windows-x64/bin/nvim.exe --headless -u NONE -i NONE -c "lua for _,p in ipairs({'nvim_forge/lua/config/keymaps.lua','tests/e2e/terminal-selection.test.lua','tests/registry.lua'}) do assert(loadfile(p)) end" -c qa!
+openspec validate send-selection-to-active-terminal --type change --strict --no-interactive
+& ./.tools/neovim/windows-x64/bin/nvim.exe -u NONE -i NONE -l tests/trace.test.lua --change send-selection-to-active-terminal --catalog-json .tests/terminal-selection/change-catalog.json
+python -B .tests/terminal-selection/verify-metadata.py
+git diff --check
+```
+Syntax/strict/trace9 PASS. Change catalog1 REGISTERED/0 MISSING/0 PENDING,
+это связь с тестами, не дополнительный behavioral PASS.3 frozen .tools SHA,
+67 pins, locks/SDK/backport metadata и оба journal prefixes PASS.
+Exact-owner container остановлен docker stop; первый immediate absence check
+попал до завершения AutoRemove. Следующий docker ps/inspect подтвердил удаление,
+.tests/terminal-selection/cleanup.json сохранён. Чужие ресурсы не затронуты.

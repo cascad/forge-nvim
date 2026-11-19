@@ -21,8 +21,14 @@ Terminal в VS Code. Скрытая консоль открывается; су�
 Не перезапускать shell/REPL и не менять программу, уже работающую в консоли.
 Нужны точное символьное/построчное многострочное выделение, portable сочетание
 и E2E visible/hidden/missing/multiple terminals. Выбор хоткея — после проверки
-конфликтов. Сейчас Ctrl+Enter в keymaps.lua вызывает внешний pwsh через :write !;
-это legacy route без встроенной консоли и без общей shell policy. Пока не исправлен.
+конфликтов. До исправления Ctrl+Enter в keymaps.lua вызывал внешний pwsh через
+:write ! — legacy route без встроенной консоли и без общей shell policy.
+Уточнение владельца: нужна обычная системная консоль внутри IDE, как в VS Code,
+с привычным shell/окружением/командами, чтобы не переключаться в другое окно.
+Автоматический выбор отдельного интерпретатора/собственный executor не требуется.
+Реализовано §297: Visual Space t e / Ctrl+Enter, active Terminal reveal/reuse/create,
+точный текст, текущая программа/сессия и вывод. Native Windows/Ubuntu по7 E2E
+закрыты aggregate после affected repeats; physical Mac/Omarchy отдельно.
 
 ## IDE-145 — общий SDK shim терял контекст проекта
 

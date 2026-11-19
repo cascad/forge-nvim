@@ -434,11 +434,46 @@ vm("<A-CR>", lsp_code_action, "LSP: code action (range)")
 nm("<leader>.", lsp_code_action, "LSP: code action / quick fix")
 vm("<leader>.", lsp_code_action, "LSP: code action (range)")
 
--- Ctrl+Enter — выполнить выделение (helix: pipe-to bash, VS Code: terminal.runSelectedText).
--- Под Windows прогоняем через pwsh, чтобы вёл себя как в helix `:sh`.
-vm("<C-CR>", function()
-    vim.cmd("'<,'>w !pwsh -NoLogo -NoProfile -Command -")
-end, "Run selection in pwsh")
+-- IDE-PANEL-30. Native selection semantics; native Terminal owns the session.
+local last_terminal
+vim.api.nvim_create_autocmd("WinLeave", {
+    group = vim.api.nvim_create_augroup("ForgeTerminalSelection", { clear = true }),
+    callback = function()
+        if vim.bo.filetype ~= "toggleterm" then return end
+        local terminals = package.loaded["toggleterm.terminal"]
+        local term = terminals and terminals.get(terminals.get_focused_id())
+        if term then last_terminal = term end
+    end,
+})
+local function run_selection_in_terminal()
+    local ok, why = pcall(function()
+        local mode = vim.fn.mode()
+        local kind = ({ s = "v", S = "V", [string.char(19)] = string.char(22) })[mode] or mode
+        local lines = vim.fn.getregion(vim.fn.getpos("v"), vim.fn.getpos("."), {
+            type = kind, exclusive = vim.o.selection == "exclusive",
+        })
+        if #lines == 0 then return end
+        vim.cmd("normal! " .. string.char(27))
+        require("toggleterm")
+        local terminals = require("toggleterm.terminal")
+        if last_terminal and not vim.api.nvim_buf_is_valid(last_terminal.bufnr) then last_terminal = nil end
+        local term = terminals.get(terminals.get_focused_id()) or last_terminal or terminals.get_last_focused()
+        if term and term.hidden then term = nil end
+        term = term or terminals.get_all()[1]
+        if term and term.bufnr and vim.api.nvim_buf_is_valid(term.bufnr)
+            and (not term.job_id or vim.fn.jobwait({ term.job_id }, 0)[1] ~= -1) then
+            if not term:is_open() and term.bufnr and vim.api.nvim_buf_is_valid(term.bufnr) then term:open() end
+            vim.notify("Активная консоль завершена. Выбери другую или открой новую (например, :2ToggleTerm).", vim.log.levels.WARN)
+            return
+        end
+        term = term or terminals.Terminal:new({ dir = vim.fn.getcwd() })
+        if not term:is_open() then term:open() end
+        term:send(lines, not term:is_float())
+    end)
+    if not ok then vim.notify("Не удалось выполнить выделение в консоли: " .. tostring(why), vim.log.levels.ERROR) end
+end
+xm("<leader>te", run_selection_in_terminal, "Terminal: run selection")
+vm("<C-CR>", run_selection_in_terminal, "Terminal: run selection")
 
 -- ===========================================================================
 -- Перенос фикса из vim.visualModeKeyBindings: $ ⇒ g_ (без \n на конце)

@@ -6,8 +6,8 @@
 
 1. IDE-080: актуальный [обзор фич/слоёв](FEATURE_REVIEW.md) завершён на source8d721c3;
    сохранены основные workflows и решения по breadcrumbs/Satellite/Comment.
-2. IDE-146 / WF-14: выполнить выделенный текст в активной встроенной консоли;
-   reveal/reuse/create, portable hotkey, затем один пакет affected E2E.
+2. IDE-146 / WF-14 выполнен (§297): Visual Space t e / Ctrl+Enter отправляет
+   выделение в обычную системную консоль внутри IDE; native Windows/Ubuntu по7 E2E.
 3. Проверить legacy neodev hook на native LuaLS, затем отдельно упрощать
    language target helpers DAP с сохранением поведения.
 4. SQL extras: запросить решение владельца об удалении или сохранении; runtime
@@ -579,7 +579,7 @@ Windows/macOS/Ubuntu — целевые ОС; натурные проверки 
 | WF-11 | Поиск файлов/текста и палитра команд | Основные действия есть; единая проверка из кода и панелей входит в приёмку |
 | WF-12 | Тесты проекта в общей панели | Go.work discovery/nearest/file/all/fix/Output Windows/Ubuntu (§207); по языкам есть отдельные workflows, смешанный проект открыт |
 | WF-13 | Единая навигация внутри рабочих панелей и чтение вывода | Space w есть; native Bash Output scroll/search→stdin→Stop Windows/Ubuntu PASS (§217). localvox-light референс, общий кейс/оформление открыты |
-| WF-14 | Хоткей: выполнить выделенный текст в активной встроенной консоли | IDE-146, обязательно; запланировано. Legacy Ctrl+Enter запускает внешний pwsh и не выполняет нужный сценарий |
+| WF-14 | Хоткей: выполнить выделенный текст в активной встроенной консоли | IDE-146 выполнен §297: Visual Space t e / Ctrl+Enter, active shell/job, reveal/reuse/create; по7 E2E Windows/Ubuntu, physical Mac/Omarchy отдельно |
 
 ### WF-01. Открытие и восстановление проекта
 
@@ -709,6 +709,11 @@ render.rs и пример native TUI. Репозиторий-референс т
 Практические текущие клавиши чтения вывода — [PANEL_KEYS](PANEL_KEYS.md).
 
 ### WF-14. Выполнение выделения в консоли — IDE-146
+
+Консоль — обычный системный terminal внутри IDE, как в VS Code: выбранный
+shell, привычные environment/commands/tools. Работать можно прямо в нижней
+панели, без переключения в другое приложение. Выделение отправляется в неё;
+интерпретатор по языку файла автоматически не подменяется.
 
 1. Выделяю кусок текста в файле и нажимаю хоткей; текст отправляется на
    выполнение в активную встроенную консоль через штатный terminal backend.
@@ -1244,9 +1249,10 @@ Normal mode, прежние aliases сохранены:
 - [x] Terminal/Trouble Windows/Ubuntu: Space w T/x, common focus/help/hide/zoom,
   literal input/jobs, несколько views и native Trouble выбор из zoom (§172).
 - [ ] Terminal/Trouble: native Mac/GUI и физические клавиши WezTerm.
-- [ ] IDE-146 / WF-14: заменить legacy внешний pwsh на выполнение выделения
+- [x] IDE-146 / WF-14: заменить legacy внешний pwsh на выполнение выделения
   в активной встроенной консоли, reveal/reuse/create и portable hotkey;
-  E2E всей реализации одним affected packet Windows/Ubuntu, native Mac/Omarchy отдельно.
+  E2E всей реализации одним affected packet Windows/Ubuntu, затем failed/affected repeats (§297);
+  native Mac/Omarchy отдельно. Это обычный системный shell в панели IDE.
 - [x] IDE-102 Windows/Ubuntu: shell policy — POSIX с/без optional pwsh, Windows actual pwsh/
   fallback и сохранение job/history через q/reopen. Native E2E в
   tests/e2e/terminal-shell.test.lua; результаты в §175. Mac/GUI ещё открыты.

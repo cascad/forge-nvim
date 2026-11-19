@@ -15663,3 +15663,39 @@ REGISTERED/1 PENDING/0 MISSING, не160 behavioral PASS. Native/тяжёлые E
 решения. Старые измерения сохранены, но не выдаются за актуальный benchmark.
 **Файлы.** FEATURE_REVIEW/PLUGIN_INVENTORY/history archive, roadmap/PROBLEMS,
 HISTORY и review-current-ide-surface.
+
+
+### 297. Выполнение выделения в системной консоли редактора
+
+**Спека: IDE-PANEL-30 ADDED — terminal-selection.** IDE-146/WF-14.
+**Было.** Visual Ctrl+Enter запускал внешний pwsh через :write ! вместо
+встроенной консоли. Терялись выбранный shell, текущая сессия и обычный workflow;
+source d073799 дал7 native RED, включая hit-enter вместо панели Terminal.
+**Причина.** Legacy mapping существовал отдельно от ToggleTerm. При интеграции
+выяснилось: get_last_focused хранит view snapshot, TermClose удаляет instance
+из registry, а exec(string с LF) не сохраняет Windows границы строк.
+**Сделано.** Visual Space t e и Visual/Select Ctrl+Enter: штатный getregion,
+native open/send(array), одна локальная ссылка на последнюю сфокусированную
+консоль. Скрытая раскрывается, существующая сохраняет job/PID/cwd/history/
+программу; отсутствующая создаётся в cwd проекта. Private tasks исключены,
+завершённая сессия показывает прежний output и warning без нового job.
+Это обычная системная консоль внутри IDE, как уточнил владелец: прежний shell,
+окружение и tools, без автоматического выбора интерпретатора по языку файла.
+Новых manager/module/plugin/SDK нет. Source buffer и yank registers сохраняются.
+**Проверки.** Registered native E2E,7 сценариев: first shell/output/repeat,
+hidden reuse, точный Unicode/indent/newlines char/line/block/reversed/exclusive/
+Select/aliases, multiple terminals, private task, float, dead job. Windows и
+Ubuntu по7 PASS aggregate после одного affected packet и failed/affected
+повторов; прежний terminal-shell по2 PASS/2 platform SKIP. Сначала target
+Windows3/7 и Ubuntu5/7; после исправлений6/7 каждой ОС. Последний failure был
+в тесте: open() видимого terminal не фокусирует его; явный focus() и точечный
+повтор прошли. Проверка whitespace/пустой строки также повторена отдельно.
+Python stdin reader — только тестовый измеритель; первый кейс выполняет
+реальную команду обычного shell. Broad full E2E повторно не запускались.
+Physical Mac/Omarchy/WezTerm modified keys отдельно, не объявлены PASS.
+**Вывод.** Выделение выполняется в той же системной консоли, без переключения
+приложений и потери сессии. Native API требует проверки поведения, а не
+предположения по названию helper; исходные неудачные прогоны сохранены.
+**Файлы.** config/keymaps.lua, terminal-selection E2E/registry, PANEL_KEYS,
+roadmap/PROBLEMS/review/HISTORY, send-selection-to-active-terminal/verification,
+commands205. Journal prefixes, pins/SDK/backports и cleanup проверены отдельно.
