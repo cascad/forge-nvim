@@ -29,7 +29,6 @@
   "mason-tool-installer.nvim": "WhoIsSethDaniel/mason-tool-installer.nvim",
   "mason.nvim": "williamboman/mason.nvim",
   "neo-tree.nvim": "nvim-neo-tree/neo-tree.nvim",
-  "neodev.nvim": "folke/neodev.nvim",
   "neogit": "NeogitOrg/neogit",
   "neotest": "nvim-neotest/neotest",
   "neotest-golang": "fredrikaverpil/neotest-golang",

@@ -15699,3 +15699,30 @@ Physical Mac/Omarchy/WezTerm modified keys отдельно, не объявле
 **Файлы.** config/keymaps.lua, terminal-selection E2E/registry, PANEL_KEYS,
 roadmap/PROBLEMS/review/HISTORY, send-selection-to-active-terminal/verification,
 commands205. Journal prefixes, pins/SDK/backports и cleanup проверены отдельно.
+
+
+### 298. Удаление неиспользуемого neodev после LuaLS control
+
+**Спека: skip_specs=true — cleanup зависимости, поведение IDE-BOOT-31 сохранено.** IDE-080.
+**Было.** Отдельный ft=lua plugin neodev оставался после перехода на штатный
+vim.lsp.config; комментарий обещал настройку Neovim API через этот plugin.
+**Причина.** Pinned neodev регистрирует legacy lspconfig.util.on_setup;
+native LuaLS configuration этим путём не проходит. Runtime library уже задаёт
+собственный on_init через VIMRUNTIME, кроме явно настроенных luarc/jsonc.
+**Сделано.** Registered native LuaLS E2E и baseline с реально загруженным
+neodev. После controls удалены только spec, pin и test-source row neodev;
+66 оставшихся revisions и LuaLS settings прежние. Новый plugin не добавлен.
+**Проверки.** Upstream LuaLS3.19.2, реальный editor/PTY RPC, private profile:
+type mismatch → edit/save → диагностика очищается; Neovim API hover/completion;
+внешняя library из .luarc.json и .luarc.jsonc. Baseline Windows3 PASS с
+neodev_loaded/spec=true; target Windows3/Ubuntu3 PASS с обоими=false. Ровно
+VIMRUNTIME в default workspace и отсутствие подмены explicit library проверены.
+Это preservation control, искусственного source RED нет. Один affected packet
+на ОС, без failed retries и unrelated full E2E. Native Mac/Omarchy отдельно.
+Подготовленные upstream binary/archive переиспользованы без загрузок;
+профили/SDK пользователя и общий67-pin baseline cache не менялись.
+**Вывод.** Убрана одна реально неиспользуемая зависимость без смены поведения.
+Ускорение старта численно не измерялось и не заявляется. Следом — узкий DAP
+рефакторинг; SQL extras остаются до отдельного решения владельца.
+**Файлы.** plugins/lsp.lua, lazy-lock.json, plugin-sources/registry и Lua E2E,
+inventory/review/roadmap/HISTORY, remove-unused-neodev/verification, commands206.

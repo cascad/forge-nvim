@@ -11411,3 +11411,55 @@ Syntax/strict/trace9 PASS. Change catalog1 REGISTERED/0 MISSING/0 PENDING,
 Exact-owner container остановлен docker stop; первый immediate absence check
 попал до завершения AutoRemove. Следующий docker ps/inspect подтвердил удаление,
 .tests/terminal-selection/cleanup.json сохранён. Чужие ресурсы не затронуты.
+
+## 206. Удаление neodev с native LuaLS controls — 2026-11-19
+
+Source c7522d6; remove-unused-neodev, skip_specs=true, FIXLOG298/IDE-080.
+OpenSpec root/context и proposal/design/tasks/apply ready прочитаны. Поведение
+IDE-BOOT-31 сохраняется. Прочитаны pinned neodev/lsp.lua и native LuaLS config:
+legacy on_setup hook не участвует в vim.lsp.config. Никаких agents/goals/push.
+
+Host TEMP/TMP/TMPDIR/NVIM_LOG_FILE и private prepared cache — только F.
+Python -B/PYTHONDONTWRITEBYTECODE=1; тестовый LuaLS --logpath внутри private
+profile. Настоящие настройки/on_init не подменяются; server executable явно
+выбран для теста. Upstream LuaLS3.19.2 переиспользован из прежнего own Core
+стенда, Linux tar.gz — из .tests/ubuntu/core-acceptance/assets. Новых загрузок нет.
+
+Windows baseline, ещё67 pins и реально загруженный neodev:
+```powershell
+$env:FORGE_E2E_LUALS='F:/repo/forge-nvim/.tests/core-acceptance/probe-1794850807403555900/profile/XDG_DATA_HOME/fride-data/mason/packages/lua-language-server/bin/lua-language-server.exe'
+$env:FORGE_LUA_BASELINE='1'
+& ./.tools/neovim/windows-x64/bin/nvim.exe -u NONE -i NONE -l tests/e2e/lua-language.test.lua
+```
+.tests/neodev-review/windows-baseline.txt:3 PASS. Проверены diagnostics/edit/
+save, native Neovim API completion/hover, explicit luarc/jsonc external library;
+package.loaded и Lazy spec действительно содержат neodev.
+
+Удалены только neodev spec/pin/source row. Собственный prepare-cache.py создал
+.tests/neodev-review/editor-deps, native prepare-plugins проверил все backports,
+manifest66 pins; общий baseline cache67 не менялся. После всей реализации:
+```powershell
+Remove-Item Env:FORGE_LUA_BASELINE -ErrorAction SilentlyContinue
+$env:FORGE_E2E_DEPS='F:/repo/forge-nvim/.tests/neodev-review/editor-deps'
+& ./scripts/test.ps1 e2e -Files @('tests/e2e/lua-language.test.lua')
+```
+Windows batch1795112719682524100:3 PASS; Ubuntu1795112782178531400:3 PASS.
+Ubuntu использовал scripts/test.sh e2e --file tests/e2e/lua-language.test.lua
+через .tests/ubuntu/neodev-review-final.sh. Own private /tmp cache и прежний
+upstream tar extraction, не image/user directories. Во всех target profiles
+neodev_loaded/spec=false; default library ровно VIMRUNTIME, luarc не подменён.
+Preservation cleanup не требует source RED; ни retries, ни broad regression.
+
+Ubuntu container6ef07abcb0a9, fride.owner=refactor-e2e, network none/CPU2/RAM3GiB,
+source RO, host F records RW. Docker Desktop/WSL/image/чужие containers не менялись.
+Native Mac/Omarchy и physical GUI не проверены. Source inventory от8d721c3
+сохраняется как историческое измерение, текущая plugin table66 pins сверена.
+
+Финал: native Lua loadfile PASS; local openspec validate remove-unused-neodev
+--type change --strict --no-interactive PASS; tests/trace.test.lua9 PASS/
+1 SQL pending SKIP. verify-metadata.py проверил append-only prefixes к c7522d6,
+точное удаление одного pin/source row,66 unchanged pins/inventory rows,
+3 frozen .tools SHA и прежние SDK/backport/старый UI lock. git diff --check PASS.
+Exact-ID/owner own container остановлен docker stop --timeout5 и отсутствие
+подтверждено bounded AutoRemove check; cleanup.json сохранён на F. Desktop/WSL
+и image не менялись. Временные private editor profiles удалены штатным fixture.

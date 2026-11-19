@@ -130,6 +130,7 @@ return {
   { file = 'tests/lib/trace.test.lua', suite = 'trace' },
   { file = 'tests/e2e/tool-paths.test.lua', suite = 'e2e', timeout = 240 },
   { file = 'tests/e2e/terminal-selection.test.lua', suite = 'e2e', timeout = 360 },
+  { file = 'tests/e2e/lua-language.test.lua', suite = 'e2e', timeout = 240 },
   { file = 'tests/e2e/sql-basic.test.lua', suite = 'e2e', timeout = 180 },
   { file = 'tests/e2e/go-rust-paths.test.lua', suite = 'e2e', timeout = 360 },
   { file = 'tests/e2e/sdk-selection.test.lua', suite = 'e2e', timeout = 600 },

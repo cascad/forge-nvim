@@ -8,8 +8,9 @@
    сохранены основные workflows и решения по breadcrumbs/Satellite/Comment.
 2. IDE-146 / WF-14 выполнен (§297): Visual Space t e / Ctrl+Enter отправляет
    выделение в обычную системную консоль внутри IDE; native Windows/Ubuntu по7 E2E.
-3. Проверить legacy neodev hook на native LuaLS, затем отдельно упрощать
-   language target helpers DAP с сохранением поведения.
+3. Legacy neodev удалён после native LuaLS control (§298): диагностика,
+   Neovim API и luarc/jsonc сохранены, Windows/Ubuntu по3 PASS; осталось66 pins.
+   Следующий самостоятельный пункт — language target helpers DAP с сохранением поведения.
 4. SQL extras: запросить решение владельца об удалении или сохранении; runtime
    пока прежний. Native Omarchy/macOS/physical gates остаются параллельно.
 

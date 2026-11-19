@@ -1,11 +1,12 @@
 # Инвентарь плагинов — IDE-080, 2026-11-19
 
-Source8d721c3: все67 имён и полные pins сверены с lazy-lock.json; ниже pin
-показан сокращённо. Это source/dependency inventory, не новый live snapshot
+Source8d721c3 содержал67 pins; после cleanup §298 текущая таблица содержит66.
+Удалён только neodev; все оставшиеся полные pins сверены с lazy-lock.json,
+ниже pin показан сокращённо. Это source/dependency inventory, не новый live snapshot
 или startup benchmark. Цена слоёв, решения и очередь — [FEATURE_REVIEW](FEATURE_REVIEW.md).
 
 Breadcrumbs/navic/Satellite и Comment сохраняются принятыми решениями владельца.
-Neodev — кандидат отдельного native compatibility control, до него не удалён.
+Neodev удалён §298 после native LuaLS control до/после: Windows/Ubuntu по3 PASS.
 Остальные оценки в таблице означают роль/предмет обзора, не разрешение удаления.
 Шесть backports затрагивают16 upstream files; состав описан в текущем обзоре.
 Прямые dependencies в таблице — прежний нормализованный Lazy snapshot;
@@ -48,7 +49,6 @@ Neodev — кандидат отдельного native compatibility control, �
 | [mason-tool-installer.nvim](https://github.com/WhoIsSethDaniel/mason-tool-installer.nvim.git) | LSP и setup | ядро / настройка инструментов | mason.nvim | 443f1ef8b5e6 |
 | [mason.nvim](https://github.com/williamboman/mason.nvim.git) | LSP и setup | ядро / настройка инструментов | — | e54f5bf5f12c |
 | [neo-tree.nvim](https://github.com/nvim-neo-tree/neo-tree.nvim.git) | Дерево файлов | ядро | nui.nvim, nvim-web-devicons, plenary.nvim | 84c75e7a7e44 |
-| [neodev.nvim](https://github.com/folke/neodev.nvim.git) | Разработка Lua-конфига | кандидат проверки legacy hook; пока сохранить | — | 46aa467dca16 |
 | [neogit](https://github.com/NeogitOrg/neogit.git) | Git status/commit/ветки/worktree | ядро | diffview.nvim, plenary.nvim, telescope.nvim | d7bb91b42f98 |
 | [neotest](https://github.com/nvim-neotest/neotest.git) | Tests и language adapters | ядро; dependency не отдельная фича | FixCursorHold.nvim, neotest-golang, neotest-jest, neotest-python, neotest-rust, nvim-nio, nvim-treesitter, plenary.nvim | 27bf92149804 |
 | [neotest-golang](https://github.com/fredrikaverpil/neotest-golang.git) | Tests и language adapters | ядро; dependency не отдельная фича | — | 65b2be63c3de |

@@ -1758,3 +1758,28 @@ Official rg15.2.0 binary/licenses/source archive готовит scripts/prepare-
 Real Telescope filename/text search/ignore/Unicode/open-line, provenance/native
 probe failures и сохранность прежнего kit. Windows/Ubuntu по3 cases прошли;
 native Mac отдельно владельцем, full Default не заявлен (§256).
+
+### LuaLS и cleanup neodev — IDE-BOOT-31 / §298
+
+`tests/e2e/lua-language.test.lua` использует настоящий `lua-language-server`
+из PATH либо `FORGE_E2E_LUALS` (полный путь к native executable уже установленного
+upstream пакета, включая Core/Mason). Не скачивает и не устанавливает tools.
+Обычные prerequisites editor-deps должны соответствовать текущему lock.
+
+```powershell
+$env:FORGE_E2E_LUALS='F:/tools/lua-language-server/bin/lua-language-server.exe' # свой готовый путь
+& ./scripts/test.ps1 e2e -Files @('tests/e2e/lua-language.test.lua')
+```
+
+```bash
+FORGE_E2E_LUALS=/path/to/lua-language-server/bin/lua-language-server \
+  bash scripts/test.sh e2e --file tests/e2e/lua-language.test.lua
+```
+
+Три native cases: диагностика → edit/save и Neovim API completion/hover;
+отдельные `.luarc.json`/`.luarc.jsonc` с внешней library. Private profile и
+LuaLS logpath создаёт fixture, production settings/on_init не заменяются.
+После cleanup runtime не загружает neodev; его отсутствие проверяется в Lazy
+spec и package.loaded. `FORGE_LUA_BASELINE=1` нужен только для исторического
+control версии с67 plugins; обычный прогон — без него. Windows/Ubuntu3 PASS
+на ОС, Mac/Omarchy не проверялись. Это config control, не clean-install acceptance.

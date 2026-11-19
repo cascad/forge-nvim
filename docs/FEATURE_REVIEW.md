@@ -3,10 +3,10 @@
 2026-11-19, source **8d721c3**. Этот проход — source/inventory review;
 редактор, SDK и pins не менялись, новых behavioral PASS или benchmark нет.
 [Прежний обзор и измерения](history/FEATURE_REVIEW_2026-11-19.md) сохранены отдельно.
-[Все67 plugins/pins](PLUGIN_INVENTORY.md) — полный список зависимостей, не67 отдельных фич.
+[Все66 plugins/pins](PLUGIN_INVENTORY.md) — текущий список после cleanup §298.
 После этого source review IDE-146 реализован §297: Visual Space t e / Ctrl+Enter
 в обычную встроенную системную консоль, native Windows/Ubuntu E2E; следующие
-кандидаты — legacy neodev hook и language target helpers DAP.
+neodev удалён после controls §298; следующий кандидат — language target helpers DAP.
 
 ## Что оставляем
 
@@ -71,7 +71,7 @@ Backports: Gitsigns2, Neogit5, Neotest4, DAP1, neotest-rust2, Neo-tree2 files.
 | Порядок | Действие | Что сохраняем / как доказываем результат |
 |---|---|---|
 | Выполнено | IDE-146: выполнение выделения в active integrated terminal | §297: visible/hidden/missing/multiple, точный текст, Unicode, повтор и тот же job; по7 native E2E Windows/Ubuntu |
-| 2 | Проверить legacy neodev hook и удалить только при доказанном отсутствии роли | Pinned neodev использует lspconfig.util.on_setup; текущий LuaLS настроен native vim.lsp.config. Нужен native LuaLS/Neovim API/explicit luarc control до удаления pin |
+| Выполнено | Legacy neodev удалён после native LuaLS control (§298) | Загруженный baseline и target без plugin: diagnostics/edit/save, Neovim API completion/hover, explicit luarc/jsonc; Windows/Ubuntu по3 PASS,66 остальных pins прежние |
 | 3 | Разделить конкретные language target helpers в dap.lua | Те же public DAP entrypoints, async cancellation/cwd/launch.json и F5. Без нового dispatcher/state или смены adapters |
 | Решение | Дополнительный SQL: убрать либо оставить optional | Удаление уберёт DB-aware workflow/schema/query Results и SQL assertions, sqls protocol/SDK patch и отдельную сборку SQL runner; Sqruff baseline сохранится |
 | Позже | Распространение рамок, platform UX | Только после физической оценки pilot/clipboard/keys; no shadow-panel rewrite |
@@ -107,6 +107,6 @@ Omarchy clean CLI прошёл; Wayland/GPU/clipboard/hotkeys/рабочий mix
 ## Итог обзора
 
 Полная пересборка редактора или смена backend не обоснованы. Основу оставляем;
-IDE-146 устранён §297; далее проверяем legacy compatibility
-и уменьшаем смешение языковых обязанностей DAP. Удаление SQL extras требует
+IDE-146 устранён §297; legacy neodev удалён после native controls §298.
+Далее уменьшаем смешение языковых обязанностей DAP. Удаление SQL extras требует
 отдельного решения; массового удаления plugins по их числу не предлагаем.
