@@ -86,6 +86,9 @@ native `cc`/`ar`. Frontend показывает APT-команды и запра
 `--system-deps check`; без TTY ask требует явного выбора. `--check-system` —
 отдельная read-only проверка выбранного установочного плана, несовместимая с
 prepare. Отчёты недостающего — `system-*.json` в `--log-dir`.
+Rustup proxy rustc/cargo сохраняет имя команды при проверке версии: ссылки на
+rustup не означают сломанный SDK. Actual Ubuntu проверка включает prepare из
+меню, edit/save, single active task и cancel/retry без смены версий/PID (§293).
 Для source checkout без установленного frontend встроенная подготовка сообщает
 причину; доступны ручной SDK selector и Mason. Cargo автоматически не запускается.
 

@@ -191,8 +191,11 @@ GoToolchain и SDK existing/manual path в установщике сохране
   прошли. §292 добавил явный native APT шаг недостающих OS packages с recheck,
   отменой и automation policy. Чистые Default/font/startup и repeat прошли без
   SDK, затем official Go и installed LSP/format/debug/output/tests.
-  Rust cold workflow блокирует недоступный Ubuntu archive; positive async
-  prepare из редактора также остаётся открытым case.
+  §293 завершил cold Rust и positive async prepare из редактора: edit/save,
+  single active task, cancel/retry, сохранение SDK/плагинов/настроек при upgrade.
+  Найден и исправлен IDE-144 — version probe Rustup proxy терял имя rustc.
+  Registered native Rustup E2E включён в обычный regression; original failures
+  и affected повторы сохранены. Go PASS — предыдущий cold checkpoint.
   [Проверки §292](../openspec/changes/prepare-native-system-dependencies/verification.md).
   **IDE-143 / следующий отдельный этап:** владелец добавил Omarchy в рабочие среды.
   Нужны native pacman provider, bootstrap/upgrade/reuse SDK и общие CLI E2E,

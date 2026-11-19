@@ -11148,3 +11148,71 @@ platform gates; Omarchy implementation follows its explicit plan.
 Cleanup evidence: cleanup-containers.txt сохранил immediate --rm race assertion;
 cleanup-containers-final.txt/json подтверждают удаление обоих exact owned IDs.
 Повтор использовал bounded poll, не Docker Desktop/WSL actions.
+
+
+## 201. Cold Rust, SDK proxy и настоящий async workflow — 2026-11-19
+
+Workspace F:/repo/forge-nvim, HEADc47e9b5; full access/never, no goal/agents/npx/
+push. TEMP/TMP/TMPDIR/NVIM_LOG_FILE and Python -B artifacts on F; native profiles
+inside exact owned Linux /tmp;2CPU/3GiB/container. Read OpenSpec apply context
+and all contextFiles;6/7+7/9 initially,7/7+9/9 after actual verification.
+Discovery: git status/log/diff, rg/rg --files, bounded Get-Content; Docker read-only
+version/ps/inspect. No Docker Desktop/WSL lifecycle or configuration commands.
+
+.tests/cold-completion/start.py preserves prior artifact inputs, checks binary/
+source hashes, starts own publisher31655ecb1f40 and calls
+python -B tests/diagnostics/check-cold-install.py --artifacts .tests/cold-install/artifacts
+  --publisher-container <ownID> --keep →cold1795094839579981700/target7936d2fc9e88.
+Native archive probe200; security endpoint later warned, native APT completed.
+No mirror/source/TLS changes. Default/font/startup/noSDK and first Go/Rust file
+notices PASS. New source archive SHA f33cd4a1b303f56dc644473ae58a0b004dbcd6476cee5de62e32f0697ef1c596.
+
+run-languages.py prepare drives real installed --prepare-language rust via
+tests/diagnostics/install-ui-pty.lua. First failed at duplicated SDK review Enter,
+not SDK install. Exact /proc/7093/cmdline verified, only that own blocked frontend
+SIGTERM'd. UI report frames showed two cold-review entries then manual nextest
+path. Driver now requires active prompt and waits for completion before proceeding.
+prepare-retry retained previous logs/results, official nextest/tools ready.
+Native build-essential, official rustup/Rust1.100.0/fmt/src installed outside kit.
+run-languages.py workflow invokes original install-language-observe.lua and
+install-workflow-observe.lua via actual kit/bin/fride, FORGE_INSTALLED_LANGUAGE_CASE=rust,
+GOTOOLCHAIN=local/RUSTUP_AUTO_INSTALL=0. LSP/format/navigation/debug/output/Tests PASS.
+
+New install-language-prepare-observe.lua drives Space l S→Rust→prepare in actual
+installed editor, observes public Overseer task, edits/saves, stops/retries and
+checks SDK versions/receipts/lock/PID. Initial unsupported Task:get_status removed;
+native RED then showed SUCCESS/result ready but hub SDK false. Report sdks.error
+identified rustc symlink incorrectly resolving to rustup. Six-line generic source
+fix preserves executable leaf name, canonicalizes parent; no private manager API.
+
+upgrade.py publishes completion-source.tar.gz through the same local artifact
+server and calls real root entry --archive-url ... --source-root <native> --install-dir
+<existingKit> --profile default --go-toolchain-download deny. No deployed config
+overlay. Source SHA d8ccdd144bc31fd3c34cf171833121c696a9adc9908dcfe34227961a2204384e;
+sdk.lua SHA90422e2724775598585159ddc7a26537f923f296c0c5227b4d4d819e7012fe01.
+rust-repeat-proof.lua before/after match4 receipts/67 pins/SDK+nextest versions/
+fallback metadata/preferences/ordinary Neovim. Final async success/cancel/retry
+PASS (actual-async-language-final). Go cached evidence from §292 retained, not rerun.
+
+Regression: tests/e2e/sdk-proxies.test.lua registered in tests/registry.lua;
+real compiler/cargo via native symlinks and real keyboard hub, wrong rustup
+basename refused. Windows native symlink EPERM →explicit SKIP, no approval escalation.
+Linux test corrected to generic hub→Rust (direct-kind open does not auto-recheck)
+and snapshot_ignore for SDK links (binary not copied). Original fails retained.
+One final affected packet per OS:
+ .tests/cold-completion/final-windows.ps1 →batch1795096466773544200
+ docker exec <ownPublisher> bash /workspace/.tests/final-cold-completion.sh
+ →Ubuntu1795096478324949122. language UI4 PASS/OS. Only affected repeats afterward:
+Linux1795096700009025899,1795096920730453859 (SDK proxy1 PASS), then unit+trace20 PASS.
+Windows unit19 PASS then trace-only8 PASS after unregistered diagnostic path
+removed from specification verification line. Native diagnostic remains explicit
+acceptance, not unconditional registry test. Full unrelated regression not repeated.
+
+Syntax/loadfile, openspec strict both changes, change trace, journal-prefix/
+frozen SDK+old frontend+locks/backports/source hashes via checkpoint.py at
+HEADc47e9b5; exact owned staging/diff --check, local commit gc.auto0/maintenance.autofalse.
+Lua-only fix uses unchanged source-matched frontend candidates; no Cargo rebuild.
+export.py preserves268 regular native records/298231 bytes under cold-completion,
+without SDK/runtime/plugin trees. Host batch/editor snapshots already on F.
+Cold target removed after exact ID/owner/resource checks; publisher remains owned
+and available for next IDE-143 instead of starting another identical test service.

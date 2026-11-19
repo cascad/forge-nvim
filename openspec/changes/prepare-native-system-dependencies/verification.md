@@ -1,9 +1,9 @@
 # Проверка IDE-BOOT-52 — 2026-11-19
 
-Статус: реализация OS dependency step проверена на Windows/Ubuntu. Чистые
-Default/font/startup/repeat и последующий Go workflow прошли. Rust cold flow
-и positive async prepare из редактора ещё открыты; change не архивируется.
-Omarchy записана отдельным IDE-143, её установка/acceptance не реализованы.
+Статус §293: OS step проверен на Windows/Ubuntu; clean Default/repeat/Go
+подтверждены в §292, оставшиеся cold Rust и actual async/cancel/retry завершены
+ниже. Все задачи реализации закрыты. Omarchy — отдельный IDE-143, её установка
+и acceptance пока не реализованы; native Mac/GUI/publication остаются gates.
 
 ## Реализация и affected проверки
 
@@ -88,3 +88,64 @@ trees. Exact ID/owner/AutoRemove/resource checks выполнены перед �
 своих двух контейнеров, оба --rm удалены. Первый immediate inspect попал между
 stop и завершением Docker auto-remove; исходный assertion сохранён, bounded
 poll подтвердил удаление. Desktop/WSL и другие containers не затрагивались.
+
+
+## §293 — завершение Rust/async и IDE-144
+
+Новый стенд .tests/cold-install/1795094839579981700: та же pinned Ubuntu24.04,
+2CPU/3GiB, реальные archives/frontend/root entry, native profile без SDK/cache.
+Source f33cd4a1b303f56dc644473ae58a0b004dbcd6476cee5de62e32f0697ef1c596.
+Default/font/startup/deferred baseline и первые Go/Rust notices PASS.
+archive доступен; security endpoint дал warning APT update, пакетный manager
+завершился, repositories/mirrors/TLS policy не менялись.
+
+Явный Rust prepare поставил build-essential, official rustup/Rust1.100.0,
+rustfmt/rust-src; следующий шаг official cargo-nextest и Mason tools ready.
+Первый UI driver дважды подтвердил redraw одного SDK review и попал в ручной
+путь nextest. Original failure сохранён; остановлен exact own frontend PID7093.
+Драйвер теперь ждёт завершения активного review. Только Rust prepare retry
+прошёл; SDK/version/signatures отражены в reports, повтор не скрывает первый отказ.
+
+Installed LSP/diagnostics/navigation/format и run/debug breakpoint/eval/output/
+Tests Rust PASS. Go предыдущего checkpoint не повторялся: это отдельное evidence,
+а не утверждение шести языков cold на одной версии source.
+
+Новый actual async observer нашёл продуктовый IDE-144: Rustup executable symlink
+rustc раскрывался в rustup. Native prepare успешно писал ready, но hub version
+probe отвергал basename и показывал SDK ready=false. SDK resolver теперь
+canonicalizes parent и сохраняет имя leaf executable. CLI использует обычный
+upstream proxy; basename validation не ослаблена для произвольного rustup файла.
+
+Исправление доставлено через настоящий root bootstrap/archive/upgrade, без
+редактирования deployed config. Candidate source
+d8ccdd144bc31fd3c34cf171833121c696a9adc9908dcfe34227961a2204384e;
+deployed sdk.lua SHA90422e2724775598585159ddc7a26537f923f296c0c5227b4d4d819e7012fe01.
+Сохранены4 Mason receipt hashes,67 plugin pins, SDK/nextest paths+versions,
+fallback metadata, preferences и ordinary Neovim guard (rust-repeat-before/after).
+
+Actual async menu→Rust→prepare PASS: одна active task, edit/save во время работы,
+ready result, cancel через public Overseer Task:stop, освобождение active и
+успешный retry; версии/receipts/lock/editor PID прежние. Первые диагностические
+попытки с отсутствующим Task:get_status исправлены на public task id; original
+failures/report сохранены. До product fix две попытки воспроизвели false SDK
+readiness; final actual-async-language-final PASS после штатного upgrade.
+
+Registered tests/e2e/sdk-proxies.test.lua использует настоящий editor/Rustup,
+native file symlinks с пробелом в пути, compiler/cargo probes и keyboard hub.
+Прямой rustup executable по-прежнему отвергается. Он входит в обычный regression.
+Windows: новый case SKIP EPERM (нет права file symlink), language UI4 PASS.
+Ubuntu: native proxy case1 и language UI4 PASS. В новом тесте исправлены прямой
+вход без recheck и snapshot symlink exclusion; Rustup binary не копируется.
+
+Один final affected packet/OS: Windows batch1795096466773544200, Ubuntu
+1795096478324949122. Только failed/affected repeats: Linux1795096700009025899
+и1795096920730453859. Unit/trace: Windows19 PASS + affected trace8 PASS после
+удаления unregistered diagnostic из строки Проверка; Ubuntu20 файлов PASS.
+Native helper остаётся linked acceptance artifact, не unattended registry case.
+Все original failures сохранены. Source code после SDK fix больше не менялся.
+
+Regular native evidence:268 files/298231 bytes в .tests/cold-completion/native-records;
+SDK/runtime/plugin trees не экспортировались. Exact cold container удаляется
+после ID/owner checks; publisher сохраняется для следующего IDE-143, чтобы
+переиспользовать уже поднятый стенд. Docker Desktop/WSL не запускались/не менялись.
+Native Mac/Omarchy/Wayland/Windows WSL и публикация остаются отдельными gates.

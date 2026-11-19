@@ -26,8 +26,10 @@ build-essential проверяется только при явной подго
 preview не выполняет OS probes.
 
 Чистые Default/font/startup и repeat прошли без SDK; затем official Go1.27.4 и
-installed LSP/format/debug/output/tests прошли. Rust cold workflow блокирует
-недоступный Ubuntu archive; полный cross-platform PASS не объявляется.
+installed LSP/format/debug/output/tests прошли. §293 завершил cold Rust и
+installed async prepare/cancel/retry, сохранил SDK/receipts/plugins при root
+upgrade; исправлен IDE-144 Rustup proxy version check. Полный native
+cross-platform PASS и публикация пока не объявляются.
 [Текущие результаты](../openspec/changes/prepare-native-system-dependencies/verification.md).
 Arch/Omarchy не получает APT: native pacman и VM/Wayland acceptance — отдельный
 [IDE-143](OMARCHY_SUPPORT_PLAN.md). macOS и GUI требуют настоящих систем.

@@ -15514,3 +15514,41 @@ HISTORY и commands200. Подробные команды и evidence — там
 Дополнение к §292: оба exact owned containers остановлены/--rm удалены.
 Первый cleanup inspect опередил асинхронный auto-remove Docker; исходный
 assertion сохранён, bounded poll подтвердил удаление. Это не product/test failure.
+
+
+### 293. Rustup proxy и завершение чистого Rust workflow
+
+**Спека: IDE-BOOT-50 (FIX), IDE-BOOT-51 (ADDED), IDE-BOOT-52 (ADDED).** IDE-144.
+**Было.** После настоящего Rust prepare SDK/LSP/debug/tests работали, но раздел
+языков объявлял Rust неисправным: Expected native rustc executable: .../rustup.
+**Причина.** Общий SDK resolver canonicalized leaf executable symlink, теряя
+имя rustc/cargo. Rustup — proxy, которому требуется исходное имя команды.
+**Сделано.** Canonical parent directory с сохранением leaf name; directory
+selection прежняя, прямой rustup вместо compiler path остаётся недопустимым.
+Без специального manager case и изменения обычного SDK пользователя. Rust
+readiness теперь согласована с реальной успешной native подготовкой.
+
+**Проверки.** Новый cold1795094839579981700: Default/font/startup без SDK и
+первые Go/Rust notices PASS. Native build-essential→rustup/Rust1.100.0/
+rustfmt/rust-src→official nextest/Mason ready; Rust LSP/diagnostics/navigation/
+format, breakpoint/eval/output/Tests PASS. Go — прежний actual checkpoint §292.
+Root archive upgrade доставил SDK fix, сохранив4 receipts/67 plugin pins,
+SDK/nextest paths+versions, metadata/preferences/ordinary Neovim. Actual menu
+async prepare/reuse/edit/save/single task/cancel/retry PASS; PID/lock прежние.
+Registered sdk-proxies E2E использует native Rustup symlinks/real compiler и
+keyboard hub. Ubuntu PASS, Windows SKIP EPERM без дополнительных permissions;
+старые4 language UI cases PASS/OS. Final unit+trace20 файлов/OS закрыты с
+affected trace repeat на Windows; original failures и source hashes сохранены.
+
+**Попутно.** Cold PTY driver дважды нажимал Enter на redraw одного review.
+Теперь ждёт завершения активного prompt, Rust retry пройден. Test fixture
+должна выбирать Rust в общем hub для recheck, а snapshot исключать SDK symlinks.
+Неверный Task:get_status в первом observer заменён на public task id. Это
+ошибки диагностики; отдельно сохранены продуктовые RED до SDK fix и final PASS.
+**Вывод.** Native CLI ready недостаточно: нужен проход через UI version probe,
+асинхронный lifecycle и upgrade. Предыдущий network blocker снят;7/7 и9/9
+задач текущих changes закрыты. Дальше IDE-143 Omarchy; native Mac/GUI/WSL и
+публикация остаются отдельными gates. Полный unrelated E2E не повторяли.
+**Файлы.** SDK resolver, registered sdk-proxies/registry, installed async observer,
+PTY, tasks/verification, IDE-144/roadmap/guides/HISTORY/commands201. Regular
+export268 файлов298231 bytes, без SDK/runtime копий; host tmp/logs на F.

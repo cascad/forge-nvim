@@ -14,19 +14,19 @@
 
 - [x] 3.1 Реализовать «Языки и инструменты» Space l S/command: SDK/version/path/source, tools status, existing/manual/prepare/recheck/logs/Mason; ForgeSdk остаётся. Добавить E2E scopes/selection/status/manual path и руководство.
 - [x] 3.2 FileType local-only notice + per-root/language dedup, Later и persistent user/project disable/reset в hub. Добавить E2E no-download/edit/save/disable/reopen/reset/invalid override.
-- [ ] 3.3 Async native prepare в стандартной terminal/task панели, последовательность/cleanup/retry/result и явное SDK apply/busy semantics. Добавить E2E real prepared SDK reuse, cancellation/missing backend/edit and actual installed flow.
+- [x] 3.3 Async native prepare в стандартной terminal/task панели, последовательность/cleanup/retry/result и явное SDK apply/busy semantics. Добавить E2E real prepared SDK reuse, cancellation/missing backend/edit and actual installed flow.
 
 ## 4. Единый итоговый checkpoint
 
-- [ ] 4.1 После всей реализации один affected/regression пакет Windows/Ubuntu, только failed/affected repeats; новый cold Core без SDK→первый Go/Rust файл→prepare→LSP/format/run/debug/tests→repeat. Сохранить original failures и honest native limits.
+- [x] 4.1 После всей реализации один affected/regression пакет Windows/Ubuntu, только failed/affected repeats; новый cold Core без SDK→первый Go/Rust файл→prepare→LSP/format/run/debug/tests→repeat. Сохранить original failures и honest native limits.
 - [x] 4.2 FIXLOG291/commands199/HISTORY/roadmap/guides, strict/trace/syntax/frozen/journal/index checks и local commit; export evidence и cleanup exact own containers. Native Mac/WSL/GUI/publication отдельно без fake PASS.
 
 ## Точка остановки — 2026-11-19
 
-7/9 tasks complete. Native async protocol/editor failure/cancel and shared SDK
-provider reuse verified; actual installed cold language flow in3.3/4.1 remains
-open. §292 resolved Terminal/Core OS dependencies; new cold Default/repeat and
-Go prepare/LSP/format/debug/output/tests PASS. Rust cold workflow is blocked by
-Ubuntu archive SSL timeout; positive editor async reuse remains open.
-No all-languages cold PASS, no archive/all_done. See verification.md and
-../prepare-native-system-dependencies/verification.md.
+9/9 tasks complete. §292 resolved Terminal/Core OS dependencies and verified
+cold Default/repeat/Go. §293 verified remaining cold Rust and installed async
+reuse/edit/cancel/retry, fixed Rustup proxy version check and passed root upgrade
+preservation. One final affected packet per OS, only failed/affected repeats;
+original failures/native limits retained in verification.md and
+../prepare-native-system-dependencies/verification.md. This is not a native
+Mac/Omarchy/GUI/publication PASS or six-language cold acceptance on one source.

@@ -64,6 +64,13 @@ sudo boundary; системные настройки/caller env не переп�
 
 ### Runtime и постоянный hub
 
+SDK executable paths сохраняют имя запускаемой команды при canonical parent
+directory. Нельзя раскрывать leaf symlink `rustc`/`cargo` в `rustup` и затем
+проверять/запускать другое имя: upstream proxies используют имя команды.
+Directory SDK selection остаётся canonical; произвольный `rustup` вместо
+`rustc` не становится допустимым executable. Actual installed async acceptance
+проверяет готовность после version probes на обычном rustup environment.
+
 Общий модуль языковых сред отображает Go/Rust/Python/Node/Bash/SQL; Bash/Python
 показывают Node dependency, SQL не требует универсального SDK. Ручной SDK/path
 делегируется ForgeSdk (sdk.json/tools.json), tools — Mason. Space l S открывает

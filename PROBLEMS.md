@@ -10,7 +10,17 @@
 
 Маршрут и приоритеты: [рабочий план nvim_forge](docs/IDE_ROADMAP.md).
 Для новых пунктов используем следующий свободный ID `IDE-xxx`; исходный
-симптом хранится здесь, этап и состояние — в плане. Следующий ID: `IDE-144`.
+симптом хранится здесь, этап и состояние — в плане. Следующий ID: `IDE-145`.
+
+## IDE-144 — Rustup ошибочно отвергался после проверки версии
+
+Actual installed async acceptance 2026-11-19: Rust подготовлен, CLI/LSP/debug/
+tests работают, но hub после version probe показывает `Expected native rustc
+executable: .../rustup`. Resolver раскрывал leaf symlink rustc в rustup и терял
+имя команды. §293 сохраняет имя executable при canonical parent, без special
+case manager. Native root upgrade/async/cancel/retry и registered sdk-proxies
+E2E подтверждают исправление. Windows symlink case SKIP по EPERM без запроса
+дополнительных прав; штатный SDK пользователя не меняется.
 
 ## IDE-143 — установка и работа на Omarchy
 
@@ -33,8 +43,9 @@ Rust/rustfmt/rust-src, но предупредил об отсутствии с�
 спрашивает перед изменением и перепроверяет результат. Rust build-essential
 проверяется только после явного выбора языка. Чистые Default/font/startup и
 repeat прошли без SDK; затем official Go и installed LSP/format/debug/output/
-tests прошли. Rust cold workflow открыт: Ubuntu archive перестал отвечать
-(SSL timeout), native cc пока не установлен. Установленные программы и SDK
+tests прошли. §293 завершил cold Rust cc/rustup/nextest, LSP/format/debug/output/
+tests, настоящий async flow и repeat/upgrade. Сетевой блокер снят; original
+failures сохранены. Установленные программы и SDK
 сохраняем; SDK не возвращаем в обязательную установку Core.
 [Текущие проверки и блокер](openspec/changes/prepare-native-system-dependencies/verification.md).
 Исходный отказ и границы — [§291](nvim_forge/FIXLOG.md#291-языки-и-инструменты-без-обязательных-sdk)

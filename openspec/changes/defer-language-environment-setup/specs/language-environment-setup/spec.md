@@ -17,7 +17,7 @@ MUST начинаться только после выбора пользова�
 редактор и не мешать edit/save/panel navigation. Готовые SDK/версии/ручные пути
 MUST сохраняться, явная ошибка выбора MUST NOT маскироваться fallback.
 Платформы: все; native Mac/WSL отдельно.
-Проверка: tests/e2e/language-environments.test.lua, tests/install-language-environments.test.py, tests/install-sdk-actions.test.py.
+Проверка: tests/e2e/language-environments.test.lua, tests/e2e/sdk-proxies.test.lua, tests/install-language-environments.test.py, tests/install-sdk-actions.test.py.
 
 #### Scenario: Основа IDE без SDK
 

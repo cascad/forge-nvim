@@ -107,3 +107,16 @@ repeat прошли без SDK, первые Go/Rust файлы не запус�
 Rust cold workflow блокирует недоступный Ubuntu archive (нужен native cc);
 positive async prepare/reuse из редактора остаётся открытым. Исторический отказ
 выше сохранён. [Новые факты](../prepare-native-system-dependencies/verification.md).
+
+
+## §293 — задачи реализации закрыты
+
+Cold1795094839579981700 завершил Rust prepare/LSP/format/debug/output/Tests.
+Actual installed menu preparation/reuse/edit/cancel/retry прошёл после найденного
+и исправленного IDE-144: SDK resolver терял имя rustc при раскрытии Rustup
+symlink. Исправление установлено штатным root upgrade; SDK versions,4 receipts,
+67 plugin pins, settings и ordinary Neovim сохранены. Новый registered native
+Rustup regression PASS Ubuntu, Windows SKIP по OS symlink permission; остальные
+language UI cases PASS обеих ОС. Failed/affected repeats и original failures
+различаются. [Подробное evidence §293](../prepare-native-system-dependencies/verification.md).
+9/9 tasks закрыты. Native Mac/Omarchy/GUI/WSL/publication не объявляются готовыми.

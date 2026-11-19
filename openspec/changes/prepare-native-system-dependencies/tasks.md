@@ -13,13 +13,14 @@
 
 ## 3. Настоящая чистая установка
 
-- [ ] 3.1 Пройти production cold Ubuntu Default без SDK, native font/readiness/first launch и repeat. Затем explicit Go/Rust prepare и installed LSP/format/run/debug/tests; связать actual результаты с оставшимися defer-language-environment-setup задачами, не объявлять незавершённое готовым.
+- [x] 3.1 Пройти production cold Ubuntu Default без SDK, native font/readiness/first launch и repeat. Затем explicit Go/Rust prepare и installed LSP/format/run/debug/tests; связать actual результаты с оставшимися defer-language-environment-setup задачами, не объявлять незавершённое готовым.
 - [x] 3.2 Записать FIXLOG292 (Спека: IDE-BOOT-52 ADDED), commands200, HISTORY/guides/roadmap/IDE-142+143, strict/trace/source hashes/journal/index checks и local commit. Экспортировать regular evidence, остановить только exact owned containers после проверки labels/ID.
 
 ## Checkpoint 2026-11-19
 
-Default без SDK, font/startup/repeat, первые Go/Rust notices и actual Go
-prepare/LSP/format/debug/output/tests PASS. В3.1 остаются Rust workflow и linked
-positive async editor prepare: APT archive SSL timeout блокирует native cc.
-После восстановления сети продолжить эти cases, без повторения всего E2E.
-См. verification.md. Omarchy — будущий IDE-143, отдельного PASS нет.
+§292: Default без SDK, font/startup/repeat, первые Go/Rust notices и actual Go
+prepare/LSP/format/debug/output/tests PASS. §293 завершил оставшиеся Rust/async
+cases после восстановления archive. SDK proxy bug исправлен и проверен root
+upgrade, registered regression и native async prepare/cancel/retry. Все7 задач
+закрыты; verification.md различает original failures и новые PASS. Omarchy —
+будущий IDE-143, отдельного PASS нет.

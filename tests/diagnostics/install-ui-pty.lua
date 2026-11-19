@@ -39,6 +39,7 @@ local ok,err=xpcall(function()
     local raw=lua('return _G.ui_raw:sub((...)+1)',{marker})
     for _,subject in ipairs(subjects) do if raw:find(subject..': действие',1,true) then selected=subject;return true end end
     review=raw:find('Продолжить установку IDE с этим планом?',1,true)
+      and screen():match('[*◆]%s+Продолжить установку IDE с этим планом%?')
     system=not system_done and raw:find('Установить системные зависимости ОС?',1,true)
     return review or system or exitcode()~=nil
    end,20),'Cold setup progress timeout\n'..screen())
@@ -48,6 +49,11 @@ local ok,err=xpcall(function()
     frame('cold-system-dependencies');marker=lua('return #_G.ui_raw');send('\r')
    elseif review then
     frame('cold-review');marker=lua('return #_G.ui_raw');send('\r')
+    -- Wait for the completed prompt: a key redraw can repeat its title in raw
+    -- output before the next SDK menu. Do not confirm that menu a second time.
+    assert(vim.wait(10000,function()
+     return exitcode()~=nil or not screen():match('[*◆]%s+Продолжить установку IDE с этим планом%?')
+    end,10),'Cold review did not complete\n'..screen())
    else
     frame(selected)
     assert(not installed[selected],'Native install did not make '..selected..' ready; first failure preserved\n'..screen())

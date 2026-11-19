@@ -60,6 +60,12 @@ local function normalize(value, base)
     local path=vim.fs.normalize(value)
     if not path:match('^[/\\]') and not path:match('^%a:[/\\]') then path=vim.fs.joinpath(base or vim.fn.getcwd(),path) end
     path=vim.fs.normalize(path)
+    if (uv.fs_stat(path) or {}).type=='file' then
+        -- Proxies use their invocation name (rustc/cargo, for example). Resolve
+        -- the parent directory while retaining the executable symlink itself.
+        local parent=vim.fs.dirname(path)
+        return vim.fs.joinpath(uv.fs_realpath(parent) or parent,vim.fs.basename(path))
+    end
     return vim.fs.normalize(uv.fs_realpath(path) or path)
 end
 function M.location(kind, value, base)
