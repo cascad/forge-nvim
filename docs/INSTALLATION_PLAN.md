@@ -1,5 +1,13 @@
 # IDE-138 — установка одной командой
 
+§301: [локальный приёмочный комплект](ACCEPTANCE_INSTALLER.md) собирается из
+готовых Core/Terminal и current frontend без изменения public catalogs.
+Добавлены publisher stand и official POSIX Neovim preparation. PowerShell/Bash
+entrypoints и Custom Core-only проверены Windows/Ubuntu. Fzf-native поставляется
+готовой library в Core с native ABI probe; установка не запускает CMake/compiler,
+при отсутствии library остаётся Lua fallback. Native Mac/полная clean-machine
+приёмка и публикация отдельно.
+
 Актуализация §300: SQL baseline — подсветка и upstream Sqruff LSP/formatter.
 Дополнительные SQL DB/query/Results/test слои, SDK и специальные delivery checks
 сняты по решению владельца; прежние SQL checkpoints ниже — исторические.

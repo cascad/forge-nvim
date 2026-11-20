@@ -18,16 +18,18 @@ Native fzf — необязательное ускорение. Если зак�
 Если режим ещё не определён, открой Ctrl+P и повтори health.
 Флаг loaded в Lazy не является доказательством выбранного native sorter.
 
-Для пользовательского профиля с CMake и C toolchain (Windows: MSVC Build Tools;
-Linux/macOS: штатный GCC/Clang + make) явная сборка:
+В установленном комплекте Core уже содержит publisher-built library своей ОС.
+Явная подготовка копирует её в IDE plugin data без CMake/C compiler:
 
 ```vim
 :Lazy build telescope-fzf-native.nvim
 ```
 
 После неё перезапусти редактор, чтобы повторить загрузку. Pins не меняются.
+Если готовой Core library нет, build не запускает компилятор: сохраняется Lua
+fallback. Проверяются platform, pin и SHA; обычный startup ничего не копирует.
 
-Для тестового SDK из корня репозитория:
+Для publisher/тестового SDK с CMake и C toolchain из корня репозитория:
 
 ```sh
 python3 -B tests/e2e/prepare_editor.py --download

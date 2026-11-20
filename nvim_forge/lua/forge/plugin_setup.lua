@@ -6,6 +6,39 @@ local function read(path)
     local data = file:read('*a'); file:close()
     return data
 end
+-- spec: IDE-BOOT-54. Explicit setup copies a publisher-built upstream library.
+-- Ordinary startup and missing Core use Telescope's existing Lua fallback.
+function M.fzf(plugin)
+    local report={copied=false,reason='No prepared Core fzf library; Lua fallback remains available'}
+    vim.g.forge_setup_fzf=report
+    local runtime=vim.env.FRIDE_RUNTIME
+    if not plugin or not runtime or runtime=='' then return report end
+    local native=runtime..'/native/fzf'
+    local ok,meta=pcall(function() return vim.json.decode(read(native..'/prepared.json')) end)
+    if not ok or type(meta)~='table' then return report end
+    local library=vim.fn.has('win32')==1 and 'libfzf.dll' or 'libfzf.so'
+    local platform=({Windows='windows',OSX='macos',Linux='linux'})[jit.os]..'-'..jit.arch
+    local lock=vim.json.decode(read(require('lazy.core.config').options.lockfile))
+    if meta.schema~=1 or meta.platform~=platform or meta.library~=library
+        or meta.commit~=lock['telescope-fzf-native.nvim'].commit then
+        report.reason='Prepared Core fzf platform/revision mismatch; Lua fallback remains available'
+        vim.g.forge_setup_fzf=report;return report
+    end
+    local source=native..'/'..library
+    local readable,bytes=pcall(read,source)
+    if not readable or vim.fn.sha256(bytes)~=meta.sha256 then
+        report.reason='Prepared Core fzf SHA mismatch; Lua fallback remains available'
+        vim.g.forge_setup_fzf=report;return report
+    end
+    local directory=plugin.dir..'/build'
+    vim.fn.mkdir(directory,'p')
+    local destination=directory..'/'..library
+    local existing,data=pcall(read,destination)
+    if not existing or vim.fn.sha256(data)~=meta.sha256 then assert(vim.uv.fs_copyfile(source,destination)) end
+    report={copied=true,sha256=meta.sha256,source=source}
+    vim.g.forge_setup_fzf=report
+    return report
+end
 local function check(lock, pins)
     local config = require('lazy.core.config')
     local errors, count = {}, 0
@@ -38,7 +71,7 @@ local function check(lock, pins)
     end
     table.sort(errors)
     assert(#errors == 0, 'Plugin readiness failed:\n' .. table.concat(errors, '\n'))
-    return {plugins = count}
+    return {plugins = count,native_fzf=vim.g.forge_setup_fzf}
 end
 function M.prepare(before_restore)
     local path = require('lazy.core.config').options.lockfile
@@ -65,6 +98,7 @@ function M.prepare(before_restore)
         -- This integration targets the pinned Lazy version, covered by E2E.
         require('lazy.manage.lock').lock = vim.deepcopy(lock)
         manager.restore({wait = true, show = false})
+        M.fzf(require('lazy.core.config').plugins['telescope-fzf-native.nvim'])
         return check(lock, true)
     end, debug.traceback)
     for key, value in pairs(saved) do vim.env[key] = value or nil end

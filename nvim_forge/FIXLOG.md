@@ -15816,3 +15816,84 @@ baseline; main specs не менялись, archive не выполнялся. �
 Текущая самостоятельная очередь завершена. Конкретный остаток до выпуска
 выделен в начале IDE_ROADMAP: рабочая приёмка, native Mac/Omarchy, release
 artifacts/inventory/bootstrap и один финальный regression кандидата.
+
+
+### 301. Локальный установщик для приёмки
+
+**Спека: IDE-BOOT-54 (ADDED), IDE-BOOT-55 (ADDED).** IDE-138.
+**Было.** Checkout запускал подготовленную среду; frontend/Core/Terminal
+существовали отдельными publisher inputs, публичные catalogs оставались пустыми.
+Владелец хочет принять установленную сборку Windows/Mac; Omarchy отложена.
+**Причина.** Не было общей локальной сборки установочного комплекта до публикации
+URLs. Также explicit monolithic runtime копировал весь Terminal независимо от
+Custom checkbox — это мешало полноценной приёмке нового local bundle.
+**Сделано.** Native publisher stand переиспользует существующие Core/Terminal/
+frontend packagers, добавлена pinned official POSIX Neovim preparation с native
+probe/repeat без host install. Local bundle содержит tracked source, current
+frontend и готовый runtime; PowerShell/Bash entrypoints проверяют полный payload
+SHA/состав до UI. Python/Cargo нужны publisher, не wrapper. Public catalogs,
+plugin pins,6 backports и обычные SDK/config не менялись. Default/deferred SDK
+и пользовательские пути остались у прежнего frontend/backend.
+Private backend фильтрует снятый Terminal из manifest files/probes/PATH и
+launcher; копирует выбранные manifest files. Core, повтор/launch и сохранение
+обычных nvim/user files проверены настоящим native Neovim с fixture setup.
+**Проверки.**20 unique targeted cases/ОС: Windows19 PASS/1 explicit POSIX SKIP,
+Ubuntu20 PASS. Из них publisher6+native1, package/entrypoint/frontend10 и native
+install/launch controls3. Package runtime — fixture, native frontend/shell
+настоящие; full installed IDE/GUI не подменяются этими tests. Первый packet:
+package Windows7/10, Ubuntu8/10. В child PowerShell отсутствовал Get-FileHash:
+заменён стандартным .NET SHA256, первопричина отсутствия cmdlet не утверждается.
+Positive fixture не содержала components.tsv: исправлен stand и publisher
+проверяет обязательный файл. Только4 Windows affected и2 Ubuntu failed cases
+повторены PASS. Source Custom RED — backend запустил probe снятого Terminal
+(EFTYPE not-selected.txt); target новый case+2 controls дали3 PASS на ОС.
+Actual Windows publisher собрал Core33 parsers/rg и Terminal; baseline2510-file
+bundle прошёл entrypoint Default plan и полный native runtime/hash/probes.
+Этот baseline предшествует Custom fix; refreshed candidate фиксируется отдельно.
+**Открытый блокер.** Полная clean-machine гарантия без C compiler ещё не
+выполнена: существующий Lazy build fzf-native требует CMake/C toolchain. Владелец
+выбирает готовую native библиотеку в Core или штатный Lua fallback без install
+build; зависимая реализация не начата до ответа. Task1.2 остаётся открытым.
+Native Mac/GUI/рабочий проект/публикация не объявляются PASS. Другие SDK не ставились.
+**Вывод.** Получен проверяемый local delivery путь и исправлена реальная
+семантика Custom. Готовность упаковки отделена от оставшегося cold dependency
+и натурной приёмки. Следующий шаг определяется ответом по fzf-native.
+**Файлы.** prepare-native-neovim/posix policy, package/prepare-acceptance-installer,
+acceptance entrypoints, install-private.lua,3 native suites, guide/roadmap/history,
+package-native-acceptance-installer/verification, commands209.
+
+**Завершение compiler-free setup — 2026-11-20.** Владелец выбрал готовую
+native fzf library в Core с существующим Lua fallback. Реализовано: publisher
+проверяет commit/source/SHA/platform, загружает library и вызывает C ABI;
+Core содержит library/metadata/LICENSE. Explicit plugin setup только копирует
+её, CMake/C compiler больше не вызываются на машине установки. При отсутствии
+Core library сохраняется fallback; обычный startup ничего не копирует.
+Source RED нового search case подтвердил попытку вызвать отсутствующий cmake.
+Новые2 actual editor cases/ОС прошли: отдельный setup process без CMake,
+затем настоящий поиск с C scoring либо Lua fallback. Прежний native control1
+и affected setup7/ОС тоже PASS. Вместе с первой частью30 unique targeted cases:
+Windows29 PASS/1 explicit POSIX SKIP, Ubuntu30 PASS, aggregate. Full regression
+и native Mac/GUI не повторялись и не объявляются PASS.
+Первый observer выполнял build после загрузки Telescope и видел уже выбранный
+fallback, хотя DLL существовала и ffi.load прошёл. Исправлена последовательность
+stand на installer process → новый editor. Minimal init потребовал loadplugins=true;
+Ubuntu image имел прежние known backports, применены current declarations к
+собственной копии и записан настоящий check receipt. Product не получал reload hacks.
+Linux publisher после корректировки shared paths перенесён на native /tmp output:
+на bind mount обход файлов был долгим, собственный процесс прерван SIGINT,
+context cleanup завершился; native producer прошёл примерно за9s. Низкоуровневая
+причина FS-разницы не утверждается, product timeouts прежние.
+Открытый выше compiler blocker снят. Native Mac, натурная приёмка владельца и
+public release остаются следующими gates; готовый Windows candidate и commit
+фиксируются в verification после итоговой сверки.
+
+**Итог §301.** Дополнительно проверена затронутая Core parser delivery цепочка:
+4/4 Windows и4/4 Ubuntu, native packaging/HTTP/install/captures и сохранение
+прежнего kit при invalid inputs. Итого34 unique targeted cases/ОС: Windows33
+PASS/1 explicit POSIX SKIP, Ubuntu34 PASS. Strict PASS, project trace9 PASS,
+каталог158 REGISTERED/0 MISSING/0 PENDING; это не158 runtime PASS.
+Journals append-only,66 pins/6 backports/4 frozen .tools files и прочие SDK/
+installer UI/main specs/WezTerm прежние. После commit clean-source Windows
+candidate сохраняется в .tests/acceptance-installer/windows-ready, его actual
+commit/SHA/plan/runtime proof — в final-candidate.json. Native Mac и натурная
+приёмка остаются владельцу; public catalogs не опубликованы.

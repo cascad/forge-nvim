@@ -2,7 +2,7 @@
 
 Обновлено: 2026-11-20. Основная сборка: **nvim_forge**.
 
-**Самостоятельная очередь завершена — 2026-11-20:**
+**Очередь упрощения завершена — 2026-11-20:**
 
 1. IDE-080: актуальный [обзор фич/слоёв](FEATURE_REVIEW.md) завершён на source8d721c3;
    сохранены основные workflows и решения по breadcrumbs/Satellite/Comment.
@@ -24,6 +24,20 @@
 сняты решением владельца; повторно разрабатывать их не нужно.
 
 ### До первой боевой сборки — конкретный остаток
+
+**В работе — локальный установщик (§301).** Native publisher/упаковка и
+PowerShell/Bash entrypoints готовы; Windows/Ubuntu по10 package cases и3
+native install/launch controls PASS aggregate. Custom без Terminal теперь
+не копирует его файлы/probes/PATH/launcher. [Команды](ACCEPTANCE_INSTALLER.md)
+и [границы проверки](../openspec/changes/package-native-acceptance-installer/verification.md).
+По решению владельца fzf-native теперь входит в Core: native build выполняет
+publisher, install копирует library без compiler; Lua fallback сохраняется.
+По3 actual search/setup E2E и7 affected setup cases на ОС прошли. Native Mac,
+полная приёмка рабочего проекта и public release остаются открытыми.
+С учётом Core parser delivery4/ОС итог34 unique targeted cases: Windows33 PASS/
+1 explicit POSIX SKIP, Ubuntu34 PASS. Локальный Windows entrypoint после сборки:
+`.\.tests\acceptance-installer\windows-ready\install.cmd`; полной GUI приёмки это
+не заменяет. Mac publisher команда и prerequisites — в guide выше.
 
 Порядок уточнён владельцем2026-11-20: Omarchy позже. Приёмку проводит на
 Windows и Mac; сначала нужен установщик либо полноценный запуск из checkout.

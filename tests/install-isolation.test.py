@@ -1,4 +1,4 @@
-"""IDE-BOOT-11: native runtime/install/launch; fixture config, не full SDK acceptance."""
+"""IDE-BOOT-11 IDE-BOOT-54: native runtime/install/launch; fixture config, не full SDK acceptance."""
 import hashlib
 import importlib.util
 import io
@@ -398,6 +398,30 @@ exit $code
         result=self.run_process([SHELL,'-NoProfile','-ExecutionPolicy','Restricted','-Command',script],env,base,'restricted')
         self.assertEqual(result.returncode,7,result.stderr);self.assertIn('Application',result.stdout)
         self.assertFalse((directory/'fride.ps1').exists())
+
+
+    def test_acceptance_unselected_terminal_in_monolithic_runtime(self):
+        # spec: IDE-BOOT-54. A full local package must honor Custom Core-only.
+        base,env,target=self.prepare('acceptance-core-only')
+        full=base/'runtime';shutil.copytree(self.runtime,full)
+        unused=full/'terminal/bin/not-selected.txt';unused.parent.mkdir(parents=True)
+        unused.write_text('unselected Terminal payload',encoding='utf-8')
+        manifest=json.loads((full/'forge-runtime.json').read_text())
+        manifest['components'].append('terminal')
+        manifest['files']['terminal/bin/not-selected.txt']=hashlib.sha256(unused.read_bytes()).hexdigest()
+        manifest['paths'].append('terminal/bin')
+        manifest['probes'].append(['terminal/bin/not-selected.txt','--must-not-run'])
+        (full/'forge-runtime.json').write_text(json.dumps(manifest),encoding='utf-8')
+        self.runtime=full;env['FORGE_NVIM_COMPONENTS']='core'
+        self.assert_ok(self.install(base,env,target))
+        installed=json.loads((target/'runtime/forge-runtime.json').read_text())
+        self.assertEqual(installed['components'],['core'])
+        self.assertFalse((target/'runtime/terminal').exists())
+        self.assertNotIn('terminal/bin',installed['paths'])
+        self.assertFalse(any(p.startswith('terminal/') for p in installed['files']))
+        self.assertFalse(any(p[0].startswith('terminal/') for p in installed['probes']))
+        self.assertFalse((target/'bin'/('fride-terminal.cmd' if WINDOWS else 'fride-terminal')).exists())
+        self.assert_ok(self.launch(base,env,target))
 
 
 if __name__=='__main__':

@@ -1,4 +1,4 @@
-"""IDE-BOOT-24/26: package native Neovim, parsers and search; never build SDKs.
+"""IDE-BOOT-24/26/54: package native Neovim, parsers, search and fzf; never build SDKs.
 
 The supplied editor-deps must have been prepared with prepare_editor.py at the
 current lazy-lock. Existing package-runtime owns the archive/manifest format.
@@ -47,6 +47,16 @@ def package(nvim_root, site, editor_deps, output, search=None):
     revision = lock['nvim-treesitter']['commit']
     if prepared.get('plugins', {}).get('nvim-treesitter') != revision:
         raise ValueError('Prepared Treesitter does not match lazy-lock')
+    fzf=prepared.get('native',{}).get('fzf')
+    library='libfzf.dll' if system=='windows' else 'libfzf.so'
+    plugin_fzf=editor_deps/'lazy/telescope-fzf-native.nvim'
+    if not fzf or fzf.get('commit')!=lock['telescope-fzf-native.nvim']['commit'] or fzf.get('library')!='lazy/telescope-fzf-native.nvim/build/'+library:
+        raise ValueError('Prepare pinned native fzf first: tests/e2e/prepare_fzf.py --editor-deps <path>')
+    fzf_source=editor_deps/fzf['library']
+    if digest(fzf_source)!=fzf['sha256'] or fzf.get('sources')!={name:digest(plugin_fzf/name) for name in ('CMakeLists.txt','src/fzf.c','src/fzf.h')}:
+        raise ValueError('Prepared native fzf payload/source mismatch')
+    if fzf.get('system')!=platform.system() or fzf.get('machine','').lower()!=platform.machine().lower():
+        raise ValueError('Prepared native fzf platform mismatch')
     sdk = None
     if system == 'windows':
         sdk = json.loads((nvim_root / 'forge-sdk.json').read_text(encoding='utf-8-sig'))
@@ -79,6 +89,11 @@ def package(nvim_root, site, editor_deps, output, search=None):
         inventory = json.loads(metadata.read_text(encoding='utf-8'))
         stage = temp / 'runtime'
         shutil.copytree(nvim_root, stage)
+        native=stage/'native/fzf';native.mkdir(parents=True)
+        shutil.copy2(fzf_source,native/library)
+        shutil.copy2(plugin_fzf/'LICENSE',native/'LICENSE')
+        (native/'prepared.json').write_text(json.dumps(dict(schema=1,platform=system+'-'+arch,
+            commit=fzf['commit'],library=library,sha256=fzf['sha256'],sources=fzf['sources']),indent=2)+'\n',encoding='utf-8')
         if search_root:
             for name in [*search_metadata['files'], 'prepared.json']:
                 destination = stage / 'search' / name
@@ -101,7 +116,11 @@ def package(nvim_root, site, editor_deps, output, search=None):
         probe = temp / 'check.lua'
         probe.write_text("package.path=vim.env.FORGE_CORE_CONFIG..'/lua/?.lua;'..package.path\n"
                          "vim.opt.rtp:prepend(vim.env.FRIDE_RUNTIME..'/treesitter')\n"
-                         "require('forge.parser_runtime').check(require('forge.tool_catalog').parsers())\n", encoding='utf-8')
+                         "require('forge.parser_runtime').check(require('forge.tool_catalog').parsers())\n"
+                         "local ffi=require('ffi');local name=vim.fn.has('win32')==1 and 'libfzf.dll' or 'libfzf.so'\n"
+                         "local lib=ffi.load(vim.env.FRIDE_RUNTIME..'/native/fzf/'..name)\n"
+                         "ffi.cdef[[void* fzf_make_default_slab(void);void fzf_free_slab(void*);]]\n"
+                         "local slab=lib.fzf_make_default_slab();assert(slab~=nil);lib.fzf_free_slab(slab)\n", encoding='utf-8')
         env['FORGE_CORE_CONFIG'] = str(ROOT / 'nvim_forge')
         result = subprocess.run([str(exe), '--headless', '-u', 'NONE', '-i', 'NONE', '-l', str(probe)],
                                 env=env, capture_output=True, text=True, encoding='utf-8', errors='replace', timeout=30)

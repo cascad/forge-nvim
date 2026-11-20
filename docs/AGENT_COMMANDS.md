@@ -11633,3 +11633,123 @@ txt и checkout-backports*.txt, temp/logs на F. Native Mac не запуска
 Владелец отложил Omarchy; приёмка Windows/Mac после установки или из готового
 checkout. Факт: POSIX launcher требует существующий nvim из PATH, missing
 plugins не устанавливаются при обычном старте; frontend artifact catalog пуст.
+
+## 209. Приёмочный local installer — 2026-11-20
+
+Source f5b012b. Владелец продолжил установщик, приёмка Windows/Mac, Omarchy
+позже. package-native-acceptance-installer apply ready, IDE-BOOT-54/55 ADDED;
+main specs прежние. Нет goals/agents/push/изменения Desktop/WSL.
+Host TEMP/TMP/TMPDIR/NVIM_LOG_FILE на F, Python -B/UTF8/no bytecode, Rust jobs2.
+
+Upstream metadata: GitHub API v0.12.2 вернул403 rate limit; official
+expanded_assets/v0.12.2 дал закреплённые SHA всех4 POSIX assets. Прямой download
+Linux archive11,368,705bytes сохранён в .tests/acceptance-installer/assets.
+Mac binaries здесь не запускались; Linux official probe/repeat отдельно прошёл.
+
+Current frontend без замены frozen .tools:
+```powershell
+python -B scripts/build-installer-ui.py --work .tests/installer-ui --output .tests/acceptance-installer/frontend/windows-x64
+```
+Windows SHA c7d8b10e88e9; Linux11faf4434fe5. Linux build offline с existing
+vendor.tar.gz, /tmp/fride-acceptance/build, Rust1.96.1,2 CPU/3GiB/network none.
+Own container label fride.owner=acceptance-installer, source RO/.tests F RW;
+точный ID в .tests/acceptance-installer/container.txt. Первый prepare использовал
+удалённый vendor path; corrected .tests/ubuntu/installer-ui/vendor.tar.gz дал PASS.
+
+Один initial packet после реализации publisher/package:
+```powershell
+python -B tests/install-native-neovim.test.py
+python -B tests/install-acceptance-package.test.py
+```
+FORGE_INSTALL_UI_BINARY указывает current binary с sibling manifest.json.
+FORGE_INSTALL_STAND_ROOT — own F profile; Linux /tmp/fride-acceptance/stand.
+Linux actual case использует FORGE_NATIVE_NVIM_ARCHIVE с official archive.
+Итог native-Neovim: Windows6 PASS/1 explicit POSIX SKIP, Ubuntu7 PASS.
+Package initial Windows7 PASS/3 FAIL (Get-FileHash), Ubuntu8 PASS/2 FAIL
+(fixture components.tsv). .NET SHA и complete fixture/source check исправлены;
+только Windows4 affected и Ubuntu2 failed повторены, PASS.10 unique cases/ОС
+aggregate, не новый all-green full run. Logs первичных отказов сохранены.
+
+Actual native Windows publisher на готовых inputs:
+```powershell
+python -B scripts/prepare-acceptance-installer.py --nvim .tools/neovim/windows-x64 --editor-deps .tests/neodev-review/editor-deps --site .tests/parser-runtime/windows-x64/site --search .tests/search-runtime/windows-x64 --terminal .tests/terminal-runtime/windows-x64 --frontend .tests/acceptance-installer/frontend/windows-x64/fride-setup.exe --output .tests/acceptance-installer/windows-x64
+.\.tests\acceptance-installer\windows-x64\install.cmd --print-plan
+```
+Baseline2510 payload files/source f5b012b, Core33 parsers+rg и Terminal. Native
+runtime-core/parser/probes check PASS без SDK/user setup. Frontend Default plan
+содержит8 components, prepare_languages=false. Этот baseline до Custom fix;
+не передаём его как финальный candidate. Логи windows-publisher/runtime/actual-plan.
+
+Custom checkbox bug: новый Isolation.test_acceptance_unselected_terminal_in_monolithic_runtime
+на source RED (EFTYPE probe снятого Terminal). После manifest filtering и copy
+selected files native packet:
+```powershell
+python -B tests/install-isolation.test.py Isolation.test_acceptance_unselected_terminal_in_monolithic_runtime Isolation.test_01_install_launch_and_repeat Isolation.test_12_external_link_in_owned_target
+```
+Windows3/Ubuntu3 PASS. Linux SDK/fixture профили только /tmp, обычные nvim/user
+files проверяет существующий snapshot. Итого20 unique cases/ОС: Windows19 PASS/
+1 SKIP, Ubuntu20 PASS; full regression/GUI/Mac/cold install не объявляются PASS.
+Команды, stdout/stderr/exit codes и captured JSON лежат .tests/acceptance-installer.
+
+Оставлен обязательный вопрос владельцу: fzf-native готовая библиотека в Core
+или штатный Lua fallback. Existing Lazy install build требует CMake/C compiler;
+clean-machine scope IDE-BOOT-54 ещё не закрыт, task1.2 открыт. Все независимые
+проверки выполнены до ожидания ответа; publication/Omarchy не начинаются.
+
+Владелец выбрал native fzf в Core + Lua fallback. Existing prepare_fzf использован
+для publisher, installation hook копирует проверенную library без CMake.
+```powershell
+python -B tests/e2e/prepare_fzf.py --editor-deps .tests/neodev-review/editor-deps --build-root .tests/acceptance-installer/fzf-build
+```
+Windows DLL SHA4e7526a3013b; LinuxSOdc99e95c9e1d из current-pin prepared SDK.
+Core publisher проверяет actual ffi.load/C allocation+free, includes LICENSE.
+Первый container1fecf5cf... завершён после независимых cases; exported9 regular
+records/243039bytes, cleanup.json. После ответа создан отдельный bounded
+fride.owner=acceptance-fzf, id в fzf-container.txt; Desktop/WSL не менялись.
+Linux current66 SDK — own native copy prepared image, pins сверены; retired
+neodev удалён только из копии. Current backports применены настоящим applier,
+его JSON записан в receipt; shared/image caches не переписывались.
+
+Windows compiler-free source RED — old f5b012b config snapshot через git archive,
+FORGE_E2E_CONFIG_SOURCE и FORGE_SEARCH_CASE='Core prebuilt'. Ошибка отсутствующего
+cmake сохранена windows-fzf-source-red.txt. Target initially copied DLL, ffi.load
+PASS, но Telescope уже cached fallback: windows-fzf-diagnostic/explicit-build JSON.
+Исправлен observer на separate minimal setup → fresh editor; loadplugins=true
+в minimal init нужен Lazy. Тестовые corrections не меняли product ради PASS.
+Финальный target2 cases/ОС PASS: windows/ubuntu-fzf-final.txt. Baseline1 control
+PASS: windows/ubuntu-fzf-control.txt. Setup7/ОС PASS: *-setup-affected.txt.
+Native C scoring и реальный rg/file/content переходы, отсутствие compiler в PATH,
+no compiler/network spawns и scope cleanup проверены.30 unique cases/ОС aggregate:
+Windows29 PASS/1 SKIP, Ubuntu30 PASS; не full suite/cross-platform GUI PASS.
+
+Linux Core producer сперва получил paths без host ubuntu prefix — stand corrected.
+Затем output на Windows bind mount был долгим (own ps snapshot); python PID23
+проверен по commandline внутри own container и прерван SIGINT. Context cleanup
+завершился, native /tmp output дал PASS за~9s; итоговый archive copied на F.
+Logs ubuntu-fzf-publisher/retry/native сохранены, timeouts продукта прежние.
+Windows baseline2510-file package и fzf draft2512 не выдаются как final candidate;
+после commit собирается свежий пакет с current source/library/LICENSE.
+
+Последний affected consumer из-за расширения Core:
+```powershell
+python -B tests/install-parser-runtime.test.py
+```
+Windows4/Ubuntu4 PASS. FORGE_PARSER_SITE указывает ready native site;
+FORGE_E2E_DEPS — current prepared66 с fzf metadata, current frontend через
+FORGE_INSTALL_UI_BINARY. Linux stand только /tmp. Полнота обычного SDK/GUI
+этими fixture stages не утверждается. Итог34 unique targeted cases/ОС:
+Windows33 PASS/1 SKIP, Ubuntu34 PASS (aggregate с failed/affected repeats).
+
+Итоговые команды без повторного broad E2E:
+```powershell
+python -B .tests/acceptance-installer/final-gates.py
+openspec validate package-native-acceptance-installer --type change --strict --no-interactive
+& ./.tools/neovim/windows-x64/bin/nvim.exe -u NONE -i NONE -l tests/trace.test.lua --catalog-json .tests/acceptance-installer/catalog-final.json
+git -c core.safecrlf=false diff --cached --check
+```
+Strict/trace PASS, каталог158 registered/0 missing/0 pending;7 Python AST,
+66 pins/6 backports/4 frozen .tools SHA и append-only prefixes сверены.
+Commit локальный, gc.auto=0/maintenance.auto=false, push/archive не выполняются.
+После него запускается тот же prepare-acceptance-installer на ready inputs,
+--output .tests/acceptance-installer/windows-ready; actual --print-plan и native
+runtime probe пишут final-candidate.json. Stage не ставит kit в user profile.

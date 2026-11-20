@@ -145,10 +145,22 @@ local function install()
   local commands=dofile(join(source,'scripts/register-command.lua'))
   local registration=commands.plan(target,vim.env.FORGE_INSTALL_COMMAND_DIR)
   local manifest=dofile(join(source,'scripts/runtime-core.lua')).validate(source,runtime)
+  local core_files=manifest.files
   local parts
   manifest,parts=dofile(join(source,'scripts/runtime-parts.lua')).plan(runtime,manifest,vim.env.FORGE_INSTALL_RUNTIME_PLAN)
   for _,part in ipairs(parts) do
     if within(target,part.root) or within(part.root,target) then fail('Install target overlaps component runtime') end
+  end
+  -- A local acceptance runtime can contain optional Terminal files. Custom
+  -- must honor its checkbox just as the modular delivery selection does.
+  local selected={}
+  for id in (vim.env.FORGE_NVIM_COMPONENTS or 'core'):gmatch('[^,]+') do selected[id]=true end
+  if not selected.terminal then
+    local function terminal_path(path) return path=='terminal' or path:sub(1,9)=='terminal/' end
+    for path in pairs(manifest.files) do if terminal_path(path) then manifest.files[path]=nil end end
+    manifest.components=vim.tbl_filter(function(id) return id~='terminal' end,manifest.components)
+    manifest.paths=vim.tbl_filter(function(path) return not terminal_path(path) end,manifest.paths)
+    manifest.probes=vim.tbl_filter(function(probe) return not terminal_path(probe[1]) end,manifest.probes)
   end
   local components = {}; for _, id in ipairs(manifest.components or {}) do components[id] = true end
   if components['node-runtime'] or components['go-runtime'] then fail('Native SDK cannot be a private IDE artifact') end
@@ -161,11 +173,19 @@ local function install()
   for _, dir in ipairs({'tmp','log','backups'}) do mkdir(join(target,dir)) end
   local stamp = tostring(os.time()) .. '-' .. tostring(uv.hrtime())
   local stage = join(target,'.stage-' .. stamp); mkdir(stage)
-  copy_tree(runtime,join(stage,'runtime'))
+  mkdir(join(stage,'runtime'))
+  for path in pairs(core_files) do
+    if manifest.files[path] then
+      local destination=join(stage,'runtime',path)
+      mkdir(vim.fs.dirname(destination));copy_tree(join(runtime,path),destination)
+    end
+  end
   for _,part in ipairs(parts) do
     for path in pairs(part.files) do
-      local destination=join(stage,'runtime',path)
-      mkdir(vim.fs.dirname(destination));copy_tree(join(part.root,path),destination)
+      if manifest.files[path] then
+        local destination=join(stage,'runtime',path)
+        mkdir(vim.fs.dirname(destination));copy_tree(join(part.root,path),destination)
+      end
     end
   end
   write(join(stage,'runtime/forge-runtime.json'),vim.json.encode(manifest))

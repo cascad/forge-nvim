@@ -1,0 +1,11 @@
+{
+  "version": "0.12.2",
+  "release": "https://github.com/neovim/neovim/releases/download/v0.12.2/",
+  "evidence": "https://github.com/neovim/neovim/releases/expanded_assets/v0.12.2",
+  "platforms": {
+    "linux-x64": {"archive": "nvim-linux-x86_64.tar.gz", "sha256": "31cf85945cb600d96cdf69f88bc68bec814acbff50863c5546adef3a1bcef260"},
+    "linux-arm64": {"archive": "nvim-linux-arm64.tar.gz", "sha256": "f697d4e4582b6e4b5c3c26e76e06ce26efa08ba1768e03fd2733fcc422bb0490"},
+    "macos-x64": {"archive": "nvim-macos-x86_64.tar.gz", "sha256": "728321db960a9b6af6c03881892a6abfd743bf759bc62d233f52fa1be64ace3c"},
+    "macos-arm64": {"archive": "nvim-macos-arm64.tar.gz", "sha256": "eeddee1009734f9071266e6b1b8a70308cb60cbcc45f5e1c1023adc471450fee"}
+  }
+}

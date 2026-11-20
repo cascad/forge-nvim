@@ -1,4 +1,4 @@
--- spec: IDE-BOOT-5. Реальная DLL/SO и C scoring; только private artifact меняется.
+-- spec: IDE-BOOT-5 IDE-BOOT-54. Реальная DLL/SO и C scoring; только private artifact меняется.
 local root=vim.fn.fnamemodify(debug.getinfo(1,'S').source:sub(2),':p:h:h:h')
 package.path=root..'/tests/lib/?.lua;'..package.path
 local T=require('check')
@@ -42,7 +42,7 @@ end
 local function check(name,variant,cmake,fn)
   if vim.env.FORGE_SEARCH_CASE and not name:find(vim.env.FORGE_SEARCH_CASE,1,true) then return end
   T.check('IDE-BOOT-5 '..name,function()
-    local e
+    local e,setup_report
     local ok,err=pcall(function()
       local path={}
       for _,exe in ipairs({'git','rg'}) do
@@ -72,15 +72,53 @@ local function check(name,variant,cmake,fn)
           local data=runtime..'/data/nvim_forge'..(vim.fn.has('win32')==1 and '-data' or '')
           local lib=data..'/lazy/telescope-fzf-native.nvim/build/'..library
           assert(vim.fn.filereadable(lib)==1)
-          if variant=='missing' then assert(vim.uv.fs_unlink(lib))
+          if variant=='prebuilt-core' then
+            assert(vim.uv.fs_unlink(lib))
+            env.FRIDE_RUNTIME=assert(vim.env.FORGE_E2E_CORE_RUNTIME,'Prepared actual Core runtime required')
+          elseif variant=='fallback-build' then
+            assert(vim.uv.fs_unlink(lib));env.FRIDE_RUNTIME=''
+          elseif variant=='missing' then assert(vim.uv.fs_unlink(lib))
           elseif variant=='corrupt' then vim.fn.writefile({'not a shared library'},lib) end
+          if variant=='prebuilt-core' or variant=='fallback-build' then
+            -- Production setup and the user's editor are different processes.
+            local script=runtime..'/explicit-fzf-setup.lua'
+            local report=runtime..'/explicit-fzf-setup.json'
+            vim.fn.writefile(vim.split([[
+local config=vim.env.FORGE_E2E_CONFIG
+vim.go.loadplugins=true
+package.path=config..'/lua/?.lua;'..package.path
+vim.opt.rtp:prepend(vim.fn.stdpath('data')..'/lazy/lazy.nvim')
+local lock=vim.env.FORGE_FZF_SETUP_REPORT..'.lock.json'
+vim.fn.writefile(vim.fn.readfile(config..'/lazy-lock.json'),lock)
+local spec
+for _,item in ipairs(require('plugins.telescope'))do if item[1]=='nvim-telescope/telescope-fzf-native.nvim'then spec=item end end
+assert(spec)
+require('lazy').setup({spec={spec},lockfile=lock,install={missing=false},checker={enabled=false},performance={cache={enabled=false}}})
+require('lazy.manage').build({plugins={'telescope-fzf-native.nvim'},wait=true,show=false})
+local plugin=require('lazy.core.config').plugins['telescope-fzf-native.nvim']
+local errors={};for _,task in ipairs(plugin._.tasks or {})do if task:has_errors()then errors[#errors+1]=task:output(vim.log.levels.ERROR)end end
+vim.fn.writefile({vim.json.encode({errors=errors,report=vim.g.forge_setup_fzf})},vim.env.FORGE_FZF_SETUP_REPORT)
+assert(#errors==0,vim.inspect(errors))
+]],'\n'),script)
+            local setup_env=vim.deepcopy(env);setup_env.FORGE_FZF_SETUP_REPORT=report
+            local artifacts=root..'/.tests/editor-e2e/fzf-setup-'..vim.uv.hrtime();vim.fn.mkdir(artifacts,'p')
+            local scope=require('process_scope').new()
+            local command=scope:command({vim.v.progpath,'-u','NONE','-i','NONE','-l',script},{artifacts=artifacts})
+            local process=vim.system(command,vim.tbl_extend('force',scope.spawn_options,
+              {cwd=project,env=setup_env,clear_env=true,text=true,timeout=30000}))
+            scope:attach(process.pid);local result=process:wait();local cleanup=scope:close()
+            vim.fn.writefile({vim.json.encode({code=result.code,stdout=result.stdout,stderr=result.stderr,scope=cleanup})},artifacts..'/result.json')
+            assert(cleanup.ok,'Setup scope cleanup failed: '..artifacts)
+            assert(result.code==0,(result.stdout or '')..(result.stderr or '')..' artifacts: '..artifacts)
+            setup_report=vim.json.decode(table.concat(vim.fn.readfile(report),'\n'))
+          end
           vim.fn.writefile({'first line','FORGE_FZF_CONTENT'},project..'/alpha_native.txt')
           vim.fn.writefile({'excluded markdown'},project..'/alpha_native.md')
           vim.fn.writefile({'other'},project..'/beta_native.txt')
         end})
       vim.fn.writefile(vim.fn.readfile(root..'/tests/e2e/search-sorter.test.lua'),e.dir..'/search-sorter.test.lua')
       T.eq(e:lua([[return vim.fn.executable('cmake')]]),cmake and 1 or 0)
-      fn(e)
+      e.fzf_setup=setup_report;fn(e)
       local observed=observe(e)
       assert(not observed.mode.blocking and observed.installs==0)
       assert(not observed.messages:match('E%d+:'),observed.messages)
@@ -133,6 +171,18 @@ end
 check('native без CMake выполняет C scoring и file/content переходы','ready',false,function(e) search(e,true) end)
 check('missing с CMake сохраняет Lua поиск и причину','missing',true,function(e) search(e,false) end)
 check('corrupt с CMake сохраняет Lua поиск и причину','corrupt',true,function(e) search(e,false) end)
+local function explicit_build(e,expected)
+  local state=assert(e.fzf_setup,'Explicit setup process report required')
+  vim.fn.writefile({vim.json.encode(state)},e.dir..'/explicit-build.json')
+  T.eq(#state.errors,0,vim.inspect(state.errors))
+  T.eq(state.report.copied,expected)
+end
+check('Core prebuilt: explicit setup без CMake и реальный C scoring','prebuilt-core',false,function(e)
+  explicit_build(e,true);search(e,true)
+end)
+check('Core missing: explicit setup без CMake и рабочий Lua fallback','fallback-build',false,function(e)
+  explicit_build(e,false);search(e,false)
+end)
 check('missing без CMake: passive health до picker и рабочий fallback','missing',false,function(e)
   local before=observe(e).status
   health(e,before and 'Lua fallback' or 'Telescope not loaded')

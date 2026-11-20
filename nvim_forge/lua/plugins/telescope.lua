@@ -22,9 +22,7 @@ end
 return {
     {
         "nvim-telescope/telescope-fzf-native.nvim",
-        build = "cmake -S. -Bbuild -DCMAKE_BUILD_TYPE=Release && "
-            .. "cmake --build build --config Release && "
-            .. "cmake --install build --prefix build",
+        build = function(plugin) require('forge.plugin_setup').fzf(plugin) end,
         lazy = true, -- spec: IDE-BOOT-5. Готовность проверяет настоящая загрузка.
     },
 

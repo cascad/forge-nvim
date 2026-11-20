@@ -1,0 +1,137 @@
+# Локальный установщик для приёмки Windows/macOS
+
+Omarchy отложена владельцем. Этот этап даёт локальный native комплект до
+публикации public release URLs. Он содержит текущую IDE, private Neovim,
+готовые parsers/rg, optional private Terminal и прежний UI Default/Custom.
+Обычный nvim/config и Go/Rust/Python/Node SDK не заменяются. Default оставляет
+языки отложенными; подготовкой управляет `Space l S` после установки.
+
+## Запуск готового комплекта
+
+Windows, из каталога выданного комплекта:
+
+```powershell
+.\install.cmd
+```
+
+Кандидат, подготовленный в этом Windows checkout:
+
+```powershell
+.\.tests\acceptance-installer\windows-ready\install.cmd --install-dir "F:\apps\fride"
+```
+
+Можно указать новый путь с ещё не существующими родителями:
+
+```powershell
+.\install.cmd --install-dir "F:\apps\fride"
+```
+
+На Mac — в native комплекте своей архитектуры:
+
+```bash
+bash ./install.sh --install-dir "$HOME/Applications/fride"
+```
+
+Default — обычный запуск. Для галочек — `--profile custom`. Предпросмотр
+без установки — `--preview`; машинный read-only plan — `--print-plan`.
+Проверка payload выполняется перед frontend. Source/runtime принадлежат
+комплекту; эти внутренние параметры нельзя подменить через entrypoint.
+
+После установки Windows: `F:\apps\fride\bin\fride.cmd <проект>`.
+Mac: `"$HOME/Applications/fride/bin/fride" /путь/к/проекту`.
+Для private WezTerm — соседний `fride-terminal.cmd` / `fride-terminal`.
+Обычный PATH не переписывается; `--command-dir` остаётся явным выбором.
+
+Повтор/upgrade запускается тем же install entrypoint с прежним install directory.
+Существующий комплект и настройки защищает прежний installer backend; wrapper
+не вводит отдельного механизма установки. Нужен доступ к upstream Git/plugins/
+Mason sources: это локальная доставка IDE runtime, а не полностью offline install.
+В Custom со снятым Terminal его files/probes/PATH и launcher не устанавливаются,
+даже если исходный приёмочный комплект содержит готовый Terminal.
+
+## Подготовка native комплекта из checkout
+
+Это **publisher/developer stand**, а не команда пользователя на чистой машине.
+Нужны Python3, Git, готовый Rust SDK для frontend, CMake/C compiler и tree-sitter CLI
+для parsers. Они переиспользуются; stand не устанавливает SDK/компиляторы.
+Готовые native inputs можно передать явно и не пересобирать.
+
+На Mac и Linux:
+
+```bash
+python3 -B scripts/prepare-acceptance-installer.py --download
+```
+
+На Windows с уже подготовленным private SDK:
+
+```powershell
+python -B scripts/prepare-acceptance-installer.py --download
+```
+
+Результат — `.tests/acceptance-installer/publisher/<platform>/installer`;
+последняя строка вывода содержит install entrypoint. Native platform определяется
+автоматически: полный Core+Terminal stand поддерживает macos-arm64/x64,
+linux-x64, windows-x64 по текущей Terminal policy. Каждый пакет
+собирается на соответствующей ОС. Существующий output не перезаписывается;
+для следующего candidate укажи новый `--output`.
+
+Команда явно получает upstream Neovim на POSIX, готовит frontend, pinned plugin
+sources, native parsers, search и Terminal существующими publisher scripts,
+затем собирает installer directory. Она не меняет public artifact catalogs.
+На Windows используется существующий patched SDK из `.tools/neovim/windows-x64`;
+его отдельная подготовка — `scripts/prepare-windows-sdk.ps1 -Download`.
+
+Готовые inputs, например на этой Windows:
+
+```powershell
+python -B scripts/prepare-acceptance-installer.py --nvim .tools/neovim/windows-x64 --editor-deps .tests/neodev-review/editor-deps --site .tests/parser-runtime/windows-x64/site --search .tests/search-runtime/windows-x64 --terminal .tests/terminal-runtime/windows-x64 --frontend .tests/acceptance-installer/frontend/windows-x64/fride-setup.exe --output .tests/acceptance-installer/windows-x64
+```
+
+Если уже есть Core/Terminal archives и current frontend с соседним manifest.json,
+достаточно сборки без downloads/компиляции:
+
+```bash
+python3 -B scripts/package-acceptance-installer.py --core /path/core.tar.gz --terminal /path/terminal.tar.gz --frontend /path/frontend/fride-setup --output /path/new-installer
+```
+
+Если publisher намеренно не передал `--terminal`, используй Custom без Terminal,
+например `--profile custom --components core`. Обычный Default stand готовит
+и Core, и Terminal; снятая галочка исключает Terminal из установленного kit.
+
+`build.json` фиксирует source commit, признак изменённого source worktree,
+input SHA и tracked source list.
+`payload.sha256` описывает полный payload. Private .tests/.tools/notes не входят
+в source. Default public bootstrap пока не опубликован; нельзя выдавать эти
+developer commands за публичный one-line install для чистой машины.
+
+## Отдельная подготовка официального POSIX Neovim
+
+```bash
+python3 -B scripts/prepare-native-neovim.py --download --output .tests/native-neovim
+```
+
+Или `--archive /path/nvim-macos-arm64.tar.gz` без сети. Повтор проверяет готовый
+output без downloads, не заменяет несовпадающие файлы. SHA закреплены по
+[официальным assets v0.12.2](https://github.com/neovim/neovim/releases/expanded_assets/v0.12.2).
+Это private publisher input, системный nvim и его config сохраняются.
+
+## Что проверяется и что остаётся владельцу
+
+Новые tests/install-acceptance-package.test.py проверяют реальные native
+PowerShell/Bash entrypoints и fride-setup plan с fixture runtime: параметры,
+Unicode paths, Default/deferred policy, missing/tamper/extra/stale/conflict и
+отсутствие private sources. Это не подмена full installed IDE acceptance.
+tests/install-native-neovim.test.py имеет отдельный actual upstream archive case;
+fixture cases не объявляют Mac native PASS.
+
+После выдачи actual candidate владелец проходит [основные workflows](IDE_ROADMAP.md#основные-пользовательские-сценарии--уточнение-владельца-2026-11-12)
+на Windows/Mac, включая GUI/clipboard/SDK paths, Debug/Tests/Git/restore.
+Mac zsh startup/Go и Cmd+C остаются отдельными обязательными проверками.
+
+Решение владельца реализовано: Core содержит готовую fzf-native library своей
+ОС с pinned source/SHA и лицензией. Publisher проверяет загрузку/C ABI; plugin
+setup только копирует library. На машине установки CMake/C compiler не нужны;
+при отсутствии подходящего Core payload остаётся штатный Lua fallback.
+Новые Windows/Ubuntu E2E проверяют отдельный setup process, затем настоящий
+редактор, native C scoring/file/content navigation и fallback без compiler.
+Это не объявляет native Mac/full GUI/clean-machine acceptance пройденными.
