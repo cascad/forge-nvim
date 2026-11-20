@@ -231,8 +231,7 @@ def collect_archive(report,path,item,platform):
         if meta.get('schema')!=1 or meta.get('platform')!=platform or meta.get('components')!=[expected]:raise ValueError('Archive platform/components mismatch')
         if set(members)!=set(meta['files'])|{manifest}:raise ValueError('Untracked/missing archive files')
         suffix='.exe' if platform.startswith('windows-') else ''
-        required={'core':['bin/nvim'+suffix,'search/bin/rg'+suffix,'search/prepared.json','treesitter/prepared.json'],
-            'sql':['sql/bin/sqls'+suffix,'sql/bin/forge-sqltest'+suffix,'sql/prepared.json']}
+        required={'core':['bin/nvim'+suffix,'search/bin/rg'+suffix,'search/prepared.json','treesitter/prepared.json']}
         if expected=='terminal':
             policy=read_json(ROOT/'scripts/sdk/terminal.json')
             required['terminal']=['terminal/prepared.json','terminal/'+policy['wezterm']['platforms'][platform]['executable']]
@@ -276,9 +275,6 @@ def generate(args):
             supplied[id]=Path(path)
         # Optional old language bundles are inventoried only when supplied.
         # The standard language tools are already covered by Mason above.
-        if 'sql' in supplied:
-            for name,version in sorted(catalog['native_tools'].items()):
-                report.item('native-tool',name,version=version,source='repo:scripts/sdk/'+('sql-test' if name=='forge-sqltest' else 'sqls.json'),license_evidence='artifact:sql')
         required_parts=[id for id in selected if id in ('core','terminal')]
         for id in dict.fromkeys([*required_parts,*supplied]):
             item=report.item('artifact',id)

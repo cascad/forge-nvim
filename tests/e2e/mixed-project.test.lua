@@ -30,7 +30,7 @@ T.check('SELF: MIXED-PROJECT шесть language roots, Node script и Python ve
     e=require('editor').start(root,{timeout=240000,site=deps.node..'/site',
       snapshot_ignore={node_modules=true,['.venv']=true,__pycache__=true},env={PATH=table.concat(path,sep),
         FORGE_NODE_EXECUTABLE=node_exe,FORGE_NODE_TOOLS=deps.node..'/tools',
-        FORGE_BASH_EXECUTABLE=bash.bash,FORGE_SQLS_EXECUTABLE=deps.sql..'/bin/sqls'..suffix,
+        FORGE_BASH_EXECUTABLE=bash.bash,
         FORGE_SQRUFF_EXECUTABLE=deps.sql..'/bin/sqruff'..suffix,
         FORGE_PYTHON_PATH='',VIRTUAL_ENV='',CONDA_PREFIX='',PYTHONHOME='',PYTHONPATH='',
         FORGE_DEBUGPY_PYTHON=tools_python,FORGE_DEBUGPY_ADAPTER=vim.fs.dirname(tools_python)..'/debugpy-adapter'..suffix,
@@ -42,6 +42,9 @@ T.check('SELF: MIXED-PROJECT шесть language roots, Node script и Python ve
         RUSTC=sysroot..'/bin/rustc'..suffix,RUSTDOC=sysroot..'/bin/rustdoc'..suffix},
       prepare=function(project,env,runtime)
         copy(root..'/tests/e2e/fixtures/mixed-project',project)
+        vim.fn.mkdir(project..'/.fride','p')
+        vim.fn.writefile({vim.json.encode({tools={pyright=deps.python..'/tools/node_modules/pyright/langserver.index.js'}})},
+          project..'/.fride/tools.json')
         for _,name in ipairs({'go.work','app/go.mod','app/main.go','shared/go.mod','shared/answer.go'}) do
           vim.fn.mkdir(vim.fs.dirname(project..'/go/'..name),'p')
           assert(vim.uv.fs_copyfile(root..'/tests/e2e/fixtures/go-workspace/'..name,project..'/go/'..name))
@@ -66,10 +69,7 @@ T.check('SELF: MIXED-PROJECT шесть language roots, Node script и Python ve
         project_python=venv..(win and '/Scripts/python.exe' or '/bin/python')
         local r=vim.system({python.host_python,'-m','venv','--without-pip',venv},
           {env=env,clear_env=true,text=true}):wait();assert(r.code==0,r.stderr);prepared=r.stdout..r.stderr
-        r=vim.system({python.host_python,'-B','-c',"import sqlite3,sys;d=sqlite3.connect(sys.argv[1]);d.execute('CREATE TABLE fixture(value INTEGER)');d.commit();d.close()",project..'/db/mixed.sqlite3'},
-          {env=env,clear_env=true,text=true}):wait();assert(r.code==0,r.stderr)
-        vim.fn.writefile({vim.json.encode({connections={{alias='Mixed',driver='sqlite3',dataSourceName='file:mixed.sqlite3?mode=rw'}}})},project..'/db/.sqls.json')
-        vim.fn.writefile({'node_modules/','.venv/','db/mixed.sqlite3','db/.sqls.json','python-run.txt','web/node-run.txt'},project..'/.gitignore')
+        vim.fn.writefile({'node_modules/','.venv/','python-run.txt','web/node-run.txt'},project..'/.gitignore')
       end})
     assert(vim.uv.fs_copyfile(root..'/tests/e2e/mixed-project.test.lua',e.dir..'/mixed-project.test.lua'))
     vim.fn.writefile(vim.split(prepared,'\n',{plain=true}),e.dir..'/prepare.txt')

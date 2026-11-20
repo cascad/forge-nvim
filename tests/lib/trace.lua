@@ -170,7 +170,7 @@ local function catalog(root, idx, registered, selected)
     return completion[change]
   end
   local function add(req)
-    if not req.id:match('^IDE%-') or (selected and req.change ~= selected) then return end
+    if (idx.removed and idx.removed[req.id]) or not req.id:match('^IDE%-') or (selected and req.change ~= selected) then return end
     local ready = not req.change or complete(req.change)
     local row = { id = req.id, file = req.file, line = req.line, change = req.change,
       kind = req.kind, implementation_complete = ready, e2e = {}, paths = {}, runners = {} }
@@ -299,9 +299,11 @@ function M.collect(root, options)
     return checklists[file]
   end
   local requirements = {}
-  for _, id in ipairs(idx.order) do requirements[#requirements + 1] = idx.ids[id] end
+  for _, id in ipairs(idx.order) do
+    if not idx.removed[id] then requirements[#requirements + 1] = idx.ids[id] end
+  end
   for _, req in ipairs(idx.changed) do
-    if req.id:match('^IDE%-') then requirements[#requirements + 1] = req end
+    if req.id:match('^IDE%-') and not idx.removed[req.id] then requirements[#requirements + 1] = req end
   end
   for _, req in ipairs(requirements) do
     local id = req.id

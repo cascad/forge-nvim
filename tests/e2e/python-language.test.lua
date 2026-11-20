@@ -177,6 +177,35 @@ check('IDE-PY-1 Python pytest nearest/file результаты/output и venv',
   e:input('<F7> Tf');e:wait('pytest file pass/fail',function() local s=counts(e);return s.passed==1 and s.failed==1 and s.running==0 end,40000)
   T.eq(vim.fn.filereadable(e.python_project..'/neighbor-ran.txt'),1)
 end)
+check('IDE-TEST-5 All runs native Python and Go without SQL adapter',function(e)
+  local testdeps=vim.env.FORGE_E2E_TEST_DEPS or root..'/.tests/test-deps'
+  local gosdk=vim.env.FORGE_E2E_DAP_TOOLS or root..'/.tests/dap-tools'
+  local win=vim.fn.has('win32')==1;local suffix=win and '.exe' or ''
+  local go=gosdk..'/go/bin/go'..suffix
+  if vim.fn.executable(go)==0 then go=vim.fn.exepath('go') end
+  assert(go~='' and vim.fn.executable(go)==1,'Prepared native Go required for multi-adapter control')
+  e:lua([[local project,testdeps,go,sep,cache=...;vim.env.GOTOOLCHAIN='local';vim.env.GOWORK='off'
+    vim.env.GOCACHE=cache;vim.env.GOENV='off';vim.env.GOPROXY='off';vim.env.GOSUMDB='off';vim.env.GOMAXPROCS='2'
+    vim.env.PATH=vim.fs.dirname(go)..sep..testdeps..'/bin'..sep..vim.env.PATH
+    local parser=vim.fn.stdpath('data')..'/site/parser';vim.fn.mkdir(parser,'p')
+    assert(vim.uv.fs_copyfile(testdeps..'/site/parser/go.so',parser..'/go.so'))
+    vim.fn.writefile({'module fride_all_adapters','','go 1.22'},project..'/go.mod')
+    vim.fn.writefile({'package alladapters','import ("testing"; "os")',
+      'func TestAllAdapters(t *testing.T) { if err := os.WriteFile("go-all-ran.txt", []byte("GO_ALL"), 0600); err != nil { t.Fatal(err) } }'},project..'/extra_test.go')]],
+    {e.python_project,testdeps,go,win and ';' or ':',require('go_cache').path(root)})
+  e:lua([[vim.cmd.cd(vim.fn.fnameescape(...))]],{e.python_project})
+  e:input(':edit '..vim.fn.fnameescape(e.python_project..'/extra_test.go')..'<CR>')
+  e:wait('Go test buffer',function()return e:current_ft()=='go'end)
+  open(e,'tests/test_math.py');e:input(' TA')
+  e:wait('native multi-adapter All results',function()
+    local s=counts(e);return s.running==0 and s.passed==2 and s.failed==1
+  end,60000)
+  T.eq(vim.fn.readfile(e.python_project..'/go-all-ran.txt'),{'GO_ALL'})
+  T.eq(vim.fn.filereadable(e.python_project..'/neighbor-ran.txt'),1)
+  local ids=e:lua([[return require('neotest').state.adapter_ids()]])
+  assert(#ids>=2,vim.inspect(ids));T.eq(e:lua([[return package.loaded['forge.sql_tests']~=nil]]),false)
+  vim.fn.writefile({vim.json.encode({adapters=ids,counts=counts(e),sql_adapter=false})},e.dir..'/native-all-adapters.json')
+end)
 check('IDE-DAP-5 Python pytest debug nearest breakpoint/eval/continue',function(e)
   open(e,'tests/test_math.py');discover(e);e:input('gg/E2E_BREAKPOINT<CR><F9>')
   e:lua([[require('dap').set_log_level('TRACE')]])

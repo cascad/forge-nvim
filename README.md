@@ -16,6 +16,9 @@ Omarchy добавлена отдельным этапом: [установка 
 Новый installer предназначен для отдельного комплекта с командой `fride`;
 он не обновляет обычный `nvim`, не заменяет его конфиг и не меняет системный PATH.
 Из этого checkout: Windows — `.\fride.cmd .`, Linux/macOS — `./fride .`.
+Это запуск ранее подготовленной среды: Windows использует private Neovim из
+`.tools`, macOS/Linux — установленный `nvim` из PATH. Плагины и языковые tools
+в Git не входят; на чистой машине одной команды запуска недостаточно.
 Полное имя внутри установленного bin — `forge-nvim`, прежний `forge` сохранён.
 Предпросмотр нового установщика без установки: Windows —
 `powershell -NoProfile -ExecutionPolicy Bypass -File scripts/preview-installer.ps1`;
@@ -48,8 +51,7 @@ SQL/Bash installer ставит базовые языковые tools без о�
 [Поиск, native fzf и наблюдаемый Lua fallback](docs/SEARCH.md).
 [Фактическая матрица языков и следующие шаги](docs/LANGUAGE_MATRIX.md).
 [Bash: язык, запуск файла и Tests](docs/BASH_WORKFLOW.md).
-[SQL: язык, подключения, запросы и Results](docs/SQL_WORKFLOW.md).
-[SQLLogicTest: запуск SQL-тестов в Tests](docs/SQL_TESTS.md).
+[SQL: подсветка и upstream Sqruff](docs/SQL_WORKFLOW.md); дополнительные DB/test слои сняты (§300).
 [Единая история работ, причин и решений](docs/HISTORY.md), включая материалы
 из прежнего `F:/claude_code/vim`; новые исправления — в `nvim_forge/FIXLOG.md`.
 

@@ -36,7 +36,7 @@ function M.list()
         end
     end
     local kinds={['dap-repl']=true,['dap-terminal']=true,['dapui_console']=true,
-        ['neotest-output-panel']=true,['neotest-output']=true,toggleterm=true,OverseerOutput=true,['forge-sql']=true}
+        ['neotest-output-panel']=true,['neotest-output']=true,toggleterm=true,OverseerOutput=true}
     for _,buf in ipairs(vim.api.nvim_list_bufs()) do
         if vim.api.nvim_buf_is_loaded(buf) and (kinds[vim.bo[buf].filetype]
             or vim.bo[buf].buftype=='terminal') then

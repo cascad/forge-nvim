@@ -32,11 +32,6 @@ function M.mason()
     return require('forge.install_profile').filter(tools,4,vim.env.FORGE_PREPARE_COMPONENTS)
 end
 
-function M.native_versions()
-    local root = vim.fn.fnamemodify(debug.getinfo(1, 'S').source:sub(2), ':p:h:h:h')
-    return vim.json.decode(table.concat(vim.fn.readfile(root..'/scripts/native-tools.json'),'\n'))
-end
-
 function M.install_policy()
     local policy=vim.env.FRIDE_TOOLS_VERSIONS or 'preserve'
     assert(policy=='preserve' or policy=='baseline','Invalid FRIDE_TOOLS_VERSIONS: '..policy)

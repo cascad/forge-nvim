@@ -1,5 +1,11 @@
 # IDE-138 — установка одной командой
 
+Актуализация §300: SQL baseline — подсветка и upstream Sqruff LSP/formatter.
+Дополнительные SQL DB/query/Results/test слои, SDK и специальные delivery checks
+сняты по решению владельца; прежние SQL checkpoints ниже — исторические.
+[Текущий SQL](SQL_WORKFLOW.md).
+
+
 **2026-11-19 / Arch-Omarchy:** добавлены native pacman dependencies/Git и
 Node/Python fallback. Уже установленный Mise используется для явной подготовки
 SDK по проекту; config/defaults/обычные SDK не заменяются. Pacman ставит только
@@ -893,7 +899,7 @@ part. Managed SQL больше не требует Go/Rust/CC или stock Mason
 Пример упаковки уже проверенных native builds:
 
 ```sh
-python -B scripts/package-sql-tools.py --sqls .tests/sql-deps --runner .tests/sql-test-deps --output .tests/sql-tools.zip
+# Прежняя SQL packaging-команда снята (§300).
 ```
 
 POSIX: python3, .tar.gz output. Wrapper использует existing package-runtime,

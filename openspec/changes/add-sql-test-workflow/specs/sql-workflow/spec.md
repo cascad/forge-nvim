@@ -68,7 +68,7 @@ compiler/scratch. Windows temp/build/cache остаются на диске chec
 MUST NOT заставлять выбирать пустой adapter вместо настоящих tests.
 
 Платформы: все
-Проверка: tests/e2e/sql-tests.test.lua, tests/e2e/work-panels.test.lua
+Проверка: tests/e2e/work-panels.test.lua, tests/e2e/python-language.test.lua
 
 #### Scenario: пустой adapter того же корня
 - **GIVEN** SQL workspace имеет `.slt` tests и активный Bats adapter без tests
@@ -90,7 +90,7 @@ Neotest discovery SHALL использовать согласованные nati
 script; объединение деревьев не зацикливается из-за separators/aliases.
 
 Платформы: все
-Проверка: tests/e2e/sql-tests.test.lua, tests/e2e/python-language.test.lua,
+Проверка: tests/e2e/python-language.test.lua,
 tests/e2e/plugin-backports.test.lua
 
 #### Scenario: смена script после stop или ошибки

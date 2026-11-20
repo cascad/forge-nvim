@@ -11514,3 +11514,122 @@ aggregate10/ОС подтверждён report.json. Source-fidelity.json фик
 reverse reconstruction. Exact-ID/owner container остановлен docker stop
 --timeout5, bounded absence check PASS; cleanup.json и все regular records
 сохранены на F. Чужие ресурсы/Desktop/WSL/image не менялись.
+
+## 208. SQL baseline и снятие дополнительных слоёв — 2026-11-19/20
+
+Source4cf845b; remove-sql-extras, FIXLOG300. Владелец явно выбрал удалить
+DB/query/Results и SQL test layers, оставить Sqruff. OpenSpec apply ready,
+ADDED IDE-SQL-10, REMOVED IDE-SQL-1…9, MODIFIED IDE-BOOT-23/35. Main IDE
+baseline пока отсутствует; main WezTerm/macOS specs не переписываются.
+
+Host TEMP/TMP/TMPDIR/NVIM_LOG_FILE на F; Python -B/UTF8/no bytecode,
+Go/Rust jobs2. User SDK/БД/config/shared caches не удалялись. No goals/agents/push.
+SQL-only tracked files удалены git rm с предварительной проверкой каждого
+абсолютного leaf внутри F:/repo/forge-nvim;36 files, никаких recursive user deletes.
+
+Source RED до удаления runtime:
+```powershell
+$env:FORGE_E2E_DEPS='F:/repo/forge-nvim/.tests/neodev-review/editor-deps'
+$env:FORGE_SQL_BASIC_CASE='SQL extras are absent'
+& ./.tools/neovim/windows-x64/bin/nvim.exe -u NONE -i NONE -l tests/e2e/sql-basic.test.lua
+```
+.tests/sql-removal/windows-source-red.txt: SQLRun exists2, expected0.
+Target primitive selection filter позже удалён из environment; native cases
+проверяют actual Sqruff, команды, registry, отсутствие modules и загрузку Tests.
+
+Fresh preparation: prepare-stand.py скопировал только два SHA-checked existing
+archives в собственный SQL stand. Windows native Clang; Ubuntu /usr/bin/cc.
+```powershell
+python -B tests/e2e/prepare_sql.py --download --output .tests/sql-removal/sql-deps --nvim .tools/neovim/windows-x64/bin/nvim.exe --cc 'C:/Program Files/LLVM/bin/clang.EXE'
+python -B tests/e2e/prepare_sql.py --output .tests/sql-removal/sql-deps --nvim .tools/neovim/windows-x64/bin/nvim.exe
+```
+Upstream Sqruff0.44.0 + grammar851e9cb257ba,2 payload files. Actual fresh prepare/
+readiness PASS обеих ОС; no network fetch, no SQLS/SQLite/compiler SDK install.
+Readiness сохранил bytes SDK/manifest. Default shared old SQL cache не менялся.
+
+Один affected packet после реализации:
+```powershell
+python -B .tests/ubuntu/sql-removal-packet.py --output .tests/sql-removal/windows-packet
+```
+Linux equivalent через .tests/ubuntu/sql-removal-final.sh. В packet:
+sql-basic, managed-entrypoints, mixed-project, work-panels с FORGE_WORK_PANEL_CASE
+«настоящий Go output»; spec_index/trace self/project; native Python install-profile,
+install-setup/go-toolchain/tool-versions/debug-tools/release-inventory/runtime.
+Direct native invocations нужны для selected CASE: batch runner очищает filters.
+Позднее сохранён generic All Python+Go; direct Python suite с
+FORGE_PYTHON_CASE=IDE-TEST-5 дал1 PASS на ОС, без SQL adapter.
+
+Initial Windows7/8 editor PASS, Ubuntu6/8. Mixed fixture использовал общий
+Node tools root без Pyright: добавлен явный pyright tools.json path. Target1/1
+на каждой ОС. Ubuntu managed Pyright initial timeout: source4cf845b и target
+controls по1 PASS, cause не доказана. Остальные native checks не повторялись.
+Target итог — по9 editor PASS/ОС aggregate. Python79/ОС: Windows77 PASS/2 SKIP,
+Ubuntu76 PASS/3 SKIP. Пропуски — явные OS/неподготовленный старый Go/network cases,
+не скрытые ошибки. Exact reports — .tests/sql-removal/final-summary.json.
+
+Ошибки моей подготовки: SDK frontend по умолчанию был старый, Linux binary
+не был указан. Использованы existing current frontend Windows SHA c7d8b10e88e9
+(.tests/installer-ui/target/release/fride-setup.exe) и Linux9664c9b15659
+(копия ранее проверенного SDK stand в guest /tmp). .tools остаётся frozen.
+Setup fixture теперь применяет Go policy до Mason и копирует весь forge graph;
+inventory сравнивает plugin names с lock вместо67; runtime missing-selected
+assertion соответствует fail-before-payload-download behavior.
+
+Сначала native installer tests исполнялись на Windows bind mount; Ubuntu Go
+group достиг outer480s timeout. Перенос FORGE_INSTALL_STAND_ROOT и Mason cache
+в private /tmp гостя дал native Go/CodeLLDB controls PASS, затем остальные
+failed installer groups PASS. Таймауты/SDK/product code не менялись ради PASS.
+Низкоуровневую причину FS-разницы не утверждаем. По source/target/type-of-check
+границы и все первичные failures сохраняются, не объявляется full suite PASS.
+
+Own container472936f01abb: sql-removal-e2e, CPU2/RAM3GiB/network none/source RO,
+regular records на F. По остановке 2026-11-19 экспортированы426 regular records/
+1203217bytes, container удалён; cleanup.json. Desktop/WSL/image не менялись.
+После этого владелец потребовал немедленную остановку без cleanup; правило
+сохранено глобально. Возобновление — 2026-11-20 по явному «продолжай».
+
+Финальная сверка 2026-11-20 нашла незакрытый Ubuntu trace self-test:1 PASS/
+4 FAIL из-за permission denied в host fixture. Добавлен существующий
+FORGE_TEST_TMPDIR для self-test; Windows final5 PASS. Для короткого Ubuntu
+repeat запрошен engine; полный native E2E повторно не запускать.
+
+После «Включил Docker» выполнен только короткий исправленный self-test:
+```powershell
+docker run --rm --init --network none --cpus 2 --memory 3g --label fride.owner=sql-metadata-final --mount type=bind,source=F:/repo/forge-nvim,target=/workspace,readonly --mount type=bind,source=F:/repo/forge-nvim/.tests/ubuntu,target=/workspace/.tests --workdir /workspace --entrypoint bash forge-nvim-tests:ubuntu24.04-nvim0.12.2 -c 'export FORGE_TEST_TMPDIR=/tmp/fride-sql-meta NVIM_LOG_FILE=/tmp/fride-sql-meta/nvim.log TEMP=/tmp/fride-sql-meta TMP=/tmp/fride-sql-meta TMPDIR=/tmp/fride-sql-meta; mkdir -p /tmp/fride-sql-meta; nvim -u NONE -i NONE -l tests/lib/trace.test.lua > /workspace/.tests/sql-removal/trace-self-final.txt 2>&1'
+```
+Результат5 PASS/0 FAIL/0 SKIP; собственный label больше не найден. `--rm`
+удалил контейнер после завершения. Desktop/WSL не запускались и не менялись.
+
+Финальные дешёвые gates, без повторного editor/installer пакета:
+```powershell
+python -B .tests/sql-removal/final-summary.py
+python -B .tests/sql-removal/final-gates.py
+openspec validate remove-sql-extras --type change --strict --no-interactive
+& ./.tools/neovim/windows-x64/bin/nvim.exe -u NONE -i NONE -l tests/trace.test.lua --catalog-json .tests/sql-removal/catalog-final.json
+git -c core.safecrlf=false diff --check HEAD
+```
+Сводка требует exit0 всех финальных групп, включая trace-self. Guard:19 Lua
+loadfile,7 Python AST,1 JSON; unchanged66 pins/6 backports/4 .tools frozen files,
+защищённые SDK/installer/main specs, append-only prefixes против4cf845b,
+отсутствие снятых runtime imports; PASS. Guard первоначально ожидал3 frozen
+files вместо4: исправлено ожидание, все4 SHA сверены. Global trace9 PASS,
+каталог156 REGISTERED/0 PENDING/0 MISSING. Strict PASS; INFO об archive refusal
+для MODIFIED отсутствующего main IDE baseline сохранён, main specs прежние.
+Native Mac/Omarchy/full regression/public release не объявляются PASS.
+
+Проверка именно пользовательского checkout профиля перед передачей команд:
+```powershell
+.\fride.cmd --version
+.\fride.cmd -l nvim_forge/scripts/prepare-plugins.lua --check
+.\fride.cmd -l nvim_forge/scripts/prepare-plugins.lua
+.\fride.cmd -l nvim_forge/scripts/prepare-plugins.lua --check
+```
+Версия0.12.2. Первый check нашёл неготовый установленный neotest-rust backport;
+явное применение всех деклараций и check прошли. Исходники/pins не менялись.
+Headless smoke этого же профиля с `Neotree show`: дерево открылось, notify ERROR
+пуст, exit0. Raw `vim.v.errmsg` содержит E216 FileExplorer от silent operation;
+это не объявляется полным GUI acceptance. Результаты в checkout-startup.json/
+txt и checkout-backports*.txt, temp/logs на F. Native Mac не запускался.
+Владелец отложил Omarchy; приёмка Windows/Mac после установки или из готового
+checkout. Факт: POSIX launcher требует существующий nvim из PATH, missing
+plugins не устанавливаются при обычном старте; frontend artifact catalog пуст.

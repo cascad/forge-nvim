@@ -1,5 +1,11 @@
 # Матрица языков nvim_forge
 
+Актуализация §300: SQL baseline — подсветка и upstream Sqruff LSP/formatter.
+Дополнительные SQL DB/query/Results/test слои, SDK и специальные delivery checks
+сняты по решению владельца; прежние SQL checkpoints ниже — исторические.
+[Текущий SQL](SQL_WORKFLOW.md).
+
+
 Первичный срез 2026-11-02, runtime commit `657ab41`; обновление 2026-11-03
 добавляет Go language (§110), Node (§111) и Python (§112–113) E2E Windows.
 Обновление 2026-11-09 добавляет Rust (§114–115) и Bash (§116–117). «Настроено» означает запись
@@ -13,7 +19,7 @@
 | Python | pyright/ruff; общий project Python selector для Pyright/DAP | ruff_organize_imports → ruff_format | debugpy default/launch.json; neotest-python/pytest | 8 real UI E2E Windows/Ubuntu PASS: venv dependency, LSP, explicit path, format/save, default/project debug, pytest/debug, unexpected adapter exit. Mac не проверен |
 | JS / Node.js | ts_ls через Node/TSLS, только при доступных tools; auto typings download отключён | Project-local Prettier, LSP fallback | NodeRun/File → Tasks; js-debug default/launch.json; Neotest Jest | 8 real UI E2E Windows/Ubuntu PASS: язык/format/run/debug/nearest/file/debug test/missing tools. Mac не проверен |
 | Bash | bashls через native Node/JS, guarded tools | shfmt, .editorconfig, async save | BashRunFile → Tasks; Bats public adapter; F5/bashdb (Windows WSL2, native Linux/Mac4+) | 8 real UI E2E Windows/Ubuntu PASS: sourced LSP/rename/completion/diagnostics, format, args/cwd/output/status, nearest/file/оба Bats syntax/regex Unicode, missing tools; DAP3 + interactive/SDK4 + panels6/Bash8:21 selected Windows/Ubuntu PASS (§217); безопасный Stop требует BashDebugPrepare. Mac/physical/cold отдельно; explicit console warning IDE-127 |
-| SQL | Upstream sqruff lsp без DB config (§267); sqls только по явной DB-команде | Sqruff native diagnostics + Conform, project .sqruff и tools.json | Прежние SQLRun/Connect/Results/SQLLogicTest — дополнительные, до обзора | §267 Windows/Ubuntu: по2 basic E2E и по4 advanced controls PASS; прежнее покрытие DB/test SDK — история. Mac/внешние DB не проверены |
+| SQL | Upstream Sqruff LSP без DB config | Sqruff diagnostics + Conform, project .sqruff и tools.json | Системные CLI — встроенная консоль; custom SQL debug/query/Tests сняты §300 | Windows/Ubuntu по3 native basic cases PASS; старые DB/test SDK проверки — история. Mac/Omarchy не проверены |
 
 Go metadata/Delve (IDE-082): label читает режим/последнюю явно полученную
 версию; GoVersion/GoToolchain действуют явно, Delve выбирается при запуске.

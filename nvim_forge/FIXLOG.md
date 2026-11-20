@@ -15755,3 +15755,64 @@ test instrumentation тоже требует обновления при пер�
 Sqruff LSP/formatter/подсветка сохраняются, в этом переносе SQL runtime прежний.
 **Файлы.** plugins/dap.lua, forge/dap/*, native Go/Cargo observers,
 review/roadmap/HISTORY, split-dap-language-targets/verification, commands207.
+
+
+### 300. SQL: Sqruff вместо собственных DB и test слоёв
+
+**Спека: IDE-SQL-10 (ADDED); IDE-SQL-1…9 (REMOVED); IDE-BOOT-23/35 (MODIFIED).** IDE-080.
+**Было.** Дополнительные подключения/schema/query/Results, SQLS patch/SDK,
+Neotest SQL adapter и собственный Rust runner требовали отдельных runtime,
+упаковки, readiness и тяжёлых проверок. Владелец выбрал их удаление, сохранив
+подсветку и готовый Sqruff LSP/formatter.
+**Причина.** Этот объём выходил за выбранный базовый SQL scope и добавлял
+собственные слои вместо использования готового upstream языка/форматтера.
+**Сделано.** Удалены6 Lua modules и36 dedicated tracked files, включая
+SDK/patch/runner/packager/tests/fixtures. Сняты SQLRun/Connect/Stop/Results,
+SQL Results component, bindings и adapter. Sqruff использует общий
+tool_paths.executable, tools.json/PATH/Mason и прежнюю dialect policy.
+Prepare SQL теперь проверяет только upstream Sqruff и pinned grammar;
+новый manifest содержит2 payload files без SQLS/SQLite/Go/Rust runner.
+Снята специальная SQL readiness/inventory; явно переданные старые archives
+остаются обычными archives с общими integrity checks. Пользовательские
+БД/config/SDK и shared caches не удалялись. Остальные66 pins и6 backports прежние.
+**Тесты и история.** Source4cf845b: новый native absence case RED — SQLRun
+существует (2 вместо0). Target Windows/Ubuntu: по9 selected editor E2E PASS
+aggregate: SQL3, managed exports3, mixed6-language workflow1, Go output1,
+новый All Python+Go1. Generic IDE-TEST-5/6 и backend fixes сохранены;
+старые dedicated SQL All cases заменены настоящим Python+Go control.
+По79 native Python tests выполнено: Windows77 PASS/2 SKIP, Ubuntu76 PASS/3 SKIP.
+Fresh Sqruff/parser preparation и повтор readiness обеих ОС прошли из прежних
+SHA-checked upstream archives, payload/manifest не изменились при readiness.
+Это targeted aggregate с failed/affected повторами, не полный regression PASS.
+**Отказы стенда.** Первый пакет выбрал старый frontend; переключён на текущие
+готовые Windows/Linux binaries, .tools не обновлялся. Fixed67 заменён сверкой
+inventory names с lock. Setup fixture применяет policy до Mason и копирует
+полный forge module graph. Missing Terminal проверяется до payload downloads.
+Mixed fixture явно задаёт Pyright path. Отдельный Ubuntu Pyright timeout не
+повторился на source/target controls, причина не установлена. На bind mount
+installer group достиг480s; тот же native guest stand и CodeLLDB cache в /tmp
+прошли. Низкоуровневая причина разницы FS не установлена, продукт не менялся.
+Windows trace self-test5 PASS; Ubuntu self-test первоначально1 PASS/4 FAIL
+из-за прав на temporary fixture, теперь использует FORGE_TEST_TMPDIR.
+Его короткий Ubuntu repeat и итоговый metadata gate отражаются в verification.
+**Вывод.** Базовый SQL остался upstream; дополнительные собственные слои сняты.
+REMOVED contracts больше не требуют E2E удалённых функций, другие пропуски
+продолжают выявляться self-test. История старых ID и исправлений сохранена.
+Native Mac/Omarchy/physical keys и общий выпуск не объявлены проверенными.
+**Файлы.** SQL runtime/UI/setup/inventory/container/preparation, retained SQL
+baseline и generic All tests, trace metadata, guides/roadmap/PROBLEMS/HISTORY,
+remove-sql-extras/verification и commands208. Runtime E2E — 2026-11-19,
+документация/итоговые metadata checks — 2026-11-20.
+
+**Завершение §300 — 2026-11-20.** После включения Docker владельцем короткий
+Ubuntu trace self-test дал5 PASS/0 FAIL/0 SKIP; временный metadata container
+auto-removed. Итоговые exit codes всех групп проверены сводкой, включая этот
+повтор. Финальные gates:19 Lua/7 Python/1 JSON syntax, unchanged66 pins,
+6 backports и4 frozen .tools files, защищённые SDK/installer/main specs,
+append-only prefixes журналов и diff check. Project trace9 PASS; каталог156
+REGISTERED/0 PENDING/0 MISSING (регистрация, не156 runtime PASS).
+OpenSpec strict PASS с INFO: archive откажет MODIFIED без принятого main IDE
+baseline; main specs не менялись, archive не выполнялся. Все4 tasks выполнены.
+Текущая самостоятельная очередь завершена. Конкретный остаток до выпуска
+выделен в начале IDE_ROADMAP: рабочая приёмка, native Mac/Omarchy, release
+artifacts/inventory/bootstrap и один финальный regression кандидата.

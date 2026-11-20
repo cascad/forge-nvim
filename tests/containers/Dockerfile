@@ -84,15 +84,10 @@ COPY tests/e2e/prepare_bash.py /opt/forge/tests/e2e/
 COPY tests/e2e/bash-tools/ /opt/forge/tests/e2e/bash-tools/
 RUN python3 /opt/forge/tests/e2e/prepare_bash.py --download --output /opt/forge/bash-deps --node-deps /opt/forge/node-deps
 ENV FORGE_E2E_BASH_DEPS=/opt/forge/bash-deps
-COPY tests/e2e/prepare_sql.py tests/e2e/sql_sdk.py /opt/forge/tests/e2e/
+COPY tests/e2e/prepare_sql.py /opt/forge/tests/e2e/
 COPY tests/e2e/sql-tools/ /opt/forge/tests/e2e/sql-tools/
-COPY scripts/sdk/sqls.json scripts/sdk/sqls-query-comments.patch /opt/forge/scripts/sdk/
 RUN python3 /opt/forge/tests/e2e/prepare_sql.py --download --output /opt/forge/sql-deps
 ENV FORGE_E2E_SQL_DEPS=/opt/forge/sql-deps
-COPY scripts/sdk/sql-test/ /opt/forge/scripts/sdk/sql-test/
-COPY tests/e2e/prepare_sql_test.py /opt/forge/tests/e2e/
-RUN python3 /opt/forge/tests/e2e/prepare_sql_test.py --download --output /opt/forge/sql-test-deps
-ENV FORGE_E2E_SQL_TEST_DEPS=/opt/forge/sql-test-deps
 RUN useradd --create-home --uid 10001 forge
 ENV HOME=/home/forge
 USER forge

@@ -32,7 +32,7 @@ class Versions(ui.UI):
                 info=zipfile.ZipInfo(NAME+SUFFIX);info.external_attr=(0o100755<<16)
                 archive.writestr(info,binary.read_bytes())
             cls.routes['/versions/fride/version-fixture/'+version+'/fixture.zip']=output.getvalue()
-        for name in ['setup_readiness','native_tools']:
+        for name in ['setup_readiness']:
             shutil.copyfile(ROOT/f'nvim_forge/lua/forge/{name}.lua',cls.source/f'nvim_forge/lua/forge/{name}.lua')
         cls.stage=cls.source/'nvim_forge/scripts/setup-tools-production.lua'
         shutil.copyfile(ROOT/'nvim_forge/scripts/setup-stage.lua',cls.stage)

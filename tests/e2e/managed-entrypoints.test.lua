@@ -18,6 +18,7 @@ local function copy(source,target)
     if not win then assert(vim.uv.fs_chmod(target,493)) end
 end
 local function check(name,fn)
+    if vim.env.FORGE_EXPORT_CASE and not name:find(vim.env.FORGE_EXPORT_CASE,1,true) then return end
     T.check('IDE-BOOT-48 '..name,function()
         local e
         local ok,err=xpcall(function()
@@ -54,6 +55,7 @@ local function check(name,fn)
                 json(runtime..'/native-entrypoints.json',{mason=mason,binaries=binaries})
             end})
             e:wait('editor ready',function() return e:lua('return _G.forge_e2e_observed') end,12000)
+            e:lua([[vim.lsp.log.set_level('debug')]])
             fn(e)
             T.eq(e:lua('return vim.g.forge_e2e_installs'),0)
         end,debug.traceback)

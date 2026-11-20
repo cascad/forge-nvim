@@ -90,7 +90,8 @@ class ReleaseInventory(unittest.TestCase):
         result,output=self.run_cli('complete',extra=['--strict']);self.assertEqual(result.returncode,0,result.stdout+result.stderr)
         data=json.loads((output/'inventory.json').read_text());self.assertTrue(data['metadata_complete']);self.assertFalse(data['full_release_ready'])
         self.assertEqual(data['components'],['core']);self.assertEqual(data['native_sdks'],[])
-        self.assertEqual(len([i for i in data['items'] if i['kind']=='plugin']),67)
+        expected_plugins=json.loads((ROOT/'nvim_forge/lazy-lock.json').read_text(encoding='utf-8'))
+        self.assertEqual({i['name'] for i in data['items'] if i['kind']=='plugin'},set(expected_plugins))
         for item in data['items']:
             for doc in item['licenses']:self.assertEqual(digest((output/doc['path']).read_bytes()),doc['sha256'])
         notices=(output/'THIRD_PARTY_NOTICES.txt').read_bytes();self.assertIn(b'Controlled document fixture',notices)

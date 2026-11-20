@@ -1,8 +1,0 @@
-[sqruff]
-dialect = sqlite
-
-[sqruff:indentation]
-tab_space_size = 2
-
-[sqruff:rules:capitalisation.keywords]
-capitalisation_policy = upper

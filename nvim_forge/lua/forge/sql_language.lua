@@ -1,12 +1,8 @@
 -- spec: IDE-BOOT-34. Upstream Sqruff LSP/formatter, no database prerequisites.
 local M = {}
 function M.tool(name, root)
-    local paths = require('forge.tool_paths')
-    local path, explicit = paths.override(name, { root = root,
+    return require('forge.tool_paths').executable(name, { root = root,
         global = 'forge_' .. name .. '_executable', env = 'FORGE_' .. name:upper() .. '_EXECUTABLE' })
-    if explicit then return path end
-    local native = require('forge.native_tools')
-    return paths.selected(name, native.executable(name), native.owned(name) and 'fride runtime' or 'PATH/Mason', root)
 end
 function M.dialect_args(path)
     local explicit = vim.g.forge_sql_dialect or vim.env.FORGE_SQL_DIALECT

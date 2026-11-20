@@ -22,7 +22,7 @@ class GoToolchain(ui.UI):
         assert cls.go.is_file(),'Prepared native Go required; never installed by this stand'
         deps=Path(os.environ.get('FORGE_E2E_DEPS',str(ROOT/'.tests/editor-deps')))
         cls.mason=deps/'lazy/mason.nvim';assert (cls.mason/'lua/mason-core/process.lua').is_file()
-        for name in ['setup_readiness','native_tools']:
+        for name in ['setup_readiness']:
             shutil.copyfile(ROOT/f'nvim_forge/lua/forge/{name}.lua',cls.source/f'nvim_forge/lua/forge/{name}.lua')
         cls.stage=cls.source/'nvim_forge/scripts/setup-tools-production.lua'
         shutil.copyfile(ROOT/'nvim_forge/scripts/setup-stage.lua',cls.stage)

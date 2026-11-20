@@ -1,5 +1,11 @@
 # Что ещё требуется для полной поставки fride
 
+Актуализация §300: SQL baseline — подсветка и upstream Sqruff LSP/formatter.
+Дополнительные SQL DB/query/Results/test слои, SDK и специальные delivery checks
+сняты по решению владельца; прежние SQL checkpoints ниже — исторические.
+[Текущий SQL](SQL_WORKFLOW.md).
+
+
 Уточнение2026-11-17 (§267): базовый SQL/Bash теперь ограничен подсветкой и
 готовыми LSP/форматтерами. SQL runtime уже использует штатный Sqruff LSP.
 §268: текущий inventory требует только Core/выбранный Terminal archives;
@@ -63,7 +69,7 @@
    пользовательского Python SDK. Mac и полный Default acceptance остаются.
 4. §252: [bash_debug.lua](../nvim_forge/lua/forge/bash_debug.lua) имеет строгую
    owned подготовку в tools stage; SQL native part содержит принятые
-   [sqls](../scripts/sdk/sqls.json) и [forge-sqltest](../scripts/sdk/sql-test/README.md).
+   [sqls](SQL_WORKFLOW.md) и [forge-sqltest](SQL_TESTS.md).
    Runtime versions/выбор собственного бинарника проверяются; source builds
    принадлежат publisher. WSL2 на Windows остаётся runtime prerequisite.
 5. §253: managed setup проверяет готовый native site из Core, без CLI/compiler.

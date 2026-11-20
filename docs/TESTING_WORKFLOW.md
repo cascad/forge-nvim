@@ -1,5 +1,13 @@
 # Проверки законченного блока
 
+Для прямых installer SDK-проверок указывай актуальный prepared frontend через
+`FORGE_INSTALL_UI_BINARY`: бинарник из старого SDK может не знать нынешние CLI
+параметры. На Linux в Docker с Windows bind mount приватные installer-стенды
+размещай через `FORGE_INSTALL_STAND_ROOT` в `/tmp` гостя; большие Mason test
+caches также должны жить на native FS гостя. Короткие отчёты сохраняются на F.
+Это prerequisites стенда, не повод менять SDK пользователя или увеличивать
+таймауты. [Фактический разбор §300](../openspec/changes/remove-sql-extras/verification.md).
+
 §290: отдельный explicit network diagnostic чистой Ubuntu —
 `python -B tests/diagnostics/check-cold-install.py --artifacts <native archives> --publisher-container <owned publisher id>`.
 Не входит в каждый quick/E2E. Проверяет clean baseline без SDK/cache, реальные

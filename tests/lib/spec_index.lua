@@ -200,6 +200,7 @@ function M.build(root)
     areas = {},      -- множество областей (WT, MAC)
     added = {},      -- ID → { id, title, change, file } — ADDED открытых changes
     changed = {},    -- полные ADDED/MODIFIED contracts активных changes
+    removed = {},    -- ID → declared retirement; old IDs remain known to history
     changes = {},    -- существующие активные change names, включая tooling
     archived = {},   -- ID → { id, change, file }
     path_refs = {},  -- 'tests/…' → { ID… } из строк `Проверка:`
@@ -239,6 +240,9 @@ function M.build(root)
           local requirements = {}
           for _, req in ipairs(M.parse_spec(text)) do requirements[req.id] = req end
           local delta = M.parse_delta(text)
+          for _, item in ipairs(delta.removed) do
+            idx.removed[item.id] = { id = item.id, change = change, file = file }
+          end
           for _, kind in ipairs({ 'added', 'modified' }) do
             for _, item in ipairs(delta[kind]) do
               local req = requirements[item.id]

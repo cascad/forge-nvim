@@ -1,5 +1,11 @@
 # E2E и регресс в целевых средах
 
+SQL §300: актуален только `sql-basic.test.lua` и
+[Sqruff/parser preparation](sql-tools/README.md). Прежние SQL language/query/
+SDK/SQLLogicTest sections ниже исторические; их scripts/tests сняты по решению
+владельца. Общие Tests/SDK других языков сохраняются.
+
+
 2026-11-18: [проверки цельного блока](../../docs/TESTING_WORKFLOW.md). Во время
 реализации — быстрые проверки; E2E одним пакетом после завершения блока,
 повторы только failed/affected. Отдельный `regression` включает native installer

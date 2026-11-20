@@ -148,7 +148,8 @@ assert(version.code==0 and tool.code==0)
         base,env,target=self.prepare('runtime-missing');self.catalog(omit=('terminal',))
         result=self.install_auto(base,env,target);self.assert_failed(result,base,target,'terminal')
         self.assertFalse(target.exists())
-        self.assertEqual([p for p in json.loads((base/'http.json').read_text()) if p.startswith('/runtime-')],['/runtime-core'])
+        self.assertEqual([p for p in json.loads((base/'http.json').read_text()) if p.startswith('/runtime-')],[],
+                         'Missing mandatory artifacts must fail before payload downloads')
 
     def test_runtime_04_duplicate_catalog(self):
         base,env,target=self.prepare('runtime-duplicate')

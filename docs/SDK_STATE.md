@@ -1,5 +1,11 @@
 # Граница IDE и языковых SDK
 
+Актуализация §300: SQL baseline — подсветка и upstream Sqruff LSP/formatter.
+Дополнительные SQL DB/query/Results/test слои, SDK и специальные delivery checks
+сняты по решению владельца; прежние SQL checkpoints ниже — исторические.
+[Текущий SQL](SQL_WORKFLOW.md).
+
+
 §267: базовый SQL runtime использует готовый Sqruff LSP/formatter без DB SDK;
 прежние native SQL parts ниже относятся к дополнительным операциям. §268 убрал
 их обязательность в installer. Явно переданный bundle проверяется при наличии

@@ -21,7 +21,7 @@ macOS и Ubuntu. Описаны Go, Rust, Python, JavaScript/Node.js, Bash и SQ
 | Языковой сервер LSP | gopls, rust-analyzer, Pyright, typescript-language-server | Навигация, completion, диагностика, переименование |
 | Отладчик и адаптер DAP | Delve, CodeLLDB, debugpy, js-debug | Breakpoints, переменные, stack trace, управление выполнением |
 | Форматтеры и линтеры | gofumpt, rustfmt, Ruff, Prettier, ShellCheck, sqruff | Форматирование и дополнительные проверки |
-| Средства тестирования | go test, cargo test, pytest, npm scripts, SQLLogicTest runner | Запуск и разбор результатов тестов |
+| Средства тестирования | go test, cargo test, pytest, npm scripts | Запуск и разбор результатов тестов |
 
 Версия SDK проекта и версия компилятора, которым собран инструмент IDE,
 могут различаться. Готовый инструмент также может требовать установленную
@@ -372,46 +372,12 @@ Node ради LSP должна быть видимой зависимостью.
 
 ## SQL
 
-### СУБД и поддержка редактора
-
-У SQL нет общего SDK, который нужно установить для всех проектов.
-Выбираются диалект, подключение к конкретной СУБД и, при необходимости,
-локальный клиент или драйвер. Удалённая БД не требует автоматически ставить
-такую же СУБД локально. Для форматирования и части статических проверок
-соединение с БД вообще не обязательно.
-
-SQLTools в VS Code использует отдельные driver extensions для разных СУБД.
-Это пример специализированной интеграции, а не универсального Go/Rust
-тулчейна для SQL. [SQLTools](https://github.com/mtxr/vscode-sqltools).
-
-### Текущие инструменты fride
-
-В сборке используются sqruff, sqls и собственный forge-sqltest. Sqruff —
-готовый SQL formatter/linter; Mason имеет платформенные assets, поэтому
-Rust SDK пользователю для его установки не требуется.
-[Sqruff](https://github.com/quarylabs/sqruff),
-[Mason package](https://github.com/mason-org/mason-registry/blob/main/packages/sqruff/package.yaml).
-
-Upstream sqls можно собрать через Go, но наш accepted вариант содержит
-конкретный patch и имеет версию `0.2.48+forge.1`. Вместе с forge-sqltest он
-уже выделен в native SQL part. Это существующий отдельный случай поставки;
-обычный stock sqls нельзя объявлять его эквивалентом без проверки patch.
-[Upstream sqls](https://github.com/sqls-server/sqls),
-[наш patch/policy](../scripts/sdk/sqls.json),
-[SQL runner](../scripts/sdk/sql-test/README.md).
-
-Наличие Go/Rust в исходниках этих tools не означает необходимость ставить
-обоих компиляторов пользователю SQL. Они нужны там, где выполняется сборка.
-Runtime-зависимости готовых binaries, диалект и доступ к БД проверяются отдельно.
-
-Пример явной установки IDE tools через Mason:
-
-```vim
-:MasonInstall sqruff
-```
-
-Sqls с нашим patch и forge-sqltest доставляются существующим native SQL part;
-их установка описана в [плане](INSTALLATION_PLAN.md).
+У SQL нет общего compiler SDK. После решения владельца (§300) fride оставляет
+подсветку и готовый Sqruff LSP/formatter через Mason либо выбранный путь.
+БД, драйверы, SQLS и собственный test runner не являются частью комплекта.
+Установленные пользователем SQL CLI доступны в обычной встроенной консоли.
+Старые sqls/SQLLogicTest source patches, сборка и packaging удалены.
+[Рабочий SQL baseline](SQL_WORKFLOW.md).
 
 ## Что действительно приходится сопровождать
 

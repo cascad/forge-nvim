@@ -1,8 +1,8 @@
 # nvim_forge — рабочий план мини-IDE
 
-Обновлено: 2026-11-19. Основная сборка: **nvim_forge**.
+Обновлено: 2026-11-20. Основная сборка: **nvim_forge**.
 
-**Текущая самостоятельная очередь — 2026-11-19:**
+**Самостоятельная очередь завершена — 2026-11-20:**
 
 1. IDE-080: актуальный [обзор фич/слоёв](FEATURE_REVIEW.md) завершён на source8d721c3;
    сохранены основные workflows и решения по breadcrumbs/Satellite/Comment.
@@ -12,10 +12,50 @@
    Neovim API и luarc/jsonc сохранены, Windows/Ubuntu по3 PASS; осталось66 pins.
    Языковые DAP helpers разделены §299: Go/Rust/Python и3 общих context функции,
    main1629→1146 строк, тела функций прежние; Windows/Ubuntu по10 selected E2E PASS.
-4. Решение владельца: удалить SQL extras и собственные слои подключения/
-   queries/Results/SQL assertions, сохранить Sqruff LSP/formatter и подсветку.
-   Реализация — отдельным change после DAP; пока runtime прежний.
-   Native Omarchy/macOS/physical gates остаются параллельно.
+4. SQL extras удалены по решению владельца (§300): connections/query/Results,
+   SQLS SDK/patch и собственный test runner. Сохранены Sqruff LSP/formatter,
+   подсветка и общие tools paths. По9 selected editor E2E Windows/Ubuntu
+   aggregate; общий All проверен на native Python+Go без SQL adapter.
+   Metadata self-tests и project trace прошли; [итог проверок](../openspec/changes/remove-sql-extras/verification.md).
+
+После этой очереди остаются установка и натурная приёмка Windows/macOS,
+физические клавиши/clipboard, полный рабочий цикл на проекте владельца и публикация
+проверенных однострочных команд. Прежние SQL extras/references пункты ниже
+сняты решением владельца; повторно разрабатывать их не нужно.
+
+### До первой боевой сборки — конкретный остаток
+
+Порядок уточнён владельцем2026-11-20: Omarchy позже. Приёмку проводит на
+Windows и Mac; сначала нужен установщик либо полноценный запуск из checkout.
+Текущая Windows: private Neovim0.12.2/backports проверены, профиль и дерево
+загрузились. Запуск из корня: `.\fride.cmd <проект>`. Mac launcher:
+`bash ./fride <проект>`; использует существующий `nvim` из PATH. Это запуск
+подготовленной среды, не установка зависимостей на чистой машине. Плагины/SDK
+не хранятся в Git; frontend artifact catalog ещё не опубликован.
+
+- [ ] Дать воспроизводимую установку приёмочного комплекта Windows/macOS:
+  актуальные native Core/Terminal/frontend artifacts и проверенный bootstrap.
+  Наличие готовых стендов Windows/Ubuntu не закрывает установку на чистом Mac.
+- [ ] Принять комплект на рабочем проекте Windows:
+  восстановление tabs/tree/layout, файловые операции, поиск/navigation,
+  run/debug/output/locals/stack/restart, Tests, diff/stage/commit/push,
+  встроенная консоль и клавиатурное управление. Подтвердить реальный GUI/clipboard.
+- [ ] Native macOS: чистая установка/повтор, языки и SDK paths; отдельно закрыть
+  исходные zsh/Go startup delay и Cmd+C. Контейнерные contract tests Mac не заменяют.
+- [ ] Подготовить release candidate из итогового кода: актуальные native
+  Core/Terminal/frontend artifacts, полный Default inventory/notices/checksums,
+  release catalog и проверка установки/повтора/upgrade через bootstrap.
+- [ ] На этом кандидате один финальный согласованный regression; исправить
+  найденные дефекты, повторяя affected cases. Затем опубликовать artifacts и
+  проверенные однострочные команды Windows/Linux/macOS.
+
+**Позже:** реальная Omarchy — [O1–O8](../tests/manual/omarchy.md), включая
+Wayland/GPU, клавиши/clipboard, языки, Git и restore. Arch CLI уже проверен;
+Omarchy не блокирует первую приёмку Windows/macOS.
+
+Дополнительный Bash debug через WSL2 на Windows ещё требует native проверки;
+он optional и не входит в базовый Bash. Распространение рамок остаётся отдельным
+решением после оценки pilot. Новые фичи в этот выпускной список не добавляются.
 
 **История установки и SDK:** владелец выбрал штатные менеджеры экосистем и готовые
 upstream-пакеты с настраиваемыми путями; референс — VS Code.
@@ -628,8 +668,9 @@ format и навигация. Project env/venv/workspace учитываются 
 Запускаю текущий файл/пакет/target или выбираю конкретную конфигурацию отладки.
 Явная конфигурация использует свои program/cwd/args/env; без неё доступен
 разумный default. При неоднозначности выбираю цель, отмена не запускает первую
-попавшуюся программу. Для SQL run означает запрос, DAP применяется к языкам
-с готовым debugger. Отсутствующий tool явно отражается в сообщении/IDE Logs
+попавшуюся программу. SQL поддерживает редактирование/диагностику/форматирование;
+команды системного SQL CLI можно отправить в обычную встроенную консоль.
+DAP применяется к языкам с готовым debugger. Отсутствующий tool отражается в IDE Logs
 с действием подготовки; обычное открытие проекта ничего не устанавливает.
 
 ### WF-06–07. Отладка, исправление и повторный запуск

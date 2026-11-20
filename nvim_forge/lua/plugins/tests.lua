@@ -79,7 +79,6 @@ return {
             consumers.forge_runner = require('forge.test_runner')
             table.insert(adapters, require('forge.node').jest())
             table.insert(adapters, require('forge.bash').tests())
-            table.insert(adapters, require('forge.sql_tests'))
             local ok_overseer, overseer_consumer = pcall(require, "neotest.consumers.overseer")
             if ok_overseer then
                 consumers.overseer = overseer_consumer

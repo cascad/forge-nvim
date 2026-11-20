@@ -12,7 +12,9 @@ local trace = require('trace')
 -- tests/lib/trace.lua). Всё пишется только в .tests/trace-fixture/; копия
 -- пересоздаётся при каждом прогоне.
 
-local FIX = B.root .. '/.tests/trace-fixture'
+local fixture_parent = vim.env.FORGE_TEST_TMPDIR
+if not fixture_parent or fixture_parent == '' then fixture_parent = B.root .. '/.tests' end
+local FIX = fixture_parent .. '/trace-fixture'
 local COPY = { 'openspec', 'tests', trace.CONFIG, trace.FIXLOG }
 
 local function read(path)
@@ -177,6 +179,31 @@ T.check('SELF: tests/trace.test.lua <копия> — FAIL на каждое на
         m.path and (' и ' .. m.path) or '', table.concat(fails, '\n')))
     end
   end
+end)
+
+T.check('SELF: REMOVED retires only its contract and preserves historical IDs',function()
+  local root=FIX..'/retired-contract-control'
+  write(root..'/tests/registry.lua','return {}')
+  write(root..'/wezterm.lua','')
+  write(root..'/nvim_forge/FIXLOG.md','')
+  write(root..'/openspec/changes/old/tasks.md','- [x] 1.1 done\n')
+  write(root..'/openspec/changes/old/specs/old/spec.md',table.concat({
+    '## ADDED Requirements','### Requirement: IDE-SQL-901 Retired fixture',
+    'Tool SHALL work.','Проверка: tests/retired.test.lua',
+    '### Requirement: IDE-SQL-902 Still required fixture',
+    'Tool SHALL work.','Проверка: tests/required.test.lua'},'\n'))
+  local before=trace.collect(root)
+  T.eq(before.catalog.summary.missing,2)
+  T.eq(#before.by_category.proverka_paths,2)
+  write(root..'/openspec/changes/remove/specs/old/spec.md',
+    '## REMOVED Requirements\n### Requirement: IDE-SQL-901 Retired fixture\n**Reason:** explicit removal\n')
+  local after=trace.collect(root)
+  T.eq(after.catalog.summary.missing,1)
+  T.eq(#after.by_category.proverka_paths,1)
+  T.eq(after.by_category.proverka_paths[1].id,'IDE-SQL-902')
+  local idx=require('spec_index').build(root)
+  T.eq(idx.removed['IDE-SQL-901'].change,'remove')
+  T.eq(idx:known('IDE-SQL-901','fixlog'),true)
 end)
 
 T.finish()

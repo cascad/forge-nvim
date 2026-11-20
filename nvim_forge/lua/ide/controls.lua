@@ -4,7 +4,7 @@ local zoom, help
 local active_win
 local pending_panel
 local work = { ['neotest-summary']='tests', ['neotest-output-panel']='tests_output',
-    ['grug-far']='search', OverseerList='tasks_output', ['forge-sql']='sql.results',
+    ['grug-far']='search', OverseerList='tasks_output',
     toggleterm='terminal', trouble='trouble', ['forge-logs']='logs' }
 local backend_maps = {}
 local search_actions = { Goto=true, Open=true, ['Open Next']=true, ['Open Prev']=true, Preview=true }
@@ -14,7 +14,7 @@ local titles = {
     dapui_console = 'Debug Console', ['dap-terminal'] = 'Debug Terminal',
     aerial = 'Outline', ['neo-tree'] = 'Files', NeogitStatus = 'Git',
     ['neotest-summary']='Tests', ['neotest-output-panel']='Test Output', ['forge-logs']='IDE Logs',
-    ['grug-far']='Search', OverseerList='Tasks', ['forge-sql']='SQL Results',
+    ['grug-far']='Search', OverseerList='Tasks',
     toggleterm='Terminal', trouble='Problems / Trouble',
 }
 local tree_components = { filesystem = 'explorer', buffers = 'buffers', git_status = 'git_status' }
@@ -160,7 +160,6 @@ function M.tests() show_work('tests') end
 function M.test_output() show_work('tests_output') end
 function M.search() show_work('search') end
 function M.tasks() show_work('tasks_output') end
-function M.sql_results() show_work('sql.results') end
 function M.terminal() show_work('terminal') end
 function M.problems() show_work('trouble') end
 function M.logs() show_work('logs') end
@@ -338,9 +337,6 @@ function M.help()
     elseif ft(source) == 'grug-far' then
         lines[#lines + 1] = 'Search: i — ввод, Tab — поле, Enter — найденное место.'
         lines[#lines + 1] = 'q скрывает с сохранением запроса; g? — search/replace.'
-    elseif ft(source) == 'forge-sql' then
-        lines[#lines + 1] = 'SQL: Space j o — output, j q — запрос из кода, j x — stop session.'
-        lines[#lines + 1] = 'q скрывает результаты; повторное открытие не выполняет SQL.'
     elseif ft(source) == 'toggleterm' then
         lines[#lines + 1] = 'Terminal: i — ввод; Ctrl-\\ Ctrl-n / Esc Esc — normal.'
         lines[#lines + 1] = 'q скрывает окно с живым job; Space w T возвращает терминал.'

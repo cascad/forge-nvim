@@ -39,4 +39,4 @@ if receipt_paths then
 end
 vim.fn.writefile({ vim.json.encode({ schema = 1, platform = osname .. '-' .. assert(arch),
     nvim_version = tostring(vim.version()), components = components, grammars = grammars,
-    pins = tools.versions(), native_tools = tools.native_versions(), receipts = receipts }) }, output)
+    pins = tools.versions(), receipts = receipts }) }, output)

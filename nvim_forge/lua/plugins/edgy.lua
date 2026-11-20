@@ -201,7 +201,6 @@ return {
             -- ===========================================================
             bottom = {
                 { title = 'IDE Logs', ft = 'forge-logs', size = { height = 0.30 }, pinned = false },
-                { title = 'SQL Results', ft = 'forge-sql', size = { height = 0.30 }, pinned = false },
                 {
                     title = "Debug Console",
                     ft = "dapui_console",

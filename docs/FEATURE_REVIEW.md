@@ -35,7 +35,7 @@ neodev удалён после controls §298; DAP language helpers раздел
 | Тема, breadcrumbs, overview ruler | Catppuccin/lualine/barbecue/navic/Satellite | Сохранить. Цельные рамки — существующий opt-in pilot до физической оценки |
 | Установка/SDK/tools | Private Neovim + upstream managers, Mason, native OS package manager | Native frontend, verified payloads, deferred SDK и user/project paths; не изолировать компиляторы |
 | Дополнительный Bash debug/Bats | Upstream bash-debug, WSL2 на Windows, native Bats | Уже сделанные optional возможности; не расширять, не удалять вместе с обязательным Bash |
-| Дополнительный SQL | sqls, собственная Results panel/adapter и SQL test executable | Отдельный кандидат удаления; нужны решение владельца и отдельный change |
+| SQL | Upstream Sqruff LSP/formatter и Treesitter | Дополнительные DB/query/Results/test слои удалены по решению владельца (§300) |
 
 ## Где сосредоточен собственный код
 
@@ -73,14 +73,12 @@ Backports: Gitsigns2, Neogit5, Neotest4, DAP1, neotest-rust2, Neo-tree2 files.
 | Выполнено | IDE-146: выполнение выделения в active integrated terminal | §297: visible/hidden/missing/multiple, точный текст, Unicode, повтор и тот же job; по7 native E2E Windows/Ubuntu |
 | Выполнено | Legacy neodev удалён после native LuaLS control (§298) | Загруженный baseline и target без plugin: diagnostics/edit/save, Neovim API completion/hover, explicit luarc/jsonc; Windows/Ubuntu по3 PASS,66 остальных pins прежние |
 | Выполнено | Языковые DAP helpers разделены (§299) | Main1629→1146 строк; Go/Rust/Python +3 прежние context функции, неизменные bodies, по10 selected native E2E Windows/Ubuntu aggregate |
-| Следующий | По решению владельца удалить дополнительные SQL-функции | Убрать DB-aware workflow/schema/query Results и SQL assertions, sqls protocol/SDK patch и SQL runner; сохранить Sqruff baseline. Runtime ещё прежний, отдельный change после DAP |
+| Выполнено | Дополнительные SQL-функции удалены (§300) | Sqruff baseline сохранён,6 Lua modules и SQL SDK/runner сняты; по9 selected editor E2E Windows/Ubuntu aggregate, общий All — native Python+Go; [verification](../openspec/changes/remove-sql-extras/verification.md) |
 | Позже | Распространение рамок, platform UX | Только после физической оценки pilot/clipboard/keys; no shadow-panel rewrite |
 
-SQL extras сейчас включают forge/sql.lua239, sql_protocol22, sql_diagnostics55,
-sql_tests95, ide/sql60 строк; отдельный Rust runner185 строк, packager69 и SDK
-policy/patch. Test preparation/fixtures — дополнительная стоимость. Это не
-базовый Sqruff module41 строк. Владелец выбрал удаление SQL extras после DAP;
-реализация отдельным change ещё впереди. Bash extras
+§300 удалил6 дополнительных Lua modules, Rust SQL runner, SQLS policy/patch,
+packager и dedicated tests/fixtures. Sqruff использует общий resolver; исходные
+LOC выше остаются снимком8d721c3, не текущим количеством строк. Bash extras
 оцениваются отдельно: пользователь уже выбирал WSL2 backend, а Bash run/tests
 также используют этот OS boundary.
 
@@ -109,5 +107,5 @@ Omarchy clean CLI прошёл; Wayland/GPU/clipboard/hotkeys/рабочий mix
 
 Полная пересборка редактора или смена backend не обоснованы. Основу оставляем;
 IDE-146 устранён §297; legacy neodev удалён после native controls §298.
-DAP helpers разделены §299 с сохранением native workflows. Следом удаляем
-SQL extras по отдельному решению владельца, сохраняя Sqruff baseline.
+DAP helpers разделены §299, SQL extras удалены §300 при сохранении Sqruff.
+Следующие gates — натурные платформы, физический UX и выпуск.
