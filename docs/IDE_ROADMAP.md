@@ -33,6 +33,9 @@
 PATH, отказ/recovery и отмену при смене проекта; собственный launch.json и
 pytest сохраняются. Итоговые результаты ОС и доставка installed kit — в
 [verification](../openspec/changes/fix-python-auto-launch-runtime/verification.md).
+По8 native cases Windows/Ubuntu PASS; ещё1 F5 на копии installed config PASS.
+Code commit182b160, три installed Lua файла обновлены с backup; пользовательские
+sessions не перезагружались. Кандидат `windows-python-fix` готов и проверен.
 Повторная приёмка владельцем и native macOS остаются открытыми.
 
 **В работе — локальный установщик (§301).** Native publisher/упаковка и
@@ -46,7 +49,7 @@ publisher, install копирует library без compiler; Lua fallback сох
 полная приёмка рабочего проекта и public release остаются открытыми.
 С учётом Core parser delivery4/ОС итог34 unique targeted cases: Windows33 PASS/
 1 explicit POSIX SKIP, Ubuntu34 PASS. Локальный Windows entrypoint после сборки:
-`.\.tests\acceptance-installer\windows-ready\install.cmd`; полной GUI приёмки это
+`.\.tests\acceptance-installer\windows-python-fix\install.cmd`; полной GUI приёмки это
 не заменяет. Mac publisher команда и prerequisites — в guide выше.
 
 Порядок уточнён владельцем2026-11-20: Omarchy позже. Приёмку проводит на

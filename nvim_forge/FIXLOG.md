@@ -15948,3 +15948,14 @@ explicit SDK имеют отдельный native регресс. Системн
 **Файлы.** lua/forge/python.lua, lua/forge/dap/python.lua, lua/plugins/dap.lua,
 новый tests/e2e/python-auto-runtime.test.lua и registry, PYTHON_WORKFLOW,
 IDE_ROADMAP/PROBLEMS и openspec/changes/fix-python-auto-launch-runtime/verification.md.
+
+
+**Доставка §302 выполнена.** Code commit182b160. Три installed Lua файла
+обновлены после повторной проверки originals; backup с SHA receipt:
+F:/apps/fride/backups/python-auto-20261121-182b160. Дополнительный native F5
+на private копии installed config PASS, code0/signal0; всего17 чистых profiles.
+Свежий clean-source комплект windows-python-fix содержит этот commit;
+manifest/Default plan и actual native Core/Terminal/parser/fzf probes PASS.
+Actual commit/SHA/plan/runtime — verification и .tests/python-auto-runtime/final-candidate.json.
+Свой test container удалён, пользовательские sessions/SDK/PATH прежние.
+Для повторной приёмки нужен только перезапуск fride, не переустановка.

@@ -17,7 +17,7 @@ Windows, из каталога выданного комплекта:
 Кандидат, подготовленный в этом Windows checkout:
 
 ```powershell
-.\.tests\acceptance-installer\windows-ready\install.cmd --install-dir "F:\apps\fride"
+.\.tests\acceptance-installer\windows-python-fix\install.cmd --install-dir "F:\apps\fride"
 ```
 
 Можно указать новый путь с ещё не существующими родителями:
@@ -25,6 +25,11 @@ Windows, из каталога выданного комплекта:
 ```powershell
 .\install.cmd --install-dir "F:\apps\fride"
 ```
+
+2026-11-21: этот кандидат содержит исправление Python F5 (§302), code commit
+`182b160`. В существующем `F:/apps/fride` три соответствующих Lua файла уже
+обновлены с backup; достаточно перезапустить fride. Новый кандидат предназначен
+для следующей полноценной установки/приёмки. [Результаты и границы](../openspec/changes/fix-python-auto-launch-runtime/verification.md).
 
 На Mac — в native комплекте своей архитектуры:
 

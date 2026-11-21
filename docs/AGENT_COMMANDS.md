@@ -11820,3 +11820,23 @@ scripts/package-acceptance-installer.py с прежними Core/Terminal/fronte
 новым output .tests/acceptance-installer/windows-python-fix. Actual delivery и
 candidate metadata — в verification и .tests/python-auto-runtime. User sessions
 не перезапускаются, push не выполняется; собственный container удаляется.
+
+
+Фактическое завершение §210: code commit182b160. Delivery scripts:
+```powershell
+python -B .tests/python-auto-runtime/deliver-installed.py
+$env:FORGE_E2E_CONFIG_SOURCE='F:/apps/fride/config/forge'
+$env:FORGE_PY_AUTO_CASE='auto PATH'
+& .tools/neovim/windows-x64/bin/nvim.exe -l tests/e2e/python-auto-runtime.test.lua
+python -B scripts/package-acceptance-installer.py --core .tests/acceptance-installer/publisher/windows-x64/assets/core.zip --terminal .tests/acceptance-installer/publisher/windows-x64/assets/terminal.zip --frontend .tests/acceptance-installer/frontend/windows-x64/fride-setup.exe --output .tests/acceptance-installer/windows-python-fix
+& .tests/acceptance-installer/windows-python-fix/install.cmd --print-plan
+& .tests/acceptance-installer/windows-python-fix/payload/runtime/bin/nvim.exe -u NONE -i NONE -l .tests/acceptance-installer/check-runtime.lua F:/repo/forge-nvim/.tests/acceptance-installer/windows-python-fix .tests/python-auto-runtime/candidate-runtime.json
+python -B .tests/python-auto-runtime/record-delivery.py
+```
+Before/after SHA сверены, original backup в installed kit; три файла обновлены
+атомарно по одному с rollback на отказ. Новый candidate2520 files, source182b160
+без dirty source; native plan/probes PASS. Installed config private F5 PASS,
+всего17 final profiles code0/signal0/empty scope. Receipt содержит честную
+границу: не physical GUI/owner acceptance, не Mac, не full regression.
+Свой container ID/labels проверены, ps показал только init/sleep/собственный ps;
+затем docker rm --force только этого ID. Docker Desktop/WSL не менялись.

@@ -78,3 +78,31 @@ backup, hashes/receipt и обновление только этих файло�
 Native macOS, повторная GUI-приёмка владельцем и public release остаются
 отдельными gates. Обычная подсказка подготовки optional language tools не
 считается ошибкой SDK и этим изменением не подавляется.
+
+## Фактическая доставка — 2026-11-21
+
+Code commit: `182b16023212adabe6890fb16d4e68b8e9f97819`. Installed originals
+повторно сверены перед атомарной заменой; обновлены только три Lua файла.
+Backup: `F:/apps/fride/backups/python-auto-20261121-182b160`, внутри receipt.json
+с before/after SHA. Те же сведения — `.tests/python-auto-runtime/installed-delivery.json`.
+Открытые пользовательские sessions не останавливались и не перезагружались.
+
+Native Auto F5 дополнительно прошёл с `FORGE_E2E_CONFIG_SOURCE=F:/apps/fride/config/forge`
+в отдельном private профиле, без записи в профиль владельца. Final code0/signal0,
+scope пуст; с основным пакетом17 чистых native profiles. Это проверка копии
+установленной конфигурации, не физический ввод в уже открытый GUI пользователя.
+
+Новый комплект: `.tests/acceptance-installer/windows-python-fix/install.cmd`.
+Штатный packager повторно использовал прежние проверенные Core/Terminal/frontend
+без загрузки или пересборки; source — чистый code commit182b160,2520 files.
+`--print-plan` проверил manifest/payload и Default: языки отложены, versions preserve.
+Native candidate runtime: три probes,33 parsers,117 queries и fzf C ABI PASS.
+Manifest SHA256: `90bd201fe17886f3bb3bdedcdcc422621405a29551cbc73ea660f24d26641bad`.
+Полные plan/runtime/source hashes и ограничения — `.tests/python-auto-runtime/final-candidate.json`.
+Последующий коммит меняет документацию/отметки доставки; код кандидата182b160.
+
+Свой контейнер `da7a1aeb5d7bae27799e95c31ed6a4b8639a12aa7a7f2ff05a9ee1bc8d591124`
+удалён после проверки ID/owner/task и отсутствия оставшихся test processes;
+Docker Desktop/WSL оставлены в исходном состоянии. Cleanup receipt записан.
+Для пользовательской проверки требуется обычный перезапуск fride, затем F5
+на простом `.py` без project venv. Без повторной установки комплекта.
