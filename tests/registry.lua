@@ -60,6 +60,7 @@ return {
   { file = 'tests/e2e/node-language.test.lua', suite = 'e2e', timeout = 900 },
   { file = 'tests/e2e/python-language.test.lua', suite = 'e2e', timeout = 900 },
   { file = 'tests/e2e/python-managed-debug.test.lua', suite = 'e2e', timeout = 300 },
+  { file = 'tests/e2e/python-auto-runtime.test.lua', suite = 'e2e', timeout = 180 },
   { file = 'tests/e2e/rust-language.test.lua', suite = 'e2e', timeout = 900 },
   { file = 'tests/e2e/bash-language.test.lua', suite = 'e2e', timeout = 420 },
   { file = 'tests/e2e/bash-debug.test.lua', suite = 'e2e', timeout = 240 },

@@ -90,6 +90,31 @@ local function project_python()
     return require('forge.python').resolve(python_project_roots())
 end
 
+-- spec: IDE-PY-3. DAP option coroutines resolve before the adapter is started.
+local function launch_python()
+    local python = project_python()
+    local cwd = vim.fn.getcwd()
+    return coroutine.create(function(co)
+        require('forge.runtime_sdk').probe('python', python, function(sdk, issue)
+            vim.schedule(function()
+                local dap = require('dap')
+                if normalize_path(vim.fn.getcwd()) ~= normalize_path(cwd) then
+                    coroutine.resume(co, dap.ABORT)
+                    return
+                end
+                if not sdk then
+                    require('forge.log_store').record(
+                        'Current Python file: ' .. python .. '\n' .. tostring(issue),
+                        vim.log.levels.ERROR, 'DAP Python')
+                    require('fidget').notify('Python SDK не запускается. Подробнее: Space w i.',
+                        vim.log.levels.ERROR, { title = 'DAP Python' })
+                end
+                coroutine.resume(co, sdk and sdk.executable or dap.ABORT)
+            end)
+        end, cwd)
+    end)
+end
+
 local function debugpy_adapter_executable()
     local explicit = executable_path(path_from_env_or_global("forge_debugpy_adapter", "FORGE_DEBUGPY_ADAPTER"))
     if explicit then
@@ -185,6 +210,7 @@ end
 
 return {
     project_python = project_python,
+    launch_python = launch_python,
     debugpy_adapter_executable = debugpy_adapter_executable,
     debugpy_adapter_python = debugpy_adapter_python,
     show_python_debug_info = show_python_debug_info,

@@ -11753,3 +11753,70 @@ Commit локальный, gc.auto=0/maintenance.auto=false, push/archive не �
 После него запускается тот же prepare-acceptance-installer на ready inputs,
 --output .tests/acceptance-installer/windows-ready; actual --print-plan и native
 runtime probe пишут final-candidate.json. Stage не ставит kit в user profile.
+
+
+## 210. Python Auto и Current File F5 — 2026-11-21
+
+Контекст: source17e81ff, IDE-147 / FIXLOG302 / IDE-PY-3. 2026-11-20 по стопу
+работа прекращена после правок; 2026-11-21 продолжены native проверки.
+Все host TEMP/TMP/TMPDIR и NVIM_LOG_FILE направлены в F:/repo/forge-nvim/.tests/tmp.
+Python -B, PYTHONUTF8=1/PYTHONDONTWRITEBYTECODE=1; SDK concurrency ограничена2.
+Использован локальный openspec, без npx/download/install.
+
+```powershell
+git status --short
+git diff -- nvim_forge/lua/forge/python.lua nvim_forge/lua/forge/dap/python.lua nvim_forge/lua/plugins/dap.lua tests/registry.lua
+openspec instructions apply --change fix-python-auto-launch-runtime --json
+```
+
+Incident probe запускает настоящий выбранный MSYS2 python3 и системный
+CPython с -I -B -c; сохраняются exit/stdout/stderr без запуска пользовательского
+скрипта. Исходные persistent fride session записи фильтровались по Python/adapter/
+launcher. Результат .tests/python-auto-runtime/incident-sdk-probes.json и jsonl;
+MSYS2 missing encodings, обычный Python exit0. Окружение/SDK пользователя прежние.
+
+```powershell
+$env:FORGE_E2E_DEPS='F:/repo/forge-nvim/.tests/neodev-review/editor-deps'
+& .tools/neovim/windows-x64/bin/nvim.exe -l tests/e2e/python-auto-runtime.test.lua
+$env:FORGE_PY_AUTO_CASE='explicit invalid'
+& .tools/neovim/windows-x64/bin/nvim.exe -l tests/e2e/python-auto-runtime.test.lua
+$env:FORGE_PY_AUTO_CASE='stale project'
+& .tools/neovim/windows-x64/bin/nvim.exe -l tests/e2e/python-auto-runtime.test.lua
+Remove-Item Env:FORGE_PY_AUTO_CASE
+$env:FORGE_PYTHON_CASE='debug default/project'
+& .tools/neovim/windows-x64/bin/nvim.exe -l tests/e2e/python-language.test.lua
+Remove-Item Env:FORGE_PYTHON_CASE
+& .tools/neovim/windows-x64/bin/nvim.exe -l tests/e2e/python-managed-debug.test.lua
+```
+
+Source Auto RED записан до product изменения; target E2E — после цельной
+реализации. Повторялись failed/affected cases: hit-enter оказался product bug,
+Windows stale/path Logs сравнения — ошибками observers. Они не выдаются за PASS.
+Final: по3 новых +1 project +4 managed,8 unique/ОС aggregate.
+Logs/state/native exit/scope лежат в .tests/python-auto-runtime и editor-e2e.
+
+Docker только после ответа владельца о включении engine. Свой container
+fride-python-auto-20261121, labels forge-nvim.owner=codex и
+forge-nvim.task=python-auto-runtime, --init/--network none/--cpus2/--memory4g;
+workspace ro, только .tests rw. Desktop/WSL не запускались и не перенастраивались.
+Prepared image forge-nvim-tests:ubuntu24.04-nvim0.12.2. В guest /tmp скопированы
+его SDK: проверены66 прежних pins, удалён только known extra neodev собственной
+копии; current applier подготовил6 backports и настоящий manifest receipt.
+
+```powershell
+docker exec fride-python-auto-20261121 python3 -B .tests/python-auto-runtime/ubuntu-prepare.py
+docker exec --env FORGE_E2E_DEPS=/tmp/fride-python-auto/editor-deps fride-python-auto-20261121 nvim -l tests/e2e/python-auto-runtime.test.lua
+docker exec --env FORGE_E2E_DEPS=/tmp/fride-python-auto/editor-deps --env 'FORGE_PYTHON_CASE=debug default/project' fride-python-auto-20261121 nvim -l tests/e2e/python-language.test.lua
+docker exec --env FORGE_E2E_DEPS=/tmp/fride-python-auto/editor-deps fride-python-auto-20261121 nvim -l tests/e2e/python-managed-debug.test.lua
+openspec validate fix-python-auto-launch-runtime --type change --strict --no-interactive
+& .tools/neovim/windows-x64/bin/nvim.exe -u NONE -i NONE -l tests/trace.test.lua --change fix-python-auto-launch-runtime
+```
+
+Strict/trace проходят, native Mac отдельно. Финальные syntax/protected pins/
+frozen SDK/append-only/native outcomes сверяются .tests/python-auto-runtime/final-gates.py.
+Delivery после code commit: точное совпадение installed originals перед copy,
+backup трёх файлов/receipt; native Auto E2E на копии installed config; штатный
+scripts/package-acceptance-installer.py с прежними Core/Terminal/frontend и
+новым output .tests/acceptance-installer/windows-python-fix. Actual delivery и
+candidate metadata — в verification и .tests/python-auto-runtime. User sessions
+не перезапускаются, push не выполняется; собственный container удаляется.

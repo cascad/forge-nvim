@@ -23,10 +23,12 @@ Pyright и Ruff должны быть доступны редактору: на�
 
 Для DAP и исходной настройки Pyright используется общий selector:
 
-1. Валидный `vim.g.forge_python_path` или `FORGE_PYTHON_PATH`.
+1. Явный Python из project/user `tools.json` (`Space l S`), затем
+   `vim.g.forge_python_path` или `FORGE_PYTHON_PATH`.
 2. Активный VIRTUAL_ENV, затем CONDA_PREFIX.
 3. `.venv`, `venv`, `.env`, `env` в корнях проекта.
-4. Доступный python3/python в PATH.
+4. В Windows — доступный `python`, затем `python3` в PATH;
+   в macOS/Linux — `python3`, затем `python`.
 
 У DAP сохранены прежние корни текущего файла, cwd и LSP. Pyright использует
 свой project root и получает python.pythonPath до initialize. Поэтому обычный
@@ -55,6 +57,13 @@ Poetry/Pipenv/Conda managers отдельно не объявлены прове
 | Locals / Debug Output / код | `Space w d` / `Space w c` / `F7` или `Space w 0` |
 
 F5 без launch.json предлагает Current Python file и вариант с аргументами.
+Перед этим запуском выбранный Python проверяется асинхронно. Если он не
+запускается, adapter не стартует: короткое уведомление Fidget указывает на
+`Space w i` / `:ForgeLogs`, где находятся полный путь и причина отказа.
+Выбранный SDK не подменяется; исправить выбор можно через `Space l S` и
+повторить F5. Смена проекта во время проверки отменяет прежний запуск.
+Эта проверка не выполняется при обычном старте IDE и не меняет собственные
+конфигурации из launch.json или отладку pytest.
 Для проектного запуска используется существующий `.vscode/launch.json`, тип
 python/debugpy, program/cwd/args. Stdout/stderr остаются в Debug Output после
 завершения. Для тестов нужны pytest и debugpy в выбранной среде. Успешный

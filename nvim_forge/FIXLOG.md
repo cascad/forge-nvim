@@ -15897,3 +15897,54 @@ installer UI/main specs/WezTerm прежние. После commit clean-source W
 candidate сохраняется в .tests/acceptance-installer/windows-ready, его actual
 commit/SHA/plan/runtime proof — в final-candidate.json. Native Mac и натурная
 приёмка остаются владельцу; public catalogs не опубликованы.
+
+
+### 302. Python F5: системный SDK без venv и ранний отказ непригодного Python
+
+Дата: 2026-11-21. Инцидент IDE-147; source17e81ff.
+Спека: IDE-PY-3 (ADDED).
+
+**Проблема.** Первый F5 → Current Python file в установленной fride на Windows
+завершился adapter/launcher timeout. Позже Python/Go/Rust в lab работали.
+Prepared Python E2E покрывали project venv и managed adapter, но обходили
+обычный Auto через неоднозначный PATH.
+
+**Причина подтверждена.** Persistent Logs: Auto выбрал MSYS2 python3; native
+probe дал exit1 и missing encodings. Системный python.exe работает; lab
+использовал свой venv. Resolver предпочитал python3 даже на Windows, а DAP
+проверял лишь наличие executable, не возможность запустить выбранный SDK.
+
+**Изменение.** Windows Auto: python → python3; POSIX сохраняет python3 → python.
+Explicit/user/project paths и active/project venv сохраняют приоритет.
+Generated Current File использует штатную nvim-dap option coroutine и уже
+существующий async runtime_sdk.probe. Непригодный SDK возвращает ABORT до
+adapter, полный path/stderr попадает в IDE Logs; смена cwd отменяет старый запуск.
+Короткая ошибка показана существующим Fidget: обычный vim.notify(ERROR) вместе
+с native Run aborted вызвал Press ENTER в первом target и был исправлен.
+SDK не подменяется, после исправления пути F5 повторяется без restart.
+Custom launch.json/pytest и остальные языки не изменены; startup не делает probe.
+
+**Проверка/E2E.** Новый python-auto-runtime: plain-file PATH, explicit invalid
+SDK + native Logs/Fidget/no-modal/edit/save/recovery, смена проекта во время
+реального probe. Настоящие CPython/debugpy; PATH SDK — private venv вне проекта,
+не project venv/override. Контролируемый непригодный CLI — переименованный
+standalone Node; настоящий MSYS2 отказ отдельно записан incident evidence.
+Windows source Auto RED → target3 PASS aggregate; Ubuntu3 PASS. Existing
+Python default/project1 + managed debugpy4 на каждой ОС PASS. Итого8 unique
+native cases/ОС; full regression и native Mac не заявляются.
+Ошибки первых observers (Windows path case/разделители) и native hit-enter
+сохранены в verification; timeouts не увеличивались.
+
+**Доставка.** Installed kit F:/apps/fride предварительно сверён с исходными
+тремя Lua файлами; обновление с backup/receipt и новый clean-source кандидат
+выполняются после code commit. Actual hashes/коммит/проверка доставки — в
+verification, без hot reload или остановки пользовательского Neovim.
+
+**Вывод.** Зелёный debug в подготовленном venv не доказывает Auto на обычной
+машине. Теперь самостоятельный файл без окружения проекта и неработающий
+explicit SDK имеют отдельный native регресс. Системный MSYS2/PATH не чинятся
+из IDE; пользователь управляет SDK через Space l S, причину смотрит Space w i.
+
+**Файлы.** lua/forge/python.lua, lua/forge/dap/python.lua, lua/plugins/dap.lua,
+новый tests/e2e/python-auto-runtime.test.lua и registry, PYTHON_WORKFLOW,
+IDE_ROADMAP/PROBLEMS и openspec/changes/fix-python-auto-launch-runtime/verification.md.

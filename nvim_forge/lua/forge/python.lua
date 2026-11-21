@@ -26,7 +26,9 @@ function M.resolve(roots)
             if selected then return found(selected,'project venv') end
         end
     end
-    for _,name in ipairs({'python3','python'}) do
+    -- spec: IDE-PY-3. Native Windows Python is normally named python.exe.
+    local names=vim.fn.has('win32')==1 and {'python','python3'} or {'python3','python'}
+    for _,name in ipairs(names) do
         if vim.fn.executable(name)==1 then
             local path=vim.fn.exepath(name)
             return found(path~='' and path or name,'PATH')

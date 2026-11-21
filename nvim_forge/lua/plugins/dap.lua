@@ -425,7 +425,7 @@ local function current_file_configs(ft)
             cwd = "${workspaceFolder}",
             console = "internalConsole",
             redirectOutput = true,
-            python = project_python,
+            python = python_targets.launch_python,
             justMyCode = true,
         }
         return {

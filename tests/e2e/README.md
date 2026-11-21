@@ -6,6 +6,20 @@ SDK/SQLLogicTest sections ниже исторические; их scripts/tests 
 владельца. Общие Tests/SDK других языков сохраняются.
 
 
+IDE-PY-3 / IDE-147 (§302): `nvim -l tests/e2e/python-auto-runtime.test.lua`.
+Нужны prepared editor/Python deps. Три настоящих Current File F5 случая:
+plain `.py` без project venv/SDK override с конкурирующими PATH именами,
+explicit непригодный SDK → Logs/Fidget/no adapter/no modal → edit/save/recovery,
+смена cwd во время native probe → ABORT. PATH SDK — реальный CPython venv вне
+проекта; adapter — настоящий debugpy. Invalid executable — контролируемый
+не-Python CLI; actual MSYS2 missing encodings записан отдельным incident probe.
+Windows source Auto RED; target Windows/Ubuntu по3 PASS aggregate. Вместе с
+default/project control и4 managed controls — по8 unique native cases/ОС.
+Фильтр failed case: `FORGE_PY_AUTO_CASE='explicit invalid'` / `'stale project'`.
+История первых failed target/observer ошибок и границы — [verification](../../openspec/changes/fix-python-auto-launch-runtime/verification.md).
+Native Mac/GUI отдельно; prepared venv E2E сами по себе не доказывают запуск
+файла из пользовательского окружения или всю цепочку installer → editor → F5.
+
 2026-11-18: [проверки цельного блока](../../docs/TESTING_WORKFLOW.md). Во время
 реализации — быстрые проверки; E2E одним пакетом после завершения блока,
 повторы только failed/affected. Отдельный `regression` включает native installer

@@ -1,6 +1,6 @@
 # nvim_forge — рабочий план мини-IDE
 
-Обновлено: 2026-11-20. Основная сборка: **nvim_forge**.
+Обновлено: 2026-11-21. Основная сборка: **nvim_forge**.
 
 **Очередь упрощения завершена — 2026-11-20:**
 
@@ -24,6 +24,16 @@
 сняты решением владельца; повторно разрабатывать их не нужно.
 
 ### До первой боевой сборки — конкретный остаток
+
+**Приёмка, IDE-147 (§302):** Python F5 без project venv выбирал MSYS2 python3,
+который не запускается, хотя системный python.exe работает. Windows Auto
+теперь предпочитает python; Current File асинхронно проверяет SDK до adapter.
+Непригодный explicit SDK не подменяется: Fidget + полная причина в IDE Logs,
+после смены пути можно повторить F5. Новые native E2E охватывают plain-file
+PATH, отказ/recovery и отмену при смене проекта; собственный launch.json и
+pytest сохраняются. Итоговые результаты ОС и доставка installed kit — в
+[verification](../openspec/changes/fix-python-auto-launch-runtime/verification.md).
+Повторная приёмка владельцем и native macOS остаются открытыми.
 
 **В работе — локальный установщик (§301).** Native publisher/упаковка и
 PowerShell/Bash entrypoints готовы; Windows/Ubuntu по10 package cases и3

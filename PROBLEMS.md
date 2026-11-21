@@ -10,12 +10,25 @@
 
 Маршрут и приоритеты: [рабочий план nvim_forge](docs/IDE_ROADMAP.md).
 Для новых пунктов используем следующий свободный ID `IDE-xxx`; исходный
-симптом хранится здесь, этап и состояние — в плане. Следующий ID: `IDE-147`.
+симптом хранится здесь, этап и состояние — в плане. Следующий ID: `IDE-148`.
 
 2026-11-20 / §300: по решению владельца дополнительные SQL DB/query/Results/
 SQLLogicTest слои и SQLS SDK сняты. Прежние IDE-060…068 и ожидавшиеся SQL
 semantic references ниже сохраняют историю; это больше не очередь реализации.
 Текущий SQL baseline — подсветка и upstream Sqruff LSP/formatter без БД.
+
+## IDE-147 — Python F5 выбрал неработающий MSYS2 вместо системного Python
+
+Владелец сообщил adapter timeout на Windows: F5 → Current Python file,
+скрипт из комплекта/репозитория fride. Позже простые Python/Go/Rust файлы в
+lab запустились успешно. Persistent IDE Logs исходного сеанса показывают
+PATH → MSYS2 python3; прямой probe этого SDK завершился с missing encodings,
+тогда как системный python.exe работает. В lab был выбран project venv.
+Причина: Auto предпочитал имя python3 на Windows; Current File не проверял
+работоспособность выбранного executable до запуска debugpy.
+Исправление и реальные E2E — FIXLOG §302 / IDE-PY-3. Проверены отдельные
+случаи без project venv, отказ explicit SDK, recovery и смена проекта.
+Native macOS и повторная приёмка установленной сборки владельцем отдельно.
 
 ## IDE-146 — выполнение выделения в активной встроенной консоли
 
