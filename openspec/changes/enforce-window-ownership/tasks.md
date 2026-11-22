@@ -7,4 +7,4 @@
 
 ## 2. Проверка и доставка
 - [x] 2.1 Один affected packet Windows/Ubuntu после реализации, failed/affected repeats; strict/trace, pins/frozen/append-only и shutdown guards. Mac не объявлять PASS.
-- [ ] 2.2 Commit, безопасная installed доставка с backup/source control и актуальный candidate; записать фактические ограничения. Если общий подход не покрывает pinned backends, предъявить blocker вместо частных бесконечных перехватов.
+- [x] 2.2 Commit, безопасная installed доставка с backup/source control и актуальный candidate; записать фактические ограничения. Если общий подход не покрывает pinned backends, предъявить blocker вместо частных бесконечных перехватов.

@@ -68,8 +68,25 @@ main specs, trace/shutdown assertions прежние. FIXLOG/AGENT_COMMANDS appe
 
 ## Доставка и ограничения
 
-Доставка/commit/manifest будут дописаны после безопасного installed update
-и проверки свежего candidate; task2.2 до этого остаётся открытой.
+Code commit `e872ae4e5ca0d580d57d1eebf4d5de3188bd101c`. В `F:/apps/fride/config/forge`
+13 Lua файлов обновлены после сравнения baseline сdf7c6df и committed bytes.
+Backup: `F:/apps/fride/backups/ownership-20261122-e872ae4`; receipt сохранён
+до замены. Установленный конфиг проверен как source всех6 новых native cases:
+6 PASS, origin/hash13/6 shutdown guards PASS. Рабочая сессия не перезагружалась.
+
+Candidate: `.tests/acceptance-installer/windows-ownership-fix/install.cmd`.
+Clean-source build e872ae4,2521 файлов проверены по payload.sha256:
+`155e40f0271c2856b53513399a6bd59ae96c5fad342a1a13ac0731c5094c1b4a`.
+Все2357 runtime hashes совпадают с проверенным windows-layout-fix; Core/
+Terminal/frontend повторно не собирались. Default `--print-plan` PASS,
+prepare_languages=false и tools_versions=preserve. Это проверка нового
+пакета/исходников, без повторной GUI установки поверх работающей IDE.
+Receipt: `.tests/ownership/delivery-final.json`, логи installed/candidate-plan.
+
+Own container2667a0a0… удалён по exact ID после inspect task label и top:
+оставались только init/sleep. Повторный docker ps -a по ID пуст.
+Desktop/WSL и чужие контейнеры не менялись.5/5 tasks выполнены; change остаётся
+в active changes до отдельного review/archive, main specs не синхронизированы.
 
 Нативный Mac и клавиатурная/GUI приёмка владельцем не объявляются PASS.
 Механизм не sandbox-ит arbitrary Lua и bang; проверяет поддерживаемый pinned

@@ -12069,3 +12069,27 @@ Strict/trace9/syntax16, pins66/SDK/Neovim/main specs/patches/append-only PASS.
 network none, task label. Desktop/WSL не запускались и не перенастраивались.
 Системный review: docs/PANEL_OWNERSHIP_REVIEW.md; FIXLOG306 и change verification
 разделяют реальные ошибки, fixture corrections, автотесты и открытую Mac/GUI приёмку.
+
+Доставка codee872ae4:13 installed Lua files, backup и receipt до замены,
+compare baseline/commit bytes, rollback при ошибке.6 новых native E2E
+повторены с FORGE_E2E_CONFIG_SOURCE=F:/apps/fride/config/forge, все PASS;
+origin/13 hashes и6 shutdown guards проверены. Candidate2521 hashes/Default
+plan PASS;2357 runtime files идентичны прежнему windows-layout-fix.
+
+```powershell
+python -B .tests/tmp/deliver-ownership.py
+# FORGE_E2E_CONFIG_SOURCE=F:/apps/fride/config/forge, без FORGE_TEST_ID:
+& .tools/neovim/windows-x64/bin/nvim.exe -u NONE -i NONE -l tests/e2e/window-ownership.test.lua
+python -B scripts/package-acceptance-installer.py --core .tests/acceptance-installer/publisher/windows-x64/assets/core.zip --terminal .tests/acceptance-installer/publisher/windows-x64/assets/terminal.zip --frontend .tests/acceptance-installer/frontend/windows-x64/fride-setup.exe --output .tests/acceptance-installer/windows-ownership-fix
+python -B .tests/tmp/verify-ownership-delivery.py
+& .tests/acceptance-installer/windows-ownership-fix/install.cmd --print-plan
+docker inspect --format '{{.Id}} {{index .Config.Labels "fride.task"}} {{.State.Running}}' fride-ownership-20261122
+docker top fride-ownership-20261122 -eo pid,ppid,args
+docker rm -f 2667a0a05e4a6ebaa5421e0dd99f3190bca6670424ec4da5e895afe584accb43
+docker ps -a --filter id=2667a0a05e4a6ebaa5421e0dd99f3190bca6670424ec4da5e895afe584accb43 --format '{{.ID}} {{.Names}}'
+```
+
+Последнее удаление — только own контейнер с проверенным ID/task и init/sleep
+в top; повторный ps пуст. Desktop/WSL не трогались. delivery-final.json хранит
+backup, manifest SHA256, source commit,6 профилей. Новые docs-only записи
+не требуют повтора editor E2E.

@@ -16171,3 +16171,11 @@ filetype/_ready недостаточно для следующей native кла
 **Файлы.** ide/ownership.lua, registry/state/buffers/activities/controls/marks,
 forge/panel_guard.lua, neo_tree_lifecycle.lua, plugins/editor.lua/neo-tree.lua,
 config/options.lua, registry declarations, E2E/transport и руководства.
+
+**Доставка §306.** Codee872ae4. В F:/apps/fride13 Lua файлов заменены только
+после baseline/hash check, backup ownership-20261122-e872ae4 и prepared receipt.
+Все6 native installed-source cases PASS; origin/13 hashes/6 shutdown guards
+подтверждены. Candidate windows-ownership-fix: clean-source,2521 manifest
+hashes/Default plan PASS,2357 runtime hashes прежние. SDK/плагины/owner session
+не обновлялись. Own контейнер2667a0a0… удалён после exact ID/task/top, повторный
+ps пуст; Desktop/WSL не менялись. Подробные receipts — change verification.
