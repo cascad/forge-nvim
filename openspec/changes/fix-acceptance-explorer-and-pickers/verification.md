@@ -72,3 +72,32 @@ final-candidate.json. Собственный контейнер222ff23d… пр�
 и процессам (только docker-init/sleep), удалён; повторный docker ps пуст.
 Desktop/WSL не перезапускались. Для обновления текущего owner процесса нужен
 обычный перезапуск fride; новая установка не требуется.
+
+## Дополнение IDE-151: русская раскладка
+
+Code **a7cf782**. Sourcebf8b100: bare пК PASS, explicit п<S-К> FAIL;
+native lookup с production langmap требует g<S-К>. Общие aliases теперь
+покрывают bare/shifted/mixed варианты. Исходный raw event владельца не записывался;
+физические keys в его WezTerm остаются ручной приёмкой.
+
+Один affected packet Windows/Ubuntu: native key engine2, editor navigation5,
+focus6, ownership46 —59/ОС. Это отдельные59 случая этого блока, а не повтор
+полного предыдущего packet. Trace9, syntax5, strict, append-only и frozen4 PASS;
+11 editor profiles/ОС завершены exit0/scope inactive. Installed-source root1
+также PASS, config-origin подтверждён, clean shutdown; всего23 observed profiles.
+Артефакты .tests/ru-root/gates.json, *-packet.json, installed-root.log.
+
+Два файла config/ru_keys.lua и config/keymaps.lua в F:/apps/fride сверены
+с bf8b100 и обновлены с backup ru-keys-20261122-a7cf782. Owner process не менялся.
+Свежий candidate **windows-layout-fix** clean-sourcea7cf782,2520 SHA entries
+проверены; manifest `1ab961f7bd722ae169eacff541e91d4f3698838e6d7252d6ad889a9e7298bfc0`.
+Default plan сохраняет prepare_languages=false/tools_versions=preserve.
+Runtime hashes совпадают с проверенным windows-navigation-fix, поэтому native
+Core/Terminal probes повторно не запускались. Receipt/delivery-final.json содержат
+hashes, backup и installed profile. Собственный container1ce6ad23… удалён после
+проверки ID/task/ps; повторный docker ps пуст. Desktop/WSL прежние.
+
+Owner live read-only: Node найден, Pyright не найден, Mason pyright отсутствует.
+Логи объяснены, tools не устанавливались. Владелец решил сохранить текущие
+hidden filters. По его просьбе создан docs/OWNER_TESTED_HOTKEYS.md: реальные
+использования/PASS/отказы отдельно от выбранных keys и автотестов.

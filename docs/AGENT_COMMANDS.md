@@ -11993,3 +11993,20 @@ unit/native editor scripts используют actual Neovim input engine; phys
 keyboard не выдаётся за проверенный. Container1ce6ad23… owned task ru-root-20261122,
 cpus2/network none, repo ro/.tests rw. Docker Desktop/WSL не запускались/не менялись.
 Strict/trace/gates/доставка дописываются по факту.
+
+Фактическое завершение §213:
+```powershell
+python -B .tests/tmp/layout-gates.py
+& .tools/neovim/windows-x64/bin/nvim.exe -u NONE -i NONE -l .tests/tmp/layout-syntax.lua
+python -B .tests/tmp/deliver-layout.py
+python -B scripts/package-acceptance-installer.py --core .tests/acceptance-installer/publisher/windows-x64/assets/core.zip --terminal .tests/acceptance-installer/publisher/windows-x64/assets/terminal.zip --frontend .tests/acceptance-installer/frontend/windows-x64/fride-setup.exe --output .tests/acceptance-installer/windows-layout-fix
+& .tests/acceptance-installer/windows-layout-fix/install.cmd --print-plan
+```
+Installed-source root case: FORGE_E2E_CONFIG_SOURCE=F:/apps/fride/config/forge,
+FORGE_TEST_ID='IDE-FILE-9 tree', acceptance-navigation.test.lua →1 PASS.
+Codea7cf782,2 files с baselinebf8b100/backup ru-keys-20261122-a7cf782.
+Manifest2520 проверен полностью Python hashlib; runtime subset hashes сравнены
+с прежним проверенным candidate, build source clean. delivery-final.json содержит
+результат, backup и profile13226295405500.23 editor scopes inactive/exit0.
+Own container1ce6ad23… удалён по exact ID после inspect/ps, повторный ps пуст;
+owner session не изменялась. Новые docs-only записи не требуют повтора editor E2E.

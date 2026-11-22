@@ -25,7 +25,7 @@ Windows, из каталога выданного комплекта:
 Кандидат, подготовленный в этом Windows checkout:
 
 ```powershell
-.\.tests\acceptance-installer\windows-navigation-fix\install.cmd --install-dir "F:\apps\fride"
+.\.tests\acceptance-installer\windows-layout-fix\install.cmd --install-dir "F:\apps\fride"
 ```
 
 Можно указать новый путь с ещё не существующими родителями:
@@ -51,6 +51,12 @@ Help/session ownership — отдельный следующий IDE-149, тек
 файла уже обновлены в F:/apps/fride с backup; достаточно перезапустить fride.
 Installed-source5 E2E и manifest/Default/runtime probes PASS; native Mac и
 повторная GUI приёмка lab остаются открытыми.
+
+Актуальный candidate после IDE-151: **windows-layout-fix**, codea7cf782.
+Добавлены общие aliases для explicit Shift-кириллицы; два Lua файла уже обновлены
+в F:/apps/fride с backup, installed-source root/reveal1 PASS. Runtime прежний,
+2520 SHA entries и Default plan проверены. Текущее скрытие сохранено по решению
+владельца. [Какие keys приняты руками](OWNER_TESTED_HOTKEYS.md).
 
 На Mac — в native комплекте своей архитектуры:
 

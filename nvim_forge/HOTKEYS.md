@@ -1,5 +1,7 @@
 # Хоткеи nvim_forge — шпаргалка
 
+[Какими keys уже пользовался владелец и что принято руками](../docs/OWNER_TESTED_HOTKEYS.md).
+
 `<leader>` = **Space**. **F1** или `<leader>sk` — поиск действующих хоткеев
 (Telescope keymaps): вводи описание, например `buffers`, `reveal`, `root`.
 В окне Files туда попадут и его локальные действия. **Normal mode**: из ввода

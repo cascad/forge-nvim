@@ -30,7 +30,8 @@
 поддерживают shifted/mixed варианты; root/reveal regression расширен.
 Логи доступны Space w i / :ForgeLogs; Node найден, Pyright в owner kit не подготовлен,
 управление — Space l S, автоустановки за владельца не было. Скрытые4 элемента
-разобраны; выбор default hidden остаётся отдельным, текущие filters прежние.
+разобраны; владелец решил сохранить текущие filters. Ручная приёмка keys
+накапливается отдельно в [списке владельца](OWNER_TESTED_HOTKEYS.md).
 
 **IDE-150 (§304), Windows приёмка 1–4:** startup/отзывчивость предварительно
 приняты владельцем. F1 — поиск хоткеев, Alt+B — файлы (подтверждены); gR в Files /
@@ -85,8 +86,8 @@ publisher, install копирует library без compiler; Lua fallback сох
 полная приёмка рабочего проекта и public release остаются открытыми.
 С учётом Core parser delivery4/ОС итог34 unique targeted cases: Windows33 PASS/
 1 explicit POSIX SKIP, Ubuntu34 PASS. Локальный Windows entrypoint после сборки:
-`.\.tests\acceptance-installer\windows-navigation-fix\install.cmd` (code88b2006,
-включает IDE-150); полной GUI приёмки это
+`.\.tests\acceptance-installer\windows-layout-fix\install.cmd` (codea7cf782,
+включает IDE-150/151); полной GUI приёмки это
 не заменяет. Mac publisher команда и prerequisites — в guide выше.
 
 Порядок уточнён владельцем2026-11-20: Omarchy позже. Приёмку проводит на

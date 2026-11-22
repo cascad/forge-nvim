@@ -16109,3 +16109,15 @@ native события с production langmap и обеими раскладкам
 
 **Файлы.** config/ru_keys.lua, config/keymaps.lua, tests/ru-keys.test.lua,
 acceptance-navigation.test.lua/registry, guides, roadmap/PROBLEMS/HISTORY.
+
+**Доставка §305.** Codea7cf782,2 installed Lua файла с backup
+ru-keys-20261122-a7cf782; actual installed-source root1 PASS, origin/shutdown
+проверены.22 packet profiles +1 installed завершены чисто. Strict/trace9/
+syntax5/append-only/frozen4 PASS. Candidate windows-layout-fix clean-source:
+2520 hashes/Default plan PASS, runtime hashes совпадают с ранее проверенным
+windows-navigation-fix, повтор Core probes не требовался. Manifest/receipts в
+change verification и .tests/ru-root/delivery-final.json. Own container1ce6ad23…
+удалён после ID/task/ps; Desktop/WSL/owner session не менялись.
+Владелец уточнил: текущее скрытие устраивает, сохранить. По просьбе владельца
+создан docs/OWNER_TESTED_HOTKEYS.md — usages/PASS/отказы отдельно от предположений,
+выбранных keys и автотестов. Новые подтверждения добавлять по его сообщениям.

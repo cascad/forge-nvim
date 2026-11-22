@@ -10,4 +10,4 @@
 ## 2. Уточнение приёмки: русская раскладка
 
 - [x] 2.1 Воспроизвести пК в native Files с production langmap, исправить общую причину; root/reveal и keymap regression Windows/Ubuntu, FIXLOG305/HISTORY/IDE-151 и справка логов/фильтров.
-- [ ] 2.2 Strict/trace и один affected packet; commit, backup и доставка проверенных Lua файлов без вмешательства в owner session. Default hidden — отдельный optional выбор, без ответа не менять; language tools без выбора владельца не устанавливать.
+- [x] 2.2 Strict/trace и один affected packet; commit, backup и доставка проверенных Lua файлов без вмешательства в owner session. Владелец решил сохранить default hidden; language tools без выбора владельца не устанавливать.

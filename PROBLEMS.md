@@ -24,7 +24,7 @@ Read-only owner session: Node F:/nodejs/node.exe есть, Pyright не обна
 Mason pyright package отсутствует. Ничего не устанавливалось за владельца.
 Логи: Space w i / :ForgeLogs; source selector s, Enter детали, native :ForgeLogs lsp.
 4 hidden в lab: __pycache__, target, venv (наши hide_by_name), .git (Hidden attribute).
-Default hidden обсуждается отдельным optional вопросом; без ответа не меняется.
+Решение владельца после уточнения: текущее скрытие устраивает, сохранить его.
 
 ## IDE-150 — приёмка Windows: Files, reveal и поиск управления
 
