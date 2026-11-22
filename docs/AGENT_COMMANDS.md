@@ -12164,3 +12164,26 @@ npx.cmd --yes @fission-ai/openspec@1.13.2 validate choose-terminal-shell --type 
 `FORGE_TEST_ID=IDE-PANEL-33` и `FORGE_E2E_CONFIG_SOURCE=F:/apps/fride/config/forge`
 и прошёл. Источник, хеши и завершение тестовой сессии проверены. Собственный
 контейнер завершён после сверки task label и списка процессов.
+
+## 218. IDE-154 и аудит ожидания диска в Files
+
+Сверены pinned Neo-tree `fs_actions.lua` и `Path:copy` Plenary. Исходный RED
+получен с обычными editor-deps по `FORGE_TEST_ID='IDE-FILE-10 save'`. Новая
+подготовка Windows использует проверенную копию зависимостей на F, Ubuntu
+использует имеющийся image и контейнер с двумя CPU и без сети. На Windows
+TEMP/TMP/TMPDIR направлены в `.tests/tmp`.
+
+```powershell
+python -B .tests/tmp/windows-async-copy-deps.py
+python -B .tests/tmp/run-async-copy.py --tag windows --nvim .tools/neovim/windows-x64/bin/nvim.exe
+docker exec -e FORGE_E2E_DEPS=/tmp/fride-async-copy/editor-deps -e GOMAXPROCS=2 fride-async-copy-20261122 python3 -B .tests/tmp/run-async-copy.py --tag ubuntu --nvim /opt/nvim/bin/nvim
+python -B .tests/tmp/async-copy-retry.py --tag windows --nvim .tools/neovim/windows-x64/bin/nvim.exe
+python -B .tests/tmp/check-async-copy-results.py
+npx.cmd --yes @fission-ai/openspec@1.13.2 validate copy-files-without-blocking --type change --strict --no-interactive
+& .tools/neovim/windows-x64/bin/nvim.exe -u NONE -i NONE -l tests/trace.test.lua --change copy-files-without-blocking
+```
+
+Повтор Ubuntu запускался тем же retry runner в контейнере. По 27 уникальных
+PASS. В `.tests/async-copy/verification.json` список сценариев, их логи и
+результаты завершения редакторов. Неизменность pin/SDK/main specs и журналы
+проверены по baseline `075c4ca`.

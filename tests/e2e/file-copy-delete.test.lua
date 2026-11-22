@@ -1,4 +1,4 @@
--- spec: IDE-FILE-3/4. Настоящие Files/Neo-tree, native input и filesystem.
+-- spec: IDE-FILE-3/4/10. Настоящие Files/Neo-tree, native input и filesystem.
 local root=vim.fn.fnamemodify(debug.getinfo(1,'S').source:sub(2),':p:h:h:h'):gsub('\\','/')
 package.path=root..'/tests/lib/?.lua;'..package.path
 local T=require('check')
@@ -164,6 +164,83 @@ check('IDE-FILE-4 typed copy Unicode name conflict and cancel preserve files',fu
   choose('copy-me.txt');popup('c');e:input('<C-u>occupied.txt<CR>')
   e:wait('native conflict asks another name',function() return e:current_ft()=='neo-tree-popup' and table.concat(e.rpc:screen_lines(),'\n'):find('already exists',1,true) end)
   finish_popup('esc');T.eq(lines('occupied.txt'),{'occupied payload'});T.eq(lines('copy-me.txt'),{'typed payload'})
+end)
+
+local function hold_copy(destination)
+  e:lua([[local async=require('plenary.async');local native=vim.uv.fs_copyfile
+    local function key(p) return vim.fs.normalize(p):lower() end
+    local target=key(...);local events=require('neo-tree.events')
+    _G.forge_copy_added=0
+    events.subscribe({event=events.FILE_ADDED,handler=function(path)
+      if key(path)==target then _G.forge_copy_added=_G.forge_copy_added+1 end
+    end})
+    vim.uv.fs_copyfile=function(source,dest,...)
+      if key(dest)==target then _G.forge_copy_sync=true end
+      return native(source,dest,...)
+    end
+    async.uv.fs_copyfile=async.wrap(function(source,dest,flags,done)
+      if key(dest)~=target then return native(source,dest,flags,done) end
+      _G.forge_copy_release=function()
+        _G.forge_copy_release=nil
+        native(source,dest,flags,function(err,result)
+          _G.forge_copy_result={error=err or false};done(err,result)
+        end)
+      end
+    end,4)]],{path(destination)})
+end
+
+local function copy_waiting()
+  e:wait('copy reached native filesystem boundary',function()
+    return e:lua('return _G.forge_copy_release~=nil or _G.forge_copy_sync==true')
+  end)
+  T.eq(e:lua('return _G.forge_copy_sync==true'),false,'Copy ran synchronously on the editor thread')
+  T.eq(e:lua('return _G.forge_copy_added'),0)
+end
+
+check('IDE-FILE-10 save code while real copy is pending',function()
+  hold_copy('destination/copied.txt')
+  tree();choose('copy-me.txt');popup('c');finish_popup('destination/copied.txt');copy_waiting()
+  T.eq(exists('destination/copied.txt'),false)
+  e:input('<F7>');e:wait('code focused while copy waits',function() return at_file('file_one.txt') end)
+  e:input('GoWHILE_COPY_PENDING<Esc>:write<CR>')
+  e:wait('other file saved before copy',function() return vim.tbl_contains(lines('file_one.txt'),'WHILE_COPY_PENDING') end)
+  e:lua('_G.forge_copy_release()')
+  e:wait('real copy and success event',function() return e:lua('return _G.forge_copy_added')==1 end)
+  T.eq(lines('destination/copied.txt'),{'typed payload'})
+  local node=e:lua([[local state=require('neo-tree.sources.manager').get_state('filesystem')
+    local n=state.tree and state.tree:get_node(require('neo-tree.utils').normalize_path(...))
+    return n~=nil]],{path('destination/copied.txt')})
+  if not node then
+    e:wait('copied row appears while code is focused',function()
+      return e:lua([[local state=require('neo-tree.sources.manager').get_state('filesystem')
+        return state.tree and state.tree:get_node(require('neo-tree.utils').normalize_path(...))~=nil]],
+        {path('destination/copied.txt')})
+    end)
+  end
+  T.eq(at_file('file_one.txt'),true,'Copy completion stole the editor focus')
+end)
+
+check('IDE-FILE-10 clipboard copy preserves a destination created while pending',function()
+  local destination='destination/copy-me.txt'
+  hold_copy(destination)
+  tree();choose('copy-me.txt');e:input('y')
+  e:wait('clipboard populated',function() return e:lua('return vim.tbl_count(require("neo-tree.sources.manager").get_state_for_window().clipboard)>0') end)
+  choose('destination');e:input('p');copy_waiting()
+  vim.fn.writefile({'another process wrote this'},path(destination))
+  report.allowed_error='Could not copy'
+  e:lua('_G.forge_copy_release()')
+  e:wait('native copy refusal reported',function()
+    for _,notice in ipairs(e.rpc.notifications) do
+      if notice.message:find('Could not copy',1,true) and notice.message:find('EEXIST',1,true) then return true end
+    end
+  end)
+  T.eq(lines(destination),{'another process wrote this'})
+  T.eq(lines('copy-me.txt'),{'typed payload'})
+  T.eq(e:lua('return _G.forge_copy_added'),0)
+  e:input(' wi');e:wait('cause in IDE Logs',function()
+    return e:current_ft()=='forge-logs' and e:lua([[return vim.api.nvim_get_current_line():find('EEXIST',1,true)~=nil
+      or table.concat(vim.api.nvim_buf_get_lines(0,0,-1,false),'\n'):find('EEXIST',1,true)~=nil]])
+  end)
 end)
 check('IDE-FILE-3 clean file cancel No and confirmed zoom selection',function()
   tree();choose('delete-me.txt');delete('delete-me.txt','esc');T.eq(exists('delete-me.txt'),true)

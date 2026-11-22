@@ -25,6 +25,15 @@
 
 ### До первой боевой сборки — конкретный остаток
 
+**IDE-154 — отзывчивость Files при копировании (§309).** `c` и `y` → `p`
+используют асинхронное копирование. Появившийся за время операции файл назначения
+сохраняется. [Рабочий сценарий](FILES_WORKFLOW.md)
+
+Следующий участок аудита Files — создание и подготовка переименования и
+перемещения. Основной `fs_rename` уже асинхронен при перемещении, но проверки
+пути, конфликта имени и создание родительских каталогов ещё синхронны.
+Проверка изменённых файлов перед удалением вызывает `fs_realpath` в потоке UI.
+
 **IDE-153 (§308).** `Space t S` позволяет выбрать оболочку из найденных,
 указать бинарь или вернуть Auto. `Space t N` создаёт новую консоль с учётом
 настройки. [Сценарии и клавиши](FRIDE_KEYBOARD_GUIDE.md#терминал-и-логи)
@@ -62,7 +71,8 @@ targeted cases Windows/Ubuntu aggregate; [доказательства и отк
 blocking delete исправлены штатными messagesopt/nomore, prompt Enter fallback
 и Plenary async/libuv companion. По33 targeted cases Windows/Ubuntu PASS
 aggregate; [результаты/ограничения](../openspec/changes/keep-filesystem-errors-responsive/verification.md).
-Полной гарантии для остальных synchronous copy/create/guard IO это не даёт.
+Отдельный путь копирования закрывает IDE-154. Создание и проверки пути
+остаются в аудите.
 Code commit `fa46778`: installed config/backport обновлены с backup,
 два native installed-source controls PASS, новый candidate `windows-files-fix`
 прошёл manifest/Default/native runtime probes. Owner session не перезагружалась.

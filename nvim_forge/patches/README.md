@@ -200,6 +200,12 @@ upstream версия, которая проходит `file-scan-order.test.lua
 Files workflow и проверками watchers на Windows/Ubuntu/macOS. Отклонённый
 generation-only prototype из §179 к принятому payload не относится.
 
+IDE-154. Companion `fs_actions.lua` передаёт копирование модулю fride
+`forge.files_copy`. Штатные диалог и события Neo-tree сохраняются. Копирование
+и проверки пути используют `plenary.async.uv`, а `COPYFILE_EXCL` сохраняет
+цель, появившуюся после выбора имени. Подготовка принимает и предыдущую
+известную конфигурацию §303. Сценарии закреплены в `file-copy-delete.test.lua`.
+
 Для уже готового Ubuntu image с теми же67 pins доступен маленький offline
 слой явной подготовки; Neovim/tools берутся из локального base image:
 
