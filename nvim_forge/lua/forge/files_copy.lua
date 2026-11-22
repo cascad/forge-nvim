@@ -116,9 +116,31 @@ local function copy(source, destination)
     return copy_entry(source, destination, stat.type), true
 end
 
+local function indicate_copy(source)
+    local ok, notification = pcall(require, 'fidget.notification')
+    if not ok then return end
+
+    local _, name = paths.split_path(source)
+    local group, key = 'Files', uv.hrtime()
+    notification.notify('Копируется «' .. name .. '»', vim.log.levels.INFO, {
+        group = group, key = key, ttl = math.huge, skip_history = true,
+    })
+    return function(copied)
+        if copied then
+            notification.notify('Скопировано «' .. name .. '»', vim.log.levels.INFO, {
+                group = group, key = key, ttl = 3,
+            })
+        else
+            notification.remove(group, key)
+        end
+    end
+end
+
 M.run = async.void(function(source, destination, on_copied)
+    local indicate_done = indicate_copy(source)
     local err, copied = copy(source, destination)
     async.util.scheduler()
+    if indicate_done then indicate_done(not err and copied) end
     if err then
         log.error('Could not copy from', source, 'to', destination, ':', err)
     elseif copied then

@@ -12196,3 +12196,18 @@ PASS. В `.tests/async-copy/verification.json` список сценариев, 
 через бинарь `F:/apps/fride/runtime/bin/nvim.exe` дала 2 PASS. Хеши, источники
 двух профилей и их завершение проверены. Собственный тестовый контейнер
 удалён по проверенному ID после проверки списка процессов.
+
+## 219. Индикация копирования IDE-154
+
+С `FORGE_TEST_ID=IDE-FILE-10` запущен тот же E2E `file-copy-delete.test.lua`.
+Windows использует готовый `.tests/async-copy/editor-deps`, Ubuntu запускает
+команду в собственном контейнере `fride-copy-indicator-20261122` с готовым
+образом, двумя CPU и без сети. Проверка видимой надписи опирается на экран
+настоящего редактора. По 2 PASS, логи `.tests/copy-indicator`.
+
+```powershell
+& .tools/neovim/windows-x64/bin/nvim.exe -u NONE -i NONE -l tests/e2e/file-copy-delete.test.lua
+docker exec -e FORGE_E2E_DEPS=/tmp/fride-copy-indicator/editor-deps -e FORGE_TEST_ID=IDE-FILE-10 -e GOMAXPROCS=2 fride-copy-indicator-20261122 /opt/nvim/bin/nvim -u NONE -i NONE -l tests/e2e/file-copy-delete.test.lua
+npx.cmd --yes @fission-ai/openspec@1.13.2 validate copy-files-without-blocking --type change --strict --no-interactive
+& .tools/neovim/windows-x64/bin/nvim.exe -u NONE -i NONE -l tests/trace.test.lua --change copy-files-without-blocking
+```
