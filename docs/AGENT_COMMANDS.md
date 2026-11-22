@@ -11910,3 +11910,46 @@ FORGE_FILES_ERROR_CASE='empty directory' / 'native error') PASS. Итого50 cl
 editor profiles. Source/payload hashes и candidate metadata в final-candidate.json.
 Свой container487b70db… ID/task/ps проверены и удалён, Desktop/WSL прежние.
 Native boundary probe Ubuntu также E1513. Local commits без push/archive.
+
+## 212. Приёмка Windows: Files и pickers (2026-11-22)
+
+Рабочая папка F:/repo/forge-nvim; host TMP/TEMP/TMPDIR — .tests/tmp на F.
+Read-only live observation: native nvim --headless -u NONE -i NONE
+--server \\.\pipe\fride.9716.0 --remote-expr с json_encode/luaeval;
+bounded Python subprocess timeout4s, без nvim_input/hot reload. Видны только
+наблюдаемые окна/Files state/cwd/строки; файлы проекта владельца не менялись.
+Первый client без --headless вернул terminal escape output, повтор headless
+прочитал реальный RPC ответ; source palette/fixture failures сохранены отдельно.
+
+```powershell
+$env:TEMP='F:/repo/forge-nvim/.tests/tmp'
+$env:TMP=$env:TEMP; $env:TMPDIR=$env:TEMP
+$env:PYTHONIOENCODING='utf-8'; $env:PYTHONDONTWRITEBYTECODE='1'
+$env:FORGE_E2E_DEPS='F:/repo/forge-nvim/.tests/neodev-review/editor-deps'
+& .tools/neovim/windows-x64/bin/nvim.exe -u NONE -i NONE -l tests/e2e/acceptance-navigation.test.lua
+python -B .tests/tmp/run-acceptance-packet.py --nvim F:/repo/forge-nvim/.tools/neovim/windows-x64/bin/nvim.exe --tag windows
+python -B .tests/tmp/run-acceptance-affected.py --nvim F:/repo/forge-nvim/.tools/neovim/windows-x64/bin/nvim.exe --tag windows
+npx.cmd --yes @fission-ai/openspec@1.13.2 validate fix-acceptance-explorer-and-pickers --type change --strict --no-interactive
+& .tools/neovim/windows-x64/bin/nvim.exe -u NONE -i NONE -l tests/trace.test.lua --change fix-acceptance-explorer-and-pickers
+```
+
+Temporary packet scripts лишь последовательно запускают перечисленные registered
+native suites и сохраняют exit/status/логи. Поддерживаемая обычная команда:
+`powershell -NoProfile -File scripts/test.ps1 e2e -Files tests/e2e/acceptance-navigation.test.lua`.
+Никаких plugin downloads/SDK installs во время тестов. CPU env caps2.
+Ubuntu: собственный `fride-acceptance-nav-20261122`, ID222ff23d…,
+label fride.task=acceptance-navigation-20261122, network none,
+repo ro / .tests rw. Подготовка копирует image deps в /tmp контейнера,
+сверяет66 pins и6 backport groups. Native binary в image — /opt/nvim/bin/nvim;
+первая ошибочная /usr/local/bin/nvim отвергнута до запуска suite.
+
+```powershell
+docker info --format '{{.OSType}}'
+docker exec -e PYTHONDONTWRITEBYTECODE=1 fride-acceptance-nav-20261122 python3 -B .tests/tmp/prepare-acceptance-ubuntu.py
+docker exec -e FORGE_E2E_DEPS=/tmp/fride-acceptance-nav/editor-deps fride-acceptance-nav-20261122 python3 -B .tests/tmp/run-acceptance-packet.py --nvim /opt/nvim/bin/nvim --tag ubuntu
+docker exec -e FORGE_E2E_DEPS=/tmp/fride-acceptance-nav/editor-deps fride-acceptance-nav-20261122 python3 -B .tests/tmp/run-acceptance-affected.py --nvim /opt/nvim/bin/nvim --tag ubuntu
+```
+
+Исходные RED/промежуточные неудачи не удалялись и не выдаются за PASS.
+Final aggregate59 unique cases/OS; final affected5+7+1, key-label repeat1.
+Доставка/backup/candidate дописываются после фактического выполнения.

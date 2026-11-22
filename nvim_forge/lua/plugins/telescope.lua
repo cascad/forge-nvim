@@ -53,6 +53,8 @@ return {
             { "<leader>fj",  "<cmd>Telescope jumplist<CR>",    desc = "Files: jumplist" },
             { "<leader>fh",  "<cmd>Telescope help_tags<CR>",   desc = "Files: help" },
             { "<leader>bb",  open_buffer_picker,               desc = "Buffers: switch" },
+            { "<A-b>",      open_buffer_picker,               desc = "Buffers: switch (quick)" },
+            { "<F1>",       "<cmd>Telescope keymaps<CR>",     desc = "Search: keymaps" },
             -- <C-b> теперь зарезервирован под IDE: toggle left panel
             -- (см. config/keymaps.lua, секция "Slot TOGGLE"). Для
             -- buffers picker используй <leader>bb / <leader>fb.
@@ -80,7 +82,9 @@ return {
             return {
                 defaults = {
                     prompt_prefix = "  ",
-                    selection_caret = " ",
+                    -- Не должен быть префиксом entry_prefix: иначе native
+                    -- update_prefix принимает обычную строку за выбранную.
+                    selection_caret = "> ",
                     path_display = { "truncate" },
                     sorting_strategy = "ascending",
                     layout_strategy = "horizontal",

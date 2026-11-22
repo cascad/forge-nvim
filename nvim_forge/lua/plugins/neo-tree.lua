@@ -227,6 +227,32 @@ local function tree_mappings(mappings)
     return ru_keys.extend_mappings(mappings)
 end
 
+-- Files — содержимое диска, Git decorations — отдельный Git source.
+-- Сохраняем штатные renderers/колонки и меняем только Git presentation.
+local function filesystem_renderers()
+    local renderers = vim.deepcopy(require('neo-tree.defaults').renderers)
+    local function clean(parts)
+        for i = #parts, 1, -1 do
+            local part = parts[i]
+            if part[1] == 'git_status' then table.remove(parts, i)
+            else
+                if part[1] == 'name' or part[1] == 'icon' then part.use_git_status_colors = false end
+                if part.content then clean(part.content) end
+            end
+        end
+    end
+    for _, parts in pairs(renderers) do clean(parts) end
+    return renderers
+end
+
+local function explorer_project_root()
+    require('ide.controls').explorer('filesystem')
+    require('neo-tree.command').execute({
+        source = 'filesystem', position = 'left', action = 'focus',
+        dir = vim.fn.getcwd(-1, -1),
+    })
+end
+
 return {
     {
         "nvim-neo-tree/neo-tree.nvim",
@@ -250,14 +276,30 @@ return {
             -- к Files.
             { "<leader>e",  function() require('ide.controls').explorer('filesystem', true) end, desc = "Explorer: toggle (Files)" },
             { "<leader>E",  function()
-                -- Reveal current file: ide.show идемпотентен, поэтому если
-                -- explorer уже открыт на filesystem и НЕ показывает текущий
-                -- файл — нужен прямой :Neotree reveal вызов.
-                local visible = require('ide').current().slots.left == 'explorer'
+                -- После фокуса Files native get_path_to_reveal() возвращает nil.
+                -- Снимаем путь из editor window до перехода, а не из панели.
+                local files = require('ide.buffers')
+                local buf = vim.api.nvim_win_get_buf(files.editor_window())
+                local file = files.is_file(buf) and vim.api.nvim_buf_get_name(buf) or nil
                 require('ide.controls').explorer()
-                -- Первое открытие уже выполняет reveal. Второй navigate
-                -- откладывает старый путь, который после rename уже исчез.
-                if visible then vim.cmd('Neotree filesystem reveal left') end
+                if file then
+                    local manager = require('neo-tree.sources.manager')
+                    local state = manager.get_state('filesystem')
+                    local utils = require('neo-tree.utils')
+                    file = utils.normalize_path(file)
+                    -- Native callback после render: WinEnter/CursorMoved во
+                    -- время async scan не должны заменить целевой node_id.
+                    if state.path and utils.is_subpath(state.path, file) then
+                        manager.navigate(state, nil, file, function()
+                            -- Пока scan шёл, мог открыться input/другая панель.
+                            -- Выбор узла обновляем, фокус у них не отбираем.
+                            require('neo-tree.ui.renderer').focus_node(state, file, true)
+                        end)
+                    else
+                        -- За пределами tree root остаётся штатный вопрос о cwd.
+                        require('neo-tree.command').execute({ source = 'filesystem', position = 'left', reveal_file = file })
+                    end
+                end
             end, desc = "Explorer: reveal current file" },
             -- TODO: после теста в Windows terminal/Cursor почистить лишние
             -- варианты. Разные терминалы по-разному кодируют Shift/Ctrl/Alt
@@ -277,6 +319,8 @@ return {
         },
         deactivate = function() vim.cmd("Neotree close") end,
         init = function()
+            vim.api.nvim_create_user_command('ForgeExplorerRoot', explorer_project_root,
+                { desc = 'Explorer: return to project root' })
             -- Открыть neo-tree автоматически, если nvim запущен на каталоге.
             -- ВАЖНО: VimEnter + once=true (а НЕ BufEnter без once). BufEnter
             -- срабатывает на каждом входе в буфер, и когда edgy.nvim
@@ -328,7 +372,7 @@ return {
                 end,
             })
         end,
-        opts = {
+        opts = function() return {
             event_handlers = {
                 { event = 'vim_buffer_enter', handler = function(args) require('forge.neo_tree_lifecycle').follow_file(args) end },
                 { event = 'neo_tree_window_after_open', handler = function(args) require('forge.neo_tree_lifecycle').opened(args) end },
@@ -433,18 +477,22 @@ return {
             filesystem = {
                 -- spec: IDE-FILE-6. Штатный auto читает вручную раскрытые каталоги синхронно.
                 async_directory_scan = "always",
+                bind_to_cwd = false,
+                renderers = filesystem_renderers(),
                 commands = vim.tbl_extend("force", guarded_open_commands("filesystem"), {
                     open_folder_as_project = open_node_as_project,
                     rename = safe_rename,
                     delete = safe_delete,
                 }),
                 -- Native follow вызывается lifecycle handler при смене файла.
-                follow_current_file = { enabled = false },
+                follow_current_file = { enabled = false, leave_dirs_open = true },
                 use_libuv_file_watcher = true,
                 filtered_items = {
                     visible = false,
                     hide_dotfiles = false,
-                    hide_gitignored = true,
+                    -- Files не зависит от запоздалого Git-ignore snapshot
+                    -- (в том числе родительского репозитория после navigate_up).
+                    hide_gitignored = false,
                     hide_by_name = { "node_modules", "__pycache__", "target", ".venv", "venv" },
                     never_show = { ".DS_Store", "thumbs.db" },
                 },
@@ -456,6 +504,7 @@ return {
                         ["O"] = "open_folder_as_project",
                         ["u"] = "navigate_up",
                         ["-"] = "navigate_up",
+                        ["gR"] = { explorer_project_root, desc = "Explorer: return to project root" },
                     }),
                 },
             },
@@ -468,7 +517,7 @@ return {
                 window = { position = "left" },
                 commands = guarded_open_commands("git_status"),
             },
-        },
+        } end,
         config = function(plugin, opts)
             require('ide.backports').run('neo-tree.nvim', plugin.dir, 'check')
             require('neo-tree').setup(opts)

@@ -16019,3 +16019,48 @@ Fresh candidate windows-files-fix clean-source/manifest/Default/native probes
 PASS. Actual hashes/ограничения — verification и final-candidate.json.
 Свой контейнер удалён, owner UI не закрывался. Нужен перезапуск fride.
 Help пока закрывается :helpclose; IDE-149 остаётся отдельным общим контрактом.
+
+## 304. Приёмка: Files, root/reveal и поиск хоткеев
+
+2026-11-22. IDE-150. Спека: IDE-FILE-8/9, IDE-PANEL-31 (ADDED).
+
+**Проблема.** Владелец предварительно принял Windows startup/отзывчивость,
+но Unicode create/copy/move временно не видны в Files, удалённый source с крестом;
+нужны быстрые buffers/searchable keys, возврат корня и reveal без сброса соседей.
+Ctrl+J/K в палитре сдвигают текст вправо. Живой fride прочитан через RPC без ввода:
+filesystem, cwd lab, root дерева выше; кириллический файл позднее уже в render.
+
+**Причина.** Telescope caret=' ' — префикс entry_prefix='  ', что воспроизводимо
+накапливает12 пробелов за12 проходов. Reveal терял target после фокуса Files;
+async render мог заменить mutable position. Nested repo fixture дополнительно
+скрывается по Git-ignore/status родительского repo после подъёма. Это объясняет
+один реальный класс невидимости; точная причина исходной задержки lab неизвестна.
+
+**Изменение.** Native caret='> '; F1/keymaps и Alt+B/buffers (решение владельца),
+старые Space s k / b b сохранены. gR/ForgeExplorerRoot возвращают глобальную
+рабочую папку, bind_to_cwd=false отделяет просмотр дерева от project cwd.
+Files сохраняет native renderers/колонки без Git component/colors/filter;
+generated hide_by_name и обычные ignore filters остаются. Git view прежний.
+Space E снимает active editor path заранее, native callback выбирает узел после
+render с do_not_focus_window=true; leave_dirs_open=true сохраняет соседние ветви.
+Новый manager/window framework или vendor backport не добавлялись.
+
+**Проверка/e2e.** Source palette RED, negative late-reveal control RED
+(фон отобрал input, neo-tree вместо popup). Первоначальный callback без true
+сломал Windows A и дал E21; после исправления actual create и delayed IO GREEN.
+Попытка absolute c сломала bare copy на обеих ОС, откатили полностью;
+source fixture relative add также был исправлен, не засчитан как product fix.
+Deprecated API из промежуточной попытки отсутствует в итоговом коде.
+Один пакет12 suites/ОС, затем failed/affected: по59 unique cases Windows/Ubuntu
+aggregate. Navigation5, explorer7, copy-delete9, scan8/filter2, buffers8,
+session1+2, worktree2+3, focus6 и filesystem-errors6. F1 ищет и локальный gR.
+Результаты/receipt/profiles — change verification и .tests/acceptance-navigation.
+
+**Вывод.** Files/Git должны иметь разные правила отображения; завершение
+фонового reveal может менять выбор дерева, но не активное окно пользователя.
+Native Mac, физические keys, полный regression и повтор owner GUI не выполнены;
+исходную задержку lab окончательно закрывать рано. IDE-149 остаётся открытым.
+
+**Файлы.** plugins/neo-tree.lua, plugins/telescope.lua,
+tests/e2e/acceptance-navigation.test.lua, registry, HOTKEYS/KEYBINDINGS/PANEL_KEYS,
+IDE_ROADMAP/PROBLEMS/HISTORY и change fix-acceptance-explorer-and-pickers.

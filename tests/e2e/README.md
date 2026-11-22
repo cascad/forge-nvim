@@ -1,5 +1,12 @@
 # E2E и регресс в целевых средах
 
+Windows acceptance IDE-150: `nvim -l tests/e2e/acceptance-navigation.test.lua`,
+5 native UI cases: повторные Ctrl+J/K палитры, tracked/Unicode create-copy-cut
+после navigate_up, root/reveal с сохранением соседей, F1/Alt+B и отмена,
+реальный отложенный scan reveal не отбирает фокус у нового filesystem input.
+Связан с IDE-FILE-8/9 и IDE-PANEL-31; registry включает файл в общий e2e.
+Files не фильтруется по Git-ignore и не рисует Git status, Git source сохраняется.
+
 SQL §300: актуален только `sql-basic.test.lua` и
 [Sqruff/parser preparation](sql-tools/README.md). Прежние SQL language/query/
 SDK/SQLLogicTest sections ниже исторические; их scripts/tests сняты по решению

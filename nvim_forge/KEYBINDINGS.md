@@ -1,6 +1,9 @@
 # Keybindings reference (nvim_forge)
 
 Полный справочник по всем хоткеям конфигурации. `<leader>` = `Space`.
+Поиск непосредственно в редакторе: **F1** / `Space s k`; список открытых файлов:
+**Alt+B** / `Space b b`. Reveal: `Space E`; вернуть Files к проекту:
+`gR` внутри дерева / `:ForgeExplorerRoot`. Все эти сочетания — normal mode.
 `<localleader>` = `\`. Режим в графе **Mode**: `n` normal, `i` insert,
 `v` visual, `x` visual+select, `t` terminal, `c` cmdline. Если не
 указан — `n`.

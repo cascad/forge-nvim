@@ -25,6 +25,17 @@
 
 ### До первой боевой сборки — конкретный остаток
 
+**IDE-150 (§304), Windows приёмка 1–4:** startup/отзывчивость предварительно
+приняты владельцем. F1 — поиск хоткеев, Alt+B — файлы (подтверждены); gR в Files /
+:ForgeExplorerRoot — вернуть рабочий корень; Space E — reveal с сохранением
+соседей. Files показывает диск без Git decorations/ignore, generated filters
+сохраняются; Git изменения — отдельно. Устранены отступы палитры и потеря
+reveal target, async callback не отбирает фокус нового input. По59 unique
+targeted cases Windows/Ubuntu aggregate; [доказательства и открытая GUI проверка](../openspec/changes/fix-acceptance-explorer-and-pickers/verification.md).
+Исходная временная невидимость файла на lab не объявлена окончательно закрытой:
+повторить create/copy/move после обновления. IDE-149 остаётся следующим отдельным
+продуктовым этапом; этот блок не заменяет общий контракт панелей.
+
 **IDE-148 (§303):** modal native errors/paging, synchronous prompt completion и
 blocking delete исправлены штатными messagesopt/nomore, prompt Enter fallback
 и Plenary async/libuv companion. По33 targeted cases Windows/Ubuntu PASS
