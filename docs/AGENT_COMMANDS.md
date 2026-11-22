@@ -12218,3 +12218,17 @@ docker exec -e FORGE_E2E_DEPS=/tmp/fride-copy-indicator/editor-deps -e FORGE_TES
 npx.cmd --yes @fission-ai/openspec@1.13.2 validate copy-files-without-blocking --type change --strict --no-interactive
 & .tools/neovim/windows-x64/bin/nvim.exe -u NONE -i NONE -l tests/trace.test.lua --change copy-files-without-blocking
 ```
+
+## 220. IDE-155 — открыть результат Ctrl+P в коде
+
+На исходном `8f2c7b9` фильтр `FORGE_TEST_ID=IDE-FILE-11` получил один PASS
+из split кода и один RED из Files после Enter. Затем выполнен пакет
+`acceptance-navigation.test.lua` на Windows и Ubuntu с готовыми зависимостями
+и отдельным контейнером. По 8 PASS, логи в `.tests/file-search-enter`.
+
+```powershell
+& .tools/neovim/windows-x64/bin/nvim.exe -u NONE -i NONE -l tests/e2e/acceptance-navigation.test.lua
+docker exec -e FORGE_E2E_DEPS=/tmp/fride-file-search-enter/editor-deps -e GOMAXPROCS=2 fride-file-search-enter-20261122 /opt/nvim/bin/nvim -u NONE -i NONE -l tests/e2e/acceptance-navigation.test.lua
+npx.cmd --yes @fission-ai/openspec@1.13.2 validate open-file-search-in-editor --type change --strict --no-interactive
+& .tools/neovim/windows-x64/bin/nvim.exe -u NONE -i NONE -l tests/trace.test.lua --change open-file-search-in-editor
+```

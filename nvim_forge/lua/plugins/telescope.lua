@@ -82,6 +82,10 @@ return {
             return {
                 defaults = {
                     prompt_prefix = "  ",
+                    -- spec: IDE-FILE-11. A file may be selected from a protected panel.
+                    get_selection_window = function()
+                        return require('ide.buffers').editor_window()
+                    end,
                     -- Не должен быть префиксом entry_prefix: иначе native
                     -- update_prefix принимает обычную строку за выбранную.
                     selection_caret = "> ",

@@ -61,6 +61,7 @@ local function check(name,fn)
         for path,value in pairs({['tracked.txt']='tracked payload',['sibling/keep.txt']='keep',['branch/deep/reveal.txt']='reveal'}) do
           vim.fn.writefile({value},project..'/'..path)
         end
+        vim.fn.writefile({'reveal','FORGE_FILES_MATCH_ON_LINE_TWO'},project..'/branch/deep/reveal.txt')
         for _,args in ipairs({{'add','.'},{'-c','user.name=Fixture','-c','user.email=fixture@example.invalid','commit','-m','fixture'}}) do
           local argv={'git','-C',project};vim.list_extend(argv,args);local r=vim.system(argv,{text=true}):wait();assert(r.code==0,r.stderr)
         end
@@ -156,6 +157,49 @@ check('IDE-PANEL-31 searchable F1 and quick AltB preserve file target',function(
   end)
   e:input('<CR>');e:wait('picked buffer in code',function() return e:current_ft()=='text' and e:current_file():find('file_one.txt',1,true) end)
   T.eq(e:has_window('neo-tree'),true)
+end)
+
+local function select_search_file(key,query,relative)
+  e:input(key);e:wait('Telescope accepts input',function()
+    return e:current_ft()=='TelescopePrompt' and e.rpc:request('nvim_get_mode',{}).mode=='i'
+  end)
+  e:input(query);e:wait('exact file is selected in search',function()
+    return e:lua([[local entry=require('telescope.actions.state').get_selected_entry()
+      local path=entry and (entry.path or entry.filename or entry.value)
+      local function normalized(p) return vim.fs.normalize(p):lower() end
+      return type(path)=='string' and normalized(vim.fn.fnamemodify(path,':p'))==normalized(...)]],{e.project..'/'..relative})
+  end)
+  e:input('<CR>');e:wait('selected file opens in code after Enter',function()
+    return e:current_ft()=='text' and normalize(e:current_file())==normalize(e.project..'/'..relative)
+  end)
+end
+
+local function find_file(relative) select_search_file('<C-p>',vim.fs.basename(relative),relative) end
+
+check('IDE-FILE-11 Ctrl+P opens a different file in the focused code split',function()
+  e:input(':vsplit file_two.txt<CR>')
+  e:wait('second editor split focused',function() return normalize(e:current_file()):find('/file_two.txt',1,true)~=nil end)
+  local win=e:lua('return vim.api.nvim_get_current_win()')
+  find_file('branch/deep/reveal.txt')
+  T.eq(e:lua('return vim.api.nvim_get_current_win()'),win)
+  T.eq(e:lua([[return vim.fn.bufwinid(vim.fn.bufnr('file_one.txt'))>0]]),true)
+end)
+
+check('IDE-FILE-11 Ctrl+P from Files opens code and preserves the guarded panel',function()
+  tree();e:wait('owner guard active in Files',function() return e:lua('return vim.wo.winfixbuf') end)
+  local panel=e:lua('return {vim.api.nvim_get_current_win(),vim.api.nvim_get_current_buf()}')
+  find_file('branch/deep/reveal.txt')
+  T.eq(e:lua([[local w,b=...;return vim.api.nvim_win_is_valid(w)
+    and vim.api.nvim_win_get_buf(w)==b and vim.wo[w].winfixbuf]],panel),true)
+end)
+
+check('IDE-FILE-11 text search from Logs opens the matching line in code',function()
+  e:input(' wi');e:wait('Logs focused',function()
+    return e:current_ft()=='forge-logs' and e:lua('return vim.wo.winfixbuf')
+  end)
+  select_search_file(' fg','FORGE_FILES_MATCH_ON_LINE_TWO','branch/deep/reveal.txt')
+  T.eq(e:lua('return vim.api.nvim_win_get_cursor(0)[1]'),2)
+  T.eq(e:has_window('forge-logs'),true)
 end)
 
 check('IDE-FILE-9 late reveal cannot steal an active filesystem input',function()
