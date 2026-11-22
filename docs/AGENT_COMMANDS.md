@@ -12187,3 +12187,12 @@ npx.cmd --yes @fission-ai/openspec@1.13.2 validate copy-files-without-blocking -
 PASS. В `.tests/async-copy/verification.json` список сценариев, их логи и
 результаты завершения редакторов. Неизменность pin/SDK/main specs и журналы
 проверены по baseline `075c4ca`.
+
+Коммит `091e2b9`. `python -B .tests/tmp/deliver-async-copy.py` сверил прежние
+байты, создал резервную копию и обновил три файла. Затем штатный `prepare-plugins.lua`
+проверил `--plugin neo-tree.nvim --check` на установленном каталоге lazy.
+С `FORGE_E2E_CONFIG_SOURCE=F:/apps/fride/config/forge` и `FORGE_TEST_ID=IDE-FILE-10`
+команда `nvim.exe -u NONE -i NONE -l tests/e2e/file-copy-delete.test.lua`
+через бинарь `F:/apps/fride/runtime/bin/nvim.exe` дала 2 PASS. Хеши, источники
+двух профилей и их завершение проверены. Собственный тестовый контейнер
+удалён по проверенному ID после проверки списка процессов.
