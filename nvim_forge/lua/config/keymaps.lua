@@ -19,10 +19,7 @@ local ru_keys = require("config.ru_keys")
 
 local function delmap(modes, lhs)
     local aliases = { lhs }
-    local ru_lhs = ru_keys.translate_lhs(lhs)
-    if ru_lhs and ru_lhs ~= lhs then
-        aliases[#aliases + 1] = ru_lhs
-    end
+    vim.list_extend(aliases, ru_keys.aliases(lhs))
 
     for _, mode in ipairs(modes) do
         for _, key in ipairs(aliases) do

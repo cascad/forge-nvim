@@ -30,5 +30,12 @@ bind_to_cwd и follow могут влиять на worktree/session: включ�
 
 ## Open Questions
 
+Дополнение приёмки: bare пК работает; п<S-К> не работает. Native mapping lookup
+с production langmap ищет g<S-К>: prefix переведён, modified Cyrillic нет.
+Общий ru_keys создаёт обычный RU, shifted RU и mixed Latin-prefix/shifted-RU
+aliases; extend_mappings и vim.keymap.set используют одну функцию. Удаление
+переназначаемых keys удаляет все её aliases. Сам langmap/terminal не меняются.
+Default hidden обсуждается отдельно, без ответа владельца текущие filters сохраняются.
+
 Точная последовательность первоначального временно пропавшего файла не известна;
 повторить реальные create/copy/move с expanded/collapsed папками и Git fixture.

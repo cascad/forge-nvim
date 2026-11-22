@@ -43,7 +43,7 @@ local function translate_token(token)
     return "<" .. prefix .. mapped .. ">", true
 end
 
-function M.translate_lhs(lhs)
+function M.translate_lhs(lhs, shifted, latin_prefix)
     if type(lhs) ~= "string" or lhs == "" then return nil end
     if lhs:find("<Plug>", 1, true) or lhs:find("<plug>", 1, true) then return nil end
 
@@ -68,6 +68,8 @@ function M.translate_lhs(lhs)
             end
         else
             local mapped = en_to_ru[ch] or ch
+            if shifted and ch:match('%u') then mapped = '<S-' .. mapped .. '>'
+            elseif latin_prefix then mapped = ch end
             out[#out + 1] = mapped
             changed = changed or mapped ~= ch
             i = i + 1
@@ -78,11 +80,21 @@ function M.translate_lhs(lhs)
     return table.concat(out)
 end
 
+-- Windows input может сохранить Shift на заглавной кириллице. Langmap
+-- переводит обычный prefix (п→g), но не <S-К>; нужен и g<S-К>, и п<S-К>.
+function M.aliases(lhs)
+    local out, seen = {}, { [lhs] = true }
+    for _, mode in ipairs({ {}, { true }, { true, true } }) do
+        local alias = M.translate_lhs(lhs, mode[1], mode[2])
+        if alias and not seen[alias] then out[#out + 1] = alias; seen[alias] = true end
+    end
+    return out
+end
+
 function M.extend_mappings(mappings)
     for lhs, rhs in pairs(vim.deepcopy(mappings)) do
-        local alias = M.translate_lhs(lhs)
-        if alias and mappings[alias] == nil then
-            mappings[alias] = rhs
+        for _, alias in ipairs(M.aliases(lhs)) do
+            if mappings[alias] == nil then mappings[alias] = rhs end
         end
     end
     return mappings
@@ -122,16 +134,13 @@ function M.setup()
         local result = original_set(mode, lhs, rhs, opts)
 
         if in_alias then return result end
-        local alias = M.translate_lhs(lhs)
-        if not alias or alias == lhs then return result end
-
         local alias_opts = opts
         if type(opts) == "table" then
             alias_opts = vim.deepcopy(opts)
         end
 
         in_alias = true
-        pcall(original_set, mode, alias, rhs, alias_opts)
+        for _, alias in ipairs(M.aliases(lhs)) do pcall(original_set, mode, alias, rhs, alias_opts) end
         in_alias = false
 
         return result

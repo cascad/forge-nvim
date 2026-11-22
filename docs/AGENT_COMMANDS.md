@@ -11971,3 +11971,25 @@ backup navigation-20261122-88b2006;2520 candidate SHA entries сверены.
 Strict/trace9/syntax4/append-only/frozen4/pins66/backports17 PASS.
 Container222ff23d… удалён по точному ID после inspect/task/ps (init+sleep);
 последующий docker ps с ID пуст. Desktop/WSL/owner process не менялись.
+
+## 213. Русская раскладка и пояснения приёмки (2026-11-22)
+
+Source bf8b100. Read-only live RPC server fride.21656.0: keymaps gR/пК,
+langmap/langnoremap, Node resolution, Python LSP warnings. Get-ChildItem -Force
+D:/rust_repo/lab:4 hidden причины сопоставлены с config/defaults. Не вводили
+клавиши в owner session и не устанавливали языки; source/plain пК GREEN,
+explicit п<S-К> RED, isolated .tests/tmp/shift-prefix-probe.lua → g<S-К> lookup.
+
+```powershell
+$env:TEMP='F:/repo/forge-nvim/.tests/tmp'; $env:TMP=$env:TEMP; $env:TMPDIR=$env:TEMP
+$env:PYTHONIOENCODING='utf-8'; $env:PYTHONDONTWRITEBYTECODE='1'
+$env:FORGE_E2E_DEPS='F:/repo/forge-nvim/.tests/neodev-review/editor-deps'
+& .tools/neovim/windows-x64/bin/nvim.exe -u NONE -i NONE -l tests/ru-keys.test.lua
+python -B .tests/tmp/run-layout-packet.py --nvim F:/repo/forge-nvim/.tools/neovim/windows-x64/bin/nvim.exe --tag windows
+docker exec -e FORGE_E2E_DEPS=/tmp/fride-layout/editor-deps fride-layout-20261122 python3 -B .tests/tmp/run-layout-packet.py --nvim /opt/nvim/bin/nvim --tag ubuntu
+```
+Packet — native-keys2/navigation5/focus6/key-ownership46,59/ОС. Registered
+unit/native editor scripts используют actual Neovim input engine; physical GUI
+keyboard не выдаётся за проверенный. Container1ce6ad23… owned task ru-root-20261122,
+cpus2/network none, repo ro/.tests rw. Docker Desktop/WSL не запускались/не менялись.
+Strict/trace/gates/доставка дописываются по факту.

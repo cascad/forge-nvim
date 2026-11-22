@@ -16073,3 +16073,39 @@ clean-source88b2006:2520 hashes, Default/no language preparation, native3 probes
 33 parsers/117 queries/fzf ABI PASS. Manifest hash и receipt в verification.
 Свой контейнер222ff23d… удалён после ID/label/ps; Desktop/WSL прежние.
 Owner session не менялась — для новых keys/Files нужен перезапуск fride.
+
+## 305. Русская раскладка: gR и явный Shift на кириллице
+
+2026-11-22. IDE-151. Спека: IDE-FILE-9 (FIX).
+
+**Проблема.** После §304 владелец сообщил: gR только EN. Также спросил, где
+общие логи Python LSP и почему Files пишет4 hidden. Read-only RPC показал,
+что gR и пК зарегистрированы; добавить такой же alias недостаточно.
+
+**Причина.** Source native пК GREEN, п<S-К> RED. Production langmap переводит
+prefix п в g, но оставляет explicit Shift-К. Изолированный mapping lookup
+выбирает g<S-К>. Прежние aliases знали только gR/пК, а E2E вводил только EN.
+Тип события соответствует Windows modified Cyrillic; физический raw input
+owner WezTerm не записывался и остаётся натурной проверкой.
+
+**Изменение.** Общий ru_keys.aliases возвращает обычный RU, shifted RU и
+mixed Latin-prefix/shifted-RU варианты. Оба пути регистрации (global keymap
+и Neo-tree mappings) используют его; delmap снимает все aliases. langmap,
+WezTerm и special Ctrl/Alt tokens прежние. Нет отдельного workaround для gR.
+HOTKEYS/PANEL_KEYS дополнены Space w i / ForgeLogs, s/Enter/f/v/r и языками
+Space l S. Node в owner PATH есть, Pyright не найден, Mason package отсутствует;
+никаких установок без выбора владельца не делали.4 hidden = __pycache__/target/
+venv (hide_by_name), .git (Windows Hidden). Default filters без ответа не менялись.
+
+**Проверка/e2e.** Один affected пакет Windows/Ubuntu: native mapping engine2
+(EN/RU/Shift, leader Shift и неизменный insert), Files/pickers5, focus ordering6,
+key ownership46. Итого59/ОС, без языковых installs. Source RED и plain-GREEN
+в .tests/tmp/ru-root-*-source.log; итог .tests/ru-root/*-packet.json.
+Новая unit suite зарегистрирована, редакторский root/reveal case расширен.
+
+**Вывод.** Текст пК не покрывает явный Shift-модификатор. Необходимо проверять
+native события с production langmap и обеими раскладками; owner GUI/Mac ещё
+отдельно принять. Логи missing server появляются до native LSP process log.
+
+**Файлы.** config/ru_keys.lua, config/keymaps.lua, tests/ru-keys.test.lua,
+acceptance-navigation.test.lua/registry, guides, roadmap/PROBLEMS/HISTORY.

@@ -10,7 +10,21 @@
 
 Маршрут и приоритеты: [рабочий план nvim_forge](docs/IDE_ROADMAP.md).
 Для новых пунктов используем следующий свободный ID `IDE-xxx`; исходный
-симптом хранится здесь, этап и состояние — в плане. Следующий ID: `IDE-151`.
+симптом хранится здесь, этап и состояние — в плане. Следующий ID: `IDE-152`.
+
+## IDE-151 — gR при Shift-кириллице и пояснения приёмки
+
+2026-11-22: владелец сообщил, что gR работает только в английской раскладке.
+Native input пК проходит, п<S-К> воспроизводимо не проходит. Production langmap
+превращает prefix в g, но оставляет modified Cyrillic: lookup ищет g<S-К>.
+Исправление — общий ru_keys, а не отдельный mapping одного окна; сохраняем
+обычный RU и добавляем shifted/mixed aliases. Regression включает native keys
+и Files root/reveal. Physical keyboard GUI проверит владелец после перезапуска.
+Read-only owner session: Node F:/nodejs/node.exe есть, Pyright не обнаружен;
+Mason pyright package отсутствует. Ничего не устанавливалось за владельца.
+Логи: Space w i / :ForgeLogs; source selector s, Enter детали, native :ForgeLogs lsp.
+4 hidden в lab: __pycache__, target, venv (наши hide_by_name), .git (Hidden attribute).
+Default hidden обсуждается отдельным optional вопросом; без ответа не меняется.
 
 ## IDE-150 — приёмка Windows: Files, reveal и поиск управления
 
