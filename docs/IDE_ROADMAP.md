@@ -25,6 +25,13 @@
 
 ### До первой боевой сборки — конкретный остаток
 
+**IDE-152 (§307):** Logs открывается на последних сообщениях, follow работает
+только в конце; при чтении истории view/фокус сохраняются. Source/filter
+показывает конец результата, сохранённая project session — прежнюю позицию.
+`G` — к последним сообщениям и follow; `gg` / `Ctrl+u` / `k` — история.
+По6 affected native cases Windows/Ubuntu PASS; Mac/GUI остаются в приёмке.
+[Проверка и доставка](../openspec/changes/follow-ide-log-tail/verification.md).
+
 **IDE-151 (§305):** приёмка нашла gR только EN: native пК проходит, п<S-К>
 не проходит из-за langmap prefix + сохранённого Shift на кириллице. Общие aliases
 поддерживают shifted/mixed варианты; root/reveal regression расширен.

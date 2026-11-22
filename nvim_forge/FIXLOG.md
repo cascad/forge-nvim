@@ -16179,3 +16179,44 @@ config/options.lua, registry declarations, E2E/transport и руководств
 hashes/Default plan PASS,2357 runtime hashes прежние. SDK/плагины/owner session
 не обновлялись. Own контейнер2667a0a0… удалён после exact ID/task/top, повторный
 ps пуст; Desktop/WSL не менялись. Подробные receipts — change verification.
+
+## 307. Logs: открытие последних сообщений и чтение истории
+
+2026-11-22. IDE-152. Спека: IDE-LOG-6 (ADDED).
+Проверка: tests/e2e/ide-logs.test.lua (2 новых native сценария и3 прежних),
+tests/e2e/session-logs-view.test.lua (native restart/project/tab restore).
+
+**Проблема.** При открытии общей консоли последние сообщения спрятаны ниже
+истории, приходится прокручивать вручную. Пользователь предложил начинать
+с конца либо перевернуть порядок при невозможности прокрутки.
+
+**Причина.** refresh безусловно возвращал прежний winsaveview; open создавал
+окно после render, не устанавливая начальную позицию. Первый cursor оставался
+на1 строке; последующие обновления не следовали за концом.
+
+**Изменение.** Хронологический порядок сохранён. Новое/повторное открытие
+скрытой панели показывает конец; source/filter — конец результата. При
+обновлении native view следует за хвостом только если cursor был на последней
+строке; старые строки сохраняют cursor/topline/leftcol. Фоновое обновление не
+отбирает фокус. Уже видимая панель при фокусировке не перематывается; session
+sidecar восстанавливает сохранённый вид после default open. Native G возвращает
+в конец и к следованию, gg/Ctrl+u/k позволяют читать историю. Новых timers,
+зависимостей, изменений recorder/IO/лимитов нет.
+
+**Проверка.** Один affected packet Windows/Ubuntu: ide-logs и session-logs-view;
+затем только failed native-source case на обеих ОС. Итог по6 unique PASS,
+без SKIP. Initial/reopen, live updates, сохранение старого view/фокуса, native
+file source и filters проверены реальным UI/public recorder. Первое падение
+source-case было ошибкой assertion: native файл оканчивается newline, cursor
+правильно стоял на последней пустой строке, нужная запись была видна над ней.
+Assertion теперь проверяет видимый viewport, не требует текста под cursor.
+Прежний session scenario сохраняет точные view/размеры между tabs/projects.
+Strict/trace9/syntax2,14 shutdown guards, неизменные pins/SDK/patches/WezTerm/
+main specs и append-only PASS. Logs: .tests/log-follow/verification.json.
+
+**Вывод.** Обычная консоль может открываться в хвосте без обратной сортировки
+и без принудительной прокрутки при чтении истории. Mac и физические keys
+остаются натурной приёмкой. Доставка/commit фиксируются в change verification.
+
+**Файлы.** forge/logs.lua, tests/e2e/ide-logs.test.lua, PANEL_KEYS/IDE_ROADMAP,
+PROBLEMS/HISTORY и openspec/changes/follow-ide-log-tail.

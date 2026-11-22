@@ -12093,3 +12093,25 @@ docker ps -a --filter id=2667a0a05e4a6ebaa5421e0dd99f3190bca6670424ec4da5e895afe
 в top; повторный ps пуст. Desktop/WSL не трогались. delivery-final.json хранит
 backup, manifest SHA256, source commit,6 профилей. Новые docs-only записи
 не требуют повтора editor E2E.
+
+## 216. IDE-152 — открытие Logs в хвосте и чтение истории
+
+Workdir F:/repo/forge-nvim, TEMP/TMP/TMPDIR=.tests/tmp на F, Python -B/UTF-8.
+Один affected packet на ОС:5 ide-logs cases и прежний session-logs-view1;
+только failed native-source case повторён после исправления viewport assertion
+для завершающего newline. Итог по6 unique PASS/0 SKIP,14 shutdown guards clean.
+
+```powershell
+python -B .tests/tmp/run-log-follow.py --nvim F:/repo/forge-nvim/.tools/neovim/windows-x64/bin/nvim.exe --tag windows
+docker exec -e FORGE_E2E_DEPS=/tmp/fride-log-tail/editor-deps -e GOMAXPROCS=2 -e CARGO_BUILD_JOBS=2 -e RAYON_NUM_THREADS=2 fride-log-tail-20261122 python3 -B .tests/tmp/run-log-follow.py --nvim /opt/nvim/bin/nvim --tag ubuntu
+# Failed-only: FORGE_TEST_ID='IDE-LOG-6 source', на Windows и через docker exec:
+& .tools/neovim/windows-x64/bin/nvim.exe -u NONE -i NONE -l tests/e2e/ide-logs.test.lua
+npx.cmd --yes @fission-ai/openspec@1.13.2 validate follow-ide-log-tail --type change --strict --no-interactive
+& .tools/neovim/windows-x64/bin/nvim.exe -u NONE -i NONE -l tests/trace.test.lua --change follow-ide-log-tail
+python -B .tests/tmp/log-follow-gates.py
+```
+
+JSON/logs .tests/log-follow; stdout/stderr runner .tests/tmp/log-follow-*.log.
+Existing image, own container с task log-tail-20261122,2CPU/network none;
+готовые pins66/backport groups6, без загрузок/сборки. Desktop/WSL не менялись.
+Strict/trace9/syntax2/append-only и неизменные pins/SDK/patches/main specs PASS.

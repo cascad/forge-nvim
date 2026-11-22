@@ -1,4 +1,4 @@
--- spec: IDE-LOG-1/2/3/4. Один readonly buffer, обычный IDE bottom slot.
+-- spec: IDE-LOG-1/2/3/4/6. Один readonly buffer, обычный IDE bottom slot.
 local M={source='events',minimum=0,query=''}
 local store=require('forge.log_store')
 local names={[0]='TRACE',[1]='DEBUG',[2]='INFO',[3]='WARN',[4]='ERROR',[5]='OFF'}
@@ -23,7 +23,13 @@ local function match(text,level)
     return (M.minimum==0 or level and level>=M.minimum)
         and text:lower():find(M.query:lower(),1,true)~=nil
 end
-function M.refresh()
+local function tail(win)
+    vim.api.nvim_win_call(win,function()
+        vim.api.nvim_win_set_cursor(win,{vim.api.nvim_buf_line_count(M.buf),0})
+        vim.cmd('normal! zb')
+    end)
+end
+function M.refresh(follow)
     if not valid() then return end
     local source=selected()
     local lines={'IDE Logs | '..source.title,
@@ -70,11 +76,18 @@ function M.refresh()
     if count==0 then lines[#lines+1]=(M.query~='' or M.minimum>0) and 'Нет совпадений по фильтру.' or 'Сообщений пока нет.' end
     -- Native logs не копируются в recorder. Report содержит только выбранный view.
     local views={}
-    for _,win in ipairs(vim.fn.win_findbuf(M.buf)) do views[win]=vim.api.nvim_win_call(win,vim.fn.winsaveview) end
+    local last=vim.api.nvim_buf_line_count(M.buf)
+    for _,win in ipairs(vim.fn.win_findbuf(M.buf)) do
+        local view=vim.api.nvim_win_call(win,vim.fn.winsaveview)
+        views[win]={view=view,follow=follow or view.lnum==last}
+    end
     vim.bo[M.buf].modifiable=true
     vim.api.nvim_buf_set_lines(M.buf,0,-1,false,lines)
     vim.bo[M.buf].modifiable=false
-    for win,view in pairs(views) do vim.api.nvim_win_call(win,function() vim.fn.winrestview(view) end) end
+    for win,saved in pairs(views) do
+        if saved.follow then tail(win)
+        else vim.api.nvim_win_call(win,function() vim.fn.winrestview(saved.view) end) end
+    end
 end
 
 function M.visible()
@@ -95,7 +108,7 @@ local function choose_source()
             return item.title..' ['..status..']'
         end
         return item.title
-    end},function(item) if item then M.source=item.id;M.refresh() end end)
+    end},function(item) if item then M.source=item.id;M.refresh(true) end end)
 end
 function M.open()
     store.snapshot_messages()
@@ -104,10 +117,10 @@ function M.open()
         vim.api.nvim_buf_set_name(M.buf,'forge://ide-logs')
         vim.bo[M.buf].bufhidden='hide';vim.bo[M.buf].swapfile=false;vim.bo[M.buf].filetype='forge-logs'
         local maps={s=choose_source,r=function() store.snapshot_messages();store.reload();M.refresh() end,
-            v=function() M.minimum=({[0]=3,[3]=4,[4]=0})[M.minimum] or 0;M.refresh() end,
-            c=function() M.query='';M.minimum=0;M.refresh() end,
+            v=function() M.minimum=({[0]=3,[3]=4,[4]=0})[M.minimum] or 0;M.refresh(true) end,
+            c=function() M.query='';M.minimum=0;M.refresh(true) end,
             f=function() vim.ui.input({prompt='IDE Logs: текст > ',default=M.query},function(query)
-                if query~=nil then M.query=query;M.refresh() end
+                if query~=nil then M.query=query;M.refresh(true) end
             end) end,
             y=function()
                 local report=store.clean(table.concat(vim.api.nvim_buf_get_lines(M.buf,0,-1,false),'\n'))
@@ -128,7 +141,9 @@ function M.open()
         for key,action in pairs(maps) do vim.keymap.set('n',key,action,{buffer=M.buf,silent=true,desc='IDE Logs: '..key}) end
     end
     M.refresh()
-    if not M.visible() then vim.cmd('botright 12split');vim.api.nvim_win_set_buf(0,M.buf) end
+    if not M.visible() then
+        vim.cmd('botright 12split');vim.api.nvim_win_set_buf(0,M.buf);tail(vim.api.nvim_get_current_win())
+    end
     require('ide.controls').work_maps(M.buf)
 end
 function M.setup()
@@ -136,9 +151,10 @@ function M.setup()
     store.changed=function() if M.visible() then M.refresh() end end
     vim.api.nvim_create_user_command('ForgeLogs',function(args)
         store.snapshot_messages()
+        local changed=args.args~='' and args.args~=M.source
         if args.args~='' then M.source=args.args end
         require('ide.controls').logs()
-        M.refresh() -- уже видимая панель не вызывает component.open повторно
+        M.refresh(changed) -- уже видимая панель не вызывает component.open повторно
     end,{nargs='?',desc='IDE Logs: общая консоль и native источники',complete=function()
         local out={};for _,source in ipairs(source_list()) do out[#out+1]=source.id end;return out
     end})
