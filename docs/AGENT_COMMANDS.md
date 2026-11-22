@@ -12115,3 +12115,26 @@ JSON/logs .tests/log-follow; stdout/stderr runner .tests/tmp/log-follow-*.log.
 Existing image, own container с task log-tail-20261122,2CPU/network none;
 готовые pins66/backport groups6, без загрузок/сборки. Desktop/WSL не менялись.
 Strict/trace9/syntax2/append-only и неизменные pins/SDK/patches/main specs PASS.
+
+Доставка code17c0b00:1 installed Lua file, backup/receipt до замены,
+baseline c877570 и committed bytes проверены.2 новых native cases с installed
+source PASS; оба origin/hash/shutdown проверены. Candidate2521 hashes/Default
+plan PASS;2357 runtime hashes идентичны windows-ownership-fix.
+
+```powershell
+python -B .tests/tmp/deliver-log-tail.py
+# FORGE_E2E_CONFIG_SOURCE=F:/apps/fride/config/forge, FORGE_TEST_ID=IDE-LOG-6:
+& .tools/neovim/windows-x64/bin/nvim.exe -u NONE -i NONE -l tests/e2e/ide-logs.test.lua
+python -B scripts/package-acceptance-installer.py --core .tests/acceptance-installer/publisher/windows-x64/assets/core.zip --terminal .tests/acceptance-installer/publisher/windows-x64/assets/terminal.zip --frontend .tests/acceptance-installer/frontend/windows-x64/fride-setup.exe --output .tests/acceptance-installer/windows-log-tail-fix
+python -B .tests/tmp/verify-log-tail-delivery.py
+& .tests/acceptance-installer/windows-log-tail-fix/install.cmd --print-plan
+docker inspect --format '{{.Id}} {{index .Config.Labels "fride.task"}}' fride-log-tail-20261122
+docker top fride-log-tail-20261122 -eo pid,ppid,args
+docker rm -f 812d778e32a13fb3d841352ab3f804a661cadc94230c3802e9dbf047c7a89cf9
+docker ps -a --filter id=812d778e32a13fb3d841352ab3f804a661cadc94230c3802e9dbf047c7a89cf9 --format '{{.ID}} {{.Names}}'
+```
+
+Удалён только own контейнер с проверенным task/ID и init/sleep в top; повторный
+ps пуст. Desktop/WSL/owner session не трогались. .tests/log-follow/delivery-final.json
+содержит source/backup/manifest и2 профиля. Повтор editor E2E для этих docs-only
+записей не требуется.

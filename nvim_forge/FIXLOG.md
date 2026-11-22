@@ -16220,3 +16220,10 @@ main specs и append-only PASS. Logs: .tests/log-follow/verification.json.
 
 **Файлы.** forge/logs.lua, tests/e2e/ide-logs.test.lua, PANEL_KEYS/IDE_ROADMAP,
 PROBLEMS/HISTORY и openspec/changes/follow-ide-log-tail.
+
+**Доставка §307.** Code17c0b00,1 installed Lua file после baseline/hash check,
+backup log-tail-20261122-17c0b00 и prepared receipt.2 installed-source native
+cases PASS; origin/hash/shutdown подтверждены. Candidate windows-log-tail-fix
+clean-source:2521 hashes/Default plan PASS, runtime2357 hashes прежние. Own
+контейнер812d778e… удалён после inspect/task/top, повторный ps пуст. Owner
+session/SDK/плагины/Desktop/WSL не менялись; перезапустить fride для обновления.

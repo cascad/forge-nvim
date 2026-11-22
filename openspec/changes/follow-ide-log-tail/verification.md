@@ -29,5 +29,21 @@ main specs/WezTerm и session transport прежние; журналы append-on
 
 ## Доставка
 
-Commit/installed controls/candidate дописываются после безопасной доставки;
-task3 пока открыт. Native Mac и физическая GUI приёмка не объявляются PASS.
+Code commit `17c0b00d3e049578989c07dd351445c45f85d2e0`. Только
+`F:/apps/fride/config/forge/lua/forge/logs.lua` обновлён после baseline c877570 /
+committed byte check, с prepared receipt и backup
+`F:/apps/fride/backups/log-tail-20261122-17c0b00`.2 native installed-source
+IDE-LOG-6 cases PASS; origin/hash и shutdown обоих профилей проверены.
+Owner session не перезагружалась; достаточно перезапустить fride.
+
+Candidate `.tests/acceptance-installer/windows-log-tail-fix/install.cmd`,
+clean-source17c0b00.2521 hashes/Default plan PASS; payload.sha256:
+`c12825d8e154eeac9b1fcd1f70c969cabc859cf142477118d0febb7b45da087d`.
+2357 runtime hashes идентичны windows-ownership-fix; Core/Terminal/frontend
+не пересобирались. Фактической GUI переустановки поверх owner kit не было.
+Receipt `.tests/log-follow/delivery-final.json`, candidate-plan.log.
+
+Own container812d778e… удалён по exact ID после task label/top (только init/sleep),
+повторный ps -a по ID пуст. Desktop/WSL/чужие контейнеры не менялись.
+3/3 tasks завершены; main specs не синхронизированы, change оставлен для review.
+Native Mac и физическая GUI приёмка не объявляются PASS.

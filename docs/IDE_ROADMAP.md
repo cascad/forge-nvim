@@ -98,8 +98,8 @@ publisher, install копирует library без compiler; Lua fallback сох
 полная приёмка рабочего проекта и public release остаются открытыми.
 С учётом Core parser delivery4/ОС итог34 unique targeted cases: Windows33 PASS/
 1 explicit POSIX SKIP, Ubuntu34 PASS. Локальный Windows entrypoint после сборки:
-`.\.tests\acceptance-installer\windows-ownership-fix\install.cmd` (codee872ae4,
-включает IDE-149/150/151); полной GUI приёмки это
+`.\.tests\acceptance-installer\windows-log-tail-fix\install.cmd` (code17c0b00,
+включает IDE-149/150/151/152); полной GUI приёмки это
 не заменяет. Mac publisher команда и prerequisites — в guide выше.
 
 Порядок уточнён владельцем2026-11-20: Omarchy позже. Приёмку проводит на

@@ -25,7 +25,7 @@ Windows, из каталога выданного комплекта:
 Кандидат, подготовленный в этом Windows checkout:
 
 ```powershell
-.\.tests\acceptance-installer\windows-ownership-fix\install.cmd --install-dir "F:\apps\fride"
+.\.tests\acceptance-installer\windows-log-tail-fix\install.cmd --install-dir "F:\apps\fride"
 ```
 
 Можно указать новый путь с ещё не существующими родителями:
@@ -34,14 +34,13 @@ Windows, из каталога выданного комплекта:
 .\install.cmd --install-dir "F:\apps\fride"
 ```
 
-Актуальный кандидат2026-11-22: `windows-ownership-fix`, code `e872ae4`.
-Включает IDE-149: общий контракт панелей, native guard и transient/legacy
-session cleanup; прежние Python/Files/раскладки fixes входят. В `F:/apps/fride`
-13 Lua файлов уже обновлены с backup; **достаточно перезапустить fride**.
-Старая рабочая сессия агентом не перезагружалась.6 native installed-source
-controls PASS;2521 manifest hashes и Default plan проверены, runtime2357
-файлов идентичен прежнему проверенному комплекту.
-[Доказательства и ограничения](../openspec/changes/enforce-window-ownership/verification.md).
+Актуальный кандидат2026-11-22: `windows-log-tail-fix`, code `17c0b00`.
+Включает IDE-152 (открытие Logs в хвосте без сброса чтения истории) и прежние
+IDE-149/Python/Files/раскладки fixes. В `F:/apps/fride` Logs уже обновлён с
+backup; **достаточно перезапустить fride**. Старая рабочая сессия агентом не
+перезагружалась.2 native installed-source controls PASS;2521 manifest hashes
+и Default plan проверены, runtime2357 файлов идентичен windows-ownership-fix.
+[Доказательства и ограничения](../openspec/changes/follow-ide-log-tail/verification.md).
 
 2026-11-21: этот кандидат содержит исправление Python F5 (§302), code commit
 `182b160`. В существующем `F:/apps/fride` три соответствующих Lua файла уже
