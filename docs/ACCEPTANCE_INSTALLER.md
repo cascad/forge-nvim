@@ -17,7 +17,7 @@ Windows, из каталога выданного комплекта:
 Кандидат, подготовленный в этом Windows checkout:
 
 ```powershell
-.\.tests\acceptance-installer\windows-python-fix\install.cmd --install-dir "F:\apps\fride"
+.\.tests\acceptance-installer\windows-files-fix\install.cmd --install-dir "F:\apps\fride"
 ```
 
 Можно указать новый путь с ещё не существующими родителями:
@@ -30,6 +30,13 @@ Windows, из каталога выданного комплекта:
 `182b160`. В существующем `F:/apps/fride` три соответствующих Lua файла уже
 обновлены с backup; достаточно перезапустить fride. Новый кандидат предназначен
 для следующей полноценной установки/приёмки. [Результаты и границы](../openspec/changes/fix-python-auto-launch-runtime/verification.md).
+
+2026-11-22: актуальный комплект `windows-files-fix`, code commit `fa46778`,
+добавляет async delete и сообщения без modal ожидания (§303), включая прежний
+Python fix. В `F:/apps/fride` четыре config файла и один Neo-tree companion
+уже обновлены с backup. Требуется перезапуск редактора, переустановка не нужна.
+Help/session ownership — отдельный следующий IDE-149, текущий комплект его
+ещё не исправляет. [Фактическая проверка](../openspec/changes/keep-filesystem-errors-responsive/verification.md).
 
 На Mac — в native комплекте своей архитектуры:
 

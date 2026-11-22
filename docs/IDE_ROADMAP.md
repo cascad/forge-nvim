@@ -30,6 +30,9 @@ blocking delete исправлены штатными messagesopt/nomore, prompt
 и Plenary async/libuv companion. По33 targeted cases Windows/Ubuntu PASS
 aggregate; [результаты/ограничения](../openspec/changes/keep-filesystem-errors-responsive/verification.md).
 Полной гарантии для остальных synchronous copy/create/guard IO это не даёт.
+Code commit `fa46778`: installed config/backport обновлены с backup,
+два native installed-source controls PASS, новый candidate `windows-files-fix`
+прошёл manifest/Default/native runtime probes. Owner session не перезагружалась.
 
 **Следующий продуктовый этап — IDE-149:** единый контракт editor/tool/transient,
 допустимые буферы по owner и сохранение только разрешённых views; legacy repair.
@@ -64,7 +67,7 @@ publisher, install копирует library без compiler; Lua fallback сох
 полная приёмка рабочего проекта и public release остаются открытыми.
 С учётом Core parser delivery4/ОС итог34 unique targeted cases: Windows33 PASS/
 1 explicit POSIX SKIP, Ubuntu34 PASS. Локальный Windows entrypoint после сборки:
-`.\.tests\acceptance-installer\windows-python-fix\install.cmd`; полной GUI приёмки это
+`.\.tests\acceptance-installer\windows-files-fix\install.cmd`; полной GUI приёмки это
 не заменяет. Mac publisher команда и prerequisites — в guide выше.
 
 Порядок уточнён владельцем2026-11-20: Omarchy позже. Приёмку проводит на

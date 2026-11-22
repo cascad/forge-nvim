@@ -11892,3 +11892,21 @@ tool types исключены; несколько таблиц типов. Nativ
 Ex и nvim_win_set_buf при winfixbuf дали E1513. Это native основа будущей
 policy, не уже реализованная изоляция. Help закрывается штатным :helpclose.
 Доставка current fix и финальные guards/commit фиксируются отдельно в verification.
+
+
+Фактическая доставка §211:
+```powershell
+python -B .tests/files-input/final-gates.py
+python -B .tests/files-input/deliver.py
+python -B scripts/package-acceptance-installer.py --core .tests/acceptance-installer/publisher/windows-x64/assets/core.zip --terminal .tests/acceptance-installer/publisher/windows-x64/assets/terminal.zip --frontend .tests/acceptance-installer/frontend/windows-x64/fride-setup.exe --output .tests/acceptance-installer/windows-files-fix
+& .tests/acceptance-installer/windows-files-fix/install.cmd --print-plan
+& .tests/acceptance-installer/windows-files-fix/payload/runtime/bin/nvim.exe -u NONE -i NONE -l .tests/acceptance-installer/check-runtime.lua F:/repo/forge-nvim/.tests/acceptance-installer/windows-files-fix .tests/files-input/candidate-runtime.json
+python -B .tests/files-input/record-delivery.py
+```
+Code fa46778; first delivery check wrong lazy root → rollback всех5, retry
+preflight проверила originals → correct check PASS, backup с receipt сохранён.
+Два selected installed-source E2E (FORGE_E2E_CONFIG_SOURCE=F:/apps/fride/config/forge,
+FORGE_FILES_ERROR_CASE='empty directory' / 'native error') PASS. Итого50 clean
+editor profiles. Source/payload hashes и candidate metadata в final-candidate.json.
+Свой container487b70db… ID/task/ps проверены и удалён, Desktop/WSL прежние.
+Native boundary probe Ubuntu также E1513. Local commits без push/archive.

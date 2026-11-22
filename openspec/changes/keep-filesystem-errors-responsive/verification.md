@@ -82,3 +82,35 @@ SHA, installed source control и runtime proof дополняются после
 размещает Help снизу, а sessionoptions сохраняет help. Window-boundary probe
 на SDK показывает E1513 для Ex и nvim_win_set_buf при winfixbuf; возможна
 нативная основа owner policy, но не объявляем эту политику уже реализованной.
+
+
+## Фактическая доставка — 2026-11-22
+
+Code commit fa4677833e35cf4bbd6d0c857682000e5f434961. Обновлены четыре
+installed config файла и один Neo-tree companion, только после проверки
+исходных hashes. Backup с before/after receipt:
+F:/apps/fride/backups/files-ui-20261122-fa46778-verified.
+Первый delivery check получил plugin directory вместо lazy root; проверка
+отказала, все5 файлов восстановлены из backup. Повторная preflight проверила
+originals, root исправлен, actual Neo-tree --check PASS. Failed backup сохранён.
+Пользовательский процесс не закрывался, hot reload не выполнялся.
+
+Два дополнительных native controls на private копии installed config PASS:
+empty/cancel и native error80 lines/history. Actual installed companion SHA
+совпал с tested SDK. Оба profiles code0/signal0/empty scope; вместе с основными
+наборами50 clean editor profiles (48 основного пакета +2 installed controls).
+Это не доставка физических клавиш в уже открытое owner UI.
+
+Новый комплект .tests/acceptance-installer/windows-files-fix/install.cmd:
+clean source fa46778,2520 files, Default языки deferred/versions preserve.
+Manifest SHA256 b4cae3586292ac8919e75c0e6d48c15a486af138cf822d7ad15c97d33b35847c.
+Native Core/Terminal3 probes,33 parsers/117 queries и fzf C ABI PASS.
+Inputs Core/Terminal/frontend прежние; ничего не скачивалось/не пересобиралось.
+Receipt .tests/files-input/final-candidate.json; последующий commit меняет
+только документы/отметки доставки, код кандидата — fa46778.
+
+Свой container487b70db… удалён после проверки ID/task и ps: только init/sleep/
+собственный ps. Desktop/WSL и чужие containers не менялись. Native owner-boundary
+probe также выполнен на official Ubuntu0.12.2: Ex и nvim_win_set_buf отвергнуты
+с E1513. Native Mac и повторная GUI-приёмка владельцем открыты.
+Help/session policy IDE-149 остаётся следующей работой, не частью этого фикса.

@@ -16009,3 +16009,13 @@ UI не должен ждать acknowledgement/синхронную рекур�
 patches/plugins.json + README, tests/e2e/filesystem-errors.test.lua/fixture,
 узкий native-more параметр общего editor harness; guides/roadmap/PROBLEMS.
 Доставка с backup и source/native proof записывается в verification после commit.
+
+
+**Доставка §303 завершена.** Code commit fa46778,4 installed config файла и1
+Neo-tree companion с backup/receipt files-ui-20261122-fa46778-verified.
+Первый wrong-root check отказал и откатил5 файлов; повторная preflight/check
+прошла. Installed-source2 native controls PASS; всего50 clean profiles.
+Fresh candidate windows-files-fix clean-source/manifest/Default/native probes
+PASS. Actual hashes/ограничения — verification и final-candidate.json.
+Свой контейнер удалён, owner UI не закрывался. Нужен перезапуск fride.
+Help пока закрывается :helpclose; IDE-149 остаётся отдельным общим контрактом.
