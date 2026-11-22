@@ -12010,3 +12010,26 @@ Manifest2520 проверен полностью Python hashlib; runtime subset 
 результат, backup и profile13226295405500.23 editor scopes inactive/exit0.
 Own container1ce6ad23… удалён по exact ID после inspect/ps, повторный ps пуст;
 owner session не изменялась. Новые docs-only записи не требуют повтора editor E2E.
+
+## 214. Чек-лист будущей сравнительной приёмки forge-termide
+
+По явному запросу владельца добавлен новый документ
+F:/repo/forge-termide/docs/NVIM_PARITY_CHECKLIST.md.40 уникальных PAR-ID связаны
+с WF-01…14 и owner hotkey evidence; все результаты НЕ ПРОВЕРЕНО.
+Поведение и совпадение keys — разные поля. Reference forge-nvim1377388,
+копирование PASS из одного продукта в другой запрещено правилами чек-листа.
+В forge-nvim OWNER_TESTED_HOTKEYS/IDE_ROADMAP даны ссылки на один документ.
+
+До записи проверены parent/target AGENTS и git status. В forge-termide уже были
+WIP README/CAPABILITIES/KNOWN-ISSUES/VALIDATION/project_layout и untracked smoke;
+добавлен/закоммичен только новый document path, остальные изменения сохранены.
+
+```powershell
+# workdir F:/repo/forge-termide
+git status --short
+git add -- docs/NVIM_PARITY_CHECKLIST.md
+git diff --cached --check -- docs/NVIM_PARITY_CHECKLIST.md
+git commit --only -m 'docs: add fride parity acceptance checklist' -- docs/NVIM_PARITY_CHECKLIST.md
+```
+Проверены40 уникальных ID и отсутствие строк с принятым PASS. Runtime/e2e не
+запускались: изменена документация будущей приёмки, сравнение ещё не выполнялось.
