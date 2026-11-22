@@ -54,14 +54,15 @@ local function start(root,holder,options)
   function self:launch()
     assert(not self.job or self:job_state().exit~=false,'TUI still running')
     vim.fn.delete(self.base..'/ready.json')
-    self.job=e:lua([[local cwd,observer=...;vim.cmd('enew')
+    self.job=e:lua([[local cwd,observer=...;return require('ide.ownership').transition('native-terminal',function()
+      vim.cmd('enew')
       _G.forge_session_exit=nil
       _G.forge_session_job=vim.fn.jobstart({vim.v.progpath,'-i','NONE','--cmd','lua dofile('..vim.inspect(observer)..')',
         '-u',vim.fn.stdpath('config')..'/init.lua'},
         {term=true,cwd=cwd,on_exit=function(_,code) _G.forge_session_exit=code end})
       assert(_G.forge_session_job>0,'Native TUI failed to start')
       _G.forge_session_terminal=vim.api.nvim_get_current_buf()
-      return _G.forge_session_job]],{self.a,self.base..'/observer.lua'})
+      return _G.forge_session_job end)]],{self.a,self.base..'/observer.lua'})
     return self:connect()
   end
   function self:connect(previous_pid)

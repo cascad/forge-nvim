@@ -259,3 +259,38 @@ native regression на source switches. Это не доказательство
 До реализации этого этапа Help/session и прочие ограничения не считаются
 закрытыми. Два чистых core probes (Windows и official Ubuntu0.12.2) показали,
 что сам native механизм работает; разрыв находится в интеграции backend.
+
+## Реализация IDE-149
+
+2026-11-22, FIXLOG §306. Предыдущий раздел описывает исходное состояние и
+ограниченный прототип; ниже — результат реализации, без переписывания истории.
+
+`ide.registry` объявляет role, lifetime, family и source компонента. Один
+`ide.ownership` применяет native `winfixbuf`, markers, разрешённые transitions
+и repair после принудительной подмены. `ide.buffers/state/activities/controls`
+читают общий контракт; marks/panel_guard теперь фасады. Размер окна больше
+не определяет, нужно ли его закрыть. Код не подменяет глобальные Neovim API.
+
+Registry open/close временно разрешают смену в пределах backend family.
+Neo-tree использует штатный before_open; cancel pending Files scan опирается
+на существующий Forge generation contract, без новых vendor patches. Его
+source, а не общий filetype, различает Files/Buffers/Git. Таблицы Debug-группы,
+действий и Edgy filters остаются: это группировка/размещение, не определение
+того, является ли окно редактором. Default `gf` добавляется только при отсутствии
+собственного buffer-local mapping.
+
+Help/меню/input имеют transient lifetime. `help` исключён из sessionoptions;
+старые native sessions очищаются после загрузки. Сохранение использует прежний
+capture/restore views, не удаляет документы и не завершает terminal jobs.
+Native `loadview` тоже вызывает SessionLoadPost: cleanup выполняется только
+при `g:SessionLoad == 1`, иначе обычное открытие файла закрывало бы терминал.
+
+Native регресс Windows/Ubuntu: по84 PASS и2 platform SKIP aggregate. Проверены
+реальные source transitions, прямой E1513/forced repair, Ex/gf/quickfix/picker,
+dirty документы и splits, Help/legacy/session save/restart, terminal jobs,
+Debug/Output и Git. [Полные результаты](../openspec/changes/enforce-window-ownership/verification.md).
+Системного blocker на проверенном pinned наборе не обнаружено. Это ограниченная
+совместимость нашего комплекта: arbitrary Lua и `!` могут обходить native guard;
+новый backend требует декларации family/lifetime и проверки его native переходов.
+Mac/физическая GUI приёмка и аудит остальных синхронных filesystem операций
+этим этапом не закрыты.

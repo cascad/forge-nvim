@@ -107,6 +107,7 @@ local default_components = {
     -- ===========================================================
     {
         id = "explorer", slot = "left", title = "Explorer",
+        source = 'filesystem',
         filetypes = { "neo-tree" },
         open    = function(opts) require('forge.neo_tree_lifecycle').open('filesystem', opts) end,
         focus   = function() require('forge.neo_tree_lifecycle').focus('filesystem') end,
@@ -119,6 +120,7 @@ local default_components = {
     },
     {
         id = "buffers", slot = "left", title = "Buffers",
+        source = 'buffers',
         filetypes = { "neo-tree" },
         open    = function(opts) require('forge.neo_tree_lifecycle').open('buffers', opts) end,
         focus   = function() require('forge.neo_tree_lifecycle').focus('buffers') end,
@@ -131,6 +133,7 @@ local default_components = {
     },
     {
         id = "git_status", slot = "left", title = "Git Files",
+        source = 'git_status',
         filetypes = { "neo-tree" },
         open    = function(opts) require('forge.neo_tree_lifecycle').open('git_status', opts) end,
         focus   = function() require('forge.neo_tree_lifecycle').focus('git_status') end,

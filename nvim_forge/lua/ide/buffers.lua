@@ -7,18 +7,10 @@ local disk_backed = {}
 function M.may_autosave(buf)
     return cancelling_save[buf] == true or (not closing[buf] and not deleted[buf])
 end
-local tool_ft = {
-    alpha=true, ['neo-tree']=true, aerial=true, ['dap-repl']=true,
-    dapui_scopes=true, dapui_watches=true, dapui_stacks=true,
-    dapui_breakpoints=true, dapui_console=true, ['dap-terminal']=true,
-    ['neotest-summary']=true, ['neotest-output-panel']=true,
-    OverseerList=true, ['grug-far']=true, trouble=true, qf=true, help=true,
-    man=true, NeogitStatus=true, DiffviewFiles=true, DiffviewFileHistory=true,
-}
+
 
 local function is_document(buf)
-    return vim.api.nvim_buf_is_valid(buf) and vim.bo[buf].buftype == ''
-        and not tool_ft[vim.bo[buf].filetype]
+    return require("ide.registry").is_document(buf)
 end
 function M.is_file(buf)
     return is_document(buf) and vim.bo[buf].buflisted
@@ -43,11 +35,7 @@ local function detach_signs(buf)
 end
 
 function M.is_editor_window(win)
-    if not vim.api.nvim_win_is_valid(win) or vim.api.nvim_win_get_config(win).relative ~= ''
-        or vim.w[win].forge_panel then return false end
-    local buf = vim.api.nvim_win_get_buf(win)
-    return vim.bo[buf].filetype == 'alpha' or
-        (vim.bo[buf].buftype == '' and not tool_ft[vim.bo[buf].filetype])
+    return require("ide.ownership").is_editor_window(win)
 end
 
 function M.editor_window()

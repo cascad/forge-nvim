@@ -99,6 +99,7 @@ return {
   { file = 'tests/e2e/file-scan-order.test.lua', suite = 'e2e', timeout = 240 },
   { file = 'tests/e2e/file-filter.test.lua', suite = 'e2e', timeout = 120 },
   { file = 'tests/e2e/acceptance-navigation.test.lua', suite = 'e2e', timeout = 180 },
+  { file = 'tests/e2e/window-ownership.test.lua', suite = 'e2e', timeout = 180 },
   { file = 'tests/ru-keys.test.lua', suite = 'unit' },
   { file = 'tests/e2e/buffers.test.lua', suite = 'e2e', timeout = 240 },
   { file = 'tests/e2e/deleted-files.test.lua', suite = 'e2e', timeout = 180 },

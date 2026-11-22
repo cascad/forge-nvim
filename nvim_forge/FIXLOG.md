@@ -16121,3 +16121,53 @@ change verification и .tests/ru-root/delivery-final.json. Own container1ce6ad23
 Владелец уточнил: текущее скрытие устраивает, сохранить. По просьбе владельца
 создан docs/OWNER_TESTED_HOTKEYS.md — usages/PASS/отказы отдельно от предположений,
 выбранных keys и автотестов. Новые подтверждения добавлять по его сообщениям.
+
+## 306. Общий контракт владельцев окон и временные views
+
+2026-11-22. IDE-149. Спека: IDE-PANEL-32 (ADDED).
+Проверка: tests/e2e/window-ownership.test.lua (6 native сценариев),
+registered affected suites; результаты —
+openspec/changes/enforce-window-ownership/verification.md.
+
+**Проблема.** Случайно открытый Help возвращался после перезапуска. Несколько
+модулей независимо определяли code/tool; panel_guard ремонтировал окна по
+размеру/flags. Один winfixbuf ломал native Files → Buffers в прототипе.
+
+**Причина.** Help был явно включён в sessionoptions. Общего owner/lifetime
+контракта не было; native backend должен иметь право менять свои буферы.
+Скрин Help доказывает persistent transient view, но не доказывает, что он
+заменил именно чужой tool buffer. Эти два случая проверяются отдельно.
+
+**Изменение.** Registry задаёт role/lifetime/family/source; ownership применяет
+native winfixbuf, разрешает backend transitions и переносит принудительно
+подставленный документ в editor с возвратом панели. State/buffers/activities/
+controls используют общий predicate; marks/panel_guard — тонкие фасады.
+Размерные эвристики закрытия editor splits удалены. Neo-tree before_open
+отпускает guard; pending Files scans отменяются существующим generation token
+при смене источника/закрытии. Новых patches, pins и API monkeypatch нет.
+Help исключён из native sessionoptions, legacy transient windows убираются.
+Сохранение не удаляет документы/modified buffers и не завершает terminal jobs.
+Обнаруженный регресс cleanup исправлен: SessionLoadPost приходит также от
+loadview; только native g:SessionLoad=1 разрешает очистку всей сессии.
+
+**Проверка.** Исходный кодdf7c6df воспроизводит legacy Help FAIL. После цельного
+блока — основной пакет Windows/Ubuntu; затем только failed/affected repeats
+и Git. Итог по84 unique PASS/2 platform SKIP на ОС; реальные Go/Delve, shells,
+Git remote/worktree и native save/restart, без имитации результатов providers.
+Strict/trace9, syntax16, pins66, unchanged backports/SDK/WezTerm/main specs,
+append-only PASS.184 editor shutdown records: exit0, без hard-kill/API errors,
+owned scopes inactive. Тест TUI carrier явно проводит только перезапуск уже
+завершённого native terminal через family transition; child assertions прежние.
+Source-test readiness дополнен действительным next_source mapping: одного
+filetype/_ready недостаточно для следующей native клавиши; диагностические
+прогоны не выдаются за отдельные продуктовые исправления.
+
+**Вывод.** Общий механизм совместим с проверенными pinned backends; необходимости
+в миграции из этого инцидента не следует. Native bang/произвольный Lua не
+изолируются sandbox-ом. Mac, физическая приёмка и прочие blocking filesystem
+операции остаются отдельно. Доставка установленной конфигурации и candidate
+фиксируется после проверки source/hash в verification, без reload owner session.
+
+**Файлы.** ide/ownership.lua, registry/state/buffers/activities/controls/marks,
+forge/panel_guard.lua, neo_tree_lifecycle.lua, plugins/editor.lua/neo-tree.lua,
+config/options.lua, registry declarations, E2E/transport и руководства.

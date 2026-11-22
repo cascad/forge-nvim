@@ -374,6 +374,8 @@ return {
         end,
         opts = function() return {
             event_handlers = {
+                { event = 'neo_tree_window_before_open', handler = function() require('ide.ownership').backend_open('neo-tree') end },
+                { event = 'neo_tree_window_before_close', handler = function(args) require('forge.neo_tree_lifecycle').closing(args) end },
                 { event = 'vim_buffer_enter', handler = function(args) require('forge.neo_tree_lifecycle').follow_file(args) end },
                 { event = 'neo_tree_window_after_open', handler = function(args) require('forge.neo_tree_lifecycle').opened(args) end },
                 { event = 'after_render', handler = function(state) require('forge.neo_tree_lifecycle').rendered(state) end },

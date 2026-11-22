@@ -62,6 +62,7 @@ function M.focus(source)
 end
 
 function M.opened(args)
+    if args.source ~= 'filesystem' then M.cancel_files(args.tabid) end
     local state = require('neo-tree.sources.manager').get_state(args.source, args.tabid)
     if not state.tree or state.tree.bufnr == state.bufnr then return end
 
@@ -73,6 +74,28 @@ function M.opened(args)
     pending[state] = saved or { defaults = defaults }
     state.default_expanded_nodes = vim.list_extend(vim.deepcopy(defaults or {}), expanded)
     state.tree = nil -- следующая штатная отрисовка создаст объект для нового буфера
+end
+
+-- The shared Neo-tree window now belongs to another source (or is closed).
+-- Retire pending Files snapshots; completed IO must not acquire that window again.
+function M.cancel_files(tab)
+    local state = require('neo-tree.sources.manager').get_state('filesystem', tab)
+    state._forge_scan_generation = {}
+    local saved = pending[state]
+    if saved then
+        state.default_expanded_nodes = saved.defaults
+        pending[state], passive[state] = nil, nil
+        if saved.done then
+            local focus = vim.api.nvim_get_current_win()
+            local ok, err = pcall(saved.done)
+            if vim.api.nvim_win_is_valid(focus) then vim.api.nvim_set_current_win(focus) end
+            if not ok then error(err) end
+        end
+    end
+end
+
+function M.closing(args)
+    if args.source == 'filesystem' then M.cancel_files(args.tabid) end
 end
 
 function M.rendered(state)

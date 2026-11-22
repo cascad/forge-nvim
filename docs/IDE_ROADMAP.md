@@ -56,14 +56,16 @@ Code commit `fa46778`: installed config/backport обновлены с backup,
 два native installed-source controls PASS, новый candidate `windows-files-fix`
 прошёл manifest/Default/native runtime probes. Owner session не перезагружалась.
 
-**Следующий продуктовый этап — IDE-149:** единый контракт editor/tool/transient,
-допустимые буферы по owner и сохранение только разрешённых views; legacy repair.
-Текущее Help снизу явно разрешено Edgy и сохраняется через sessionoptions=help.
-Нужно решить это общей lifecycle policy, а не очередным blacklist Help.
-Ограниченный [разбор границ](PANEL_OWNERSHIP_REVIEW.md#ide-149--границы-буферов-и-сессий-2026-11-22)
-должен дать проверяемые инварианты и native E2E до дальнейшей приёмки.
-Если для нашего pinned набора нужны постоянные частные перехваты — пересмотреть
-основу, затем предметно сравнить Termide с нужными языками/debug/tests/Git.
+**IDE-149 реализован (§306):** общий registry contract editor/tool/transient,
+native winfixbuf и разрешённые backend transitions; прежние marks/panel_guard
+стали фасадами, ремонт по размеру окна удалён. Help исключён из новых сессий,
+при загрузке старых убирается; документы/splits и живые terminal jobs сохраняются.
+Windows/Ubuntu: по84 unique affected cases PASS aggregate, по2 platform SKIP;
+это один основной пакет и повторы failed/affected, не полный regression продукта.
+[Разбор реализации](PANEL_OWNERSHIP_REVIEW.md#реализация-ide-149)
+и [доказательства/ограничения](../openspec/changes/enforce-window-ownership/verification.md).
+Обычные native команды защищены; произвольный Lua/явный bang не sandbox-ятся.
+Ручная приёмка установленной сборки и native Mac остаются открытыми.
 
 **Приёмка, IDE-147 (§302):** Python F5 без project venv выбирал MSYS2 python3,
 который не запускается, хотя системный python.exe работает. Windows Auto

@@ -82,34 +82,7 @@ end
 ---@param win integer
 ---@return boolean
 function M.is_main_window(win)
-    if not vim.api.nvim_win_is_valid(win) then return false end
-    local pilot=package.loaded['forge.frame_pilot']
-    if pilot and pilot.is_code(win) then return true end
-    if vim.api.nvim_win_get_config(win).relative ~= "" then return false end
-
-    local buf = vim.api.nvim_win_get_buf(win)
-    if vim.bo[buf].buftype ~= "" then return false end
-
-    -- Buffer-local override (edgy auto-set'ит этот флаг для своих
-    -- views; мы можем устанавливать вручную для diffview, neogit
-    -- log и т.п.).
-    if vim.b[buf].edgy_disable == false then return true end
-
-    -- Любой tool-ft исключаем явно, чтобы не считать edgebar окна
-    -- "главными" в случае, если edgy_disable не выставлен.
-    local tool_ft = {
-        ["neo-tree"] = true, ["aerial"] = true, ["toggleterm"] = true,
-        ["dap-repl"] = true,
-        ["dapui_scopes"] = true, ["dapui_watches"] = true,
-        ["dapui_stacks"] = true, ["dapui_breakpoints"] = true,
-        ["dapui_console"] = true,
-        ["neotest-summary"] = true, ["neotest-output-panel"] = true,
-        ["OverseerList"] = true, ["grug-far"] = true,
-        ["trouble"] = true, ["qf"] = true,
-        ["NeogitStatus"] = true, ["NeogitPopup"] = true,
-        ["help"] = true, ["man"] = true, ["alpha"] = true,
-    }
-    return not tool_ft[vim.bo[buf].filetype]
+    return require("ide.ownership").is_editor_window(win)
 end
 
 ---Найти окно для редактора. Если ни одного — создать.

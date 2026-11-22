@@ -12033,3 +12033,39 @@ git commit --only -m 'docs: add fride parity acceptance checklist' -- docs/NVIM_
 ```
 Проверены40 уникальных ID и отсутствие строк с принятым PASS. Runtime/e2e не
 запускались: изменена документация будущей приёмки, сравнение ещё не выполнялось.
+
+## 215. IDE-149 — владельцы окон, native transitions и sessions
+
+Workdir F:/repo/forge-nvim. Все host TEMP/TMP/TMPDIR заданы в .tests/tmp на F;
+Python -B/UTF-8. Source RED — частная копия конфигурации с tracked Lua из
+df7c6df, `FORGE_TEST_ID='IDE-PANEL-32 Help'`: legacy Help FAIL. Нативный
+production-source runner использует реальные плагины из готовых editor-deps,
+без загрузки, mocks providers или изменения owner session.
+
+```powershell
+python -B .tests/tmp/run-ownership-packet.py --nvim F:/repo/forge-nvim/.tools/neovim/windows-x64/bin/nvim.exe --tag windows
+docker exec -e FORGE_E2E_DEPS=/tmp/fride-ownership/editor-deps -e GOMAXPROCS=2 -e CARGO_BUILD_JOBS=2 -e RAYON_NUM_THREADS=2 fride-ownership-20261122 python3 -B .tests/tmp/run-ownership-packet.py --nvim /opt/nvim/bin/nvim --tag ubuntu
+python -B .tests/tmp/repeat-ownership.py --nvim F:/repo/forge-nvim/.tools/neovim/windows-x64/bin/nvim.exe --tag windows
+python -B .tests/tmp/ownership-session-final.py --nvim F:/repo/forge-nvim/.tools/neovim/windows-x64/bin/nvim.exe --tag windows
+```
+
+Два последних runner — failed/affected cases, затем Git/session lifetime;
+аналогичные commands через docker exec для Ubuntu. `FORGE_TEST_ID` ограничивал
+native source/terminal cases. После исправления readiness mapping повторён
+только `IDE-PANEL-32 backend` на обеих ОС. Реальный Windows pwsh-case получил
+существующий $PSHOME в test PATH. stdout/stderr — .tests/ownership/*.log,
+пакетные JSON и aggregate.json связывают уникальные cases с последним результатом.
+Итог по84 PASS/2 platform SKIP на ОС;184 shutdown records clean.
+
+```powershell
+npx.cmd --yes @fission-ai/openspec@1.13.2 validate enforce-window-ownership --type change --strict --no-interactive
+& .tools/neovim/windows-x64/bin/nvim.exe -u NONE -i NONE -l tests/trace.test.lua --change enforce-window-ownership
+python -B .tests/tmp/audit-ownership.py
+python -B .tests/tmp/ownership-gates.py
+```
+
+Strict/trace9/syntax16, pins66/SDK/Neovim/main specs/patches/append-only PASS.
+Взяты existing image/deps; own контейнер fride-ownership-20261122 с2CPU,
+network none, task label. Desktop/WSL не запускались и не перенастраивались.
+Системный review: docs/PANEL_OWNERSHIP_REVIEW.md; FIXLOG306 и change verification
+разделяют реальные ошибки, fixture corrections, автотесты и открытую Mac/GUI приёмку.

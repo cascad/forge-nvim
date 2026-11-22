@@ -309,7 +309,6 @@ opt.sessionoptions = {
     "buffers",
     "curdir",
     "folds",
-    "help",
     "localoptions",
     "tabpages",
     "winsize",

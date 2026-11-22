@@ -240,6 +240,7 @@ return {
                 pattern = { 'PersistenceLoadPre', 'PersistenceSavePost' },
                 callback = function(ev)
                     if ev.match == 'PersistenceLoadPre' then
+                        require('ide.ownership').session_loading(true)
                         require('forge.neo_tree_lifecycle').session_loading(true)
                     else
                         require('forge.session_views').save()

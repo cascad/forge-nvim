@@ -12,37 +12,6 @@ local M = {}
 -- Таблицы filetypes
 -- ------------------------------------------------------------------
 
-local tool_filetypes = {
-    ['forge-logs'] = true,
-    ["neo-tree"] = true,
-    ["dap-repl"] = true,
-    ["dap-view"] = true,
-    ["dap-view-term"] = true,
-    ["dap-view-help"] = true,
-    ["neotest-summary"] = true,
-    ["neotest-output-panel"] = true,
-    ["OverseerList"] = true,
-    ["overseer"] = true,
-    ["overseer-list"] = true,
-    ["grug-far"] = true,
-    ["qf"] = true,
-}
-
-local session_unsafe_filetypes = vim.tbl_extend("force", tool_filetypes, {
-    ["alpha"] = true,
-    ["lazy"] = true,
-    ["mason"] = true,
-    ["TelescopePrompt"] = true,
-    ["TelescopeResults"] = true,
-})
-
-local session_unsafe_buftypes = {
-    ["nofile"] = true,
-    ["prompt"] = true,
-    ["quickfix"] = true,
-    ["terminal"] = true,
-}
-
 local explorer_modes = {
     files = true,
     buffers = true,
@@ -155,8 +124,7 @@ local function is_code_window(win)
     -- spec: IDE-PANEL-12. Общая классификация, без создания main split.
     if not require('ide.state').is_main_window(win) then return false end
     local buf = vim.api.nvim_win_get_buf(win)
-    -- SQL/legacy исключения также нужны session cleanup: сохраняем таблицу.
-    return not tool_filetypes[vim.bo[buf].filetype]
+    return require("ide.registry").policy(buf).role == "editor"
 end
 
 local function find_code_window()
@@ -323,17 +291,18 @@ function M.cleanup_for_session()
     M.close_activity(nil)
 
     close_windows(function(buf)
-        return session_unsafe_filetypes[vim.bo[buf].filetype] == true
-            or session_unsafe_buftypes[vim.bo[buf].buftype] == true
+        return not require("ide.registry").is_document(buf)
     end)
 
     for _, buf in ipairs(vim.api.nvim_list_bufs()) do
         if vim.api.nvim_buf_is_valid(buf) and vim.api.nvim_buf_is_loaded(buf) then
-            local ft = vim.bo[buf].filetype
             local bt = vim.bo[buf].buftype
-            local name = vim.api.nvim_buf_get_name(buf)
-            if session_unsafe_filetypes[ft] or session_unsafe_buftypes[bt] or name:find("neo%-tree", 1, false) then
-                pcall(vim.api.nvim_buf_delete, buf, { force = true })
+            if not require("ide.registry").is_document(buf) then
+                if not vim.bo[buf].modified and bt ~= 'terminal' then
+                    pcall(vim.api.nvim_buf_delete, buf, { force = false })
+                else
+                    vim.bo[buf].buflisted = false
+                end
             end
         end
     end

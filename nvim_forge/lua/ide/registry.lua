@@ -24,6 +24,10 @@ local M = {}
 ---@field is_open   fun(): boolean
 ---@field focus?    fun()              -- сфокусироваться (default: find by filetypes)
 ---@field filetypes? string[]          -- для default is_open / focus / edgy filter
+---@field source? string              -- источник shared backend (Neo-tree)
+---@field role? "tool"|"editor"|"transient"
+---@field lifetime? "view"|"document"|"transient"
+---@field family? string              -- допустимые native смены буфера
 ---@field icon?     string             -- для Activity Bar UI (пока не используется)
 
 local components = {} ---@type table<string, ide.Component>
@@ -45,6 +49,9 @@ function M.register(spec)
 
     spec.title = spec.title or spec.id
     spec.filetypes = spec.filetypes or {}
+    spec.role = spec.role or 'tool'
+    spec.lifetime = spec.lifetime or 'view'
+    spec.family = spec.family or spec.filetypes[1] or spec.id
 
     -- Default focus: первая попавшаяся window с матчящимся filetype'ом.
     if not spec.focus then
@@ -55,8 +62,38 @@ function M.register(spec)
         end
     end
 
+    for _, action in ipairs({ 'open', 'close' }) do
+        local backend = spec[action]
+        spec[action] = function(...)
+            return require('ide.ownership').transition(spec.family, backend, ...)
+        end
+    end
     components[spec.id] = spec
 end
+
+local auxiliary = {
+    alpha = { role = 'editor', lifetime = 'transient' },
+    help = { role = 'transient', lifetime = 'transient' },
+    man = { role = 'transient', lifetime = 'transient' },
+    lazy = { role = 'transient', lifetime = 'transient' },
+    mason = { role = 'transient', lifetime = 'transient' },
+    NeogitPopup = { role = 'transient', lifetime = 'transient' },
+    DiffviewFiles = { role = 'tool', lifetime = 'transient', family = 'diffview' },
+    DiffviewFileHistory = { role = 'tool', lifetime = 'transient', family = 'diffview' },
+}
+
+function M.policy(buf)
+    if not vim.api.nvim_buf_is_valid(buf) then return { role = 'transient', lifetime = 'transient' } end
+    local ft = vim.bo[buf].filetype
+    for _, c in ipairs(M.list()) do
+        if vim.tbl_contains(c.filetypes, ft) and (not c.source or c.source == vim.b[buf].neo_tree_source) then return c end
+    end
+    if auxiliary[ft] then return auxiliary[ft] end
+    if vim.bo[buf].buftype == 'terminal' then return { role = 'tool', lifetime = 'transient', family = 'native-terminal' } end
+    if vim.bo[buf].buftype == '' then return { role = 'editor', lifetime = 'document' } end
+    return { role = 'transient', lifetime = 'transient' }
+end
+function M.is_document(buf) return M.policy(buf).lifetime == 'document' end
 
 ---@param id string
 ---@return ide.Component|nil

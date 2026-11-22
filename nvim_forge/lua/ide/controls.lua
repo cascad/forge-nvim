@@ -24,13 +24,7 @@ local winbar = "%!v:lua.require'ide.controls'.winbar()"
 local function valid(win) return win and vim.api.nvim_win_is_valid(win) end
 local function ft(win) return vim.bo[vim.api.nvim_win_get_buf(win or 0)].filetype end
 local function component(win)
-    local kind = ft(win)
-    if work[kind] then return work[kind] end
-    if kind == 'neo-tree' then
-        return tree_components[vim.b[vim.api.nvim_win_get_buf(win or 0)].neo_tree_source]
-    end
-    if kind:match('^dapui_') and kind ~= 'dapui_console' then return 'dap.sidebar' end
-    return ({ ['dap-repl'] = 'dap.repl', dapui_console = 'dap.console', ['dap-terminal'] = 'dap.terminal', aerial = 'outline', NeogitStatus = 'neogit' })[kind]
+    return require("ide.registry").policy(vim.api.nvim_win_get_buf(win or 0)).id
 end
 
 local function close_help(enter)

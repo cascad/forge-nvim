@@ -56,7 +56,9 @@ Help; после перезапуска оно восстановилось и �
 Нужна общая политика editor/tool/transient и сохранения только разрешённых
 views, с очисткой legacy sessions. Native winfixbuf оценить как дополнительный
 механизм, не объявлять sandbox для произвольного Lua. Разбор —
-docs/PANEL_OWNERSHIP_REVIEW.md; следующий этап до продолжения приёмки.
+docs/PANEL_OWNERSHIP_REVIEW.md. Реализация2026-11-22 — FIXLOG §306:
+единый контракт, native guard и разрешённые transitions, transient/legacy cleanup.
+Windows/Ubuntu по84 targeted PASS aggregate; owner GUI и Mac ещё не приняты.
 Владелец требует объективно оценить жизнеспособность подхода; если понадобится
 бесконечно добавлять частные перехваты — сравнить альтернативную основу, включая Termide.
 
