@@ -16064,3 +16064,12 @@ Native Mac, физические keys, полный regression и повтор o
 **Файлы.** plugins/neo-tree.lua, plugins/telescope.lua,
 tests/e2e/acceptance-navigation.test.lua, registry, HOTKEYS/KEYBINDINGS/PANEL_KEYS,
 IDE_ROADMAP/PROBLEMS/HISTORY и change fix-acceptance-explorer-and-pickers.
+
+**Доставка §304.** Code88b2006;2 Lua файла F:/apps/fride/config/forge сверены
+с исходной версией и обновлены с backup navigation-20261122-88b2006.
+Installed-source navigation5 PASS, origins и shutdown проверены;125 profiles
+в основных/affected/installed логах чисто завершены. Candidate windows-navigation-fix
+clean-source88b2006:2520 hashes, Default/no language preparation, native3 probes,
+33 parsers/117 queries/fzf ABI PASS. Manifest hash и receipt в verification.
+Свой контейнер222ff23d… удалён после ID/label/ps; Desktop/WSL прежние.
+Owner session не менялась — для новых keys/Files нужен перезапуск fride.

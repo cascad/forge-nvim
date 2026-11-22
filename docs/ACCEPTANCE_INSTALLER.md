@@ -25,7 +25,7 @@ Windows, из каталога выданного комплекта:
 Кандидат, подготовленный в этом Windows checkout:
 
 ```powershell
-.\.tests\acceptance-installer\windows-files-fix\install.cmd --install-dir "F:\apps\fride"
+.\.tests\acceptance-installer\windows-navigation-fix\install.cmd --install-dir "F:\apps\fride"
 ```
 
 Можно указать новый путь с ещё не существующими родителями:
@@ -45,6 +45,12 @@ Python fix. В `F:/apps/fride` четыре config файла и один Neo-tr
 уже обновлены с backup. Требуется перезапуск редактора, переустановка не нужна.
 Help/session ownership — отдельный следующий IDE-149, текущий комплект его
 ещё не исправляет. [Фактическая проверка](../openspec/changes/keep-filesystem-errors-responsive/verification.md).
+
+Позднее2026-11-22: текущий candidate **windows-navigation-fix**, code88b2006,
+добавляет IDE-150 и включает предыдущие исправления. Два соответствующих Lua
+файла уже обновлены в F:/apps/fride с backup; достаточно перезапустить fride.
+Installed-source5 E2E и manifest/Default/runtime probes PASS; native Mac и
+повторная GUI приёмка lab остаются открытыми.
 
 На Mac — в native комплекте своей архитектуры:
 

@@ -56,6 +56,19 @@ fixture заменён закрытием/повторным открытием 
 
 ## Доставка
 
-После commit — два installed Lua файла с проверкой исходных bytes и backup,
-без hot reload/остановки owner session. Receipt, installed-source native control
-и новый package candidate фиксируются отдельным дополнением после доставки.
+Code commit **88b2006**. Два installed Lua файла в F:/apps/fride/config/forge
+сверены с6a0b4f6 и заменены только после backup
+F:/apps/fride/backups/navigation-20261122-88b2006. Нет hot reload/остановки
+owner session; SDK/backports/plugins прежние. Installed-source navigation5 PASS;
+config-origin и5 shutdown receipts проверены. Всего gate подтвердил125 profiles.
+
+Свежий candidate `.tests/acceptance-installer/windows-navigation-fix/install.cmd`
+собран с clean-source88b2006,2520 manifest files сверены по SHA256.
+Manifest SHA256: `485b55e70025af152e02a6aaa29e114666b1f229fdb0daad4db5c17a36ffde06`.
+Default print-plan: prepare_languages=false, tools_versions=preserve.
+Native runtime:3 probes,33 parsers/117 queries, fzf ABI PASS.
+Receipt/metadata: .tests/acceptance-navigation/installed-delivery.json и
+final-candidate.json. Собственный контейнер222ff23d… проверен по ID/task label
+и процессам (только docker-init/sleep), удалён; повторный docker ps пуст.
+Desktop/WSL не перезапускались. Для обновления текущего owner процесса нужен
+обычный перезапуск fride; новая установка не требуется.

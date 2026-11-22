@@ -11953,3 +11953,21 @@ docker exec -e FORGE_E2E_DEPS=/tmp/fride-acceptance-nav/editor-deps fride-accept
 Исходные RED/промежуточные неудачи не удалялись и не выдаются за PASS.
 Final aggregate59 unique cases/OS; final affected5+7+1, key-label repeat1.
 Доставка/backup/candidate дописываются после фактического выполнения.
+
+Фактические final команды §212:
+```powershell
+python -B .tests/tmp/acceptance-gates.py
+& .tools/neovim/windows-x64/bin/nvim.exe -u NONE -i NONE -l .tests/tmp/acceptance-syntax.lua
+python -B .tests/tmp/deliver-acceptance-navigation.py
+python -B scripts/package-acceptance-installer.py --core .tests/acceptance-installer/publisher/windows-x64/assets/core.zip --terminal .tests/acceptance-installer/publisher/windows-x64/assets/terminal.zip --frontend .tests/acceptance-installer/frontend/windows-x64/fride-setup.exe --output .tests/acceptance-installer/windows-navigation-fix
+& .tests/acceptance-installer/windows-navigation-fix/install.cmd --print-plan
+& .tests/acceptance-installer/windows-navigation-fix/payload/runtime/bin/nvim.exe -u NONE -i NONE -l .tests/acceptance-installer/check-runtime.lua F:/repo/forge-nvim/.tests/acceptance-installer/windows-navigation-fix F:/repo/forge-nvim/.tests/acceptance-navigation/candidate-runtime.json
+python -B .tests/tmp/record-acceptance-delivery.py
+```
+Installed-source control — тот же navigation suite с
+FORGE_E2E_CONFIG_SOURCE=F:/apps/fride/config/forge,5 PASS. После него origins,
+shutdown0 и отсутствие active scope сверены. Code88b2006,2 installed files,
+backup navigation-20261122-88b2006;2520 candidate SHA entries сверены.
+Strict/trace9/syntax4/append-only/frozen4/pins66/backports17 PASS.
+Container222ff23d… удалён по точному ID после inspect/task/ps (init+sleep);
+последующий docker ps с ID пуст. Desktop/WSL/owner process не менялись.
