@@ -12157,3 +12157,10 @@ npx.cmd --yes @fission-ai/openspec@1.13.2 validate choose-terminal-shell --type 
 Повторены только `FORGE_TEST_ID=IDE-PANEL-33` и Windows fallback. В
 `.tests/terminal-choice` записаны результаты и ссылки на профили завершения.
 По 3 уникальных PASS и 2 пропуска другой платформы на ОС.
+
+После коммита `9294bd5` обновлены два файла в `F:/apps/fride/config/forge`
+через `python -B .tests/tmp/deliver-terminal-shell.py`. До замены сверена
+исходная конфигурация и записана резервная копия. Тот же тест запущен с
+`FORGE_TEST_ID=IDE-PANEL-33` и `FORGE_E2E_CONFIG_SOURCE=F:/apps/fride/config/forge`
+и прошёл. Источник, хеши и завершение тестовой сессии проверены. Собственный
+контейнер завершён после сверки task label и списка процессов.
