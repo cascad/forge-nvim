@@ -12232,3 +12232,10 @@ docker exec -e FORGE_E2E_DEPS=/tmp/fride-file-search-enter/editor-deps -e GOMAXP
 npx.cmd --yes @fission-ai/openspec@1.13.2 validate open-file-search-in-editor --type change --strict --no-interactive
 & .tools/neovim/windows-x64/bin/nvim.exe -u NONE -i NONE -l tests/trace.test.lua --change open-file-search-in-editor
 ```
+
+`python -B .tests/tmp/deliver-file-search-enter.py` сверил прежнюю конфигурацию,
+создал резервную копию и обновил один Lua-файл из `e61742a`. В установленной
+сборке `FORGE_E2E_CONFIG_SOURCE=F:/apps/fride/config/forge` и фильтр
+`FORGE_TEST_ID='IDE-FILE-11 Ctrl+P from Files'` дали 1 PASS с её `nvim.exe`.
+Проверены исходник, SHA и завершение тестовой сессии. Контейнер теста удалён
+после сверки ID, метки и процессов.

@@ -14,3 +14,10 @@
 по 8 PASS. Логи `windows.log` / `ubuntu.log` в `.tests/file-search-enter`.
 Палитра команд, Ctrl+J/K, F1, Alt+B, дерево и открытие из split проверены в том
 же пакете. Strict OpenSpec и trace прошли. Native macOS остаётся для приёмки.
+
+`F:/apps/fride/config/forge/lua/plugins/telescope.lua` обновлён из `e61742a`
+после сверки с `8f2c7b9`. Резервная копия в
+`F:/apps/fride/backups/file-search-enter-20261122-e61742a`. Сценарий из Files
+повторён с установленной конфигурацией и бинарём. Дополнительный 1 PASS,
+лог `.tests/file-search-enter/windows-installed.log`. Для рабочей сессии
+правка вступит в силу при перезапуске fride.
