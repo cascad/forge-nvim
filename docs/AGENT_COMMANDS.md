@@ -12183,6 +12183,13 @@ npx.cmd --yes @fission-ai/openspec@1.13.2 validate copy-files-without-blocking -
 & .tools/neovim/windows-x64/bin/nvim.exe -u NONE -i NONE -l tests/trace.test.lua --change copy-files-without-blocking
 ```
 
+Установочная проверка использует `python -B .tests/tmp/deliver-copy-indicator.py`
+и фильтр `FORGE_TEST_ID=IDE-FILE-10 save` на бинаре из `F:/apps/fride` с
+`FORGE_E2E_CONFIG_SOURCE=F:/apps/fride/config/forge`. Два повтора выявили
+свёрнутый каталог после успешной копии. Целевой повтор с раскрытой папкой
+прошёл. Ссылки на результаты в verification. Тестовый контейнер удалён после
+сверки метки и своих процессов.
+
 Повтор Ubuntu запускался тем же retry runner в контейнере. По 27 уникальных
 PASS. В `.tests/async-copy/verification.json` список сценариев, их логи и
 результаты завершения редакторов. Неизменность pin/SDK/main specs и журналы

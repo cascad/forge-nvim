@@ -202,7 +202,13 @@ end
 
 check('IDE-FILE-10 save code while real copy is pending',function()
   hold_copy('destination/copied.txt')
-  tree();choose('copy-me.txt');popup('c');finish_popup('destination/copied.txt');copy_waiting()
+  tree();choose('destination');e:input('l')
+  e:wait('destination folder expanded before copying',function()
+    for _,node in ipairs(locator().nodes or {}) do
+      if node.name=='destination' then return node.expanded end
+    end
+  end)
+  choose('copy-me.txt');popup('c');finish_popup('destination/copied.txt');copy_waiting()
   T.eq(exists('destination/copied.txt'),false)
   e:input('<F7>');e:wait('code focused while copy waits',function() return at_file('file_one.txt') end)
   e:input('GoWHILE_COPY_PENDING<Esc>:write<CR>')
