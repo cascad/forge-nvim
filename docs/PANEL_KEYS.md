@@ -96,10 +96,13 @@ Terminal: `i` — ввод; normal `Ctrl-t` / `Space tt` — toggle, `Ctrl-\` и
 тот же toggle. В terminal-normal `Ctrl-\` остаётся native prefix; повтор
 `Ctrl-\ Ctrl-n` безопасен. `Space w T` открывает/фокусирует без toggle.
 
-Shell Terminal: на macOS/Linux используется выбранный при старте `vim.o.shell`,
-даже если установлен `pwsh`. На Windows сохраняется `pwsh -NoLogo`, когда
-Neovim видит executable `pwsh`; иначе используется `vim.o.shell`.
-Глобальный shell редактора этот выбор не меняет.
+Оболочку встроенного терминала выбирай через `Space t S` / `:ForgeTerminalShell`.
+Меню показывает найденные оболочки, принимает путь к бинарю и сохраняет выбор
+для профиля fride. `Space t N` / `:ForgeTerminalNew` открывает новую консоль
+с выбранной оболочкой. Уже запущенную консоль можно выбрать через `:TermSelect`.
+В режиме `Auto` Windows предпочитает `pwsh`, если он найден в PATH,
+а macOS/Linux используют оболочку, выбранную при запуске редактора.
+Если сохранённый бинарь исчезнет, fride предупредит и применит Auto.
 
 ## Читать уже напечатанный вывод
 

@@ -12138,3 +12138,22 @@ docker ps -a --filter id=812d778e32a13fb3d841352ab3f804a661cadc94230c3802e9dbf04
 ps пуст. Desktop/WSL/owner session не трогались. .tests/log-follow/delivery-final.json
 содержит source/backup/manifest и2 профиля. Повтор editor E2E для этих docs-only
 записей не требуется.
+
+## 217. IDE-153 и клавиши по сценариям
+
+В `F:/repo/forge-nvim` проверены ссылки в новой шпаргалке и `git diff --check`.
+Для оболочки запущен `terminal-shell.test.lua` с готовыми editor-deps на
+Windows и Ubuntu. На Windows TEMP/TMP/TMPDIR направлены на F, а `$PSHOME`
+добавлен в PATH тестового процесса для проверки настоящего pwsh. На Ubuntu
+использован готовый image с `--cpus 2 --network none` и своим контейнером.
+
+```powershell
+& .tools/neovim/windows-x64/bin/nvim.exe -u NONE -i NONE -l tests/e2e/terminal-shell.test.lua
+docker exec -e FORGE_E2E_DEPS=/tmp/fride-terminal-choice/editor-deps -e GOMAXPROCS=2 fride-terminal-choice-20261122 /opt/nvim/bin/nvim -u NONE -i NONE -l tests/e2e/terminal-shell.test.lua
+npx.cmd --yes @fission-ai/openspec@1.13.2 validate choose-terminal-shell --type change --strict --no-interactive
+& .tools/neovim/windows-x64/bin/nvim.exe -u NONE -i NONE -l tests/trace.test.lua --change choose-terminal-shell
+```
+
+Повторены только `FORGE_TEST_ID=IDE-PANEL-33` и Windows fallback. В
+`.tests/terminal-choice` записаны результаты и ссылки на профили завершения.
+По 3 уникальных PASS и 2 пропуска другой платформы на ОС.

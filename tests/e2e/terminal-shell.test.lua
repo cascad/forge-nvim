@@ -75,6 +75,9 @@ local function check(label,posix,present)
       elseif present then
         command='Write-Output FORGE_TERMINAL_BEFORE; Set-Content terminal-shell.kind $PSVersionTable.PSEdition'
       else command='echo FORGE_TERMINAL_BEFORE & echo %ComSpec% > terminal-shell.kind' end
+      e:wait('native shell prompt',function()
+        return state(e).text:find(windows and '>' or '$',1,true)~=nil
+      end,10000)
       e:input(command..'<CR>')
       e:wait('shell wrote actual kind file',function()
         local value=result(e.project..'/terminal-shell.kind');return value~=nil and value~=''
@@ -143,4 +146,91 @@ check('POSIX optional pwsh preserves configured bash',true,true)
 check('POSIX no pwsh preserves configured sh',true,false)
 check('Windows prefers actual pwsh',false,true)
 check('Windows no pwsh uses native fallback',false,false)
+
+T.check('IDE-PANEL-33 choose detected shell custom binary and Auto for new consoles',function()
+  local e,custom
+  local ok,err=xpcall(function()
+    local shell=vim.fn.exepath(windows and 'cmd' or 'sh')
+    assert(shell~='', 'Native cmd or sh is required')
+    local found=vim.fs.normalize(shell)
+    e=require('editor').start(root,{prepare=function(project)
+      local dir=project..'/custom shell';vim.fn.mkdir(dir,'p')
+      custom=vim.fs.normalize(dir..(windows and '/shell probe.exe' or '/shell probe'))
+      assert(vim.uv.fs_copyfile(shell,custom))
+      if not windows then assert(vim.uv.fs_chmod(custom,493)) end
+    end})
+    e:wait('configured editor ready',function() return e:lua('return _G.forge_e2e_observed') end,10000)
+    local global=e:lua('return vim.o.shell')
+    local function saved()
+      return e:lua([[local path=vim.fn.stdpath('config')..'/tools.json'
+        if vim.fn.filereadable(path)==0 then return false end
+        local data=vim.json.decode(table.concat(vim.fn.readfile(path),'\n'))
+        return data.tools['terminal-shell'] or false]])
+    end
+    local function choose(query)
+      e:input(' tS');e:wait('shell settings picker',function() return e:current_ft()=='TelescopePrompt' end)
+      e:input(query)
+      e:wait('matching shell selected',function()
+        return e:lua([[local q=...;local item=require('telescope.actions.state').get_selected_entry()
+          return item and item.ordinal:find(q,1,true)~=nil]],{query})
+      end)
+      e:input('<CR>')
+    end
+    local function input_path(path)
+      e:wait('custom shell executable input',function()
+        local current=mode(e):sub(1,1)
+        return (current=='i' or current=='c') and table.concat(e.rpc:screen_lines(),'\n'):find('Путь к бинарю',1,true)~=nil
+      end)
+      if mode(e):sub(1,1)=='c' then e:input('<C-u>')
+      else e:input('<Home><S-End><BS>') end
+      e:input(path..'<CR>')
+    end
+    local function new_console(needle, command)
+      e:input(' tN');e:wait('new terminal ready',function()
+        if e:current_ft()~='toggleterm' or mode(e)~='t' then return false end
+        return e:lua([[local sign=...;return table.concat(vim.api.nvim_buf_get_lines(0,0,-1,false),'\n'):find(sign,1,true)~=nil]],
+          {windows and '>' or '$'})
+      end,10000)
+      local job=e:lua('return vim.b.terminal_job_id')
+      e:input(command..'<CR>')
+      e:wait('shell command executed',function()
+        return e:lua([[local needle=...;for _,line in ipairs(vim.api.nvim_buf_get_lines(0,0,-1,false)) do
+          if vim.trim(line)==needle then return true end end;return false]],{needle})
+      end)
+      normal(e);e:input('<F7>');e:wait('returned to editor',function() return e:current_ft()~='toggleterm' end)
+      return job
+    end
+    e:input(':edit file_one.txt<CR>');e:wait('source file',function() return e:current_ft()=='text' end)
+    local echo=windows and 'echo %OS%' or [[printf '%s\n' "$0"]]
+    local old=new_console('FRIDE_AUTO_READY','echo FRIDE_AUTO_READY')
+    choose(found);e:wait('found shell persisted',function() return saved()==found end)
+    local selected=new_console(windows and 'Windows_NT' or found,echo)
+    assert(selected~=old)
+
+    choose('Указать путь');input_path(custom)
+    e:wait('custom executable persisted',function() return saved()==custom end)
+    local configured=new_console(windows and 'Windows_NT' or custom,echo)
+    assert(configured~=old and configured~=selected)
+    local managed=e:lua([[local job=...;for _,term in ipairs(require('toggleterm.terminal').get_all()) do
+      if term.job_id==job then return term.name end end]],{configured})
+    assert(vim.fs.normalize(managed):lower():find(custom:lower(),1,true),'Custom shell path not executed')
+    T.eq(e:lua('return vim.fn.jobwait({...},0)',{old,selected,configured}),{-1,-1,-1})
+
+    choose('Указать путь');input_path(custom..'.missing')
+    e:wait('invalid path rejected',function()
+      for _,n in ipairs(e.rpc.notifications) do
+        if n.message:find('Исполняемый файл оболочки не найден',1,true) then return true end
+      end
+    end)
+    T.eq(saved(),custom)
+    choose('Auto —');e:wait('Auto removes override',function() return saved()==false end)
+    T.eq(e:lua('return vim.o.shell'),global)
+    T.eq(e:lua('return vim.g.forge_e2e_installs'),0)
+  end,debug.traceback)
+  if e then
+    e:snapshot('terminal-shell-settings');io.stdout:write('  artifacts: '..e.dir..'\n')
+    e:stop(not ok and err or nil)
+  end
+  assert(ok,err)
+end)
 T.finish()

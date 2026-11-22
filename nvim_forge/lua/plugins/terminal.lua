@@ -10,11 +10,13 @@ return {
     {
         "akinsho/toggleterm.nvim",
         version = "*",
-        cmd = { "ToggleTerm", "ToggleTermToggleAll", "TermExec" },
+        cmd = { "ToggleTerm", "ToggleTermToggleAll", "TermExec", "ForgeTerminalShell", "ForgeTerminalNew" },
         keys = {
             { "<leader>tt", "<cmd>ToggleTerm direction=horizontal<CR>", desc = "Terminal: toggle" },
             { "<leader>tT", "<cmd>ToggleTerm direction=float<CR>",      desc = "Terminal: float" },
             { "<leader>tV", "<cmd>ToggleTerm direction=vertical<CR>",   desc = "Terminal: vertical split" },
+            { "<leader>tS", "<cmd>ForgeTerminalShell<CR>", desc = "Terminal: choose shell" },
+            { "<leader>tN", "<cmd>ForgeTerminalNew<CR>", desc = "Terminal: new console" },
             -- VS Code-style Ctrl+\` (на терминалах часто <C-_> или <C-/>).
             -- Backtick неуниверсален, поэтому <C-\\> + <C-t> как алиасы.
             -- В terminal-normal сохраняем native prefix, включая repeat escape
@@ -39,11 +41,7 @@ return {
                 end
             end,
 
-            -- На Windows shell = pwsh (PowerShell 7+), если установлен.
-            -- Иначе fallback на дефолтный shell (cmd.exe).
-            -- spec: IDE-PANEL-19. На POSIX наличие pwsh не подменяет выбранный shell.
-            shell = (vim.fn.has("win32") == 1 and vim.fn.executable("pwsh") == 1)
-                and "pwsh -NoLogo" or vim.o.shell,
+            shell = function() return require('forge.terminal_shell').command() end,
 
             -- Открыть терминал и сразу войти в insert mode (как
             -- юзер ожидает).
@@ -77,5 +75,21 @@ return {
                 NormalFloat = { link = "NormalFloat" },
             },
         },
+        config = function(_, opts)
+            require('toggleterm').setup(opts)
+            vim.api.nvim_create_user_command('ForgeTerminalShell', function()
+                require('forge.terminal_shell').choose()
+            end, { desc = 'Terminal: choose shell' })
+            vim.api.nvim_create_user_command('ForgeTerminalNew', function()
+                local ide = require('ide')
+                require('ide.controls').focus_code()
+                ide.hide_slot('bottom')
+                local term = require('toggleterm.terminal').Terminal:new()
+                require('ide.ownership').transition('toggleterm', function()
+                    term:open()
+                end)
+                if term:is_open() then ide.show('terminal') end
+            end, { desc = 'Terminal: new console' })
+        end,
     },
 }
