@@ -15959,3 +15959,53 @@ manifest/Default plan и actual native Core/Terminal/parser/fzf probes PASS.
 Actual commit/SHA/plan/runtime — verification и .tests/python-auto-runtime/final-candidate.json.
 Свой test container удалён, пользовательские sessions/SDK/PATH прежние.
 Для повторной приёмки нужен только перезапуск fride, не переустановка.
+
+
+### 303. Отзывчивый delete и сообщения без modal ожидания
+
+Дата: 2026-11-22. IDE-148, source cf6095e.
+Спека: IDE-FILE-7 (ADDED).
+
+**Проблема.** Во время Windows-приёмки после удаления пустой папки остались
+prompt/E21, ввод и закрытие почти не работали, Ctrl-C помог с задержкой.
+Владелец требует: отказ/ожидание ОС не должны блокировать редактор.
+
+**Причина/границы доказательства.** Log подтверждает completed delete;
+interruption stack находится в scheduled redrawstatus из controls внутри
+cmp.confirm/filter sync. Это доказанное место ожидания, не единственная
+установленная причина E21. Native E2E подтвердил prompt completion sync,
+message modal и synchronous system delete. Тот же E21 не воспроизведён.
+Первый OS fixture не запрещал delete (attributes-only handle); исправлен на
+GENERIC_READ и самопроверку настоящего RemoveDirectoryW error32. Его прежний
+FAIL не считается доказательством product bug.
+
+**Изменение.** Native messagesopt wait:0 + nomore сохраняют history и общие
+Logs, без Press ENTER/More. Явные confirmation dialogs остаются. Prompt Enter
+не вызывает cmp sync, обычное completion сохранено. Убран forced redrawstatus.
+Один pinned Neo-tree companion использует существующие Plenary async/libuv
+lstat/scandir/unlink/rmdir, без shell wait/нового manager. Ошибка содержит path/
+native cause, не считается success и не повторяется автоматически. Cleanup
+не стирает modified buffer, изменённый до прихода async результата.
+
+**Проверка/E2E.** По6 новых native cases Windows/Ubuntu PASS: empty/cancel,
+prompt Enter, error80 lines/history, actual OS denial/retry/edit/save,
+held real IO + ввод в другом файле, pending modified buffer + explicit recovery.
+Ещё по27 controls:9 copy/delete/dirty,7 Files,6 focus/order,1 real Go LSP
+completion,3 backport CLI,1 full setup. Итого33 unique/ОС aggregate; не full
+regression/Mac/owner GUI. Initial target6 не прошёл init из-за промежуточного
+invalid messagesopt: порядок исправлен append wait:0 перед remove hit-enter.
+Новые cases стартуют с native more=true до init; общий прежний more=false
+мог маскировать paging. После этой корректировки повторены только affected6.
+Полные исходные FAIL/fixtures/results — verification keep-filesystem-errors-responsive.
+
+**Вывод.** Файловый отказ — штатный terminal outcome операции. История остаётся,
+UI не должен ждать acknowledgement/синхронную рекурсию. Recursive delete
+не атомарен; остальные slow copy/create/guard IO требуют отдельного аудита.
+Новый Help/session report выделен в IDE-149: это другая policy, не доказательство
+провала исправленного delete. Native winfixbuf probe подтвердил E1513 даже
+для nvim_win_set_buf; единый owner/lifecycle contract ещё не реализован.
+
+**Файлы.** config/options.lua, plugins/completion.lua, ide/controls.lua,
+patches/plugins.json + README, tests/e2e/filesystem-errors.test.lua/fixture,
+узкий native-more параметр общего editor harness; guides/roadmap/PROBLEMS.
+Доставка с backup и source/native proof записывается в verification после commit.

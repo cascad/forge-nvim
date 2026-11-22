@@ -1,6 +1,6 @@
 # nvim_forge — рабочий план мини-IDE
 
-Обновлено: 2026-11-21. Основная сборка: **nvim_forge**.
+Обновлено: 2026-11-22. Основная сборка: **nvim_forge**.
 
 **Очередь упрощения завершена — 2026-11-20:**
 
@@ -24,6 +24,21 @@
 сняты решением владельца; повторно разрабатывать их не нужно.
 
 ### До первой боевой сборки — конкретный остаток
+
+**IDE-148 (§303):** modal native errors/paging, synchronous prompt completion и
+blocking delete исправлены штатными messagesopt/nomore, prompt Enter fallback
+и Plenary async/libuv companion. По33 targeted cases Windows/Ubuntu PASS
+aggregate; [результаты/ограничения](../openspec/changes/keep-filesystem-errors-responsive/verification.md).
+Полной гарантии для остальных synchronous copy/create/guard IO это не даёт.
+
+**Следующий продуктовый этап — IDE-149:** единый контракт editor/tool/transient,
+допустимые буферы по owner и сохранение только разрешённых views; legacy repair.
+Текущее Help снизу явно разрешено Edgy и сохраняется через sessionoptions=help.
+Нужно решить это общей lifecycle policy, а не очередным blacklist Help.
+Ограниченный [разбор границ](PANEL_OWNERSHIP_REVIEW.md#ide-149--границы-буферов-и-сессий-2026-11-22)
+должен дать проверяемые инварианты и native E2E до дальнейшей приёмки.
+Если для нашего pinned набора нужны постоянные частные перехваты — пересмотреть
+основу, затем предметно сравнить Termide с нужными языками/debug/tests/Git.
 
 **Приёмка, IDE-147 (§302):** Python F5 без project venv выбирал MSYS2 python3,
 который не запускается, хотя системный python.exe работает. Windows Auto

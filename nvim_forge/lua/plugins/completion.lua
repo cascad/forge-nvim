@@ -148,10 +148,14 @@ return {
                     -- Confirm: Replace, как editor.suggest.insertMode:replace.
                     -- select=false — не подтверждать первый, если ничего явно
                     -- не выбрано. Иначе будет вешать рандомный вариант на Enter.
-                    ["<CR>"] = cmp.mapping.confirm({
-                        behavior = cmp.ConfirmBehavior.Replace,
-                        select = false,
-                    }),
+                    ["<CR>"] = cmp.mapping(function(fallback)
+                        -- spec: IDE-FILE-7. Native prompt owns Enter; cmp.confirm
+                        -- synchronizes its filter even when completion is disabled.
+                        if vim.bo.buftype == 'prompt' then fallback(); return end
+                        if not cmp.confirm({ behavior = cmp.ConfirmBehavior.Replace, select = false }) then
+                            fallback()
+                        end
+                    end),
 
                     -- Tab — supertab-style: completion → snippet jump → indent
                     ["<Tab>"] = cmp.mapping(function(fallback)

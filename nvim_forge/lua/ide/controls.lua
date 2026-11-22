@@ -410,7 +410,8 @@ function M.refresh()
         end
         if work[ft(win)] then M.work_maps(vim.api.nvim_win_get_buf(win)) end
     end
-    vim.cmd('redrawstatus')
+    -- Window option updates already request a native redraw. Forcing :redrawstatus
+    -- here can re-enter message handling while an input/completion callback waits.
 end
 
 function M.setup()

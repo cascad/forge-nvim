@@ -195,3 +195,51 @@ Diffview-aware политику, не создаёт окна. Space w 0 исп�
 Нельзя распространять совпадение двух predicates на все focus paths.
 Первоначальная ошибка нового теста о создании через F7 исправлена и записана
 в §156; исходный диагностический F7/md сценарий уже имел созданный main.
+
+
+## IDE-149 — границы буферов и сессий (2026-11-22)
+
+Входящий report: Help открылся при попытках выйти из delete error и сохранился
+после restart. Скрин13:50 показывает native Help, не Code в окне DAP.
+Текущий код явно размещает bt=help в bottom Edgy и включает help в
+sessionoptions. Поэтому конкретное восстановление — разрешённая конфигурацией
+lifecycle policy. Закрытие из любого окна: :helpclose. Она ещё не изменена
+исправлением IDE-148; это отдельный следующий продуктовый этап.
+
+Найден системный gap: panel_guard проверяет named file в panel/orphan и
+ремонтирует layout; он не проверяет пару owner→allowed buffer. marks берёт
+filetypes из registry, но buffers, controls и guard имеют другие таблицы.
+Наличие нескольких слоёв само по себе не ошибка; расходящиеся определения
+класса окна — реальный риск и причина пересмотра контракта.
+
+Native probe нашего0.12.2: winfixbuf=true запретил и Ex :buffer, и
+nvim_win_set_buf с E1513. Artifact: .tests/files-input/window-boundary-probe.json.
+Механизм защищает buffer/window pairing в самом редакторе. Его нельзя назвать
+sandbox для произвольного Lua: plugin может явно снять флаг, Ex bang обходит
+его; корректному backend иногда тоже нужна законная смена буфера.
+
+Один ограниченный план реализации, без нового window manager:
+
+1. В existing registry объявить role/lifetime/allowed buffers; editor/tool/
+   transient классифицировать в одном месте, удалить дублирующие таблицы.
+2. Native winfixbuf применять на owned views. Разрешённые backend transitions
+   проводить через общий controller; не monkeypatch nvim_win_set_buf и не
+   объявлять все переходы ошибкой. Не ломать Neo-tree source switches, Help
+   navigation, Debug group или смену Terminal.
+3. Файловые переходы вести в editor; сохранять editor splits, не схлопывать их
+   по эвристике размера/winfix. Transient остаётся transient, q/Esc/F4 доступны.
+4. Session save/restore использует lifetime: документы и разрешённые views,
+   без Help/prompt/menu/temporary popup. Нужен native legacy restore control:
+   новые опции не отменяют уже записанные команды старого session script.
+5. Native E2E маршрутов :edit, picker, gf/gd, quickfix, backend open, Help,
+   source/terminal switch, save/restart/legacy; отдельно сохранность unsaved
+   buffers, живых jobs/DAP и размеров. Проверки одного владельца переиспользуются
+   через declarations; no-op/mock state не доказывает границу.
+
+Критерий выбора основы: общая policy должна покрывать наш конечный pinned набор
+без накопления специальных перехватов отдельных клавиш/ошибок. Если штатный
+механизм заставляет форкать каждый backend или сохраняется неустранимая
+нестабильность на этих маршрутах — остановить наращивание glue и предметно
+сравнить альтернативную основу с нашей обязательной матрицей языков/debug/
+tests/Git/session. Эквивалентность Termide сейчас не исследована и не заявлена.
+Сам по себе намеренно сохраняемый Help не доказывает необходимость миграции.

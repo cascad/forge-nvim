@@ -11840,3 +11840,55 @@ Before/after SHA сверены, original backup в installed kit; три фай
 границу: не physical GUI/owner acceptance, не Mac, не full regression.
 Свой container ID/labels проверены, ps показал только init/sleep/собственный ps;
 затем docker rm --force только этого ID. Docker Desktop/WSL не менялись.
+
+
+## 211. Delete, error UI и native IO — 2026-11-22
+
+IDE-148 / IDE-FILE-7 / FIXLOG303, source cf6095e. Temp/logs на F в .tests/tmp;
+Python -B/PYTHONUTF8=1/PYTHONDONTWRITEBYTECODE=1. Pins/SDK не обновлялись.
+Incident session jsonl прочитан из private fride-data и сохранён на F; текущий
+owner Neovim не закрывался, пользователь сам сообщил о delayed Ctrl-C.
+
+```powershell
+openspec list --json
+openspec instructions apply --change keep-filesystem-errors-responsive --json
+$env:FORGE_E2E_DEPS='F:/repo/forge-nvim/.tests/neodev-review/editor-deps'
+& .tools/neovim/windows-x64/bin/nvim.exe -u NONE -i NONE -l tests/e2e/filesystem-errors.test.lua
+python -B .tests/files-input/prepare-backport.py
+& .tools/neovim/windows-x64/bin/nvim.exe -u NONE -i NONE -l nvim_forge/scripts/prepare-plugins.lua --plugin-root F:/repo/forge-nvim/.tests/neodev-review/editor-deps/lazy
+python -B .tests/files-input/run-packet.py --nvim F:/repo/forge-nvim/.tools/neovim/windows-x64/bin/nvim.exe --tag windows
+```
+
+Source1 control PASS/3 real RED/1 invalid OS-fixture FAIL. Первый target6
+остановились в init: invalid intermediate messagesopt. Устранено корректным
+порядком; final6 PASS. Ordinary-window/prompt/history/OS proofs записываются
+в editor artifacts. Windows denial helper применяет CreateFileW GENERIC_READ
+без FILE_SHARE_DELETE и проверяет RemoveDirectoryW error32; POSIX parent0555
+восстанавливается finally. Held IO сохраняет настоящий UV результат.
+
+Native more=true выставляется до product init только новыми6 cases: прежний
+harness more=false мог скрыть paging. После этой final корректировки повторены
+только новые6 на ОС. Прежние27 packet controls не меняли свой more=false.
+Raw logs .tests/files-input/*source/target/native-final.log, *-packet.json.
+
+Docker только после ответа владельца. Свой fride-files-errors-20261122:
+--init --network none --cpus2 --memory4g, labels owner=codex/task=filesystem-errors,
+workspace ro/.tests rw, sleep3600. Desktop/WSL не запускались/не менялись.
+Guest /tmp/fride-files-errors/editor-deps: own copy image SDK, verified66 pins,
+known extra neodev removed, current6 backports/17 files и actual receipt.
+```powershell
+docker exec fride-files-errors-20261122 python3 -B .tests/files-input/ubuntu-prepare.py
+docker exec --env FORGE_E2E_DEPS=/tmp/fride-files-errors/editor-deps fride-files-errors-20261122 nvim -u NONE -i NONE -l tests/e2e/filesystem-errors.test.lua
+docker exec --env FORGE_E2E_DEPS=/tmp/fride-files-errors/editor-deps fride-files-errors-20261122 python3 -B .tests/files-input/run-packet.py --nvim /opt/nvim/bin/nvim --tag ubuntu
+```
+По33 unique targeted PASS/ОС; full/Mac/owner GUI не заявляются.
+
+IDE-149 read-only assessment: options включает session help, Edgy явно
+размещает Help в bottom, panel_guard ремонтирует named-file leakage, остальные
+tool types исключены; несколько таблиц типов. Native isolated boundary probe:
+```powershell
+& .tools/neovim/windows-x64/bin/nvim.exe -u NONE -i NONE -l .tests/files-input/window-probe.lua
+```
+Ex и nvim_win_set_buf при winfixbuf дали E1513. Это native основа будущей
+policy, не уже реализованная изоляция. Help закрывается штатным :helpclose.
+Доставка current fix и финальные guards/commit фиксируются отдельно в verification.

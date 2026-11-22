@@ -3,6 +3,11 @@
 local opt = vim.opt
 local ru_keys = require("config.ru_keys")
 
+-- spec: IDE-FILE-7. Errors remain in history/IDE Logs without modal hit-enter.
+opt.messagesopt:append('wait:0')
+opt.messagesopt:remove('hit-enter')
+opt.more = false
+
 -- spec: IDE-SQL-7. SQLLogicTest — отдельный DSL, не production SQL для SQLS/Sqruff.
 vim.filetype.add({extension={slt='sqllogictest'}})
 

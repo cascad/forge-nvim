@@ -39,6 +39,16 @@ Files не сохраняет и не отбрасывает этот текст
 
 ## Проверки и границы
 
+IDE-148 / §303: normal delete выполняет IO через существующие Plenary async/
+libuv, без ожидания shell-команды в UI. Отказ ОС оставляет причину/путь в
+`Space w i` и `:messages`; native сообщения не требуют Press ENTER/More.
+Explicit confirmation по-прежнему обязателен; Esc/No отменяют действие.
+Пока IO ожидается, можно вернуться в код через F7 и сохранить другой файл.
+Modified buffer, изменённый до async cleanup, не уничтожается.
+Recursive delete не является транзакцией: после отказа часть уже удалённых
+файлов не откатывается; проверьте остаток, повтор выполняется явно.
+Это не объявление всех copy/create/rename путей неблокирующими.
+
 `tests/e2e/file-copy-delete.test.lua` содержит9 native UI сценариев:
 clipboard file/directory, typed copy/conflict/cancel, чистый file delete
 с Esc/No/zoom, recursive directory delete/cancel, root refusal, modified

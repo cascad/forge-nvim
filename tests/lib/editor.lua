@@ -93,7 +93,7 @@ local function start(root, options, holder)
   local observer = runtime .. '/observe.lua'
   vim.fn.writefile({
     'vim.opt.rtp:prepend(vim.env.FORGE_E2E_CONFIG)',
-    'vim.o.columns=140; vim.o.lines=45; vim.o.more=false',
+    'vim.o.columns=140; vim.o.lines=45; vim.o.more=' .. tostring(options.more == true),
     'vim.g.forge_e2e_installs=0; vim.g.forge_e2e_notifications={}',
     'vim.api.nvim_create_autocmd("User", {pattern="VeryLazy", callback=function() vim.defer_fn(function() _G.forge_e2e_observed=true end,3500) end})',
     '_G.forge_e2e_spawns={}; local spawn=vim.uv.spawn; vim.uv.spawn=function(cmd,opts,...) _G.forge_e2e_spawns[#_G.forge_e2e_spawns+1]={cmd=cmd,args=(opts or {}).args}; return spawn(cmd,opts,...) end',
