@@ -265,7 +265,7 @@ for _,eol in ipairs({'\n','\r\n'}) do
       local a,b=assert(source:find(spec.after,1,true));source=source:sub(1,a-1)..spec.before..source:sub(b+1)
       T.eq(vim.fn.sha256(source),spec.before_sha256)
       local path=base..'/neotest/'..spec.file;local raw=source:gsub('\n',eol);write(path,raw)
-      local files=companions(base,spec,eol,false,'neotest');T.eq(#files,3)
+      local files=companions(base,spec,eol,false,'neotest');T.eq(#files,4)
       assert(cli(base,'--check','neotest').code~=0);T.eq(bytes(path),raw)
       local result=cli(base,nil,'neotest');T.eq(result.code,0,result.stderr)
       local actual=vim.json.decode(result.stdout).neotest

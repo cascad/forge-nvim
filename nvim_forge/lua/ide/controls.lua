@@ -144,10 +144,11 @@ local function show_work(id)
     close_help(false)
     M.restore(false)
     local ide = require('ide')
-    ide.focus_main()
+    local comp = ide.registry.get(id)
+    -- An open terminal already has its own window and input mode.
+    if id ~= 'terminal' or not comp.is_open() then ide.focus_main() end
     pending_panel = id
     ide.show(id)
-    local comp = ide.registry.get(id)
     if comp.is_open() then pending_panel = nil;comp.focus() end
 end
 function M.tests() show_work('tests') end
@@ -321,7 +322,8 @@ function M.help()
         lines[#lines + 1] = 'c c — commit; P u — push; b — ветки; w — worktree.'
         lines[#lines + 1] = 'g? — штатная справка Neogit со всеми действиями.'
     elseif ft(source) == 'neotest-summary' then
-        lines[#lines + 1] = 'Tests: Enter — раскрыть, i — код выбранного теста.'
+        lines[#lines + 1] = 'Tests. l — раскрыть, h — свернуть, Enter — переключить ветку.'
+        lines[#lines + 1] = 'i — открыть код выбранного теста.'
         lines[#lines + 1] = 'r — запустить, o — вывод; g? — native справка.'
     elseif ft(source) == 'neotest-output-panel' then
         lines[#lines + 1] = 'Test Output: q скрывает, Space w r возвращает вывод.'

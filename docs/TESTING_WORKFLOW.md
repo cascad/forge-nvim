@@ -93,7 +93,7 @@ docker compose -f tests/containers/compose.yaml run --rm ubuntu acceptance
 | Запуск Node, Python venv, выбор конфигурации, breakpoint, Locals, стек, Output, паника и повтор после правки | `mixed-project`, `go-workspace`, `debug-panels`, `dap-output` |
 | Тест под курсором, файл и проект, pass/fail, отладка теста, исправление и повтор | `test-runner`, `go-workspace-tests` |
 | Diff и история, stage файла, hunk и выбранной строки, ветка, worktree, commit и push | `git-workflow` |
-| Фокус, закрытие и разворот панелей, Help, Outline, общие логи, встроенная консоль и отправка выделения | `window-ownership`, `work-panels`, `outline`, `ide-logs`, `terminal-selection` |
+| Фокус, закрытие и разворот панелей, Help, Outline, общие логи, встроенная консоль и отправка выделения | `window-ownership`, `work-panels`, `tool-panels`, `outline`, `ide-logs`, `terminal-selection` |
 
 Нужны Git, ripgrep, Python 3 и Neovim для тестов. На Windows Neovim выбирает
 `scripts/test.ps1`. Уже подготовленные каталоги можно передать
@@ -102,10 +102,10 @@ Go tests/gopls, Node, Python, Rust, Bash, Sqruff и Bash DAP описана в
 [инструкции E2E](../tests/e2e/README.md). Те же подготовительные шаги есть
 в [Dockerfile Ubuntu](../tests/containers/Dockerfile). Скачивание выполняется
 при явном флаге подготовки. На текущем Windows-стенде актуальный набор плагинов
-лежит в `.tests/async-copy/editor-deps`. Укажи этот путь перед запуском.
+лежит в `.tests/terminal-test-panel-keys/editor-deps`. Укажи этот путь перед запуском.
 
 ```powershell
-$env:FORGE_E2E_DEPS = (Resolve-Path .tests/async-copy/editor-deps).Path
+$env:FORGE_E2E_DEPS = (Resolve-Path .tests/terminal-test-panel-keys/editor-deps).Path
 ./scripts/test.ps1 acceptance
 ```
 

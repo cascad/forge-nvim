@@ -163,7 +163,8 @@ path с `/` на Windows смешивался с discovery tree `\`: positions.m
 
 На существующей установке явно `:Lazy build neotest`, затем restart.
 `nvim -l nvim_forge/scripts/prepare-plugins.lua --plugin-root <lazy> --plugin neotest`
-использует тот же applier; --check/--revert проверяют/возвращают все четыре файла.
+использует тот же applier. `--check` и `--revert` работают со всеми файлами
+группы, включая companion для двух направленных действий в summary.
 Ревизия и 67 pins не менялись. Неизвестный последний companion отклоняется
 до записи primary и предыдущих companions. LF/CRLF сохраняются; повтор/check
 не меняет mtime. Native process E2E находятся в plugin-backports.test.lua,

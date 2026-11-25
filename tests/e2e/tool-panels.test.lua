@@ -29,7 +29,7 @@ local function state(e)
     local b=vim.api.nvim_win_get_buf(w);local channel=vim.bo[b].channel
     out[#out+1]={win=w,buf=b,ft=vim.bo[b].filetype,relative=vim.api.nvim_win_get_config(w).relative,
       buftype=vim.bo[b].buftype,channel=channel,pid=channel>0 and vim.fn.jobpid(channel) or false,
-      text=table.concat(vim.api.nvim_buf_get_lines(b,0,-1,false),'\n')}
+      cursor=vim.api.nvim_win_get_cursor(w),text=table.concat(vim.api.nvim_buf_get_lines(b,0,-1,false),'\n')}
     end;return {windows=out,mode=vim.api.nvim_get_mode(),current=vim.api.nvim_get_current_win(),
       dap=package.loaded.dap and require('dap').session()~=nil or false,installs=vim.g.forge_e2e_installs} ]])
 end
@@ -120,9 +120,23 @@ local function help(e,kind,heading)
   focus(e,'q',kind)
 end
 check('cold Terminal focus is idempotent',false,function(e,capture)
-  shell(e,' wT');normal(e);local before=terminal(e);capture('terminal-before')
+  shell(e,' wT');normal(e);keys(e,'gg0');local before=terminal(e);capture('terminal-before')
+  e:lua([[vim.v.errmsg='';_G.forge_terminal_focus_entries={}
+    vim.api.nvim_create_autocmd('WinEnter',{callback=function()
+      table.insert(_G.forge_terminal_focus_entries,vim.api.nvim_get_current_win())
+    end})]])
   keys(e,' wT');T.eq(e:current_ft(),'toggleterm');preserved(before,terminal(e))
-  normal(e);code(e);focus(e,' wT','toggleterm');preserved(before,terminal(e))
+  T.eq(terminal(e).cursor,before.cursor)
+  T.eq(e:lua('return _G.forge_terminal_focus_entries'),{},'Refocusing the active terminal must stay in its window')
+  T.eq(e:lua('return vim.v.errmsg'),'')
+  normal(e);code(e)
+  e:input(':rightbelow vsplit file_two.txt<CR>')
+  e:wait('second code split active',function() return e:current_file():match('/file_two%.txt$') end)
+  e:lua("vim.v.errmsg='';_G.forge_terminal_focus_entries={}")
+  focus(e,' wT','toggleterm');preserved(before,terminal(e))
+  T.eq(terminal(e).cursor,before.cursor)
+  T.eq(e:lua('return _G.forge_terminal_focus_entries'),{before.win},'Focus should move directly from code to terminal')
+  T.eq(e:lua('return vim.v.errmsg'),'')
   capture('terminal-refocused')
 end)
 check('Terminal input help zoom cancel hide preserve process',false,function(e,capture)

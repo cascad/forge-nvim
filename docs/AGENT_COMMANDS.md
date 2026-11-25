@@ -12349,3 +12349,28 @@ bash scripts/test.sh e2e \
 
 На `d7eee11` прошли 7 файлов и 32 сценария за 199,83 с.
 Лог на Mac в `.tests/batches/1795607269698456000/00.log`.
+
+## 224. Фокус Terminal и ветки в Tests
+
+Точечные RED с исходным комплектом в
+`.tests/terminal-test-panel-keys/{terminal-before,tests-before}.log`.
+Подготовлен отдельный комплект плагинов из прежнего кеша, применён
+Neotest companion, обновлён его manifest. Временные файлы на F.
+
+```powershell
+$nvim = '.tools/neovim/windows-x64/bin/nvim.exe'
+$env:FORGE_E2E_DEPS = (Resolve-Path .tests/terminal-test-panel-keys/editor-deps).Path
+& $nvim -u NONE -i NONE -l nvim_forge/scripts/prepare-plugins.lua --plugin-root "$env:FORGE_E2E_DEPS/lazy"
+./scripts/test.ps1 e2e -Files @('tests/e2e/tool-panels.test.lua','tests/e2e/work-panels.test.lua')
+$env:FORGE_TOOL_PANEL_CASE = 'cold Terminal focus'
+& $nvim -u NONE -i NONE -l tests/e2e/tool-panels.test.lua
+$env:FORGE_TEST_ID = 'IDE-TEST-6'
+& $nvim -u NONE -i NONE -l tests/e2e/plugin-backports.test.lua
+openspec validate unify-terminal-trouble-controls --type change --strict --no-interactive
+openspec validate unify-work-panel-controls --type change --strict --no-interactive
+```
+
+Исходные дефекты воспроизведены. Windows получила 14 PASS в пакете и
+1 PASS при повторе сценария фокуса после уточнения наблюдения, плюс
+3 PASS для подготовки Neotest. Отчёт пакета
+`.tests/batches/1795633892989790600/report.json`.

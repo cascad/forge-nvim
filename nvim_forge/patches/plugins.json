@@ -91,6 +91,13 @@
         "after_sha256": "e2d3ac0334c97fd487cc4d63f71fbff8dab2d3da00b4600dba05b1a04a4f1740",
         "before": "    if root then\n      table.insert(adapters, { adapter = adapter, root = root })",
         "after": "    if root then\n      root = (vim.uv or vim.loop).fs_realpath(root) or root\n      table.insert(adapters, { adapter = adapter, root = root })"
+      },
+      {
+        "file": "lua/neotest/consumers/summary/component.lua",
+        "before_sha256": "2abeaa6e43890341b2a816741e0926c7409a7a1572aeead1404ed5507f2babf0",
+        "after_sha256": "da15cdaa24f6e69b64309d4402edfd5fa6080bb16f52247f799bad3b4fea9100",
+        "before": "    if expandable then\n      canvas:add_mapping(\n        \"expand\",\n        async_func(function()\n          self:toggle_reference(position.id)\n          neotest.summary.render()\n        end)\n      )\n",
+        "after": "    if expandable then\n      local function set_expanded(expanded)\n        if (not not self.expanded_positions[position.id]) == expanded then\n          return\n        end\n        self:toggle_reference(position.id)\n        neotest.summary.render()\n      end\n      canvas:add_mapping(\"expand\", async_func(function()\n        set_expanded(not self.expanded_positions[position.id])\n      end))\n      canvas:add_mapping(\"expand_node\", async_func(function()\n        set_expanded(true)\n      end))\n      canvas:add_mapping(\"collapse_node\", async_func(function()\n        set_expanded(false)\n      end))\n"
       }
     ]
   },

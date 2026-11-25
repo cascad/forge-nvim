@@ -160,6 +160,15 @@ check('IDE-PANEL-7 Tests summary выбор из zoom не запускает т
   select(e,'sample_test.go')
   local state=e:lua([[return {cursor=vim.api.nvim_win_get_cursor(0),line=vim.api.nvim_get_current_line(),cr=vim.fn.maparg('<CR>','n',false,true).desc,expand=vim.fn.maparg('e','n',false,true).desc,mappings=require('neotest.config').summary.mappings} ]])
   vim.fn.writefile(vim.split(vim.inspect(state),'\n',{plain=true}),e.dir..'/summary-before-expand.txt')
+  e:lua([[vim.keymap.set('n','<F35>',function() vim.g.forge_tests_key_barrier=(vim.g.forge_tests_key_barrier or 0)+1 end,{buffer=0})]])
+  for index, step in ipairs({{'ll',true},{'hh',false}}) do
+    e:input(step[1]..'<F35>')
+    e:wait('Summary branch visibility after '..step[1],function()
+      return e:lua('return vim.g.forge_tests_key_barrier')==index
+        and (text(e,'neotest-summary'):find('TestNearest',1,true)~=nil)==step[2]
+    end)
+    T.eq(e:current_ft(),'neotest-summary')
+  end
   e:input('<CR>')
   e:wait('summary обнаружил TestNearest',function() return text(e,'neotest-summary'):find('TestNearest',1,true) end,20000)
   e:input(' wz');select(e,'TestNeighbour');e:input('i')

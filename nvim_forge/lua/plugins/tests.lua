@@ -94,7 +94,7 @@ return {
                 output = { open_on_run = false },
                 running = { concurrent = false }, -- native fallback не раздувает число команд
                 quickfix = { open = false },
-                summary = { mappings = { help = 'g?' } }, -- ? — общий panel help
+                summary = { mappings = { help = 'g?', expand_node = 'l', collapse_node = 'h' } },
             })
             require('neotest').forge_runner.bind_run_api(require('neotest').run)
 
