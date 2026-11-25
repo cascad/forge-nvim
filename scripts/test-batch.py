@@ -59,13 +59,13 @@ def environment():
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('--mode', choices=['quick','e2e','full','regression'], default='e2e')
+    parser.add_argument('--mode', choices=['quick','e2e','acceptance','full','regression'], default='e2e')
     parser.add_argument('--nvim', default='nvim')
     parser.add_argument('--file', action='append', default=[])
     parser.add_argument('--plan', action='store_true')
     args = parser.parse_args()
-    if args.mode == 'regression' and args.file:
-        parser.error('regression is complete; use e2e --file for a selected block')
+    if args.mode in ('regression', 'acceptance') and args.file:
+        parser.error(f'{args.mode} is complete; use e2e --file for a selected block')
     nvim = shutil.which(args.nvim)
     if not nvim:
         parser.error('Prepared Neovim required: '+args.nvim)
@@ -83,7 +83,10 @@ def main():
     selected = json.loads(planned.stdout)
     commands, missing_inputs, core_mode = [], [], None
     if selected['registry']:
-        commands.append({'name':'registry', 'argv':[nvim,'-l','tests/run.lua',*selected['suites'],'--registry',str(registry)], 'timeout':None})
+        argv = [nvim, '-l', 'tests/run.lua', *selected['suites'], '--registry', str(registry)]
+        if args.mode == 'acceptance':
+            argv.append('--require-all')
+        commands.append({'name':'registry', 'argv':argv, 'timeout':None})
     for name in selected['installers']:
         extra = []
         if name == 'tests/install-core-acceptance.test.py':

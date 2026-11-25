@@ -37,6 +37,62 @@ registry/native inventory. Он проверяет наличие E2E, резу�
 Native macOS прогон отдельно выполняет владелец. Запуск на Windows не доказывает
 работу macOS. Команды не устанавливают и не перенастраивают Docker/WSL.
 
+## Автоматическая приёмка редактора
+
+Запускай из корня репозитория после подготовки тестового окружения.
+
+```powershell
+./scripts/test.ps1 acceptance
+```
+
+```sh
+bash scripts/test.sh acceptance
+```
+
+В готовом Ubuntu-образе с зависимостями для текущего `lazy-lock.json`:
+
+```sh
+docker compose -f tests/containers/compose.yaml run --rm ubuntu acceptance
+```
+
+Состав можно посмотреть с `-Plan` на Windows и `--plan` на Linux/macOS.
+Приёмка идёт по отметкам `acceptance = true` в [реестре](../tests/registry.lua)
+и запускает настоящий fride в отдельных временных проектах. Тесты проверяют
+открытый файл, содержимое на диске, изменения в индексе и remote Git, вывод
+процессов и фокус после действия.
+Ошибка или пропущенный сценарий дают ненулевой код выхода.
+
+| Что проверяем | Тесты в `tests/e2e/` (суффикс `.test.lua`) |
+| --- | --- |
+| Запуск, вкладки, переход A → B → A, восстановление вкладок, Files и размеров панелей | `editor`, `buffers`, `project-session`, `session-files-view`, `session-tool-views` |
+| Создание, rename, copy, cut/paste и delete, Unicode, отказ ОС и ввод во время операций | `file-explorer`, `file-copy-delete`, `filesystem-errors`, `acceptance-navigation` |
+| Ctrl+P из кода и Files, поиск текста из Logs до строки, палитра, F1, Alt+B, reveal | `acceptance-navigation` |
+| LSP в смешанном проекте, переход к определению и реализации, возврат, ввод аргументов | `mixed-project`, `go-workspace-language`, `snippet-input` |
+| Запуск Node, Python venv, выбор конфигурации, breakpoint, Locals, стек, Output, паника и повтор после правки | `mixed-project`, `go-workspace`, `debug-panels`, `dap-output` |
+| Тест под курсором, файл и проект, pass/fail, отладка теста, исправление и повтор | `test-runner`, `go-workspace-tests` |
+| Diff и история, stage файла, hunk и выбранной строки, ветка, worktree, commit и push | `git-workflow` |
+| Фокус, закрытие и разворот панелей, Help, Outline, общие логи, встроенная консоль и отправка выделения | `window-ownership`, `work-panels`, `outline`, `ide-logs`, `terminal-selection` |
+
+Нужны Git, ripgrep, Python 3 и Neovim для тестов. На Windows Neovim выбирает
+`scripts/test.ps1`. Уже подготовленные каталоги можно передать
+через `FORGE_E2E_*_DEPS` и `FORGE_E2E_DAP_TOOLS`. Подготовка плагинов, Go/Delve,
+Go tests/gopls, Node, Python, Rust, Bash, Sqruff и Bash DAP описана в
+[инструкции E2E](../tests/e2e/README.md). Те же подготовительные шаги есть
+в [Dockerfile Ubuntu](../tests/containers/Dockerfile). Команда `acceptance`
+сама ничего не скачивает. На текущем Windows-стенде актуальный набор плагинов
+лежит в `.tests/async-copy/editor-deps`. Укажи этот путь перед запуском.
+
+```powershell
+$env:FORGE_E2E_DEPS = (Resolve-Path .tests/async-copy/editor-deps).Path
+./scripts/test.ps1 acceptance
+```
+
+Результат и путь к логу печатаются в конце. Сводный лог прогона сохраняется
+в `.tests/batches/<stamp>/00.log`, подробности последнего прогона —
+в `.tests/report.json` и `.tests/logs/`. Повторяй упавший файл через `e2e -Files`
+или `e2e --file`. Установщик, физические клавиши и clipboard WezTerm, а также
+замеры отзывчивости на рабочем проекте входят в отдельную приёмку.
+
 ## Команды блока
 
 Из корня репозитория, после отдельной подготовки зависимостей:

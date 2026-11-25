@@ -28,6 +28,7 @@ local M = {}
 ---@field role? "tool"|"editor"|"transient"
 ---@field lifetime? "view"|"document"|"transient"
 ---@field family? string              -- допустимые native смены буфера
+---@field backend_switches_buffer? boolean -- backend меняет буфер сам; guard проверяет family после смены
 ---@field icon?     string             -- для Activity Bar UI (пока не используется)
 
 local components = {} ---@type table<string, ide.Component>
@@ -80,6 +81,7 @@ local auxiliary = {
     NeogitPopup = { role = 'transient', lifetime = 'transient' },
     DiffviewFiles = { role = 'tool', lifetime = 'transient', family = 'diffview' },
     DiffviewFileHistory = { role = 'tool', lifetime = 'transient', family = 'diffview' },
+    OverseerOutput = { role = 'tool', lifetime = 'transient', family = 'overseer-output', backend_switches_buffer = true },
 }
 
 function M.policy(buf)

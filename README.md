@@ -9,7 +9,7 @@
 Активные среды — Windows/macOS/Ubuntu; Mint пока отложен: [границы модулей](docs/PORTABLE_ARCHITECTURE.md).
 Omarchy добавлена отдельным этапом: [установка и тесты](docs/OMARCHY_SUPPORT_PLAN.md).
 [E2E и команды прогонов внутри VM](tests/e2e/README.md).
-[Проверки цельного блока и полный regression](docs/TESTING_WORKFLOW.md):
+[Приёмка редактора, проверки блока и полный regression](docs/TESTING_WORKFLOW.md):
 список файлов одной командой, просмотр плана, отдельный большой прогон.
 [Установка одной командой: состав Default/Custom и текущая готовность](docs/INSTALLATION_PLAN.md)
 — выбор компонентов реализован; полная готовность Default и публичная поставка ещё в разработке.

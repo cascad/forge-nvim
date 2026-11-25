@@ -12,6 +12,9 @@ Trace сохраняет требование регистрации .sh/.test.l
 
 [Когда проверять блок и как запускать полный regression](../docs/TESTING_WORKFLOW.md).
 E2E запускаются один раз после цельной реализации; повторы — только failed/affected.
+`./scripts/test.ps1 acceptance` / `bash scripts/test.sh acceptance` запускают
+[основные сценарии fride](../docs/TESTING_WORKFLOW.md#автоматическая-приёмка-редактора).
+Пропуск одной из выбранных проверок делает приёмку неуспешной.
 `scripts/test.ps1 regression` / `bash scripts/test.sh regression` добавляют native
 Python suites установщика/release к прежнему full. `-Plan` / `--plan` показывает состав.
 

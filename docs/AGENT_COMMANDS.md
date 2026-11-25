@@ -12239,3 +12239,42 @@ npx.cmd --yes @fission-ai/openspec@1.13.2 validate open-file-search-in-editor --
 `FORGE_TEST_ID='IDE-FILE-11 Ctrl+P from Files'` дали 1 PASS с её `nvim.exe`.
 Проверены исходник, SHA и завершение тестовой сессии. Контейнер теста удалён
 после сверки ID, метки и процессов.
+
+## 221. Автоматическая приёмка редактора
+
+```powershell
+$env:FORGE_E2E_DEPS = (Resolve-Path .tests/async-copy/editor-deps).Path
+$env:Path = "$PSHOME;$env:Path"
+$env:GOMAXPROCS = '2'
+./scripts/test.ps1 acceptance -Plan
+./scripts/test.ps1 acceptance
+$nvim = '.tools/neovim/windows-x64/bin/nvim.exe'
+& $nvim -u NONE -i NONE -l tests/lib/test_batch.test.lua
+& $nvim -u NONE -i NONE -l tests/e2e/test-batch.test.lua
+$env:FORGE_TEST_ID = 'SELF: E2E-CATALOG приёмочный runner'
+& $nvim -u NONE -i NONE -l tests/e2e/e2e-catalog.test.lua
+$env:FORGE_TEST_ID = 'IDE-PANEL-3 смена файла'
+& $nvim -u NONE -i NONE -l tests/e2e/outline.test.lua
+$env:FORGE_TEST_ID = 'IDE-PANEL-31 Ctrl+Shift+P'
+& $nvim -u NONE -i NONE -l tests/e2e/acceptance-navigation.test.lua
+$env:FORGE_TEST_ID = 'IDE-FILE-8'
+& $nvim -u NONE -i NONE -l tests/e2e/acceptance-navigation.test.lua
+$env:FORGE_TEST_ID = 'IDE-FILE-11 Ctrl+P opens'
+& $nvim -u NONE -i NONE -l tests/e2e/acceptance-navigation.test.lua
+$env:FORGE_TEST_ID = ''
+$env:FORGE_WORK_PANEL_CASE = 'selected task'
+& $nvim -u NONE -i NONE -l tests/e2e/work-panels.test.lua
+openspec validate enforce-window-ownership --type change --strict --no-interactive
+& $nvim -u NONE -i NONE -l tests/trace.test.lua --change enforce-window-ownership
+& 'C:/Program Files/Git/bin/bash.exe' -n scripts/test.sh
+docker info --format '{{.OSType}}'
+```
+
+Приёмка сохранила план и вывод в `.tests/batches/1795597304733228000`.
+Точечные повторы и журнал Windows в `.tests/acceptance-20261125`.
+Копия подробного отчёта — `registry-report.json` в том же каталоге.
+Windows выполнила 124 сценария в 23 файлах за 894 с. Первый проход дал
+119 PASS и 5 FAIL, пять точечных повторов завершились PASS. История и
+два невоспроизведённых сбоя описаны в FIXLOG §312–313.
+Для прямых вызовов Neovim временные файлы и лог перенесены в `.tests/tmp`.
+Linux engine Docker недоступен, контейнеры не запускались.

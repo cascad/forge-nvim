@@ -1,6 +1,6 @@
 -- Единственный вход проверок (add-wezterm-spec-checks, design, решения 1, 2, 10, 12):
 --
---   nvim -l tests/run.lua [набор…] [--id ID] [--update-golden] [--strict] [--registry ФАЙЛ]
+--   nvim -l tests/run.lua [набор…] [--id ID] [--update-golden] [--strict] [--require-all] [--registry ФАЙЛ]
 --
 -- Раннер только оркеструет: берёт файлы из tests/registry.lua, запускает каждый
 -- отдельным процессом с таймаутом, разбирает строки `ok`/`FAIL`/`SKIP`,
@@ -148,12 +148,13 @@ local SUITES = { 'unit', 'e2e', 'wezterm', 'install', 'trace', 'conpty' }
 -- минуты, поэтому только по имени набора или вместе с --id.
 local DEFAULT_SUITES = { 'unit', 'e2e', 'wezterm', 'install', 'trace' }
 local USAGE = [[
-Использование: nvim -l tests/run.lua [набор…] [--id ID] [--update-golden] [--strict] [--registry ФАЙЛ]
+Использование: nvim -l tests/run.lua [набор…] [--id ID] [--update-golden] [--strict] [--require-all] [--registry ФАЙЛ]
   набор            unit | e2e | wezterm | install | trace | conpty
                    (по умолчанию — все, кроме conpty; с --id — все)
   --id ID          только проверки требования: WT-CLIP — вся capability, WT-CLIP-1 — одно требование
   --update-golden  перезаписать эталоны и фикстуру (осознанное изменение, diff — в тот же коммит)
   --strict         UNCOVERED тоже валит прогон
+  --require-all    SKIP любой выбранной проверки валит прогон
   --registry ФАЙЛ  другой реестр вместо tests/registry.lua (самопроверка раннера)
   -h, --help       эта справка]]
 
@@ -183,6 +184,8 @@ do
       ARGS.update_golden = true
     elseif a == '--strict' then
       ARGS.strict = true
+    elseif a == '--require-all' then
+      ARGS.require_all = true
     elseif a == '--registry' then
       i = i + 1
       if not argv[i] then usage_error('--registry ждёт путь к файлу') end
@@ -715,6 +718,18 @@ local n_run_files = vim.tbl_count(run_files)
 
 local failures = {}
 if FC.FAIL > 0 then failures[#failures + 1] = ('файлов с FAIL: %d'):format(FC.FAIL) end
+if ARGS.require_all then
+  for _, r in ipairs(FILES) do
+    for _, c in ipairs(r.cases) do
+      if c.status == 'SKIP' then
+        failures[#failures + 1] = ('пропущена проверка %s: %s'):format(c.name, c.detail or r.file)
+      end
+    end
+    if r.verdict == 'SKIP' and #r.cases == 0 then
+      failures[#failures + 1] = ('пропущен файл %s: %s'):format(r.file, r.reason or 'SKIP')
+    end
+  end
+end
 if FIXTURE and FIXTURE.status == 'FAIL' then failures[#failures + 1] = 'фикстура не выгрузилась' end
 if ARGS.strict and COUNTS.UNCOVERED > 0 then
   failures[#failures + 1] = ('--strict: UNCOVERED %d'):format(COUNTS.UNCOVERED)
@@ -743,6 +758,7 @@ local report = {
     suites = ARGS.suites,
     id = ARGS.id,
     strict = ARGS.strict,
+    require_all = ARGS.require_all or false,
     update_golden = ARGS.update_golden,
     registry = ARGS.registry,
     -- Среда shell-наборов, если опрашивалась: где (WSL/macOS/Linux), путь

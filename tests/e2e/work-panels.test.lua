@@ -183,7 +183,23 @@ check('IDE-PANEL-7 selected task из zoom, running job переживает hid
     e:input(':OverseerRun forge-e2e-'..name..'<CR>')
     e:wait('процесс '..name..' запущен',function() return vim.fn.filereadable(e.project..'/'..name..'-started')==1 end,15000)
   end
-  focus(e,' wb','OverseerList');select(e,'forge-e2e-alpha');e:input(' wz');select(e,'forge-e2e-beta');e:input('<C-s>')
+  focus(e,' wb','OverseerList')
+  local function preview(name)
+    select(e,'forge-e2e-'..name)
+    e:wait('Overseer dock shows '..name,function()
+      return e:lua([[local marker='JOB_STARTED_'..(...)
+        for _, win in ipairs(vim.api.nvim_tabpage_list_wins(0)) do
+          local buf=vim.api.nvim_win_get_buf(win)
+          if vim.bo[buf].filetype=='OverseerOutput'
+              and table.concat(vim.api.nvim_buf_get_lines(buf,0,-1,false),'\n'):find(marker,1,true) then return true end
+        end]],{name})
+    end)
+    T.eq(e:lua('return vim.wo.winfixbuf'),true,'Tasks list remains protected')
+  end
+  preview('alpha')
+  preview('beta')
+  select(e,'forge-e2e-alpha')
+  e:input(' wz');select(e,'forge-e2e-beta');e:input('<C-s>')
   e:wait('output выбранной beta',function() return e:lua([[return vim.bo.buftype=='terminal' and table.concat(vim.api.nvim_buf_get_lines(0,0,-1,false),'\n'):find('JOB_STARTED_beta',1,true)~=nil]]) end)
   local output=e:lua('return vim.api.nvim_get_current_buf()')
   local job=tasks(e,'forge-e2e-beta')[1].id

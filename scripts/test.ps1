@@ -1,6 +1,6 @@
 # Единая точка входа внутри Windows VM; зависимости готовятся отдельно.
 param(
-    [ValidateSet('quick', 'e2e', 'full', 'regression')]
+    [ValidateSet('quick', 'e2e', 'acceptance', 'full', 'regression')]
     [string] $Mode = 'full',
     [string[]] $Files = @(),
     [switch] $Plan
@@ -29,7 +29,7 @@ try {
         'e2e'   { @('e2e') }
         'full'  { @('unit', 'e2e', 'wezterm', 'install', 'trace', 'conpty') }
     }
-    if ($Files.Count -gt 0 -or $Plan -or $Mode -eq 'regression') {
+    if ($Files.Count -gt 0 -or $Plan -or $Mode -in @('acceptance', 'regression')) {
         $forgeBatchArgs=@('-B','scripts/test-batch.py','--nvim',$forgeTestNvim,'--mode',$Mode)
         foreach ($forgeFile in $Files) { $forgeBatchArgs+=@('--file',$forgeFile) }
         if ($Plan) { $forgeBatchArgs+='--plan' }

@@ -31,6 +31,7 @@ local cases={
   {name='non-IDE unit policy сохраняется',kind='other',code=0},
   {name='unknown selected change не даёт false PASS',kind='valid',change='not-a-change',code=1,unknown=true},
   {name='общий runner сохраняет structured каталог',kind='runner',code=0,catalog='REGISTERED',runner=true},
+  {name='приёмочный runner отклоняет частичный SKIP',kind='runner',code=1,runner=true,require_all=true},
   {name='default runner сохраняет native Python каталог',kind='native',code=0,catalog='REGISTERED',runner=true},
 }
 for _,case in ipairs(cases) do
@@ -71,13 +72,24 @@ for _,case in ipairs(cases) do
       write(tree..'/tests/trace.test.lua',read(driver..'/tests/trace.test.lua'))
       registry[#registry+1]={file='tests/trace.test.lua',suite='trace'}
     end
+    if case.require_all then
+      write(tree..'/'..flow,[[
+package.path=vim.env.FORGE_REPO..'/tests/lib/?.lua;'..package.path
+local T=require('check')
+T.check('IDE-BOOT-1 baseline',function() end)
+T.skip('IDE-BOOT-1 second action','Missing fixture dependency')
+T.finish()
+]])
+    end
     local rows={};for _,entry in ipairs(registry) do rows[#rows+1]=('{file=%q,suite=%q}'):format(entry.file,entry.suite) end
     write(tree..'/tests/registry.lua','return {'..table.concat(rows,',')..'}\n')
     local env=vim.fn.environ()
     env.FORGE_TEST_ID=nil;env.VIMINIT=nil;env.EXINIT=nil;env.GVIMINIT=nil
     env.FORGE_REPO=case.runner and tree or driver;env.NVIM_LOG_FILE=dir..'/nvim.log'
     local argv={vim.v.progpath,'--clean','-l',case.runner and tree..'/tests/run.lua' or driver..'/tests/trace.test.lua'}
-    if case.runner then argv[#argv+1]='trace' else
+    if case.require_all then
+      vim.list_extend(argv,{'e2e','--require-all'})
+    elseif case.runner then argv[#argv+1]='trace' else
       argv[#argv+1]=tree
       if case.change then argv[#argv+1]='--change';argv[#argv+1]=case.change end
       if case.catalog then argv[#argv+1]='--catalog-json';argv[#argv+1]=dir..'/catalog.json' end
@@ -93,7 +105,13 @@ for _,case in ipairs(cases) do
     T.eq(result.signal,0);T.eq(result.code,case.code,'Native CLI verdict')
     local text=(result.stdout or '')..(result.stderr or '')
     assert(text:find(case.runner and 'Итог:' or 'passed',1,true),'Trace CLI не исполнил проверки')
-    if case.code==1 then
+    if case.require_all then
+      local report=vim.json.decode(read(tree..'/.tests/report.json'))
+      assert(not report.summary.ok)
+      T.eq(report.files[1].cases[1].status,'ok')
+      T.eq(report.files[1].cases[2].status,'SKIP')
+      assert(text:find('Missing fixture dependency',1,true),text)
+    elseif case.code==1 then
       assert(text:find('TRACE:',1,true),text)
       assert(text:find(case.unknown and 'not-a-change' or id,1,true),text)
       assert(text:find(case.path_error and 'Проверка:' or 'E2E',1,true),text)

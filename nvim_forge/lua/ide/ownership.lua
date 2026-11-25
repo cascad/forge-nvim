@@ -64,7 +64,7 @@ function M.mark(w)
     if p.role == 'tool' then
         owned[w] = { family = p.family, buf = b, slot = p.slot, id = p.id }
         vim.w[w].forge_panel, vim.w[w].forge_slot, vim.w[w].forge_component = true, p.slot, p.id
-        vim.wo[w].winfixbuf = not (depth[p.family] and depth[p.family] > 0)
+        vim.wo[w].winfixbuf = not p.backend_switches_buffer and not (depth[p.family] and depth[p.family] > 0)
         if not mapped[b] then
             mapped[b] = true
             local has_gf = false

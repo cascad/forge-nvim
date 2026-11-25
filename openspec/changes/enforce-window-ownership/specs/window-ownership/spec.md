@@ -4,7 +4,7 @@
 IDE SHALL различать editor/tool/transient по единому контракту, защищать owned
 панель от случайной подмены и сохранять только документы/разрешённые views.
 Платформы: все.
-Проверка: tests/e2e/window-ownership.test.lua и registered affected suites.
+Проверка: tests/e2e/window-ownership.test.lua, tests/e2e/work-panels.test.lua, tests/e2e/outline.test.lua.
 
 #### Scenario: Защищённая панель
 - **GIVEN** открыты editor splits и служебная панель
@@ -16,6 +16,18 @@ IDE SHALL различать editor/tool/transient по единому конт�
 - **GIVEN** Files, Git, Tests, Debug или Terminal view
 - **WHEN** пользователь переключает штатный source/секцию/terminal или повторно открывает view
 - **THEN** native backend выполняет переход без E1513 и без потери job/session/вывода.
+
+#### Scenario: Предпросмотр выбранной задачи
+- **GIVEN** в Tasks видны две задачи с разным выводом
+- **WHEN** курсор переходит между задачами
+- **THEN** Overseer обновляет буфер своего предпросмотра
+- **AND** список Tasks сохраняет защиту, а скрытие панели сохраняет активную задачу.
+
+#### Scenario: Outline следует за открытым файлом
+- **GIVEN** открыт Outline с символами первого файла
+- **WHEN** пользователь открывает второй файл в коде
+- **THEN** Aerial обновляет буфер Outline и показывает символы второго файла
+- **AND** фокус остаётся в коде.
 
 #### Scenario: Навигация и временные окна
 - **GIVEN** picker, gf/gd, quickfix или команда панели ведёт в файл

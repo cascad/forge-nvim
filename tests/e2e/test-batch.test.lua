@@ -21,6 +21,21 @@ T.check('IDE-TEST-10 native dry plan uses real registry and clears inherited fil
   assert(full.code==0,full.stderr)
   assert(vim.tbl_contains(vim.json.decode(full.stdout).installers,'tests/release-inventory.test.py'),'Release inventory omitted from regression')
 end)
+T.check('IDE-TEST-10 native acceptance plan requires complete editor results',function()
+  local python=vim.fn.exepath(vim.fn.has('win32')==1 and 'python' or 'python3')
+  local argv={python,'-B',root..'/scripts/test-batch.py','--nvim',vim.v.progpath,'--mode','acceptance','--plan'}
+  local options={cwd=root,text=true,timeout=30000}
+  local result=vim.system(argv,options):wait()
+  assert(result.code==0,result.stderr)
+  local data=vim.json.decode(result.stdout)
+  assert(vim.tbl_contains(data.registry_files,'tests/e2e/acceptance-navigation.test.lua'))
+  T.eq(data.installers,{})
+  T.eq(#data.commands,1)
+  assert(vim.tbl_contains(data.commands[1].argv,'--require-all'))
+  local invalid=vim.system(vim.list_extend(argv,{'--file','tests/e2e/acceptance-navigation.test.lua'}),options):wait()
+  T.eq(invalid.code,2)
+  assert(invalid.stderr:find('acceptance is complete',1,true),invalid.stderr)
+end)
 T.check('IDE-TEST-11 Core input gate blocks before tests and declares source installed argv',function()
   local python=vim.fn.exepath(vim.fn.has('win32')==1 and 'python' or 'python3')
   local argv={python,'-B',root..'/scripts/test-batch.py','--nvim',vim.v.progpath,'--mode','e2e','--file','tests/install-core-acceptance.test.py'}

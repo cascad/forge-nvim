@@ -147,6 +147,7 @@ local default_components = {
     {
         id = "outline", slot = "left", title = "Outline",
         filetypes = { "aerial" },
+        backend_switches_buffer = true,
         open    = function() pcall(vim.cmd, "AerialOpen left") end,
         close   = function() pcall(vim.cmd, "AerialClose") end,
         is_open = function() return any_window_with_ft("aerial") end,

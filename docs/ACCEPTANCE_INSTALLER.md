@@ -157,6 +157,10 @@ output без downloads, не заменяет несовпадающие фай
 
 ## Что проверяется и что остаётся владельцу
 
+Перед ручной проверкой редактора запусти `./scripts/test.ps1 acceptance`
+на Windows или `bash scripts/test.sh acceptance` на macOS.
+[Состав и подготовка тестов](TESTING_WORKFLOW.md#автоматическая-приёмка-редактора).
+
 Новые tests/install-acceptance-package.test.py проверяют реальные native
 PowerShell/Bash entrypoints и fride-setup plan с fixture runtime: параметры,
 Unicode paths, Default/deferred policy, missing/tamper/extra/stale/conflict и
