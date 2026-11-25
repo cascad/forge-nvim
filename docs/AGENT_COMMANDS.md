@@ -12332,3 +12332,20 @@ docker info --format '{{.OSType}}'
 
 На Windows прошёл 21 сценарий. После уточнения условий Files и gopls
 оба затронутых случая прошли при повторе. Linux engine Docker недоступен.
+
+Владелец повторил затронутые E2E на macOS ARM64 с Neovim 0.12.4 и
+подготовленными зависимостями.
+
+```bash
+bash scripts/test.sh e2e \
+  --file tests/e2e/go-workspace-language.test.lua \
+  --file tests/e2e/file-explorer.test.lua \
+  --file tests/e2e/file-copy-delete.test.lua \
+  --file tests/e2e/git-workflow.test.lua \
+  --file tests/e2e/project-session.test.lua \
+  --file tests/e2e/session-files-view.test.lua \
+  --file tests/e2e/session-tool-views.test.lua
+```
+
+На `d7eee11` прошли 7 файлов и 32 сценария за 199,83 с.
+Лог на Mac в `.tests/batches/1795607269698456000/00.log`.
