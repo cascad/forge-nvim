@@ -9,6 +9,8 @@ import subprocess
 import sys
 import time
 
+from lib import editor_acceptance
+
 ROOT = Path(__file__).resolve().parents[1]
 
 def core_inputs(env):
@@ -63,9 +65,14 @@ def main():
     parser.add_argument('--nvim', default='nvim')
     parser.add_argument('--file', action='append', default=[])
     parser.add_argument('--plan', action='store_true')
+    parser.add_argument('--prepare', action='store_true', help='Explicitly prepare acceptance dependencies, then run')
     args = parser.parse_args()
     if args.mode in ('regression', 'acceptance') and args.file:
         parser.error(f'{args.mode} is complete; use e2e --file for a selected block')
+    if args.prepare and args.mode != 'acceptance':
+        parser.error('--prepare requires acceptance mode')
+    if args.prepare and args.plan:
+        parser.error('Run --plan and --prepare separately')
     nvim = shutil.which(args.nvim)
     if not nvim:
         parser.error('Prepared Neovim required: '+args.nvim)
@@ -95,6 +102,17 @@ def main():
     if not commands:
         parser.error('Empty test batch')
     env['FORGE_INSTALL_TEST_NVIM'] = nvim
+    if args.mode == 'acceptance':
+        env['FORGE_TEST_NVIM'] = nvim
+        missing_inputs = editor_acceptance.host_inputs(env, args.prepare)
+        if args.prepare and not missing_inputs:
+            for argv in editor_acceptance.preparation_commands(env):
+                print(f'Preparing {Path(argv[2]).stem}', flush=True)
+                if subprocess.run(argv, cwd=ROOT, env=env).returncode:
+                    missing_inputs.append(f'{argv[2]} failed. See its output above.')
+                    break
+        if not missing_inputs or not args.prepare:
+            missing_inputs.extend(editor_acceptance.prepared_inputs(env, nvim))
     report = {'mode':args.mode, 'started_at':datetime.datetime.now(datetime.timezone.utc).isoformat(),
               'registry_files':[row['file'] for row in selected['registry']], 'installers':selected['installers'],
               'commands':commands, 'results':[], 'filters_cleared':cleared, 'core_mode':core_mode,
@@ -108,6 +126,8 @@ def main():
         report.update(complete=False, ok=False)
         (folder/'report.json').write_text(json.dumps(report,indent=2,ensure_ascii=False),encoding='utf-8')
         sys.stderr.write('Batch inputs are not ready; no tests started:\n'+'\n'.join(missing_inputs)+'\n')
+        if args.mode == 'acceptance' and not args.prepare:
+            sys.stderr.write('Prepare with bash scripts/test.sh acceptance --prepare or ./scripts/test.ps1 acceptance -Prepare.\n')
         sys.stderr.write('Report: '+str(folder/'report.json')+'\n')
         return 2
     print(f"Batch: {len(selected['registry'])} registered files, {len(selected['installers'])} native Python suites",flush=True)

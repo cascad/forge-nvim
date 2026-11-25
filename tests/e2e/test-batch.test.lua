@@ -36,6 +36,42 @@ T.check('IDE-TEST-10 native acceptance plan requires complete editor results',fu
   T.eq(invalid.code,2)
   assert(invalid.stderr:find('acceptance is complete',1,true),invalid.stderr)
 end)
+T.check('IDE-TEST-10 unprepared acceptance refuses to start scenario files',function()
+  local python=vim.fn.exepath(vim.fn.has('win32')==1 and 'python' or 'python3')
+  local fixture=root..'/.tests/batch-inputs/'..tostring(vim.uv.hrtime())
+  local deps=fixture..'/missing'
+  local env={FORGE_E2E_DEPS=deps}
+  for _,name in ipairs({'TEST','LSP','NODE','PYTHON','RUST','BASH','SQL','BASH_DAP'}) do
+    env['FORGE_E2E_'..name..'_DEPS']=deps
+  end
+  local function invoke(flag)
+    local argv={python,'-B',root..'/scripts/test-batch.py','--nvim',vim.v.progpath,'--mode','acceptance'}
+    if flag then argv[#argv+1]=flag end
+    return vim.system(argv,{cwd=root,text=true,timeout=30000,env=env}):wait()
+  end
+  local planned=invoke('--plan')
+  T.eq(planned.code,0,planned.stderr)
+  local plan=vim.json.decode(planned.stdout)
+  assert(not plan.ready and #plan.registry_files>0)
+  assert(table.concat(plan.missing_inputs,'\n'):find('FORGE_E2E_DEPS',1,true))
+  assert(table.concat(plan.missing_inputs,'\n'):find('FORGE_E2E_TEST_DEPS',1,true))
+  local blocked=invoke()
+  T.eq(blocked.code,2)
+  assert(blocked.stderr:find('no tests started',1,true) and blocked.stderr:find('acceptance --prepare',1,true))
+  local path=assert(blocked.stderr:match('Report: ([^\r\n]+)'))
+  local report=vim.json.decode(table.concat(vim.fn.readfile(path),'\n'))
+  T.eq(report.results,{})
+  assert(not report.ready and not report.complete and not report.ok)
+  T.eq(vim.fn.filereadable(vim.fs.dirname(path)..'/00.log'),0,'Registry process started without prerequisites')
+
+  vim.fn.mkdir(deps,'p')
+  vim.fn.writefile({'{"plugins":{"stale":"old"}}'},deps..'/manifest.json')
+  planned=invoke('--plan')
+  T.eq(planned.code,0,planned.stderr)
+  plan=vim.json.decode(planned.stdout)
+  assert(not plan.ready)
+  assert(table.concat(plan.missing_inputs,'\n'):find('do not match lazy-lock.json',1,true))
+end)
 T.check('IDE-TEST-11 Core input gate blocks before tests and declares source installed argv',function()
   local python=vim.fn.exepath(vim.fn.has('win32')==1 and 'python' or 'python3')
   local argv={python,'-B',root..'/scripts/test-batch.py','--nvim',vim.v.progpath,'--mode','e2e','--file','tests/install-core-acceptance.test.py'}

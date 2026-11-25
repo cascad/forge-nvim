@@ -3,7 +3,8 @@ param(
     [ValidateSet('quick', 'e2e', 'acceptance', 'full', 'regression')]
     [string] $Mode = 'full',
     [string[]] $Files = @(),
-    [switch] $Plan
+    [switch] $Plan,
+    [switch] $Prepare
 )
 $ErrorActionPreference = 'Stop'
 $forgeTestRoot = Split-Path -Parent $PSScriptRoot
@@ -29,10 +30,11 @@ try {
         'e2e'   { @('e2e') }
         'full'  { @('unit', 'e2e', 'wezterm', 'install', 'trace', 'conpty') }
     }
-    if ($Files.Count -gt 0 -or $Plan -or $Mode -in @('acceptance', 'regression')) {
+    if ($Files.Count -gt 0 -or $Plan -or $Prepare -or $Mode -in @('acceptance', 'regression')) {
         $forgeBatchArgs=@('-B','scripts/test-batch.py','--nvim',$forgeTestNvim,'--mode',$Mode)
         foreach ($forgeFile in $Files) { $forgeBatchArgs+=@('--file',$forgeFile) }
         if ($Plan) { $forgeBatchArgs+='--plan' }
+        if ($Prepare) { $forgeBatchArgs+='--prepare' }
         & python @forgeBatchArgs
     } else {
         & $forgeTestNvim -l tests/run.lua @forgeTestSuites

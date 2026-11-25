@@ -39,7 +39,27 @@ Native macOS прогон отдельно выполняет владелец. 
 
 ## Автоматическая приёмка редактора
 
-Запускай из корня репозитория после подготовки тестового окружения.
+Запускай из корня репозитория. При первом запуске подготовь окружение и
+выполни приёмку одной командой.
+
+```powershell
+./scripts/test.ps1 acceptance -Prepare
+```
+
+```sh
+bash scripts/test.sh acceptance --prepare
+```
+
+Для подготовки нужны Git, ripgrep, Neovim 0.12, Python 3.12+ с venv,
+C-компилятор и установленный Rust SDK. На macOS нужен Bash 4+ для сценария
+Bash Debug и Xcode Command Line Tools для парсеров. fride находит Bash из
+Homebrew. Свой путь можно задать в `FORGE_BASH_DEBUG_BASH`.
+Если используешь rustup, недостающие компоненты добавляются командой
+`rustup component add rust-analyzer rustfmt clippy rust-src`.
+
+Подготовка скачивает тестовые плагины и инструменты в `.tests`.
+Она использует имеющийся Rust SDK. Каталоги, переданные через `FORGE_E2E_*`,
+используются как готовые входы. Для последующих прогонов убери флаг подготовки.
 
 ```powershell
 ./scripts/test.ps1 acceptance
@@ -55,7 +75,9 @@ bash scripts/test.sh acceptance
 docker compose -f tests/containers/compose.yaml run --rm ubuntu acceptance
 ```
 
-Состав можно посмотреть с `-Plan` на Windows и `--plan` на Linux/macOS.
+Состав и готовность окружения можно посмотреть с `-Plan` на Windows и
+`--plan` на Linux/macOS. При недостающих входах обычная команда показывает
+список зависимостей и завершает работу до запуска E2E.
 Приёмка идёт по отметкам `acceptance = true` в [реестре](../tests/registry.lua)
 и запускает настоящий fride в отдельных временных проектах. Тесты проверяют
 открытый файл, содержимое на диске, изменения в индексе и remote Git, вывод
@@ -78,8 +100,8 @@ docker compose -f tests/containers/compose.yaml run --rm ubuntu acceptance
 через `FORGE_E2E_*_DEPS` и `FORGE_E2E_DAP_TOOLS`. Подготовка плагинов, Go/Delve,
 Go tests/gopls, Node, Python, Rust, Bash, Sqruff и Bash DAP описана в
 [инструкции E2E](../tests/e2e/README.md). Те же подготовительные шаги есть
-в [Dockerfile Ubuntu](../tests/containers/Dockerfile). Команда `acceptance`
-сама ничего не скачивает. На текущем Windows-стенде актуальный набор плагинов
+в [Dockerfile Ubuntu](../tests/containers/Dockerfile). Скачивание выполняется
+при явном флаге подготовки. На текущем Windows-стенде актуальный набор плагинов
 лежит в `.tests/async-copy/editor-deps`. Укажи этот путь перед запуском.
 
 ```powershell

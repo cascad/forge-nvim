@@ -16,6 +16,6 @@ case "$forge_mode" in
   quick) set -- unit ;;
   e2e)   set -- e2e ;;
   full)  set -- unit e2e wezterm install trace ;;
-  *) printf 'Usage: bash scripts/test.sh [quick|e2e|acceptance|full|regression] [--file PATH ...] [--plan]\n' >&2; exit 2 ;;
+  *) printf 'Usage: bash scripts/test.sh [quick|e2e|acceptance|full|regression] [--file PATH ...] [--plan | --prepare]\n' >&2; exit 2 ;;
 esac
 exec nvim -l tests/run.lua "$@"

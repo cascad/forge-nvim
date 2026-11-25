@@ -18,6 +18,7 @@ def main():
     parser.add_argument('--download', action='store_true')
     parser.add_argument('--output', type=Path, default=ROOT / '.tests/test-deps')
     parser.add_argument('--cc', help='Путь к C compiler (clang/gcc)')
+    parser.add_argument('--nvim', default=os.environ.get('FORGE_TEST_NVIM', 'nvim'))
     args = parser.parse_args()
     deps = Path(os.environ.get('FORGE_E2E_DEPS', ROOT / '.tests/editor-deps'))
     catalog = deps / 'lazy/nvim-treesitter/lua/nvim-treesitter/parsers.lua'
@@ -44,7 +45,7 @@ def main():
     flags = ['-O2', '-shared'] + ([] if os.name == 'nt' else ['-fPIC'])
     subprocess.run([compiler, *flags, '-I', str(source), str(source / 'parser.c'), '-o', str(build)], check=True)
     shutil.copyfile(build, target)
-    nvim = shutil.which('nvim')
+    nvim = shutil.which(args.nvim)
     if not nvim:
         parser.error('Нужен nvim для проверки parser ABI')
     lua_path = json.dumps(target.resolve().as_posix())

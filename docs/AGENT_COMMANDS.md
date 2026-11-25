@@ -12278,3 +12278,23 @@ Windows выполнила 124 сценария в 23 файлах за 894 с. 
 два невоспроизведённых сбоя описаны в FIXLOG §312–313.
 Для прямых вызовов Neovim временные файлы и лог перенесены в `.tests/tmp`.
 Linux engine Docker недоступен, контейнеры не запускались.
+
+## 222. Проверка входов автоматической приёмки
+
+Лог владельца с Mac на `a206f2b` показал 23 FAIL за 0,6 с при отсутствии
+тестовых зависимостей. Windows проверила новый план с готовым стендом,
+отказ на пустом стенде и обнаружение неверных plugin pins.
+
+```powershell
+$env:FORGE_E2E_DEPS = (Resolve-Path .tests/async-copy/editor-deps).Path
+./scripts/test.ps1 acceptance -Plan
+$nvim = '.tools/neovim/windows-x64/bin/nvim.exe'
+& $nvim -u NONE -i NONE -l tests/e2e/test-batch.test.lua
+& $nvim -u NONE -i NONE -l tests/lib/test_batch.test.lua
+python -B tests/e2e/prepare_tests.py --help
+& 'C:/Program Files/Git/bin/bash.exe' -n scripts/test.sh
+```
+
+Прямой Python-вызов `editor_acceptance.preparation_commands` проверил
+порядок десяти шагов и передачу custom Node каталога в Python/Bash.
+Саму сетевую подготовку и полный E2E повтор на Windows не запускали.

@@ -14,7 +14,9 @@ Trace сохраняет требование регистрации .sh/.test.l
 E2E запускаются один раз после цельной реализации; повторы — только failed/affected.
 `./scripts/test.ps1 acceptance` / `bash scripts/test.sh acceptance` запускают
 [основные сценарии fride](../docs/TESTING_WORKFLOW.md#автоматическая-приёмка-редактора).
-Пропуск одной из выбранных проверок делает приёмку неуспешной.
+При первом запуске используй `-Prepare` / `--prepare` для явной подготовки.
+Отсутствие зависимостей останавливает прогон до сценариев. Пропуск одной из
+выбранных проверок делает приёмку неуспешной.
 `scripts/test.ps1 regression` / `bash scripts/test.sh regression` добавляют native
 Python suites установщика/release к прежнему full. `-Plan` / `--plan` показывает состав.
 
