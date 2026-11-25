@@ -101,7 +101,7 @@ local function tasks(e,name)
     if not name or task.name:find(name,1,true) then out[#out+1]={id=task.id,name=task.name,status=task.status} end end;return out]],{name or vim.NIL})
 end
 local function counts(e)
-  return e:lua([[local n=require('neotest');local out={total=0,passed=0,failed=0,running=0};
+  return e:lua([[local n=require('neotest');local out={total=0,passed=0,failed=0,running=0,skipped=0};
     for _,id in ipairs(n.state.adapter_ids()) do local s=n.state.status_counts(id);
       if s then for key in pairs(out) do out[key]=out[key]+(s[key] or 0) end end end;return out]])
 end
@@ -149,15 +149,26 @@ end)
 local function go(e)
   focus(e,':cd '..vim.fn.fnameescape(e.project..'/go project')..'<CR>:edit sample_test.go<CR>','go');e.code_file=e:current_file()
 end
-check('IDE-PANEL-7 Tests summary выбор из zoom не запускает тест',function(e)
+local function go_summary(e,test_count)
+  test_count=test_count or 2
   go(e);focus(e,' wt','neotest-summary')
   -- Имя файла появляется до discovery. Ждём и состояние, и его UI render,
   -- иначе Enter попадает в старую строку без дочерних тестов/expand callback.
-  e:wait('summary обнаружил два теста',function()
-    return counts(e).total==2 and text(e,'neotest-summary'):match('^[^\n]*2')~=nil
+  e:wait('summary обнаружил '..test_count..' тестов',function()
+    return counts(e).total==test_count and text(e,'neotest-summary'):match('^[^\n]*'..test_count)~=nil
       and text(e,'neotest-summary'):find('sample_test.go',1,true)
   end,20000)
   select(e,'sample_test.go')
+end
+local function run_summary_test(e, name, key, status)
+  e:wait(name..' visible in Tests',function() return text(e,'neotest-summary'):find(name,1,true) end)
+  select(e,name)
+  e:input(key)
+  e:wait(name..' finished after '..key,function() return counts(e)[status]==1 end,30000)
+  T.eq(e:current_ft(),'neotest-summary')
+end
+check('IDE-PANEL-7 Tests summary выбор из zoom не запускает тест',function(e)
+  go_summary(e)
   local state=e:lua([[return {cursor=vim.api.nvim_win_get_cursor(0),line=vim.api.nvim_get_current_line(),cr=vim.fn.maparg('<CR>','n',false,true).desc,expand=vim.fn.maparg('e','n',false,true).desc,mappings=require('neotest.config').summary.mappings} ]])
   vim.fn.writefile(vim.split(vim.inspect(state),'\n',{plain=true}),e.dir..'/summary-before-expand.txt')
   e:lua([[vim.keymap.set('n','<F35>',function() vim.g.forge_tests_key_barrier=(vim.g.forge_tests_key_barrier or 0)+1 end,{buffer=0})]])
@@ -175,6 +186,59 @@ check('IDE-PANEL-7 Tests summary выбор из zoom не запускает т
   e:wait('выбранный тест открыт',function() return e:current_file()==e.code_file and e:lua('return vim.api.nvim_get_current_line()'):find('TestNeighbour',1,true) end)
   T.eq(vim.fn.filereadable(e.project..'/go project/neighbour-ran.txt'),0)
   T.eq(counts(e).passed+counts(e).failed+counts(e).running,0)
+end)
+check('IDE-PANEL-7 Summary keyboard runs selected Go tests in both layouts',function(e)
+  go_summary(e)
+  e:input('<CR>')
+  local marker=e.project..'/go project/neighbour-ran.txt'
+  run_summary_test(e,'TestNearest','r','passed')
+  T.eq(vim.fn.filereadable(marker),0)
+  run_summary_test(e,'TestNeighbour','к','failed')
+  T.eq(vim.fn.readfile(marker),{'executed'})
+end)
+check('IDE-PANEL-7 Summary output float closes and returns to chosen test',function(e)
+  go_summary(e)
+  e:input('<CR>')
+  run_summary_test(e,'TestNearest','r','passed')
+  local summary=e:lua('return vim.api.nvim_get_current_win()')
+  for _,keys in ipairs({{'o','<Esc>'},{'щ','q'},{'o','й'}}) do
+    select(e,'TestNearest')
+    focus(e,keys[1],'neotest-output')
+    e:wait('floating output contains NEAREST_OUTPUT',function()
+      return text(e,'neotest-output'):find('NEAREST_OUTPUT',1,true)
+        and e:lua('return vim.api.nvim_win_get_config(0).relative')~=''
+    end)
+    e:input(keys[2])
+    e:wait('output dismissed by '..keys[2],function()
+      return not e:has_window('neotest-output') and e:lua('return vim.api.nvim_get_current_win()')==summary
+    end)
+    assert(e:lua('return vim.api.nvim_get_current_line()'):find('TestNearest',1,true))
+  end
+end)
+check('IDE-PANEL-7 Summary output for skipped and unrun tests keeps input usable',function(e)
+  vim.fn.writefile({'', 'func TestSkipped(t *testing.T) { t.Skip("E2E_SKIP_REASON") }'},
+    e.project..'/go project/sample_test.go','a')
+  go_summary(e,3)
+  e:input('<CR>')
+  e:wait('unrun test visible',function() return text(e,'neotest-summary'):find('TestNeighbour',1,true) end)
+  select(e,'TestNeighbour')
+  e:input('o')
+  e:wait('no output notice for unrun test',function()
+    for _,notice in ipairs(e.rpc.notifications) do
+      if notice.message:find('No output for TestNeighbour',1,true) then return true end
+    end
+  end)
+  T.eq(e:current_ft(),'neotest-summary')
+  assert(not e:has_window('neotest-output'))
+
+  run_summary_test(e,'TestSkipped','r','skipped')
+  select(e,'TestSkipped')
+  focus(e,'o','neotest-output')
+  e:wait('skipped test reason',function()
+    return text(e,'neotest-output'):find('E2E_SKIP_REASON',1,true)
+  end)
+  focus(e,'<Esc>','neotest-summary')
+  assert(not e:has_window('neotest-output'))
 end)
 check('IDE-PANEL-7 настоящий Go output сохраняется после zoom hide и reopen',function(e)
   go(e);e:input('10G Tt')

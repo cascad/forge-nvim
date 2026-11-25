@@ -12374,3 +12374,30 @@ openspec validate unify-work-panel-controls --type change --strict --no-interact
 1 PASS при повторе сценария фокуса после уточнения наблюдения, плюс
 3 PASS для подготовки Neotest. Отчёт пакета
 `.tests/batches/1795633892989790600/report.json`.
+
+## 225. Запуск и вывод Tests в двух раскладках
+
+На исходной конфигурации два новых сценария воспроизвели ожидание
+заменяемого символа после `к` и открытое окно после `Esc`. Лог
+`.tests/terminal-test-panel-keys/summary-layout-before.log`. Для запуска
+использован готовый комплект плагинов с предыдущей проверки.
+
+```powershell
+$nvim = '.tools/neovim/windows-x64/bin/nvim.exe'
+$env:TEMP = (Resolve-Path .tests/tmp).Path
+$env:TMP = $env:TEMP
+$env:TMPDIR = $env:TEMP
+$env:FORGE_E2E_DEPS = (Resolve-Path .tests/terminal-test-panel-keys/editor-deps).Path
+$env:GOMAXPROCS = '2'
+$env:FORGE_WORK_PANEL_CASE = 'Summary '
+& $nvim -u NONE -i NONE -l tests/e2e/work-panels.test.lua
+Remove-Item Env:FORGE_WORK_PANEL_CASE
+./scripts/test.ps1 e2e -Files @('tests/e2e/work-panels.test.lua')
+& $nvim -u NONE -i NONE -l tests/ru-keys.test.lua
+openspec validate unify-work-panel-controls --type change --strict --no-interactive
+git diff --check
+```
+
+После правки на Windows прошли 9 сценариев панелей за 77,2 с,
+2 проверки раскладки и строгая валидация спеки. Отчёт
+`.tests/batches/1795634470536752200/report.json`.

@@ -324,7 +324,8 @@ function M.help()
     elseif ft(source) == 'neotest-summary' then
         lines[#lines + 1] = 'Tests. l — раскрыть, h — свернуть, Enter — переключить ветку.'
         lines[#lines + 1] = 'i — открыть код выбранного теста.'
-        lines[#lines + 1] = 'r — запустить, o — вывод; g? — native справка.'
+        lines[#lines + 1] = 'r/к — запустить, o/щ — вывод, Esc или q/й — закрыть вывод.'
+        lines[#lines + 1] = 'g? — штатная справка Neotest.'
     elseif ft(source) == 'neotest-output-panel' then
         lines[#lines + 1] = 'Test Output: q скрывает, Space w r возвращает вывод.'
     elseif ft(source) == 'OverseerList' then

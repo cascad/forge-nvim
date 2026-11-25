@@ -84,6 +84,7 @@ return {
                 consumers.overseer = overseer_consumer
             end
 
+            local ru_keys = require("config.ru_keys")
             require("neotest").setup({
                 adapters = adapters,
                 consumers = next(consumers) and consumers or nil,
@@ -94,9 +95,29 @@ return {
                 output = { open_on_run = false },
                 running = { concurrent = false }, -- native fallback не раздувает число команд
                 quickfix = { open = false },
-                summary = { mappings = { help = 'g?', expand_node = 'l', collapse_node = 'h' } },
+                summary = { mappings = {
+                    help = 'g?',
+                    expand_node = 'l',
+                    collapse_node = 'h',
+                    run = vim.list_extend({ 'r' }, ru_keys.aliases('r')),
+                    output = vim.list_extend({ 'o' }, ru_keys.aliases('o')),
+                } },
             })
             require('neotest').forge_runner.bind_run_api(require('neotest').run)
+
+            vim.api.nvim_create_autocmd("FileType", {
+                group = vim.api.nvim_create_augroup("ForgeNeotestOutput", { clear = true }),
+                pattern = "neotest-output",
+                callback = function(ev)
+                    for _, key in ipairs({ "q", "<Esc>" }) do
+                        vim.keymap.set({ "n", "x", "t" }, key, function()
+                            if vim.api.nvim_win_get_config(0).relative ~= "" then
+                                vim.api.nvim_win_close(0, false)
+                            end
+                        end, { buffer = ev.buf, nowait = true, silent = true, desc = "Close test output" })
+                    end
+                end,
+            })
 
             -- То же правило, что и для LSP-диагностики (см. plugins/lsp.lua):
             -- текст упавшего теста не раскрывается сам и не раздвигает код.
