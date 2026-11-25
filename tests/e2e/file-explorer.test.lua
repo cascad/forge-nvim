@@ -196,9 +196,14 @@ check('IDE-FILE-2 cut/paste в выбранный каталог и отмена
   tree()
   choose('keep_me.txt')
   popup('m')
+  local original_popup = e:lua('return vim.api.nvim_get_current_buf()')
   e:input('<C-u>' .. file('occupied.txt') .. '<CR>')
   e:wait('занятое имя вызывает повторный ввод',function()
-    return e:current_ft()=='neo-tree-popup' and table.concat(e.rpc:screen_lines(),'\n'):find('already exists',1,true)~=nil
+    if e:current_ft()~='neo-tree-popup' or e.rpc:request('nvim_get_mode',{}).mode~='i' then return false end
+    return e:lua([[local before, expected = ...
+      return vim.api.nvim_get_current_buf() ~= before
+        and vim.fs.normalize(vim.trim(vim.api.nvim_get_current_line())) == vim.fs.normalize(expected)
+    ]], {original_popup, file('occupied.txt')})
   end)
   focus('<Esc>','neo-tree')
   T.eq(content('keep_me.txt'),{'keep payload'})

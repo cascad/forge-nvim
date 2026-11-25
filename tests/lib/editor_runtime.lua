@@ -14,16 +14,15 @@ function M.create(root)
       -- На Windows место берётся с диска checkout, а не системного C:.
       base = root .. '/.tests/tmp'
     else
-      local name = vim.fn.tempname()
-      assert(absolute(name), 'Не удалось получить абсолютный путь временной папки')
-      base = vim.fn.fnamemodify(name, ':h')
+      -- Unix socket addresses include the full runtime directory.
+      base = '/tmp'
     end
   end
   assert(absolute(base), 'FORGE_TEST_TMPDIR должен быть абсолютным путём')
   vim.fn.mkdir(base, 'p')
   local parent = assert(uv.fs_realpath(base))
-  local token = tostring(uv.os_getpid()) .. '-' .. tostring(uv.hrtime())
-  local path = base .. '/' .. token .. '-forge-editor'
+  local token = ('%d-%.0f'):format(uv.os_getpid(), uv.hrtime())
+  local path = parent:gsub('\\', '/') .. '/' .. token .. '-forge-editor'
   assert(not uv.fs_lstat(path), 'Runtime уже существует: '..path)
   assert(uv.fs_mkdir(path, 448))
   local profile = { path=path, canonical=assert(uv.fs_realpath(path)), parent=parent,

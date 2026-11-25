@@ -17,6 +17,13 @@ local function start_editor()
     return ready
   end)
   T.eq(ready, true)
+  local server=editor:lua('return vim.v.servername')
+  assert(server~='', 'Native Neovim RPC address is empty; inspect nvim.log')
+  local channel=vim.fn.sockconnect('pipe',server,{rpc=true})
+  assert(channel>0, 'Cannot connect to native Neovim at '..server)
+  local pid=vim.rpcrequest(channel,'nvim_exec_lua','return vim.uv.os_getpid()',{})
+  vim.fn.chanclose(channel)
+  T.eq(pid,editor:lua('return vim.uv.os_getpid()'))
 end
 T.check('SELF: EDITOR-STARTUP настоящий nvim_forge и pinned плагины', start_editor)
 

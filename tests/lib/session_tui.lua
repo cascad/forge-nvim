@@ -59,7 +59,8 @@ local function start(root,holder,options)
       _G.forge_session_exit=nil
       _G.forge_session_job=vim.fn.jobstart({vim.v.progpath,'-i','NONE','--cmd','lua dofile('..vim.inspect(observer)..')',
         '-u',vim.fn.stdpath('config')..'/init.lua'},
-        {term=true,cwd=cwd,on_exit=function(_,code) _G.forge_session_exit=code end})
+        {term=true,cwd=cwd,env={NVIM_LOG_FILE=vim.env.FORGE_SESSION_PROBE..'/nvim-tui.log'},
+          on_exit=function(_,code) _G.forge_session_exit=code end})
       assert(_G.forge_session_job>0,'Native TUI failed to start')
       _G.forge_session_terminal=vim.api.nvim_get_current_buf()
       return _G.forge_session_job end)]],{self.a,self.base..'/observer.lua'})
@@ -70,8 +71,9 @@ local function start(root,holder,options)
     e:wait('new native TUI backend ready',function()
       if vim.fn.filereadable(self.base..'/ready.json')~=1 then return false end
       ready=vim.json.decode(table.concat(vim.fn.readfile(self.base..'/ready.json'),'\n'))
-      return ready.pid~=previous_pid and ready.server~=''
+      return ready.pid~=previous_pid
     end,20000)
+    assert(ready.server~='', 'Native TUI has no RPC address; inspect nvim-tui.log')
     local channel=vim.fn.sockconnect('pipe',ready.server,{rpc=true})
     assert(channel>0,'Cannot connect to native TUI backend: '..ready.server)
     self.connections[#self.connections+1]=channel;self.channel=channel
@@ -116,12 +118,12 @@ local function start(root,holder,options)
     local failures={}
     local function attempt(fn) local ok,err=pcall(fn);if not ok then failures[#failures+1]=tostring(err) end end
     attempt(function()
-      if self.job and self:job_state().exit==false then self:quit() end
+      if self.channel and self.job and self:job_state().exit==false then self:quit() end
     end)
     for _,c in ipairs(self.connections) do pcall(vim.fn.chanclose,c) end
     attempt(function()
       if self.job then assert(vim.fn.writefile({vim.json.encode(self:job_state())},e.dir..'/tui-final.json')==0) end
-      for _,name in ipairs({'lifecycle.jsonl','ready.json'}) do
+      for _,name in ipairs({'lifecycle.jsonl','ready.json','nvim-tui.log'}) do
         if vim.fn.filereadable(self.base..'/'..name)==1 then assert(vim.uv.fs_copyfile(self.base..'/'..name,e.dir..'/'..name)) end
       end
     end)

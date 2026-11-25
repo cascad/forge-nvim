@@ -23,6 +23,9 @@ T.check('SELF: GO-WORKSPACE-LANGUAGE definition/implementation/references чер
       end})
     assert(vim.uv.fs_copyfile(root..'/tests/e2e/go-workspace-language.test.lua',e.dir..'/go-workspace-language.test.lua'))
     report={targets={}}
+    e:wait('IDE ready before opening Go workspace', function()
+      return e:lua('return _G.forge_e2e_observed')
+    end,10000)
     e:lua([[vim.lsp.log.set_level('debug');_G.forge_work_requests={}
       vim.api.nvim_create_autocmd('LspRequest',{callback=function(ev)
         local r=ev.data.request;table.insert(_G.forge_work_requests,
@@ -30,10 +33,11 @@ T.check('SELF: GO-WORKSPACE-LANGUAGE definition/implementation/references чер
     local function state()
       return e:lua([[local clients={};for _,c in ipairs(vim.lsp.get_clients({name='gopls'})) do
         clients[#clients+1]={id=c.id,root=c.root_dir:gsub('\\','/'),cmd=type(c.config.cmd)=='table' and c.config.cmd or type(c.config.cmd),
-          initialized=c.initialized,attached=c.attached_buffers[vim.api.nvim_get_current_buf()]==true}
+          initialized=c.initialized,attached=vim.lsp.buf_is_attached(vim.api.nvim_get_current_buf(),c.id)}
         end;return {file=vim.api.nvim_buf_get_name(0):gsub('\\','/'),line=vim.api.nvim_get_current_line(),
           cursor=vim.api.nvim_win_get_cursor(0),word=vim.fn.expand('<cword>'),clients=clients,
           cwd=vim.fn.getcwd():gsub('\\','/'),requests=_G.forge_work_requests,
+          implementation_map=vim.fn.maparg('gi','n',false,true).buffer,
           installs=vim.g.forge_e2e_installs,mode=vim.api.nvim_get_mode()}]])
     end
     local client
@@ -49,10 +53,11 @@ T.check('SELF: GO-WORKSPACE-LANGUAGE definition/implementation/references чер
       e:input(':edit '..file..'<CR>')
       e:wait('Go файл и настоящий gopls '..file,function()
         local s=state()
+        report.pending_open={file=file,state=s}
         return s.file:sub(-#file)==file and #s.clients==1
           and s.clients[1].initialized and s.clients[1].attached
-          and e:lua([[return vim.fn.maparg('gi','n',false,true).buffer==1]])
       end,30000)
+      report.pending_open=nil
     end
     local function seek(word)
       e:input('gg/'..word..'<CR>')

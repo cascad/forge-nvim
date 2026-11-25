@@ -39,7 +39,7 @@ local function start(root, options, holder)
   assert(ready and vim.deep_equal(manifest.backports, payload),
     'Тестовый backport не подготовлен; повтори python[3] -B tests/e2e/prepare_editor.py: ' .. vim.inspect(payload))
 
-  local dir = root .. '/.tests/editor-e2e/' .. tostring(uv.hrtime())
+  local dir = root .. '/.tests/editor-e2e/' .. ('%.0f'):format(uv.hrtime())
   vim.fn.mkdir(dir, 'p')
   holder.dir=dir
   -- Большой private runtime живёт на файловой системе гостя, а не на
@@ -71,6 +71,10 @@ local function start(root, options, holder)
   env.GIT_CEILING_DIRECTORIES = runtime
   env.TMP, env.TEMP, env.TMPDIR = runtime .. '/tmp', runtime .. '/tmp', runtime .. '/tmp'
   vim.fn.mkdir(env.TMP, 'p')
+  if vim.fn.has('win32') ~= 1 then
+    env.XDG_RUNTIME_DIR = runtime .. '/run'
+    assert(uv.fs_mkdir(env.XDG_RUNTIME_DIR, 448))
+  end
   env.FORGE_E2E_CONFIG = root .. '/nvim_forge'
   env.VIMINIT, env.EXINIT, env.GVIMINIT = nil, nil, nil
   -- Приложения берут суффикс -data на Windows по native stdpath Neovim.

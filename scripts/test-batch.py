@@ -53,10 +53,14 @@ def environment():
         if name == 'FORGE_TEST_ID' or name.startswith('FORGE_') and name.endswith('_CASE'):
             cleared.append(name)
             del env[name]
-    temporary = Path(env.get('FORGE_TEST_TMPDIR', str(ROOT / '.tests/tmp')))
-    temporary.mkdir(parents=True, exist_ok=True)
-    env.update(TEMP=str(temporary), TMP=str(temporary), TMPDIR=str(temporary),
-               NVIM_LOG_FILE=str(temporary / 'batch-nvim.log'), PYTHONUTF8='1', PYTHONDONTWRITEBYTECODE='1')
+    log_dir = ROOT / '.tests/tmp'
+    log_dir.mkdir(parents=True, exist_ok=True)
+    override = env.get('FORGE_TEST_TMPDIR')
+    if override or os.name == 'nt':
+        temporary = Path(override) if override else log_dir
+        temporary.mkdir(parents=True, exist_ok=True)
+        env.update(TEMP=str(temporary), TMP=str(temporary), TMPDIR=str(temporary))
+    env.update(NVIM_LOG_FILE=str(log_dir / 'batch-nvim.log'), PYTHONUTF8='1', PYTHONDONTWRITEBYTECODE='1')
     return env, sorted(cleared)
 
 def main():

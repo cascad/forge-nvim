@@ -12298,3 +12298,37 @@ python -B tests/e2e/prepare_tests.py --help
 Прямой Python-вызов `editor_acceptance.preparation_commands` проверил
 порядок десяти шагов и передачу custom Node каталога в Python/Bash.
 Саму сетевую подготовку и полный E2E повтор на Windows не запускали.
+
+## 223. Разбор первого полного прогона на macOS
+
+На Mac выполнена `bash scripts/test.sh acceptance --prepare` на `e65dd37`.
+Все зависимости подготовились. Из 124 сценариев прошло 113, 11 упали.
+Журнал прогона `.tests/batches/1795603253220369000/00.log` на Mac.
+Детали получены из отдельных `.tests/logs/tests__e2e__*.test.lua.log`
+и логов Neovim, Neogit и gopls в найденных каталогах артефактов.
+
+На Windows тесты запущены с `FORGE_E2E_DEPS=.tests/async-copy/editor-deps`,
+логами и временными файлами на F. Вывод в `.tests/macos-acceptance-followup`.
+Имя каждого лога включает использованный фильтр.
+
+```powershell
+$nvim = '.tools/neovim/windows-x64/bin/nvim.exe'
+& $nvim -u NONE -i NONE -l tests/e2e/editor.test.lua
+& $nvim -u NONE -i NONE -l tests/e2e/go-workspace-language.test.lua
+$env:FORGE_TEST_ID = 'IDE-FILE-2 cut/paste'
+& $nvim -u NONE -i NONE -l tests/e2e/file-explorer.test.lua
+$env:FORGE_TEST_ID = 'IDE-FILE-4 typed copy'
+& $nvim -u NONE -i NONE -l tests/e2e/file-copy-delete.test.lua
+$env:FORGE_TEST_ID = 'IDE-GIT-2'
+& $nvim -u NONE -i NONE -l tests/e2e/git-workflow.test.lua
+$env:FORGE_TEST_ID = 'IDE-GIT-3'
+& $nvim -u NONE -i NONE -l tests/e2e/git-workflow.test.lua
+$env:FORGE_TEST_ID = $null
+& $nvim -u NONE -i NONE -l tests/e2e/project-session.test.lua
+& $nvim -u NONE -i NONE -l tests/e2e/session-files-view.test.lua
+& $nvim -u NONE -i NONE -l tests/e2e/session-tool-views.test.lua
+docker info --format '{{.OSType}}'
+```
+
+На Windows прошёл 21 сценарий. После уточнения условий Files и gopls
+оба затронутых случая прошли при повторе. Linux engine Docker недоступен.
