@@ -12440,3 +12440,19 @@ openspec validate fix-project-session-restore-focus --type change --strict --no-
 IDE-PANEL-15 прошёл точечно. Первый лог в
 `.tests/batches/1795689929780302300/00.log`, повтор в
 `.tests/tmp/recent-projects-ide-panel-15.log`.
+
+## 228. Приёмка fride из checkout
+
+```powershell
+$env:FORGE_E2E_DEPS = (Resolve-Path .tests/terminal-test-panel-keys/editor-deps).Path
+$env:FORGE_TEST_ID = 'IDE-BOOT-12'
+& .tools/neovim/windows-x64/bin/nvim.exe -u NONE -i NONE -l tests/e2e/editor.test.lua
+Remove-Item Env:FORGE_TEST_ID
+./scripts/test.ps1 e2e -Files @('tests/e2e/editor.test.lua','tests/e2e/project-session.test.lua')
+openspec validate add-fride-command --type change --strict --no-interactive
+```
+
+В точечном прогоне Windows подтверждён запуск `fride.cmd`. Пути конфига,
+Neovim, данных и проекта в `.tests/editor-e2e/6197408490100/checkout-launch.json`.
+Общий пакет дал 13 PASS за 49,19 с. Лог в
+`.tests/batches/1795691529793337300/00.log`.

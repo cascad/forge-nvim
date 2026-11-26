@@ -156,4 +156,61 @@ if editor then
   io.stdout:write('  artifacts: ' .. editor.dir .. '\n')
   editor:stop()
 end
+
+T.check('IDE-BOOT-12 checkout fride loads current config and opens a project through Files', function()
+  local tui
+  local ok, issue = xpcall(function()
+    tui = require('session_tui').start(root, { checkout = true })
+    tui:launch()
+    local host = tui.host
+    local function real(path)
+      return assert(vim.uv.fs_realpath(path), path):gsub('\\', '/')
+    end
+    local runtime = vim.fn.has('win32') == 1 and vim.v.progpath or vim.fn.exepath('nvim')
+    local launch = tui:lua([[return { config=vim.env.MYVIMRC, executable=vim.v.progpath, version=tostring(vim.version()),
+      namespace=vim.env.NVIM_APPNAME, cwd=vim.fn.getcwd(), data=vim.fn.stdpath('data') }]])
+    vim.fn.writefile({ vim.json.encode(launch) }, host.dir .. '/checkout-launch.json')
+    T.eq(real(launch.config), real(root .. '/nvim_forge/init.lua'))
+    T.eq(real(launch.executable), real(runtime))
+    T.eq(launch.namespace, 'nvim_forge')
+    T.eq(real(launch.cwd), real(tui.a))
+    assert(real(launch.data):find(real(host.runtime) .. '/', 1, true) == 1, launch.data)
+
+    host:wait('Files opens for the directory argument', function()
+      return tui:lua([[for _,win in ipairs(vim.api.nvim_tabpage_list_wins(0)) do
+        if vim.bo[vim.api.nvim_win_get_buf(win)].filetype=='neo-tree' then return true end
+      end]])
+    end)
+    tui:send(' we')
+    local row
+    host:wait('Files renders the fixture with keyboard focus', function()
+      row = tui:lua([[if vim.bo.filetype~='neo-tree' then return false end
+      for i,line in ipairs(vim.api.nvim_buf_get_lines(0,0,-1,false)) do
+        if line:find('first.txt',1,true) then return i end
+      end; return false]])
+      return row
+    end)
+    tui:send(tostring(row) .. 'Gl')
+    host:wait('l opens the selected project file in code', function()
+      return tui:lua([[return vim.bo.filetype=='text'
+        and vim.api.nvim_buf_get_name(0):gsub('\\','/')==...]], { tui.a .. '/first.txt' })
+    end)
+    T.eq(tui:lua('return vim.api.nvim_get_current_line()'), 'first.txt line 1 | Project A ü')
+    local state = tui:state()
+    T.eq(state.installs, 0)
+    assert(#state.ui > 0 and not state.mode.blocking, 'Real TUI is not ready')
+    assert(not state.messages:match('E%d%d%d+:') and not state.messages:find('Failed to run ',1,true),
+      state.messages)
+    for _, notice in ipairs(state.notices) do
+      assert(notice.level < vim.log.levels.ERROR, notice.message)
+    end
+    host:snapshot('checkout-launch')
+  end, debug.traceback)
+  if tui then
+    io.stdout:write('  artifacts: ' .. tui.host.dir .. '\n')
+    tui:stop(not ok and issue or nil)
+  end
+  assert(ok, issue)
+end)
+
 T.finish()

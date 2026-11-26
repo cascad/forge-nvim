@@ -8,7 +8,7 @@
 
 Комплект SHALL предоставлять fride и полное имя forge-nvim, сохраняя прежний локальный forge. Команда MUST запускать тот же изолированный профиль и native SDK, передавать argv/cwd/stdin/TTY/exit code и восстанавливать окружение вызывающего PowerShell. Checkout SHALL предоставлять fride через прежние launch helpers без нового resolver.
 Платформы: все.
-Проверка: tests/install-isolation.test.py.
+Проверка: tests/install-isolation.test.py и tests/e2e/editor.test.lua.
 
 #### Scenario: Основное и совместимые имена
 - **WHEN** пользователь запускает fride, forge-nvim или прежний forge из bin комплекта
@@ -18,6 +18,7 @@
 #### Scenario: Запуск checkout
 - **WHEN** пользователь запускает fride из checkout
 - **THEN** используется прежний поддерживаемый launch helper и профиль nvim_forge
+- **AND** готовая среда загружает конфиг из checkout, открывает переданный каталог и даёт открыть файл через Files
 - **AND** штатные nvim_forge.cmd/nvim_forge.sh продолжают работать
 
 #### Scenario: Явная регистрация
