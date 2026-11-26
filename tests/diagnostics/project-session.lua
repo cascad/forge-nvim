@@ -6,6 +6,9 @@ local ok,err=xpcall(function()
   tui=require('session_tui').start(root)
   report={artifacts=tui.host.dir,states={}}
   assert(vim.uv.fs_copyfile(root..'/tests/diagnostics/project-session.lua',tui.host.dir..'/project-session.lua'))
+  local branch=tui.a..'/session-folder'
+  vim.fn.mkdir(branch,'p')
+  assert(vim.fn.writefile({'Explorer session fixture'},branch..'/session-child.txt')==0)
   local function capture(label)
     local state=tui:state();report.states[#report.states+1]={label=label,state=state}
     vim.fn.writefile({vim.json.encode(report)},tui.host.dir..'/project-session.json')
@@ -63,7 +66,19 @@ local ok,err=xpcall(function()
   tui:command('edit first.txt')
   tui.host:wait('B file',function() return tui:state().file==tui.b..'/first.txt' end)
   capture('project-b-edit')
-  tui:command('lua require("config.start").open_project('..vim.inspect(tui.a)..')')
+  tui:send(' op')
+  tui.host:wait('Recent Projects picker is ready',function()
+    return tui:mode().mode=='i' and tui:lua('return vim.bo.filetype')=='TelescopePrompt'
+  end)
+  tui:send('Project A')
+  tui.host:wait('recent project A is selected by its name',function()
+    return tui:lua([[local path=...
+      local entry=require('telescope.actions.state').get_selected_entry()
+      if not entry then return false end
+      if vim.fn.has('win32')==1 then return entry.value:lower()==path:lower() end
+      return entry.value==path]],{tui.a})
+  end)
+  tui:send('\r')
   report.returned=tui:connect(report.switched.pid)
   tui.host:wait('project A files and tabs',function()
     local s=tui:state();return s.cwd==tui.a and #s.tabs==2 and #s.buffers==3
@@ -75,6 +90,28 @@ local ok,err=xpcall(function()
   report.loaded_after_return=tui:lua([[for _,b in ipairs(vim.api.nvim_list_bufs()) do
     if vim.api.nvim_buf_get_name(b):gsub('\\','/')==... then return vim.api.nvim_buf_get_lines(b,46,47,false)[1] end
   end]],{tui.a..'/third.txt'})
+  tui:send(' we')
+  local folder_row
+  tui.host:wait('restored Files renders the nested folder',function()
+    folder_row=tui:lua([[if vim.bo.filetype~='neo-tree' then return false end
+      for row,line in ipairs(vim.api.nvim_buf_get_lines(0,0,-1,false)) do
+        if line:find('session-folder',1,true) then return row end
+      end
+      return false]])
+    return folder_row
+  end)
+  tui:send(tostring(folder_row)..'G')
+  tui.host:wait('nested folder selected in Files',function()
+    return tui:lua('return vim.api.nvim_get_current_line()'):find('session-folder',1,true)
+  end)
+  local function child_visible()
+    return tui:lua([[return table.concat(vim.api.nvim_buf_get_lines(0,0,-1,false),'\n')
+      :find('session-child.txt',1,true)~=nil]])
+  end
+  tui:send('l');tui.host:wait('l expands restored Files branch',child_visible)
+  tui:send('h');tui.host:wait('h collapses restored Files branch',function()
+    return tui:lua('return vim.bo.filetype')=='neo-tree' and not child_visible()
+  end)
   tui:save_sessions('returned-a')
 end,debug.traceback)
 if tui then

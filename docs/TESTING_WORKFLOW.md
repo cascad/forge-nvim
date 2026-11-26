@@ -86,14 +86,14 @@ docker compose -f tests/containers/compose.yaml run --rm ubuntu acceptance
 
 | Что проверяем | Тесты в `tests/e2e/` (суффикс `.test.lua`) |
 | --- | --- |
-| Запуск, вкладки, переход A → B → A, восстановление вкладок, Files и размеров панелей | `editor`, `buffers`, `project-session`, `session-files-view`, `session-tool-views` |
+| Запуск, вкладки, возврат из списка недавних проектов, восстановление вкладок и панелей, раскрытие и сворачивание Files после возврата | `editor`, `buffers`, `project-session`, `session-files-view`, `session-tool-views` |
 | Создание, rename, copy, cut/paste и delete, Unicode, отказ ОС и ввод во время операций | `file-explorer`, `file-copy-delete`, `filesystem-errors`, `acceptance-navigation` |
 | Ctrl+P из кода и Files, поиск текста из Logs до строки, палитра, F1, Alt+B, reveal | `acceptance-navigation` |
 | LSP в смешанном проекте, переход к определению и реализации, возврат, ввод аргументов | `mixed-project`, `go-workspace-language`, `snippet-input` |
 | Запуск Node, Python venv, выбор конфигурации, breakpoint, Locals, стек, Output, паника и повтор после правки | `mixed-project`, `go-workspace`, `debug-panels`, `dap-output` |
 | Тест под курсором, файл и проект, pass/fail, отладка теста, исправление и повтор | `test-runner`, `go-workspace-tests` |
 | Diff и история, stage файла, hunk и выбранной строки, ветка, worktree, commit и push | `git-workflow` |
-| Фокус, закрытие и разворот панелей, Help, Outline, общие логи, встроенная консоль и отправка выделения | `window-ownership`, `work-panels`, `tool-panels`, `outline`, `ide-logs`, `terminal-selection` |
+| Фокус, закрытие и разворот панелей, Help, Outline, общие логи и сбой Go workspace, встроенная консоль и отправка выделения | `window-ownership`, `work-panels`, `tool-panels`, `outline`, `ide-logs`, `terminal-selection` |
 
 Нужны Git, ripgrep, Python 3 и Neovim для тестов. На Windows Neovim выбирает
 `scripts/test.ps1`. Уже подготовленные каталоги можно передать
@@ -114,6 +114,23 @@ $env:FORGE_E2E_DEPS = (Resolve-Path .tests/terminal-test-panel-keys/editor-deps)
 в `.tests/report.json` и `.tests/logs/`. Повторяй упавший файл через `e2e -Files`
 или `e2e --file`. Установщик, физические клавиши и clipboard WezTerm, а также
 замеры отзывчивости на рабочем проекте входят в отдельную приёмку.
+
+### Пробелы приёмки обычного запуска
+
+Тесты редактора запускают текущий конфиг с подготовленными плагинами. Для
+приёмки поставки нужны контрольные сценарии на том же кандидате, который
+получит пользователь.
+
+| Открытая проверка | Что проверяем до выпуска |
+| --- | --- |
+| Запуск из checkout | Запустить штатный `./fride` или `fride.cmd` после обновления репозитория. Сверить путь загруженного конфига, версию runtime и готовность плагинов. Открыть проект, файл и Files. |
+| Готовый комплект | Установить и обновить комплект в отдельном профиле. Повторить короткий сценарий через его `bin/fride`, проверить происхождение конфига и отсутствие ошибок при старте. Windows и macOS проверяются на своих ОС. |
+| Ввод из WezTerm | Доставить клавиши двух раскладок через реальное окно WezTerm, проверить фокус, выделение мышью и последний символ в clipboard. |
+
+Для каждого сценария фиксируем вход пользователя и наблюдаемый результат.
+Например, после выбора проекта проверяем активный каталог, открытые вкладки
+и способность раскрыть ветку. Для фонового сбоя проверяем рабочий экран,
+доступные действия и запись в Logs. Прогоны группируем по законченному блоку.
 
 ## Команды блока
 

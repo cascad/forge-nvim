@@ -2,7 +2,7 @@
 local root=vim.fn.fnamemodify(debug.getinfo(1,'S').source:sub(2),':p:h:h:h'):gsub('\\','/')
 package.path=root..'/tests/lib/?.lua;'..package.path
 local T=require('check')
-T.check('IDE-PANEL-15 native session restore returns code focus and preserves project state',function()
+T.check('IDE-PANEL-15 Recent Projects restores files, focus and Explorer keys in native TUI',function()
   local dir=root..'/.tests/project-session/'..tostring(vim.uv.hrtime());vim.fn.mkdir(dir,'p')
   assert(vim.uv.fs_copyfile(root..'/tests/e2e/project-session.test.lua',dir..'/project-session.test.lua'))
   local result=vim.system({vim.v.progpath,'-l',root..'/tests/diagnostics/project-session.lua'},

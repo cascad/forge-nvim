@@ -12424,3 +12424,19 @@ openspec validate add-ide-log-console --type change --strict --no-interactive
 
 На Windows семь сценариев прошли за 71,77 с. Сводка
 `.tests/batches/1795689677631045600/report.json`.
+
+## 227. Приёмка недавних проектов и клавиш Files
+
+```powershell
+$env:FORGE_E2E_DEPS = (Resolve-Path .tests/terminal-test-panel-keys/editor-deps).Path
+./scripts/test.ps1 e2e -Files @('tests/e2e/project-session.test.lua')
+$env:FORGE_TEST_ID = 'IDE-PANEL-15'
+& .tools/neovim/windows-x64/bin/nvim.exe -u NONE -i NONE -l tests/e2e/project-session.test.lua
+openspec validate fix-project-session-restore-focus --type change --strict --no-interactive
+```
+
+В первом пакете IDE-PANEL-29 прошёл, IDE-PANEL-15 вернулся через недавние
+проекты и остановился на выборе строки Files. После исправления ввода теста
+IDE-PANEL-15 прошёл точечно. Первый лог в
+`.tests/batches/1795689929780302300/00.log`, повтор в
+`.tests/tmp/recent-projects-ide-panel-15.log`.
