@@ -75,6 +75,7 @@ local function python_project_roots()
     }, { upward = true, path = start })[1]
 
     add(marker and vim.fs.dirname(marker) or start)
+    add(require('forge.tool_paths').root(start))
     add(vim.fn.getcwd())
     add(vim.fn.getcwd(0))
 

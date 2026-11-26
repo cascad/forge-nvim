@@ -98,4 +98,52 @@ T.check('IDE-DAP-1 Go.work запускает пакет и пересобира
   end
   assert(ok,err)
 end)
+
+T.check('IDE-DAP-1 F5 builds a nested two-file Go package without a module',function()
+  local editor
+  local ok,issue=xpcall(function()
+    local tools=vim.env.FORGE_E2E_DAP_TOOLS or root..'/.tests/dap-tools'
+    local sep=vim.fn.has('win32')==1 and ';' or ':'
+    local path=table.concat({tools..'/bin',tools..'/go/bin',vim.env.PATH},sep)
+    editor=require('editor').start(root,{env={PATH=path,GOTOOLCHAIN='local',GOENV='off',
+      GO111MODULE='on',GOWORK='off',GOPROXY='off',GOSUMDB='off',GOTELEMETRY='off',
+      CGO_ENABLED='0',GOMAXPROCS='2',GOFLAGS='-p=2',GOCACHE=require('go_cache').path(root),
+      FORGE_DLV_PATH='',DLV_PATH=''},prepare=function(project,env,runtime)
+        env.GOPATH=runtime..'/go';env.GOBIN=''
+        local package_dir=project..'/cmd/lab01'
+        vim.fn.mkdir(package_dir,'p')
+        assert(vim.fn.writefile({'package main','import "fmt"','func main() {',
+          '  fmt.Println("MODULELESS", answer()) // E2E_BREAKPOINT','}'},package_dir..'/main.go')==0)
+        assert(vim.fn.writefile({'package main','func answer() int { return 42 }'},package_dir..'/answer.go')==0)
+      end})
+    editor:input(':edit cmd/lab01/main.go<CR>')
+    editor:wait('Go file opened',function() return editor:current_ft()=='go' end)
+    editor:input('gg/E2E_BREAKPOINT<CR><F9><F5>')
+    editor:wait('Current Go package offered by F5',function()
+      if editor:current_ft()~='TelescopePrompt' then return false end
+      return editor:lua([[local entry=require('telescope.actions.state').get_selected_entry()
+        return entry and entry.ordinal:find('Current Go package  [go]',1,true) or false]])
+    end)
+    editor:input('<CR>')
+    editor:wait('Delve stops inside the moduleless package',function()
+      return editor:lua([[local s=require('dap').session()
+        return s and s.stopped_thread_id~=nil and s.current_frame~=nil or false]])
+    end,90000)
+    -- This change to Go module mode belongs only to the Delve process.
+    T.eq(editor:lua('return vim.env.GO111MODULE'),'on')
+    T.eq(vim.fn.filereadable(editor.project..'/go.mod'),0)
+    T.eq(vim.fn.filereadable(editor.project..'/cmd/lab01/go.mod'),0)
+    editor:input('<F7><F5>')
+    editor:wait('output includes the value from the sibling Go file',function()
+      local output=P.state(editor,'dap-repl')[1]
+      return editor:lua([[return require('dap').session()==nil]])
+        and output and output.text:find('MODULELESS 42',1,true)
+    end,20000)
+  end,debug.traceback)
+  if editor then
+    io.stdout:write('  artifacts: '..editor.dir..'\n')
+    editor:stop(not ok and issue or nil)
+  end
+  assert(ok,issue)
+end)
 T.finish()

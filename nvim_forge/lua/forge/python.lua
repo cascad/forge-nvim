@@ -15,17 +15,27 @@ function M.resolve(roots)
         global='forge_python_path',env='FORGE_PYTHON_PATH'})
     if explicit then return selected end
     local function found(path,source) return paths.selected('python',path,source,roots and roots[1]) end
+    local function in_project(root)
+        for _,folder in ipairs({'.venv','venv','.env','env'}) do
+            local path=executable(python_in(root..'/'..folder))
+            if path then return found(path,'project venv') end
+        end
+    end
+    -- Prefer the file's project environment before inheriting the shell environment.
+    for _,root in ipairs(roots or {}) do
+        selected=in_project(root)
+        if selected then return selected end
+    end
+    local workspace=roots and roots[1] and paths.root(roots[1])
+    if workspace and not vim.tbl_contains(roots,workspace) then
+        selected=in_project(workspace)
+        if selected then return selected end
+    end
     selected=executable(python_in(vim.env.VIRTUAL_ENV))
     if selected then return found(selected,'VIRTUAL_ENV') end
     local conda=vim.env.CONDA_PREFIX
     selected=executable(conda and conda~='' and (conda..(vim.fn.has('win32')==1 and '/python.exe' or '/bin/python')) or nil)
     if selected then return found(selected,'CONDA_PREFIX') end
-    for _,root in ipairs(roots or {}) do
-        for _,folder in ipairs({'.venv','venv','.env','env'}) do
-            selected=executable(python_in(root..'/'..folder))
-            if selected then return found(selected,'project venv') end
-        end
-    end
     -- spec: IDE-PY-3. Native Windows Python is normally named python.exe.
     local names=vim.fn.has('win32')==1 and {'python','python3'} or {'python3','python'}
     for _,name in ipairs(names) do

@@ -159,7 +159,28 @@ local function show_dlv_info()
     end)
 end
 
+local function package_config(path)
+    local directory = vim.fs.dirname(path) or vim.fn.getcwd()
+    local work = vim.env.GOWORK
+    local workspace = work ~= 'off' and
+        ((work and work ~= 'auto' and work ~= '') or vim.fs.root(directory, 'go.work'))
+    local standalone = not workspace and not vim.fs.root(directory, 'go.mod')
+    return {
+        type = "go",
+        request = "launch",
+        mode = "debug",
+        -- Delve builds from dlvCwd and starts the program in cwd.
+        -- GOPATH mode builds "." because Go rejects absolute package paths in that mode.
+        program = (standalone or vim.env.GO111MODULE == 'off') and "." or directory,
+        dlvCwd = directory,
+        cwd = "${workspaceFolder}",
+        env = standalone and { GO111MODULE = "off" } or nil,
+        outputMode = "remote",
+    }
+end
+
 return {
     resolve_dlv_path = resolve_dlv_path,
     show_dlv_info = show_dlv_info,
+    package_config = package_config,
 }

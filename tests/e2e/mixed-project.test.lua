@@ -64,6 +64,9 @@ T.check('SELF: MIXED-PROJECT шесть language roots, Node script и Python ve
         env.RUSTUP_HOME=vim.env.RUSTUP_HOME or vim.fn.fnamemodify(sysroot,':h:h')
         for _,k in ipairs({'RUSTC_WRAPPER','RUSTC_WORKSPACE_WRAPPER','RUSTFLAGS','CARGO_ENCODED_RUSTFLAGS',
             'VIRTUAL_ENV','CONDA_PREFIX','PYTHONHOME','PYTHONPATH'}) do env[k]=nil end
+        -- A valid environment inherited from the shell must not override
+        -- the workspace's Python for either Pyright or Current Python file.
+        env.VIRTUAL_ENV=vim.fs.dirname(vim.fs.dirname(tools_python))
         vim.fn.mkdir(env.CARGO_HOME,'p')
         local venv=project..'/python/.venv'
         project_python=venv..(win and '/Scripts/python.exe' or '/bin/python')

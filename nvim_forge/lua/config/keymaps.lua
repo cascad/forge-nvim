@@ -317,29 +317,20 @@ im("<C-f>", "<Esc>/", "Find in buffer")
 -- Ctrl+H — заменить (как `:%s//`)
 nm("<C-h>", ":%s/", "Replace in buffer")
 
--- Ctrl+/ — toggle comment. VS Code держит это как дефолтный
--- editor.action.commentLine, поэтому в keybindings.json отдельной записи нет.
--- Терминалы обычно присылают Ctrl+/ как Ctrl+_ (ASCII 31), новые TUI могут
--- прислать буквальный <C-/>. Держим оба варианта и вызываем Comment.nvim API,
--- а не строку `gc`, чтобы не зависеть от remap-поведения.
-nm("<C-_>", toggle_comment_line, "Toggle comment line")
-nm("<C-/>", toggle_comment_line, "Toggle comment line")
-xm("<C-_>", toggle_comment_selection, "Toggle comment selection")
-xm("<C-/>", toggle_comment_selection, "Toggle comment selection")
-im("<C-_>", function()
+-- Cmd+/ reaches Neovim as <D-/> via the terminal's keyboard protocol.
+-- Terminals can encode Ctrl+/ as Ctrl+_ (ASCII 31).
+local function toggle_comment_insert()
     vim.cmd("stopinsert")
     vim.schedule(function()
         toggle_comment_line()
         vim.cmd("startinsert")
     end)
-end, "Toggle comment line")
-im("<C-/>", function()
-    vim.cmd("stopinsert")
-    vim.schedule(function()
-        toggle_comment_line()
-        vim.cmd("startinsert")
-    end)
-end, "Toggle comment line")
+end
+for _, lhs in ipairs({ "<C-_>", "<C-/>", "<D-/>" }) do
+    nm(lhs, toggle_comment_line, "Toggle comment line")
+    xm(lhs, toggle_comment_selection, "Toggle comment selection")
+    im(lhs, toggle_comment_insert, "Toggle comment line")
+end
 
 -- Ctrl+L — выделить строку без \n (helix: extend_to_line_bounds + trim).
 -- В Neovim `V` берёт строку с переводом, `0vg_` — без него.

@@ -143,6 +143,33 @@ scenario('IDE-BOOT-2 обычные файлы не вызывают преду�
   end
 end)
 
+scenario('EDITOR-COMMENT Cmd+/ comments and uncomments lines through the editor mapping', function()
+  local first, second = 'local first = 1', 'local second = 2'
+  assert(vim.fn.writefile({first, second, 'return first + second'}, editor.project .. '/comment.lua') == 0)
+  editor:input(':edit comment.lua<CR>')
+  editor:wait('Lua file opened', function() return editor:current_file():match('/comment.lua$') end)
+  local function lines_are(a, b)
+    return function()
+      local lines = editor:lua('return vim.api.nvim_buf_get_lines(0,0,2,false)')
+      return lines[1] == a and lines[2] == b
+    end
+  end
+  editor:input('gg<D-/>')
+  editor:wait('Cmd+/ comments the current line', lines_are('-- ' .. first, second))
+  editor:input('<D-/>')
+  editor:wait('Cmd+/ uncomments the current line', lines_are(first, second))
+  editor:input('ggVj<D-/>')
+  editor:wait('Cmd+/ comments the selection', lines_are('-- ' .. first, '-- ' .. second))
+  editor:input('gg0i<D-/>')
+  editor:wait('Cmd+/ uncomments while staying in Insert mode', function()
+    return lines_are(first, '-- ' .. second)() and editor:lua('return vim.api.nvim_get_mode().mode') == 'i'
+  end)
+  editor:input('<Esc>:edit! file_one.txt<CR>')
+  editor:wait('comment test returned to the original file', function()
+    return editor:current_file():match('/file_one.txt$')
+  end)
+end)
+
 scenario('EDITOR-ERRORS нет ошибок конфигурации после UIEnter и действий', function()
   for _, item in ipairs(editor:lua('return vim.g.forge_e2e_notifications')) do
     assert(item.level < vim.log.levels.ERROR, item.message)

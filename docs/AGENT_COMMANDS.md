@@ -12526,3 +12526,20 @@ openspec validate add-fride-command --type change --strict --no-interactive
 Отчёт `.tests/batches/1795709344487753200/report.json`. 35 сценариев
 прошли на Windows. Под Git Bash отдельно проверены синтаксис обоих
 launchers и передача checkout-окружения в Neovim.
+
+## 233. Go Debug, приоритет проектной venv и комментарии
+
+2026-11-26, FIXLOG §325. Windows с подготовленными входами.
+
+```powershell
+$env:FORGE_E2E_DEPS = (Resolve-Path .tests/terminal-test-panel-keys/editor-deps).Path
+$env:Path = "$PSHOME;$env:Path"
+./scripts/test.ps1 e2e -Files @('tests/e2e/editor.test.lua','tests/e2e/go-workspace.test.lua','tests/e2e/dap-output.test.lua','tests/e2e/mixed-project.test.lua','tests/e2e/python-node-sdk-picker.test.lua')
+./scripts/test.ps1 e2e -Files @('tests/e2e/editor.test.lua')
+```
+
+Первый прогон `.tests/batches/1795720929913577200/00.log` подтвердил
+Go, Python и действие команды комментария. Закрытие фикстуры
+через `:bd!` завершило дочерний редактор до общей проверки сообщений.
+Фикстура теперь возвращается в исходный файл через `:edit!`.
+Повтор `.tests/batches/1795721109575155000/00.log` прошёл.

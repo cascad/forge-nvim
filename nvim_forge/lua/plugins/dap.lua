@@ -399,14 +399,7 @@ local function current_file_configs(ft)
             }),
         }
     elseif ft == "go" then
-        local base = {
-            type = "go",
-            request = "launch",
-            mode = "debug",
-            program = "${fileDirname}",
-            cwd = "${workspaceFolder}",
-            outputMode = "remote",
-        }
+        local base = go_targets.package_config(current_launch_path())
         return {
             extend_config(base, {
                 name = "Current Go package",

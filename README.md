@@ -48,6 +48,7 @@ SQL/Bash installer ставит базовые языковые tools без о�
 дополнений; каталогу нужны только Core/выбранный Terminal, языковые tools готовит Mason.
 [Команды агента и формат получаемых результатов](docs/AGENT_COMMANDS.md).
 [Клавиши fride по сценариям: панели, проекты, дерево и терминал](docs/FRIDE_KEYBOARD_GUIDE.md).
+[Запуск проекта и кода, отладка и выбор Python](docs/RUN_AND_DEBUG.md).
 [Клавиши рабочих панелей Space w](nvim_forge/QUICKSTART.md#общий-маршрут-рабочих-панелей--space-w).
 [Общая консоль логов IDE](docs/IDE_LOGS.md): `Space w i` / `:ForgeLogs`.
 [Рабочий пилот рамок Code/Locals](docs/PANEL_FRAME_PILOT.md): `:ForgeFramePilot` в остановленном Debug.

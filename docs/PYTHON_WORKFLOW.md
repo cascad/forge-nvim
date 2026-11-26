@@ -25,14 +25,15 @@ Pyright и Ruff должны быть доступны редактору: на�
 
 1. Явный Python из project/user `tools.json` (`Space l S`), затем
    `vim.g.forge_python_path` или `FORGE_PYTHON_PATH`.
-2. Активный VIRTUAL_ENV, затем CONDA_PREFIX.
-3. `.venv`, `venv`, `.env`, `env` в корнях проекта.
+2. `.venv`, `venv`, `.env`, `env` в корнях проекта.
+3. Активный VIRTUAL_ENV, затем CONDA_PREFIX.
 4. В Windows — доступный `python`, затем `python3` в PATH;
    в macOS/Linux — `python3`, затем `python`.
 
-У DAP сохранены прежние корни текущего файла, cwd и LSP. Pyright использует
-свой project root и получает python.pythonPath до initialize. Поэтому обычный
-неактивированный .venv с зависимостями работает без extraPaths в конфиге.
+Для DAP учитываются корни текущего файла, проекта и LSP. Pyright начинает
+со своего корня, учитывает корень репозитория и получает python.pythonPath
+до initialize. Обычный неактивированный .venv с зависимостями работает
+без extraPaths в конфиге. [Общий порядок запуска](RUN_AND_DEBUG.md#как-выбирается-python)
 Явный settings.python.pythonPath сохраняется. Его можно поменять штатной
 командой `:LspPyrightSetPythonPath <полный путь к python>`; при пробелах это
 один целый аргумент команды, без shell quotes. Эта команда настраивает LSP;
