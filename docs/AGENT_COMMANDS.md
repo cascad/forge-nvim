@@ -12498,3 +12498,15 @@ $env:Path = "$PSHOME;$env:Path"
 ```
 
 Отчёт `.tests/batches/1795699295000641000/report.json`.
+
+## 231. Клавиши Files до и после смены проекта
+
+2026-11-26, FIXLOG §323. Windows, public launcher, отдельный профиль.
+
+```powershell
+$env:FORGE_E2E_DEPS = (Resolve-Path .tests/terminal-test-panel-keys/editor-deps).Path
+$env:Path = "$PSHOME;$env:Path"
+./scripts/test.ps1 e2e -Files @('tests/e2e/editor.test.lua','tests/e2e/project-session.test.lua','tests/e2e/session-files-view.test.lua','tests/e2e/session-tool-views.test.lua','tests/e2e/acceptance-navigation.test.lua','tests/e2e/ide-logs.test.lua')
+```
+
+Отчёт `.tests/batches/1795708652434281800/report.json`.

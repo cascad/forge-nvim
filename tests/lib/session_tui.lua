@@ -51,10 +51,11 @@ local function start(root,holder,options)
     local mode=self:mode();assert(mode.mode=='n' and not mode.blocking,'TUI command requires Normal mode')
     self:send(':'..command..'\r')
   end
-  function self:launch()
+  function self:launch(without_project)
     assert(not self.job or self:job_state().exit~=false,'TUI still running')
+    assert(not without_project or options.launcher, 'A startup screen check needs the public launcher')
     vim.fn.delete(self.base..'/ready.json')
-    self.job=e:lua([[local project,observer,launcher=...;return require('ide.ownership').transition('native-terminal',function()
+    self.job=e:lua([[local project,observer,launcher,without_project=...;return require('ide.ownership').transition('native-terminal',function()
       vim.cmd('enew')
       _G.forge_session_exit=nil
       local cwd=project
@@ -70,10 +71,13 @@ local function start(root,holder,options)
           -- jobstart передаёт cmd.exe аргументы без добавления кавычек.
           env.FORGE_SESSION_PROJECT=project
           env.PSModuleAnalysisCachePath=vim.env.FORGE_SESSION_PROBE..'/ps-module-cache'
+          local command='fride.cmd -i NONE --cmd "lua dofile(vim.env.FORGE_SESSION_OBSERVER)"'
+          if not without_project then command=command..' "%FORGE_SESSION_PROJECT%"' end
           argv={'cmd.exe','/d','/v:off','/c',
-            'fride.cmd -i NONE --cmd "lua dofile(vim.env.FORGE_SESSION_OBSERVER)" "%FORGE_SESSION_PROJECT%"'}
+            command}
         else
-          argv={cwd..'/fride','-i','NONE','--cmd','lua dofile(vim.env.FORGE_SESSION_OBSERVER)',project}
+          argv={cwd..'/fride','-i','NONE','--cmd','lua dofile(vim.env.FORGE_SESSION_OBSERVER)'}
+          if not without_project then argv[#argv+1]=project end
         end
       end
       _G.forge_session_job=vim.fn.jobstart(argv,
@@ -81,7 +85,7 @@ local function start(root,holder,options)
           on_exit=function(_,code) _G.forge_session_exit=code end})
       assert(_G.forge_session_job>0,'Native TUI failed to start')
       _G.forge_session_terminal=vim.api.nvim_get_current_buf()
-      return _G.forge_session_job end)]],{self.a,self.base..'/observer.lua',options.launcher or vim.NIL})
+      return _G.forge_session_job end)]],{self.a,self.base..'/observer.lua',options.launcher or vim.NIL,not not without_project})
     return self:connect()
   end
   function self:connect(previous_pid)

@@ -165,9 +165,11 @@ local function check_launcher(contract)
   local tui
   local ok, issue = xpcall(function()
     tui = require('session_tui').start(root, { launcher = contract.launcher, prepare = function(project)
-      local nested = project .. '/Project A ü/nested'
-      vim.fn.mkdir(nested, 'p')
-      assert(vim.fn.writefile({ 'Nested project file' }, nested .. '/nested.txt') == 0)
+      for _, name in ipairs({ 'Project A ü', 'Project B ü' }) do
+        local nested = project .. '/' .. name .. '/nested'
+        vim.fn.mkdir(nested, 'p')
+        assert(vim.fn.writefile({ 'Nested project file | ' .. name }, nested .. '/nested.txt') == 0)
+      end
     end })
     tui:launch()
     local host = tui.host
@@ -198,33 +200,102 @@ local function check_launcher(contract)
         if line:find(...,1,true) then return i end
       end; return false]], { name })
     end
-    local row
-    host:wait('Files is focused immediately after fride opens a directory', function()
-      row = row_for('nested')
-      return row
-    end, 5000)
-    tui:send(tostring(row) .. 'Gl')
-    host:wait('l expands the selected directory', function() return row_for('nested.txt') end)
-    tui:send('h')
-    host:wait('h collapses the selected directory', function() return not row_for('nested.txt') end)
-    tui:send('l')
-    host:wait('l reopens the directory', function()
-      row = row_for('nested.txt')
-      return row
-    end)
-    tui:send(tostring(row) .. 'Gl')
-    host:wait('l opens the selected project file in code', function()
-      return tui:lua([[return vim.bo.filetype=='text'
-        and vim.api.nvim_buf_get_name(0):gsub('\\','/')==...]], { tui.a .. '/nested/nested.txt' })
-    end)
-    T.eq(tui:lua('return vim.api.nvim_get_current_line()'), 'Nested project file')
-    local state = tui:state()
-    T.eq(state.installs, 0)
-    assert(#state.ui > 0 and not state.mode.blocking, 'Real TUI is not ready')
-    assert(not state.messages:match('E%d%d%d+:') and not state.messages:find('Failed to run ',1,true),
-      state.messages)
-    for _, notice in ipairs(state.notices) do
-      assert(notice.level < vim.log.levels.ERROR, notice.message)
+    local function check_ui()
+      local state = tui:state()
+      T.eq(state.installs, 0)
+      assert(#state.ui > 0 and not state.mode.blocking, 'Real TUI is not ready')
+      assert(not state.messages:match('E%d%d%d+:') and not state.messages:find('Failed to run ',1,true),
+        state.messages)
+      for _, notice in ipairs(state.notices) do
+        assert(notice.level < vim.log.levels.ERROR, notice.message)
+      end
+    end
+
+    local function open_from_files(project, context)
+      local row
+      host:wait(context .. ': Files has focus and shows the nested folder', function()
+        row = row_for('nested')
+        return row
+      end)
+      tui:send(tostring(row) .. 'G')
+      -- Session restore may already have expanded the directory.
+      if row_for('nested.txt') then
+        tui:send('h')
+        host:wait(context .. ': h collapses the restored branch', function()
+          return row_for('nested') and not row_for('nested.txt')
+        end)
+      end
+      for _, keys in ipairs({ { 'l', 'h' }, { 'д', 'р' } }) do
+        tui:send(keys[1])
+        host:wait(context .. ': ' .. keys[1] .. ' expands the branch', function()
+          return row_for('nested.txt')
+        end)
+        tui:send(keys[2])
+        host:wait(context .. ': ' .. keys[2] .. ' collapses the branch', function()
+          return row_for('nested') and not row_for('nested.txt')
+        end)
+      end
+      tui:send('l')
+      host:wait(context .. ': nested file is visible', function()
+        row = row_for('nested.txt')
+        return row
+      end)
+      tui:send(tostring(row) .. 'Gl')
+      host:wait(context .. ': l opens the selected project file in code', function()
+        return tui:state().file == project .. '/nested/nested.txt'
+      end)
+      T.eq(tui:lua('return vim.api.nvim_get_current_line()'), 'Nested project file | ' .. vim.fs.basename(project))
+      check_ui()
+    end
+
+    open_from_files(tui.a, 'Directory launch')
+
+    if not contract.revision then
+      -- Prepare only on-disk recent entries in this test's private profile.
+      -- The dashboard, picker, project switch, and restore all run through input.
+      tui:quit()
+      local history = launch.data .. '/project_nvim'
+      vim.fn.mkdir(history, 'p')
+      assert(vim.fn.writefile({ tui.a, tui.b }, history .. '/project_history') == 0)
+
+      local function select_recent(keys, query, project)
+        local pid = tui:state().pid
+        tui:send(keys)
+        host:wait('Recent Projects picker from ' .. keys, function()
+          return tui:mode().mode == 'i' and tui:lua('return vim.bo.filetype') == 'TelescopePrompt'
+        end)
+        tui:send(query)
+        host:wait('Named project selected: ' .. query, function()
+          local path = tui:lua([[local entry=require('telescope.actions.state').get_selected_entry()
+            return entry and entry.value or false]])
+          return path and real(path) == real(project)
+        end)
+        tui:send('\r')
+        tui:connect(pid)
+        host:wait('Requested project has opened: ' .. query, function()
+          return real(tui:state().cwd) == real(project)
+        end)
+      end
+
+      tui:launch(true)
+      host:wait('fride without arguments opens the start screen', function()
+        return tui:lua('return vim.bo.filetype') == 'alpha'
+      end)
+      select_recent('p', 'Project B', tui.b)
+      open_from_files(tui.b, 'Start screen project picker')
+      select_recent(' op', 'Project A', tui.a)
+      host:wait('Project A returns to its saved file with code focus', function()
+        return tui:lua('return _G.forge_session_views_restored > 0')
+          and tui:state().file == tui.a .. '/nested/nested.txt'
+      end)
+      tui:send(' we')
+      open_from_files(tui.a, 'Restored project')
+
+      tui:command('ForgeLogs')
+      host:wait('ForgeLogs opens the central log from the public launcher', function()
+        return tui:lua('return vim.bo.filetype') == 'forge-logs'
+      end)
+      check_ui()
     end
     host:snapshot('public-launch')
   end, debug.traceback)
@@ -235,7 +306,7 @@ local function check_launcher(contract)
   assert(ok, issue)
 end
 
-T.check('IDE-BOOT-12 checkout fride loads current config and opens a project through Files', function()
+T.check('IDE-BOOT-12 checkout fride opens projects and navigates Files through real input', function()
   check_launcher({
     launcher = { directory = root },
     config = root .. '/nvim_forge/init.lua',
