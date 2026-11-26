@@ -362,13 +362,9 @@ return {
                     vim.cmd("enew")
                     pcall(vim.api.nvim_buf_delete, dir_buf, { force = true })
 
-                    -- `reveal left` создаёт боковой split, который
-                    -- edgy подхватывает в left edgebar.
+                    -- При старте с каталогом первым действием можно выбрать
+                    -- файл в дереве. Открытие файла переведёт фокус в код.
                     vim.cmd("Neotree filesystem reveal left")
-                    -- Вернуть фокус в main (вправо от neo-tree), чтобы
-                    -- пользователь начинал работу в редакторе, а не
-                    -- внутри дерева.
-                    pcall(vim.cmd, "wincmd l")
                 end,
             })
         end,

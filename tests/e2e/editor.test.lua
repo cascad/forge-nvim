@@ -164,7 +164,11 @@ end
 local function check_launcher(contract)
   local tui
   local ok, issue = xpcall(function()
-    tui = require('session_tui').start(root, { launcher = contract.launcher })
+    tui = require('session_tui').start(root, { launcher = contract.launcher, prepare = function(project)
+      local nested = project .. '/Project A ü/nested'
+      vim.fn.mkdir(nested, 'p')
+      assert(vim.fn.writefile({ 'Nested project file' }, nested .. '/nested.txt') == 0)
+    end })
     tui:launch()
     local host = tui.host
     local launch = tui:lua([[local expected=vim.uv.fs_realpath(...)
@@ -188,26 +192,32 @@ local function check_launcher(contract)
       vim.fn.writefile({ vim.json.encode(backports) }, host.dir .. '/installed-backports.json')
     end
 
-    host:wait('Files opens for the directory argument', function()
-      return tui:lua([[for _,win in ipairs(vim.api.nvim_tabpage_list_wins(0)) do
-        if vim.bo[vim.api.nvim_win_get_buf(win)].filetype=='neo-tree' then return true end
-      end]])
-    end)
-    tui:send(' we')
-    local row
-    host:wait('Files renders the fixture with keyboard focus', function()
-      row = tui:lua([[if vim.bo.filetype~='neo-tree' then return false end
+    local function row_for(name)
+      return tui:lua([[if vim.bo.filetype~='neo-tree' then return false end
       for i,line in ipairs(vim.api.nvim_buf_get_lines(0,0,-1,false)) do
-        if line:find('first.txt',1,true) then return i end
-      end; return false]])
+        if line:find(...,1,true) then return i end
+      end; return false]], { name })
+    end
+    local row
+    host:wait('Files is focused immediately after fride opens a directory', function()
+      row = row_for('nested')
+      return row
+    end, 5000)
+    tui:send(tostring(row) .. 'Gl')
+    host:wait('l expands the selected directory', function() return row_for('nested.txt') end)
+    tui:send('h')
+    host:wait('h collapses the selected directory', function() return not row_for('nested.txt') end)
+    tui:send('l')
+    host:wait('l reopens the directory', function()
+      row = row_for('nested.txt')
       return row
     end)
     tui:send(tostring(row) .. 'Gl')
     host:wait('l opens the selected project file in code', function()
       return tui:lua([[return vim.bo.filetype=='text'
-        and vim.api.nvim_buf_get_name(0):gsub('\\','/')==...]], { tui.a .. '/first.txt' })
+        and vim.api.nvim_buf_get_name(0):gsub('\\','/')==...]], { tui.a .. '/nested/nested.txt' })
     end)
-    T.eq(tui:lua('return vim.api.nvim_get_current_line()'), 'first.txt line 1 | Project A ü')
+    T.eq(tui:lua('return vim.api.nvim_get_current_line()'), 'Nested project file')
     local state = tui:state()
     T.eq(state.installs, 0)
     assert(#state.ui > 0 and not state.mode.blocking, 'Real TUI is not ready')

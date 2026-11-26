@@ -12484,3 +12484,17 @@ openspec validate package-native-acceptance-installer --type change --strict --n
 `current-upgrade.log`, `current-repeat.log`. 14 E2E за 42,01 с в
 `.tests/batches/1795694979429909100/00.log`. Отдельный native регресс
 ошибки и повторов прошёл за 26,289 с.
+
+## 230. Фокус Files при запуске с каталогом
+
+2026-11-26, FIXLOG §322. Сценарий IDE-BOOT-12 обнаруживал потерю фокуса
+до правки. В той же подготовленной среде запущены тесты запуска,
+восстановления проекта, навигации и IDE Logs.
+
+```powershell
+$env:FORGE_E2E_DEPS = (Resolve-Path .tests/terminal-test-panel-keys/editor-deps).Path
+$env:Path = "$PSHOME;$env:Path"
+./scripts/test.ps1 e2e -Files @('tests/e2e/editor.test.lua','tests/e2e/project-session.test.lua','tests/e2e/acceptance-navigation.test.lua','tests/e2e/ide-logs.test.lua')
+```
+
+Отчёт `.tests/batches/1795699295000641000/report.json`.
