@@ -57,6 +57,45 @@ end,function(project)
   vim.fn.writefile({'{"name":"forge-log-test","version":"1.0.0"}'},project..'/package.json')
 end)
 
+check('IDE-LOG-2 real gopls workspace failure stays in Logs and Go navigation works',function()
+  keys(':edit nested/scratch/main.go<CR>')
+  e:wait('native gopls loaded and recorded workspace failure',function()
+    return e:lua([[if #vim.lsp.get_clients({name='gopls',bufnr=0})==0 then return false end
+      for _,entry in ipairs(require('forge.log_store').entries()) do
+        if entry.source=='gopls' and entry.level==vim.log.levels.WARN
+          and entry.message:find('cannot find main module',1,true) then return true end
+      end]])
+  end,30000)
+  local function raw_on_screen()
+    return table.concat(e.rpc:screen_lines(),'\n'):find('packages.Load error',1,true)~=nil
+  end
+  T.eq(raw_on_screen(),false,'workspace status covered the editor')
+  e:wait('native diagnostic is still available',function()
+    return e:lua([[for _,diagnostic in ipairs(vim.diagnostic.get(0)) do
+      if diagnostic.message:find('cannot find main module',1,true) then return true end
+    end]])
+  end,15000)
+  keys('G0/target<CR>gd')
+  e:wait('Go definition in moduleless file',function()
+    return e:current_ft()=='go' and e:lua('return vim.api.nvim_win_get_cursor(0)[1]')==3
+  end,15000)
+  T.eq(raw_on_screen(),false)
+  open('events:gopls')
+  assert(has('Error loading workspace') and has('cannot find main module'))
+end,function(project,env,runtime)
+  local deps=vim.env.FORGE_E2E_LSP_DEPS or root..'/.tests/lsp-deps'
+  local tools=vim.env.FORGE_E2E_DAP_TOOLS or root..'/.tests/dap-tools'
+  assert(vim.fn.filereadable(deps..'/manifest.json')==1,'Подготовь lsp-deps явно')
+  local sep=vim.fn.has('win32')==1 and ';' or ':'
+  env.PATH=table.concat({deps..'/bin',tools..'/go/bin',env.PATH},sep)
+  env.GO111MODULE,env.GOWORK,env.GOENV,env.GOPROXY='on','off','off','off'
+  env.GOTOOLCHAIN,env.GOTELEMETRY='local','off'
+  env.GOPATH,env.GOCACHE=runtime..'/go',require('go_cache').path(root)
+  vim.fn.mkdir(project..'/nested/scratch','p')
+  vim.fn.writefile({'package main','','func target() int { return 42 }','','func main() { println(target()) }'},
+    project..'/nested/scratch/main.go')
+end)
+
 check('IDE-LOG-1 IDE-LOG-3 filters report help zoom and reopen',function()
   keys(':edit file_one.txt<CR>');e:wait('code',function() return e:current_ft()=='text' end)
   e:lua([[vim.notify('LOG_INFO_VISIBLE',vim.log.levels.INFO,{title='Format'})

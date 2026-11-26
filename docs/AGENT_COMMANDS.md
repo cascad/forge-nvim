@@ -12401,3 +12401,26 @@ git diff --check
 После правки на Windows прошли 9 сценариев панелей за 77,2 с,
 2 проверки раскладки и строгая валидация спеки. Отчёт
 `.tests/batches/1795634470536752200/report.json`.
+
+## 226. Сбой фоновой загрузки Go workspace
+
+Диагностический запуск настоящего gopls с Go-файлом вне модуля дал
+`packages.Load` и длинное окно при `GO111MODULE=on`. Переход к определению
+в файле сработал. Артефакты исходной версии
+`.tests/editor-e2e/4283730483600/screen-gopls-workspace.txt`.
+
+```powershell
+$env:TEMP = (Resolve-Path .tests/tmp).Path
+$env:TMP = $env:TEMP
+$env:TMPDIR = $env:TEMP
+$env:FORGE_E2E_DEPS = (Resolve-Path .tests/terminal-test-panel-keys/editor-deps).Path
+$env:GOMAXPROCS = '2'
+& .tools/neovim/windows-x64/bin/nvim.exe -u NONE -i NONE -l .tests/tmp/forge-gopls-workspace-probe.lua
+$env:FORGE_PROBE_MODULE = 'on'
+& .tools/neovim/windows-x64/bin/nvim.exe -u NONE -i NONE -l .tests/tmp/forge-gopls-workspace-probe.lua
+./scripts/test.ps1 e2e -Files @('tests/e2e/ide-logs.test.lua','tests/e2e/go-workspace-language.test.lua')
+openspec validate add-ide-log-console --type change --strict --no-interactive
+```
+
+На Windows семь сценариев прошли за 71,77 с. Сводка
+`.tests/batches/1795689677631045600/report.json`.

@@ -10,6 +10,21 @@
 --   barbecue   — VS Code-стайл breadcrumbs сверху буфера
 --   satellite  — VS Code-стайл overview ruler справа (диагностика, git, search)
 
+local go_workspace_errors = setmetatable({}, { __mode = 'k' })
+local function log_go_workspace_error(msg)
+    if msg.lsp_client.name ~= 'gopls' or msg.title ~= 'Error loading workspace' then
+        return false
+    end
+    local client = msg.lsp_client
+    if msg.done then
+        go_workspace_errors[client] = nil
+    elseif msg.message and msg.message ~= '' and go_workspace_errors[client] ~= msg.message then
+        go_workspace_errors[client] = msg.message
+        require('forge.log_store').record(msg.title .. ': ' .. msg.message, vim.log.levels.WARN, client.name)
+    end
+    return true
+end
+
 return {
     -- =========================================================
     -- trouble.nvim — Problems-tab из VS Code
@@ -65,6 +80,8 @@ return {
         event = "LspAttach",
         opts = function() return {
             progress = {
+                -- IDE-LOG-2. Это длительный статус загрузки workspace gopls.
+                ignore = { log_go_workspace_error },
                 display = {
                     progress_icon = { pattern = "dots" },
                     done_icon = "✓",
