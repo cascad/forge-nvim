@@ -34,6 +34,30 @@ if vim.fn.sha256(original)==patch.after_sha256 then
 end
 assert(vim.fn.sha256(original)==patch.before_sha256,'Нужны pinned исходники Neogit')
 
+T.check('IDE-BOOT-12 checkout preparation repairs known files and preserves a locally edited plugin',function()
+  runtime(function(base)
+    local cache=base..'/lazy'
+    local path=cache..'/neogit/'..patch.file
+    write(path,original)
+    local files=companions(cache,patch,'\n',false,'neogit')
+    local changed=files[1].raw..'\n-- local change\n'
+    write(files[1].path,changed)
+    local backports=dofile(root..'/nvim_forge/lua/ide/backports.lua')
+    local errors=backports.prepare_checkout(base)
+    T.eq(#errors,1)
+    assert(errors[1]:find('неизвестное содержимое',1,true),errors[1])
+    T.eq(bytes(path),original)
+    T.eq(bytes(files[1].path),changed)
+
+    write(files[1].path,files[1].raw)
+    T.eq(backports.prepare_checkout(base),{})
+    assert(backports.run('neogit',cache..'/neogit','check'))
+    local mtime=vim.uv.fs_stat(path).mtime
+    T.eq(backports.prepare_checkout(base),{})
+    T.eq(vim.uv.fs_stat(path).mtime,mtime)
+  end)
+end)
+
 T.check('IDE-GIT-7 CLI apply check repeat и revert сохраняют LF/CRLF',function()
   runtime(function(base)
     for _,eol in ipairs({'\n','\r\n'}) do

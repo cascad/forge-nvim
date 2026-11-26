@@ -96,10 +96,16 @@ Launcher/test entrypoint проверяют manifest и SHA256, ничего н�
 при старте. Системный `nvim` не заменяется. Причина, A/B и команды:
 [tests/diagnostics/README.md](tests/diagnostics/README.md).
 
-После обновления checkout подготовь **все** объявленные plugin backports,
-а не выборочный список. Если версия установленного плагина отличается от
-lazy-lock.json, сначала выполни в Forge `:Lazy restore`, дождись завершения
-и закрой редактор. Затем из корня репозитория:
+При запуске из обновлённого checkout `fride` локально применяет недостающие
+backports к знакомым ревизиям плагинов своего профиля. Ошибки подготовки
+попадают в `:ForgeLogs`. Если нужен отсутствующий плагин или установлена
+другая версия, запусти явную подготовку по lockfile из корня репозитория.
+
+```sh
+./fride --headless -i NONE -u "$PWD/nvim_forge/init.lua" -l nvim_forge/scripts/setup-stage.lua plugins
+```
+
+Существующая команда локальной подготовки и проверки работает отдельно:
 
 ```powershell
 .\nvim_forge.cmd -l .\nvim_forge\scripts\prepare-plugins.lua

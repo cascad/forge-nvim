@@ -12510,3 +12510,19 @@ $env:Path = "$PSHOME;$env:Path"
 ```
 
 Отчёт `.tests/batches/1795708652434281800/report.json`.
+
+## 232. Запуск со старым кэшем плагинов
+
+2026-11-26, FIXLOG §324. Перед правкой IDE-BOOT-12 с исходными
+файлами Neo-tree и Gitsigns упал на раскрытии через `l`.
+
+```powershell
+$env:FORGE_E2E_DEPS = (Resolve-Path .tests/terminal-test-panel-keys/editor-deps).Path
+$env:Path = "$PSHOME;$env:Path"
+./scripts/test.ps1 e2e -Files @('tests/e2e/editor.test.lua','tests/e2e/plugin-backports.test.lua','tests/e2e/file-explorer.test.lua')
+openspec validate add-fride-command --type change --strict --no-interactive
+```
+
+Отчёт `.tests/batches/1795709344487753200/report.json`. 35 сценариев
+прошли на Windows. Под Git Bash отдельно проверены синтаксис обоих
+launchers и передача checkout-окружения в Neovim.

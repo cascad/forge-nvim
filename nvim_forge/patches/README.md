@@ -7,10 +7,11 @@ pin и lazy-lock не меняются. Root+nested/neighbor-target E2E и пр�
 nearest/integration/debug controls проходят Windows/Ubuntu. Удалять этот срез
 после upstream версии, прошедшей те же `rust-test-runtime` и `rust-language` cases.
 
-После обновления checkout подготовь **все** объявленные plugin backports,
-а не выборочный список. Если версия установленного плагина отличается от
-lazy-lock.json, сначала выполни в Forge `:Lazy restore`, дождись завершения
-и закрой редактор. Затем из корня репозитория:
+Запуск из checkout подготавливает известные backports в своём кэше до
+загрузки Lazy. Если нужны исходники отсутствующих плагинов или текущая
+ревизия отличается от lockfile, используй
+[явную подготовку плагинов](../../README.md). Локальные apply и check
+также доступны отдельной командой из корня репозитория:
 
 ```powershell
 .\nvim_forge.cmd -l .\nvim_forge\scripts\prepare-plugins.lua

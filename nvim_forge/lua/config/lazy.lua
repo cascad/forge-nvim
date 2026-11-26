@@ -2,6 +2,18 @@
 -- https://lazy.folke.io/installation
 
 local config_root = vim.fn.fnamemodify(debug.getinfo(1, 'S').source:sub(2), ':p:h:h:h')
+local checkout = vim.env.FORGE_CHECKOUT_CONFIG
+if checkout and vim.env.NVIM_APPNAME == 'nvim_forge'
+    and vim.uv.fs_realpath(checkout) == vim.uv.fs_realpath(config_root) then
+    -- Only the checkout launchers can update known backports in their profile.
+    -- Run before Lazy can load any of the affected modules.
+    local errors = require('ide.backports').prepare_checkout(vim.fn.stdpath('data'))
+    for _, message in ipairs(errors) do
+        vim.schedule(function()
+            vim.notify(message, vim.log.levels.WARN, { title = 'Backports' })
+        end)
+    end
+end
 local lazypath = vim.fn.stdpath("data") .. "/lazy/lazy.nvim"
 if not (vim.uv or vim.loop).fs_stat(lazypath) then
     local lazyrepo = "https://github.com/folke/lazy.nvim.git"

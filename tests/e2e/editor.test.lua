@@ -171,6 +171,19 @@ local function check_launcher(contract)
         assert(vim.fn.writefile({ 'Nested project file | ' .. name }, nested .. '/nested.txt') == 0)
       end
     end })
+    if not contract.revision then
+      -- An existing checkout may have current plugin revisions with old or
+      -- missing backports. Exercise the launcher against that private cache.
+      local namespace = vim.fn.has('win32') == 1 and 'nvim_forge-data' or 'nvim_forge'
+      local lazy_root = tui.host.runtime .. '/data/' .. namespace .. '/lazy'
+      local backports = dofile(root .. '/nvim_forge/lua/ide/backports.lua')
+      for _, plugin in ipairs({ 'neo-tree.nvim', 'gitsigns.nvim' }) do
+        local dir = lazy_root .. '/' .. plugin
+        backports.run(plugin, dir, 'revert')
+        local prepared, issue = pcall(backports.run, plugin, dir, 'check')
+        assert(not prepared and tostring(issue):find('не подготовлен', 1, true), tostring(issue))
+      end
+    end
     tui:launch()
     local host = tui.host
     local launch = tui:lua([[local expected=vim.uv.fs_realpath(...)
@@ -189,10 +202,8 @@ local function check_launcher(contract)
     local data_home = contract.data_home or host.runtime .. '/data'
     local namespace = contract.namespace .. (vim.fn.has('win32') == 1 and '-data' or '')
     T.eq(real(launch.data), real(data_home .. '/' .. namespace))
-    if contract.revision then
-      local backports = tui:lua([[return require('ide.backports').all(vim.fn.stdpath('data')..'/lazy','check')]])
-      vim.fn.writefile({ vim.json.encode(backports) }, host.dir .. '/installed-backports.json')
-    end
+    local backports = tui:lua([[return require('ide.backports').all(vim.fn.stdpath('data')..'/lazy','check')]])
+    vim.fn.writefile({ vim.json.encode(backports) }, host.dir .. '/public-launch-backports.json')
 
     local function row_for(name)
       return tui:lua([[if vim.bo.filetype~='neo-tree' then return false end

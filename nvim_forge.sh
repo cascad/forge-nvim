@@ -55,4 +55,5 @@ REPO="$(cd -P "$(dirname "$SCRIPT")" && pwd)"
 exec env \
     XDG_CONFIG_HOME="$REPO" \
     NVIM_APPNAME=nvim_forge \
+    FORGE_CHECKOUT_CONFIG="$REPO/nvim_forge" \
     nvim "$@"
