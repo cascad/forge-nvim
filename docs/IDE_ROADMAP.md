@@ -153,6 +153,8 @@ Windows и Mac; сначала нужен установщик либо полн
 - [ ] Дать воспроизводимую установку приёмочного комплекта Windows/macOS:
   актуальные native Core/Terminal/frontend artifacts и проверенный bootstrap.
   Наличие готовых стендов Windows/Ubuntu не закрывает установку на чистом Mac.
+  Windows Core прошёл обновление `17c0b00` → `f2d4769`, повтор
+  из того же пакета и запуск через установленный launcher (§321).
 - [ ] Принять комплект на рабочем проекте Windows:
   восстановление tabs/tree/layout, файловые операции, поиск/navigation,
   run/debug/output/locals/stack/restart, Tests, diff/stage/commit/push,

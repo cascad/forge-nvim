@@ -12456,3 +12456,31 @@ openspec validate add-fride-command --type change --strict --no-interactive
 Neovim, данных и проекта в `.tests/editor-e2e/6197408490100/checkout-launch.json`.
 Общий пакет дал 13 PASS за 49,19 с. Лог в
 `.tests/batches/1795691529793337300/00.log`.
+
+## 229. Приёмка установленного fride после обновления
+
+Отдельный стенд `.tests/installed-upgrade-20261126` на F. Готовые
+native Core/Terminal и frontend переиспользованы. Из detached checkout
+зафиксированной ревизии пакет собран через
+`python -B scripts/package-acceptance-installer.py --core <core.zip> --terminal <terminal.zip> --frontend <fride-setup.exe> --output <installer-current>`.
+Изолированный профиль получил копию предыдущих Git-плагинов и LuaLS.
+Профиль Git использует прежнюю политику CRLF; входы Mason включают
+зарегистрированный экспорт LuaLS в `share`.
+
+```powershell
+# Абсолютные пути в отдельном стенде, профиль передан через HOME и XDG_*.
+& "$stand/baseline-clean/install.cmd" --profile custom --components core --install-dir $kit --no-color --result "$stand/install-baseline-final-plan.json"
+& "$stand/installer-current/install.cmd" --profile custom --components core --install-dir $kit --no-color --result "$stand/current-upgrade-plan.json"
+& "$stand/installer-current/install.cmd" --profile custom --components core --install-dir $kit --no-color --result "$stand/current-repeat-plan.json"
+$env:FORGE_E2E_INSTALLED_KIT = $kit
+$env:FORGE_E2E_INSTALLED_PROFILE = "$stand/profile"
+$env:FORGE_E2E_INSTALLER_BUNDLE = "$stand/installer-current"
+./scripts/test.ps1 e2e -Files @('tests/e2e/editor.test.lua','tests/e2e/project-session.test.lua')
+python -B tests/install-isolation.test.py Isolation.test_acceptance_retry_keeps_payload_unchanged
+openspec validate package-native-acceptance-installer --type change --strict --no-interactive
+```
+
+Основные результаты в `upgrade-evidence.json`, `smoke-before.log`,
+`current-upgrade.log`, `current-repeat.log`. 14 E2E за 42,01 с в
+`.tests/batches/1795694979429909100/00.log`. Отдельный native регресс
+ошибки и повторов прошёл за 26,289 с.

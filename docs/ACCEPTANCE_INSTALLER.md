@@ -22,11 +22,18 @@ Windows, из каталога выданного комплекта:
 .\install.cmd
 ```
 
-Кандидат, подготовленный в этом Windows checkout:
+Кандидат Windows из ревизии `f2d4769`, подготовленный 2026-11-26:
 
 ```powershell
-.\.tests\acceptance-installer\windows-log-tail-fix\install.cmd --install-dir "F:\apps\fride"
+.\.tests\installed-upgrade-20261126\installer-current\install.cmd --install-dir "F:\apps\fride"
 ```
+
+На отдельном профиле прошли установка старого Core `17c0b00`, обновление
+до `f2d4769` и повтор из того же пакета. Проверены резервная копия конфига,
+запуск через установленный `bin/fride.cmd` и 2524 SHA256 пакета после
+повтора. Журналы установщика находятся в `logs` рядом с `payload`.
+Приёмка macOS и GUI WezTerm ещё впереди.
+[История и доказательства §321](../nvim_forge/FIXLOG.md#321-повторная-установка-fride-из-одного-комплекта)
 
 Можно указать новый путь с ещё не существующими родителями:
 
@@ -34,7 +41,7 @@ Windows, из каталога выданного комплекта:
 .\install.cmd --install-dir "F:\apps\fride"
 ```
 
-Актуальный кандидат2026-11-22: `windows-log-tail-fix`, code `17c0b00`.
+Кандидат 2026-11-22: `windows-log-tail-fix`, code `17c0b00`.
 Включает IDE-152 (открытие Logs в хвосте без сброса чтения истории) и прежние
 IDE-149/Python/Files/раскладки fixes. В `F:/apps/fride` Logs уже обновлён с
 backup; **достаточно перезапустить fride**. Старая рабочая сессия агентом не
