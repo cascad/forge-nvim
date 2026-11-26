@@ -54,15 +54,16 @@ local function start(root,holder,options)
   function self:launch()
     assert(not self.job or self:job_state().exit~=false,'TUI still running')
     vim.fn.delete(self.base..'/ready.json')
-    self.job=e:lua([[local project,observer,root,checkout=...;return require('ide.ownership').transition('native-terminal',function()
+    self.job=e:lua([[local project,observer,launcher=...;return require('ide.ownership').transition('native-terminal',function()
       vim.cmd('enew')
       _G.forge_session_exit=nil
       local cwd=project
       local env={NVIM_LOG_FILE=vim.env.FORGE_SESSION_PROBE..'/nvim-tui.log'}
       local argv={vim.v.progpath,'-i','NONE','--cmd','lua dofile('..vim.inspect(observer)..')',
         '-u',vim.fn.stdpath('config')..'/init.lua'}
-      if checkout then
-        cwd=root
+      if type(launcher)=='table' then
+        cwd=launcher.directory
+        env=vim.tbl_extend('force',env,launcher.environment or {})
         env.NVIM_APPNAME='nvim'
         env.FORGE_SESSION_OBSERVER=observer
         if vim.fn.has('win32')==1 then
@@ -72,7 +73,7 @@ local function start(root,holder,options)
           argv={'cmd.exe','/d','/v:off','/c',
             'fride.cmd -i NONE --cmd "lua dofile(vim.env.FORGE_SESSION_OBSERVER)" "%FORGE_SESSION_PROJECT%"'}
         else
-          argv={root..'/fride','-i','NONE','--cmd','lua dofile(vim.env.FORGE_SESSION_OBSERVER)',project}
+          argv={cwd..'/fride','-i','NONE','--cmd','lua dofile(vim.env.FORGE_SESSION_OBSERVER)',project}
         end
       end
       _G.forge_session_job=vim.fn.jobstart(argv,
@@ -80,7 +81,7 @@ local function start(root,holder,options)
           on_exit=function(_,code) _G.forge_session_exit=code end})
       assert(_G.forge_session_job>0,'Native TUI failed to start')
       _G.forge_session_terminal=vim.api.nvim_get_current_buf()
-      return _G.forge_session_job end)]],{self.a,self.base..'/observer.lua',root,options.checkout==true})
+      return _G.forge_session_job end)]],{self.a,self.base..'/observer.lua',options.launcher or vim.NIL})
     return self:connect()
   end
   function self:connect(previous_pid)

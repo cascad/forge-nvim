@@ -157,24 +157,36 @@ if editor then
   editor:stop()
 end
 
-T.check('IDE-BOOT-12 checkout fride loads current config and opens a project through Files', function()
+local function real(path)
+  return assert(vim.uv.fs_realpath(path), path):gsub('\\', '/')
+end
+
+local function check_launcher(contract)
   local tui
   local ok, issue = xpcall(function()
-    tui = require('session_tui').start(root, { checkout = true })
+    tui = require('session_tui').start(root, { launcher = contract.launcher })
     tui:launch()
     local host = tui.host
-    local function real(path)
-      return assert(vim.uv.fs_realpath(path), path):gsub('\\', '/')
-    end
-    local runtime = vim.fn.has('win32') == 1 and vim.v.progpath or vim.fn.exepath('nvim')
-    local launch = tui:lua([[return { config=vim.env.MYVIMRC, executable=vim.v.progpath, version=tostring(vim.version()),
-      namespace=vim.env.NVIM_APPNAME, cwd=vim.fn.getcwd(), data=vim.fn.stdpath('data') }]])
-    vim.fn.writefile({ vim.json.encode(launch) }, host.dir .. '/checkout-launch.json')
-    T.eq(real(launch.config), real(root .. '/nvim_forge/init.lua'))
-    T.eq(real(launch.executable), real(runtime))
-    T.eq(launch.namespace, 'nvim_forge')
+    local launch = tui:lua([[local expected=vim.uv.fs_realpath(...)
+      local config
+      for _,script in ipairs(vim.fn.getscriptinfo()) do
+        if vim.uv.fs_realpath(script.name)==expected then config=script.name;break end
+      end
+      return { config=config, executable=vim.v.progpath, version=tostring(vim.version()),
+        namespace=vim.env.NVIM_APPNAME, cwd=vim.fn.getcwd(), data=vim.fn.stdpath('data') }]], { contract.config })
+    launch.revision = contract.revision
+    vim.fn.writefile({ vim.json.encode(launch) }, host.dir .. '/public-launch.json')
+    T.eq(real(assert(launch.config, 'Expected init.lua was not sourced')), real(contract.config))
+    T.eq(real(launch.executable), real(contract.runtime))
+    T.eq(launch.namespace, contract.namespace)
     T.eq(real(launch.cwd), real(tui.a))
-    assert(real(launch.data):find(real(host.runtime) .. '/', 1, true) == 1, launch.data)
+    local data_home = contract.data_home or host.runtime .. '/data'
+    local namespace = contract.namespace .. (vim.fn.has('win32') == 1 and '-data' or '')
+    T.eq(real(launch.data), real(data_home .. '/' .. namespace))
+    if contract.revision then
+      local backports = tui:lua([[return require('ide.backports').all(vim.fn.stdpath('data')..'/lazy','check')]])
+      vim.fn.writefile({ vim.json.encode(backports) }, host.dir .. '/installed-backports.json')
+    end
 
     host:wait('Files opens for the directory argument', function()
       return tui:lua([[for _,win in ipairs(vim.api.nvim_tabpage_list_wins(0)) do
@@ -204,13 +216,63 @@ T.check('IDE-BOOT-12 checkout fride loads current config and opens a project thr
     for _, notice in ipairs(state.notices) do
       assert(notice.level < vim.log.levels.ERROR, notice.message)
     end
-    host:snapshot('checkout-launch')
+    host:snapshot('public-launch')
   end, debug.traceback)
   if tui then
     io.stdout:write('  artifacts: ' .. tui.host.dir .. '\n')
     tui:stop(not ok and issue or nil)
   end
   assert(ok, issue)
+end
+
+T.check('IDE-BOOT-12 checkout fride loads current config and opens a project through Files', function()
+  check_launcher({
+    launcher = { directory = root },
+    config = root .. '/nvim_forge/init.lua',
+    runtime = vim.fn.has('win32') == 1 and vim.v.progpath or vim.fn.exepath('nvim'),
+    namespace = 'nvim_forge',
+  })
 end)
+
+if vim.env.FORGE_E2E_INSTALLED_KIT then
+  T.check('IDE-BOOT-54 installed fride opens the project with the packaged revision', function()
+    local function owned_directory(path)
+      local directory = real(assert(path, 'Укажи путь к установленному комплекту и профилю'))
+      local owned = real(root .. '/.tests') .. '/'
+      assert(directory:sub(1, #owned) == owned, 'Профиль и комплект должны быть на отдельном стенде в .tests')
+      return directory
+    end
+    local function json(path)
+      return vim.json.decode(table.concat(vim.fn.readfile(path), '\n'))
+    end
+    local kit = owned_directory(vim.env.FORGE_E2E_INSTALLED_KIT)
+    local profile = owned_directory(vim.env.FORGE_E2E_INSTALLED_PROFILE)
+    local bundle = real(assert(vim.env.FORGE_E2E_INSTALLER_BUNDLE, 'Укажи проверяемый комплект установщика'))
+    local marker = json(kit .. '/.forge-install.json')
+    assert(marker.ready and marker.product == 'forge-nvim', 'Комплект ещё не готов')
+    local build = json(bundle .. '/build.json')
+    assert(build.source_commit and build.source_worktree_dirty == false, 'Требуется комплект из commit')
+    for _, source in ipairs(build.source_files) do
+      local relative = source:match('^nvim_forge/(.+)$')
+      if relative then
+        T.eq(vim.fn.readfile(kit .. '/config/forge/' .. relative, 'b'),
+          vim.fn.readfile(bundle .. '/payload/source/' .. source, 'b'), relative)
+      end
+    end
+    check_launcher({
+      launcher = { directory = kit .. '/bin', environment = {
+        HOME = profile .. '/home', USERPROFILE = profile .. '/home',
+        LOCALAPPDATA = profile .. '/local', APPDATA = profile .. '/roaming',
+        XDG_CONFIG_HOME = profile .. '/config', XDG_DATA_HOME = profile .. '/data',
+        XDG_STATE_HOME = profile .. '/state', XDG_CACHE_HOME = profile .. '/cache',
+      } },
+      config = kit .. '/config/forge/init.lua',
+      runtime = kit .. '/runtime/bin/' .. (vim.fn.has('win32') == 1 and 'nvim.exe' or 'nvim'),
+      namespace = 'fride',
+      data_home = profile .. '/data',
+      revision = build.source_commit,
+    })
+  end)
+end
 
 T.finish()

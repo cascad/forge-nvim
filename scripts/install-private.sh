@@ -74,7 +74,9 @@ export FORGE_INSTALL_SOURCE="$source_dir" FORGE_INSTALL_TARGET="$install_dir" FO
 export FORGE_INSTALL_COMMAND_DIR="$command_dir"
 unset FORGE_INSTALL_RUNTIME_PLAN
 if [ -n "$runtime_plan" ]; then export FORGE_INSTALL_RUNTIME_PLAN="$runtime_plan";fi
-work="$(mktemp -d "$(dirname "$source_dir")/.installer.XXXXXX")"
+work_root="${FORGE_INSTALL_WORK_ROOT:-$(dirname "$source_dir")}"
+mkdir -p "$work_root"
+work="$(mktemp -d "$work_root/.installer.XXXXXX")"
 mkdir "$work/tmp"
 export NVIM_APPNAME=fride
 export NVIM_LOG_FILE="$work/nvim.log" TEMP="$work/tmp" TMP="$work/tmp" TMPDIR="$work/tmp"

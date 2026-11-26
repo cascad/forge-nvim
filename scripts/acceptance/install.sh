@@ -20,5 +20,6 @@ verify() {
   fi
 }
 verify || { printf 'Installer SHA256 mismatch.\n' >&2;exit 1; }
+export FORGE_INSTALL_WORK_ROOT="$root/logs"
 exec "$root/payload/frontend/fride-setup" --source "$root/payload/source" \
   --runtime-path "$root/payload/runtime" --log-dir "$root/logs" "$@"

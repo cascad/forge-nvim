@@ -12,6 +12,7 @@ import sys
 import tarfile
 import time
 import unittest
+from unittest.mock import patch
 import zipfile
 
 ROOT=Path(__file__).resolve().parents[1]
@@ -422,6 +423,33 @@ exit $code
         self.assertFalse(any(p[0].startswith('terminal/') for p in installed['probes']))
         self.assertFalse((target/'bin'/('fride-terminal.cmd' if WINDOWS else 'fride-terminal')).exists())
         self.assert_ok(self.launch(base,env,target))
+
+    def test_acceptance_retry_keeps_payload_unchanged(self):
+        base,env,target=self.prepare('acceptance-retry')
+        bundle=base/'installer'
+        name='fride-setup.exe' if WINDOWS else 'fride-setup'
+        frontend=Path(os.environ.get('FORGE_INSTALL_UI_BINARY',str(ROOT/'.tools/installer-ui'/PLATFORM/name)))
+        acceptance=module('forge_acceptance_packager',ROOT/'scripts/package-acceptance-installer.py')
+
+        def copy_fixture(destination):
+            for name in ('nvim_forge','scripts'):
+                shutil.copytree(self.source/name,destination/name)
+            shutil.copyfile(self.source/'wezterm.lua',destination/'wezterm.lua')
+            return sorted(snapshot(destination))
+
+        with patch.object(acceptance,'copy_source',copy_fixture):
+            acceptance.package(self.archive,frontend,bundle)
+        before=snapshot(bundle/'payload')
+        command=([SHELL,'-NoProfile','-ExecutionPolicy','Bypass','-File',str(bundle/'install.ps1')]
+                 if WINDOWS else [SHELL,str(bundle/'install.sh')])
+        command+=['--profile','custom','--components','core','--install-dir',str(target),'--no-color']
+        failed=self.run_process(command,dict(env,FORGE_FAIL_STAGE='parsers'),base,'bundle-failed')
+        self.assertNotEqual(failed.returncode,0,failed.stdout+failed.stderr)
+        self.assertIn('parsers',(base/'stages.txt').read_text(encoding='utf-8').splitlines())
+        self.assertEqual(set(snapshot(bundle/'payload')),set(before),'Failed install polluted the payload')
+        self.assert_ok(self.run_process(command,env,base,'bundle-retry'))
+        self.assert_ok(self.run_process(command,env,base,'bundle-repeat'))
+        self.assertEqual(snapshot(bundle/'payload'),before)
 
 
 if __name__=='__main__':

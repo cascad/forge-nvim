@@ -89,7 +89,8 @@ try {
     $env:FORGE_INSTALL_RUNTIME=$runtime
     if ($RuntimePlanPath) { $env:FORGE_INSTALL_RUNTIME_PLAN=[IO.Path]::GetFullPath($RuntimePlanPath) }
     if ($CommandDir) { $env:FORGE_INSTALL_COMMAND_DIR=[IO.Path]::GetFullPath($CommandDir) }
-    $work=Join-Path (Split-Path -Parent $Source) ('.installer-'+[Guid]::NewGuid().ToString('N'))
+    $workRoot=if ($env:FORGE_INSTALL_WORK_ROOT) { [IO.Path]::GetFullPath($env:FORGE_INSTALL_WORK_ROOT) } else { Split-Path -Parent $Source }
+    $work=Join-Path $workRoot ('.installer-'+[Guid]::NewGuid().ToString('N'))
     New-Item -ItemType Directory -Path (Join-Path $work 'tmp') -Force | Out-Null
     $env:NVIM_APPNAME='fride';$env:NVIM_LOG_FILE=Join-Path $work 'nvim.log'
     $env:TEMP=Join-Path $work 'tmp';$env:TMP=$env:TEMP;$env:TMPDIR=$env:TEMP

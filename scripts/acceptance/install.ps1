@@ -38,7 +38,15 @@ if (@($entries | Where-Object { $_.Attributes -band [IO.FileAttributes]::Reparse
     @($entries | Where-Object { -not $_.PSIsContainer }).Count -ne $expectedCount) {
     throw 'Incomplete or unexpected installer payload.'
 }
-& (Join-Path $bundleRoot 'payload/frontend/fride-setup.exe') --source (Join-Path $bundleRoot 'payload/source') `
-    --runtime-path (Join-Path $bundleRoot 'payload/runtime') --powershell ([Diagnostics.Process]::GetCurrentProcess().MainModule.FileName) `
-    --log-dir (Join-Path $bundleRoot 'logs') @args
-exit $LASTEXITCODE
+$logRoot=Join-Path $bundleRoot 'logs'
+$savedWorkRoot=$env:FORGE_INSTALL_WORK_ROOT
+try {
+    $env:FORGE_INSTALL_WORK_ROOT=$logRoot
+    & (Join-Path $bundleRoot 'payload/frontend/fride-setup.exe') --source (Join-Path $bundleRoot 'payload/source') `
+        --runtime-path (Join-Path $bundleRoot 'payload/runtime') --powershell ([Diagnostics.Process]::GetCurrentProcess().MainModule.FileName) `
+        --log-dir $logRoot @args
+    $installExit=$LASTEXITCODE
+} finally {
+    $env:FORGE_INSTALL_WORK_ROOT=$savedWorkRoot
+}
+exit $installExit
