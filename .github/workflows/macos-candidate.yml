@@ -1,0 +1,56 @@
+name: Build macOS candidate
+on:
+  push:
+    branches: ['build/macos/**']
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: macos-15
+            platform: macos-arm64
+          - runner: macos-15-intel
+            platform: macos-x64
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 50
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Select the candidate revision from the branch name
+        shell: bash
+        run: |
+          set -euo pipefail
+          revision="${GITHUB_REF_NAME##*/}"
+          [[ "$revision" =~ ^[0-9a-f]{7,40}$ ]]
+          git checkout --detach "$(git rev-parse --verify "$revision^{commit}")"
+      - name: Prepare native Core, Terminal and installer
+        shell: bash
+        run: |
+          set -euo pipefail
+          command -v tree-sitter || brew install tree-sitter-cli
+          python3 -B scripts/prepare-acceptance-installer.py --download --work "$RUNNER_TEMP/build" --output "$RUNNER_TEMP/fride"
+          test "$(cat "$RUNNER_TEMP/fride/platform.txt")" = "${{ matrix.platform }}"
+          tar -C "$RUNNER_TEMP" -czf "$RUNNER_TEMP/fride-${GITHUB_REF_NAME##*/}-${{ matrix.platform }}.tar.gz" fride
+      - name: Verify editor shortcuts, clean install and repeat
+        shell: bash
+        run: |
+          set -euo pipefail
+          export PATH="$RUNNER_TEMP/fride/payload/runtime/bin:$RUNNER_TEMP/fride/payload/runtime/search/bin:$PATH"
+          export FORGE_E2E_DEPS="$RUNNER_TEMP/build/${{ matrix.platform }}/editor-deps"
+          bash scripts/test.sh e2e --file tests/e2e/editor.test.lua
+          for phase in install repeat; do
+            bash "$RUNNER_TEMP/fride/install.sh" --profile default --install-dir "$RUNNER_TEMP/installed" --no-color --result "$RUNNER_TEMP/$phase.json"
+          done
+      - uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f
+        with:
+          name: fride-${{ matrix.platform }}
+          path: ${{ runner.temp }}/fride-*.tar.gz
+          if-no-files-found: error
+          compression-level: 0
