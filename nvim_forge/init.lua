@@ -23,6 +23,7 @@ require('forge.logs').setup()
 require('forge.sdk').setup()
 require('forge.tool_paths').setup()
 require("config.ru_keys").setup()
+require("forge.binary_files").setup()
 require("config.options")
 require("config.keymaps")
 -- WezTerm на Windows: подменные клавиши сочетаний, которые не доходят через

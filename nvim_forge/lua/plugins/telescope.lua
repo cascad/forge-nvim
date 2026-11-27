@@ -19,6 +19,15 @@ local function open_buffer_picker()
     require('telescope.builtin').buffers(opts)
 end
 
+local function guard_file_selection()
+    local state = require('telescope.actions.state')
+    require('telescope.actions.set').edit:replace_if(function()
+        local entry = state.get_selected_entry()
+        return entry and require('forge.binary_files').refuse(entry.path or entry.filename)
+    end, function() end)
+    return true
+end
+
 return {
     {
         "nvim-telescope/telescope-fzf-native.nvim",
@@ -82,6 +91,7 @@ return {
             return {
                 defaults = {
                     prompt_prefix = "  ",
+                    buffer_previewer_maker = require('forge.binary_files').preview,
                     -- spec: IDE-FILE-11. A file may be selected from a protected panel.
                     get_selection_window = function()
                         return require('ide.buffers').editor_window()
@@ -119,7 +129,9 @@ return {
                     },
                 },
                 pickers = {
+                    oldfiles = { attach_mappings = guard_file_selection },
                     find_files = {
+                        attach_mappings = guard_file_selection,
                         hidden = true,
                         find_command = vim.fn.executable("fd") == 1
                             and { "fd", "--type", "f", "--strip-cwd-prefix", "--hidden", "--exclude", ".git" }

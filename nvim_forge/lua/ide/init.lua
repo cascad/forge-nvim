@@ -160,8 +160,7 @@ local default_components = {
         id = "tests", slot = "right", title = "Tests",
         filetypes = { "neotest-summary" },
         open = function()
-            local nt = safe_require("neotest")
-            if nt then pcall(nt.summary.open) end
+            require("neotest").summary.open()
         end,
         close = function()
             local nt = safe_require("neotest")

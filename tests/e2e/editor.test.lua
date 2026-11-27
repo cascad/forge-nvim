@@ -269,15 +269,21 @@ local function check_launcher(contract)
       local namespace = vim.fn.has('win32') == 1 and 'nvim_forge-data' or 'nvim_forge'
       local lazy_root = tui.host.runtime .. '/data/' .. namespace .. '/lazy'
       local backports = dofile(root .. '/nvim_forge/lua/ide/backports.lua')
-      for _, plugin in ipairs({ 'neo-tree.nvim', 'gitsigns.nvim' }) do
+      for _, plugin in ipairs({ 'neo-tree.nvim', 'gitsigns.nvim', 'neotest' }) do
         local dir = lazy_root .. '/' .. plugin
         backports.run(plugin, dir, 'revert')
         local prepared, issue = pcall(backports.run, plugin, dir, 'check')
         assert(not prepared and tostring(issue):find('не подготовлен', 1, true), tostring(issue))
       end
     end
-    tui:launch()
     local host = tui.host
+    host:lua([[
+      vim.api.nvim_create_autocmd('TermRequest', { callback = function(ev)
+        local flag = ev.data.sequence:match('1337;SetUserVar=FORGE_NVIM=([%w+/=]*)')
+        if flag then vim.g.forge_test_pane_flag = flag end
+      end })
+    ]])
+    tui:launch()
     local launch = tui:lua([[local expected=vim.uv.fs_realpath(...)
       local config
       for _,script in ipairs(vim.fn.getscriptinfo()) do
@@ -371,7 +377,54 @@ local function check_launcher(contract)
       host:wait('physical Ctrl+/ uncomments the same line', function()
         return tui:lua('return vim.api.nvim_get_current_line()') == 'echo ok'
       end)
-      tui:command('edit! #')
+      host:wait('fride advertised its keyboard transport to the terminal', function()
+        return host:lua('return vim.g.forge_test_pane_flag') == vim.base64.encode('1')
+      end)
+      require('bootstrap')
+      local wez = require('fake_wezterm')
+      local function press(os, physical, mods)
+        local keys = wez.load_config({triple = wez.TRIPLES[os]}).config.keys
+        local binding = assert(wez.find_binding(keys, physical, mods))
+        local window = wez.window()
+        local version = vim.base64.decode(host:lua('return vim.g.forge_test_pane_flag'))
+        wez.run_callback(binding.action, window, wez.pane({user_vars={FORGE_NVIM=version}}))
+        local action = assert(window.performed[1])
+        T.eq(action.name, 'SendString')
+        tui:send(action.args[1])
+      end
+      tui:command('edit! comment.py')
+      tui:send('iprint(1)\rprint(2)\27')
+      host:wait('Python buffer ready', function()
+        return tui:lua('return vim.bo.filetype') == 'python' and tui:mode().mode == 'n'
+      end)
+      tui:send('gg')
+      press('macos', 'phys:Slash', 'SUPER')
+      host:wait('Cmd+/ comments only the current Python line', function()
+        return vim.deep_equal(tui:lua('return vim.api.nvim_buf_get_lines(0,0,-1,false)'), {'# print(1)', 'print(2)'})
+      end)
+      press('windows', 'phys:Slash', 'CTRL')
+      host:wait('Ctrl+/ restores the current Python line via the Windows profile', function()
+        return tui:lua('return vim.api.nvim_get_current_line()') == 'print(1)'
+      end)
+      tui:send('ggVj')
+      press('macos', 'phys:Slash', 'SUPER')
+      host:wait('Cmd+/ comments both selected Python lines', function()
+        return vim.deep_equal(tui:lua('return vim.api.nvim_buf_get_lines(0,0,-1,false)'), {'# print(1)', '# print(2)'})
+      end)
+      tui:send('ggVj')
+      press('macos', 'phys:Slash', 'SUPER')
+      host:wait('Cmd+/ restores both Python lines', function()
+        return vim.deep_equal(tui:lua('return vim.api.nvim_buf_get_lines(0,0,-1,false)'), {'print(1)', 'print(2)'})
+      end)
+      tui:command('write')
+      press('macos', 'phys:W', 'SUPER')
+      host:wait('Cmd+W closes the Python tab', function() return not tui:state().file:match('comment%.py$') end)
+      tui:send(' wt')
+      host:wait('lowercase wt opens Tests from checkout', function() return tui:lua('return vim.bo.filetype') == 'neotest-summary' end)
+      tui:send('q')
+      host:wait('q returns to the editor', function() return tui:lua('return vim.bo.buftype') == '' end)
+      tui:command('edit nested/nested.txt')
+      host:wait('restorable project document selected', function() return tui:state().file == tui.a .. '/nested/nested.txt' end)
       check_ui()
       -- Prepare only on-disk recent entries in this test's private profile.
       -- The dashboard, picker, project switch, and restore all run through input.
@@ -432,7 +485,8 @@ T.check('IDE-BOOT-12 checkout fride opens projects and navigates Files through r
   check_launcher({
     launcher = { directory = root },
     config = root .. '/nvim_forge/init.lua',
-    runtime = vim.fn.has('win32') == 1 and vim.v.progpath or vim.fn.exepath('nvim'),
+    runtime = vim.fn.has('win32') == 1 and vim.env.FORGE_NVIM ~= 'system'
+      and (root .. '/.tools/neovim/windows-x64/bin/nvim.exe') or vim.fn.exepath('nvim'),
     namespace = 'nvim_forge',
   })
 end)

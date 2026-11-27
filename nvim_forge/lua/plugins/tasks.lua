@@ -79,6 +79,16 @@ return {
             local overseer = require("overseer")
             local vscode = require("overseer.vscode")
             overseer.setup(opts)
+            vim.api.nvim_create_autocmd("User", {
+                group = vim.api.nvim_create_augroup("ForgeDebugBuildStatus", { clear = true }),
+                pattern = "OverseerListUpdate",
+                callback = function()
+                    local builds = overseer.list_tasks({ status = "RUNNING", filter = function(task)
+                        return task.name == "cargo build (debug)"
+                    end })
+                    require("forge.dap.status").building = #builds > 0
+                end,
+            })
             vim.api.nvim_create_user_command('BashRunFile', function(args) require('forge.bash').run_file(args.fargs) end, {nargs='*',complete='file'})
             vim.api.nvim_create_user_command('NodeRun', function() require('forge.node').run_script() end, {})
             vim.api.nvim_create_user_command('NodeRunFile', function() require('forge.node').run_file() end, {})
@@ -91,7 +101,7 @@ return {
                     return {
                         name = "cargo build (debug)",
                         cmd = { "cargo" },
-                        args = { "build" },
+                        args = launch_config and launch_config.forgeCargoArgs or { "build" },
                         cwd = cwd,
                         components = {
                             { "on_output_quickfix", open = false },

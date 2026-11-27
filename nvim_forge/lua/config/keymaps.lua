@@ -28,31 +28,6 @@ local function delmap(modes, lhs)
     end
 end
 
-local function comment_api()
-    local ok, api = pcall(require, "Comment.api")
-    if not ok then
-        vim.notify("Comment.nvim API is not available", vim.log.levels.ERROR, { title = "Keymap" })
-        return nil
-    end
-    return api
-end
-
-local function toggle_comment_line()
-    local api = comment_api()
-    if not api then return end
-    api.toggle.linewise.current()
-end
-
-local function toggle_comment_selection()
-    local api = comment_api()
-    if not api then return end
-
-    local mode = vim.fn.mode()
-    local esc = vim.api.nvim_replace_termcodes("<Esc>", true, false, true)
-    vim.api.nvim_feedkeys(esc, "nx", false)
-    api.toggle.linewise(mode)
-end
-
 -- spec: IDE-BUF-1/2/3 общая модель файловых вкладок и safe-close.
 local buffers = require('ide.buffers')
 buffers.setup()
@@ -319,17 +294,10 @@ nm("<C-h>", ":%s/", "Replace in buffer")
 
 -- Cmd+/ reaches Neovim as <D-/> via the terminal's keyboard protocol.
 -- Terminals can encode Ctrl+/ as Ctrl+_ (ASCII 31).
-local function toggle_comment_insert()
-    vim.cmd("stopinsert")
-    vim.schedule(function()
-        toggle_comment_line()
-        vim.cmd("startinsert")
-    end)
-end
 for _, lhs in ipairs({ "<C-_>", "<C-/>", "<D-/>" }) do
-    nm(lhs, toggle_comment_line, "Toggle comment line")
-    xm(lhs, toggle_comment_selection, "Toggle comment selection")
-    im(lhs, toggle_comment_insert, "Toggle comment line")
+    map("n", lhs, "gcc", { remap = true, desc = "Toggle comment line" })
+    map("x", lhs, "gc", { remap = true, desc = "Toggle comment selection" })
+    map("i", lhs, "<C-o>gcc", { remap = true, desc = "Toggle comment line" })
 end
 
 -- Ctrl+L — выделить строку без \n (helix: extend_to_line_bounds + trim).
@@ -485,6 +453,7 @@ anym("<S-F6>", function() focus_window("W") end, "Window: previous focus")
 anym("<F7>", focus_editor_window, "Window: focus editor")
 anym("<F4>", smart_close_current_context, "Close current context")
 anym("<C-F4>", smart_close_current_context, "Close current context")
+anym("<D-w>", smart_close_current_context, "Close current context (Cmd+W)")
 anym("<C-PageDown>", next_buffer, "Buffer: next")
 anym("<C-PageUp>", previous_buffer, "Buffer: previous")
 anym("<A-h>", previous_buffer, "Buffer tab: previous")

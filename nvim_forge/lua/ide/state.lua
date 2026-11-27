@@ -148,7 +148,14 @@ function M.show(id, opts)
     local slot = comp.slot
     close_active(slot, id)
     requested[slot] = id
-    if not comp.is_open() then pcall(comp.open, opts) end
+    if not comp.is_open() then
+        local ok, err = pcall(comp.open, opts)
+        if not ok then
+            requested[slot] = nil
+            vim.notify(comp.title .. " — " .. tostring(err), vim.log.levels.ERROR, { title = "Панели" })
+            return false
+        end
+    end
     state.slots[slot] = id
     state.last_shown[slot] = id
 end

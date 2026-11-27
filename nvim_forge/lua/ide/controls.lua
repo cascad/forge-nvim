@@ -148,7 +148,7 @@ local function show_work(id)
     -- An open terminal already has its own window and input mode.
     if id ~= 'terminal' or not comp.is_open() then ide.focus_main() end
     pending_panel = id
-    ide.show(id)
+    if ide.show(id) == false then pending_panel = nil; return end
     if comp.is_open() then pending_panel = nil;comp.focus() end
 end
 function M.tests() show_work('tests') end

@@ -142,6 +142,7 @@ return {
                         symbols = { error = " ", warn = " ", info = " ", hint = " " },
                     },
                     { "filename", path = 1, symbols = { modified = " ●", readonly = " ", unnamed = "[No Name]" } },
+                    require("forge.dap.status").label,
                     -- LSP-сервер-индикатор
                     {
                         function()

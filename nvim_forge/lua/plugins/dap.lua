@@ -52,8 +52,6 @@ local function remember_launch_buffer()
     if ok and dap.session() then return end
 
     local buf = vim.api.nvim_get_current_buf()
-    local name = vim.api.nvim_buf_get_name(buf)
-    if name == "" then return end
     if vim.bo[buf].buftype ~= "" then return end
     -- Не запоминаем dap-ui-окна (scopes/watches/stacks/breakpoints/
     -- console/repl) как "launch buffer".
@@ -436,23 +434,46 @@ local function current_file_configs(ft)
     return {}
 end
 
-local function debug_choices(ft)
+local function needs_active_file(value)
+    if type(value) == "string" then
+        return value:find("${file[%a]*}") or value:find("${relativeFile[%a]*}")
+    end
+    if type(value) == "table" then
+        for _, item in pairs(value) do
+            if needs_active_file(item) then return true end
+        end
+    end
+    return false
+end
+
+local function debug_choices(ft, done)
     local choices = {}
     local configs, path = load_launch_configs()
+    local current = current_file_configs(ft)
+    local runnable = #current > 0 or #(require("dap").configurations[ft] or {}) > 0
     for _, cfg in ipairs(configs or {}) do
-        table.insert(choices, {
-            source = "launch.json",
-            path = path,
-            config = cfg,
-        })
+        if runnable or not needs_active_file(cfg.program) then
+            table.insert(choices, { source = "launch.json", path = path, config = cfg })
+        end
     end
-    for _, cfg in ipairs(current_file_configs(ft)) do
+    for _, cfg in ipairs(current) do
         table.insert(choices, {
             source = "current file",
             config = cfg,
         })
     end
-    return choices, path
+    if runnable or vim.fn.filereadable(cargo_root() .. "/Cargo.toml") ~= 1 then
+        return done(choices, path, runnable)
+    end
+    local status = require("forge.dap.status")
+    status.discovering = status.discovering + 1
+    rust_targets.project_configs(cargo_root(), function(targets)
+        status.discovering = status.discovering - 1
+        for _, cfg in ipairs(targets) do
+            choices[#choices + 1] = { source = "Cargo", config = cfg }
+        end
+        done(choices, path, runnable)
+    end)
 end
 
 local function format_debug_choice(choice)
@@ -463,24 +484,18 @@ end
 local function prepare_debug_action()
     leave_terminal_mode()
     remember_launch_buffer()
-    -- Если сессия уже идёт — открываем правильную секцию для её типа
-    -- (для Go это REPL, иначе Console). БЕЗ этого каждый F5/F10/F11
-    -- во время Go-сессии перефокусировал бы dap-view на Console и
-    -- сбивал юзера, который смотрит вывод в REPL.
-    -- Если сессии нет — открываем ТОЛЬКО левый sidebar (без bottom),
-    -- чтобы не было мерцания console→repl при запуске Python/Go.
-    -- Bottom поднимется в event_initialized listener с правильной
-    -- секцией.
+    -- Keep the layout while choosing a new launch. An active session owns its output.
     local session = require("dap").session()
     local cfg = session and session.config
     if cfg and cfg.type then
         ide_dap.show_section(section_for_config(cfg), false, true)
-    else
-        ide_dap.show_section(nil, false)
     end
 end
 
+local launch_request = 0
 local function dap_continue()
+    launch_request = launch_request + 1
+    local request = launch_request
     prepare_debug_action()
     vim.schedule(function()
         local dap = require("dap")
@@ -489,9 +504,21 @@ local function dap_continue()
             return
         end
 
-        local choices, path = debug_choices(current_launch_filetype())
-        if #choices > 0 then
-            if #choices == 1 then
+        local ft = current_launch_filetype()
+        local origin, cwd = vim.api.nvim_get_current_buf(), vim.fn.getcwd()
+        debug_choices(ft, function(choices, path, runnable)
+            if request ~= launch_request or origin ~= vim.api.nvim_get_current_buf()
+                or cwd ~= vim.fn.getcwd() or dap.session() then return end
+            if #choices == 0 then
+                if dap.configurations[ft] and #dap.configurations[ft] > 0 then
+                    with_launch_buffer(function() dap.continue() end)
+                else
+                    vim.notify("Нет целей для отладки. Добавь конфигурацию в .vscode/launch.json.",
+                        vim.log.levels.INFO, { title = "DAP" })
+                end
+                return
+            end
+            if #choices == 1 and runnable then
                 run_config(dap, choices[1].config)
                 return
             end
@@ -507,11 +534,6 @@ local function dap_continue()
                     run_config(dap, choice.config)
                 end
             end)
-            return
-        end
-
-        with_launch_buffer(function()
-            dap.continue()
         end)
     end)
 end

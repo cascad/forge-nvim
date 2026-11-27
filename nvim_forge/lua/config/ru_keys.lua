@@ -128,10 +128,18 @@ end
 
 -- on_key runs before Normal interprets ':' as an Ex command. Read the
 -- layout on demand so the first motion after a layout switch is correct.
+local fixed_letters = {}
+for en, ru in pairs(en_to_ru) do
+    if en:match('^%a$') then fixed_letters[ru] = true end
+end
+
 function M.follow_layout(current)
     local previous
     vim.on_key(function(_, typed)
-        if typed == '' or typed:byte() == 0x80 or typed:match('^[%w%c%s]$') then return end
+        -- Letters on these two rows have fixed positions in both Russian layouts.
+        -- Repeating j/h (о/р) must never cross the macOS input-source API.
+        if typed == '' or typed:byte() == 0x80 or typed:match('^[%w%c%s]$')
+            or fixed_letters[typed] then return end
         local mode = vim.api.nvim_get_mode().mode:sub(1, 1)
         if mode ~= 'n' and mode ~= 'v' and mode ~= 'V' and mode ~= '\22' then return end
         local layout = current()

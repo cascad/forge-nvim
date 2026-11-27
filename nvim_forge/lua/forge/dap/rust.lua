@@ -95,6 +95,27 @@ local function rust_select_program(parsed, manifest_path, current_file, complete
     return complete(dap_abort())
 end
 
+local function cargo_metadata(root, done)
+    local args = { "cargo", "metadata", "--no-deps", "--format-version", "1",
+        "--manifest-path", root .. "/Cargo.toml" }
+    local opts = { cwd = root, text = true, env = { RUSTUP_AUTO_INSTALL = "0" } }
+    local ok, err = pcall(vim.system, args, opts, vim.schedule_wrap(function(result)
+        if result.code == 0 then
+            local decoded, metadata = pcall(vim.json.decode, result.stdout or "")
+            if decoded and type(metadata) == "table" and type(metadata.packages) == "table" then
+                return done(metadata)
+            end
+        end
+        vim.notify("cargo metadata: " .. vim.trim(result.stderr or "invalid response"),
+            vim.log.levels.WARN, { title = "DAP" })
+        done(nil)
+    end))
+    if not ok then
+        vim.notify("cargo metadata: " .. tostring(err), vim.log.levels.WARN, { title = "DAP" })
+        done(nil)
+    end
+end
+
 -- spec: IDE-DAP-9. Вся program option использует штатную coroutine nvim-dap.
 local function rust_current_program()
     local root = cargo_root()
@@ -113,36 +134,48 @@ local function rust_current_program()
                 coroutine.resume(co, program)
             end)
         end
-        local ok, problem = pcall(vim.system, {
-            "cargo", "metadata", "--no-deps", "--format-version", "1", "--manifest-path", manifest_path,
-        }, { cwd = root, text = true, env = { RUSTUP_AUTO_INSTALL = "0" } }, function(result)
-            vim.schedule(function()
-                if normalize_path(vim.fn.getcwd()) ~= launch_cwd then
-                    complete(dap_abort())
-                    return
-                end
-                if result.code ~= 0 then
-                    vim.notify("cargo metadata failed; cannot resolve debug binary", vim.log.levels.ERROR, { title = "DAP" })
-                    complete(dap_abort())
-                    return
-                end
-                local decoded, parsed = pcall(vim.json.decode, result.stdout)
-                if not decoded or type(parsed) ~= "table" then
-                    vim.notify("cargo metadata returned invalid JSON", vim.log.levels.ERROR, { title = "DAP" })
-                    complete(dap_abort())
-                    return
-                end
-                rust_select_program(parsed, manifest_path, current_file, complete)
-            end)
+        cargo_metadata(root, function(parsed)
+            if not parsed or normalize_path(vim.fn.getcwd()) ~= launch_cwd then
+                return complete(dap_abort())
+            end
+            rust_select_program(parsed, manifest_path, current_file, complete)
         end)
-        if not ok then
-            vim.notify("cargo metadata could not start: " .. tostring(problem), vim.log.levels.ERROR, { title = "DAP" })
-            complete(dap_abort())
+    end)
+end
+
+-- A manifest or a document can launch any executable in its Cargo workspace.
+local function project_configs(root, done)
+    cargo_metadata(root, function(metadata)
+        if not metadata then return done({}) end
+        local configs = {}
+        local members = {}
+        for _, id in ipairs(metadata.workspace_members) do members[id] = true end
+        for _, pkg in ipairs(metadata.packages) do
+            if members[pkg.id] then
+                for _, target in ipairs(pkg.targets) do
+                    for _, kind in ipairs({ "bin", "example" }) do
+                        if rust_target_has_kind(target, kind) then
+                            configs[#configs + 1] = {
+                                name = ("%s / %s [%s]"):format(pkg.name, target.name, kind),
+                                type = "codelldb", request = "launch", cwd = vim.fs.dirname(pkg.manifest_path),
+                                program = rust_target_exe(metadata, target, kind),
+                                preLaunchTask = "cargo build (debug)", forgeCargoArgs = {
+                                    "build", "--manifest-path", pkg.manifest_path, "--" .. kind, target.name,
+                                },
+                                sourceLanguages = { "rust" }, console = "integratedTerminal",
+                            }
+                        end
+                    end
+                end
+            end
         end
+        table.sort(configs, function(a, b) return a.name < b.name end)
+        done(configs)
     end)
 end
 
 return {
+    project_configs = project_configs,
     cargo_root = cargo_root,
     rust_current_program = rust_current_program,
 }

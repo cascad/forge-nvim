@@ -91,14 +91,18 @@ local SEND_F13 = { name = 'SendKey', args = { { key = 'F13' } } }
 local SEND_CTRL_C = { name = 'SendKey', args = { { key = 'c', mods = 'CTRL' } } }
 
 T.check('WT-KBD-7 macOS physical Slash sends the comment chord to a fride pane on either layout', function()
-  for _, row in ipairs({ { 'SUPER', '\27[47;9u' }, { 'CTRL', '\27[47;5u' } }) do
-    local b = binding('macos', 'phys:Slash', row[1])
+  for _, row in ipairs({
+    { 'SUPER', '\27[47;9u', 'phys:Slash', '/' },
+    { 'CTRL', '\27[47;5u', 'phys:Slash', '/' },
+    { 'SUPER', '\27[119;9u', 'phys:W', 'w' },
+  }) do
+    local b = binding('macos', row[3], row[1])
     local win = F.window()
     F.run_callback(b.action, win, F.pane({user_vars={FORGE_NVIM='1'}}))
     T.eq(win.performed, {{name='SendString',args={row[2]}}})
     local shell = F.window()
     F.run_callback(b.action, shell, F.pane())
-    T.eq(shell.performed, {{name='SendKey',args={{key='/',mods=row[1]}}}})
+    T.eq(shell.performed, {{name='SendKey',args={{key=row[4],mods=row[1]}}}})
   end
 end)
 
@@ -168,7 +172,7 @@ T.check('WT-KBD-7 других клавиш от себя WezTerm не шлёт:
     end
     local want = { ['F13 NONE'] = true }
     if os_name == 'windows' then want['c CTRL'] = true end
-    if os_name == 'macos' then want['/ SUPER'], want['/ CTRL'] = true, true end
+    if os_name == 'macos' then want['/ SUPER'], want['/ CTRL'], want['w SUPER'] = true, true, true end
     local extra, missing = {}, {}
     for id, where in pairs(got) do
       if not want[id] then extra[#extra + 1] = id .. ' ← ' .. table.concat(where, '; ') end

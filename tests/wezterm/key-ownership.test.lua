@@ -72,7 +72,7 @@ for _, lhs in ipairs(KEYS10_LHS) do KEYS10_CANON[KN.canon(lhs)] = true end
 --- исходным нажатием), а это не «перехват у nvim».
 local function without_keys10(os_name, list)
   if os_name == 'macos' then
-    return vim.tbl_filter(function(lhs) return lhs ~= '<C-/>' and lhs ~= '<D-/>' end, list)
+    return vim.tbl_filter(function(lhs) return lhs ~= '<C-/>' and lhs ~= '<D-/>' and lhs ~= '<D-w>' end, list)
   end
   if os_name ~= 'windows' then return list end
   return vim.tbl_filter(function(lhs) return not KEYS10_CANON[KN.canon(lhs)] end, list)
@@ -194,7 +194,7 @@ end)
 
 T.check('WT-KEYS-1 встроенных Cmd-сочетаний на macOS нет: Cmd+W, Cmd+K, Cmd+F, Cmd+1', function()
   for _, os_name in ipairs({ 'macos', 'linux' }) do
-    T.eq(intercepted_of(os_name, { '<D-w>', '<D-k>', '<D-f>', '<D-1>' }), {}, os_name .. ': перехвачены')
+    T.eq(intercepted_of(os_name, without_keys10(os_name, { '<D-w>', '<D-k>', '<D-f>', '<D-1>' })), {}, os_name .. ': перехвачены')
   end
 end)
 
@@ -258,6 +258,7 @@ end)
 local TABLE = {
   { 'darwin', 'phys:Slash', 'CTRL', 'Callback', 'Ctrl+/' },
   { 'darwin', 'phys:Slash', 'SUPER', 'Callback', 'Cmd+/' },
+  { 'darwin', 'phys:W', 'SUPER', 'Callback', 'Cmd+W' },
   { 'win', 'phys:C', 'CTRL', 'Callback', 'Ctrl+C' },
   { 'both', 'phys:V', 'CTRL', 'PasteFrom', 'Ctrl+V' },
   { 'both', 'phys:V', 'CTRL|SHIFT', 'PasteFrom', 'Ctrl+Shift+V' },
@@ -321,7 +322,7 @@ end
 
 local PLATFORM_ROWS = { windows = { both = true, win = true }, macos = { both = true, mac = true, darwin = true },
   linux = { both = true, mac = true } }
-local TABLE_COUNT = { windows = 48 + #KEYS10, macos = 63, linux = 61 }
+local TABLE_COUNT = { windows = 48 + #KEYS10, macos = 64, linux = 61 }
 
 T.check('WT-KEYS-3 число сочетаний в таблице для каждой ОС', function()
   local n = { windows = 0, macos = 0, linux = 0 }
@@ -634,7 +635,7 @@ end)
 -- доходит как F13, и <F13> nvim_forge — его намеренная привязка (WT-KEYS-6).
 local KEYS7_EXCEPTIONS = {
   windows = { '<C-c>' },
-  macos = { KN.canon('<C-/>'), KN.canon('<D-/>') },
+  macos = { KN.canon('<C-/>'), KN.canon('<D-/>'), KN.canon('<D-w>') },
   linux = {},
 }
 -- Подмены WT-KEYS-10 — не пересечение: WezTerm отдаёт эти сочетания
@@ -690,7 +691,7 @@ end)
 T.check('WT-KEYS-7 проверены все привязки Ctrl+Shift и Cmd, включая комментарий на Mac', function()
   -- <C-S-F13> — подменная клавиша Ctrl+Space (WT-KEYS-10): её шлёт WezTerm, физически её нет.
   local cs_allowed = with_ru_aliases({ '<C-S-f>', '<C-S-p>', '<C-S-e>', '<C-S-d>', '<C-S-F5>', '<C-S-F13>' })
-  local d_allowed = with_ru_aliases({ '<D-A-l>', '<D-/>' })
+  local d_allowed = with_ru_aliases({ '<D-A-l>', '<D-/>', '<D-w>' })
   local have = forge_keys()
   local cs, d, extra = {}, {}, {}
   for k, where in pairs(have) do

@@ -97,6 +97,12 @@ local function launch(marker, console)
   wait_stop(before, 'breakpoint')
 end
 
+local function status(label)
+  editor:wait('видимый статус Debug: ' .. label, function()
+    return table.concat(editor.rpc:screen_lines(), '\n'):find('Debug: ' .. label, 1, true)
+  end)
+end
+
 local function finish()
   editor:input('<F5>')
   editor:wait('сессия завершена', function() return editor:lua("return require('dap').session() == nil") end, 15000)
@@ -119,12 +125,14 @@ end
 check('IDE-DAP-1 первый и повторный запуск: stdout/stderr и сохранение после выхода', function()
   for _, marker in ipairs({ 'first', 'second' }) do
     launch(marker)
+    status('paused')
     T.eq(editor:has_window('dap-repl'), true)
     contains('STDOUT_BEFORE_' .. marker)
     contains('STDERR_BEFORE_' .. marker)
     contains('Building ')
     if marker == 'second' then assert(not output():find('STDOUT_BEFORE_first', 1, true), 'Остался вывод предыдущей сессии') end
     finish()
+    status('idle')
     contains('STDOUT_AFTER_' .. marker)
     T.eq(editor:has_window('dap-repl'), true)
   end
@@ -143,6 +151,7 @@ check('IDE-DAP-1 скрытая панель восстанавливается 
   local before = stops()
   editor:input('<F5>')
   contains('WAITING_FOR_GATE')
+  status('running')
   editor:input(' mc')
   editor:wait('панели скрыты пользователем', function() return not editor:has_window('dap-repl') and not editor:has_window('dapui_scopes') end)
   vim.fn.writefile({ 'continue' }, editor.project .. '/continue.flag')
@@ -165,6 +174,36 @@ check('IDE-DAP-2 panic виден в Output во время паузы, stderr �
   finish()
   contains('panic: FORGE_PANIC_MESSAGE')
   T.eq(editor:has_window('dap-repl'), true)
+end)
+
+check('F5 on a document after debug offers configured launches and cancels cleanly', function()
+  vim.fn.writefile({'readme'}, editor.project .. '/README.md')
+  vim.fn.writefile({vim.json.encode({configurations = {
+    {name='Current file via launch.json', type='debugpy', request='launch', program='${file}'},
+    {name='Configured Go launch', type='go', request='launch', program=editor.project},
+  }})}, editor.project .. '/.vscode/launch.json')
+  editor:input('<F7>:edit README.md<CR>')
+  editor:wait('README active', function() return editor:current_ft() == 'markdown' end)
+  editor:input('<F5>')
+  editor:wait('project choices in launcher', function()
+    return editor:lua([[for _,b in ipairs(vim.api.nvim_list_bufs()) do
+      if vim.bo[b].filetype=='TelescopeResults' then
+        local rows=table.concat(vim.api.nvim_buf_get_lines(b,0,-1,false),'\n')
+        if rows:find('Configured Go launch',1,true) and not rows:find('Current file',1,true) then return true end
+      end end;return false]])
+  end)
+  editor:input('<Esc>')
+  editor:wait('cancel returns to README', function() return editor:current_ft() == 'markdown' end)
+  T.eq(editor:lua("return require('dap').session()==nil"),true)
+  vim.fn.writefile({'{"configurations":[]}'}, editor.project .. '/.vscode/launch.json')
+  editor:input('<F5>')
+  editor:wait('empty launcher explains the missing targets', function()
+    for _, n in ipairs(editor.rpc.notifications) do
+      if n.message:find('Нет целей для отладки', 1, true) then return true end
+    end
+  end)
+  T.eq(editor:current_ft(), 'markdown')
+  T.eq(editor:lua("return require('dap').session()==nil"),true)
 end)
 
 if editor then

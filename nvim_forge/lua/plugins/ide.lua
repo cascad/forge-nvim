@@ -199,7 +199,7 @@ return {
             local rust_external = require("config.rust_external")
             require("barbecue").setup(opts)
             vim.api.nvim_create_autocmd({
-                "WinScrolled", "BufWinEnter", "CursorHold",
+                "BufWinEnter", "CursorHold",
                 "InsertLeave", "BufModifiedSet",
             }, {
                 group = vim.api.nvim_create_augroup("BarbecueUpdate", { clear = true }),

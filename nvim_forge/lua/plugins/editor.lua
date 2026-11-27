@@ -75,8 +75,18 @@ return {
             sticky = true,
             toggler = { line = "gcc", block = "gbc" },
             opleader = { line = "gc",  block = "gb" },
-            mappings = { basic = true, extra = true },
+            mappings = { basic = false, extra = true },
         },
+        config = function(_, opts)
+            -- gc / gcc are native Neovim operators, including injected languages.
+            require("Comment").setup(opts)
+            vim.keymap.set("n", "gb", "<Plug>(comment_toggle_blockwise)")
+            vim.keymap.set("x", "gb", "<Plug>(comment_toggle_blockwise_visual)")
+            vim.keymap.set("n", "gbc", function()
+                return vim.v.count == 0 and "<Plug>(comment_toggle_blockwise_current)"
+                    or "<Plug>(comment_toggle_blockwise_count)"
+            end, { expr = true })
+        end,
     },
 
     -- =========================================================

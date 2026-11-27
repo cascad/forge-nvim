@@ -151,7 +151,12 @@ check('IDE-FILE-9 tree root return preserves project and reveal sibling expansio
   T.eq(normalize(e:lua('return vim.fn.getcwd()')),normalize(e.project))
   -- Reveal previously opened paths twice: auto-follow may not collapse older ancestors.
   open('nested/file_three.txt');e:input(' E');e:wait('first reveal',function() return e:current_ft()=='neo-tree' and normalize(tree_state().selected or '')==normalize(e.project..'/nested/file_three.txt') end)
-  expand('sibling');open('branch/deep/reveal.txt');e:input(' <S-У>')
+  expand('sibling');open('branch/deep/reveal.txt')
+  -- Follow runs after a debounce while the user is still editing the second file.
+  e:wait('background follow reached second file',function()
+    return normalize(tree_state().selected or '')==normalize(e.project..'/branch/deep/reveal.txt')
+  end)
+  e:input(' <S-У>')
   e:wait('deep file revealed',function() return e:current_ft()=='neo-tree' and normalize(tree_state().selected or '')==normalize(e.project..'/branch/deep/reveal.txt') end)
   local expanded={};for _,p in ipairs(tree_state().expanded) do expanded[normalize(p)]=true end
   T.eq(expanded[normalize(e.project..'/sibling')],true,'unrelated explicit expansion retained')

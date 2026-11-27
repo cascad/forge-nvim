@@ -182,6 +182,7 @@ end
 local function open_guard(source, cmd)
     return function(state, ...)
         local node = safe_tree_node(state)
+        if node and node.type == "file" and require("forge.binary_files").refuse(node.path) then return end
         if node and node.type == "message" then
             if source == "filesystem" then
                 local ok, fs_cmds = pcall(require, "neo-tree.sources.filesystem.commands")
@@ -203,6 +204,8 @@ local function guarded_open_commands(source)
         open        = open_guard(source, "open"),
         open_split  = open_guard(source, "open_split"),
         open_vsplit = open_guard(source, "open_vsplit"),
+        open_tabnew = open_guard(source, "open_tabnew"),
+        toggle_preview = open_guard(source, "toggle_preview"),
     }
 end
 
@@ -293,6 +296,15 @@ return {
                         manager.navigate(state, nil, file, function()
                             -- Пока scan шёл, мог открыться input/другая панель.
                             -- Выбор узла обновляем, фокус у них не отбираем.
+                            local node = state.tree and state.tree:get_node(file)
+                            -- Explicit reveal opens each ancestor on the user's behalf.
+                            -- Native follow keeps these when it later selects another file.
+                            state.explicitly_opened_nodes = state.explicitly_opened_nodes or {}
+                            while node and node:get_parent_id() do
+                                local parent = node:get_parent_id()
+                                state.explicitly_opened_nodes[parent] = true
+                                node = state.tree:get_node(parent)
+                            end
                             require('neo-tree.ui.renderer').focus_node(state, file, true)
                         end)
                     else
