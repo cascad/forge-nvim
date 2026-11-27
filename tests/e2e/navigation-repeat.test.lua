@@ -57,6 +57,9 @@ T.check('Held j and h scroll Go code with gopls in both layouts without per-key 
         return client and client.initialized]])
     end, 30000)
     e:input('gg$')
+    e:wait('cursor ready before measuring repeated keys', function()
+      return vim.deep_equal(e:lua('return vim.api.nvim_win_get_cursor(0)'), {1, 79})
+    end)
     e:lua([[local ui=require('barbecue.ui')
       local update=ui.update
       _G.repeat_metrics={updates=0, layout_reads=0}

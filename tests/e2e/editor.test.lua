@@ -253,7 +253,12 @@ if vim.fn.has('macunix') == 1 then
       return {symbols[':'], symbols[';']}
     ]=])
     T.eq(result, {'^', '$'})
-    editor:input('i   first line<Esc>0:')
+    editor:input('i   first line<Esc>0')
+    editor:wait('line ready before physical Shift+6', function()
+      return editor:lua([[return vim.fn.mode() == 'n' and vim.fn.col('.') == 1
+        and vim.api.nvim_get_current_line() == '   first line']])
+    end)
+    editor:input(':')
     editor:wait('Russian Shift+6 moves to first nonblank', function()
       return editor:lua('return vim.fn.col(".")') == 4
     end)
@@ -263,10 +268,15 @@ if vim.fn.has('macunix') == 1 then
     end)
     editor:input('Aтекст:;<Esc>')
     editor:wait('Russian punctuation stays literal in Insert', function()
-      return editor:lua('return vim.api.nvim_get_current_line():sub(-#"текст:;") == "текст:;"')
+      return editor:lua([[return vim.fn.mode() == 'n'
+        and vim.api.nvim_get_current_line():sub(-#'текст:;') == 'текст:;']])
     end)
     editor:lua([[_G.forge_layout_for_test('US')]])
-    editor:input(':let g:forge_english_colon = 1<CR>')
+    editor:input(':')
+    editor:wait('English colon enters command mode', function()
+      return editor:lua("return vim.fn.mode() == 'c'")
+    end)
+    editor:input('let g:forge_english_colon = 1<CR>')
     editor:wait('English colon opens Ex after layout switch', function()
       return editor:lua('return vim.g.forge_english_colon') == 1
     end)
