@@ -107,18 +107,39 @@ local function langmap_escape(char)
     return char
 end
 
-function M.langmap()
-    local items = {}
+function M.langmap(layout)
+    local chars = {}
     for en, ru in pairs(en_to_ru) do
         -- Only non-ASCII Russian chars are safe here. ASCII chars produced by
         -- the Russian number row, like ":" for physical Shift+6, cannot be
         -- distinguished from the same char typed on the English layout.
         if #ru > 1 then
-            items[#items + 1] = langmap_escape(ru) .. langmap_escape(en)
+            chars[ru] = en
         end
+    end
+    for char, key in pairs(layout or {}) do chars[char] = key end
+    local items = {}
+    for char, key in pairs(chars) do
+        items[#items + 1] = langmap_escape(char) .. langmap_escape(key)
     end
     table.sort(items)
     return table.concat(items, ",")
+end
+
+-- on_key runs before Normal interprets ':' as an Ex command. Read the
+-- layout on demand so the first motion after a layout switch is correct.
+function M.follow_layout(current)
+    local previous
+    vim.on_key(function(_, typed)
+        if typed == '' or typed:byte() == 0x80 or typed:match('^[%w%c%s]$') then return end
+        local mode = vim.api.nvim_get_mode().mode:sub(1, 1)
+        if mode ~= 'n' and mode ~= 'v' and mode ~= 'V' and mode ~= '\22' then return end
+        local layout = current()
+        if layout ~= previous then
+            previous = layout
+            vim.o.langmap = M.langmap(layout)
+        end
+    end, vim.api.nvim_create_namespace('forge_keyboard_layout'))
 end
 
 local installed = false

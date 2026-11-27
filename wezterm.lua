@@ -552,6 +552,15 @@ map("phys:V", "SUPER", act.PasteFrom("Clipboard"), { os = "not_windows" })  -- s
 -- --- Клавиши для программы ------------------------------------------------
 -- Ctrl+[ неотличим от Esc; шлём F13 — nvim вешает на него «сдвиг влево».
 map("phys:LeftBracket", "CTRL", act.SendKey({ key = "F13" }))  -- spec: WT-KEYS-6
+if platform.os == "macos" then
+    for _, chord in ipairs({ { "SUPER", "\27[47;9u" }, { "CTRL", "\27[47;5u" } }) do
+        local mods, bytes = chord[1], chord[2]
+        map("phys:Slash", mods, wezterm.action_callback(function(window, pane)
+            local forge = pane:get_user_vars().FORGE_NVIM == NVIM_CHORDS_VERSION
+            window:perform_action(forge and act.SendString(bytes) or act.SendKey({ key = "/", mods = mods }), pane)
+        end))
+    end
+end
 for _, c in ipairs(NVIM_CHORDS) do
     map(c[2], c[3], nvim_chord(c), { os = "windows" })  -- spec: WT-KEYS-10, WT-KBD-9
 end

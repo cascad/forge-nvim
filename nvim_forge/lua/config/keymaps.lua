@@ -47,7 +47,7 @@ local function toggle_comment_selection()
     local api = comment_api()
     if not api then return end
 
-    local mode = vim.fn.visualmode()
+    local mode = vim.fn.mode()
     local esc = vim.api.nvim_replace_termcodes("<Esc>", true, false, true)
     vim.api.nvim_feedkeys(esc, "nx", false)
     api.toggle.linewise(mode)

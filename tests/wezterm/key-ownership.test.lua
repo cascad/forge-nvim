@@ -71,6 +71,9 @@ for _, lhs in ipairs(KEYS10_LHS) do KEYS10_CANON[KN.canon(lhs)] = true end
 --- перехватывает, но отдаёт nvim_forge подменной клавишей (или программе —
 --- исходным нажатием), а это не «перехват у nvim».
 local function without_keys10(os_name, list)
+  if os_name == 'macos' then
+    return vim.tbl_filter(function(lhs) return lhs ~= '<C-/>' and lhs ~= '<D-/>' end, list)
+  end
   if os_name ~= 'windows' then return list end
   return vim.tbl_filter(function(lhs) return not KEYS10_CANON[KN.canon(lhs)] end, list)
 end
@@ -253,6 +256,8 @@ end)
 -- macOS (Super-сочетания шрифта — тоже 'mac': на Windows их нет, WT-KEYS-3). Linux получает набор macOS (Purpose спеки). Действие — вид действия
 -- WezTerm; смысл каждого проверяет свой ID (колонка «Где описано»).
 local TABLE = {
+  { 'darwin', 'phys:Slash', 'CTRL', 'Callback', 'Ctrl+/' },
+  { 'darwin', 'phys:Slash', 'SUPER', 'Callback', 'Cmd+/' },
   { 'win', 'phys:C', 'CTRL', 'Callback', 'Ctrl+C' },
   { 'both', 'phys:V', 'CTRL', 'PasteFrom', 'Ctrl+V' },
   { 'both', 'phys:V', 'CTRL|SHIFT', 'PasteFrom', 'Ctrl+Shift+V' },
@@ -314,11 +319,11 @@ for _, k in ipairs(KEYS10) do
   table.insert(TABLE, { 'win', k[1], k[2], 'Callback', k[3] })
 end
 
-local PLATFORM_ROWS = { windows = { both = true, win = true }, macos = { both = true, mac = true },
+local PLATFORM_ROWS = { windows = { both = true, win = true }, macos = { both = true, mac = true, darwin = true },
   linux = { both = true, mac = true } }
-local TABLE_COUNT = { windows = 48 + #KEYS10, macos = 61, linux = 61 }
+local TABLE_COUNT = { windows = 48 + #KEYS10, macos = 63, linux = 61 }
 
-T.check('WT-KEYS-3 таблица требования: 48 перехватов на Windows плюс 9 подмен WT-KEYS-10, 61 на macOS, остальные платформы — как macOS', function()
+T.check('WT-KEYS-3 число сочетаний в таблице для каждой ОС', function()
   local n = { windows = 0, macos = 0, linux = 0 }
   for _, row in ipairs(TABLE) do
     for os_name, rows in pairs(PLATFORM_ROWS) do
@@ -629,7 +634,7 @@ end)
 -- доходит как F13, и <F13> nvim_forge — его намеренная привязка (WT-KEYS-6).
 local KEYS7_EXCEPTIONS = {
   windows = { '<C-c>' },
-  macos = {},
+  macos = { KN.canon('<C-/>'), KN.canon('<D-/>') },
   linux = {},
 }
 -- Подмены WT-KEYS-10 — не пересечение: WezTerm отдаёт эти сочетания
@@ -682,10 +687,10 @@ T.check('WT-KEYS-7 сверка наборов: Ctrl+[ сравнивается 
   T.ok(KN.canon('<C-[>') ~= KN.canon('<Esc>'), 'Ctrl+[ и Esc слились')
 end)
 
-T.check('WT-KEYS-7 из <C-S-…> nvim_forge использует только F, P, E, D, F5 (и подменную <C-S-F13>), из <D-…> — только <D-A-l>; WezTerm их не перехватывает, кроме подмены WT-KEYS-10 на Windows', function()
+T.check('WT-KEYS-7 проверены все привязки Ctrl+Shift и Cmd, включая комментарий на Mac', function()
   -- <C-S-F13> — подменная клавиша Ctrl+Space (WT-KEYS-10): её шлёт WezTerm, физически её нет.
   local cs_allowed = with_ru_aliases({ '<C-S-f>', '<C-S-p>', '<C-S-e>', '<C-S-d>', '<C-S-F5>', '<C-S-F13>' })
-  local d_allowed = with_ru_aliases({ '<D-A-l>' })
+  local d_allowed = with_ru_aliases({ '<D-A-l>', '<D-/>' })
   local have = forge_keys()
   local cs, d, extra = {}, {}, {}
   for k, where in pairs(have) do
@@ -858,7 +863,9 @@ end)
 T.check('WT-KEYS-10 macOS и Linux: подмен нет — сочетания таблицы не перехвачены', function()
   for _, os_name in ipairs({ 'macos', 'linux' }) do
     for _, k in ipairs(KEYS10) do
-      T.eq(F.find_binding(cfg(os_name).keys, k[1], k[2]), nil, os_name .. ': ' .. k[3])
+      if os_name ~= 'macos' or k[3] ~= 'Ctrl+/' then
+        T.eq(F.find_binding(cfg(os_name).keys, k[1], k[2]), nil, os_name .. ': ' .. k[3])
+      end
     end
   end
 end)

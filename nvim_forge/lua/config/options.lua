@@ -275,6 +275,18 @@ opt.hlsearch = true
 
 opt.langmap = ru_keys.langmap()
 opt.langremap = false
+if vim.fn.has('macunix') == 1 and not vim.env.SSH_CONNECTION and vim.g.forge_system_keyboard_layout ~= false then
+    vim.api.nvim_create_autocmd('UIEnter', {
+        callback = function()
+            for _, ui in ipairs(vim.api.nvim_list_uis()) do
+                if ui.stdout_tty then
+                    ru_keys.follow_layout(require('config.macos_layout').reader())
+                    return true
+                end
+            end
+        end,
+    })
+end
 
 opt.splitright = true
 opt.splitbelow = true

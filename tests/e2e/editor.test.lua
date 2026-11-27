@@ -179,6 +179,71 @@ scenario('EDITOR-ERRORS нет ошибок конфигурации после 
   assert(not messages:find('E5113', 1, true), messages)
 end)
 
+if vim.fn.has('macunix') == 1 then
+  scenario('MAC-INPUT Cyrillic and US keyboard layouts drive Normal motions, Ex and Insert', function()
+    editor:input(':enew<CR>')
+    editor:wait('empty document for keyboard motions', function()
+      return editor:lua('return vim.api.nvim_buf_get_name(0) == ""')
+    end)
+    local result = editor:lua([=[
+      local ffi = require('ffi')
+      ffi.cdef[[
+        const void *TISCreateInputSourceList(const void *, unsigned char);
+        extern const void *kTISPropertyInputSourceID;
+        long CFArrayGetCount(const void *);
+        const void *CFArrayGetValueAtIndex(const void *, long);
+        const void *CFRetain(const void *);
+        unsigned char CFStringGetCString(const void *, char *, long, uint32_t);
+      ]]
+      local carbon = ffi.load('/System/Library/Frameworks/Carbon.framework/Carbon')
+      local cf = ffi.load('/System/Library/Frameworks/CoreFoundation.framework/CoreFoundation')
+      local selected
+      local layout = require('config.macos_layout')
+      layout.reader()()  -- exercise the active system source without selecting one
+      local reader = layout.reader(function()
+        return ffi.cast('void *', cf.CFRetain(selected))
+      end)
+      local sources = ffi.gc(carbon.TISCreateInputSourceList(nil, 1), cf.CFRelease)
+      local by_id = {}
+      for i = 0, tonumber(cf.CFArrayGetCount(sources)) - 1 do
+        local source = ffi.cast('void *', cf.CFArrayGetValueAtIndex(sources, i))
+        local id = carbon.TISGetInputSourceProperty(source, carbon.kTISPropertyInputSourceID)
+        local buf = ffi.new('char[256]')
+        if id ~= nil and cf.CFStringGetCString(id, buf, 256, 0x08000100) ~= 0 then
+          by_id[ffi.string(buf)] = source
+        end
+      end
+      -- Borrowed sources are retained by the captured array throughout the test.
+      _G.forge_layout_for_test = function(id)
+        assert(sources ~= nil)
+        selected = assert(by_id['com.apple.keylayout.' .. id], id)
+      end
+      _G.forge_layout_for_test('RussianWin')
+      local symbols = reader()
+      require('config.ru_keys').follow_layout(reader)
+      return {symbols[':'], symbols[';']}
+    ]=])
+    T.eq(result, {'^', '$'})
+    editor:input('i   first line<Esc>0:')
+    editor:wait('Russian Shift+6 moves to first nonblank', function()
+      return editor:lua('return vim.fn.col(".")') == 4
+    end)
+    editor:input(';')
+    editor:wait('Russian Shift+4 moves to line end', function()
+      return editor:lua('return vim.fn.col(".") == vim.fn.col("$") - 1')
+    end)
+    editor:input('Aтекст:;<Esc>')
+    editor:wait('Russian punctuation stays literal in Insert', function()
+      return editor:lua('return vim.api.nvim_get_current_line():sub(-#"текст:;") == "текст:;"')
+    end)
+    editor:lua([[_G.forge_layout_for_test('US')]])
+    editor:input(':let g:forge_english_colon = 1<CR>')
+    editor:wait('English colon opens Ex after layout switch', function()
+      return editor:lua('return vim.g.forge_english_colon') == 1
+    end)
+  end)
+end
+
 if editor then
   io.stdout:write('  artifacts: ' .. editor.dir .. '\n')
   editor:stop()
@@ -289,6 +354,25 @@ local function check_launcher(contract)
     open_from_files(tui.a, 'Directory launch')
 
     if not contract.revision then
+      -- Use the bytes sent by the macOS terminal profile, including a filetype
+      -- whose optional parser has never been installed.
+      tui:command('edit comment.sh')
+      tui:send('iecho ok\27')
+      host:wait('shell buffer ready', function()
+        return tui:lua('return vim.bo.filetype') == 'sh' and tui:mode().mode == 'n'
+      end)
+      tui:lua([[vim.treesitter.language.register('forge_missing_shell_parser', 'sh')
+        assert(vim.treesitter.get_parser(0) == nil)]])
+      tui:send('\27[47;9u')
+      host:wait('physical Cmd+/ comments a shell line', function()
+        return tui:lua('return vim.api.nvim_get_current_line()') == '# echo ok'
+      end)
+      tui:send('\27[47;5u')
+      host:wait('physical Ctrl+/ uncomments the same line', function()
+        return tui:lua('return vim.api.nvim_get_current_line()') == 'echo ok'
+      end)
+      tui:command('edit! #')
+      check_ui()
       -- Prepare only on-disk recent entries in this test's private profile.
       -- The dashboard, picker, project switch, and restore all run through input.
       tui:quit()

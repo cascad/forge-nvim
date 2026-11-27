@@ -59,6 +59,18 @@ return {
         "numToStr/Comment.nvim",
         event = "VeryLazy", -- IDE-BOOT-7: готов до первого чтения файла
         opts = {
+            -- Neovim 0.12 returns nil for a missing parser. Comment.nvim
+            -- expects an exception and otherwise calls :children() on nil.
+            pre_hook = function(ctx)
+                local ok, parser = pcall(vim.treesitter.get_parser, 0)
+                if ok and parser then return end
+                local syntax = require("Comment.ft").get(vim.bo.filetype, ctx.ctype)
+                if syntax then return syntax end
+                if ctx.ctype == require("Comment.utils").ctype.linewise then
+                    return vim.bo.commentstring
+                end
+                error({ msg = "Блочные комментарии недоступны для " .. vim.bo.filetype })
+            end,
             padding = true,
             sticky = true,
             toggler = { line = "gcc", block = "gbc" },

@@ -1,4 +1,6 @@
 -- Observer only: actual TUI owns restart/reconnect, this file never starts it.
+-- This PTY receives scripted US keystrokes regardless of the desktop input source.
+vim.g.forge_system_keyboard_layout = false
 local base=assert(vim.env.FORGE_SESSION_PROBE)
 _G.forge_session_notices={};_G.forge_session_installs=0
 _G.forge_session_views_restored=0

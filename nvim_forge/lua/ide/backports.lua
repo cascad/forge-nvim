@@ -71,13 +71,33 @@ local function write_file(plan)
         'Проверка записанного backport не прошла')
 end
 
+local function local_git(dir, args)
+    local cmd = { 'git', '--no-optional-locks', '-c', 'core.hooksPath=/dev/null', '-C', dir }
+    vim.list_extend(cmd, args)
+    local r = vim.system(cmd, { text = true, env = { GIT_ALLOW_PROTOCOL = '', GIT_NO_LAZY_FETCH = '1' } }):wait()
+    assert(r.code == 0, vim.trim(r.stderr or 'git failed'))
+    return vim.trim(r.stdout or '')
+end
+
+local function head_revision(dir)
+    if not vim.uv.fs_lstat(dir .. '/.git') then return end -- exported Core
+    local head = vim.uv.fs_stat(dir .. '/.git/HEAD') and vim.trim(read(dir .. '/.git/HEAD'))
+    if head and head:match('^%x+$') then return head end
+    return local_git(dir, { 'rev-parse', 'HEAD' })
+end
+
 local function check_revision(name, dir, patch)
-    -- Не искать Git в родительском checkout экспортированного архива.
-    if vim.uv.fs_stat(dir .. '/.git') then
-        local head = vim.system({ 'git', '-C', dir, 'rev-parse', 'HEAD' }, { text = true }):wait()
-        assert(head.code == 0 and vim.trim(head.stdout or '') == patch.revision,
-            'Backport: неизвестная ревизия ' .. name .. '; ожидается ' .. patch.revision)
-    end
+    local head = head_revision(dir)
+    assert(not head or head == patch.revision,
+        'Backport: неизвестная ревизия ' .. name .. '; ожидается ' .. patch.revision)
+end
+
+local function clean_other_revision(dir, patch)
+    local head = head_revision(dir)
+    if not head or head == patch.revision then return false end
+    assert(local_git(dir, { 'status', '--porcelain', '--untracked-files=all' }) == '',
+        ('%s: ревизия %s содержит локальные изменения'):format(dir, head))
+    return true
 end
 
 local function plan_files(name, dir, patch, mode)
@@ -110,6 +130,18 @@ function M.prepare_checkout(data_path)
         local dir = vim.fs.joinpath(data, 'lazy', name)
         if vim.uv.fs_stat(dir) then
             local ok, err = pcall(function()
+                if clean_other_revision(dir, patch) then
+                    local gitdir = dir .. '/.git'
+                    assert(vim.uv.fs_lstat(gitdir).type == 'directory'
+                        and vim.fs.normalize(vim.uv.fs_realpath(gitdir)) == vim.fs.normalize(gitdir),
+                        'Backport: внешний каталог Git: ' .. gitdir)
+                    -- A clean old Lazy clone can switch pins offline. A shallow
+                    -- or partial clone may need the explicit setup to fetch it.
+                    local switched, reason = pcall(local_git, dir, {
+                        'checkout', '--detach', '--no-overwrite-ignore', '--no-recurse-submodules', patch.revision,
+                    })
+                    assert(switched, 'Для ' .. name .. ' подготовь плагины из checkout (setup-stage.lua plugins): ' .. tostring(reason))
+                end
                 local plans = plan_files(name, dir, patch, 'apply')
                 local pending = vim.tbl_filter(function(plan) return plan.text ~= nil end, plans)
                 if #pending == 0 then return end
@@ -130,7 +162,16 @@ end
 
 function M.all(lazy_root, mode)
     local result = {}
-    for name in pairs(patches) do result[name] = M.run(name, lazy_root .. '/' .. name, mode) end
+    for name, patch in pairs(patches) do
+        local dir = lazy_root .. '/' .. name
+        if mode == 'before_restore' then
+            -- A clean checkout at another revision has no current-pin
+            -- backport to revert. Let Lazy fetch and restore the source pin.
+            if not clean_other_revision(dir, patch) then result[name] = M.run(name, dir, 'revert') end
+        else
+            result[name] = M.run(name, dir, mode)
+        end
+    end
     return result
 end
 

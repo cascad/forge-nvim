@@ -9,7 +9,7 @@ local ok, err = xpcall(function()
         local prepared, report = pcall(require('forge.plugin_setup').prepare, function()
             -- Known backports are tracked modifications. Native restore must
             -- see original files; unknown changes still fail closed.
-            backports.all(directory, 'revert')
+            backports.all(directory, 'before_restore')
         end)
         -- A failed restore must not leave the previous kit's known patches
         -- reverted in the shared fride data directory. Preserve first error.

@@ -58,6 +58,42 @@ T.check('IDE-BOOT-12 checkout preparation repairs known files and preserves a lo
   end)
 end)
 
+T.check('IDE-BOOT-12 clean older Git revision restores offline before Neotest backports',function()
+  runtime(function(base)
+    -- Use a real local Git history so this regression runs without GitHub.
+    local spec=vim.json.decode(bytes(root..'/nvim_forge/patches/plugins.json')).neotest
+    local dir=base..'/lazy/neotest'
+    local function git(...)
+      local args={'git','-C',dir,'-c','user.name=Forge Test','-c','user.email=test@example.invalid',
+        '-c','commit.gpgSign=false','-c','core.hooksPath=/dev/null'}
+      vim.list_extend(args,{...})
+      local r=vim.system(args,{text=true}):wait(); assert(r.code==0,r.stderr)
+      return vim.trim(r.stdout)
+    end
+    vim.fn.mkdir(dir,'p'); git('init','-q')
+    local client=dir..'/lua/neotest/client/init.lua'
+    write(client,'-- older release\n')
+    git('add','.');git('commit','-qm','old');local old=git('rev-parse','HEAD')
+    local source=bytes(deps..'/lazy/neotest/'..spec.file):gsub('\r\n','\n')
+    local a,b=assert(source:find(spec.after,1,true))
+    write(dir..'/'..spec.file,source:sub(1,a-1)..spec.before..source:sub(b+1))
+    companions(base..'/lazy',spec,'\n',false,'neotest')
+    git('add','.');git('commit','-qm','new pin'); spec.revision=git('rev-parse','HEAD')
+    write(base..'/patches/plugins.json',vim.json.encode({neotest=spec}))
+    write(base..'/lazy-lock.json',vim.json.encode({neotest={commit=spec.revision}}))
+    write(base..'/lua/ide/backports.lua',bytes(root..'/nvim_forge/lua/ide/backports.lua'))
+    local bp=dofile(base..'/lua/ide/backports.lua')
+    git('checkout','--detach',old)
+    write(client,'-- my edits\n')
+    T.eq(#bp.prepare_checkout(base),1); T.eq(bytes(client),'-- my edits\n')
+    T.eq(git('rev-parse','HEAD'),old)
+    git('restore','lua/neotest/client/init.lua')
+    bp.all(base..'/lazy','before_restore'); T.eq(git('rev-parse','HEAD'),old)
+    T.eq(bp.prepare_checkout(base),{}); T.eq(git('rev-parse','HEAD'),spec.revision)
+    bp.run('neotest',dir,'check')
+  end)
+end)
+
 T.check('IDE-GIT-7 CLI apply check repeat и revert сохраняют LF/CRLF',function()
   runtime(function(base)
     for _,eol in ipairs({'\n','\r\n'}) do

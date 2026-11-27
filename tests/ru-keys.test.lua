@@ -19,4 +19,18 @@ T.check('IDE-FILE-9 Cyrillic text input stays unchanged by normal aliases',funct
   type_keys('iп<S-К> текст<Esc>')
   T.eq(vim.api.nvim_get_current_line(),'пК текст')
 end)
+T.check('Mac layout switch on the first motion preserves English Ex and Russian text input',function()
+  local russian = { [':']='^', [';']='$' }
+  local layout = russian
+  ru.follow_layout(function() return layout end)
+  vim.api.nvim_buf_set_lines(0,0,-1,false,{'   first line'})
+  type_keys('gg0:'); T.eq(vim.fn.col('.'),4)
+  type_keys(';'); T.eq(vim.fn.col('.'),13)
+  type_keys('v:'); T.eq(vim.fn.col('.'),4)
+  type_keys('<Esc>0d;'); T.eq(vim.api.nvim_get_current_line(),'')
+  type_keys('iтекст:;<Esc>'); T.eq(vim.api.nvim_get_current_line(),'текст:;')
+  layout=nil
+  type_keys(':let g:forge_test_colon = 17<CR>'); T.eq(vim.g.forge_test_colon,17)
+  type_keys('0$'); T.eq(vim.fn.col('.'),#'текст:;')
+end)
 T.finish()
