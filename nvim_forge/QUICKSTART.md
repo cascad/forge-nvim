@@ -485,7 +485,7 @@ IDE-028 проверяется отдельным `worktree-refresh.test.lua` (F
 | `<C-a>` | Select all |
 | `<C-f>` | Find в буфере |
 | `<C-h>` | Replace в буфере (`:%s/`) |
-| `<C-/>` | Toggle comment |
+| `Cmd+/` на Mac, `Ctrl+/` на Windows и Linux | Закомментировать строку или выделенные строки. В Shell (`.sh`) добавляет `#`, в SQL (`.sql`) — `--`. Повторное нажатие снимает комментарий. |
 | `<C-l>` | Select line без `\n` |
 | `<A-[>` / `<A-]>` | Jumplist back / forward |
 | `<A-Up>` / `<A-Down>` | Move line up / down |

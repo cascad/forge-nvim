@@ -170,6 +170,35 @@ scenario('EDITOR-COMMENT Cmd+/ comments and uncomments lines through the editor 
   end)
 end)
 
+for _, file in ipairs({
+  { name = 'comment.sh', ft = 'sh', header = '#!/bin/sh', first = '  echo one', second = '  echo two', prefix = '# ' },
+  { name = 'comment.sql', ft = 'sql', header = '-- report', first = '  SELECT 1;', second = '  SELECT 2;', prefix = '-- ' },
+}) do
+  scenario('EDITOR-COMMENT line shortcuts in ' .. file.ft, function()
+    local original = { file.header, file.first, file.second }
+    assert(vim.fn.writefile(original, editor.project .. '/' .. file.name) == 0)
+    editor:input(':edit ' .. file.name .. '<CR>')
+    editor:wait(file.name .. ' opened', function() return editor:current_ft() == file.ft end)
+    local first = file.first:gsub('^(%s*)', '%1' .. file.prefix)
+    local second = file.second:gsub('^(%s*)', '%1' .. file.prefix)
+    local function expect(keys, mode, lines)
+      editor:input(keys)
+      editor:wait(file.name .. ' ' .. keys, function()
+        return editor:lua('return vim.api.nvim_get_mode().mode') == mode
+          and vim.deep_equal(editor:lua('return vim.api.nvim_buf_get_lines(0,0,-1,false)'), lines)
+      end)
+    end
+    for _, key in ipairs({ '<D-/>', '<C-/>' }) do
+      expect('2G' .. key, 'n', { file.header, first, file.second })
+      expect('I' .. key, 'i', original)
+      expect('<Esc>2GVj' .. key, 'n', { file.header, first, second })
+      expect('2GVj' .. key, 'n', original)
+    end
+    editor:input(':edit! file_one.txt<CR>')
+    editor:wait('back from ' .. file.name, function() return editor:current_file():match('/file_one.txt$') end)
+  end)
+end
+
 scenario('EDITOR-ERRORS нет ошибок конфигурации после UIEnter и действий', function()
   for _, item in ipairs(editor:lua('return vim.g.forge_e2e_notifications')) do
     assert(item.level < vim.log.levels.ERROR, item.message)
