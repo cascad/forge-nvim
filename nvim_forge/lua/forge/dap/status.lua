@@ -1,4 +1,4 @@
-local M = { building = false, discovering = 0 }
+local M = { building = false }
 
 function M.label()
     local dap = package.loaded.dap
@@ -9,7 +9,6 @@ function M.label()
         return session.initialized and 'Debug: running' or 'Debug: starting'
     end
     if M.building then return 'Debug: building' end
-    if M.discovering > 0 then return 'Debug: finding targets' end
     return 'Debug: idle'
 end
 

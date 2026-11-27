@@ -189,7 +189,7 @@ check('F5 on a document after debug offers configured launches and cancels clean
     return editor:lua([[for _,b in ipairs(vim.api.nvim_list_bufs()) do
       if vim.bo[b].filetype=='TelescopeResults' then
         local rows=table.concat(vim.api.nvim_buf_get_lines(b,0,-1,false),'\n')
-        if rows:find('Configured Go launch',1,true) and not rows:find('Current file',1,true) then return true end
+        if rows:find('Configured Go launch',1,true) and rows:find('Current file via launch.json',1,true) then return true end
       end end;return false]])
   end)
   editor:input('<Esc>')

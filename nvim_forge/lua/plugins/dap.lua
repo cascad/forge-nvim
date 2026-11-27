@@ -434,46 +434,16 @@ local function current_file_configs(ft)
     return {}
 end
 
-local function needs_active_file(value)
-    if type(value) == "string" then
-        return value:find("${file[%a]*}") or value:find("${relativeFile[%a]*}")
-    end
-    if type(value) == "table" then
-        for _, item in pairs(value) do
-            if needs_active_file(item) then return true end
-        end
-    end
-    return false
-end
-
-local function debug_choices(ft, done)
+local function debug_choices(ft)
     local choices = {}
     local configs, path = load_launch_configs()
-    local current = current_file_configs(ft)
-    local runnable = #current > 0 or #(require("dap").configurations[ft] or {}) > 0
     for _, cfg in ipairs(configs or {}) do
-        if runnable or not needs_active_file(cfg.program) then
-            table.insert(choices, { source = "launch.json", path = path, config = cfg })
-        end
+        table.insert(choices, { source = "launch.json", config = cfg })
     end
-    for _, cfg in ipairs(current) do
-        table.insert(choices, {
-            source = "current file",
-            config = cfg,
-        })
+    for _, cfg in ipairs(current_file_configs(ft)) do
+        table.insert(choices, { source = "current file", config = cfg })
     end
-    if runnable or vim.fn.filereadable(cargo_root() .. "/Cargo.toml") ~= 1 then
-        return done(choices, path, runnable)
-    end
-    local status = require("forge.dap.status")
-    status.discovering = status.discovering + 1
-    rust_targets.project_configs(cargo_root(), function(targets)
-        status.discovering = status.discovering - 1
-        for _, cfg in ipairs(targets) do
-            choices[#choices + 1] = { source = "Cargo", config = cfg }
-        end
-        done(choices, path, runnable)
-    end)
+    return choices, path
 end
 
 local function format_debug_choice(choice)
@@ -499,41 +469,33 @@ local function dap_continue()
     prepare_debug_action()
     vim.schedule(function()
         local dap = require("dap")
+        if request ~= launch_request then return end
         if dap.session() then
             dap.continue()
             return
         end
 
         local ft = current_launch_filetype()
-        local origin, cwd = vim.api.nvim_get_current_buf(), vim.fn.getcwd()
-        debug_choices(ft, function(choices, path, runnable)
-            if request ~= launch_request or origin ~= vim.api.nvim_get_current_buf()
-                or cwd ~= vim.fn.getcwd() or dap.session() then return end
-            if #choices == 0 then
-                if dap.configurations[ft] and #dap.configurations[ft] > 0 then
-                    with_launch_buffer(function() dap.continue() end)
-                else
-                    vim.notify("Нет целей для отладки. Добавь конфигурацию в .vscode/launch.json.",
-                        vim.log.levels.INFO, { title = "DAP" })
-                end
-                return
+        local choices, path = debug_choices(ft)
+        if #choices == 0 then
+            if dap.configurations[ft] and #dap.configurations[ft] > 0 then
+                with_launch_buffer(function() dap.continue() end)
+            else
+                vim.notify("Нет целей для отладки. Добавь конфигурацию в .vscode/launch.json.",
+                    vim.log.levels.INFO, { title = "DAP" })
             end
-            if #choices == 1 and runnable then
-                run_config(dap, choices[1].config)
-                return
-            end
+            return
+        end
+        if #choices == 1 and choices[1].source == "current file" then
+            run_config(dap, choices[1].config)
+            return
+        end
 
-            local prompt = path
-                and ("Debug configuration (" .. vim.fn.fnamemodify(path, ":.") .. "):")
-                or "Debug configuration:"
-            vim.ui.select(choices, {
-                prompt = prompt,
-                format_item = format_debug_choice,
-            }, function(choice)
-                if choice then
-                    run_config(dap, choice.config)
-                end
-            end)
+        local prompt = path
+            and ("Debug configuration (" .. vim.fn.fnamemodify(path, ":.") .. "):")
+            or "Debug configuration:"
+        vim.ui.select(choices, { prompt = prompt, format_item = format_debug_choice }, function(choice)
+            if choice then run_config(dap, choice.config) end
         end)
     end)
 end

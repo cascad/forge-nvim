@@ -101,7 +101,7 @@ return {
                     return {
                         name = "cargo build (debug)",
                         cmd = { "cargo" },
-                        args = launch_config and launch_config.forgeCargoArgs or { "build" },
+                        args = { "build" },
                         cwd = cwd,
                         components = {
                             { "on_output_quickfix", open = false },

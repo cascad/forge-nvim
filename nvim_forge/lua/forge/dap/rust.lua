@@ -143,39 +143,7 @@ local function rust_current_program()
     end)
 end
 
--- A manifest or a document can launch any executable in its Cargo workspace.
-local function project_configs(root, done)
-    cargo_metadata(root, function(metadata)
-        if not metadata then return done({}) end
-        local configs = {}
-        local members = {}
-        for _, id in ipairs(metadata.workspace_members) do members[id] = true end
-        for _, pkg in ipairs(metadata.packages) do
-            if members[pkg.id] then
-                for _, target in ipairs(pkg.targets) do
-                    for _, kind in ipairs({ "bin", "example" }) do
-                        if rust_target_has_kind(target, kind) then
-                            configs[#configs + 1] = {
-                                name = ("%s / %s [%s]"):format(pkg.name, target.name, kind),
-                                type = "codelldb", request = "launch", cwd = vim.fs.dirname(pkg.manifest_path),
-                                program = rust_target_exe(metadata, target, kind),
-                                preLaunchTask = "cargo build (debug)", forgeCargoArgs = {
-                                    "build", "--manifest-path", pkg.manifest_path, "--" .. kind, target.name,
-                                },
-                                sourceLanguages = { "rust" }, console = "integratedTerminal",
-                            }
-                        end
-                    end
-                end
-            end
-        end
-        table.sort(configs, function(a, b) return a.name < b.name end)
-        done(configs)
-    end)
-end
-
 return {
-    project_configs = project_configs,
     cargo_root = cargo_root,
     rust_current_program = rust_current_program,
 }
