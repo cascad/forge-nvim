@@ -75,7 +75,7 @@ def payload(raw, native, parent):
         if native.startswith('windows-'):
             zip_tree(raw[0],terminal/'wezterm','WezTerm-windows-'+p['wezterm']['version']+'/')
         elif native.startswith('macos-'):
-            zip_tree(raw[0],work/'mac','')
+            zip_tree(raw[0],work/'mac',Path(specs[0]['archive']).stem + '/')
             for path in (work/'mac').rglob('*'):
                 if path.is_symlink() and not path.resolve().is_relative_to(work/'mac'):
                     raise ValueError('External Terminal archive link')
