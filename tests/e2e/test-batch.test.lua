@@ -29,6 +29,8 @@ T.check('IDE-TEST-10 native acceptance plan requires complete editor results',fu
   assert(result.code==0,result.stderr)
   local data=vim.json.decode(result.stdout)
   assert(vim.tbl_contains(data.registry_files,'tests/e2e/acceptance-navigation.test.lua'))
+  assert(vim.tbl_contains(data.registry_files,'tests/wezterm/keyboard-protocol.test.lua'))
+  assert(vim.tbl_contains(data.registry_files,'tests/e2e/sdk-hub.test.lua'))
   T.eq(data.installers,{})
   T.eq(#data.commands,1)
   assert(vim.tbl_contains(data.commands[1].argv,'--require-all'))

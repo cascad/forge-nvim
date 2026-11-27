@@ -309,10 +309,15 @@ T.check('WT-PANE-8 Cmd+Q всегда спрашивает: window_close_confirm
   end, { 'macos' })
 end)
 
-T.check('WT-PANE-8 macOS: Cmd+W и Cmd+1…9 не привязаны — ни панель, ни вкладку не закрывают и не переключают', function()
+T.check('WT-PANE-8 macOS: Cmd+W передаётся приложению, Cmd+1…9 сохраняют вкладку', function()
   each_os(function(c)
     T.eq(c.disable_default_key_bindings, true, 'встроенные привязки WezTerm (в них есть Cmd+W и Cmd+цифры)')
-    char_absent(c.keys, 'w', 'SUPER', 'config.keys')
+    local _, binding = action(c.keys, 'phys:W', 'SUPER')
+    local forge, shell = F.window(), F.window()
+    F.run_callback(binding.action, forge, F.pane({user_vars={FORGE_NVIM='1'}}))
+    F.run_callback(binding.action, shell, F.pane())
+    T.eq(forge.performed, {{name='SendString',args={'\27[119;9u'}}})
+    T.eq(shell.performed, {{name='SendKey',args={{key='w',mods='SUPER'}}}})
     for i = 1, 9 do char_absent(c.keys, tostring(i), 'SUPER', 'config.keys') end
   end, { 'macos' })
 end)

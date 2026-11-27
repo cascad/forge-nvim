@@ -20,3 +20,6 @@ mod tests {
         assert_eq!(1, 2, "FORGE_EXPECTED_TEST_FAILURE");
     }
 }
+
+pub trait ForgeProvider {}
+pub mod provider;

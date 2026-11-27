@@ -17,6 +17,16 @@
 -- rustaceanvim — у того были проблемы с experimental endpoints,
 -- блокировавшими ra на 20 сек).
 
+local function goto_implementation()
+    local ft = vim.bo.filetype
+    if (ft == "python" or ft == "sh")
+        and #vim.lsp.get_clients({ bufnr = 0, method = "textDocument/implementation" }) == 0
+        and #vim.lsp.get_clients({ bufnr = 0, method = "textDocument/definition" }) > 0 then
+        return vim.lsp.buf.definition()
+    end
+    return vim.lsp.buf.implementation()
+end
+
 return {
     -- =====================================================================
     -- Mason
@@ -266,7 +276,7 @@ return {
                     -- IDE-style F-клавиши и Alt+J (как в keybindings.json)
                     nm("<F12>",   vim.lsp.buf.definition,                "LSP: go to definition")
                     nm("<S-F12>", vim.lsp.buf.references,                "LSP: references")
-                    nm("<C-F12>", vim.lsp.buf.implementation,            "LSP: implementation")
+                    nm("<C-F12>", goto_implementation,                   "LSP: implementation")
                     nm("<F2>",    vim.lsp.buf.rename,                    "LSP: rename")
                     nm("<F3>",    function() vim.diagnostic.jump({ count = 1, float = true }) end,  "Diag: next")
                     nm("<S-F3>",  function() vim.diagnostic.jump({ count = -1, float = true }) end, "Diag: prev")
@@ -276,7 +286,7 @@ return {
                     nm("gd", vim.lsp.buf.definition,      "LSP: definition")
                     nm("gD", vim.lsp.buf.declaration,     "LSP: declaration")
                     nm("gr", vim.lsp.buf.references,      "LSP: references")
-                    nm("gi", vim.lsp.buf.implementation,  "LSP: implementation")
+                    nm("gi", goto_implementation,          "LSP: implementation")
                     nm("gy", vim.lsp.buf.type_definition, "LSP: type definition")
                     nm("K",  vim.lsp.buf.hover,           "LSP: hover")
 
@@ -298,7 +308,7 @@ return {
                     nm("<leader>lk", vim.lsp.buf.signature_help,        "LSP: signature help")
                     nm("<leader>ld", vim.lsp.buf.definition,            "LSP: definition")
                     nm("<leader>lr", vim.lsp.buf.references,            "LSP: references")
-                    nm("<leader>li", vim.lsp.buf.implementation,        "LSP: implementation")
+                    nm("<leader>li", goto_implementation,               "LSP: implementation")
                     nm("<leader>lt", vim.lsp.buf.type_definition,       "LSP: type def")
                     nm("<leader>lD", vim.lsp.buf.declaration,           "LSP: declaration")
 

@@ -15,7 +15,7 @@ function M.native_suites(root)
   return out
 end
 function M.select(registry,installers,mode,files,windows)
-  local modes={quick={'unit'},e2e={'e2e'},acceptance={'e2e'},full={'unit','e2e','wezterm','install','trace'},regression={'unit','e2e','wezterm','install','trace'}}
+  local modes={quick={'unit'},e2e={'e2e'},acceptance={'unit','e2e'},full={'unit','e2e','wezterm','install','trace'},regression={'unit','e2e','wezterm','install','trace'}}
   local suites=assert(modes[mode],'Unknown test mode: '..tostring(mode))
   if windows and (mode=='full' or mode=='regression') then suites=vim.list_extend(vim.deepcopy(suites),{'conpty'}) end
   local by_file={};for _,row in ipairs(registry) do by_file[row.file]=row end

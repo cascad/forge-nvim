@@ -37,7 +37,8 @@ function M.start(argv, options)
             end
           end
         end
-      elseif batch[1] == 'grid_clear' then self.screen = {} end
+      elseif batch[1] == 'grid_clear' then self.screen = {}
+      elseif batch[1] == 'flush' then self.last_flush_ns = vim.uv.hrtime() end
     end
   end
   self.scope=require('process_scope').new()
