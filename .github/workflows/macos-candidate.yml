@@ -31,6 +31,7 @@ jobs:
           [[ "$revision" =~ ^[0-9a-f]{7,40}$ ]]
           git checkout --detach "$(git rev-parse --verify "$revision^{commit}")"
       - name: Prepare native Core, Terminal and installer
+        id: package
         shell: bash
         run: |
           set -euo pipefail
@@ -38,17 +39,27 @@ jobs:
           python3 -B scripts/prepare-acceptance-installer.py --download --work "$RUNNER_TEMP/build" --output "$RUNNER_TEMP/fride"
           test "$(cat "$RUNNER_TEMP/fride/platform.txt")" = "${{ matrix.platform }}"
           tar -C "$RUNNER_TEMP" -czf "$RUNNER_TEMP/fride-${GITHUB_REF_NAME##*/}-${{ matrix.platform }}.tar.gz" fride
-      - name: Verify editor shortcuts, clean install and repeat
+      - name: Verify editor shortcuts
         shell: bash
         run: |
           set -euo pipefail
-          export PATH="$RUNNER_TEMP/fride/payload/runtime/bin:$RUNNER_TEMP/fride/payload/runtime/search/bin:$PATH"
+          runtime="$RUNNER_TEMP/fride/payload/runtime"
+          export PATH="$runtime/bin:$runtime/search/bin:$runtime/terminal/wezterm/WezTerm.app/Contents/MacOS:$PATH"
           export FORGE_E2E_DEPS="$RUNNER_TEMP/build/${{ matrix.platform }}/editor-deps"
-          bash scripts/test.sh e2e --file tests/e2e/editor.test.lua
+          result=0
+          bash scripts/test.sh e2e --file tests/e2e/editor.test.lua || result=$?
+          cat .tests/logs/tests__e2e__editor.test.lua.log
+          exit "$result"
+      - name: Verify clean install and repeat
+        if: ${{ !cancelled() && steps.package.outcome == 'success' }}
+        shell: bash
+        run: |
+          set -euo pipefail
           for phase in install repeat; do
             bash "$RUNNER_TEMP/fride/install.sh" --profile default --install-dir "$RUNNER_TEMP/installed" --no-color --result "$RUNNER_TEMP/$phase.json"
           done
       - uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f
+        if: ${{ !cancelled() && steps.package.outcome == 'success' }}
         with:
           name: fride-${{ matrix.platform }}
           path: ${{ runner.temp }}/fride-*.tar.gz
